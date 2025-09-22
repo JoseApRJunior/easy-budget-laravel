@@ -1,0 +1,41 @@
+{% extends "layouts/admin.twig" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Análise Histórica</li>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Dashboard de Análise Histórica</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% else %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Total de Métricas</h6>
+                                <h3>{{ dashboard.total_metrics ?? 0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Performance Média</h6>
+                                <h3>{{ dashboard.avg_performance ?? '0ms' }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

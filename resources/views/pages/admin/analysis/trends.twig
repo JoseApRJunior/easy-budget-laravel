@@ -1,0 +1,21 @@
+{% extends "layouts/admin.twig" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/admin/analysis">Análise</a></li>
+<li class="breadcrumb-item active">Tendências</li>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Análise de Tendências - {{ period.start }} a {{ period.end }}</h5>
+    </div>
+    <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
+        <canvas id="trendsChart" width="400" height="200"></canvas>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

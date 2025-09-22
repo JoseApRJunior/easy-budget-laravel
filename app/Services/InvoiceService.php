@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class InvoiceService extends BaseTenantService implements ServiceInterface
+class InvoiceService extends BaseTenantService
 {
     private InvoiceRepository $invoiceRepository;
 

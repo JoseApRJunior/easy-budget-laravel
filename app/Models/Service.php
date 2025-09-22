@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\ServiceItem;
+use App\Models\ServiceStatus;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +31,7 @@ class Service extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'budget_id',
         'category_id',
@@ -44,7 +49,7 @@ class Service extends Model
      *
      * @var array<string, float>
      */
-    protected $attributes = [
+    protected $attributes = [ 
         'discount' => 0.0,
         'total'    => 0.0,
     ];
@@ -54,17 +59,17 @@ class Service extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
+    protected $casts = [ 
         'tenant_id'             => 'integer',
         'budget_id'             => 'integer',
         'category_id'           => 'integer',
         'service_statuses_id'   => 'integer',
         'discount'              => 'decimal:2',
         'total'                 => 'decimal:2',
-        'due_date'              => 'datetime',
+        'due_date'              => 'date',
         'pdf_verification_hash' => 'string',
-        'created_at'            => 'datetime',
-        'updated_at'            => 'datetime',
+        'created_at'            => 'immutable_datetime',
+        'updated_at'            => 'immutable_datetime',
     ];
 
     /**

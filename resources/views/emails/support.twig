@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Budget - Confirme sua conta</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      background-color: #0D6EFD;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      font-size: 0.9em;
+      color: #6c757d;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0D6EFD;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class='container'>
+    <div class='header'>
+      <h1>Easy Budget </h1>
+    </div>
+    <div class='content'>
+      <p>Olá {{emailData.first_name}},</p>
+      <p>Agradecemos por entrar em contato conosco. Aqui estão os detalhes da sua mensagem de suporte:</p>
+      <ul>
+        <li><strong>Assunto:</strong> {{emailData.subject}}</li>
+        <li><strong>Mensagem:</strong> {{emailData.message}}</li>
+        <li><strong>E-mail:</strong> {{emailData.email}}</li>
+        <li><strong>Data de envio:</strong> {{ "now"|date("d/m/Y H:i") }} </li>
+      </ul>
+      <p>Nossa equipe de suporte irá analisar sua mensagem e entrar em contato com você em breve.</p>
+      <p>Obrigado por sua paciência e cooperação.</p>
+
+      <hr>
+      <a href="{{urlSuporte}}" class="btn">Suporte Easy Budget</a>
+    </div>
+    <div class='footer'>
+      <p>Este é um e-mail automático, por favor não responda.</p>
+      <p>&copy; {{ "now"|date("Y") }} Easy Budget.<br>Todos os direitos reservados.</p>
+    </div>
+  </div>
+
+</body>
+
+</html>

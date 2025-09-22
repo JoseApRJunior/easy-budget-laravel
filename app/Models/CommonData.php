@@ -47,7 +47,7 @@ class CommonData extends Model
         'tenant_id'           => 'integer',
         'first_name'          => 'string',
         'last_name'           => 'string',
-        'birth_date'          => 'immutable_datetime',
+        'birth_date'          => 'immutable_date',
         'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',

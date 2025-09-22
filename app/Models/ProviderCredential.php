@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class ProviderCredential extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *

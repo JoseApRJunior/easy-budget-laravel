@@ -73,7 +73,7 @@ class UserRole extends Pivot
         'user_id'    => 'integer',
         'role_id'    => 'integer',
         'tenant_id'  => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 }

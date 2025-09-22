@@ -1,0 +1,130 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="bi bi-rulers me-2"></i>Unidades
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/provider">Dashboard</a></li>
+                <li class="breadcrumb-item active">Unidades</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Botão de Adicionar -->
+    <div class="mb-4">
+        <a href="/admin/units/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Nova Unidade
+        </a>
+    </div>
+
+    <!-- Tabela de Unidades -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col" class="ps-4">ID</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Abreviação</th>
+                            <th scope="col">Slug</th>
+                            <th scope="col">Criado em</th>
+                            <th scope="col" class="text-end pe-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if units|length > 0 %}
+                        {% for unit in units %}
+                        <tr>
+                            <td class="ps-4">{{ unit.id }}</td>
+                            <td>{{ unit.name }}</td>
+                            <td><span class="badge bg-secondary">{{ unit.abbreviation }}</span></td>
+                            <td><code>{{ unit.slug }}</code></td>
+                            <td>{{ unit.createdAt|date('d/m/Y H:i') }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="/admin/units/show/{{ unit.id }}"
+                                        class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/admin/units/edit/{{ unit.id }}"
+                                        class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-unit"
+                                        data-id="{{ unit.id }}" data-name="{{ unit.name }}" title="Excluir">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-inbox text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">Nenhuma unidade encontrada</p>
+                                    <p class="text-muted small">Clique em "Nova Unidade" para adicionar</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a unidade <strong id="unitName"></strong>?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" action="" method="POST">
+                    {{ csrf.field|raw }}
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<script>
+    document.addEventListener( 'DOMContentLoaded', function () {
+        // Configurar modal de exclusão
+        const deleteButtons = document.querySelectorAll( '.delete-unit' );
+        const deleteForm = document.getElementById( 'deleteForm' );
+        const unitNameElement = document.getElementById( 'unitName' );
+
+        deleteButtons.forEach( button => {
+            button.addEventListener( 'click', function () {
+                const unitId = this.getAttribute( 'data-id' );
+                const unitName = this.getAttribute( 'data-name' );
+                deleteForm.action = `/admin/units/delete/${unitId}`;
+                unitNameElement.textContent = unitName;
+                const deleteModal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
+                deleteModal.show();
+            } );
+        } );
+    } );
+</script>
+{% endblock %}

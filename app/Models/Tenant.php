@@ -27,6 +27,10 @@ class Tenant extends Model
 {
     use HasFactory;
 
+    /**
+     * Compatibilidade com schema legado dos tenants.
+     * Apenas o campo 'name' é permitido para manter consistência com o banco legado.
+     */
     protected $fillable = [ 
         'name',
     ];

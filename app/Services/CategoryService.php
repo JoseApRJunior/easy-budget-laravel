@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class CategoryService extends BaseTenantService implements ServiceInterface
+class CategoryService extends BaseTenantService
 {
     private CategoryRepository $categoryRepository;
 

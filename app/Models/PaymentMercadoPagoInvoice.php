@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class PaymentMercadoPagoInvoice extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -40,8 +42,8 @@ class PaymentMercadoPagoInvoice extends Model
         'invoice_id'         => 'integer',
         'transaction_amount' => 'decimal:2',
         'transaction_date'   => 'datetime',
-        'created_at'         => 'datetime',
-        'updated_at'         => 'datetime',
+        'created_at'         => 'immutable_datetime',
+        'updated_at'         => 'immutable_datetime',
     ];
 
     /**

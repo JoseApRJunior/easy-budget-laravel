@@ -36,7 +36,7 @@ class BudgetStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'slug',
         'name',
         'description',
@@ -51,14 +51,20 @@ class BudgetStatus extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
+    protected $casts = [ 
         'description' => 'string',
         'icon'        => 'string',
         'is_active'   => 'boolean',
         'order_index' => 'integer',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the budgets for the BudgetStatus.

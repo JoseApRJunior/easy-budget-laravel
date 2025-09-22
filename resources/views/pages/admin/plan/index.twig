@@ -1,0 +1,70 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ page_title|default('Gerenciamento de Assinaturas') }}</h1>
+    {% if is_history_page %}
+    <a href="/admin/plans/subscriptions" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Voltar para Assinaturas Ativas
+    </a>
+    {% endif %}
+  </div>
+
+  {% if subscriptions is empty %}
+  <div class="alert alert-info" role="alert">
+    Nenhuma assinatura encontrada.
+  </div>
+  {% else %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Prestador</th>
+              <th scope="col">Plano</th>
+              <th scope="col">Status</th>
+              <th scope="col">Início</th>
+              <th scope="col">Fim</th>
+              <th scope="col">Valor Pago</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for subscription in subscriptions %}
+            <tr>
+              <th scope="row">{{ subscription.id }}</th>
+              <td>{{ subscription.provider_name }}</td>
+              <td>{{ subscription.plan_name }}</td>
+              <td>
+                {% set status_map = {
+                'active': { 'class': 'bg-success', 'text': 'Ativa' },
+                'pending': { 'class': 'bg-warning text-dark', 'text': 'Pendente' },
+                'cancelled': { 'class': 'bg-dark', 'text': 'Cancelada' },
+                'expired': { 'class': 'bg-secondary', 'text': 'Expirada' }
+                } %}
+                <span
+                  class="badge {{ status_map[subscription.status]['class']|default('bg-light text-dark border') }}">{{
+                  status_map[subscription.status]['text']|default(subscription.status|capitalize) }}</span>
+              </td>
+              <td>{{ subscription.start_date ? subscription.start_date|date("d/m/Y") : 'N/A' }}</td>
+              <td>{{ subscription.end_date ? subscription.end_date|date("d/m/Y") : 'N/A' }}</td>
+              <td>R$ {{ subscription.transaction_amount|number_format(2, ',', '.') }}</td>
+              <td>
+                <a href="/admin/plans/subscription/show/{{ subscription.id }}" class="btn btn-sm btn-primary"
+                  title="Ver Detalhes">
+                  <i class="bi bi-eye-fill"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

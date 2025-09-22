@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class ProviderService extends BaseTenantService implements ServiceInterface
+class ProviderService extends BaseTenantService
 {
     private ProviderRepository   $providerRepository;
     private CommonDataRepository $commonDataRepository;
@@ -122,44 +122,86 @@ class ProviderService extends BaseTenantService implements ServiceInterface
 
     public function createByTenantId( array $data, int $tenantId ): ServiceResult
     {
-        $result = parent::createByTenantId( $data, $tenantId );
-        if ( !$result->isSuccess() ) {
-            return $result;
-        }
+        try {
+            $result = parent::createByTenantId( $data, $tenantId );
+            if ( !$result->isSuccess() ) {
+                return $result;
+            }
 
-        $entity = $result->getData();
-        if ( isset( $data[ 'common_data' ] ) && is_array( $data[ 'common_data' ] ) ) {
-            $this->commonDataRepository->createForProvider( $data[ 'common_data' ], $tenantId, $entity->id );
+            $entity = $result->getData();
+            if ( isset( $data[ 'common_data' ] ) && is_array( $data[ 'common_data' ] ) ) {
+                $this->commonDataRepository->createForProvider( $data[ 'common_data' ], $tenantId, $entity->id );
+            }
+            if ( isset( $data[ 'contact' ] ) && is_array( $data[ 'contact' ] ) ) {
+                $this->contactRepository->createForProvider( $data[ 'contact' ], $tenantId, $entity->id );
+            }
+            if ( isset( $data[ 'addresses' ] ) && is_array( $data[ 'addresses' ] ) ) {
+                $this->addressRepository->createForProvider( $data[ 'addresses' ], $tenantId, $entity->id );
+            }
+            $entity->load( [ 'commonData', 'contact', 'addresses' ] );
+            return $this->success( $entity, 'Fornecedor criado com sucesso.' );
+        } catch ( \Illuminate\Database\QueryException $e ) {
+            // Trata exceções de chave duplicada do índice único (tenant_id, user_id)
+            if ( $e->getCode() === '23000' || str_contains( $e->getMessage(), 'providers_tenant_user_unique' ) ) {
+                // Busca o provider existente para retornar
+                $existingProvider = $this->providerRepository->findOneByAndTenantId( [ 
+                    'tenant_id' => $tenantId,
+                    'user_id'   => $data[ 'user_id' ]
+                ], $tenantId );
+
+                if ( $existingProvider ) {
+                    return $this->success( $existingProvider, 'Fornecedor já existe para este usuário e tenant.' );
+                }
+            }
+
+            // Re-lança outras exceções de banco não tratadas
+            return $this->error( \App\Enums\OperationStatus::ERROR, 'Erro ao criar fornecedor: ' . $e->getMessage() );
+        } catch ( \Exception $e ) {
+            return $this->error( \App\Enums\OperationStatus::ERROR, 'Erro inesperado ao criar fornecedor: ' . $e->getMessage() );
         }
-        if ( isset( $data[ 'contact' ] ) && is_array( $data[ 'contact' ] ) ) {
-            $this->contactRepository->createForProvider( $data[ 'contact' ], $tenantId, $entity->id );
-        }
-        if ( isset( $data[ 'addresses' ] ) && is_array( $data[ 'addresses' ] ) ) {
-            $this->addressRepository->createForProvider( $data[ 'addresses' ], $tenantId, $entity->id );
-        }
-        $entity->load( [ 'commonData', 'contact', 'addresses' ] );
-        return $this->success( $entity, 'Fornecedor criado com sucesso.' );
     }
 
     public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
-        $result = parent::updateByIdAndTenantId( $id, $tenant_id, $data );
-        if ( !$result->isSuccess() ) {
-            return $result;
-        }
+        try {
+            $entity = $this->findEntityByIdAndTenantId( $id, $tenantId );
+            if ( !$entity ) {
+                return $this->error( \App\Enums\OperationStatus::NOT_FOUND, 'Fornecedor não encontrado.' );
+            }
 
-        $entity = $result->getData();
-        if ( isset( $data[ 'common_data' ] ) && is_array( $data[ 'common_data' ] ) ) {
-            $this->commonDataRepository->updateForProvider( $data[ 'common_data' ], $tenant_id, $entity->id );
+            // Validação específica
+            $validation = $this->validateForTenant( $data, $tenantId, true );
+            if ( !$validation->isSuccess() ) {
+                return $validation;
+            }
+
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $this->updateEntity( $entity, $data, $tenantId );
+            $saved = $this->saveEntity( $entity );
+
+            if ( !$saved ) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                return $this->error( \App\Enums\OperationStatus::ERROR, 'Falha ao atualizar fornecedor.' );
+            }
+
+            if ( isset( $data[ 'common_data' ] ) && is_array( $data[ 'common_data' ] ) ) {
+                $this->commonDataRepository->updateForProvider( $data[ 'common_data' ], $tenantId, $entity->id );
+            }
+            if ( isset( $data[ 'contact' ] ) && is_array( $data[ 'contact' ] ) ) {
+                $this->contactRepository->updateForProvider( $data[ 'contact' ], $tenantId, $entity->id );
+            }
+            if ( isset( $data[ 'addresses' ] ) && is_array( $data[ 'addresses' ] ) ) {
+                $this->addressRepository->updateForProvider( $data[ 'addresses' ], $tenantId, $entity->id );
+            }
+            $entity->load( [ 'commonData', 'contact', 'addresses' ] );
+
+            \Illuminate\Support\Facades\DB::commit();
+            return $this->success( $entity, 'Fornecedor atualizado com sucesso.' );
+        } catch ( \Exception $e ) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return $this->error( \App\Enums\OperationStatus::ERROR, 'Falha ao atualizar fornecedor: ' . $e->getMessage() );
         }
-        if ( isset( $data[ 'contact' ] ) && is_array( $data[ 'contact' ] ) ) {
-            $this->contactRepository->updateForProvider( $data[ 'contact' ], $tenant_id, $entity->id );
-        }
-        if ( isset( $data[ 'addresses' ] ) && is_array( $data[ 'addresses' ] ) ) {
-            $this->addressRepository->updateForProvider( $data[ 'addresses' ], $tenant_id, $entity->id );
-        }
-        $entity->load( [ 'commonData', 'contact', 'addresses' ] );
-        return $this->success( $entity, 'Fornecedor atualizado com sucesso.' );
     }
 
     public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult

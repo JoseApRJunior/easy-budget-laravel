@@ -25,7 +25,18 @@ class PlanService extends BaseNoTenantService
      */
     public function __construct( PlanRepository $planRepository )
     {
+        parent::__construct();
         $this->planRepository = $planRepository;
+    }
+
+    /**
+     * Retorna a classe do modelo Plan.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\Plan();
     }
 
     /**

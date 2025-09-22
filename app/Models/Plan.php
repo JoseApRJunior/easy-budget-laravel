@@ -51,8 +51,8 @@ class Plan extends Model
         'max_budgets' => 'integer',
         'max_clients' => 'integer',
         'features'    => 'array',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'immutable_datetime',
     ];
 
     /**

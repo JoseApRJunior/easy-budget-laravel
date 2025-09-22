@@ -183,8 +183,8 @@ class ActivityService extends BaseTenantService
      * Atualiza uma atividade existente.
      *
      * @param int $id ID da atividade
-     * @param int $tenant_id ID do tenant
      * @param array $data Dados para atualização
+     * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
     public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
@@ -194,12 +194,12 @@ class ActivityService extends BaseTenantService
             return $validation;
         }
 
-        $entity = $this->findEntityByIdAndTenantId( $id, $tenant_id );
+        $entity = $this->findEntityByIdAndTenantId( $id, $tenantId );
         if ( !$entity ) {
             return $this->error( OperationStatus::NOT_FOUND, 'Atividade não encontrada.' );
         }
 
-        $this->updateEntity( $entity, $data, $tenant_id );
+        $this->updateEntity( $entity, $data, $tenantId );
         return $this->success( $entity, 'Atividade atualizada com sucesso.' );
     }
 

@@ -19,7 +19,7 @@ use app\database\repositories\PaymentMercadoPagoPlansRepository;
  * Serviço para gerenciamento de planos
  * Implementa ServiceNoTenantInterface para operações sem tenant_id
  */
-class PlanService extends BaseNoTenantService implements ServiceNoTenantInterface
+class PlanService extends BaseNoTenantService
 {
     private mixed $authenticated;
 

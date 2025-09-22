@@ -35,8 +35,8 @@ class Support extends Model
      * @var array<string, string>
      */
     protected $casts = [ 
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**

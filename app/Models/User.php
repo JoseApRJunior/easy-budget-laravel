@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Activity;
+use App\Models\Permission;
+use App\Models\Provider;
+use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,8 +66,8 @@ class User extends Authenticatable
         'password'   => 'hashed',
         'logo'       => 'string',
         'is_active'  => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**
@@ -95,7 +99,9 @@ class User extends Authenticatable
             'user_roles',
             'user_id',
             'role_id',
-        )->withPivot( [ 'tenant_id' ] )
+        )->using( \App\Models\UserRole::class)
+            ->withPivot( [ 'tenant_id' ] )
+            ->wherePivot( 'tenant_id', $this->tenant_id )
             ->withTimestamps();
     }
 
@@ -158,7 +164,18 @@ class User extends Authenticatable
      */
     public function hasRole( string $role ): bool
     {
-        return $this->roles->contains( 'name', $role );
+        return $this->roles()->where( 'name', $role )->exists();
+    }
+
+    /**
+     * Accessor para obter o nome do usuário.
+     * Retorna o nome completo do provider se disponível, caso contrário retorna o email.
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->provider?->commonData
+            ? ( $this->provider->commonData->first_name . ' ' . $this->provider->commonData->last_name )
+            : ( $this->attributes[ 'email' ] ?? '' );
     }
 
 }

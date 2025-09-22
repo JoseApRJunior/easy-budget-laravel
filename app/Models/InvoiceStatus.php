@@ -34,7 +34,7 @@ class InvoiceStatus extends Model
      *
      * @var bool
      */
-    public $timestamps = true;
+    public $timestamps = false;
 
     /**
      * The attributes that should be cast.

@@ -20,7 +20,18 @@ class BudgetStatusService extends BaseNoTenantService
 
     public function __construct( BudgetStatusRepository $budgetStatusRepository )
     {
+        parent::__construct();
         $this->budgetStatusRepository = $budgetStatusRepository;
+    }
+
+    /**
+     * Retorna a classe do modelo BudgetStatus.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\BudgetStatus();
     }
 
     protected function findEntityById( int $id ): ?Model
@@ -28,8 +39,15 @@ class BudgetStatusService extends BaseNoTenantService
         return $this->budgetStatusRepository->findById( $id );
     }
 
-    protected function listEntities( array $filters = [] ): array
+    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
     {
+        $filters = [];
+        if ( $orderBy !== null ) {
+            $filters[ 'order' ] = $orderBy;
+        }
+        if ( $limit !== null ) {
+            $filters[ 'limit' ] = $limit;
+        }
         return $this->budgetStatusRepository->findAll( $filters );
     }
 
@@ -90,6 +108,24 @@ class BudgetStatusService extends BaseNoTenantService
         }
 
         return $this->success( $data );
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
+        return $this->success();
     }
 
     /**

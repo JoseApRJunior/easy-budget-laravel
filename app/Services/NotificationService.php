@@ -14,13 +14,24 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
-class NotificationService extends BaseNoTenantService implements ServiceNoTenantInterface
+class NotificationService extends BaseNoTenantService
 {
     private ActivityService $activityService;
 
     public function __construct( ActivityService $activityService )
     {
+        parent::__construct();
         $this->activityService = $activityService;
+    }
+
+    /**
+     * Retorna a classe do modelo Notification.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\Notification();
     }
 
     protected function findEntityById( int $id ): ?Model
@@ -29,17 +40,16 @@ class NotificationService extends BaseNoTenantService implements ServiceNoTenant
         return \App\Models\Notification::find( $id );
     }
 
-    protected function listEntities( array $filters = [] ): array
+    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
     {
         $query = \App\Models\Notification::query();
 
-        if ( isset( $filters[ 'order' ] ) ) {
-            $order = $filters[ 'order' ];
-            $query->orderBy( $order[ 0 ] ?? 'id', $order[ 1 ] ?? 'asc' );
+        if ( $orderBy !== null ) {
+            $query->orderBy( $orderBy[ 0 ] ?? 'id', $orderBy[ 1 ] ?? 'asc' );
         }
 
-        if ( isset( $filters[ 'limit' ] ) ) {
-            $query->limit( (int) $filters[ 'limit' ] );
+        if ( $limit !== null ) {
+            $query->limit( $limit );
         }
 
         return $query->get()->all();
@@ -75,7 +85,7 @@ class NotificationService extends BaseNoTenantService implements ServiceNoTenant
         return $entity->delete();
     }
 
-    protected function canDeleteEntity( int $id ): bool
+    protected function canDeleteEntity( Model $entity ): bool
     {
         // Lógica para verificar se pode deletar (ex: não referenciada)
         return true;
@@ -196,6 +206,24 @@ class NotificationService extends BaseNoTenantService implements ServiceNoTenant
             return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $messages ) );
         }
 
+        return $this->success();
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
         return $this->success();
     }
 

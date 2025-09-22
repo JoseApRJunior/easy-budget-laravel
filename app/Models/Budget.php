@@ -3,7 +3,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\BudgetStatus;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,7 +68,7 @@ class Budget extends Model
         'user_confirmation_token_id' => 'integer',
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
-        'due_date'                   => 'datetime',
+        'due_date'                   => 'date',
         'pdf_verification_hash'      => 'string',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'immutable_datetime',
@@ -99,45 +104,63 @@ class Budget extends Model
     }
 
     /**
-     * Get the history attribute as array.
+     * Get the attachment attribute as decoded JSON array.
+     *
+     * @return array
      */
-    public function getHistoryAttribute( $value ): mixed
+    public function getAttachmentAttribute( $value ): array
     {
         if ( empty( $value ) ) {
             return [];
         }
 
         $decoded = json_decode( $value, true );
-        return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+        return $decoded ?? [];
     }
 
     /**
-     * Get the attachment attribute as array.
-     */
-    public function getAttachmentAttribute( $value ): mixed
-    {
-        if ( empty( $value ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $value, true );
-        return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
-    }
-
-    /**
-     * Set the attachment attribute as JSON.
+     * Set the attachment attribute as encoded JSON string.
+     *
+     * @param mixed $value
      */
     public function setAttachmentAttribute( $value ): void
     {
-        $this->attributes[ 'attachment' ] = is_array( $value ) ? json_encode( $value ) : $value;
+        if ( empty( $value ) ) {
+            $this->attributes[ 'attachment' ] = null;
+            return;
+        }
+
+        $this->attributes[ 'attachment' ] = json_encode( $value );
     }
 
     /**
-     * Set the history attribute as JSON.
+     * Get the history attribute as decoded JSON array.
+     *
+     * @return array
+     */
+    public function getHistoryAttribute( $value ): array
+    {
+        if ( empty( $value ) ) {
+            return [];
+        }
+
+        $decoded = json_decode( $value, true );
+        return $decoded ?? [];
+    }
+
+    /**
+     * Set the history attribute as encoded JSON string.
+     *
+     * @param mixed $value
      */
     public function setHistoryAttribute( $value ): void
     {
-        $this->attributes[ 'history' ] = is_array( $value ) ? json_encode( $value ) : $value;
+        if ( empty( $value ) ) {
+            $this->attributes[ 'history' ] = null;
+            return;
+        }
+
+        $this->attributes[ 'history' ] = json_encode( $value );
     }
 
 }

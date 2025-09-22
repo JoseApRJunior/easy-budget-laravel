@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +15,13 @@ use Illuminate\Support\Carbon;
 class Activity extends Model
 {
     use TenantScoped;
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * The table associated with the model.
@@ -47,7 +56,6 @@ class Activity extends Model
         'entity_id'  => 'integer',
         'metadata'   => 'array',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
     ];
 
     /**

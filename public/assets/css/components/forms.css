@@ -1,0 +1,159 @@
+/* Estilos base para formulários */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select {
+   background-color: var(--form-input-bg);
+   border-color: var(--form-input-border);
+   color: var(--form-text);
+   border-radius: var(--border-radius-md);
+   width: 100%;
+}
+
+/* Tema escuro para formulários */
+.theme-dark .form-control,
+.theme-dark input[type="password"],
+.theme-dark input[type="text"],
+.theme-dark input[type="number"],
+.theme-dark select,
+.theme-dark select option {
+   background-color: var(--form-input-bg) !important;
+   color: var(--form-text) !important;
+}
+
+/* Estados dos campos */
+.form-control:focus {
+   background-color: var(--form-input-bg) !important;
+   color: var(--form-text) !important;
+   border-color: var(--primary-color);
+   box-shadow: var(--form-focus-shadow);
+   outline: none;
+}
+
+.form-control:not(:placeholder-shown):valid {
+   border-color: var(--text-success);
+}
+
+/* Campos inválidos */
+.form-control.is-invalid {
+   border-color: var(--bs-form-invalid-border-color);
+   background-position: right calc(0.375em + 2.1875rem) center !important;
+   background-image: none !important;
+}
+
+.form-control.is-invalid:focus {
+   box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
+}
+
+/* Container de senha */
+.password-container {
+   width: 100%;
+   position: relative;
+   margin-bottom: 1rem;
+}
+
+.password-toggle {
+   --toggle-size: 40px;
+   position: absolute;
+   right: var(--spacing-sm);
+   top: 50%;
+   transform: translateY(-50%);
+   display: flex;
+   align-items: center;
+   gap: var(--spacing-sm);
+   width: 60px;
+   min-width: var(--toggle-size);
+   height: auto;
+   border: none;
+   background: transparent;
+   padding: 0;
+   z-index: 5;
+   color: var(--small-text);
+   transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+   color: var(--primary-color);
+}
+
+.password-toggle i {
+   position: relative;
+   font-size: 1rem;
+   color: var(--form-text);
+}
+
+/* Feedback de erro */
+.invalid-feedback {
+   position: absolute;
+   top: 100%;
+   left: 0;
+   width: 100%;
+   margin-top: 0.25rem;
+   font-size: 0.875em;
+   color: var(--bs-form-invalid-color);
+   display: block;
+   text-align: left;
+   padding-left: 0.5rem;
+}
+
+/* Autofill styles */
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover {
+   -webkit-box-shadow: 0 0 0 1000px var(--form-input-bg) inset !important;
+   -webkit-text-fill-color: var(--form-text) !important;
+   transition: background-color 5000s ease-in-out;
+}
+
+/* Floating labels */
+.form-floating > label {
+   color: var(--small-text);
+}
+
+.form-floating > .form-control:focus ~ label {
+   color: var(--primary-color);
+}
+
+.form-floating.password-container {
+   position: relative;
+}
+
+.form-floating.password-container .form-control {
+   height: calc(3.5rem + 2px);
+   padding: 1.625rem 0.75rem 0.625rem;
+   padding-right: 3.5rem !important;
+}
+
+.form-floating.password-container label {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   padding: 1rem 0.75rem;
+   overflow: hidden;
+   text-align: start;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   pointer-events: none;
+   border: 1px solid transparent;
+   transform-origin: 0 0;
+   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+}
+
+/* Checkbox styles */
+.form-check-input.is-invalid {
+   border-color: #dc3545;
+}
+
+.form-check-input.is-invalid:focus {
+   border-color: #dc3545;
+   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+#terms-error {
+   font-size: 0.875rem;
+   margin-top: 0.5rem;
+}

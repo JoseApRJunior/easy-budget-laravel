@@ -19,7 +19,7 @@ use Exception;
  *
  * @package app\database\servicesORM
  */
-class RoleService extends BaseNoTenantService implements ServiceNoTenantInterface
+class RoleService extends BaseNoTenantService
 {
     private RoleRepositoryInterface $repository;
     private ActivityService         $activityService;

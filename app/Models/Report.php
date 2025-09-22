@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class Report extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -40,7 +42,7 @@ class Report extends Model
     protected $casts = [ 
         'tenant_id'  => 'integer',
         'size'       => 'float',
-        'created_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
     ];
 
     /**

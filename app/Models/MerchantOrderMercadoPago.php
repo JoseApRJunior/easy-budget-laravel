@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class MerchantOrderMercadoPago extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -20,7 +22,7 @@ class MerchantOrderMercadoPago extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'provider_id',
         'merchant_order_id',
@@ -35,13 +37,13 @@ class MerchantOrderMercadoPago extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'tenant_id' => 'integer',
-        'provider_id' => 'integer',
+    protected $casts = [ 
+        'tenant_id'            => 'integer',
+        'provider_id'          => 'integer',
         'plan_subscription_id' => 'integer',
-        'total_amount' => 'decimal:2',
-        'created_at'   => 'datetime',
-        'updated_at'   => 'datetime',
+        'total_amount'         => 'decimal:2',
+        'created_at'           => 'immutable_datetime',
+        'updated_at'           => 'immutable_datetime',
     ];
 
     /**

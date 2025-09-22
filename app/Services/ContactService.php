@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class ContactService extends BaseTenantService implements ServiceInterface
+class ContactService extends BaseTenantService
 {
     private ContactRepository $contactRepository;
 

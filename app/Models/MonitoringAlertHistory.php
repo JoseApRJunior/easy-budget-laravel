@@ -29,7 +29,7 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'alert_type',
         'severity',
@@ -58,7 +58,7 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'current_value'    => 'float',
         'threshold_value'  => 'float',
         'metadata'         => 'array',
@@ -67,8 +67,8 @@ class MonitoringAlertHistory extends Model
         'first_occurrence' => 'datetime',
         'last_occurrence'  => 'datetime',
         'tenant_id'        => 'integer',
-        'created_at'       => 'datetime',
-        'updated_at'       => 'datetime',
+        'created_at'       => 'immutable_datetime',
+        'updated_at'       => 'immutable_datetime',
     ];
 
     /**

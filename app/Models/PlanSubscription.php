@@ -68,8 +68,8 @@ class PlanSubscription extends Model
         'tenant_id'          => 'integer',
         'provider_id'        => 'integer',
         'plan_id'            => 'integer',
-        'created_at'         => 'datetime',
-        'updated_at'         => 'datetime',
+        'created_at'         => 'immutable_datetime',
+        'updated_at'         => 'immutable_datetime',
     ];
 
     /**

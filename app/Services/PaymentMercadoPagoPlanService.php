@@ -47,8 +47,18 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
      */
     public function __construct( MercadoPagoService $mercadoPagoService )
     {
+        parent::__construct();
         $this->mercadoPagoService = $mercadoPagoService;
-        $this->model              = new PaymentMercadoPagoPlan();
+    }
+
+    /**
+     * Retorna a classe do modelo PaymentMercadoPagoPlan.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new PaymentMercadoPagoPlan();
     }
 
     /**
@@ -74,7 +84,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
 
             return $this->mercadoPagoService->createPaymentPreference( $paymentData, $tenantId );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao criar preferência de pagamento para plano', [ 
+            Log::error( 'Exceção ao criar preferência de pagamento para plano', [
                 'tenant_id' => $tenantId,
                 'plan_data' => $planData,
                 'exception' => $e->getMessage(),
@@ -133,7 +143,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
 
             $this->updateLocalPlanPayment( $paymentData, (int) $tenantId );
 
-            Log::info( 'Webhook de plano processado com sucesso', [ 
+            Log::info( 'Webhook de plano processado com sucesso', [
                 'payment_id' => $paymentId,
                 'tenant_id'  => $tenantId,
                 'status'     => $paymentData[ 'status' ]
@@ -141,7 +151,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
 
             return $this->success( $paymentData, 'Webhook de plano processado com sucesso.' );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao processar webhook de plano', [ 
+            Log::error( 'Exceção ao processar webhook de plano', [
                 'webhook_data' => $webhookData,
                 'exception'    => $e->getMessage(),
                 'trace'        => $e->getTraceAsString()
@@ -192,7 +202,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
                 'Status do pagamento de plano obtido com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao verificar status do pagamento de plano', [ 
+            Log::error( 'Exceção ao verificar status do pagamento de plano', [
                 'payment_id' => $paymentId,
                 'tenant_id'  => $tenantId,
                 'exception'  => $e->getMessage()
@@ -249,7 +259,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
                 'Pagamento de plano cancelado com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao cancelar pagamento de plano', [ 
+            Log::error( 'Exceção ao cancelar pagamento de plano', [
                 'payment_id' => $paymentId,
                 'tenant_id'  => $tenantId,
                 'exception'  => $e->getMessage()
@@ -307,7 +317,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
                 'Reembolso do pagamento de plano processado com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao processar reembolso de pagamento de plano', [ 
+            Log::error( 'Exceção ao processar reembolso de pagamento de plano', [
                 'payment_id' => $paymentId,
                 'tenant_id'  => $tenantId,
                 'amount'     => $amount,
@@ -393,7 +403,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
                 [ 'total' => count( $payments ) ],
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao listar pagamentos de planos', [ 
+            Log::error( 'Exceção ao listar pagamentos de planos', [
                 'tenant_id' => $tenantId,
                 'filters'   => $filters,
                 'exception' => $e->getMessage()
@@ -534,6 +544,24 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
     }
 
     /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
+        return $this->success();
+    }
+
+    /**
      * Salva a entidade no banco de dados.
      *
      * @param Model $entity Entidade a ser salva
@@ -544,7 +572,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
         try {
             return $entity->save();
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao salvar entidade de pagamento de plano', [ 
+            Log::error( 'Erro ao salvar entidade de pagamento de plano', [
                 'entity_id' => $entity->id ?? 'new',
                 'exception' => $e->getMessage()
             ] );
@@ -613,13 +641,13 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
      */
     private function preparePlanPaymentData( array $planData, int $tenantId ): array
     {
-        return [ 
+        return [
             'transaction_amount'   => $planData[ 'transaction_amount' ],
             'payment_method'       => $planData[ 'payment_method' ],
             'plan_subscription_id' => $planData[ 'plan_subscription_id' ],
             'tenant_id'            => $tenantId,
             'description'          => $planData[ 'description' ] ?? 'Pagamento de plano - Easy Budget',
-            'metadata'             => [ 
+            'metadata'             => [
                 'tenant_id'            => $tenantId,
                 'plan_subscription_id' => $planData[ 'plan_subscription_id' ],
                 'type'                 => 'plan_payment'
@@ -654,11 +682,11 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
     private function updateLocalPlanPayment( array $paymentData, int $tenantId ): void
     {
         $this->model->updateOrCreate(
-            [ 
+            [
                 'payment_id' => $paymentData[ 'id' ],
                 'tenant_id'  => $tenantId
             ],
-            [ 
+            [
                 'provider_id'          => $paymentData[ 'provider_id' ] ?? null,
                 'plan_subscription_id' => $paymentData[ 'metadata' ][ 'plan_subscription_id' ] ?? null,
                 'status'               => $paymentData[ 'status' ],
@@ -682,7 +710,7 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService implements Payme
         $this->model
             ->where( 'payment_id', $paymentId )
             ->where( 'tenant_id', $tenantId )
-            ->update( [ 
+            ->update( [
                 'status'     => $status,
                 'updated_at' => \now()
             ] );

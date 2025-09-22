@@ -20,6 +20,23 @@ abstract class BaseNoTenantService extends BaseService implements ServiceNoTenan
     protected Model $model;
 
     /**
+     * BaseNoTenantService constructor.
+     * Inicializa a propriedade $model através do método abstrato getModelClass().
+     */
+    public function __construct()
+    {
+        $this->model = $this->getModelClass();
+    }
+
+    /**
+     * Método abstrato que deve ser implementado pelas classes filhas
+     * para fornecer a classe do modelo correspondente.
+     *
+     * @return Model
+     */
+    abstract protected function getModelClass(): Model;
+
+    /**
      * Obtém entidade por ID global.
      *
      * @param int $id ID da entidade

@@ -126,9 +126,9 @@ class InvoiceStatusService extends BaseNoTenantService
     {
         $id = $isUpdate ? ( $data[ 'id' ] ?? null ) : null;
 
-        $rules = [
+        $rules = [ 
             'name'        => 'required|string|max:255',
-            'slug'        => [
+            'slug'        => [ 
                 'required',
                 'string',
                 'max:255',
@@ -152,6 +152,24 @@ class InvoiceStatusService extends BaseNoTenantService
         }
 
         return $this->success( $data );
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
+        return $this->success();
     }
 
     /**

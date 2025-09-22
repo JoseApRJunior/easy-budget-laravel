@@ -12,13 +12,24 @@ use App\Support\ServiceResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
-class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
+class PdfService extends BaseNoTenantService
 {
     private ActivityService $activityService;
 
     public function __construct( ActivityService $activityService )
     {
+        parent::__construct();
         $this->activityService = $activityService;
+    }
+
+    /**
+     * Retorna a classe do modelo Pdf.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\Pdf();
     }
 
     protected function findEntityById( int $id ): ?Model
@@ -27,17 +38,16 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
         return \App\Models\Pdf::find( $id );
     }
 
-    protected function listEntities( array $filters = [] ): array
+    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
     {
         $query = \App\Models\Pdf::query();
 
-        if ( isset( $filters[ 'order' ] ) ) {
-            $order = $filters[ 'order' ];
-            $query->orderBy( $order[ 0 ] ?? 'id', $order[ 1 ] ?? 'asc' );
+        if ( $orderBy !== null ) {
+            $query->orderBy( $orderBy[ 0 ] ?? 'id', $orderBy[ 1 ] ?? 'asc' );
         }
 
-        if ( isset( $filters[ 'limit' ] ) ) {
-            $query->limit( (int) $filters[ 'limit' ] );
+        if ( $limit !== null ) {
+            $query->limit( $limit );
         }
 
         return $query->get()->all();
@@ -73,7 +83,7 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
         return $entity->delete();
     }
 
-    protected function canDeleteEntity( int $id ): bool
+    protected function canDeleteEntity( Model $entity ): bool
     {
         // Lógica para verificar se pode deletar (ex: não referenciada)
         return true;
@@ -93,7 +103,7 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
         $pdfPath = storage_path( 'app/pdfs/' . uniqid() . '.pdf' );
         // Simular geração: file_put_contents($pdfPath, 'PDF content stub for ' . $type);
 
-        $pdfData = [
+        $pdfData = [ 
             'path'         => $pdfPath,
             'type'         => $type,
             'data'         => $data,
@@ -117,7 +127,7 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
     public function generateBudgetPdf( \App\Models\Budget $budget, string $type = 'invoice' ): ServiceResult
     {
         try {
-            $pdfData = [
+            $pdfData = [ 
                 'title'       => "Orçamento #{$budget->id}",
                 'content'     => "PDF do orçamento #{$budget->id} - Cliente: {$budget->customer->name}",
                 'budget_id'   => $budget->id,
@@ -138,7 +148,7 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
 
     private function validatePdfData( array $data, string $type ): ServiceResult
     {
-        $rules = [
+        $rules = [ 
             'title'   => 'required|string|max:255',
             'content' => 'required|string', // ou array para templates
         ];
@@ -166,7 +176,6 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
 
     // listAll removed - use list( ['order' => $orderBy, 'limit' => $limit] ) instead
 
-
     /**
      * Validação específica para PDFs globais.
      *
@@ -177,8 +186,8 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
     protected function validateForGlobal( array $data, bool $isUpdate = false ): ServiceResult
     {
         $id    = $data[ 'id' ] ?? null;
-        $rules = [
-            'path'     => [
+        $rules = [ 
+            'path'     => [ 
                 'required',
                 'string',
                 'max:500',
@@ -195,6 +204,24 @@ class PdfService extends BaseNoTenantService implements ServiceNoTenantInterface
             return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $messages ) );
         }
 
+        return $this->success();
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
         return $this->success();
     }
 

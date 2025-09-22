@@ -20,7 +20,18 @@ class RoleService extends BaseNoTenantService
 
     public function __construct( RoleRepository $roleRepository )
     {
+        parent::__construct();
         $this->roleRepository = $roleRepository;
+    }
+
+    /**
+     * Retorna a classe do modelo Role.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): Model
+    {
+        return new \App\Models\Role();
     }
 
     /**
@@ -43,8 +54,15 @@ class RoleService extends BaseNoTenantService
         return $this->roleRepository->findById( $id );
     }
 
-    protected function listEntities( array $filters = [] ): array
+    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
     {
+        $filters = [];
+        if ( $orderBy !== null ) {
+            $filters[ 'order' ] = $orderBy;
+        }
+        if ( $limit !== null ) {
+            $filters[ 'limit' ] = $limit;
+        }
         return $this->roleRepository->findAll( $filters );
     }
 
@@ -80,12 +98,8 @@ class RoleService extends BaseNoTenantService
         return $entity->delete();
     }
 
-    protected function canDeleteEntity( int $id ): bool
+    protected function canDeleteEntity( Model $entity ): bool
     {
-        $entity = $this->findEntityById( $id );
-        if ( !$entity ) {
-            return false;
-        }
         $userCount = \App\Models\User::where( 'role_id', $entity->id )->count();
         return $userCount === 0;
     }
@@ -118,6 +132,24 @@ class RoleService extends BaseNoTenantService
             $messages = $validator->errors()->all();
             return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $messages ) );
         }
+        return $this->success();
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
         return $this->success();
     }
 

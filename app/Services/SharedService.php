@@ -13,22 +13,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
-class SharedService extends BaseNoTenantService implements ServiceNoTenantInterface
+class SharedService extends BaseNoTenantService
 {
     private ActivityService $activityService;
 
     public function __construct( ActivityService $activityService )
     {
+        parent::__construct();
         $this->activityService = $activityService;
     }
 
+    /**
+     * Retorna a classe do modelo Activity (usado para logging).
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\Activity();
+    }
+
     // Overrides mínimos para interface (não aplicável para utilities, throw exception)
-    protected function findEntityById( int $tenantId ): ?Model
+    protected function findEntityById( int $id ): ?Model
     {
         throw new \LogicException( 'CRUD não suportado em SharedService.' );
     }
 
-    protected function listEntities( array $filters = [] ): array
+    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
     {
         throw new \LogicException( 'CRUD não suportado em SharedService.' );
     }
@@ -126,6 +137,24 @@ class SharedService extends BaseNoTenantService implements ServiceNoTenantInterf
     protected function validateForGlobal( array $data, bool $isUpdate = false ): ServiceResult
     {
         // Validação genérica para utilities, ou skip
+        return $this->success();
+    }
+
+    /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
         return $this->success();
     }
 

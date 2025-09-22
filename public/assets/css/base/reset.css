@@ -1,0 +1,36 @@
+/* Reset básico */
+html {
+   scroll-behavior: smooth;
+}
+
+body {
+   min-height: 100vh;
+   font-family: var(--font-primary);
+   background-color: var(--bg-color);
+   color: var(--text-color);
+   margin: 0;
+   padding: 0;
+}
+
+/* Reset de foco */
+:focus-visible {
+   outline: 2px solid var(--primary-color);
+   outline-offset: 2px;
+   box-shadow: var(--form-focus-shadow);
+}
+
+/* Classe utilitária para elementos escondidos */
+.visually-hidden {
+   position: absolute;
+   width: 1px;
+   height: 1px;
+   padding: 0;
+   margin: -1px;
+   overflow: hidden;
+   clip: rect(0, 0, 0, 0);
+   border: 0;
+}
+
+.d-none {
+   display: none !important;
+}

@@ -22,19 +22,22 @@ class HomeController extends Controller
     public function index( Request $request ): View
     {
         $user = Auth::user();
-        if ( !$user ) {
-            return view( 'pages.home.index', [ 'welcome' => true ] );
-        }
 
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
-
+        // Carregar planos para todos os usuários (autenticados e não autenticados)
         $result = $this->planService->list();
         if ( !$result->isSuccess() ) {
             abort( 500, 'Erro ao carregar planos' );
         }
 
         $plans = $result->getData();
+
+        if ( !$user ) {
+            $welcome = true; // Define a variável $welcome para usuários não autenticados
+            return view( 'pages.home.index', compact( 'plans', 'welcome' ) );
+        }
+
+        $tenantId   = $user->tenant_id ?? 1;
+        $providerId = $user->provider_id ?? $user->id;
 
         // $recentBudgets   = $this->budgetService->getBudgetsForProvider( $providerId, [ 'limit' => 5 ] );
         // $recentCustomers = $this->customerService->search( '', $tenantId, $providerId );

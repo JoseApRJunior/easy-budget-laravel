@@ -1,0 +1,30 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+<div class="container-fluid py-1">
+  {% include 'partials/settings/header.twig' %}
+
+  <div class="row g-4">
+    <!-- Menu Lateral -->
+    <div class="col-12 col-md-3">
+      {% include 'partials/settings/sidebar.twig' %}
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="col-12 col-md-9">
+      <div class="tab-content">
+        {% include 'partials/settings/tabs/profile.twig' %}
+        {% include 'partials/settings/tabs/general.twig' %}
+        {% include 'partials/settings/tabs/notifications.twig' %}
+        {% include 'partials/settings/tabs/security.twig' %}
+        {% include 'partials/settings/tabs/integration.twig' %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<script src="/assets/js/settings.js"></script>
+{% endblock %}

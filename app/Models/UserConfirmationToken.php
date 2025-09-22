@@ -38,8 +38,8 @@ class UserConfirmationToken extends Model
     protected $casts = [ 
         'tenant_id'  => 'integer',
         'expires_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**

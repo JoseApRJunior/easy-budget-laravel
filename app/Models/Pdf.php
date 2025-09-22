@@ -26,7 +26,7 @@ class Pdf extends Model
     protected $casts = [ 
         'data'         => 'array',
         'generated_at' => 'datetime',
-        'created_at'   => 'datetime',
-        'updated_at'   => 'datetime'
+        'created_at'   => 'immutable_datetime',
+        'updated_at'   => 'immutable_datetime'
     ];
 }

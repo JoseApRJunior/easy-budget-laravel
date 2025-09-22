@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -95,10 +96,16 @@ class PlansWithPlanSubscription extends Model
 
     /**
      * Get the plan subscription that owns the PlansWithPlanSubscription.
+     *
+     * Este relacionamento utiliza chave primária compartilhada (id) para conectar
+     * a view PlansWithPlanSubscription com a tabela PlanSubscription.
+     * Utilizado para relatórios que precisam acessar dados detalhados da assinatura.
+     *
+     * @return HasOne
      */
-    public function planSubscription(): BelongsTo
+    public function planSubscription(): HasOne
     {
-        return $this->belongsTo( PlanSubscription::class, 'id' );
+        return $this->hasOne(PlanSubscription::class, 'id', 'id');
     }
 
     /**
