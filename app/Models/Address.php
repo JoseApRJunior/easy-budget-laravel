@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class Address extends Model
 {
-    use BelongsToTenant;
+    use TenantScoped;
 
     /**
      * The table associated with the model.
@@ -47,8 +47,8 @@ class Address extends Model
         'city'           => 'string',
         'state'          => 'string',
         'cep'            => 'string',
-        'created_at'     => 'datetime_immutable',
-        'updated_at'     => 'datetime_immutable',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**

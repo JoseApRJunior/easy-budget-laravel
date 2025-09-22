@@ -23,7 +23,7 @@ class ContactService extends BaseTenantService implements ServiceInterface
         $this->contactRepository = $contactRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         return $this->contactRepository->findByIdAndTenantId( $id, $tenantId );
     }
@@ -96,7 +96,7 @@ class ContactService extends BaseTenantService implements ServiceInterface
         return $this->success();
     }
 
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         $entity = $this->findEntityByIdAndTenantId( $id, $tenantId );
         if ( !$entity ) {
@@ -124,9 +124,9 @@ class ContactService extends BaseTenantService implements ServiceInterface
      * Atualiza um contato existente pelo ID e tenant.
      * Delega para a classe base que gerencia validação, atualização e persistência.
      */
-    public function updateByIdAndTenantId( int $id, int $tenantId, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
-        return parent::updateByIdAndTenantId( $id, $tenantId, $data );
+        return parent::updateByIdAndTenantId( $id, $data, $tenantId );
     }
 
     public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult

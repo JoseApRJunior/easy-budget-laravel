@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class Customer extends Model
 {
-    use BelongsToTenant;
+    use TenantScoped;
 
     /**
      * The table associated with the model.
@@ -48,7 +48,7 @@ class Customer extends Model
      * @var array<string, string>
      */
     protected $casts = [ 
-        'tenant_id'      => 'string',
+        'tenant_id'      => 'integer',
         'common_data_id' => 'integer',
         'contact_id'     => 'integer',
         'address_id'     => 'integer',

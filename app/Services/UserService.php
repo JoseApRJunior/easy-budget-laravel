@@ -57,11 +57,11 @@ class UserService extends BaseTenantService
     /**
      * Busca um usuário pelo ID e tenant_id.
      *
-     * @param mixed $id ID do usuário
+     * @param int $id ID do usuário
      * @param int $tenant_id ID do tenant (snake_case conforme padrão legacy)
      * @return ServiceResult
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         try {
             $user = $this->findEntityByIdAndTenantId( $id, $tenant_id );
@@ -147,7 +147,7 @@ class UserService extends BaseTenantService
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             $user = $this->findEntityByIdAndTenantId( $id, $tenant_id );
@@ -221,7 +221,7 @@ class UserService extends BaseTenantService
     /**
      * Encontra usuário por ID e tenant.
      */
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?EloquentModel
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?EloquentModel
     {
         return $this->userRepository->findByIdAndTenantId( $id, $tenantId );
     }

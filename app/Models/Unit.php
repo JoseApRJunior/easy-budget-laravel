@@ -16,14 +16,13 @@ class Unit extends Model
 
     protected $table = 'units';
 
-    protected $fillable = [
+    protected $fillable = [ 
+        'slug',
         'name',
-        'symbol',
-        'type',
         'is_active',
     ];
 
-    protected $casts = [
+    protected $casts = [ 
         'is_active' => 'boolean',
     ];
 

@@ -39,7 +39,7 @@ class CustomerService extends BaseTenantService
         $this->addressRepository    = $addressRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         return $this->customerRepository->findByIdAndTenantId( $id, (int) $tenantId );
     }
@@ -52,7 +52,7 @@ class CustomerService extends BaseTenantService
     protected function createEntity( array $data, int $tenantId ): Model
     {
         $customer = new Customer();
-        $customer->fill( [
+        $customer->fill( [ 
             'tenant_id' => $tenantId,
             'name'      => $data[ 'name' ],
             'status'    => $data[ 'status' ] ?? 'active',
@@ -94,7 +94,7 @@ class CustomerService extends BaseTenantService
 
     public function validateForTenant( array $data, int $tenant_id, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [
+        $rules = [ 
             'name'  => 'required|string|max:255',
             'email' => 'nullable|email',
             'phone' => 'nullable|string|max:20',
@@ -138,11 +138,11 @@ class CustomerService extends BaseTenantService
     /**
      * Busca um cliente pelo ID e tenant_id.
      *
-     * @param mixed $id ID do cliente
+     * @param int $id ID do cliente
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         try {
             $customer = $this->findEntityByIdAndTenantId( $id, $tenantId );
@@ -213,12 +213,12 @@ class CustomerService extends BaseTenantService
     /**
      * Atualiza cliente por ID e tenant_id.
      *
-     * @param mixed $id ID do cliente
+     * @param int $id ID do cliente
      * @param int $tenantId ID do tenant
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( mixed $id, int $tenantId, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             $customer = $this->findEntityByIdAndTenantId( $id, $tenantId );
@@ -253,11 +253,11 @@ class CustomerService extends BaseTenantService
     /**
      * Deleta cliente por ID e tenant_id.
      *
-     * @param mixed $id ID do cliente
+     * @param int $id ID do cliente
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function deleteByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         try {
             $customer = $this->findEntityByIdAndTenantId( $id, $tenantId );

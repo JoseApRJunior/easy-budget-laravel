@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ActivityService extends BaseTenantService
 {
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         // Assume Activity model exists
         return \App\Models\Activity::where( 'tenant_id', $tenantId )->find( $id );
@@ -76,7 +76,7 @@ class ActivityService extends BaseTenantService
 
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
-        $rules     = [
+        $rules     = [ 
             'action'   => 'required|string',
             'metadata' => 'nullable|array',
             'user_id'  => 'nullable|integer|exists:users,id',
@@ -86,6 +86,38 @@ class ActivityService extends BaseTenantService
             $messages = $validator->errors()->all();
             return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $messages ) );
         }
+        return $this->success( $data );
+    }
+
+    /**
+     * Busca uma atividade pelo ID e tenant_id.
+     *
+     * @param int $id ID da atividade
+     * @param int $tenantId ID do tenant
+     * @return ServiceResult
+     */
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
+    {
+        $entity = $this->findEntityByIdAndTenantId( $id, $tenantId );
+        if ( !$entity ) {
+            return $this->error( OperationStatus::NOT_FOUND, 'Atividade não encontrada.' );
+        }
+        return $this->success( $entity );
+    }
+
+    /**
+     * Lista atividades por tenant_id com filtros.
+     *
+     * @param int $tenant_id ID do tenant
+     * @param array $filters Filtros opcionais
+     * @param ?array $orderBy Ordem dos resultados
+     * @param ?int $limit Limite de resultados
+     * @param ?int $offset Offset dos resultados
+     * @return ServiceResult
+     */
+    public function listByTenantId( int $tenant_id, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): ServiceResult
+    {
+        $data = $this->listEntitiesByTenantId( $tenant_id, $filters, $orderBy, $limit, $offset );
         return $this->success( $data );
     }
 
@@ -110,7 +142,7 @@ class ActivityService extends BaseTenantService
      */
     public function logActivity( string $action, array $data = [], int $tenantId ): ServiceResult
     {
-        $activityData = [
+        $activityData = [ 
             'action'     => $action,
             'metadata'   => $data,
             'user_id'    => Auth::id(),
@@ -155,7 +187,7 @@ class ActivityService extends BaseTenantService
      * @param array $data Dados para atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $validation = $this->validate( $data, true );
         if ( !$validation->isSuccess() ) {

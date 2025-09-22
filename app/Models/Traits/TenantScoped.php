@@ -107,9 +107,22 @@ trait TenantScoped
     {
         $scope      = new TenantScope();
         $dummyModel = new class extends Model
-        {};
+        {
+        };
         $dummyModel->setRawAttributes( [] );
         return $scope->getCurrentTenantId( $dummyModel );
+    }
+
+    /**
+     * Set the testing tenant ID for test environments.
+     * This method allows setting a fixed tenant_id for testing purposes.
+     *
+     * @param  int|null  $tenantId
+     * @return void
+     */
+    public static function setTestingTenantId( ?int $tenantId ): void
+    {
+        config( [ 'tenant.testing_id' => $tenantId ] );
     }
 
     /**

@@ -28,7 +28,6 @@ class Activity extends Model
      */
     protected $fillable = [ 
         'tenant_id',
-        'budget_id',
         'user_id',
         'action_type',
         'entity_type',
@@ -43,9 +42,12 @@ class Activity extends Model
      * @var array<string, string>
      */
     protected $casts = [ 
+        'tenant_id'  => 'integer',
+        'user_id'    => 'integer',
+        'entity_id'  => 'integer',
         'metadata'   => 'array',
-        'created_at' => 'datetime_immutable',
-        'updated_at' => 'datetime_immutable',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**
@@ -54,14 +56,6 @@ class Activity extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
-    }
-
-    /**
-     * Get the budget that owns the Activity.
-     */
-    public function budget(): BelongsTo
-    {
-        return $this->belongsTo( Budget::class);
     }
 
     /**

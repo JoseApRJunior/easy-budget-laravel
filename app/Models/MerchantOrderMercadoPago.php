@@ -36,9 +36,12 @@ class MerchantOrderMercadoPago extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'total_amount' => 'float',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'tenant_id' => 'integer',
+        'provider_id' => 'integer',
+        'plan_subscription_id' => 'integer',
+        'total_amount' => 'decimal:2',
+        'created_at'   => 'datetime',
+        'updated_at'   => 'datetime',
     ];
 
     /**
@@ -46,7 +49,7 @@ class MerchantOrderMercadoPago extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -54,7 +57,7 @@ class MerchantOrderMercadoPago extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
     /**
@@ -62,6 +65,7 @@ class MerchantOrderMercadoPago extends Model
      */
     public function planSubscription(): BelongsTo
     {
-        return $this->belongsTo(PlanSubscription::class);
+        return $this->belongsTo( PlanSubscription::class);
     }
+
 }

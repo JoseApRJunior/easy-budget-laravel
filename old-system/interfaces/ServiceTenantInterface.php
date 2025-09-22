@@ -12,11 +12,11 @@ interface ServiceTenantInterface
     /**
      * Busca uma entidade pelo ID e tenant ID.
      *
-     * @param mixed $id
+     * @param int $id
      * @param int $tenantId
      * @return ServiceResult
      */
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult;
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult;
 
     /**
      * Lista entidades pelo tenant ID.
@@ -42,21 +42,21 @@ interface ServiceTenantInterface
     /**
      * Atualiza entidade por ID e tenant ID.
      *
-     * @param mixed $id
+     * @param int $id
      * @param array $data
      * @param int $tenantId
      * @return ServiceResult
      */
-    public function update( mixed $id, array $data, int $tenantId ): ServiceResult;
+    public function update( int $id, array $data, int $tenantId ): ServiceResult;
 
     /**
      * Remove entidade por ID e tenant ID.
      *
-     * @param mixed $id
+     * @param int $id
      * @param int $tenantId
      * @return ServiceResult
      */
-    public function delete( mixed $id, int $tenantId ): ServiceResult;
+    public function delete( int $id, int $tenantId ): ServiceResult;
 
     /**
      * Valida dados para tenant (create/update).

@@ -20,7 +20,7 @@ class Schedule extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'service_id',
         'user_confirmation_token_id',
@@ -34,11 +34,14 @@ class Schedule extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'start_date_time' => 'datetime',
-        'end_date_time' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'tenant_id'                  => 'integer',
+        'service_id'                 => 'integer',
+        'user_confirmation_token_id' => 'integer',
+        'start_date_time'            => 'datetime',
+        'end_date_time'              => 'datetime',
+        'created_at'                 => 'datetime',
+        'updated_at'                 => 'datetime',
     ];
 
     /**
@@ -46,7 +49,7 @@ class Schedule extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -54,7 +57,7 @@ class Schedule extends Model
      */
     public function service(): BelongsTo
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo( Service::class);
     }
 
     /**
@@ -62,6 +65,7 @@ class Schedule extends Model
      */
     public function userConfirmationToken(): BelongsTo
     {
-        return $this->belongsTo(UserConfirmationToken::class);
+        return $this->belongsTo( UserConfirmationToken::class);
     }
+
 }

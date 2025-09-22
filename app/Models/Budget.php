@@ -64,11 +64,9 @@ class Budget extends Model
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
         'due_date'                   => 'datetime',
-        'attachment'                 => 'array',
-        'history'                    => 'array',
         'pdf_verification_hash'      => 'string',
-        'created_at'                 => 'datetime_immutable',
-        'updated_at'                 => 'datetime_immutable',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'immutable_datetime',
     ];
 
     /**
@@ -98,6 +96,48 @@ class Budget extends Model
     public function services(): HasMany
     {
         return $this->hasMany( Service::class);
+    }
+
+    /**
+     * Get the history attribute as array.
+     */
+    public function getHistoryAttribute( $value ): mixed
+    {
+        if ( empty( $value ) ) {
+            return [];
+        }
+
+        $decoded = json_decode( $value, true );
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+    }
+
+    /**
+     * Get the attachment attribute as array.
+     */
+    public function getAttachmentAttribute( $value ): mixed
+    {
+        if ( empty( $value ) ) {
+            return [];
+        }
+
+        $decoded = json_decode( $value, true );
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+    }
+
+    /**
+     * Set the attachment attribute as JSON.
+     */
+    public function setAttachmentAttribute( $value ): void
+    {
+        $this->attributes[ 'attachment' ] = is_array( $value ) ? json_encode( $value ) : $value;
+    }
+
+    /**
+     * Set the history attribute as JSON.
+     */
+    public function setHistoryAttribute( $value ): void
+    {
+        $this->attributes[ 'history' ] = is_array( $value ) ? json_encode( $value ) : $value;
     }
 
 }

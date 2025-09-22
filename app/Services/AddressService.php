@@ -23,7 +23,7 @@ class AddressService extends BaseTenantService implements ServiceInterface
         $this->addressRepository = $addressRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?EloquentModel
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?EloquentModel
     {
         return $this->addressRepository->findByIdAndTenantId( $id, $tenantId );
     }
@@ -93,7 +93,7 @@ class AddressService extends BaseTenantService implements ServiceInterface
         return $this->success();
     }
 
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         $entity = $this->findEntityByIdAndTenantId( $id, $tenantId );
         if ( !$entity ) {
@@ -113,9 +113,9 @@ class AddressService extends BaseTenantService implements ServiceInterface
         return parent::createByTenantId( $data, $tenantId );
     }
 
-    public function updateByIdAndTenantId( int $id, int $tenantId, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
-        return parent::updateByIdAndTenantId( $id, $tenantId, $data );
+        return parent::updateByIdAndTenantId( $id, $data, $tenantId );
     }
 
     public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult

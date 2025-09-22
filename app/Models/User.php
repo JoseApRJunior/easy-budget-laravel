@@ -8,6 +8,7 @@ use App\Models\Activity;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,8 +20,7 @@ use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
-    use HasFactory;
-    use TenantScoped;
+    use HasFactory, TenantScoped, Notifiable;
 
     /**
      * The table associated with the model.
@@ -36,16 +36,8 @@ class User extends Authenticatable
      */
     protected $fillable = [ 
         'tenant_id',
-        'name',
-        'first_name',
-        'last_name',
         'email',
         'password',
-        'phone',
-        'address',
-        'city',
-        'state',
-        'zip_code',
         'is_active',
         'logo',
     ];
@@ -65,22 +57,13 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [ 
-        'tenant_id'         => 'integer',
-        'name'              => 'string',
-        'first_name'        => 'string',
-        'last_name'         => 'string',
-        'email'             => 'string',
-        'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'phone'             => 'string',
-        'address'           => 'string',
-        'city'              => 'string',
-        'state'             => 'string',
-        'zip_code'          => 'string',
-        'logo'              => 'string',
-        'is_active'         => 'boolean',
-        'created_at'        => 'datetime',
-        'updated_at'        => 'datetime',
+        'tenant_id'  => 'integer',
+        'email'      => 'string',
+        'password'   => 'hashed',
+        'logo'       => 'string',
+        'is_active'  => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -160,25 +143,6 @@ class User extends Authenticatable
     public function activities(): HasMany
     {
         return $this->hasMany( Activity::class);
-    }
-
-    /**
-     * Boot method para validação de unicidade de email por tenant.
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating( function ($user) {
-            // Validação de unicidade de email por tenant
-            $existing = self::where( 'tenant_id', $user->tenant_id )
-                ->where( 'email', $user->email )
-                ->first();
-
-            if ( $existing ) {
-                throw new \Exception( 'Email já existe para este tenant.' );
-            }
-        } );
     }
 
     /**

@@ -49,8 +49,8 @@ class Provider extends Model
         'contact_id'     => 'integer',
         'address_id'     => 'integer',
         'terms_accepted' => 'boolean',
-        'created_at'     => 'datetime_immutable',
-        'updated_at'     => 'datetime_immutable',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**
@@ -85,7 +85,8 @@ class Provider extends Model
         parent::boot();
 
         static::creating( function ($provider) {
-            $existing = self::where( 'user_id', $provider->user_id )
+            $existing = $provider->newQuery()
+                ->where( 'user_id', $provider->user_id )
                 ->where( 'tenant_id', $provider->tenant_id )
                 ->first();
 

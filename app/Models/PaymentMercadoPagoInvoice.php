@@ -20,7 +20,7 @@ class PaymentMercadoPagoInvoice extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'invoice_id',
         'payment_id',
@@ -35,11 +35,13 @@ class PaymentMercadoPagoInvoice extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'transaction_amount' => 'float',
-        'transaction_date' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'tenant_id'          => 'integer',
+        'invoice_id'         => 'integer',
+        'transaction_amount' => 'decimal:2',
+        'transaction_date'   => 'datetime',
+        'created_at'         => 'datetime',
+        'updated_at'         => 'datetime',
     ];
 
     /**
@@ -47,7 +49,7 @@ class PaymentMercadoPagoInvoice extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -55,6 +57,7 @@ class PaymentMercadoPagoInvoice extends Model
      */
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo( Invoice::class);
     }
+
 }

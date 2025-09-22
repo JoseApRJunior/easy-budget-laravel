@@ -13,9 +13,9 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+    protected $fillable = [ 
         'name',
-        'guard_name',
+        'slug',
     ];
 
     /**
@@ -24,7 +24,7 @@ class Role extends Model
      * Roles são globais, mas assignments a users são scoped via pivot tenant_id em user_roles.
      */
 
-    protected $casts = [
+    protected $casts = [ 
         'guard_name' => 'string',
     ];
 

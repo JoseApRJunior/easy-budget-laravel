@@ -143,7 +143,7 @@ class SharedService implements ServiceInterface
      * @param array<string, mixed> $data Dados para atualização
      * @return ServiceResult Resultado da operação com status, mensagem e dados
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validar tenant_id
@@ -284,7 +284,7 @@ class SharedService implements ServiceInterface
     {
         try {
             $hashedToken = hash( 'sha256', $token );
-            $entity = $this->userConfirmationTokenRepository->findByToken( $hashedToken );
+            $entity      = $this->userConfirmationTokenRepository->findByToken( $hashedToken );
 
             if ( $entity === null ) {
                 return ServiceResult::error( OperationStatus::NOT_FOUND, 'Token de confirmação inválido ou não encontrado.' );
@@ -324,7 +324,7 @@ class SharedService implements ServiceInterface
             }
 
             // Gera um token cru para confirmação de conta
-            $rawToken = bin2hex( random_bytes( 32 ) );
+            $rawToken    = bin2hex( random_bytes( 32 ) );
             $hashedToken = hash( 'sha256', $rawToken );
             $expiresDate = ( new DateTimeImmutable() )->modify( '+7 days' );
 
@@ -337,11 +337,11 @@ class SharedService implements ServiceInterface
             );
 
             // Retornar dados com raw_token para envio de email
-            $resultData = [
-                'id' => null, // Será preenchido após save
-                'raw_token' => $rawToken,
+            $resultData = [ 
+                'id'           => null, // Será preenchido após save
+                'raw_token'    => $rawToken,
                 'hashed_token' => $hashedToken,
-                'expires_at' => $expiresDate
+                'expires_at'   => $expiresDate
             ];
 
             // Salvar via repository
@@ -352,7 +352,7 @@ class SharedService implements ServiceInterface
                 return ServiceResult::error( OperationStatus::ERROR, 'Falha ao gerar novo token de confirmação.' );
             }
 
-            $resultData['id'] = $savedEntity->getId();
+            $resultData[ 'id' ] = $savedEntity->getId();
 
             return ServiceResult::success( $resultData, 'Novo token de confirmação gerado com sucesso.' );
         } catch ( Exception $e ) {
@@ -411,10 +411,11 @@ class SharedService implements ServiceInterface
             // Buscar provedor completo usando o model Provider
             return $this->provider->getProviderFullByUserId(
                 $userConfirmationToken->getUserId(),
-                $userConfirmationToken->getTenantId()
+                $userConfirmationToken->getTenantId(),
             );
         } catch ( Exception $e ) {
             throw new \RuntimeException( "Falha ao buscar prestador por token, tente mais tarde ou entre em contato com suporte.", 0, $e );
         }
     }
+
 }

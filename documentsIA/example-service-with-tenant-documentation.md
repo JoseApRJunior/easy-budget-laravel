@@ -209,7 +209,7 @@ class MeuService extends BaseTenantService
         // Implementação específica
     }
 
-    public function updateByIdAndTenantId(int $id, int $tenant_id, array $data): ServiceResult
+    public function updateByIdAndTenantId(int $id, array $data, int $tenantId): ServiceResult
     {
         // Implementação específica
     }

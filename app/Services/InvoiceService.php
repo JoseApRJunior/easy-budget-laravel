@@ -23,7 +23,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
         $this->invoiceRepository = $invoiceRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         $tenantId = (int) $tenantId;
         return $this->invoiceRepository->findByIdAndTenantId( $id, (int) $tenantId );
@@ -80,20 +80,20 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
         $tenantId  = (int) $tenantId;
-        $rules     = [
-            'customer_id' => [
+        $rules     = [ 
+            'customer_id' => [ 
                 'required',
                 Rule::exists( 'customers', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],
-            'provider_id' => [
+            'provider_id' => [ 
                 'required',
                 Rule::exists( 'providers', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],
-            'service_id'  => [
+            'service_id'  => [ 
                 'nullable',
                 Rule::exists( 'services', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],
-            'budget_id'   => [
+            'budget_id'   => [ 
                 'nullable',
                 Rule::exists( 'budgets', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],
@@ -108,7 +108,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
         }
         if ( isset( $data[ 'items' ] ) ) {
             foreach ( $data[ 'items' ] as $item ) {
-                $itemRules     = [
+                $itemRules     = [ 
                     'description' => 'required|string|max:255',
                     'quantity'    => 'required|numeric|min:1',
                     'price'       => 'required|numeric|min:0',
@@ -123,7 +123,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
         return $this->success();
     }
 
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         $tenantId = (int) $tenantId;
         $entity   = $this->findEntityByIdAndTenantId( $id, $tenantId );
@@ -151,7 +151,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
             $entity = $this->createEntity( $data, $tenantId );
             if ( isset( $data[ 'items' ] ) && is_array( $data[ 'items' ] ) ) {
                 foreach ( $data[ 'items' ] as $itemData ) {
-                    $entity->items()->create( [
+                    $entity->items()->create( [ 
                         'tenant_id'   => $tenantId,
                         'invoice_id'  => $entity->id,
                         'description' => $itemData[ 'description' ],
@@ -165,7 +165,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
         } );
     }
 
-    public function updateByIdAndTenantId( mixed $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $tenantId = (int) $tenant_id;
         return DB::transaction( function () use ($id, $data, $tenantId) {
@@ -181,7 +181,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
             if ( isset( $data[ 'items' ] ) && is_array( $data[ 'items' ] ) ) {
                 $entity->items()->delete();
                 foreach ( $data[ 'items' ] as $itemData ) {
-                    $entity->items()->create( [
+                    $entity->items()->create( [ 
                         'tenant_id'   => $tenantId,
                         'invoice_id'  => $entity->id,
                         'description' => $itemData[ 'description' ],
@@ -289,7 +289,7 @@ class InvoiceService extends BaseTenantService implements ServiceInterface
 
     public function validate( array $data, bool $isUpdate = false ): ServiceResult
     {
-        $rules     = [
+        $rules     = [ 
             'amount' => 'required|numeric|min:0',
             'status' => 'required|in:pending,paid,canceled',
             'items'  => 'required|array|min:1',

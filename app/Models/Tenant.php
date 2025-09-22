@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Activity;
+use App\Models\AreaOfActivity;
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\CommonData;
+use App\Models\Invoice;
+use App\Models\MiddlewareMetricHistory;
+use App\Models\MonitoringAlertHistory;
+use App\Models\PlanSubscription;
+use App\Models\Product;
+use App\Models\Profession;
+use App\Models\Provider;
+use App\Models\Service;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
-use App\Models\User;
-use App\Models\Provider;
-use App\Models\Budget;
-use App\Models\Service;
-use App\Models\Invoice;
-use App\Models\Activity;
-use App\Models\PlanSubscription;
-use App\Models\MiddlewareMetricHistory;
-use App\Models\MonitoringAlertHistory;
-use App\Models\CommonData;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\AreaOfActivity;
-use App\Models\Profession;
-
 use Illuminate\Support\Facades\Auth;
 
 class Tenant extends Model
@@ -31,14 +29,10 @@ class Tenant extends Model
 
     protected $fillable = [ 
         'name',
-        'slug',
-        'description',
-        'domain',
-        'is_active',
     ];
 
-    protected $casts = [ 
-        'is_active' => 'boolean',
+    protected $casts = [
+        // No casts needed for basic Tenant entity
     ];
 
     /**
@@ -153,27 +147,6 @@ class Tenant extends Model
             return Auth::user()->tenant ?? null;
         }
         return null;
-    }
-
-    /**
-     * Verifica se o tenant está ativo.
-     *
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->is_active;
-    }
-
-    /**
-     * Escopo para tenants ativos.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive( $query )
-    {
-        return $query->where( 'is_active', true );
     }
 
 }

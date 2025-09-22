@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Tenant;
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class RolePermission extends Pivot
 {
-    use BelongsToTenant;
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -45,8 +45,8 @@ class RolePermission extends Pivot
         'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'datetime_immutable',
-        'updated_at'    => 'datetime_immutable',
+        'created_at'    => 'immutable_datetime',
+        'updated_at'    => 'immutable_datetime',
     ];
 
     /**

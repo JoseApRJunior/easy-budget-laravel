@@ -28,7 +28,6 @@ class ServiceItem extends Model
         'product_id',
         'unit_value',
         'quantity',
-        'total',
     ];
 
     /**
@@ -42,7 +41,6 @@ class ServiceItem extends Model
         'product_id' => 'integer',
         'unit_value' => 'decimal:2',
         'quantity'   => 'integer',
-        'total'      => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

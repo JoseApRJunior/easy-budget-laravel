@@ -24,7 +24,7 @@ class Invoice extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'service_id',
         'customer_id',
@@ -40,7 +40,6 @@ class Invoice extends Model
         'public_hash',
         'discount',
         'notes',
-        'description',
     ];
 
     /**
@@ -48,7 +47,7 @@ class Invoice extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
+    protected $casts = [ 
         'tenant_id'           => 'integer',
         'service_id'          => 'integer',
         'customer_id'         => 'integer',
@@ -56,7 +55,7 @@ class Invoice extends Model
         'code'                => 'string',
         'subtotal'            => 'decimal:2',
         'total'               => 'decimal:2',
-        'due_date'            => 'datetime',
+        'due_date'            => 'date',
         'transaction_date'    => 'datetime',
         'payment_method'      => 'string',
         'payment_id'          => 'string',
@@ -64,9 +63,8 @@ class Invoice extends Model
         'public_hash'         => 'string',
         'discount'            => 'decimal:2',
         'notes'               => 'string',
-        'description'         => 'string',
-        'created_at'          => 'datetime_immutable',
-        'updated_at'          => 'datetime_immutable',
+        'created_at'          => 'immutable_datetime',
+        'updated_at'          => 'immutable_datetime',
     ];
 
     /**

@@ -27,7 +27,7 @@ class ServiceService extends BaseTenantService implements PaginatableInterface, 
         $this->serviceRepository = $serviceRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenant_id ): ?EloquentModel
+    protected function findEntityByIdAndTenantId( int $id, int $tenant_id ): ?EloquentModel
     {
         return $this->serviceRepository->findByIdAndTenantId( $id, (int) $tenant_id );
     }
@@ -102,13 +102,13 @@ class ServiceService extends BaseTenantService implements PaginatableInterface, 
         return parent::createByTenantId( $data, $tenantId );
     }
 
-    public function updateByIdAndTenantId( mixed $id, int $tenantId, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $validation = $this->validateForTenant( $data, $tenantId, true );
         if ( !$validation->isSuccess() ) {
             return $validation;
         }
-        return parent::updateByIdAndTenantId( $id, $tenantId, $data );
+        return parent::updateByIdAndTenantId( $id, $data, $tenantId );
     }
 
     public function deleteManyByTenantId( array $id, int $tenantId ): ServiceResult
@@ -168,7 +168,7 @@ class ServiceService extends BaseTenantService implements PaginatableInterface, 
     /**
      * Busca service por ID e tenant_id.
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         $service = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$service ) {
@@ -189,7 +189,7 @@ class ServiceService extends BaseTenantService implements PaginatableInterface, 
     /**
      * Deleta service por ID e tenant_id.
      */
-    public function deleteByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function deleteByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         $service = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$service ) {

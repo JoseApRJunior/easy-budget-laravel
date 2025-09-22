@@ -26,7 +26,7 @@ class Service extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'budget_id',
         'category_id',
@@ -37,7 +37,6 @@ class Service extends Model
         'discount',
         'total',
         'due_date',
-        'observation',
     ];
 
     /**
@@ -45,7 +44,7 @@ class Service extends Model
      *
      * @var array<string, float>
      */
-    protected $attributes = [ 
+    protected $attributes = [
         'discount' => 0.0,
         'total'    => 0.0,
     ];
@@ -55,7 +54,7 @@ class Service extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'             => 'integer',
         'budget_id'             => 'integer',
         'category_id'           => 'integer',
@@ -64,7 +63,6 @@ class Service extends Model
         'total'                 => 'decimal:2',
         'due_date'              => 'datetime',
         'pdf_verification_hash' => 'string',
-        'observation'           => 'string',
         'created_at'            => 'datetime',
         'updated_at'            => 'datetime',
     ];

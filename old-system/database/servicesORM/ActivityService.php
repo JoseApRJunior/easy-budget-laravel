@@ -112,7 +112,7 @@ class ActivityService implements ServiceInterface
      * @param array<string, mixed> $data Dados para atualização
      * @return ServiceResult Resultado da operação com status, mensagem e dados
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         return ServiceResult::error(
             OperationStatus::FORBIDDEN,
@@ -167,10 +167,10 @@ class ActivityService implements ServiceInterface
     {
         try {
             $criteria = [];
-            $orderBy = [ 'created_at' => 'DESC' ];
-            
+            $orderBy  = [ 'created_at' => 'DESC' ];
+
             $activities = $this->activityRepository->findAllByTenantId( $tenant_id, $criteria, $orderBy, $limit );
-            
+
             return ServiceResult::success( $activities, 'Atividades recentes encontradas com sucesso.' );
         } catch ( Exception $e ) {
             return ServiceResult::error( OperationStatus::ERROR, 'Erro ao buscar atividades recentes: ' . $e->getMessage() );
@@ -233,7 +233,5 @@ class ActivityService implements ServiceInterface
         }
         return $data;
     }
-
-
 
 }

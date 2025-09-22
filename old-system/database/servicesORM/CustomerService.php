@@ -193,7 +193,7 @@ class CustomerService implements ServiceInterface
      * @param int $tenant_id ID do tenant
      * @return ServiceResult Resultado da operação
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $validation = $this->validate( $data, true );
         if ( !$validation->isSuccess() ) {

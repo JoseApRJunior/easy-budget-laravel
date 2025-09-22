@@ -36,7 +36,7 @@ class ProviderService extends BaseTenantService implements ServiceInterface
         $this->addressRepository    = $addressRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenant_id ): ?EloquentModel
+    protected function findEntityByIdAndTenantId( int $id, int $tenant_id ): ?EloquentModel
     {
         return $this->providerRepository->findByIdAndTenantId( $id, $tenant_id );
     }
@@ -105,7 +105,7 @@ class ProviderService extends BaseTenantService implements ServiceInterface
         return $this->success();
     }
 
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         $entity = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$entity ) {
@@ -141,7 +141,7 @@ class ProviderService extends BaseTenantService implements ServiceInterface
         return $this->success( $entity, 'Fornecedor criado com sucesso.' );
     }
 
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $result = parent::updateByIdAndTenantId( $id, $tenant_id, $data );
         if ( !$result->isSuccess() ) {

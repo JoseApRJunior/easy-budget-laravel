@@ -66,7 +66,7 @@ class ReportStorageService extends BaseTenantService
         $this->authenticatedUser = Auth::user();
 
         // Carrega configuração de relatórios
-        $this->config = config( 'report', [
+        $this->config = config( 'report', [ 
             'allowed_formats' => [ 'pdf', 'csv', 'xlsx' ],
             'max_size'        => 10 * 1024 * 1024, // 10MB
             'storage_disk'    => 'local',
@@ -83,7 +83,7 @@ class ReportStorageService extends BaseTenantService
      * @param int $tenant_id ID do tenant
      * @return ServiceResult
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         try {
             $report = $this->findEntityByIdAndTenantId( $id, $tenant_id );
@@ -159,7 +159,7 @@ class ReportStorageService extends BaseTenantService
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             $report = $this->findEntityByIdAndTenantId( $id, $tenant_id );
@@ -233,7 +233,7 @@ class ReportStorageService extends BaseTenantService
     /**
      * Encontra relatório por ID e tenant.
      */
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenant_id ): ?\Illuminate\Database\Eloquent\Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenant_id ): ?\Illuminate\Database\Eloquent\Model
     {
         return $this->reportRepository->findByIdAndTenantId( $id, $tenant_id );
     }
@@ -252,7 +252,7 @@ class ReportStorageService extends BaseTenantService
     protected function createEntity( array $data, int $tenant_id ): \Illuminate\Database\Eloquent\Model
     {
         $report = new Report();
-        $report->fill( [
+        $report->fill( [ 
             'tenant_id'   => $tenant_id,
             'user_id'     => $this->authenticatedUser->id ?? $data[ 'user_id' ],
             'hash'        => $data[ 'hash' ] ?? $this->generateReportHash( $data ),
@@ -313,7 +313,7 @@ class ReportStorageService extends BaseTenantService
      */
     public function validateForTenant( array $data, int $tenant_id, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [
+        $rules = [ 
             'type'        => 'required|string|max:50',
             'description' => 'required|string|max:255',
             'format'      => 'required|string|in:' . implode( ',', $this->config[ 'allowed_formats' ] ),
@@ -379,7 +379,7 @@ class ReportStorageService extends BaseTenantService
             $existingReport = $this->findDuplicateReport( $reportHash, $data[ 'tenant_id' ] );
 
             if ( $existingReport && !$this->isExpired( $existingReport ) ) {
-                return ServiceResult::success( [
+                return ServiceResult::success( [ 
                     'id'           => $existingReport->id,
                     'file_path'    => $existingReport->file_path,
                     'is_duplicate' => true,
@@ -395,7 +395,7 @@ class ReportStorageService extends BaseTenantService
             $fileInfo = $storageResult->getData();
 
             // Prepara dados para criação do relatório
-            $reportData = [
+            $reportData = [ 
                 'hash'        => $reportHash,
                 'type'        => $data[ 'type' ] ?? 'general',
                 'description' => $data[ 'description' ] ?? '',
@@ -418,7 +418,7 @@ class ReportStorageService extends BaseTenantService
             $report            = $createResult->getData();
             $report->file_path = $fileInfo[ 'path' ];
 
-            return ServiceResult::success( [
+            return ServiceResult::success( [ 
                 'id'        => $report->id,
                 'file_path' => $report->file_path,
                 'hash'      => $reportHash,
@@ -519,7 +519,7 @@ class ReportStorageService extends BaseTenantService
                 return $this->error( OperationStatus::ERROR, 'Falha ao armazenar arquivo.' );
             }
 
-            return ServiceResult::success( [
+            return ServiceResult::success( [ 
                 'path'   => $filePath,
                 'size'   => $contentSize,
                 'format' => $format,

@@ -27,8 +27,6 @@ class InvoiceStatus extends Model
         'color',
         'icon',
         'description',
-        'order_index',
-        'is_active',
     ];
 
     /**
@@ -44,10 +42,7 @@ class InvoiceStatus extends Model
      * @var array<string, string>
      */
     protected $casts = [ 
-        'order_index' => 'integer',
-        'is_active'   => 'boolean',
-        'created_at'  => 'datetime_immutable',
-        'updated_at'  => 'datetime_immutable',
+        'description' => 'string',
     ];
 
     /**

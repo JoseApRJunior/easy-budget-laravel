@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * - getByIdAndTenantId(int $id, int $tenant_id): ServiceResult
  * - listByTenantId(int $tenant_id, array $filters = []): ServiceResult
  * - createByTenantId(array $data, int $tenant_id): ServiceResult
- * - updateByIdAndTenantId(int $id, int $tenant_id, array $data): ServiceResult
+ * - updateByIdAndTenantId(int $id, array $data, int $tenantId): ServiceResult
  * - deleteByIdAndTenantId(int $id, int $tenant_id): ServiceResult
  *
  * EXEMPLOS DE MÉTODOS CUSTOMIZADOS:
@@ -174,7 +174,7 @@ class ExampleService extends BaseTenantService
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         DB::beginTransaction();
         try {

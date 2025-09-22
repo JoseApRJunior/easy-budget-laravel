@@ -49,7 +49,7 @@ class BudgetService extends BaseTenantService
         $this->notificationService = $notificationService;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         return $this->budgetRepository->findByIdAndTenantId( $id, $tenantId );
     }
@@ -104,7 +104,7 @@ class BudgetService extends BaseTenantService
     /**
      * Busca budget por ID e tenant_id.
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         $budget = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$budget ) {
@@ -134,7 +134,7 @@ class BudgetService extends BaseTenantService
     /**
      * Atualiza budget por ID e tenant_id.
      */
-    public function updateByIdAndTenantId( mixed $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         $budget = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$budget ) {
@@ -157,7 +157,7 @@ class BudgetService extends BaseTenantService
     /**
      * Deleta budget por ID e tenant_id.
      */
-    public function deleteByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function deleteByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         $budget = $this->findEntityByIdAndTenantId( $id, $tenant_id );
         if ( !$budget ) {

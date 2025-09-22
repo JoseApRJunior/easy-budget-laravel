@@ -47,7 +47,7 @@ interface ServiceInterface extends BaseServiceInterface
      * @param array<string, mixed> $data Dados para atualização
      * @return ServiceResult Resultado da operação com status, mensagem e dados
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult;
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult;
 
     /**
      * Remove uma entidade.

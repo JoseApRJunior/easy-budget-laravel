@@ -20,7 +20,7 @@ class ProviderCredential extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'payment_gateway',
         'access_token_encrypted',
         'refresh_token_encrypted',
@@ -36,10 +36,12 @@ class ProviderCredential extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'expires_in' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'provider_id' => 'integer',
+        'tenant_id'   => 'integer',
+        'expires_in'  => 'integer',
+        'created_at'  => 'datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**
@@ -47,7 +49,7 @@ class ProviderCredential extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
     /**
@@ -55,6 +57,7 @@ class ProviderCredential extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
+
 }

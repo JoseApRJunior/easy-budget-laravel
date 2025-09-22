@@ -13,14 +13,14 @@ class Support extends Model
      *
      * @var string
      */
-    protected $table = 'support';
+    protected $table = 'supports';
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'first_name',
         'last_name',
         'email',
@@ -34,7 +34,7 @@ class Support extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
+    protected $casts = [ 
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -44,6 +44,7 @@ class Support extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
+
 }

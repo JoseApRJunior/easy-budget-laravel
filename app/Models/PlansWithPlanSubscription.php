@@ -58,10 +58,8 @@ class PlansWithPlanSubscription extends Model
         'tenant_id'          => 'integer',
         'provider_id'        => 'integer',
         'plan_id'            => 'integer',
-        'transaction_amount' => 'float',
+        'transaction_amount' => 'decimal:2',
         'end_date'           => 'datetime',
-        'created_at'         => 'datetime',
-        'updated_at'         => 'datetime',
     ];
 
     /**
