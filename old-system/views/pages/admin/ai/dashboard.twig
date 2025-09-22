@@ -1,0 +1,593 @@
+{% extends "layouts/admin.twig" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Dashboard IA </li>
+{% endblock %}
+
+{% block admin_content %}
+<style>
+    .metric-card {
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .prediction-chart {
+        height: 300px;
+        max-height: 300px;
+        margin: 1rem 0;
+    }
+
+    .alert-item {
+        transition: all 0.3s ease;
+    }
+
+    .alert-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h1 class="mb-4">
+                        <i class="bi bi-robot me-3"></i>
+                        Dashboard de Inteligência Artificial
+                    </h1>
+                    <div class="row" id="header-metrics">
+                        <div class="col-md-3 text-center">
+                            <div class="h5 mb-0" id="downtime-reduction">-</div>
+                            <small>Redução de Downtime</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h5 mb-0" id="revenue-increase">-</div>
+                            <small>Aumento de Receita</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h5 mb-0" id="alerts-count">-</div>
+                            <small>Alertas Ativos</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h5 mb-0" id="efficiency-gains">-</div>
+                            <small>Ganhos de Eficiência</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas ROI -->
+    <!-- Métricas ROI -->
+    <div class="row mb-4" id="roi-metrics">
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value text-success" id="roi-downtime">-</div>
+                    <div class="metric-label text-muted">Redução Downtime</div>
+                    <small class="text-muted">Meta: 70-85%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value text-success" id="roi-revenue">-</div>
+                    <div class="metric-label text-muted">Aumento Receita</div>
+                    <small class="text-muted">Vs. período anterior</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value text-success" id="roi-savings">-</div>
+                    <div class="metric-label text-muted">Economia Custos</div>
+                    <small class="text-muted">Automação + Otimização</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value text-success" id="roi-efficiency">-</div>
+                    <div class="metric-label text-muted">Ganhos Eficiência</div>
+                    <small class="text-muted">Processos otimizados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Predições de Churn -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-x text-warning me-2"></i>
+                        Predições de Churn
+                    </h5>
+                </div>
+                <div class="card-body" id="churn-predictions">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Carregando predições...</p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="/admin/ai/reports?type=churn" class="btn btn-primary btn-sm">
+                            Ver Relatório Completo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas Proativos -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        Alertas Proativos
+                    </h5>
+                </div>
+                <div class="card-body" id="alerts-container">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Carregando alertas...</p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button class="btn btn-primary btn-sm" onclick="loadDashboardData()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Atualizar Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previsão de Receita -->
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up text-success me-2"></i>
+                        Previsão de Receita
+                    </h5>
+                </div>
+                <div class="card-body" style="height: 350px;">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="revenueChart" class="prediction-chart"></canvas>
+                    </div>
+                    <div class="row mt-3" id="revenue-forecast">
+                        <div class="col-md-4 text-center">
+                            <h6>Próximo Mês</h6>
+                            <span class="h4 text-success" id="next-month">-</span>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Próximo Trimestre</h6>
+                            <span class="h4 text-primary" id="next-quarter">-</span>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Taxa de Crescimento</h6>
+                            <span class="h4 text-info" id="growth-rate">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oportunidades de Otimização -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        Otimizações
+                    </h5>
+                </div>
+                <div class="card-body" id="optimization-opportunities">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Carregando oportunidades...</p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="/admin/ai/reports?type=optimization" class="btn btn-primary btn-sm">
+                            Ver Todas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <!-- Ações Rápidas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="mb-4">Ações Rápidas de IA</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-primary w-100" onclick="analyzeAllBudgets()">
+                                <i class="bi bi-calculator me-2"></i>
+                                Analisar Orçamentos
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-success w-100" onclick="generateRecommendations()">
+                                <i class="bi bi-magic me-2"></i>
+                                Gerar Recomendações
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-warning w-100" onclick="runAnomalyDetection()">
+                                <i class="bi bi-search me-2"></i>
+                                Detectar Anomalias
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/ai/settings" class="btn btn-secondary w-100">
+                                <i class="bi bi-gear me-2"></i>
+                                Configurações IA
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    let revenueChart;
+    function updateRevenueChart( forecast ) {
+        const ctx = document.getElementById( 'revenueChart' ).getContext( '2d' );
+        if ( revenueChart ) {
+            revenueChart.destroy();
+        }
+        const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        // Dados atuais: usar histórico se disponível no backend, senão simulado para 9 primeiros meses
+        const currentData = forecast.historical ? forecast.historical.slice( 0, 9 ).map( v => v || 0 ) : [45000, 52000, 48000, 61000, 55000, 67000, 73000, 69000, 78000];
+        const forecastData = new Array( 12 ).fill( null );
+        if ( forecast.next_month ) forecastData[9] = forecast.next_month;
+        if ( forecast.next_quarter ) {
+            forecastData[10] = forecast.next_quarter / 3;
+            forecastData[11] = forecast.next_quarter / 3;
+        }
+        revenueChart = new Chart( ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Receita Atual',
+                    data: currentData.concat( forecastData.slice( 9 ) ),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Previsão IA',
+                    data: forecastData,
+                    borderColor: '#f093fb',
+                    backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                height: 300,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function ( value ) {
+                                return 'R$ ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        } );
+    }
+
+    // Inicializar com dados padrão até loadDashboardData
+    updateRevenueChart( { next_month: 95000, next_quarter: 306000, historical: null } );
+
+    function updateAlertsDisplay( alerts ) {
+        const container = document.getElementById( 'alerts-container' );
+        const alertsCount = document.getElementById( 'alerts-count' );
+
+        if ( alerts && alerts.length > 0 ) {
+            container.innerHTML = alerts.map( alert => `
+            <div class="alert alert-${alert.severity === 'critical' ? 'danger' : alert.severity === 'high' ? 'warning' : 'info'} alert-item">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <strong>${alert.client_name || 'Cliente'}</strong>
+                        <p class="mb-1">Probabilidade: ${alert.probability || 0}%</p>
+                    </div>
+                    <span class="badge bg-${alert.severity === 'critical' ? 'danger' : alert.severity === 'high' ? 'warning' : 'info'}">
+                        ${alert.severity === 'critical' ? 'Crítico' : alert.severity === 'high' ? 'Alto' : 'Médio'}
+                    </span>
+                </div>
+            </div>
+        `).join( '' );
+            alertsCount.textContent = alerts.length;
+        } else {
+            container.innerHTML = '<div class="text-center text-muted py-4"><p>Nenhum alerta ativo</p></div>';
+            alertsCount.textContent = '0';
+        }
+    }
+
+    // Carregar dados do dashboard
+    function loadDashboardData() {
+
+        // Carregar todos os dados do dashboard
+        fetch( '/admin/ai/dataset' )
+            .then( response => {
+                // Verificar se a resposta é JSON
+                const contentType = response.headers.get( 'content-type' );
+
+                // Verificar o status da resposta
+                if ( !response.ok ) {
+                    throw new Error( 'Erro HTTP: ' + response.status + ' ' + response.statusText );
+                }
+
+                // Verificar se o Content-Type é JSON
+                if ( !contentType || !contentType.includes( 'application/json' ) ) {
+                    throw new Error( 'Resposta não é JSON válido. Content-Type: ' + contentType );
+                }
+
+                // Ler o corpo da resposta como texto primeiro para depuração
+                return response.text().then( text => {
+                    // Verificar se o texto está vazio
+                    if ( !text ) {
+                        throw new Error( 'Resposta vazia recebida do servidor' );
+                    }
+                    try {
+                        return JSON.parse( text );
+                    } catch ( e ) {
+                        throw new Error( 'Falha ao parsear JSON: ' + e.message + '. Texto recebido: ' + text );
+                    }
+                } );
+            } )
+            .then( data => {
+                // Verificar se os dados foram recebidos corretamente
+                if ( data && typeof data === 'object' ) {
+                    // Atualizar predições de churn
+                    if ( data.insights && data.insights.churn_predictions ) {
+                        updateChurnPredictions( data.insights.churn_predictions );
+                    }
+                    // Atualizar previsão de receita
+                    if ( data.insights && data.insights.revenue_forecast ) {
+                        updateRevenueForecast( data.insights.revenue_forecast );
+                    }
+                    // Atualizar métricas ROI
+                    if ( data.insights && data.insights.roi_metrics ) {
+                        updateROIMetrics( data.insights.roi_metrics );
+                    }
+                    // Atualizar alertas
+                    if ( data.default_risk_alerts ) {
+                        updateAlertsDisplay( data.default_risk_alerts );
+                    }
+                    // Atualizar oportunidades de otimização
+                    if ( data.insights && data.insights.optimization_opportunities ) {
+                        updateOptimizationOpportunities( data.insights.optimization_opportunities );
+                    }
+                    // Atualizar métricas do header
+                    if ( data.insights && data.insights.roi_metrics ) {
+                        updateHeaderMetrics( data.insights.roi_metrics );
+                    }
+                } else {
+                    console.error( 'Erro no dashboard: Dados inválidos recebidos', data );
+                }
+            } )
+            .catch( error => {
+                console.error( 'Erro ao carregar dados:', error );
+                // Exibir mensagem de erro amigável para o usuário
+                document.getElementById( 'header-metrics' ).innerHTML = '<div class="col-12"><div class="alert alert-danger text-center">Erro ao carregar dados do dashboard. Por favor, tente novamente. Detalhes: ' + error.message + '</div></div>';
+            } );
+
+    }
+
+    function updateChurnPredictions( predictions ) {
+        const container = document.getElementById( 'churn-predictions' );
+        if ( predictions && predictions.length > 0 ) {
+            container.innerHTML = predictions.map( pred => `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>${pred.client_name || 'Cliente'}</strong><br>
+                    <small class="text-muted">Risco: ${pred.risk_level === 'critical' ? 'Crítico' : pred.risk_level === 'high' ? 'Alto' : 'Médio'}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-${pred.risk_level === 'critical' ? 'danger' : pred.risk_level === 'high' ? 'warning' : 'info'}">
+                        ${Math.round( ( pred.probability || 0 ) * 100 )}%
+                    </span>
+                </div>
+            </div>
+        `).join( '' );
+        } else {
+            container.innerHTML = '<div class="text-center text-muted py-4"><p>Nenhuma predição de churn encontrada</p></div>';
+        }
+    }
+
+    function updateRevenueForecast( forecast ) {
+        if ( forecast ) {
+            document.getElementById( 'next-month' ).textContent = 'R$ ' + ( forecast.next_month || 0 ).toLocaleString( 'pt-BR', { minimumFractionDigits: 2 } );
+            document.getElementById( 'next-quarter' ).textContent = 'R$ ' + ( forecast.next_quarter || 0 ).toLocaleString( 'pt-BR', { minimumFractionDigits: 2 } );
+            document.getElementById( 'growth-rate' ).textContent = ( ( forecast.growth_rate || 0 ) * 100 ).toFixed( 1 ) + '%';
+            updateRevenueChart( forecast );
+        }
+    }
+
+    function updateROIMetrics( metrics ) {
+        if ( metrics ) {
+            document.getElementById( 'roi-downtime' ).textContent = ( ( metrics.downtime_reduction || 0 ) * 100 ).toFixed( 1 ) + '%';
+            document.getElementById( 'roi-revenue' ).textContent = ( ( metrics.revenue_increase || 0 ) * 100 ).toFixed( 1 ) + '%';
+            document.getElementById( 'roi-savings' ).textContent = ( ( metrics.cost_savings || 0 ) * 100 ).toFixed( 1 ) + '%';
+            document.getElementById( 'roi-efficiency' ).textContent = ( ( metrics.efficiency_gains || 0 ) * 100 ).toFixed( 1 ) + '%';
+        }
+    }
+
+    function updateHeaderMetrics( metrics ) {
+        if ( metrics ) {
+            document.getElementById( 'downtime-reduction' ).textContent = ( ( metrics.downtime_reduction || 0 ) * 100 ).toFixed( 1 ) + '%';
+            document.getElementById( 'revenue-increase' ).textContent = ( ( metrics.revenue_increase || 0 ) * 100 ).toFixed( 1 ) + '%';
+            document.getElementById( 'efficiency-gains' ).textContent = ( ( metrics.efficiency_gains || 0 ) * 100 ).toFixed( 1 ) + '%';
+        }
+    }
+
+    function updateOptimizationOpportunities( opportunities ) {
+        const container = document.getElementById( 'optimization-opportunities' );
+        if ( opportunities && opportunities.length > 0 ) {
+            container.innerHTML = opportunities.map( opp => `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>${opp.type || 'Oportunidade'}</strong><br>
+                    <small class="text-muted">${opp.description || ''}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-info">
+                        ${opp.priority || 'Média'}
+                    </span>
+                </div>
+            </div>
+        `).join( '' );
+        } else {
+            container.innerHTML = '<div class="text-center text-muted py-4"><p>Nenhuma oportunidade encontrada</p></div>';
+        }
+    }
+
+    // Carregar dados ao inicializar
+    document.addEventListener( 'DOMContentLoaded', function () {
+        loadDashboardData();
+    } );
+
+    async function analyzeAllBudgets( event ) {
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Analisando...';
+        try {
+            const response = await fetch( '/admin/ai/analyze-all-budgets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify( { all: true } )
+            } );
+            if ( !response.ok ) {
+                throw new Error( 'Erro HTTP: ' + response.status );
+            }
+            const data = await response.json();
+            if ( data.success ) {
+                alert( 'Análise concluída! ' + ( data.message || 'Verifique os logs para detalhes.' ) );
+                loadDashboardData(); // Recarregar dashboard
+            } else {
+                alert( 'Erro: ' + ( data.message || 'Falha na análise' ) );
+            }
+        } catch ( error ) {
+            alert( 'Erro ao analisar: ' + error.message );
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-calculator me-2"></i>Analisar Orçamentos';
+        }
+    }
+
+    async function generateRecommendations( event ) {
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Gerando...';
+        try {
+            const response = await fetch( '/admin/ai/generate-recommendations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify( { type: 'all' } )
+            } );
+            if ( !response.ok ) {
+                throw new Error( 'Erro HTTP: ' + response.status );
+            }
+            const data = await response.json();
+            if ( data.success ) {
+                alert( 'Recomendações geradas! ' + ( data.message || 'Verifique as notificações.' ) );
+                loadDashboardData(); // Recarregar
+            } else {
+                alert( 'Erro: ' + ( data.message || 'Falha na geração' ) );
+            }
+        } catch ( error ) {
+            alert( 'Erro ao gerar: ' + error.message );
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-magic me-2"></i>Gerar Recomendações';
+        }
+    }
+
+    async function runAnomalyDetection( event ) {
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Detectando...';
+        try {
+            const response = await fetch( '/admin/ai/run-anomaly-detection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify( { scope: 'full' } )
+            } );
+            if ( !response.ok ) {
+                throw new Error( 'Erro HTTP: ' + response.status );
+            }
+            const data = await response.json();
+            if ( data.success ) {
+                alert( 'Detecção de anomalias concluída! Anomalias encontradas: ' + ( data.anomalies || 0 ) );
+                loadDashboardData(); // Recarregar
+            } else {
+                alert( 'Erro: ' + ( data.message || 'Falha na detecção' ) );
+            }
+        } catch ( error ) {
+            alert( 'Erro ao detectar: ' + error.message );
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-search me-2"></i>Detectar Anomalias';
+        }
+    }
+
+    // Auto-refresh dos dados a cada 5 minutos
+    setInterval( function () {
+        loadDashboardData();
+    }, 300000 );
+</script>
+
+{% endblock %}

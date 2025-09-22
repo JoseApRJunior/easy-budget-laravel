@@ -1,0 +1,18 @@
+{% if auth() %}
+<div class="col-12">
+  <div class="mb-3">
+    <label class="small text-muted">Empresa</label>
+    <p class="mb-0">{{ auth().company_name|default('Não informado') }}</p>
+  </div>
+</div>
+<div class="col-12">
+  <div class="mb-3">
+    <label class="small text-muted">Endereço</label>
+    <p class="mb-0">
+      {{ auth().address|default('') }}, {{ auth().address_number|default('') }}<br>
+      {{ auth().neighborhood|default('') }} - {{ auth().city|default('') }}/{{ auth().state|default('') }}<br>
+      CEP: {{ auth().cep|default('') }}
+    </p>
+  </div>
+</div>
+{% endif %}

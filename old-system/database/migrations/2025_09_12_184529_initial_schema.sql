@@ -1,0 +1,7 @@
+-- ================================================
+-- MIGRAÇÃO: InitialSchema
+-- Data: 2025-09-12
+-- Autor: Sistema Easy Budget
+-- Descrição: initial_schema
+-- Versão: 1.0
+-- ================================================

@@ -1,0 +1,519 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="bi bi-graph-up me-2"></i>Monitoramento do Sistema</h2>
+            
+            <!-- Navegação por Abas -->
+            <ul class="nav nav-tabs mb-4" id="monitoringTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                        <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics" type="button" role="tab">
+                        <i class="bi bi-graph-up me-1"></i>Métricas
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance" type="button" role="tab">
+                        <i class="bi bi-lightning me-1"></i>Performance
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Conteúdo das Abas -->
+            <div class="tab-content" id="monitoringTabsContent">
+                
+                <!-- Aba Dashboard -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <!-- Cards de Resumo -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6>Middlewares Ativos</h6>
+                                            <h3>{{ middlewares|length }}</h3>
+                                        </div>
+                                        <i class="bi bi-shield-check fs-1 opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6>Taxa de Sucesso</h6>
+                                            <h3>{{ "%.1f"|format(success_rate) }}%</h3>
+                                        </div>
+                                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6>Tempo Médio</h6>
+                                            <h3>{{ (average_response_time * 1000)|number_format(0) }}ms</h3>
+                                        </div>
+                                        <i class="bi bi-clock fs-1 opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6>Total Execuções</h6>
+                                            <h3>{{ total_executions|number_format }}</h3>
+                                        </div>
+                                        <i class="bi bi-activity fs-1 opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico de Performance -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Performance em Tempo Real</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="performanceChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Status Geral</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-{{ system_health.status == 'Operacional' ? 'check-circle-fill text-success' : (system_health.status == 'Atenção' ? 'exclamation-triangle-fill text-warning' : 'x-circle-fill text-danger') }} fs-3 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-0">Sistema {{ system_health.status }}</h6>
+                                            <small class="text-muted">{{ system_health.healthy_percentage }}% dos middlewares saudáveis</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-lightning-charge-fill text-{{ system_health.performance == 'Excelente' ? 'success' : (system_health.performance == 'Boa' ? 'primary' : 'warning') }} fs-3 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-0">Performance {{ system_health.performance }}</h6>
+                                            <small class="text-muted">Tempo médio: {{ (average_response_time * 1000)|number_format(1) }}ms</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-graph-up-arrow text-{{ system_health.activity_level == 'Alta' ? 'success' : (system_health.activity_level == 'Média' ? 'info' : 'warning') }} fs-3 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-0">Atividade {{ system_health.activity_level }}</h6>
+                                            <small class="text-muted">{{ total_executions }} execuções no período</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba Métricas -->
+                <div class="tab-pane fade" id="metrics" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Métricas Detalhadas</h5>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="exportMetrics()">
+                            <i class="bi bi-download me-1"></i>Exportar
+                        </button>
+                    </div>
+
+                    <!-- Resumo Geral -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm text-center">
+                                <div class="card-body">
+                                    <i class="bi bi-layers fs-1 text-primary mb-2"></i>
+                                    <h5 class="card-title">Total de Middlewares</h5>
+                                    <h3 class="text-primary">{{ middlewares|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm text-center">
+                                <div class="card-body">
+                                    <i class="bi bi-play-circle fs-1 text-success mb-2"></i>
+                                    <h5 class="card-title">Total de Execuções</h5>
+                                    <h3 class="text-success">{{ total_executions|number_format }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm text-center">
+                                <div class="card-body">
+                                    <i class="bi bi-speedometer2 fs-1 text-warning mb-2"></i>
+                                    <h5 class="card-title">Tempo Médio</h5>
+                                    <h3 class="text-warning">{{ "%.4f"|format(average_response_time) }}s</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm text-center">
+                                <div class="card-body">
+                                    <i class="bi bi-check-circle fs-1 text-info mb-2"></i>
+                                    <h5 class="card-title">Taxa de Sucesso</h5>
+                                    <h3 class="text-info">{{ "%.2f"|format(success_rate) }}%</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Detalhada de Métricas -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-table me-2"></i>Métricas por Middleware
+                                </h5>
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Filtrar middlewares..." 
+                                           id="middleware-filter" style="width: 200px;">
+                                    <select class="form-select form-select-sm" id="sort-by" style="width: 150px;">
+                                        <option value="name">Nome</option>
+                                        <option value="executions">Execuções</option>
+                                        <option value="average_time">Tempo Médio</option>
+                                        <option value="success_rate">Taxa de Sucesso</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0" id="metrics-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="px-4 py-3">Middleware</th>
+                                            <th class="px-4 py-3 text-center">Execuções</th>
+                                            <th class="px-4 py-3 text-center">Sucessos</th>
+                                            <th class="px-4 py-3 text-center">Falhas</th>
+                                            <th class="px-4 py-3 text-center">Taxa de Sucesso</th>
+                                            <th class="px-4 py-3 text-center">Tempo Médio</th>
+                                            <th class="px-4 py-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for name, data in middlewares %}
+                                        {% set success_rate = data.executions > 0 ? (data.successes / data.executions * 100) : 0 %}
+                                        {% set failures = data.executions - data.successes %}
+                                        <tr class="middleware-row" data-name="{{ name|lower }}">
+                                            <td class="px-4 py-3">
+                                                <div class="d-flex align-items-center">
+                                                    {% if name == 'AdminMiddleware' %}
+                                                        <i class="bi bi-shield-lock-fill text-danger fs-4 me-3"></i>
+                                                    {% elseif name == 'AuthMiddleware' %}
+                                                        <i class="bi bi-key-fill text-success fs-4 me-3"></i>
+                                                    {% elseif name == 'GuestMiddleware' %}
+                                                        <i class="bi bi-person text-secondary fs-4 me-3"></i>
+                                                    {% elseif name == 'ProviderMiddleware' %}
+                                                        <i class="bi bi-briefcase-fill text-warning fs-4 me-3"></i>
+                                                    {% elseif name == 'UserMiddleware' %}
+                                                        <i class="bi bi-person-check-fill text-info fs-4 me-3"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-gear-fill text-primary fs-4 me-3"></i>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ name }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">{{ data.type|default('ORM Middleware') }}</small>
+                                                        {% if data.routes is defined %}
+                                                            <br>
+                                                            <small class="text-info">Rotas: {{ data.routes|slice(0, 2)|join(', ') }}{% if data.routes|length > 2 %}...{% endif %}</small>
+                                                        {% endif %}
+                                                        {% if data.errors is defined and data.errors|length > 0 %}
+                                                            <br>
+                                                            <small class="text-danger">Erros: {{ data.errors|length }} registrados</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="badge bg-secondary fs-6">{{ data.executions|default(0)|number_format }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="badge bg-success fs-6">{{ data.successes|default(0)|number_format }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="badge bg-danger fs-6">{{ failures|number_format }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                        <div class="progress-bar bg-{{ success_rate >= 95 ? 'success' : (success_rate >= 90 ? 'warning' : 'danger') }}" 
+                                                             style="width: {{ success_rate }}%"></div>
+                                                    </div>
+                                                    <span class="fw-bold text-{{ success_rate >= 95 ? 'success' : (success_rate >= 90 ? 'warning' : 'danger') }}">
+                                                        {{ "%.2f"|format(success_rate) }}%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                {% set avg_time = data.average_time|default(0) %}
+                                                <span class="fw-bold text-{{ avg_time < 0.5 ? 'success' : (avg_time < 1.0 ? 'warning' : 'danger') }}">
+                                                    {{ "%.4f"|format(avg_time) }}s
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                {% if success_rate >= 95 and avg_time < 1.0 %}
+                                                    <span class="badge bg-success">Saudável</span>
+                                                {% elseif success_rate >= 90 and avg_time < 2.0 %}
+                                                    <span class="badge bg-warning">Atenção</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Crítico</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-1 mb-3"></i>
+                                                <h6>Nenhum middleware monitorado</h6>
+                                                <p class="mb-0">Execute algumas operações para ver as métricas aparecerem aqui</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba Performance -->
+                <div class="tab-pane fade" id="performance" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Gargalos Identificados</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% set has_bottlenecks = false %}
+                                    {% for name, data in middlewares %}
+                                        {% set success_rate = data.executions > 0 ? (data.successes / data.executions * 100) : 0 %}
+                                        {% set avg_time = data.average_time|default(0) %}
+                                        {% if success_rate < 95 or avg_time > 0.1 %}
+                                            {% set has_bottlenecks = true %}
+                                            <div class="alert alert-{{ success_rate < 90 or avg_time > 0.15 ? 'danger' : 'warning' }} mb-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-{{ success_rate < 90 or avg_time > 0.15 ? 'x-circle' : 'exclamation-triangle' }} me-2"></i>
+                                                    <div>
+                                                        <strong>{{ name }}</strong>
+                                                        {% if success_rate < 95 %}
+                                                            <br><small>Taxa de sucesso baixa: {{ "%.1f"|format(success_rate) }}%</small>
+                                                        {% endif %}
+                                                        {% if avg_time > 0.1 %}
+                                                            <br><small>Tempo de resposta alto: {{ (avg_time * 1000)|number_format(0) }}ms</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not has_bottlenecks %}
+                                        <div class="alert alert-success">
+                                            <i class="bi bi-check-circle me-2"></i>Nenhum gargalo crítico identificado
+                                        </div>
+                                        <p class="text-muted">Todos os middlewares estão operando dentro dos parâmetros normais.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Recomendações</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        {% if success_rate >= 95 %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle text-success me-2"></i>
+                                                Performance geral excelente ({{ "%.1f"|format(success_rate) }}% sucesso)
+                                            </li>
+                                        {% else %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                                Melhorar taxa de sucesso (atual: {{ "%.1f"|format(success_rate) }}%)
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% if average_response_time < 0.05 %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-lightning text-success me-2"></i>
+                                                Tempos de resposta ótimos ({{ (average_response_time * 1000)|number_format(0) }}ms)
+                                            </li>
+                                        {% elseif average_response_time > 0.1 %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-clock text-warning me-2"></i>
+                                                Otimizar tempo de resposta (atual: {{ (average_response_time * 1000)|number_format(0) }}ms)
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% if total_executions > 100 %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-graph-up text-info me-2"></i>
+                                                Volume de tráfego {{ total_executions > 500 ? 'alto' : 'moderado' }} ({{ total_executions|number_format }} execuções)
+                                            </li>
+                                        {% else %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-graph-down text-secondary me-2"></i>
+                                                Volume de tráfego baixo ({{ total_executions|number_format }} execuções)
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% if middlewares|length >= 4 %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-layers text-info me-2"></i>
+                                                {{ middlewares|length }} middlewares ativos - considerar otimização
+                                            </li>
+                                        {% else %}
+                                            <li class="mb-2">
+                                                <i class="bi bi-shield-check text-success me-2"></i>
+                                                Arquitetura enxuta com {{ middlewares|length }} middlewares
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Gráfico de Performance
+const ctx = document.getElementById('performanceChart');
+if (ctx) {
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.labels|json_encode|raw }},
+            datasets: [{
+                label: 'Tempo de Resposta (ms)',
+                data: {{ chart_data.data|json_encode|raw }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Tempo (ms)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function exportMetrics() {
+    const table = document.getElementById('metrics-table');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tr');
+    let csv = [];
+    
+    rows.forEach(row => {
+        const cols = row.querySelectorAll('td, th');
+        const rowData = [];
+        
+        cols.forEach(col => {
+            let text = col.textContent.trim();
+            text = text.replace(/\s+/g, ' ');
+            rowData.push(`"${text}"`);
+        });
+        
+        if (rowData.length > 0) {
+            csv.push(rowData.join(','));
+        }
+    });
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `metricas-middlewares-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ativar abas do Bootstrap
+    const triggerTabList = [].slice.call(document.querySelectorAll('#monitoringTabs button'))
+    triggerTabList.forEach(function (triggerEl) {
+        const tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+    
+    const filterInput = document.getElementById('middleware-filter');
+    const sortSelect = document.getElementById('sort-by');
+    
+    if (filterInput) {
+        filterInput.addEventListener('input', function(e) {
+            const filter = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.middleware-row');
+            
+            rows.forEach(row => {
+                const name = row.dataset.name;
+                if (name && name.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
