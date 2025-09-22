@@ -19,7 +19,7 @@ class AlertSetting extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'settings',
     ];
 
@@ -28,9 +28,9 @@ class AlertSetting extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'settings' => 'array',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'settings'   => 'array',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 }

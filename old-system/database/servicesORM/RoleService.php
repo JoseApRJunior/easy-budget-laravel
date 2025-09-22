@@ -19,7 +19,7 @@ use Exception;
  *
  * @package app\database\servicesORM
  */
-class RoleService extends BaseNoTenantService implements ServiceNoTenantInterface
+class RoleService extends BaseNoTenantService
 {
     private RoleRepositoryInterface $repository;
     private ActivityService         $activityService;
@@ -43,7 +43,7 @@ class RoleService extends BaseNoTenantService implements ServiceNoTenantInterfac
      * @param int $id ID da entidade
      * @return ServiceResult Resultado da operação com status, mensagem e dados
      */
-    public function getById( mixed $id ): ServiceResult
+    public function getById( int $id ): ServiceResult
     {
         try {
             // Buscar role pelo ID
@@ -59,12 +59,12 @@ class RoleService extends BaseNoTenantService implements ServiceNoTenantInterfac
         }
     }
 
-    public function updateById( mixed $id, array $data ): ServiceResult
+    public function updateById( int $id, array $data ): ServiceResult
     {
         return $this->update( $id, $data );
     }
 
-    public function deleteById( mixed $id ): ServiceResult
+    public function deleteById( int $id ): ServiceResult
     {
         return $this->delete( $id );
     }
@@ -118,7 +118,7 @@ class RoleService extends BaseNoTenantService implements ServiceNoTenantInterfac
             }
 
             // Prepare data for base create
-            $preparedData                = $data;
+            $preparedData                  = $data;
             $preparedData[ 'description' ] = $data[ 'description' ] ?? '';
             $preparedData[ 'isActive' ]    = $data[ 'isActive' ] ?? true;
 
@@ -156,7 +156,7 @@ class RoleService extends BaseNoTenantService implements ServiceNoTenantInterfac
             }
 
             // Prepare data for base update
-            $preparedData                = $data;
+            $preparedData                  = $data;
             $preparedData[ 'description' ] = $data[ 'description' ] ?? $entity->getDescription();
             $preparedData[ 'isActive' ]    = isset( $data[ 'isActive' ] ) ? $data[ 'isActive' ] : $entity->getIsActive();
 

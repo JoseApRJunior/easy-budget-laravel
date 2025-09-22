@@ -18,7 +18,7 @@ class CommonData extends Model
      *
      * @var string
      */
-    protected $table = 'common_data';
+    protected $table = 'common_datas';
 
     /**
      * The attributes that are mass assignable.
@@ -47,15 +47,15 @@ class CommonData extends Model
         'tenant_id'           => 'integer',
         'first_name'          => 'string',
         'last_name'           => 'string',
-        'birth_date'          => 'datetime',
+        'birth_date'          => 'immutable_date',
         'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',
         'description'         => 'string',
         'area_of_activity_id' => 'integer',
         'profession_id'       => 'integer',
-        'created_at'          => 'datetime_immutable',
-        'updated_at'          => 'datetime_immutable',
+        'created_at'          => 'immutable_datetime',
+        'updated_at'          => 'immutable_datetime',
     ];
 
     /**

@@ -46,9 +46,15 @@ class ServiceStatus extends Model
         'icon'        => 'string',
         'order_index' => 'integer',
         'is_active'   => 'boolean',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the services for the ServiceStatus.

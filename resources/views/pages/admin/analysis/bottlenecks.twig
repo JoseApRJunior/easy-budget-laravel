@@ -1,0 +1,32 @@
+{% extends "layouts/admin.twig" %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/admin/analysis">Análise</a></li>
+<li class="breadcrumb-item active">Gargalos</li>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Identificação de Gargalos - {{ period.start }} a {{ period.end }}</h5>
+    </div>
+    <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
+        {% if bottlenecks %}
+        <div class="alert alert-warning">
+            <h6>Gargalos Identificados:</h6>
+            <ul class="mb-0">
+                {% for bottleneck in bottlenecks %}
+                <li>{{ bottleneck.description }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="alert alert-success">Nenhum gargalo crítico identificado no período.</div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -8,12 +8,15 @@ export default defineConfig({
          refresh: true,
       }),
    ],
+   css: {
+      postcss: {
+         plugins: [],
+      },
+   },
    build: {
       rollupOptions: {
          output: {
-            manualChunks: {
-               vendor: ["jquery", "bootstrap"],
-            },
+            manualChunks: undefined,
          },
       },
    },

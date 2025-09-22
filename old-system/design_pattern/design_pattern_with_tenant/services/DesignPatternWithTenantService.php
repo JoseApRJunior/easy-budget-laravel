@@ -2,13 +2,13 @@
 
 namespace design_patern\design_pattern_with_tenant\services;
 
+use app\enums\OperationStatus;
 use app\interfaces\ServiceInterface;
 use app\support\ServiceResult;
 use core\dbal\EntityNotFound;
-use app\enums\OperationStatus;
-use Exception;
 use design_patern\design_pattern_with_tenant\entities\DesignPatternWithTenantEntity;
 use design_patern\design_pattern_with_tenant\repositories\DesignPatternWithTenantRepository;
+use Exception;
 
 /**
  * Padrão de Service WithTenant - Easy Budget
@@ -185,7 +185,7 @@ class DesignPatternWithTenantService implements ServiceInterface
      * @param array<string, mixed> $data Dados para atualização
      * @return ServiceResult Resultado da operação
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validar dados de entrada

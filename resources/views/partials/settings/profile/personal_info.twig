@@ -1,0 +1,30 @@
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="small text-muted">Nome</label>
+    <p class="mb-0 fw-semibold">{{ auth().first_name }} {{ auth().last_name }}</p>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="small text-muted">E-mail</label>
+    <p class="mb-0">{{ auth().email }}</p>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="small text-muted">E-mail Comercial</label>
+    <p class="mb-0">{{ auth().email_business }}</p>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="small text-muted">Telefone</label>
+    <p class="mb-0">{{ auth().phone|default('Não informado') }}</p>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="mb-3">
+    <label class="small text-muted">Data de Nascimento</label>
+    <p class="mb-0">{{ auth().birth_date ? auth().birth_date|date("d/m/Y") : 'Não informado' }}</p>
+  </div>
+</div>

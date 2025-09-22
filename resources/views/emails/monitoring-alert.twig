@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Budget - Alerta de Monitoramento</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .alert-info {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-info h3 {
+            margin: 0 0 15px 0;
+            color: #dc3545;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 120px;
+            margin-right: 10px;
+        }
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+        .context-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .context-section h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .context-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .recommendations {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .recommendations h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+            font-size: 16px;
+        }
+        .recommendations ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .recommendations li {
+            margin-bottom: 5px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 14px;
+            border-top: 1px solid #dee2e6;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Alerta de Monitoramento</h1>
+            <p>Easy Budget - Sistema de Monitoramento Automático</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert-info">
+                <h3>
+                    {% if alert_type == 'slow_response' %}
+                        ⏱️ Tempo de Resposta Elevado
+                        <span class="badge badge-warning">Performance</span>
+                    {% elseif alert_type == 'high_memory' %}
+                        💾 Uso Excessivo de Memória
+                        <span class="badge badge-danger">Memória</span>
+                    {% elseif alert_type == 'middleware_error' %}
+                        ❌ Erro no Middleware
+                        <span class="badge badge-danger">Erro</span>
+                    {% elseif alert_type == 'security_alert' %}
+                        🔒 Alerta de Segurança
+                        <span class="badge badge-danger">Segurança</span>
+                    {% else %}
+                        ⚠️ Alerta de Sistema
+                        <span class="badge badge-info">Sistema</span>
+                    {% endif %}
+                </h3>
+                
+                <div class="info-row">
+                    <span class="info-label">Middleware:</span>
+                    <span class="info-value"><strong>{{ middleware_name }}</strong></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Mensagem:</span>
+                    <span class="info-value">{{ message }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Data/Hora:</span>
+                    <span class="info-value">{{ timestamp }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Servidor:</span>
+                    <span class="info-value">{{ server_name }}</span>
+                </div>
+            </div>
+            
+            {% if context %}
+            <div class="context-section">
+                <h4>Detalhes Técnicos</h4>
+                {% for key, value in context %}
+                    {% if key != 'middleware' and key != 'timestamp' %}
+                    <div class="context-item">
+                        <strong>{{ key|title|replace({'_': ' '}) }}:</strong>
+                        {% if key == 'execution_time' %}
+                            {{ "%.3f"|format(value) }} segundos
+                        {% elseif key == 'memory_used' or key == 'threshold' %}
+                            {% if value > 1048576 %}
+                                {{ "%.2f"|format(value / 1048576) }} MB
+                            {% elseif value > 1024 %}
+                                {{ "%.2f"|format(value / 1024) }} KB
+                            {% else %}
+                                {{ value }} bytes
+                            {% endif %}
+                        {% else %}
+                            {{ value }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="recommendations">
+                <h4>📋 Recomendações</h4>
+                <ul>
+                    {% if alert_type == 'slow_response' %}
+                        <li>Verifique os logs do sistema para identificar gargalos</li>
+                        <li>Analise consultas ao banco de dados que podem estar lentas</li>
+                        <li>Considere implementar cache para operações frequentes</li>
+                        <li>Monitore a carga do servidor e recursos disponíveis</li>
+                    {% elseif alert_type == 'high_memory' %}
+                        <li>Verifique se há vazamentos de memória no código</li>
+                        <li>Analise o processamento de grandes volumes de dados</li>
+                        <li>Considere otimizar consultas que retornam muitos registros</li>
+                        <li>Implemente paginação em listagens extensas</li>
+                    {% elseif alert_type == 'middleware_error' %}
+                        <li>Verifique os logs de erro para detalhes específicos</li>
+                        <li>Analise a configuração do middleware</li>
+                        <li>Teste o fluxo de autenticação/autorização</li>
+                        <li>Verifique conectividade com banco de dados</li>
+                    {% elseif alert_type == 'security_alert' %}
+                        <li>Investigue imediatamente a atividade suspeita</li>
+                        <li>Verifique logs de acesso e autenticação</li>
+                        <li>Considere bloquear IPs suspeitos temporariamente</li>
+                        <li>Revise configurações de segurança</li>
+                    {% else %}
+                        <li>Verifique os logs do sistema para mais detalhes</li>
+                        <li>Monitore o comportamento do sistema</li>
+                        <li>Entre em contato com a equipe técnica se necessário</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <p style="margin-top: 25px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; font-size: 14px; color: #495057;">
+                <strong>ℹ️ Informação:</strong> Este alerta foi gerado automaticamente pelo sistema de monitoramento do Easy Budget. 
+                Para evitar spam, alertas similares serão suprimidos por 5 minutos.
+            </p>
+            
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="http://{{ server_name }}/admin/monitoring" 
+                   style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: 600;">
+                    🔍 Acessar Dashboard de Monitoramento
+                </a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Easy Budget</strong> - Sistema de Gestão de Orçamentos</p>
+            <p>Este é um email automático gerado pelo sistema de monitoramento.</p>
+            <p style="font-size: 12px; margin-top: 10px;">Não responda a este email.</p>
+        </div>
+    </div>
+</body>
+</html>

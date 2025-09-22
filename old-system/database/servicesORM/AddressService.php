@@ -60,7 +60,7 @@ class AddressService implements ServiceInterface
         }
     }
 
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validar dados

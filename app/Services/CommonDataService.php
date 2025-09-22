@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class CommonDataService extends BaseTenantService implements ServiceInterface
+class CommonDataService extends BaseTenantService
 {
     private CommonDataRepository $commonDataRepository;
 
@@ -74,15 +74,15 @@ class CommonDataService extends BaseTenantService implements ServiceInterface
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
         $id        = $data[ 'id' ] ?? null;
-        $rules     = [
+        $rules     = [ 
             'company_name' => 'required|string|max:255',
-            'cnpj'         => [
+            'cnpj'         => [ 
                 'required',
                 'string',
                 $isUpdate ? 'unique:common_data,cnpj,' . $id . ',id,tenant_id,' . $tenantId : 'unique:common_data,cnpj,NULL,id,tenant_id,' . $tenantId
             ],
             'fantasy_name' => 'nullable|string|max:255',
-            'customer_id'  => [
+            'customer_id'  => [ 
                 'required',
                 Rule::exists( 'customers', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],

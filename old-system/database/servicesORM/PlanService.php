@@ -19,7 +19,7 @@ use app\database\repositories\PaymentMercadoPagoPlansRepository;
  * Serviço para gerenciamento de planos
  * Implementa ServiceNoTenantInterface para operações sem tenant_id
  */
-class PlanService extends BaseNoTenantService implements ServiceNoTenantInterface
+class PlanService extends BaseNoTenantService
 {
     private mixed $authenticated;
 
@@ -37,7 +37,7 @@ class PlanService extends BaseNoTenantService implements ServiceNoTenantInterfac
         }
     }
 
-    public function getById( mixed $id ): ServiceResult
+    public function getById( int $id ): ServiceResult
     {
         try {
             $entity = $this->planRepository->findById( $id );
@@ -52,12 +52,12 @@ class PlanService extends BaseNoTenantService implements ServiceNoTenantInterfac
         }
     }
 
-    public function updateById( mixed $id, array $data ): ServiceResult
+    public function updateById( int $id, array $data ): ServiceResult
     {
         return $this->update( $id, $data );
     }
 
-    public function deleteById( mixed $id ): ServiceResult
+    public function deleteById( int $id ): ServiceResult
     {
         return $this->delete( $id );
     }
@@ -128,7 +128,7 @@ class PlanService extends BaseNoTenantService implements ServiceNoTenantInterfac
             }
 
             // Prepare data for base create
-            $preparedData                = $data;
+            $preparedData                  = $data;
             $preparedData[ 'description' ] = $data[ 'description' ] ?? '';
             $preparedData[ 'price' ]       = $data[ 'price' ] ?? 0.0;
             $preparedData[ 'status' ]      = isset( $data[ 'status' ] ) ? (bool) $data[ 'status' ] : true;
@@ -176,7 +176,7 @@ class PlanService extends BaseNoTenantService implements ServiceNoTenantInterfac
             }
 
             // Prepare data for base update
-            $preparedData                = $data;
+            $preparedData                  = $data;
             $preparedData[ 'description' ] = isset( $data[ 'description' ] ) ? $data[ 'description' ] : $entity->getDescription();
             $preparedData[ 'price' ]       = isset( $data[ 'price' ] ) ? (float) $data[ 'price' ] : $entity->getPrice();
             $preparedData[ 'status' ]      = isset( $data[ 'status' ] ) ? (bool) $data[ 'status' ] : $entity->getStatus();

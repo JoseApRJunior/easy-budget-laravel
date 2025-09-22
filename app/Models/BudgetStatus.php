@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class BudgetStatus extends Model
@@ -16,10 +16,10 @@ class BudgetStatus extends Model
      * Filtra por is_active = true e ordena por order_index.
      * Substitui funcionalidade do HasEnums trait, adaptado para esta tabela sem coluna 'status'.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param mixed $query
+     * @return mixed
      */
-    public function scopeActiveStatus( Builder $query ): Builder
+    public function scopeActiveStatus( $query )
     {
         return $query->where( 'is_active', true )->orderBy( 'order_index' );
     }
@@ -56,9 +56,15 @@ class BudgetStatus extends Model
         'icon'        => 'string',
         'is_active'   => 'boolean',
         'order_index' => 'integer',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the budgets for the BudgetStatus.

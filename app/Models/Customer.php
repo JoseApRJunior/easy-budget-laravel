@@ -3,15 +3,20 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Address;
+use App\Models\Budget;
+use App\Models\CommonData;
+use App\Models\Contact;
+use App\Models\Tenant;
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class Customer extends Model
 {
-    use BelongsToTenant;
+    use TenantScoped;
 
     /**
      * The table associated with the model.
@@ -25,7 +30,7 @@ class Customer extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'common_data_id',
         'contact_id',
@@ -38,7 +43,7 @@ class Customer extends Model
      *
      * @var array<string, string>
      */
-    protected $attributes = [ 
+    protected $attributes = [
         'status' => 'active',
     ];
 
@@ -47,14 +52,14 @@ class Customer extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'      => 'string',
+    protected $casts = [
+        'tenant_id'      => 'integer',
         'common_data_id' => 'integer',
         'contact_id'     => 'integer',
         'address_id'     => 'integer',
         'status'         => 'string',
-        'created_at'     => 'datetime',
-        'updated_at'     => 'datetime',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**

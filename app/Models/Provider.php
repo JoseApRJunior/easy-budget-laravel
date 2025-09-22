@@ -3,10 +3,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Address;
 use App\Models\Budget;
+use App\Models\CommonData;
+use App\Models\Contact;
 use App\Models\PlanSubscription;
+use App\Models\ProviderCredential;
 use App\Models\Service;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,8 +55,8 @@ class Provider extends Model
         'contact_id'     => 'integer',
         'address_id'     => 'integer',
         'terms_accepted' => 'boolean',
-        'created_at'     => 'datetime_immutable',
-        'updated_at'     => 'datetime_immutable',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**
@@ -78,21 +84,14 @@ class Provider extends Model
     }
 
     /**
-     * Boot method para validação de unicidade (user_id, tenant_id).
+     * Boot method do modelo Provider.
      */
     protected static function boot(): void
     {
         parent::boot();
 
-        static::creating( function ($provider) {
-            $existing = self::where( 'user_id', $provider->user_id )
-                ->where( 'tenant_id', $provider->tenant_id )
-                ->first();
-
-            if ( $existing ) {
-                throw new \Exception( 'Provedor já existe para este usuário e tenant.' );
-            }
-        } );
+        // A unicidade (tenant_id, user_id) agora é garantida pelo índice único no banco de dados
+        // Isso permite criação idempotente e tratamento adequado de exceções no service/repository
     }
 
     /**

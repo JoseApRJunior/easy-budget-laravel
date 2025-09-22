@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class PaymentMercadoPagoPlan extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -20,7 +22,7 @@ class PaymentMercadoPagoPlan extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'payment_id',
         'tenant_id',
         'provider_id',
@@ -36,11 +38,14 @@ class PaymentMercadoPagoPlan extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'transaction_amount' => 'float',
-        'transaction_date' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'tenant_id'            => 'integer',
+        'provider_id'          => 'integer',
+        'plan_subscription_id' => 'integer',
+        'transaction_amount'   => 'decimal:2',
+        'transaction_date'     => 'datetime',
+        'created_at'           => 'immutable_datetime',
+        'updated_at'           => 'immutable_datetime',
     ];
 
     /**
@@ -48,7 +53,7 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -56,7 +61,7 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
     /**
@@ -64,6 +69,7 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function planSubscription(): BelongsTo
     {
-        return $this->belongsTo(PlanSubscription::class);
+        return $this->belongsTo( PlanSubscription::class);
     }
+
 }

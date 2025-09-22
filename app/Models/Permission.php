@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Custom Permission model: global, aplicável a todos os tenants sem scoping por tenant_id.
@@ -24,13 +25,12 @@ class Permission extends Model
      * 'name': Nome da permissão (ex: 'editar-orcamento').
      * 'guard_name': Nome do guard de autenticação (ex: 'web', 'api').
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'name',
         'guard_name',
     ];
 
-
-    protected $casts = [
+    protected $casts = [ 
         'guard_name' => 'string',
     ];
 
@@ -42,7 +42,7 @@ class Permission extends Model
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'role_permissions');
+        return $this->belongsToMany( Role::class, 'role_permissions' );
     }
 
     /**
@@ -54,7 +54,7 @@ class Permission extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_permissions', 'permission_id', 'user_id')->withPivot('tenant_id')->withTimestamps();
+        return $this->belongsToMany( User::class, 'user_permissions', 'permission_id', 'user_id' )->withPivot( 'tenant_id' )->withTimestamps();
     }
 
 }

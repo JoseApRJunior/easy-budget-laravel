@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * - getByIdAndTenantId(int $id, int $tenant_id): ServiceResult
  * - listByTenantId(int $tenant_id, array $filters = []): ServiceResult
  * - createByTenantId(array $data, int $tenant_id): ServiceResult
- * - updateByIdAndTenantId(int $id, int $tenant_id, array $data): ServiceResult
+ * - updateByIdAndTenantId(int $id, array $data, int $tenantId): ServiceResult
  * - deleteByIdAndTenantId(int $id, int $tenant_id): ServiceResult
  */
 abstract class BaseTenantService extends BaseService implements ServiceInterface
@@ -29,11 +29,11 @@ abstract class BaseTenantService extends BaseService implements ServiceInterface
     /**
      * Busca uma entidade pelo ID e tenant_id.
      *
-     * @param mixed $id ID da entidade
+     * @param int $id ID da entidade
      * @param int $tenant_id ID do tenant (snake_case conforme padrão legacy)
      * @return ServiceResult
      */
-    abstract public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult;
+    abstract public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult;
 
     /**
      * Lista entidades por tenant_id com filtros.
@@ -61,7 +61,7 @@ abstract class BaseTenantService extends BaseService implements ServiceInterface
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    abstract public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult;
+    abstract public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult;
 
     /**
      * Deleta entidade por ID e tenant_id.
@@ -75,11 +75,11 @@ abstract class BaseTenantService extends BaseService implements ServiceInterface
     /**
      * Busca uma entidade pelo ID e tenant_id.
      *
-     * @param mixed $id ID da entidade
+     * @param int $id ID da entidade
      * @param int $tenant_id ID do tenant (snake_case conforme padrão legacy)
      * @return Model|null Entidade encontrada ou null
      */
-    abstract protected function findEntityByIdAndTenantId( mixed $id, int $tenant_id ): ?Model;
+    abstract protected function findEntityByIdAndTenantId( int $id, int $tenant_id ): ?Model;
 
     /**
      * Lista entidades por tenant_id.

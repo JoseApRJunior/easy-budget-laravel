@@ -82,6 +82,16 @@ final class ExampleService extends BaseNoTenantService
      */
     protected string $entityName = 'Example';
 
+    /**
+     * Retorna a classe do modelo Example.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new \App\Models\Example();
+    }
+
     // ========================================================================
     // MÉTODOS ABSTRATOS DA BASE (OBRIGATÓRIOS)
     // ========================================================================
@@ -399,7 +409,7 @@ final class ExampleService extends BaseNoTenantService
             $inactive = $this->repository->query()->where( 'status', 'inactive' )->count();
             $pending  = $this->repository->query()->where( 'status', 'pending' )->count();
 
-            $statistics = [
+            $statistics = [ 
                 'total'               => $total,
                 'active'              => $active,
                 'inactive'            => $inactive,
@@ -466,7 +476,7 @@ final class ExampleService extends BaseNoTenantService
         $errorCount   = count( $errors );
 
         return ServiceResult::success(
-            [
+            [ 
                 'created'         => $created,
                 'total_processed' => $totalProcessed,
                 'success_count'   => $successCount,

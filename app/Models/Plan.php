@@ -37,7 +37,6 @@ class Plan extends Model
         'max_budgets',
         'max_clients',
         'features',
-        'is_active',
     ];
 
     /**
@@ -46,15 +45,14 @@ class Plan extends Model
      * @var array<string, string>
      */
     protected $casts = [ 
-        'description' => 'string|null',
+        'description' => 'string',
         'price'       => 'decimal:2',
         'status'      => 'boolean',
-        'max_budgets' => 'integer|null',
-        'max_clients' => 'integer|null',
+        'max_budgets' => 'integer',
+        'max_clients' => 'integer',
         'features'    => 'array',
-        'is_active'   => 'boolean',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'immutable_datetime',
     ];
 
     /**

@@ -43,8 +43,8 @@ class ServiceItem extends Model
         'unit_value' => 'decimal:2',
         'quantity'   => 'integer',
         'total'      => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**
@@ -69,6 +69,14 @@ class ServiceItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo( Product::class);
+    }
+
+    /**
+     * Set the total attribute automatically calculated from quantity and unit_value.
+     */
+    public function setTotalAttribute($value)
+    {
+        $this->attributes['total'] = (float)$this->quantity * (float)$this->unit_value;
     }
 
 }

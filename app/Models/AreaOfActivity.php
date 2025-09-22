@@ -14,19 +14,15 @@ class AreaOfActivity extends Model
 {
     use HasFactory;
 
-    protected $table = 'area_of_activities';
+    protected $table = 'areas_of_activity';
 
     protected $fillable = [
         'slug',
         'name',
-        'description',
-        'order_index',
         'is_active',
     ];
 
     protected $casts = [
-        'description' => 'string|null',
-        'order_index' => 'integer|null',
         'is_active' => 'boolean',
     ];
 
@@ -35,6 +31,7 @@ class AreaOfActivity extends Model
      */
     public function commonData()
     {
-        return $this->hasMany(CommonData::class, 'area_of_activity_id');
+        return $this->hasMany( CommonData::class, 'area_of_activity_id' );
     }
+
 }

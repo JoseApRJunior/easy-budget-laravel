@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class Report extends Model
 {
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -20,7 +22,7 @@ class Report extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'user_id',
         'hash',
@@ -37,18 +39,25 @@ class Report extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'size' => 'float',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $casts = [ 
+        'tenant_id'  => 'integer',
+        'size'       => 'float',
+        'created_at' => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the tenant that owns the Report.
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -56,6 +65,7 @@ class Report extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo( User::class);
     }
+
 }

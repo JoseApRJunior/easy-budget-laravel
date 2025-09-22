@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class CategoryService extends BaseTenantService implements ServiceInterface
+class CategoryService extends BaseTenantService
 {
     private CategoryRepository $categoryRepository;
 
@@ -24,7 +24,7 @@ class CategoryService extends BaseTenantService implements ServiceInterface
         $this->categoryRepository = $categoryRepository;
     }
 
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
         $tenantId = (int) $tenantId;
         return $this->categoryRepository->findByIdAndTenantId( $id, $tenantId );
@@ -107,7 +107,7 @@ class CategoryService extends BaseTenantService implements ServiceInterface
         return $this->success();
     }
 
-    public function getByIdAndTenantId( mixed $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
     {
         $tenantId = (int) $tenantId;
         $entity   = $this->findEntityByIdAndTenantId( $id, $tenantId );
@@ -129,9 +129,9 @@ class CategoryService extends BaseTenantService implements ServiceInterface
         return parent::createByTenantId( $data, $tenantId );
     }
 
-    public function updateByIdAndTenantId( int $id, int $tenantId, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
-        return parent::updateByIdAndTenantId( $id, $tenantId, $data );
+        return parent::updateByIdAndTenantId( $id, $data, $tenantId );
     }
 
     public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult

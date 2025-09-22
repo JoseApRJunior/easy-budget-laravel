@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\ServiceItem;
+use App\Models\ServiceStatus;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,7 +42,6 @@ class Service extends Model
         'discount',
         'total',
         'due_date',
-        'observation',
     ];
 
     /**
@@ -62,11 +66,10 @@ class Service extends Model
         'service_statuses_id'   => 'integer',
         'discount'              => 'decimal:2',
         'total'                 => 'decimal:2',
-        'due_date'              => 'datetime',
+        'due_date'              => 'date',
         'pdf_verification_hash' => 'string',
-        'observation'           => 'string',
-        'created_at'            => 'datetime',
-        'updated_at'            => 'datetime',
+        'created_at'            => 'immutable_datetime',
+        'updated_at'            => 'immutable_datetime',
     ];
 
     /**

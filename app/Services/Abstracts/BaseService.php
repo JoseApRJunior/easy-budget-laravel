@@ -52,17 +52,22 @@ abstract class BaseService
     protected function tenantId(): ?int
     {
         $user = Auth::user();
-        return $user?->tenant_id;
+        if ( $user instanceof \App\Models\User ) {
+            /** @phpstan-ignore-next-line */
+            return $user->tenant_id;
+        }
+        return null;
     }
 
     /**
      * Obtém o usuário autenticado.
      *
-     * @return mixed Instância do usuário ou null
+     * @return \App\Models\User|null Instância do usuário ou null
      */
-    protected function authUser()
+    protected function authUser(): ?\App\Models\User
     {
-        return Auth::user();
+        $user = Auth::user();
+        return $user instanceof \App\Models\User ? $user : null;
     }
 
     /**
@@ -107,23 +112,6 @@ abstract class BaseService
             return $this->error( OperationStatus::INVALID_DATA, "O campo {$field} deve ter no máximo {$max} caracteres." );
         }
         return $this->success();
-    }
-
-    /**
-     * Valida dados para o tenant atual.
-     *
-     * @param array $data Dados a validar
-     * @param bool $is_update Se é uma atualização
-     * @return ServiceResult Resultado da validação
-     */
-    public function validate( array $data, bool $is_update = false ): ServiceResult
-    {
-        $tenantId = $this->tenantId();
-        if ( $tenantId === null ) {
-            return $this->error( OperationStatus::INVALID_DATA, 'Tenant não identificado.' );
-        }
-
-        return $this->validateForTenant( $data, $tenantId, $is_update );
     }
 
     /**

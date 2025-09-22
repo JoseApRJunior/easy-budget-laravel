@@ -53,8 +53,18 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
      */
     public function __construct( MercadoPagoService $mercadoPagoService )
     {
+        parent::__construct();
         $this->mercadoPagoService = $mercadoPagoService;
-        $this->model              = new MerchantOrderMercadoPago();
+    }
+
+    /**
+     * Retorna a classe do modelo MerchantOrderMercadoPago.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    protected function getModelClass(): \Illuminate\Database\Eloquent\Model
+    {
+        return new MerchantOrderMercadoPago();
     }
 
     /**
@@ -97,7 +107,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
             $merchantOrder = $this->createEntity( $preparedData );
             $this->saveEntity( $merchantOrder );
 
-            Log::info( 'Merchant order criada com sucesso', [ 
+            Log::info( 'Merchant order criada com sucesso', [
                 'merchant_order_id' => $orderData[ 'merchant_order_id' ],
                 'tenant_id'         => $tenantId,
                 'provider_id'       => $orderData[ 'provider_id' ]
@@ -108,7 +118,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 'Merchant order criada com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao criar merchant order', [ 
+            Log::error( 'Exceção ao criar merchant order', [
                 'tenant_id'  => $tenantId,
                 'order_data' => $orderData,
                 'exception'  => $e->getMessage(),
@@ -174,7 +184,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
             $updatedOrder = $this->updateEntity( $existingOrder[ 'id' ], $preparedData );
             $this->saveEntity( $updatedOrder );
 
-            Log::info( 'Merchant order atualizada com sucesso', [ 
+            Log::info( 'Merchant order atualizada com sucesso', [
                 'merchant_order_id' => $orderData[ 'merchant_order_id' ],
                 'tenant_id'         => $tenantId,
                 'changes'           => $hasChanges
@@ -185,7 +195,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 'Merchant order atualizada com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao atualizar merchant order', [ 
+            Log::error( 'Exceção ao atualizar merchant order', [
                 'tenant_id'  => $tenantId,
                 'order_data' => $orderData,
                 'exception'  => $e->getMessage(),
@@ -246,7 +256,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
             // Atualizar ou criar registro local
             $this->updateLocalMerchantOrder( $orderData, (int) $tenantId );
 
-            Log::info( 'Webhook de merchant order processado com sucesso', [ 
+            Log::info( 'Webhook de merchant order processado com sucesso', [
                 'order_id'  => $orderId,
                 'tenant_id' => $tenantId,
                 'status'    => $orderData[ 'status' ]
@@ -257,7 +267,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 'Webhook de merchant order processado com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao processar webhook de merchant order', [ 
+            Log::error( 'Exceção ao processar webhook de merchant order', [
                 'webhook_data' => $webhookData,
                 'exception'    => $e->getMessage(),
                 'trace'        => $e->getTraceAsString()
@@ -320,7 +330,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 'Status da merchant order sincronizado com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao sincronizar status da merchant order', [ 
+            Log::error( 'Exceção ao sincronizar status da merchant order', [
                 'order_id'  => $orderId,
                 'tenant_id' => $tenantId,
                 'exception' => $e->getMessage()
@@ -409,7 +419,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 [ 'total' => count( $orders ) ],
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao listar merchant orders', [ 
+            Log::error( 'Exceção ao listar merchant orders', [
                 'tenant_id' => $tenantId,
                 'filters'   => $filters,
                 'exception' => $e->getMessage()
@@ -466,7 +476,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
                 'Merchant order cancelada com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'Exceção ao cancelar merchant order', [ 
+            Log::error( 'Exceção ao cancelar merchant order', [
                 'order_id'  => $orderId,
                 'tenant_id' => $tenantId,
                 'exception' => $e->getMessage()
@@ -614,6 +624,24 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
     }
 
     /**
+     * Validação para tenant (não aplicável para serviços NoTenant).
+     *
+     * Este método é obrigatório por herança mas não realiza validação específica
+     * de tenant, pois esta é uma classe NoTenant.
+     *
+     * @param array $data Dados a validar
+     * @param int $tenant_id ID do tenant
+     * @param bool $is_update Se é uma operação de atualização
+     * @return ServiceResult Resultado da validação
+     */
+    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
+    {
+        // Para serviços NoTenant, não há validação específica de tenant
+        // Retorna sucesso pois a validação é feita pelo método validateForGlobal
+        return $this->success();
+    }
+
+    /**
      * Salva a entidade no banco de dados.
      *
      * @param Model $entity Entidade a ser salva
@@ -624,7 +652,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
         try {
             return $entity->save();
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao salvar entidade de merchant order', [ 
+            Log::error( 'Erro ao salvar entidade de merchant order', [
                 'entity_id' => $entity->id ?? 'new',
                 'exception' => $e->getMessage()
             ] );
@@ -701,7 +729,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
      */
     private function prepareMerchantOrderData( array $orderData, int $tenantId ): array
     {
-        return [ 
+        return [
             'tenant_id'            => $tenantId,
             'provider_id'          => $orderData[ 'provider_id' ],
             'merchant_order_id'    => $orderData[ 'merchant_order_id' ],
@@ -758,11 +786,11 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
     private function updateLocalMerchantOrder( array $orderData, int $tenantId ): void
     {
         $this->model->updateOrCreate(
-            [ 
+            [
                 'merchant_order_id' => $orderData[ 'id' ],
                 'tenant_id'         => $tenantId
             ],
-            [ 
+            [
                 'provider_id'          => $orderData[ 'provider_id' ] ?? null,
                 'plan_subscription_id' => $orderData[ 'metadata' ][ 'plan_subscription_id' ] ?? null,
                 'status'               => $orderData[ 'status' ] ?? 'opened',
@@ -785,7 +813,7 @@ class MerchantOrderMercadoPagoService extends BaseNoTenantService implements Mer
         $this->model
             ->where( 'merchant_order_id', $orderId )
             ->where( 'tenant_id', $tenantId )
-            ->update( [ 
+            ->update( [
                 'status'     => $status,
                 'updated_at' => now()
             ] );

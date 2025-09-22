@@ -143,7 +143,7 @@ class ReportStorageService implements ServiceInterface
      * @param array<string, mixed> $data Dados para atualização
      * @return ServiceResult Resultado da operação
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validar tenant_id

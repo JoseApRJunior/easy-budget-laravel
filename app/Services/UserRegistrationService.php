@@ -97,11 +97,11 @@ class UserRegistrationService extends BaseTenantService
     /**
      * Busca uma entidade pelo ID e tenant_id.
      *
-     * @param mixed $id ID da entidade
+     * @param int $id ID da entidade
      * @param int $tenant_id ID do tenant
      * @return ServiceResult
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult
     {
         try {
             // Delegar para UserService para buscar usuário
@@ -171,7 +171,7 @@ class UserRegistrationService extends BaseTenantService
      * @param array $data Dados de atualização
      * @return ServiceResult
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Delegar para UserService para atualizar usuário
@@ -324,7 +324,7 @@ class UserRegistrationService extends BaseTenantService
 
             DB::commit();
 
-            return ServiceResult::success( [
+            return ServiceResult::success( [ 
                 'provider_id' => $provider->id,
                 'tenant_id'   => $tenant_id,
                 'user_id'     => $user->id,
@@ -482,7 +482,7 @@ class UserRegistrationService extends BaseTenantService
 
             DB::commit();
 
-            return ServiceResult::success( [
+            return ServiceResult::success( [ 
                 'token' => $token,
                 'user'  => $user
             ], 'E-mail de confirmação reenviado com sucesso.' );
@@ -625,7 +625,7 @@ class UserRegistrationService extends BaseTenantService
             $tenantName   = $data[ 'first_name' ] . '_' . $timestamp . '_' . $randomString;
 
             $tenant = new Tenant();
-            $tenant->fill( [
+            $tenant->fill( [ 
                 'name'   => $tenantName,
                 'status' => 'active'
             ] );
@@ -665,7 +665,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $user = new User();
-            $user->fill( [
+            $user->fill( [ 
                 'tenant_id' => $tenant_id,
                 'name'      => $data[ 'first_name' ] . ' ' . $data[ 'last_name' ],
                 'email'     => $data[ 'email' ],
@@ -709,7 +709,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $commonData = new \App\Models\CommonData();
-            $commonData->fill( [
+            $commonData->fill( [ 
                 'tenant_id'  => $tenant_id,
                 'first_name' => $data[ 'first_name' ],
                 'last_name'  => $data[ 'last_name' ]
@@ -750,7 +750,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $contact = new \App\Models\Contact();
-            $contact->fill( [
+            $contact->fill( [ 
                 'tenant_id'      => $tenant_id,
                 'email'          => $data[ 'email' ],
                 'phone'          => $data[ 'phone' ] ?? '',
@@ -791,7 +791,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $address = new \App\Models\Address();
-            $address->fill( [
+            $address->fill( [ 
                 'tenant_id' => $tenant_id
             ] );
 
@@ -840,7 +840,7 @@ class UserRegistrationService extends BaseTenantService
     ): ServiceResult {
         try {
             $provider = new \App\Models\Provider();
-            $provider->fill( [
+            $provider->fill( [ 
                 'tenant_id'      => $tenant_id,
                 'user_id'        => $user->id,
                 'common_data_id' => $commonData->id,
@@ -901,7 +901,7 @@ class UserRegistrationService extends BaseTenantService
 
             // Criar assinatura do plano
             $planSubscription = new \App\Models\PlanSubscription();
-            $planSubscription->fill( [
+            $planSubscription->fill( [ 
                 'tenant_id'          => $tenant_id,
                 'provider_id'        => $provider->id,
                 'plan_id'            => $plan->id,
@@ -923,7 +923,7 @@ class UserRegistrationService extends BaseTenantService
             // Se não for plano gratuito, criar assinatura pendente
             if ( $plan->slug !== 'free' ) {
                 $pendingSubscription = new \App\Models\PlanSubscription();
-                $pendingSubscription->fill( [
+                $pendingSubscription->fill( [ 
                     'tenant_id'          => $tenant_id,
                     'provider_id'        => $provider->id,
                     'plan_id'            => $plan->id,
@@ -971,7 +971,7 @@ class UserRegistrationService extends BaseTenantService
             $hashedToken = hash( 'sha256', $token );
 
             $tokenEntity = new UserConfirmationToken();
-            $tokenEntity->fill( [
+            $tokenEntity->fill( [ 
                 'token'      => $hashedToken,
                 'user_id'    => $user->id,
                 'tenant_id'  => $tenant_id,
@@ -1062,7 +1062,7 @@ class UserRegistrationService extends BaseTenantService
                 $email,
                 'Senha alterada - Easy Budget',
                 'emails.password-changed',
-                [
+                [ 
                     'first_name' => $firstName,
                     'app_name'   => config( 'app.name', 'Easy Budget' )
                 ],
@@ -1094,7 +1094,7 @@ class UserRegistrationService extends BaseTenantService
      */
     private function validateRegistrationData( array $data, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [
+        $rules = [ 
             'email'          => 'required|email|max:255',
             'password'       => 'required|string|min:8|max:255',
             'first_name'     => 'required|string|max:255',
@@ -1139,11 +1139,11 @@ class UserRegistrationService extends BaseTenantService
     /**
      * Busca uma entidade pelo ID e tenant_id.
      *
-     * @param mixed $id ID da entidade
+     * @param int $id ID da entidade
      * @param int $tenant_id ID do tenant
      * @return EloquentModel|null Entidade encontrada ou null
      */
-    protected function findEntityByIdAndTenantId( mixed $id, int $tenant_id ): ?EloquentModel
+    protected function findEntityByIdAndTenantId( int $id, int $tenant_id ): ?EloquentModel
     {
         try {
             // Para UserRegistrationService, a entidade principal é User

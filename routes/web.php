@@ -13,6 +13,7 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InfoController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegalController;
@@ -35,6 +36,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get( '/', [ HomeController::class, 'index' ] )->name( 'home' );
 
+Route::get( '/about', [ InfoController::class, 'about' ] )->name( 'about' );
 Route::get( '/terms-of-service', [ LegalController::class, 'termsOfService' ] )->name( 'legal.terms' );
 Route::get( '/privacy-policy', [ LegalController::class, 'privacyPolicy' ] )->name( 'legal.privacy' );
 
@@ -67,6 +69,8 @@ Route::get( '/invoices/{id}', [ InvoiceController::class, 'publicShow' ] )->name
 Route::get( '/plans/{slug}', [ PlanController::class, 'show' ] )->name( 'public.plan.show' );
 
 Route::middleware( 'auth' )->group( function () {
+    Route::get( '/profile', [ UserController::class, 'showProfile' ] )->name( 'profile.show' );
+
     Route::get( '/provider', [ ProviderController::class, 'index' ] )->name( 'provider.dashboard' );
     Route::get( '/provider/update', [ ProviderController::class, 'edit' ] )->name( 'provider.edit' );
     Route::post( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
@@ -127,7 +131,7 @@ Route::middleware( 'auth' )->group( function () {
     Route::delete( '/provider/invoices/{id}', [ InvoiceController::class, 'destroy' ] )->name( 'invoices.destroy' );
     Route::get( '/provider/invoices/{id}/print', [ InvoiceController::class, 'print' ] )->name( 'invoices.print' );
 
-    Route::get( '/provider/reports', [ ReportController::class, 'index' ] )->name( 'reports.index' );
+    Route::get( '/provider/reports', [ ReportController::class, 'index' ] )->name( 'provider.reports.index' );
     Route::get( '/provider/reports/budgets', [ ReportController::class, 'budgets' ] )->name( 'reports.budgets' );
     Route::get( '/provider/reports/customers', [ ReportController::class, 'customers' ] )->name( 'reports.customers' );
     Route::get( '/provider/reports/services', [ ReportController::class, 'services' ] )->name( 'reports.services' );
@@ -160,6 +164,8 @@ Route::middleware( 'auth' )->group( function () {
 Route::prefix( 'admin' )->middleware( [ 'auth', 'admin' ] )->name( 'admin.' )->group( function () {
     Route::get( '/dashboard', [ DashboardController::class, 'index' ] )->name( 'dashboard' );
 
+    Route::get( '/plans/subscriptions', [ PlanController::class, 'subscriptions' ] )->name( 'plans.subscriptions' );
+
     Route::get( '/users', [ UserController::class, 'index' ] )->name( 'users.index' );
     Route::get( '/users/create', [ UserController::class, 'create' ] )->name( 'users.create' );
     Route::post( '/users', [ UserController::class, 'store' ] )->name( 'users.store' );
@@ -186,6 +192,8 @@ Route::prefix( 'admin' )->middleware( [ 'auth', 'admin' ] )->name( 'admin.' )->g
 
     Route::get( '/settings', [ SettingsController::class, 'index' ] )->name( 'settings.index' );
     Route::post( '/settings', [ SettingsController::class, 'store' ] )->name( 'settings.store' );
+
+    Route::get( '/logs', [ LogController::class, 'index' ] )->name( 'logs.index' );
 
     Route::get( '/monitoring', [ MonitoringController::class, 'index' ] )->name( 'monitoring.index' );
     Route::get( '/alerts', [ AlertController::class, 'index' ] )->name( 'alerts.index' );

@@ -16,17 +16,13 @@ class Profession extends Model
 
     protected $table = 'professions';
 
-    protected $fillable = [
+    protected $fillable = [ 
         'slug',
         'name',
-        'description',
-        'order_index',
         'is_active',
     ];
 
-    protected $casts = [
-        'description' => 'string|null',
-        'order_index' => 'integer|null',
+    protected $casts = [ 
         'is_active' => 'boolean',
     ];
 
@@ -35,6 +31,7 @@ class Profession extends Model
      */
     public function commonData()
     {
-        return $this->hasMany(CommonData::class, 'profession_id');
+        return $this->hasMany( CommonData::class, 'profession_id' );
     }
+
 }

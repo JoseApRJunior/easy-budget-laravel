@@ -33,8 +33,6 @@ class Product extends Model
         'active',
         'code',
         'image',
-        'category_id',
-        'unit_id',
     ];
 
     /**
@@ -46,8 +44,8 @@ class Product extends Model
         'tenant_id'  => 'integer',
         'price'      => 'decimal:2',
         'active'     => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**
@@ -56,22 +54,6 @@ class Product extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
-    }
-
-    /**
-     * Get the category that owns the Product.
-     */
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo( Category::class);
-    }
-
-    /**
-     * Get the unit that owns the Product.
-     */
-    public function unit(): BelongsTo
-    {
-        return $this->belongsTo( Unit::class);
     }
 
 }

@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * Esta é uma implementação mínima para resolver erros de autoload.
  * TODO: Implementar funcionalidade completa posteriormente.
  */
-class SupportService extends BaseNoTenantService implements ServiceNoTenantInterface
+class SupportService extends BaseNoTenantService
 {
     /**
      * Repositório para operações de suporte.

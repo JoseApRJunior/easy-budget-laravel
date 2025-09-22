@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class UserConfirmationToken extends Model
 {
-    use BelongsToTenant;
+    use TenantScoped;
     /**
      * The table associated with the model.
      *
@@ -37,9 +37,9 @@ class UserConfirmationToken extends Model
      */
     protected $casts = [ 
         'tenant_id'  => 'integer',
-        'expires_at' => 'datetime_immutable',
-        'created_at' => 'datetime_immutable',
-        'updated_at' => 'datetime_immutable',
+        'expires_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**

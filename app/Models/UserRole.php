@@ -4,16 +4,16 @@ namespace App\Models;
 
 use App\Models\Role;
 use App\Models\Tenant;
+use App\Models\Traits\TenantScoped;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
-use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
 
 class UserRole extends Pivot
 {
-    use BelongsToTenant;
+    use TenantScoped;
 
     /**
      * The table associated with the model.
@@ -73,7 +73,7 @@ class UserRole extends Pivot
         'user_id'    => 'integer',
         'role_id'    => 'integer',
         'tenant_id'  => 'integer',
-        'created_at' => 'datetime_immutable',
-        'updated_at' => 'datetime_immutable',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 }

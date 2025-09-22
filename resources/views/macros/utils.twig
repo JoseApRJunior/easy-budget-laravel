@@ -1,0 +1,17 @@
+{# Definir macro para verificar recurso do plano #}
+{% macro checkFeature(feature_slug, content, condition = true) %}
+{% set resource = getResource(feature_slug) %}
+{% if condition and resource and entityProperty(resource, 'status') is defined and entityProperty(resource, 'status') ==
+'inactive' %}
+<div class="alert alert-warning m-2 d-flex" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <div>
+    Recurso desativado temporariamente
+  </div>
+</div>
+{% endif %}
+<div
+  class="feature-content {% if condition and resource and entityProperty(resource, 'status') is defined and entityProperty(resource, 'status') == 'inactive' %}feature-disabled{% endif %}">
+  {{ content|raw }}
+</div>
+{% endmacro %}

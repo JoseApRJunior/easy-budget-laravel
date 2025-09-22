@@ -18,11 +18,11 @@ interface ServiceInterface extends BaseServiceInterface
     /**
      * Busca uma entidade pelo ID e tenant_id
      *
-     * @param mixed $id ID da entidade
+     * @param int $id ID da entidade
      * @param int $tenant_id ID do tenant (snake_case conforme padrão legacy)
      * @return ServiceResult Resultado da operação com a entidade encontrada
      */
-    public function getByIdAndTenantId( mixed $id, int $tenant_id ): ServiceResult;
+    public function getByIdAndTenantId( int $id, int $tenant_id ): ServiceResult;
 
     /**
      * Lista todas as entidades de um tenant
@@ -50,7 +50,7 @@ interface ServiceInterface extends BaseServiceInterface
      * @param array $data Dados para atualização
      * @return ServiceResult Resultado da operação com a entidade atualizada
      */
-    public function updateByIdAndTenantId( int $id, int $tenant_id, array $data ): ServiceResult;
+    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult;
 
     /**
      * Remove uma entidade por ID e tenant_id
