@@ -218,32 +218,4 @@ class CustomerController extends BaseController
         return response()->json( $customers );
     }
 
-    public function servicesAndQuotes( int $id ): View
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $data = $this->customerService->getServicesAndQuotes( $id, $tenantId );
-
-        if ( empty( $data ) ) {
-            abort( 404 );
-        }
-
-        $customer = $this->customerService->getById( $id, $tenantId );
-
-        return view( 'pages.customer.services-quotes', compact( 'data', 'customer' ) );
-    }
-
-    public function search( Request $request ): \Illuminate\Http\JsonResponse
-    {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
-
-        $query     = $request->get( 'q', '' );
-        $customers = $this->customerService->search( $query, $tenantId, $providerId );
-
-        return response()->json( $customers );
-    }
-
 }

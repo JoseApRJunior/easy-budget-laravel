@@ -45,9 +45,17 @@ class RolePermission extends Pivot
         'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'immutable_datetime',
-        'updated_at'    => 'immutable_datetime',
+        'created_at'    => 'datetime',
+        'updated_at'    => 'datetime',
     ];
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+    }
 
     /**
      * Get the role that owns the RolePermission.

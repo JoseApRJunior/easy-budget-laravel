@@ -56,31 +56,19 @@ class RolePermissionSeeder extends Seeder
             );
         }
 
-        // Associar permissions aos roles
+        // Associar permissions aos roles (usando sync para evitar duplicatas)
         $adminPermissions    = [ 'access-dashboard', 'manage-users', 'manage-budgets', 'manage-customers', 'manage-reports', 'system-settings' ];
         $userPermissions     = [ 'access-dashboard', 'manage-budgets' ];
         $providerPermissions = [ 'access-dashboard', 'manage-budgets', 'manage-customers' ];
 
-        foreach ( $adminPermissions as $name ) {
-            $permission = Permission::where( 'name', $name )->first();
-            if ( $permission ) {
-                $adminRole->permissions()->attach( $permission->id );
-            }
-        }
+        $adminPermissionIds = Permission::whereIn('name', $adminPermissions)->pluck('id')->toArray();
+        $adminRole->permissions()->sync($adminPermissionIds);
 
-        foreach ( $userPermissions as $name ) {
-            $permission = Permission::where( 'name', $name )->first();
-            if ( $permission ) {
-                $userRole->permissions()->attach( $permission->id );
-            }
-        }
+        $userPermissionIds = Permission::whereIn('name', $userPermissions)->pluck('id')->toArray();
+        $userRole->permissions()->sync($userPermissionIds);
 
-        foreach ( $providerPermissions as $name ) {
-            $permission = Permission::where( 'name', $name )->first();
-            if ( $permission ) {
-                $providerRole->permissions()->attach( $permission->id );
-            }
-        }
+        $providerPermissionIds = Permission::whereIn('name', $providerPermissions)->pluck('id')->toArray();
+        $providerRole->permissions()->sync($providerPermissionIds);
 
         /**
          * Seeder para RBAC custom: cria roles e permissions globais, attach via relationships Eloquent.

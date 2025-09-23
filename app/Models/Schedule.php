@@ -40,10 +40,10 @@ class Schedule extends Model
         'tenant_id'                  => 'integer',
         'service_id'                 => 'integer',
         'user_confirmation_token_id' => 'integer',
-        'start_date_time'            => 'datetime',
-        'end_date_time'              => 'datetime',
-        'created_at'                 => 'datetime',
-        'updated_at'                 => 'datetime',
+        'start_date_time'            => 'immutable_datetime',
+        'end_date_time'              => 'immutable_datetime',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'immutable_datetime',
     ];
 
     /**

@@ -72,11 +72,25 @@ class ServiceItem extends Model
     }
 
     /**
-     * Set the total attribute automatically calculated from quantity and unit_value.
+     * Boot the model and set up event listeners.
      */
-    public function setTotalAttribute($value)
+    protected static function booted(): void
     {
-        $this->attributes['total'] = (float)$this->quantity * (float)$this->unit_value;
+        static::saving( function (ServiceItem $model) {
+            // Calculate total as quantity * unit_value using safe decimal math
+            $quantity  = (int) ( $model->quantity ?? 0 );
+            $unitValue = (string) ( $model->unit_value ?? '0' );
+
+            // Use bcmath if available for precise decimal calculations
+            if ( function_exists( 'bcmul' ) ) {
+                $computed = bcmul( $unitValue, (string) $quantity, 2 );
+            } else {
+                // Fallback to number_format for precise decimal handling
+                $computed = number_format( ( (float) $unitValue ) * $quantity, 2, '.', '' );
+            }
+
+            $model->total = $computed;
+        } );
     }
 
 }

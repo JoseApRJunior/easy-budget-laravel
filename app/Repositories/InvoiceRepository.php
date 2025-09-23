@@ -12,10 +12,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class InvoiceRepository extends AbstractRepository implements RepositoryInterface
 {
-    public function __construct()
-    {
-        parent::__construct( new Invoice() );
-    }
+    protected string $modelClass = Invoice::class;
 
     public function findByIdAndTenantId( int $id, int $tenantId ): ?Invoice
     {

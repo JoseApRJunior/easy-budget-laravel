@@ -25,7 +25,7 @@ class CommonData extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'first_name',
         'last_name',
@@ -43,11 +43,11 @@ class CommonData extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'           => 'integer',
         'first_name'          => 'string',
         'last_name'           => 'string',
-        'birth_date'          => 'immutable_date',
+        'birth_date'          => 'immutable_datetime',
         'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',

@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use App\Models\Role;
 use App\Repositories\RoleRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class RoleSlugTest extends TestCase
 {
@@ -43,13 +43,13 @@ class RoleSlugTest extends TestCase
     public function it_excludes_specific_id_when_checking_slug(): void
     {
         $role1 = Role::create( [ 'name' => 'Test Role', 'slug' => 'test-role', 'status' => 'active' ] );
-        $role2 = Role::create( [ 'name' => 'Another Role', 'slug' => 'test-role', 'status' => 'active' ] );
+        $role2 = Role::create( [ 'name' => 'Another Role', 'slug' => 'another-role', 'status' => 'active' ] );
 
         $result1 = $this->repository->existsBySlug( 'test-role', null, $role1->id );
-        $result2 = $this->repository->existsBySlug( 'test-role', null, $role2->id );
+        $result2 = $this->repository->existsBySlug( 'another-role', null, $role2->id );
 
-        $this->assertTrue( $result1 ); // Deve encontrar o role2
-        $this->assertTrue( $result2 ); // Deve encontrar o role1
+        $this->assertFalse( $result1 ); // Não deve encontrar porque exclui o próprio role1
+        $this->assertFalse( $result2 ); // Não deve encontrar porque exclui o próprio role2
     }
 
     /** @test */

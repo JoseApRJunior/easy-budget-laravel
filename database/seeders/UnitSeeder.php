@@ -76,7 +76,10 @@ class UnitSeeder extends Seeder
         ];
 
         foreach ( $units as $unit ) {
-            DB::table( 'units' )->insert( $unit );
+            DB::table( 'units' )->updateOrInsert(
+                ['name' => $unit['name'], 'symbol' => $unit['symbol']],
+                $unit
+            );
         }
     }
 

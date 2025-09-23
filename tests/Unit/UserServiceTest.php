@@ -24,14 +24,23 @@ class UserServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->tenant = Tenant::factory()->create();
+        // Mock das dependências necessárias para UserRegistrationService
+        $this->userService               = $this->mock( \App\Services\UserService::class );
+        $this->mailerService             = $this->mock( \App\Services\MailerService::class );
+        $this->tenantRepository          = $this->mock( \App\Repositories\TenantRepository::class );
+        $this->userRepository            = $this->mock( \App\Repositories\UserRepository::class );
+        $this->userConfirmationTokenRepo = $this->mock( \App\Repositories\UserConfirmationTokenRepository::class );
+        $this->notificationService       = $this->mock( \App\Services\NotificationService::class );
 
-        // Mock do repositório e serviço de notificação
-        $this->userRepository      = $this->mock( UserRepository::class);
-        $this->notificationService = $this->mock( \App\Services\NotificationService::class);
-
-        // Instanciar o serviço com os mocks
-        $this->userService = new UserRegistrationService( $this->userRepository, $this->notificationService );
+        // Instanciar o UserRegistrationService com todas as dependências
+        $this->userRegistrationService = new UserRegistrationService(
+            $this->userService,
+            $this->mailerService,
+            $this->tenantRepository,
+            $this->userRepository,
+            $this->userConfirmationTokenRepo,
+            $this->notificationService
+        );
     }
 
     /** @test */
@@ -64,17 +73,18 @@ class UserServiceTest extends TestCase
             ->once()
             ->andReturn( true );
 
-        $user = $this->userService->registerProvider( $providerData );
+        $user = $this->userRegistrationService->registerProvider( $providerData );
 
         $this->assertInstanceOf( User::class, $user );
         $this->assertEquals( 'João Silva', $user->name );
     }
 
     /** @test */
-    public function it_confirms_account_with_valid_token()
+    public function it_confirms_account_successfully()
     {
         $userId = 1;
         $token  = 'valid-token';
+        $tenantId = 1; // Adding missing tenant ID
 
         $this->userRepository
             ->shouldReceive( 'getUserIdByToken' )
@@ -82,7 +92,7 @@ class UserServiceTest extends TestCase
             ->with( $token )
             ->andReturn( $userId );
 
-        $result = $this->userService->confirmAccount( $token );
+        $result = $this->userRegistrationService->confirmAccount( $token, $tenantId );
 
         $this->assertTrue( $result );
     }
@@ -91,6 +101,7 @@ class UserServiceTest extends TestCase
     public function it_fails_to_confirm_account_with_invalid_token()
     {
         $token = 'invalid-token';
+        $tenantId = 1; // Adding missing tenant ID
 
         $this->userRepository
             ->shouldReceive( 'getUserIdByToken' )
@@ -100,7 +111,7 @@ class UserServiceTest extends TestCase
 
         $this->expectException( \Illuminate\Validation\ValidationException::class);
 
-        $this->userService->confirmAccount( $token );
+        $this->userRegistrationService->confirmAccount( $token, $tenantId );
     }
 
     /** @test */
@@ -117,7 +128,7 @@ class UserServiceTest extends TestCase
             ->with( $email, $token )
             ->andReturn( $userId );
 
-        $result = $this->userService->resetPassword( $email, $token, $newPassword );
+        $result = $this->userRegistrationService->resetPassword( $email, $token, $newPassword );
 
         $this->assertTrue( $result );
     }
@@ -134,7 +145,7 @@ class UserServiceTest extends TestCase
             ->with( $userId, 'blocked', $reason )
             ->andReturn( true );
 
-        $result = $this->userService->blockAccount( $userId, $reason );
+        $result = $this->userRegistrationService->blockAccount( $userId, $reason );
 
         $this->assertTrue( $result );
     }
@@ -159,7 +170,7 @@ class UserServiceTest extends TestCase
             ->once()
             ->andReturn( true );
 
-        $result = $this->userService->initiatePasswordReset( $email );
+        $result = $this->userRegistrationService->initiatePasswordReset( $email );
 
         $this->assertTrue( $result );
     }
@@ -176,7 +187,7 @@ class UserServiceTest extends TestCase
             ->andReturn( null );
 
         // Should still return true to prevent email enumeration
-        $result = $this->userService->initiatePasswordReset( $email );
+        $result = $this->userRegistrationService->initiatePasswordReset( $email );
 
         $this->assertTrue( $result );
     }

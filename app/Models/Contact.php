@@ -45,8 +45,8 @@ class Contact extends Model
         'email_business' => 'string',
         'phone_business' => 'string',
         'website'        => 'string',
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**

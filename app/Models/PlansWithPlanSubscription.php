@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
- * Modelo para a view PlansWithPlanSubscription.
+ * Modelo para combinar dados de Plan e PlanSubscription.
  *
- * Esta é uma entidade de view/DTO somente leitura que combina dados
- * de Plan e PlanSubscription para relatórios e consultas.
+ * Esta é uma entidade virtual/DTO somente leitura que combina dados
+ * de Plan e PlanSubscription através de joins Eloquent para relatórios e consultas.
+ * Não depende de uma view física no banco de dados.
  *
  * @property int $id
  * @property int $tenant_id
@@ -28,11 +29,87 @@ use Illuminate\Support\Carbon;
 class PlansWithPlanSubscription extends Model
 {
     /**
-     * The table associated with the model.
+     * Indicates if the model should be timestamped.
      *
-     * @var string
+     * @var bool
      */
-    protected $table = 'plans_with_plan_subscription';
+    public $timestamps = false;
+
+    /**
+     * Get query for PlansWithPlanSubscription data using joins.
+     * Since the view doesn't exist, we use Eloquent joins instead.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function buildQuery()
+    {
+        return PlanSubscription::select( [ 
+            'plan_subscriptions.id',
+            'plan_subscriptions.tenant_id',
+            'plan_subscriptions.provider_id',
+            'plan_subscriptions.plan_id',
+            'plan_subscriptions.status',
+            'plan_subscriptions.transaction_amount',
+            'plan_subscriptions.end_date',
+            'plans.slug',
+            'plans.name',
+            'plan_subscriptions.created_at',
+            'plan_subscriptions.updated_at',
+        ] )
+            ->join( 'plans', 'plan_subscriptions.plan_id', '=', 'plans.id' )
+            ->with( [ 'tenant', 'provider', 'plan' ] );
+    }
+
+    /**
+     * Create a new instance from PlanSubscription data.
+     *
+     * @param PlanSubscription $planSubscription
+     * @return static
+     */
+    public static function fromPlanSubscription( PlanSubscription $planSubscription )
+    {
+        $instance                     = new static();
+        $instance->id                 = $planSubscription->id;
+        $instance->tenant_id          = $planSubscription->tenant_id;
+        $instance->provider_id        = $planSubscription->provider_id;
+        $instance->plan_id            = $planSubscription->plan_id;
+        $instance->status             = $planSubscription->status;
+        $instance->transaction_amount = $planSubscription->transaction_amount;
+        $instance->end_date           = $planSubscription->end_date;
+        $instance->slug               = $planSubscription->plan->slug ?? '';
+        $instance->name               = $planSubscription->plan->name ?? '';
+        $instance->created_at         = $planSubscription->created_at;
+        $instance->updated_at         = $planSubscription->updated_at;
+
+        return $instance;
+    }
+
+    /**
+     * Get all records as a collection.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getAll()
+    {
+        return static::buildQuery()->get();
+    }
+
+    /**
+     * Find a subscription with plan by ID.
+     *
+     * @param int $id
+     * @return static|null
+     */
+    public static function findSubscriptionWithPlan( $id )
+    {
+        $planSubscription = PlanSubscription::find( $id );
+
+        if ( !$planSubscription ) {
+            return null;
+        }
+
+        return static::fromPlanSubscription( $planSubscription );
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -64,13 +141,6 @@ class PlansWithPlanSubscription extends Model
     ];
 
     /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public $timestamps = false;
-
-    /**
      * Get the tenant that owns the PlansWithPlanSubscription.
      */
     public function tenant(): BelongsTo
@@ -97,54 +167,11 @@ class PlansWithPlanSubscription extends Model
     /**
      * Get the plan subscription that owns the PlansWithPlanSubscription.
      *
-     * Este relacionamento utiliza chave primária compartilhada (id) para conectar
-     * a view PlansWithPlanSubscription com a tabela PlanSubscription.
-     * Utilizado para relatórios que precisam acessar dados detalhados da assinatura.
-     *
      * @return HasOne
      */
     public function planSubscription(): HasOne
     {
-        return $this->hasOne(PlanSubscription::class, 'id', 'id');
-    }
-
-    /**
-     * Override save method to make this model read-only.
-     *
-     * @param  array  $options
-     * @return bool
-     *
-     * @throws \Exception
-     */
-    public function save( array $options = [] ): bool
-    {
-        throw new \Exception( 'This model is read-only and cannot be saved.' );
-    }
-
-    /**
-     * Override update method to make this model read-only.
-     *
-     * @param  array  $attributes
-     * @param  array  $options
-     * @return bool
-     *
-     * @throws \Exception
-     */
-    public function update( array $attributes = [], array $options = [] ): bool
-    {
-        throw new \Exception( 'This model is read-only and cannot be updated.' );
-    }
-
-    /**
-     * Override delete method to make this model read-only.
-     *
-     * @return bool|null
-     *
-     * @throws \Exception
-     */
-    public function delete(): ?bool
-    {
-        throw new \Exception( 'This model is read-only and cannot be deleted.' );
+        return $this->hasOne( PlanSubscription::class, 'id', 'id' );
     }
 
 }

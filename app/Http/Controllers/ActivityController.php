@@ -25,9 +25,9 @@ use Maatwebsite\Excel\Facades\Excel;
 class ActivityController extends BaseController
 {
     /**
-     * @var ActivityService
+     * @var ActivityService|null
      */
-    protected ActivityService $activityService;
+    protected ?ActivityService $activityService = null;
 
     /**
      * Construtor da classe ActivityController.
@@ -127,7 +127,7 @@ class ActivityController extends BaseController
             'date_to'   => 'nullable|date'
         ] );
 
-        $filters                 = $this->getActivityFilters( $request );
+        $filters                   = $this->getActivityFilters( $request );
         $filters[ 'search_query' ] = $request->query;
 
         $activities = $this->activityService->searchActivities(

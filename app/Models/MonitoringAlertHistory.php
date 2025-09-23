@@ -29,28 +29,23 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'tenant_id',
         'alert_type',
         'severity',
-        'title',
-        'description',
-        'component',
+        'middleware_name',
         'endpoint',
-        'method',
-        'current_value',
+        'metric_name',
+        'metric_value',
         'threshold_value',
-        'unit',
-        'metadata',
-        'status',
-        'acknowledged_by',
-        'acknowledged_at',
-        'resolved_by',
+        'message',
+        'additional_data',
+        'is_resolved',
         'resolved_at',
+        'resolved_by',
         'resolution_notes',
-        'occurrence_count',
-        'first_occurrence',
-        'last_occurrence',
+        'notification_sent',
+        'notification_sent_at',
     ];
 
     /**
@@ -58,17 +53,18 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'current_value'    => 'float',
-        'threshold_value'  => 'float',
-        'metadata'         => 'array',
-        'acknowledged_at'  => 'datetime',
-        'resolved_at'      => 'datetime',
-        'first_occurrence' => 'datetime',
-        'last_occurrence'  => 'datetime',
-        'tenant_id'        => 'integer',
-        'created_at'       => 'immutable_datetime',
-        'updated_at'       => 'immutable_datetime',
+    protected $casts = [ 
+        'metric_value'         => 'decimal:3',
+        'threshold_value'      => 'decimal:3',
+        'additional_data'      => 'array',
+        'is_resolved'          => 'boolean',
+        'resolved_at'          => 'datetime',
+        'notification_sent'    => 'boolean',
+        'notification_sent_at' => 'datetime',
+        'tenant_id'            => 'integer',
+        'resolved_by'          => 'integer',
+        'created_at'           => 'immutable_datetime',
+        'updated_at'           => 'immutable_datetime',
     ];
 
     /**
@@ -77,14 +73,6 @@ class MonitoringAlertHistory extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
-    }
-
-    /**
-     * Get the user who acknowledged the alert.
-     */
-    public function acknowledgedBy(): BelongsTo
-    {
-        return $this->belongsTo( User::class, 'acknowledged_by' );
     }
 
     /**

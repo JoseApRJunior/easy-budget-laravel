@@ -66,7 +66,7 @@ class Service extends Model
         'service_statuses_id'   => 'integer',
         'discount'              => 'decimal:2',
         'total'                 => 'decimal:2',
-        'due_date'              => 'date',
+        'due_date'              => 'datetime',
         'pdf_verification_hash' => 'string',
         'created_at'            => 'immutable_datetime',
         'updated_at'            => 'immutable_datetime',
@@ -110,6 +110,14 @@ class Service extends Model
     public function serviceItems(): HasMany
     {
         return $this->hasMany( ServiceItem::class);
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

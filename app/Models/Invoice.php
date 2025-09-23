@@ -39,6 +39,7 @@ class Invoice extends Model
         'transaction_amount',
         'public_hash',
         'discount',
+        'description',
         'notes',
     ];
 
@@ -62,6 +63,7 @@ class Invoice extends Model
         'transaction_amount'  => 'decimal:2',
         'public_hash'         => 'string',
         'discount'            => 'decimal:2',
+        'description'         => 'string',
         'notes'               => 'string',
         'created_at'          => 'immutable_datetime',
         'updated_at'          => 'immutable_datetime',
@@ -97,6 +99,14 @@ class Invoice extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo( Service::class);
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
     }
 
 }

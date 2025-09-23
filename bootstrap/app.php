@@ -10,6 +10,9 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+    ->withProviders( [
+        // \App\Providers\TwigServiceProvider::class, // Removido - migrando para Blade nativo
+    ] )
     ->withMiddleware( function (Middleware $middleware): void {
         $middleware->alias( [ 
             'tenancy'         => \Stancl\Tenancy\Middleware\InitializeTenancyByPath::class,

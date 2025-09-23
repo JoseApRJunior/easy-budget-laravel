@@ -47,8 +47,8 @@ class Address extends Model
         'city'           => 'string',
         'state'          => 'string',
         'cep'            => 'string',
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**

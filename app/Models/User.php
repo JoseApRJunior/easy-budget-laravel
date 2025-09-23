@@ -101,22 +101,30 @@ class User extends Authenticatable
             'role_id',
         )->using( \App\Models\UserRole::class)
             ->withPivot( [ 'tenant_id' ] )
-            ->wherePivot( 'tenant_id', $this->tenant_id )
             ->withTimestamps();
     }
 
     /**
-     * The permissions that belong to the user.
+     * Get roles with tenant scoping applied.
+     * Use this method when you need to ensure tenant isolation for roles.
      */
-    public function permissions(): BelongsToMany
+    public function getTenantScopedRoles()
     {
-        return $this->belongsToMany(
-            Permission::class,
-            'user_permissions',
-            'user_id',
-            'permission_id',
-        )->withPivot( 'tenant_id' )
-            ->withTimestamps();
+        return $this->roles()->wherePivot( 'tenant_id', $this->tenant_id );
+    }
+
+    /**
+     * The permissions that belong to the user through roles.
+     * Since user_permissions table doesn't exist, permissions are accessed via roles.
+     */
+    public function permissions()
+    {
+        return Permission::whereHas( 'roles', function ($query) {
+            $query->whereHas( 'users', function ($query) {
+                $query->where( 'user_id', $this->id )
+                    ->where( 'tenant_id', $this->tenant_id );
+            } );
+        } );
     }
 
     /**
@@ -128,7 +136,7 @@ class User extends Authenticatable
     public function attachRole( $role ): void
     {
         $roleId = $role instanceof Role ? $role->getKey() : $role;
-        $this->roles()->attach( $roleId, [ 'tenant_id' => $this->tenant_id ] );
+        $this->getTenantScopedRoles()->attach( $roleId, [ 'tenant_id' => $this->tenant_id ] );
     }
 
     /**
@@ -140,7 +148,7 @@ class User extends Authenticatable
     public function detachRole( $role ): void
     {
         $roleId = $role instanceof Role ? $role->getKey() : $role;
-        $this->roles()->wherePivot( 'tenant_id', $this->tenant_id )->detach( $roleId );
+        $this->getTenantScopedRoles()->detach( $roleId );
     }
 
     /**
@@ -164,7 +172,7 @@ class User extends Authenticatable
      */
     public function hasRole( string $role ): bool
     {
-        return $this->roles()->where( 'name', $role )->exists();
+        return $this->getTenantScopedRoles()->where( 'name', $role )->exists();
     }
 
     /**
@@ -176,6 +184,14 @@ class User extends Authenticatable
         return $this->provider?->commonData
             ? ( $this->provider->commonData->first_name . ' ' . $this->provider->commonData->last_name )
             : ( $this->attributes[ 'email' ] ?? '' );
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

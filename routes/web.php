@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\AICoontroller;
+use App\Http\Controllers\AIController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
@@ -157,7 +157,7 @@ Route::middleware( 'auth' )->group( function () {
 
     Route::get( '/provider/monitoring', [ MonitoringController::class, 'index' ] )->name( 'monitoring.index' );
     Route::get( '/provider/alerts', [ AlertController::class, 'index' ] )->name( 'alerts.index' );
-    Route::get( '/provider/ai', [ AICoontroller::class, 'index' ] )->name( 'ai.index' );
+    Route::get( '/provider/ai', [ AIController::class, 'index' ] )->name( 'ai.index' );
 } );
 
 // Admin routes
@@ -193,11 +193,11 @@ Route::prefix( 'admin' )->middleware( [ 'auth', 'admin' ] )->name( 'admin.' )->g
     Route::get( '/settings', [ SettingsController::class, 'index' ] )->name( 'settings.index' );
     Route::post( '/settings', [ SettingsController::class, 'store' ] )->name( 'settings.store' );
 
-    Route::get( '/logs', [ LogController::class, 'index' ] )->name( 'logs.index' );
+    Route::get( '/logs', [ \App\Http\Controllers\LogController::class, 'index' ] )->name( 'logs.index' );
 
     Route::get( '/monitoring', [ MonitoringController::class, 'index' ] )->name( 'monitoring.index' );
     Route::get( '/alerts', [ AlertController::class, 'index' ] )->name( 'alerts.index' );
-    Route::get( '/ai', [ AICoontroller::class, 'index' ] )->name( 'ai.index' );
+    Route::get( '/ai', [ AIController::class, 'index' ] )->name( 'ai.index' );
     Route::get( '/backups', [ BackupController::class, 'index' ] )->name( 'backups.index' );
     Route::post( '/backups', [ BackupController::class, 'store' ] )->name( 'backups.store' );
     Route::get( '/categories', [ CategoryController::class, 'index' ] )->name( 'categories.index' );

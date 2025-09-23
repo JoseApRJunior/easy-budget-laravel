@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class LogController extends Controller
+class LogController extends BaseController
 {
-    /**
-     * Exibe a página de logs do sistema
-     *
-     * @param Request $request
-     * @return View
-     */
-    public function index( Request $request ): View
+    public function __construct()
     {
-        return view( 'pages.admin.logs.index' );
+        parent::__construct();
+    }
+
+    public function index(): View
+    {
+        return view( 'admin.logs.index' );
+    }
+
+    public function show( Request $request, string $id ): View
+    {
+        // Logic to show specific log
+        return view( 'admin.logs.show', compact( 'id' ) );
+    }
+
+    public function download( Request $request, string $id ): JsonResponse
+    {
+        // Logic to download log file
+        return response()->json( [ 'status' => 'success' ] );
     }
 
 }

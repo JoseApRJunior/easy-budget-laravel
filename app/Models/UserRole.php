@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Role;
 use App\Models\Tenant;
-use App\Models\Traits\TenantScoped;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 class UserRole extends Pivot
 {
-    use TenantScoped;
 
     /**
      * The table associated with the model.
@@ -73,7 +71,16 @@ class UserRole extends Pivot
         'user_id'    => 'integer',
         'role_id'    => 'integer',
         'tenant_id'  => 'integer',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
+    }
+
 }

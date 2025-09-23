@@ -1,0 +1,15 @@
+tools:
+  - name: php-stan
+    command: vendor\bin\phpstan.bat analyse -c phpstan.neon --memory-limit=-1 --no-progress
+  - name: tests-unit
+    command: vendor\bin\phpunit.bat --configuration tests/phpunit.xml
+  - name: php-syntax-check
+    command: php -l app/controllers/HomeController.php
+  - name: composer-validate
+    command: composer validate --strict
+  - name: analyze-controllers
+    command: vendor\bin\phpstan.bat analyse app/controllers/ -c phpstan.neon --memory-limit=-1 --no-progress
+  - name: analyze-services
+    command: vendor\bin\phpstan.bat analyse app/database/servicesORM/ -c phpstan.neon --memory-limit=-1 --no-progress
+  - name: analyze-entities
+    command: vendor\bin\phpstan.bat analyse app/database/entitiesORM/ -c phpstan.neon --memory-limit=-1 --no-progress

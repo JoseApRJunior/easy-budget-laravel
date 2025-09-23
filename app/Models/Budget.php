@@ -40,7 +40,7 @@ class Budget extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'customer_id',
         'code',
@@ -61,14 +61,16 @@ class Budget extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
         'budget_statuses_id'         => 'integer',
         'user_confirmation_token_id' => 'integer',
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
-        'due_date'                   => 'date',
+        'due_date'                   => 'datetime',
+        'attachment'                 => 'array',
+        'history'                    => 'array',
         'pdf_verification_hash'      => 'string',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'immutable_datetime',
@@ -104,22 +106,22 @@ class Budget extends Model
     }
 
     /**
-     * Get the attachment attribute as decoded JSON array.
+     * Get the attachment attribute as decoded JSON array or raw string.
      *
-     * @return array
+     * @return array|string
      */
-    public function getAttachmentAttribute( $value ): array
+    public function getAttachmentAttribute( $value )
     {
         if ( empty( $value ) ) {
             return [];
         }
 
         $decoded = json_decode( $value, true );
-        return $decoded ?? [];
+        return $decoded !== null ? $decoded : $value;
     }
 
     /**
-     * Set the attachment attribute as encoded JSON string.
+     * Set the attachment attribute as encoded JSON string or raw string.
      *
      * @param mixed $value
      */
@@ -130,26 +132,26 @@ class Budget extends Model
             return;
         }
 
-        $this->attributes[ 'attachment' ] = json_encode( $value );
+        $this->attributes[ 'attachment' ] = is_array( $value ) ? json_encode( $value ) : $value;
     }
 
     /**
-     * Get the history attribute as decoded JSON array.
+     * Get the history attribute as decoded JSON array or raw string.
      *
-     * @return array
+     * @return array|string
      */
-    public function getHistoryAttribute( $value ): array
+    public function getHistoryAttribute( $value )
     {
         if ( empty( $value ) ) {
             return [];
         }
 
         $decoded = json_decode( $value, true );
-        return $decoded ?? [];
+        return $decoded !== null ? $decoded : $value;
     }
 
     /**
-     * Set the history attribute as encoded JSON string.
+     * Set the history attribute as encoded JSON string or raw string.
      *
      * @param mixed $value
      */
@@ -160,7 +162,15 @@ class Budget extends Model
             return;
         }
 
-        $this->attributes[ 'history' ] = json_encode( $value );
+        $this->attributes[ 'history' ] = is_array( $value ) ? json_encode( $value ) : $value;
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

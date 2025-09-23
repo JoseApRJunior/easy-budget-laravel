@@ -43,9 +43,7 @@ class Customer extends Model
      *
      * @var array<string, string>
      */
-    protected $attributes = [
-        'status' => 'active',
-    ];
+    protected $attributes = [];
 
     /**
      * The attributes that should be cast.
@@ -100,6 +98,14 @@ class Customer extends Model
     public function budgets(): HasMany
     {
         return $this->hasMany( Budget::class);
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

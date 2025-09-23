@@ -56,4 +56,12 @@ class Product extends Model
         return $this->belongsTo( Tenant::class);
     }
 
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+    }
+
 }
