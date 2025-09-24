@@ -84,14 +84,14 @@ class ProviderService extends BaseTenantService
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
         $id        = $data[ 'id' ] ?? null;
-        $rules     = [ 
+        $rules     = [
             'company_name' => 'required|string|max:255',
-            'cnpj'         => [ 
+            'cnpj'         => [
                 'required',
                 'string',
                 Rule::unique( 'providers', 'cnpj' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )->ignore( $id )
             ],
-            'category_id'  => [ 
+            'category_id'  => [
                 'required',
                 Rule::exists( 'categories', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) )
             ],
@@ -144,7 +144,7 @@ class ProviderService extends BaseTenantService
             // Trata exceções de chave duplicada do índice único (tenant_id, user_id)
             if ( $e->getCode() === '23000' || str_contains( $e->getMessage(), 'providers_tenant_user_unique' ) ) {
                 // Busca o provider existente para retornar
-                $existingProvider = $this->providerRepository->findOneByAndTenantId( [ 
+                $existingProvider = $this->providerRepository->findOneByAndTenantId( [
                     'tenant_id' => $tenantId,
                     'user_id'   => $data[ 'user_id' ]
                 ], $tenantId );
@@ -155,9 +155,9 @@ class ProviderService extends BaseTenantService
             }
 
             // Re-lança outras exceções de banco não tratadas
-            return $this->error( \App\Enums\OperationStatus::ERROR, 'Erro ao criar fornecedor: ' . $e->getMessage() );
+            return $this->error( OperationStatus::ERROR, 'Erro ao criar fornecedor: ' . $e->getMessage() );
         } catch ( \Exception $e ) {
-            return $this->error( \App\Enums\OperationStatus::ERROR, 'Erro inesperado ao criar fornecedor: ' . $e->getMessage() );
+            return $this->error( OperationStatus::ERROR, 'Erro inesperado ao criar fornecedor: ' . $e->getMessage() );
         }
     }
 

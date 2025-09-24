@@ -2,12 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InvoiceStatus extends Model
 {
+    use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * The table associated with the model.
@@ -21,7 +32,7 @@ class InvoiceStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
         'slug',
         'color',
@@ -41,7 +52,7 @@ class InvoiceStatus extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'description' => 'string',
     ];
 

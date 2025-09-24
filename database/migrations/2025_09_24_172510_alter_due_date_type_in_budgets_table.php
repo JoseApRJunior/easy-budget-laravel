@@ -13,13 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create( 'tenants', function (Blueprint $table) {
-            $table->id();
-            $table->string( 'name' )->unique();
-            $table->timestamps();
-            
-            // Índices para performance
-            $table->index('name', 'uk_tenants_name');
+        Schema::table( 'budgets', function ( Blueprint $table ) {
+            $table->datetime( 'due_date' )->nullable()->change();
         } );
     }
 
@@ -28,7 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists( 'tenants' );
+        Schema::table( 'budgets', function ( Blueprint $table ) {
+            $table->date( 'due_date' )->nullable()->change();
+        } );
     }
 
 };

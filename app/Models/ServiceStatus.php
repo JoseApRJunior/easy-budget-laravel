@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,16 @@ use Illuminate\Support\Carbon;
 
 class ServiceStatus extends Model
 {
+    use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * The table associated with the model.
@@ -23,7 +34,7 @@ class ServiceStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'description',
@@ -38,7 +49,7 @@ class ServiceStatus extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'slug'        => 'string',
         'name'        => 'string',
         'description' => 'string',

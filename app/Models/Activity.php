@@ -17,6 +17,15 @@ class Activity extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * Indicates if the model should be timestamped.
      *
      * @var bool

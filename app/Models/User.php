@@ -27,6 +27,15 @@ class User extends Authenticatable
     use HasFactory, TenantScoped, Notifiable;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -39,7 +48,6 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
         'tenant_id',
         'email',
         'password',
@@ -62,7 +70,6 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'name'       => 'string',
         'tenant_id'  => 'integer',
         'email'      => 'string',
         'password'   => 'hashed',

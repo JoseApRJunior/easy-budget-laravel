@@ -13,6 +13,15 @@ class Invoice extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -24,7 +33,7 @@ class Invoice extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'service_id',
         'customer_id',
@@ -48,7 +57,7 @@ class Invoice extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'           => 'integer',
         'service_id'          => 'integer',
         'customer_id'         => 'integer',

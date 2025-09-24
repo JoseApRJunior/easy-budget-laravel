@@ -20,6 +20,15 @@ class Service extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -31,7 +40,7 @@ class Service extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'budget_id',
         'category_id',
@@ -49,7 +58,7 @@ class Service extends Model
      *
      * @var array<string, float>
      */
-    protected $attributes = [ 
+    protected $attributes = [
         'discount' => 0.0,
         'total'    => 0.0,
     ];
@@ -59,11 +68,13 @@ class Service extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'             => 'integer',
         'budget_id'             => 'integer',
         'category_id'           => 'integer',
         'service_statuses_id'   => 'integer',
+        'code'                  => 'string',
+        'description'           => 'string',
         'discount'              => 'decimal:2',
         'total'                 => 'decimal:2',
         'due_date'              => 'datetime',

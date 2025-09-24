@@ -13,6 +13,15 @@ class Address extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -24,7 +33,7 @@ class Address extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'address',
         'address_number',
@@ -39,7 +48,7 @@ class Address extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'      => 'integer',
         'address'        => 'string',
         'address_number' => 'string',
@@ -47,8 +56,8 @@ class Address extends Model
         'city'           => 'string',
         'state'          => 'string',
         'cep'            => 'string',
-        'created_at'     => 'datetime',
-        'updated_at'     => 'datetime',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**

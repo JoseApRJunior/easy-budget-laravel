@@ -10,6 +10,16 @@ use Illuminate\Support\Carbon;
 class PaymentMercadoPagoInvoice extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -22,7 +32,7 @@ class PaymentMercadoPagoInvoice extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'invoice_id',
         'payment_id',
@@ -37,7 +47,7 @@ class PaymentMercadoPagoInvoice extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'          => 'integer',
         'invoice_id'         => 'integer',
         'transaction_amount' => 'decimal:2',

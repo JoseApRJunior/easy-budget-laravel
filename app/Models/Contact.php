@@ -13,6 +13,15 @@ class Contact extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -24,7 +33,7 @@ class Contact extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'email',
         'phone',
@@ -38,15 +47,15 @@ class Contact extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'      => 'integer',
         'email'          => 'string',
         'phone'          => 'string',
         'email_business' => 'string',
         'phone_business' => 'string',
         'website'        => 'string',
-        'created_at'     => 'datetime',
-        'updated_at'     => 'datetime',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'immutable_datetime',
     ];
 
     /**

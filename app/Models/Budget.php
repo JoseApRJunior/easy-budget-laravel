@@ -21,6 +21,15 @@ class Budget extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * Get the tenant that owns the Budget.
      */
     public function tenant(): BelongsTo

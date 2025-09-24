@@ -10,6 +10,16 @@ use Illuminate\Support\Carbon;
 class ProviderCredential extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -22,7 +32,7 @@ class ProviderCredential extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'payment_gateway',
         'access_token_encrypted',
         'refresh_token_encrypted',
@@ -38,7 +48,7 @@ class ProviderCredential extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'provider_id' => 'integer',
         'tenant_id'   => 'integer',
         'expires_in'  => 'integer',

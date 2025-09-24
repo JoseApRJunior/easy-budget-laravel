@@ -34,7 +34,7 @@ class Provider extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'user_id',
         'common_data_id',
@@ -48,7 +48,7 @@ class Provider extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'      => 'integer',
         'user_id'        => 'integer',
         'common_data_id' => 'integer',
@@ -89,6 +89,7 @@ class Provider extends Model
     protected static function boot(): void
     {
         parent::boot();
+        static::bootTenantScoped();
 
         // A unicidade (tenant_id, user_id) agora é garantida pelo índice único no banco de dados
         // Isso permite criação idempotente e tratamento adequado de exceções no service/repository
@@ -99,7 +100,7 @@ class Provider extends Model
      */
     public function scopeActive( $query )
     {
-        return $query->whereHas( 'user', function ($q) {
+        return $query->whereHas( 'user', function ( $q ) {
             $q->where( 'is_active', true );
         } );
     }

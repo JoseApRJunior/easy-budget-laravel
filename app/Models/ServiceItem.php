@@ -28,7 +28,6 @@ class ServiceItem extends Model
         'product_id',
         'unit_value',
         'quantity',
-        'total',
     ];
 
     /**
@@ -74,8 +73,11 @@ class ServiceItem extends Model
     /**
      * Boot the model and set up event listeners.
      */
-    protected static function booted(): void
+    protected static function boot()
     {
+        parent::boot();
+        static::bootTenantScoped();
+
         static::saving( function ( ServiceItem $model ) {
             // Calculate total as quantity * unit_value using safe decimal math
             $quantity  = (int) ( $model->quantity ?? 0 );

@@ -14,6 +14,15 @@ class Product extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -25,7 +34,7 @@ class Product extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'name',
         'description',
@@ -40,12 +49,16 @@ class Product extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'  => 'integer',
-        'price'      => 'decimal:2',
-        'active'     => 'boolean',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+    protected $casts = [
+        'tenant_id'   => 'integer',
+        'name'        => 'string',
+        'description' => 'string',
+        'price'       => 'decimal:2',
+        'active'      => 'boolean',
+        'code'        => 'string',
+        'image'       => 'string',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'immutable_datetime',
     ];
 
     /**

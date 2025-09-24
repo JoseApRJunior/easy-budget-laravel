@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Model para representar profissões, global (sem scoping por tenant).
+ * Model para representar profissões, com tenant_id opcional para compatibilidade com sistema legado.
  */
 class Profession extends Model
 {
@@ -20,10 +20,16 @@ class Profession extends Model
         'slug',
         'name',
         'is_active',
+        'tenant_id', // Adicionado para compatibilidade com ProfessionEntity legada
     ];
 
     protected $casts = [ 
-        'is_active' => 'boolean',
+        'tenant_id'  => 'integer',
+        'slug'       => 'string',
+        'name'       => 'string',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**

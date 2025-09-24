@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pdf extends Model
 {
-    use HasFactory;
+    use HasFactory, TenantScoped;
 
-    protected $fillable = [ 
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    protected $fillable = [
+        'tenant_id',
         'path',
         'type',
         'data',
@@ -23,7 +34,7 @@ class Pdf extends Model
         'updated_at'
     ];
 
-    protected $casts = [ 
+    protected $casts = [
         'data'         => 'array',
         'generated_at' => 'datetime',
         'created_at'   => 'immutable_datetime',

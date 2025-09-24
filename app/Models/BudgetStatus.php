@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,17 @@ use Illuminate\Support\Carbon;
 
 class BudgetStatus extends Model
 {
+    use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * Scope para obter status ativos.
      * Filtra por is_active = true e ordena por order_index.
@@ -36,7 +48,7 @@ class BudgetStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'description',
@@ -51,7 +63,7 @@ class BudgetStatus extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'description' => 'string',
         'icon'        => 'string',
         'is_active'   => 'boolean',
