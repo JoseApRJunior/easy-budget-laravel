@@ -29,23 +29,30 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'alert_type',
         'severity',
-        'middleware_name',
+        'title',
+        'description',
+        'component',
         'endpoint',
-        'metric_name',
-        'metric_value',
+        'method',
+        'current_value',
         'threshold_value',
+        'unit',
+        'metadata',
         'message',
-        'additional_data',
-        'is_resolved',
-        'resolved_at',
+        'status',
+        'acknowledged_by',
+        'acknowledged_at',
         'resolved_by',
+        'resolved_at',
         'resolution_notes',
-        'notification_sent',
-        'notification_sent_at',
+        'occurrence_count',
+        'first_occurrence',
+        'last_occurrence',
+        'resolved',
     ];
 
     /**
@@ -53,18 +60,23 @@ class MonitoringAlertHistory extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'metric_value'         => 'decimal:3',
-        'threshold_value'      => 'decimal:3',
-        'additional_data'      => 'array',
-        'is_resolved'          => 'boolean',
-        'resolved_at'          => 'datetime',
-        'notification_sent'    => 'boolean',
-        'notification_sent_at' => 'datetime',
-        'tenant_id'            => 'integer',
-        'resolved_by'          => 'integer',
-        'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'immutable_datetime',
+    protected $casts = [
+        'current_value'    => 'decimal:3',
+        'threshold_value'  => 'decimal:3',
+        'metadata'         => 'array',
+        'resolved'         => 'boolean',
+        'tenant_id'        => 'integer',
+        'resolved_by'      => 'integer',
+        'acknowledged_by'  => 'integer',
+        'acknowledged_at'  => 'immutable_datetime',
+        'resolved_at'      => 'immutable_datetime',
+        'occurrence_count' => 'integer',
+        'first_occurrence' => 'immutable_datetime',
+        'last_occurrence'  => 'immutable_datetime',
+        'unit'             => 'string',
+        'status'           => 'string',
+        'created_at'       => 'immutable_datetime',
+        'updated_at'       => 'immutable_datetime',
     ];
 
     /**

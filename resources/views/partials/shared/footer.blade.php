@@ -48,3 +48,33 @@
     </div>
   </div>
 </footer>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+@vite( [ 'resources/js/main.js', 'resources/js/alert/alert.js' ] )
+
+@yield( 'scripts' )
+
+<script>
+	// Configuração global para AJAX
+document.addEventListener('DOMContentLoaded', function () { // Configura o token CSRF para todas as requisições AJAX
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+// Adiciona o token em todas as requisições fetch
+const originalFetch = window.fetch;
+window.fetch = function () {
+let [resource, config] = arguments;
+if (config === undefined) {
+config = {};
+}
+if (config.headers === undefined) {
+config.headers = {};
+}
+config.headers['X-CSRF-TOKEN'] = csrfToken;
+return originalFetch(resource, config);
+};
+});
+</script>
+
+@stack( 'scripts' )

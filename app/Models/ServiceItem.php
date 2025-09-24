@@ -22,7 +22,7 @@ class ServiceItem extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'service_id',
         'product_id',
@@ -36,7 +36,7 @@ class ServiceItem extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'  => 'integer',
         'service_id' => 'integer',
         'product_id' => 'integer',
@@ -76,14 +76,15 @@ class ServiceItem extends Model
      */
     protected static function booted(): void
     {
-        static::saving( function (ServiceItem $model) {
+        static::saving( function ( ServiceItem $model ) {
             // Calculate total as quantity * unit_value using safe decimal math
             $quantity  = (int) ( $model->quantity ?? 0 );
-            $unitValue = (string) ( $model->unit_value ?? '0' );
+            $unitValue = (int) ( $model->unit_value ?? '0' );
+            $computed  = 0;
 
             // Use bcmath if available for precise decimal calculations
             if ( function_exists( 'bcmul' ) ) {
-                $computed = bcmul( $unitValue, (string) $quantity, 2 );
+                $computed = bcmul( $unitValue, (int) $quantity, 2 );
             } else {
                 // Fallback to number_format for precise decimal handling
                 $computed = number_format( ( (float) $unitValue ) * $quantity, 2, '.', '' );

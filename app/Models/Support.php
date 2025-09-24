@@ -20,7 +20,7 @@ class Support extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'first_name',
         'last_name',
         'email',
@@ -34,10 +34,17 @@ class Support extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
+        'tenant_id'  => 'integer',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the tenant that owns the Support.

@@ -6,6 +6,7 @@
    ],
    "settings": {
       "postman.settings.dotenv-detection-notification-visibility": false,
-      "traycer.enableAutoAnalysis": false
+      "traycer.enableAutoAnalysis": false,
+      "php.format.codeStyle": "Laravel"
    }
 }

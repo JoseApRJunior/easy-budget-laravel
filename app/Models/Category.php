@@ -16,13 +16,9 @@ class Category extends Model
 
     protected $table = 'categories';
 
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
-    ];
-
-    protected $casts = [
-        // No casts needed for basic Category entity
     ];
 
     /**

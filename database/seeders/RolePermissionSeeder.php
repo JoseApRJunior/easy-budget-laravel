@@ -19,21 +19,24 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::updateOrCreate(
             [ 'name' => 'Administrador' ],
             [
-                'guard_name'  => 'web'
+                'guard_name'  => 'web',
+                'slug'        => 'administrador'
             ],
         );
 
         $userRole = Role::updateOrCreate(
             [ 'name' => 'Usuário' ],
             [
-                'guard_name'  => 'web'
+                'guard_name'  => 'web',
+                'slug'        => 'usuario'
             ],
         );
 
         $providerRole = Role::updateOrCreate(
             [ 'name' => 'Prestador' ],
             [
-                'guard_name'  => 'web'
+                'guard_name'  => 'web',
+                'slug'        => 'prestador'
             ],
         );
 

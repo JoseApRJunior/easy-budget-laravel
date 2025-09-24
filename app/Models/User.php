@@ -38,7 +38,8 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
+        'name',
         'tenant_id',
         'email',
         'password',
@@ -51,7 +52,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $hidden = [ 
+    protected $hidden = [
         'password',
     ];
 
@@ -60,7 +61,8 @@ class User extends Authenticatable
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
+        'name'       => 'string',
         'tenant_id'  => 'integer',
         'email'      => 'string',
         'password'   => 'hashed',
@@ -119,8 +121,8 @@ class User extends Authenticatable
      */
     public function permissions()
     {
-        return Permission::whereHas( 'roles', function ($query) {
-            $query->whereHas( 'users', function ($query) {
+        return Permission::whereHas( 'roles', function ( $query ) {
+            $query->whereHas( 'users', function ( $query ) {
                 $query->where( 'user_id', $this->id )
                     ->where( 'tenant_id', $this->tenant_id );
             } );

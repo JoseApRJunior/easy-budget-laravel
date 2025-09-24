@@ -1,7 +1,6 @@
 <?php
 
-namespace app\database\entitiesORM;
-
+namespace app\database\entities;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
@@ -17,7 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @package app\database\entitiesORM
  * @psalm-suppress PropertyNotSetInConstructoa
  */
-#[ORM\Entity]
+#[ORM\Entity ]
 #[ORM\Table(name: 'middleware_metrics_history') ]
 #[ORM\HasLifecycleCallbacks ]
 class MiddlewareMetricHistoryEntity extends AbstractEntityORM
@@ -647,7 +646,7 @@ class MiddlewareMetricHistoryEntity extends AbstractEntityORM
      */
     public function toArray(): array
     {
-        return [ 
+        return [
             'id'                     => $this->id,
             'tenant_id'              => $this->tenant->getId(),
             'middleware_name'        => $this->middlewareName,

@@ -19,7 +19,7 @@ class Resource extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
         'slug',
         'in_dev',
@@ -31,8 +31,9 @@ class Resource extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'in_dev'     => 'boolean',
+        'status'     => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
     ];

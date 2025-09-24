@@ -5,42 +5,32 @@ export default defineConfig({
    plugins: [
       laravel({
          input: [
-            "resources/css/app.css",
+            // Assets CSS
+            "resources/css/variables.css",
+            "resources/css/alerts.css",
+            "resources/css/layout.css",
+            "resources/css/navigation-improvements.css",
+            // Assets JavaScript
             "resources/js/app.js",
-            // Assets do sistema antigo
-            "resources/css/oldsystem/main.css",
-            "resources/css/oldsystem/layout.css",
-            "resources/css/oldsystem/home.css",
-            "resources/css/oldsystem/monitoring.css",
-            "resources/css/oldsystem/timeline.css",
-            "resources/css/oldsystem/alert/alert.css",
-            "resources/js/oldsystem/main.js",
-            "resources/js/oldsystem/login.js",
-            "resources/js/oldsystem/home.js",
-            "resources/js/oldsystem/budget.js",
-            "resources/js/oldsystem/invoice.js",
-            "resources/js/oldsystem/customer.js",
-            "resources/js/oldsystem/product.js",
-            "resources/js/oldsystem/service.js",
-            "resources/js/oldsystem/monitoring.js",
-            "resources/js/oldsystem/settings.js",
-            "resources/js/oldsystem/alert/alert.js",
-            "resources/js/oldsystem/modules/utils.js",
-            "resources/js/oldsystem/modules/auth.js",
-            "resources/js/oldsystem/modules/form-validation.js",
-            "resources/js/oldsystem/modules/masks/index.js",
+            "resources/js/main.js",
+            "resources/js/login.js",
+            "resources/js/home.js",
+            "resources/js/budget.js",
+            "resources/js/invoice.js",
+            "resources/js/customer.js",
+            "resources/js/product.js",
+            "resources/js/service.js",
+            "resources/js/monitoring.js",
+            "resources/js/settings.js",
+            "resources/js/alert/alert.js",
+            "resources/js/modules/utils.js",
+            "resources/js/modules/auth.js",
+            "resources/js/modules/form-validation.js",
+            "resources/js/modules/masks/index.js",
          ],
          refresh: true,
       }),
    ],
-   css: {
-      postcss: {
-         plugins: [
-            require('tailwindcss'),
-            require('autoprefixer'),
-         ],
-      },
-   },
    build: {
       rollupOptions: {
          output: {

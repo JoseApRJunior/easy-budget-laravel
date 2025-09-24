@@ -29,14 +29,18 @@ class Tenant extends Model
 
     /**
      * Compatibilidade com schema legado dos tenants.
-     * Apenas o campo 'name' é permitido para manter consistência com o banco legado.
+     * Campos permitidos para manter consistência com o banco.
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
+        'slug',
+        'description',
+        'domain',
+        'is_active',
     ];
 
     protected $casts = [
-        // No casts needed for basic Tenant entity
+        'is_active' => 'boolean',
     ];
 
     /**

@@ -106,66 +106,6 @@ class Budget extends Model
     }
 
     /**
-     * Get the attachment attribute as decoded JSON array or raw string.
-     *
-     * @return array|string
-     */
-    public function getAttachmentAttribute( $value )
-    {
-        if ( empty( $value ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $value, true );
-        return $decoded !== null ? $decoded : $value;
-    }
-
-    /**
-     * Set the attachment attribute as encoded JSON string or raw string.
-     *
-     * @param mixed $value
-     */
-    public function setAttachmentAttribute( $value ): void
-    {
-        if ( empty( $value ) ) {
-            $this->attributes[ 'attachment' ] = null;
-            return;
-        }
-
-        $this->attributes[ 'attachment' ] = is_array( $value ) ? json_encode( $value ) : $value;
-    }
-
-    /**
-     * Get the history attribute as decoded JSON array or raw string.
-     *
-     * @return array|string
-     */
-    public function getHistoryAttribute( $value )
-    {
-        if ( empty( $value ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $value, true );
-        return $decoded !== null ? $decoded : $value;
-    }
-
-    /**
-     * Set the history attribute as encoded JSON string or raw string.
-     *
-     * @param mixed $value
-     */
-    public function setHistoryAttribute( $value ): void
-    {
-        if ( empty( $value ) ) {
-            $this->attributes[ 'history' ] = null;
-            return;
-        }
-
-        $this->attributes[ 'history' ] = is_array( $value ) ? json_encode( $value ) : $value;
-    }
-
-    /**
      * Accessor para tratar valores zero-date no updated_at.
      */
     public function getUpdatedAtAttribute( $value )

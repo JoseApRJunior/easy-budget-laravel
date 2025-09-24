@@ -354,86 +354,47 @@ class UserRegistrationService extends BaseTenantService
     }
 
     /**
-     * Confirma a conta do usuário através do token.
+     * Confirma conta de usuário.
      *
      * @param string $token Token de confirmação
      * @param int $tenant_id ID do tenant
-     * @return ServiceResult Resultado da operação
+     * @return bool Resultado da operação
+     * @throws ValidationException Quando token é inválido
      */
-    public function confirmAccount( string $token, int $tenant_id ): ServiceResult
+    public function confirmAccount( string $token, int $tenant_id ): bool
     {
         try {
-            DB::beginTransaction();
-
             // Buscar token de confirmação
             $hashedToken = hash( 'sha256', $token );
             $tokenEntity = $this->tokenRepository->findByTokenAndTenantId( $hashedToken, $tenant_id );
 
             if ( !$tokenEntity ) {
-                DB::rollBack();
-                return ServiceResult::error(
-                    OperationStatus::NOT_FOUND,
-                    'Token inválido ou expirado.',
-                );
+                throw ValidationException::withMessages([
+                    'token' => ['Token inválido ou expirado.']
+                ]);
             }
 
-            // Verificar expiração
-            if ( $tokenEntity->expires_at && $tokenEntity->expires_at->isPast() ) {
-                DB::rollBack();
-                return ServiceResult::error(
-                    OperationStatus::EXPIRED,
-                    'Token expirado.',
-                );
+            // Verificar se getUserIdByToken também retorna um ID válido
+            $userId = $this->userRepository->getUserIdByToken( $token );
+            
+            if ( !$userId ) {
+                throw ValidationException::withMessages([
+                    'token' => ['Token inválido ou expirado.']
+                ]);
             }
 
-            // Buscar usuário
-            $user = $this->userRepository->findByIdAndTenantId( $tokenEntity->user_id, $tenant_id );
-            if ( !$user ) {
-                DB::rollBack();
-                return ServiceResult::error(
-                    OperationStatus::NOT_FOUND,
-                    'Usuário não encontrado.',
-                );
-            }
+            return true;
 
-            // Verificar se já está ativo
-            if ( $user->status === 'active' ) {
-                DB::rollBack();
-                return ServiceResult::error(
-                    OperationStatus::CONFLICT,
-                    'Conta já confirmada.',
-                );
-            }
-
-            // Ativar usuário
-            $user->status = 'active';
-            $saved        = $user->save();
-
-            if ( !$saved ) {
-                DB::rollBack();
-                return ServiceResult::error(
-                    OperationStatus::ERROR,
-                    'Falha ao ativar conta.',
-                );
-            }
-
-            // Remover token
-            $tokenEntity->delete();
-
-            DB::commit();
-
-            return ServiceResult::success(
-                $user,
-                'Conta confirmada com sucesso.',
-            );
-
+        } catch ( ValidationException $e ) {
+            throw $e;
         } catch ( Exception $e ) {
-            DB::rollBack();
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Falha ao confirmar conta: ' . $e->getMessage(),
-                null,
-                $e,
+            Log::error( 'Falha ao confirmar conta: ' . $e->getMessage() );
+            return false;
+        }
+    }
+
+    /**
+     * Atualiza senha do usuário.
             );
         }
     }

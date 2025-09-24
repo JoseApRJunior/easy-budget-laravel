@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Category;
-use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
@@ -21,7 +20,6 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         // Dados das categorias de exemplo, sem ID fixo (auto-increment)
-        // Cada categoria será criada para todos os tenants existentes
         $categoriesData = [ 
             [ 'slug' => 'carpentry', 'name' => 'Carpintaria' ],
             [ 'slug' => 'construction_civil', 'name' => 'Construção Civil' ],
@@ -52,40 +50,12 @@ class CategorySeeder extends Seeder
             [ 'slug' => 'others', 'name' => 'Outros' ],
         ];
 
-        // Se não há tenants, criar default tenant para seeding inicial
-        if ( Tenant::count() === 0 ) {
-            $defaultTenant = Tenant::create( [ 
-                'name'      => 'Default',
-                'slug'      => 'default',
-                'is_active' => true,
-            ] );
-            $tenantId      = $defaultTenant->id;
-            $tenants       = collect( [ $defaultTenant ] );
-        } else {
-            $tenants  = Tenant::all();
-            $tenantId = $tenants->first()->id; // Use first tenant for any global fallback if needed
-        }
-
-        // Loop através de todos os tenants existentes no sistema
-        // Garante que cada categoria seja criada scoped ao tenant correto
-        foreach ( $tenants as $tenant ) {
-            foreach ( $categoriesData as $data ) {
-                // Usa updateOrCreate para evitar duplicatas por tenant e slug
-                // Chave única: ['tenant_id', 'slug'] conforme constraint da migration
-                Category::updateOrCreate(
-                    [ 
-                        'tenant_id' => $tenant->id,
-                        'slug'      => $data[ 'slug' ],
-                    ],
-                    [ 
-                        'name'        => $data[ 'name' ],
-                        'description' => null, // Descrição opcional, pode ser adicionada posteriormente
-                        'is_active'   => true,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
-                    ],
-                );
-            }
+        // Criar categorias globais (sem tenant_id)
+        foreach ( $categoriesData as $data ) {
+            Category::updateOrCreate(
+                [ 'slug' => $data[ 'slug' ] ],
+                [ 'name' => $data[ 'name' ] ]
+            );
         }
     }
 
