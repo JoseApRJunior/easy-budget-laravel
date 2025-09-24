@@ -84,8 +84,17 @@ class UserServiceTest extends TestCase
     {
         $userId = 1;
         $token  = 'valid-token';
-        $tenantId = 1; // Adding missing tenant ID
+        $tenantId = 1;
+        $hashedToken = hash('sha256', $token);
 
+        // Mock para o tokenRepository
+        $this->userConfirmationTokenRepo
+            ->shouldReceive( 'findByTokenAndTenantId' )
+            ->once()
+            ->with( $hashedToken, $tenantId )
+            ->andReturn( (object)['user_id' => $userId] );
+
+        // Mock para getUserIdByToken (se ainda for usado)
         $this->userRepository
             ->shouldReceive( 'getUserIdByToken' )
             ->once()
@@ -101,7 +110,15 @@ class UserServiceTest extends TestCase
     public function it_fails_to_confirm_account_with_invalid_token()
     {
         $token = 'invalid-token';
-        $tenantId = 1; // Adding missing tenant ID
+        $tenantId = 1;
+        $hashedToken = hash('sha256', $token);
+
+        // Mock para o tokenRepository retornando null (token inválido)
+        $this->userConfirmationTokenRepo
+            ->shouldReceive( 'findByTokenAndTenantId' )
+            ->once()
+            ->with( $hashedToken, $tenantId )
+            ->andReturn( null );
 
         $this->userRepository
             ->shouldReceive( 'getUserIdByToken' )
