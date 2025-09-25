@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\ReportService;
+use App\Services\ActivityService;
 use App\Services\BudgetService;
+use App\Services\ActivityService;
 use App\Services\CustomerService;
+use App\Services\ActivityService;
 use App\Services\InvoiceService;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -63,7 +67,7 @@ class ReportController extends BaseController
         CustomerService $customerService,
         InvoiceService $invoiceService
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->reportService = $reportService;
         $this->budgetService = $budgetService;
         $this->customerService = $customerService;
@@ -646,3 +650,4 @@ class ReportController extends BaseController
         ]);
     }
 }
+

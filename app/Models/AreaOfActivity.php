@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Model para representar áreas de atividade, global (sem scoping por tenant).
+ * Model para representar áreas de atividade.
  */
 class AreaOfActivity extends Model
 {
@@ -23,7 +23,19 @@ class AreaOfActivity extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'slug'       => 'string',
+        'name'       => 'string',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Índices para otimização de consultas
+     */
+    protected $indexes = [
+        'slug'      => 'unique',
+        'is_active' => 'index',
     ];
 
     /**

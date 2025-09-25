@@ -18,7 +18,6 @@ class TenantFactory extends Factory
 
         return [ 
             'name'       => $name,
-            'slug'       => Str::slug( $name ),
             'created_at' => now(),
             'updated_at' => now(),
         ];

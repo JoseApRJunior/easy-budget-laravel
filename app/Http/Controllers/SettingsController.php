@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\SettingsService;
+use App\Services\ActivityService;
 use App\Services\TenantService;
+use App\Services\ActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +45,7 @@ class SettingsController extends BaseController
         SettingsService $settingsService,
         TenantService $tenantService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->settingsService = $settingsService;
         $this->tenantService   = $tenantService;
     }
@@ -660,3 +662,4 @@ class SettingsController extends BaseController
     }
 
 }
+

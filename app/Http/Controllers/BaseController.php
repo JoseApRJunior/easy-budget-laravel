@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Services\ActivityService;
 use App\Support\ServiceResult;
 use Exception;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,47 +16,47 @@ use Illuminate\Routing\Controller as BaseLaravelController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\View\View;
+use InvalidArgumentException;
 
 /**
- * Classe base para todos os controladores da aplicação.
- * Fornece métodos auxiliares comuns para acesso a tenant, autenticação,
- * logging de atividades e padronização de respostas.
- *
- * @package App\Http\Controllers
- * @author IA
+ * Controlador base da aplicação.
+ * 
+ * Fornece funcionalidades comuns para todos os controladores,
+ * incluindo helpers para autenticação, tenant, sanitização,
+ * validação e respostas padronizadas baseadas no sistema antigo.
  */
 abstract class BaseController extends BaseLaravelController
 {
-    /**
-     * @var ActivityService|null
-     */
-    protected ?ActivityService $activityService = null;
+    use AuthorizesRequests, ValidatesRequests;
 
-    /**
-     * Construtor da classe BaseController.
-     * Inicializa o serviço de atividades se disponível.
-     */
-    public function __construct()
+    protected ActivityService $activityService;
+
+    public function __construct(ActivityService $activityService)
     {
-        $this->activityService = app( ActivityService::class);
+        $this->activityService = $activityService;
     }
 
     /**
-     * Obtém o ID do tenant atual do usuário autenticado.
-     *
-     * @return int|null ID do tenant ou null se não autenticado
+     * Obtém o ID do tenant do usuário autenticado.
      */
     protected function tenantId(): ?int
     {
-        $user = Auth::user();
-        return $user?->tenant_id ?? null;
+        return Auth::user()?->tenant_id ?? session('tenant_id');
+    }
+
+    /**
+     * Obtém o usuário autenticado.
+     */
+    protected function user()
+    {
+        return Auth::user();
     }
 
     /**
      * Obtém o ID do usuário autenticado.
-     *
-     * @return int|null ID do usuário ou null se não autenticado
      */
     protected function userId(): ?int
     {
@@ -62,33 +64,127 @@ abstract class BaseController extends BaseLaravelController
     }
 
     /**
-     * Registra uma atividade no sistema.
-     *
-     * @param string $action Ação realizada
-     * @param string $entity Tipo de entidade afetada
-     * @param int|null $entityId ID da entidade (opcional)
-     * @param array $metadata Metadados adicionais (opcional)
-     * @return void
+     * Verifica se o usuário está autenticado.
+     */
+    protected function isAuthenticated(): bool
+    {
+        return Auth::check();
+    }
+
+    /**
+     * Valida se o usuário tem acesso ao tenant especificado.
+     */
+    protected function validateTenantAccess(int $tenantId): bool
+    {
+        $userTenantId = $this->tenantId();
+        
+        if ($userTenantId !== $tenantId) {
+            $this->logAccessDenied("Tentativa de acesso ao tenant {$tenantId}");
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Valida se o modelo pertence ao tenant atual.
+     */
+    protected function validateModelTenantAccess(Model $model): bool
+    {
+        if (!$model->hasAttribute('tenant_id')) {
+            return true; // Modelo não tem tenant_id
+        }
+
+        $modelTenantId = $model->getAttribute('tenant_id');
+        $userTenantId = $this->tenantId();
+
+        if ($modelTenantId !== $userTenantId) {
+            $this->logAccessDenied("Tentativa de acesso ao modelo " . get_class($model) . " #{$model->getKey()}");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Sanitiza dados de entrada removendo tags HTML e caracteres perigosos.
+     */
+    protected function sanitizeInput(array $data): array
+    {
+        return array_map(function ($value) {
+            if (is_string($value)) {
+                // Remove tags HTML e PHP
+                $value = strip_tags($value);
+                // Remove caracteres de controle
+                $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+                // Trim espaços
+                $value = trim($value);
+            } elseif (is_array($value)) {
+                $value = $this->sanitizeInput($value);
+            }
+            
+            return $value;
+        }, $data);
+    }
+
+    /**
+     * Valida dados de entrada com regras especificadas.
+     */
+    protected function validateInput(array $data, array $rules, array $messages = []): array
+    {
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($validator->fails()) {
+            throw new InvalidArgumentException(
+                'Dados de entrada inválidos: ' . implode(', ', $validator->errors()->all())
+            );
+        }
+
+        return $validator->validated();
+    }
+
+    /**
+     * Valida método HTTP da requisição.
+     */
+    protected function validateRequestMethod(Request $request, array $allowedMethods): bool
+    {
+        $method = strtoupper($request->method());
+        $allowedMethods = array_map('strtoupper', $allowedMethods);
+
+        if (!in_array($method, $allowedMethods)) {
+            $this->logError("Método HTTP {$method} não permitido");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Registra atividade do usuário.
      */
     protected function logActivity(
         string $action,
-        string $entity,
-        ?int $entityId = null,
-        array $metadata = [],
+        ?Model $model = null,
+        array $details = [],
+        ?string $description = null
     ): void {
-        if ( $this->activityService ) {
-            $tenantId = $this->tenantId();
-            $userId   = $this->userId();
+        $this->activityService->logActivity($action, $model, $details, $description);
+    }
 
-            $this->activityService->createActivity(
-                action: $action,
-                entity: $entity,
-                entity_id: $entityId,
-                user_id: $userId,
-                tenant_id: $tenantId,
-                metadata: $metadata,
-            );
-        }
+    /**
+     * Registra acesso negado.
+     */
+    protected function logAccessDenied(string $resource, array $details = []): void
+    {
+        $this->activityService->logAccessDenied($resource, $details);
+    }
+
+    /**
+     * Registra erro no sistema.
+     */
+    protected function logError(string $error, array $details = []): void
+    {
+        $this->activityService->logError($error, $details);
     }
 
     /**
@@ -129,28 +225,7 @@ abstract class BaseController extends BaseLaravelController
             : redirect()->back();
     }
 
-    /**
-     * Valida o acesso ao tenant atual.
-     * Verifica se o usuário tem acesso ao tenant_id atual.
-     *
-     * @param int $requiredTenantId ID do tenant requerido
-     * @return void
-     * @throws Exception Se acesso negado
-     */
-    protected function validateTenantAccess( int $requiredTenantId ): void
-    {
-        $currentTenantId = $this->tenantId();
 
-        if ( $currentTenantId !== $requiredTenantId ) {
-            Log::warning( 'Tentativa de acesso indevido a tenant', [ 
-                'user_id'         => $this->userId(),
-                'current_tenant'  => $currentTenantId,
-                'required_tenant' => $requiredTenantId
-            ] );
-
-            throw new Exception( 'Acesso negado: Tenant inválido.', 403 );
-        }
-    }
 
     /**
      * Processa o resultado de um ServiceResult e retorna resposta apropriada.
@@ -228,43 +303,80 @@ abstract class BaseController extends BaseLaravelController
     }
 
     /**
-     * Retorna resposta JSON padronizada de sucesso.
-     *
-     * @param mixed $data Dados da resposta
-     * @param string|null $message Mensagem (opcional)
-     * @param int $statusCode Código de status HTTP (padrão 200)
-     * @return JsonResponse
+     * Resposta de sucesso padronizada.
      */
-    protected function jsonSuccess(
+    protected function successResponse(
         mixed $data = null,
-        ?string $message = null,
-        int $statusCode = 200,
+        string $message = 'Operação realizada com sucesso',
+        int $status = 200
     ): JsonResponse {
-        return response()->json( [ 
+        return response()->json([
             'success' => true,
             'message' => $message,
-            'data'    => $data
-        ], $statusCode );
+            'data' => $data,
+            'timestamp' => now()->toISOString(),
+        ], $status);
     }
 
     /**
-     * Retorna resposta JSON padronizada de erro.
-     *
-     * @param string $message Mensagem de erro
-     * @param mixed $errors Erros de validação (opcional)
-     * @param int $statusCode Código de status HTTP (padrão 400)
-     * @return JsonResponse
+     * Resposta de erro padronizada.
      */
-    protected function jsonError(
-        string $message,
-        mixed $errors = null,
-        int $statusCode = 400,
+    protected function errorResponse(
+        string $message = 'Erro interno do servidor',
+        int $status = 500,
+        mixed $errors = null
     ): JsonResponse {
-        return response()->json( [ 
+        $response = [
             'success' => false,
             'message' => $message,
-            'errors'  => $errors
-        ], $statusCode );
+            'timestamp' => now()->toISOString(),
+        ];
+
+        if ($errors !== null) {
+            $response['errors'] = $errors;
+        }
+
+        return response()->json($response, $status);
+    }
+
+    /**
+     * Resposta baseada em ServiceResult.
+     */
+    protected function serviceResponse(ServiceResult $result): JsonResponse
+    {
+        return response()->json($result->toResponse(), $result->getHttpCode());
+    }
+
+    /**
+     * Resposta de validação com erros.
+     */
+    protected function validationErrorResponse(array $errors, string $message = 'Dados inválidos'): JsonResponse
+    {
+        return $this->errorResponse($message, 422, $errors);
+    }
+
+    /**
+     * Resposta de não encontrado.
+     */
+    protected function notFoundResponse(string $message = 'Recurso não encontrado'): JsonResponse
+    {
+        return $this->errorResponse($message, 404);
+    }
+
+    /**
+     * Resposta de não autorizado.
+     */
+    protected function unauthorizedResponse(string $message = 'Não autorizado'): JsonResponse
+    {
+        return $this->errorResponse($message, 401);
+    }
+
+    /**
+     * Resposta de acesso negado.
+     */
+    protected function forbiddenResponse(string $message = 'Acesso negado'): JsonResponse
+    {
+        return $this->errorResponse($message, 403);
     }
 
 }

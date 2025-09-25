@@ -5,15 +5,12 @@ namespace App\Models;
 
 use App\Models\BudgetStatus;
 use App\Models\Customer;
-use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Budget extends Model
 {
@@ -21,11 +18,12 @@ class Budget extends Model
     use TenantScoped;
 
     /**
-     * Get the tenant that owns the Budget.
+     * Boot the model.
      */
-    public function tenant(): BelongsTo
+    protected static function boot()
     {
-        return $this->belongsTo( Tenant::class);
+        parent::boot();
+        static::bootTenantScoped();
     }
 
     /**
@@ -40,12 +38,12 @@ class Budget extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'customer_id',
-        'code',
         'budget_statuses_id',
         'user_confirmation_token_id',
+        'code',
         'due_date',
         'discount',
         'total',
@@ -61,7 +59,7 @@ class Budget extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
         'budget_statuses_id'         => 'integer',
@@ -69,10 +67,20 @@ class Budget extends Model
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
         'due_date'                   => 'date',
+        'attachment'                 => 'string',
+        'history'                    => 'string',
         'pdf_verification_hash'      => 'string',
         'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
+
+    /**
+     * Get the tenant that owns the Budget.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo( Tenant::class);
+    }
 
     /**
      * Get the customer that owns the Budget.
@@ -93,74 +101,6 @@ class Budget extends Model
     public function userConfirmationToken(): BelongsTo
     {
         return $this->belongsTo( UserConfirmationToken::class);
-    }
-
-    /**
-     * Get the services for the Budget.
-     */
-    public function services(): HasMany
-    {
-        return $this->hasMany( Service::class);
-    }
-
-    /**
-     * Get the attachment attribute as decoded JSON array.
-     *
-     * @return array
-     */
-    public function getAttachmentAttribute( $value ): array
-    {
-        if ( empty( $value ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $value, true );
-        return $decoded ?? [];
-    }
-
-    /**
-     * Set the attachment attribute as encoded JSON string.
-     *
-     * @param mixed $value
-     */
-    public function setAttachmentAttribute( $value ): void
-    {
-        if ( empty( $value ) ) {
-            $this->attributes[ 'attachment' ] = null;
-            return;
-        }
-
-        $this->attributes[ 'attachment' ] = json_encode( $value );
-    }
-
-    /**
-     * Get the history attribute as decoded JSON array.
-     *
-     * @return array
-     */
-    public function getHistoryAttribute( $value ): array
-    {
-        if ( empty( $value ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $value, true );
-        return $decoded ?? [];
-    }
-
-    /**
-     * Set the history attribute as encoded JSON string.
-     *
-     * @param mixed $value
-     */
-    public function setHistoryAttribute( $value ): void
-    {
-        if ( empty( $value ) ) {
-            $this->attributes[ 'history' ] = null;
-            return;
-        }
-
-        $this->attributes[ 'history' ] = json_encode( $value );
     }
 
 }

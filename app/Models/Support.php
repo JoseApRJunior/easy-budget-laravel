@@ -2,12 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class Support extends Model
 {
+    use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -20,7 +32,7 @@ class Support extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'first_name',
         'last_name',
         'email',
@@ -34,10 +46,17 @@ class Support extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
+        'tenant_id'  => 'integer',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
     ];
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public const UPDATED_AT = null;
 
     /**
      * Get the tenant that owns the Support.

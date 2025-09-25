@@ -50,14 +50,14 @@ class BudgetFactory extends Factory
 
     /**
      * Estado para associar Budget a um customer (User).
-     * Cria user via factory se não fornecido.
+     * Cria customer via factory se não fornecido.
      *
      * @return static
      */
     public function forCustomer(): static
     {
         return $this->state( fn( array $attributes ) => [ 
-            'customer_id' => $attributes[ 'customer_id' ] ?? User::factory()->create()->id,
+            'customer_id' => $attributes[ 'customer_id' ] ?? \App\Models\Customer::factory()->create()->id,
         ] );
     }
 

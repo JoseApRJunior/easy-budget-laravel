@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\CategoryService;
+use App\Services\ActivityService;
 use App\Services\ProductService;
+use App\Services\ActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +43,7 @@ class ProductController extends BaseController
         ProductService $productService,
         CategoryService $categoryService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->productService  = $productService;
         $this->categoryService = $categoryService;
     }
@@ -633,3 +635,4 @@ class ProductController extends BaseController
     }
 
 }
+

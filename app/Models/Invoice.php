@@ -13,6 +13,15 @@ class Invoice extends Model
     use TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -24,21 +33,21 @@ class Invoice extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'service_id',
         'customer_id',
-        'code',
         'invoice_statuses_id',
+        'code',
+        'public_hash',
         'subtotal',
+        'discount',
         'total',
         'due_date',
-        'transaction_date',
         'payment_method',
         'payment_id',
         'transaction_amount',
-        'public_hash',
-        'discount',
+        'transaction_date',
         'notes',
     ];
 
@@ -47,7 +56,7 @@ class Invoice extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'           => 'integer',
         'service_id'          => 'integer',
         'customer_id'         => 'integer',
@@ -64,7 +73,7 @@ class Invoice extends Model
         'discount'            => 'decimal:2',
         'notes'               => 'string',
         'created_at'          => 'immutable_datetime',
-        'updated_at'          => 'immutable_datetime',
+        'updated_at'          => 'datetime',
     ];
 
     /**
@@ -97,6 +106,14 @@ class Invoice extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo( Service::class);
+    }
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
     }
 
 }

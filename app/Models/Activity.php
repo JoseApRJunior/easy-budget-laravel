@@ -9,12 +9,19 @@ use App\Models\Traits\TenantScoped;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Activity extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * Indicates if the model should be timestamped.
@@ -35,7 +42,7 @@ class Activity extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'user_id',
         'action_type',
@@ -50,12 +57,15 @@ class Activity extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'  => 'integer',
-        'user_id'    => 'integer',
-        'entity_id'  => 'integer',
-        'metadata'   => 'array',
-        'created_at' => 'immutable_datetime',
+    protected $casts = [
+        'tenant_id'   => 'integer',
+        'user_id'     => 'integer',
+        'action_type' => 'string',
+        'entity_type' => 'string',
+        'entity_id'   => 'integer',
+        'description' => 'string',
+        'metadata'    => 'string',
+        'created_at'  => 'immutable_datetime',
     ];
 
     /**

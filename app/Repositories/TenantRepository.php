@@ -27,10 +27,10 @@ class TenantRepository extends AbstractNoTenantRepository
     /**
      * Busca tenant por ID
      *
-     * @param string $id ID do tenant
+     * @param int $id ID do tenant
      * @return Tenant|null Tenant encontrado ou null
      */
-    public function findById( string $id ): ?Tenant
+    public function findById( int $id ): ?Tenant
     {
         try {
             $tenant = Tenant::find( $id );

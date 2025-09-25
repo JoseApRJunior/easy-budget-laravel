@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InvoiceStatus extends Model
@@ -21,28 +20,27 @@ class InvoiceStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
         'slug',
         'color',
         'icon',
-        'description',
+        'description'
     ];
-
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public $timestamps = false;
 
     /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
+        'name'        => 'string',
+        'slug'        => 'string',
         'description' => 'string',
+        'color'       => 'string',
+        'icon'        => 'string',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**

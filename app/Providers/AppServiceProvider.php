@@ -50,10 +50,6 @@ class AppServiceProvider extends ServiceProvider
         // Registrar services utilitários como singletons
         $this->app->singleton( \App\Services\SharedService::class);
 
-        // Bind interfaces para implementações concretas
-        $this->app->bind( \App\Interfaces\BudgetQueryInterface::class, \App\Services\BudgetService::class);
-        $this->app->bind( \App\Interfaces\ServiceQueryInterface::class, \App\Services\ServiceService::class);
-
         // Bind interfaces específicas do MercadoPago
         $this->app->bind( \App\Interfaces\MercadoPagoServiceInterface::class, \App\Services\MercadoPagoService::class);
         $this->app->bind( \App\Interfaces\PaymentMercadoPagoInvoiceServiceInterface::class, \App\Services\PaymentMercadoPagoInvoiceService::class);

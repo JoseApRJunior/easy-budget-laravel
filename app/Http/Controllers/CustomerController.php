@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerFormRequest;
 use App\Services\CustomerService;
+use App\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +16,9 @@ class CustomerController extends BaseController
 {
     public function __construct(
         private readonly CustomerService $customerService,
+        private readonly ActivityService $activityService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     public function index( Request $request ): View
@@ -211,34 +213,6 @@ class CustomerController extends BaseController
                 'provider_id' => $providerId
             ],
         );
-
-        $query     = $request->get( 'q', '' );
-        $customers = $this->customerService->search( $query, $tenantId, $providerId );
-
-        return response()->json( $customers );
-    }
-
-    public function servicesAndQuotes( int $id ): View
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $data = $this->customerService->getServicesAndQuotes( $id, $tenantId );
-
-        if ( empty( $data ) ) {
-            abort( 404 );
-        }
-
-        $customer = $this->customerService->getById( $id, $tenantId );
-
-        return view( 'pages.customer.services-quotes', compact( 'data', 'customer' ) );
-    }
-
-    public function search( Request $request ): \Illuminate\Http\JsonResponse
-    {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
 
         $query     = $request->get( 'q', '' );
         $customers = $this->customerService->search( $query, $tenantId, $providerId );

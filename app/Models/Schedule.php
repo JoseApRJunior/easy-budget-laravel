@@ -10,6 +10,16 @@ use Illuminate\Support\Carbon;
 class Schedule extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -22,7 +32,7 @@ class Schedule extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'service_id',
         'user_confirmation_token_id',
@@ -36,14 +46,14 @@ class Schedule extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'                  => 'integer',
         'service_id'                 => 'integer',
         'user_confirmation_token_id' => 'integer',
-        'start_date_time'            => 'datetime',
-        'end_date_time'              => 'datetime',
-        'created_at'                 => 'datetime',
-        'updated_at'                 => 'datetime',
+        'start_date_time'            => 'immutable_datetime',
+        'end_date_time'              => 'immutable_datetime',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'immutable_datetime',
     ];
 
     /**

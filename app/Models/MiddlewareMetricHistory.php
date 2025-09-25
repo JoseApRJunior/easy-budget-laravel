@@ -18,6 +18,15 @@ class MiddlewareMetricHistory extends Model
     use HasFactory, TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -29,7 +38,7 @@ class MiddlewareMetricHistory extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'middleware_name',
         'endpoint',
@@ -54,12 +63,15 @@ class MiddlewareMetricHistory extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'response_time'    => 'float',
         'memory_usage'     => 'integer',
         'cpu_usage'        => 'float',
         'status_code'      => 'integer',
         'tenant_id'        => 'integer',
+        'user_id'          => 'integer',
+        'ip_address'       => 'string',
+        'user_agent'       => 'string',
         'request_size'     => 'integer',
         'response_size'    => 'integer',
         'database_queries' => 'integer',

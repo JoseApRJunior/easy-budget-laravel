@@ -8,14 +8,14 @@ use App\Enums\OperationStatus;
 use App\Interfaces\ServiceInterface;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
-use App\Services\Abstracts\BaseTenantService;
+use App\Services\Abstracts\BaseService;
 use App\Support\ServiceResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class CategoryService extends BaseTenantService
+class CategoryService extends BaseService implements ServiceInterface
 {
     private CategoryRepository $categoryRepository;
 
@@ -24,22 +24,18 @@ class CategoryService extends BaseTenantService
         $this->categoryRepository = $categoryRepository;
     }
 
-    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
+    protected function findEntityById( int $id ): ?Model
     {
-        $tenantId = (int) $tenantId;
-        return $this->categoryRepository->findByIdAndTenantId( $id, $tenantId );
+        return $this->categoryRepository->find( $id );
     }
 
-    protected function listEntitiesByTenantId( int $tenantId, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
+    protected function listEntities( array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
     {
-        $tenantId = (int) $tenantId;
-        return $this->categoryRepository->findAllByTenantId( $tenantId, $filters, $orderBy, $limit, $offset );
+        return $this->categoryRepository->findAll( $filters, $orderBy, $limit, $offset );
     }
 
-    protected function createEntity( array $data, int $tenantId ): Model
+    protected function createEntity( array $data ): Model
     {
-        $tenantId            = (int) $tenantId;
-        $data[ 'tenant_id' ] = $tenantId;
         if ( isset( $data[ 'parent_id' ] ) ) {
             $data[ 'parent_id' ] = (int) $data[ 'parent_id' ];
         }
@@ -48,9 +44,8 @@ class CategoryService extends BaseTenantService
         return $category;
     }
 
-    protected function updateEntity( Model $entity, array $data, int $tenantId ): void
+    protected function updateEntity( Model $entity, array $data ): void
     {
-        $tenantId = (int) $tenantId;
         if ( isset( $data[ 'parent_id' ] ) ) {
             $data[ 'parent_id' ] = (int) $data[ 'parent_id' ];
         }
@@ -67,12 +62,6 @@ class CategoryService extends BaseTenantService
         return $entity->delete();
     }
 
-    protected function belongsToTenant( Model $entity, int $tenantId ): bool
-    {
-        $tenantId = (int) $tenantId;
-        return (int) $entity->tenant_id === $tenantId;
-    }
-
     protected function canDeleteEntity( Model $entity ): bool
     {
         // Check if used in budgets or services
@@ -84,15 +73,15 @@ class CategoryService extends BaseTenantService
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
         $currentId = $data[ 'id' ] ?? null;
-        $rules     = [ 
-            'name'        => [ 
+        $rules     = [
+            'name'        => [
                 'required',
                 'string',
                 'max:255',
                 $isUpdate ? 'unique:categories,name,' . $currentId . ',id,tenant_id,' . (int) $tenantId : 'unique:categories,name,NULL,id,tenant_id,' . (int) $tenantId
             ],
             'description' => 'nullable|string|max:1000',
-            'parent_id'   => [ 
+            'parent_id'   => [
                 'nullable',
                 Rule::exists( 'categories', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenantId ) ),
                 $isUpdate && $currentId ? Rule::unique( 'categories', 'parent_id' )->ignore( $currentId ) : Rule::unique( 'categories', 'parent_id' )

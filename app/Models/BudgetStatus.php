@@ -11,6 +11,15 @@ use Illuminate\Support\Carbon;
 
 class BudgetStatus extends Model
 {
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+    }
+
     /**
      * Scope para obter status ativos.
      * Filtra por is_active = true e ordena por order_index.
@@ -36,7 +45,7 @@ class BudgetStatus extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'description',
@@ -51,12 +60,13 @@ class BudgetStatus extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'description' => 'string',
         'icon'        => 'string',
         'is_active'   => 'boolean',
         'order_index' => 'integer',
         'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**

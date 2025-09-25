@@ -53,11 +53,46 @@ class BudgetController extends Controller
         $tenantId   = $user->tenant_id ?? 1;
         $providerId = $user->provider_id ?? $user->id;
 
-        try {
-            $budget = $this->budgetService->create( $request, $tenantId, $providerId );
+        $validated = $request->validated();
 
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $budget = new \App\Models\Budget();
+            $budget->customer_name = $validated['customer_name'];
+            $budget->project_description = $validated['project_description'];
+            $budget->due_date = $validated['due_date'];
+            $budget->total_value = $validated['total_value'];
+            $budget->tenant_id = $tenantId;
+            $budget->provider_id = $providerId;
+            $budget->user_id = $user->id;
+            $budget->status = 'draft'; // assuming initial status
+            $budget->save();
+
+            // Generate code after save
+            $budget->code = 'ORC-' . $tenantId . '-' . str_pad($budget->id, 6, '0', STR_PAD_LEFT);
+            $budget->save();
+
+            if ($request->hasFile('budget_file')) {
+                $filePath = $request->file('budget_file')->store('budgets', 'public');
+                $budget->budget_file = $filePath;
+                $budget->save();
+            }
+
+            // Processar itens
+            foreach ($validated['items'] as $itemData) {
+                \App\Models\ItemBudget::create([
+                    'budget_id' => $budget->id,
+                    'description' => $itemData['description'],
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $itemData['unit_price'],
+                    'total' => $itemData['total'],
+                ]);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
             return redirect()->route( 'budgets.show', $budget->code )->with( 'success', 'Orçamento criado com sucesso!' );
         } catch ( \Exception $e ) {
+            \Illuminate\Support\Facades\DB::rollback();
             return back()->with( 'error', 'Erro ao criar orçamento: ' . $e->getMessage() )->withInput();
         }
     }

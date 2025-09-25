@@ -6,12 +6,22 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Product extends Model
 {
     use HasFactory;
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * The table associated with the model.
@@ -25,7 +35,7 @@ class Product extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'name',
         'description',
@@ -40,12 +50,16 @@ class Product extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'  => 'integer',
-        'price'      => 'decimal:2',
-        'active'     => 'boolean',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+    protected $casts = [
+        'tenant_id'   => 'integer',
+        'name'        => 'string',
+        'description' => 'string',
+        'price'       => 'decimal:2',
+        'active'      => 'boolean',
+        'code'        => 'string',
+        'image'       => 'string',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**
@@ -54,6 +68,14 @@ class Product extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Movimentações de inventário deste tenant.
+     */
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany( InventoryMovement::class);
     }
 
 }

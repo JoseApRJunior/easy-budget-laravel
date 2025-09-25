@@ -21,17 +21,28 @@ class Permission extends Model
     use HasFactory;
 
     /**
+     * Tabela associada ao modelo Permission.
+     */
+    protected $table = 'permissions';
+
+    /**
      * Campos preenchíveis para o model Permission, focando em atributos globais sem tenant scoping.
      * 'name': Nome da permissão (ex: 'editar-orcamento').
+     * 'slug': Slug único da permissão (ex: 'edit-budget').
+     * 'description': Descrição detalhada da permissão.
+     * 'group': Grupo ao qual a permissão pertence (ex: 'budget', 'user', 'admin').
      * 'guard_name': Nome do guard de autenticação (ex: 'web', 'api').
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
-        'guard_name',
+        'description',
     ];
 
-    protected $casts = [ 
-        'guard_name' => 'string',
+    protected $casts = [
+        'name' => 'string',
+        'description' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -46,15 +57,19 @@ class Permission extends Model
     }
 
     /**
-     * Relationship com users - tenant-scoped via pivot custom.
-     * Assume tabela user_permissions com tenant_id para direct permissions.
-     * Se não existir, use via roles. Assignments scoped por tenant.
+     * Relationship com users - tenant-scoped via roles.
+     * Since user_permissions table doesn't exist, users are accessed via roles.
+     * Assignments scoped por tenant through role assignments.
      *
      * @return BelongsToMany
      */
-    public function users(): BelongsToMany
+    public function users()
     {
-        return $this->belongsToMany( User::class, 'user_permissions', 'permission_id', 'user_id' )->withPivot( 'tenant_id' )->withTimestamps();
+        return User::whereHas( 'roles', function ($query) {
+            $query->whereHas( 'permissions', function ($query) {
+                $query->where( 'permission_id', $this->id );
+            } );
+        } );
     }
 
 }

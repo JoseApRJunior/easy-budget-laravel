@@ -24,6 +24,10 @@ return new class extends Migration
             $table->foreign( 'common_data_id' )->references( 'id' )->on( 'common_data' )->onDelete( 'set null' );
             $table->foreign( 'contact_id' )->references( 'id' )->on( 'contacts' )->onDelete( 'set null' );
             $table->foreign( 'address_id' )->references( 'id' )->on( 'addresses' )->onDelete( 'set null' );
+
+            // Adiciona índice único composto para garantir idempotência na criação de providers
+            // (tenant_id, user_id) - um usuário só pode ter um provider por tenant
+            $table->unique( [ 'tenant_id', 'user_id' ], 'providers_tenant_user_unique' );
         } );
     }
 
@@ -38,6 +42,9 @@ return new class extends Migration
             $table->dropForeign( [ 'common_data_id' ] );
             $table->dropForeign( [ 'contact_id' ] );
             $table->dropForeign( [ 'address_id' ] );
+
+            // Remove o índice único composto
+            $table->dropUnique( 'providers_tenant_user_unique' );
 
             // Remove colunas
             $table->dropColumn( [ 'user_id', 'common_data_id', 'contact_id', 'address_id', 'terms_accepted' ] );

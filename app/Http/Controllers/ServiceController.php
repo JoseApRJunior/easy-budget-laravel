@@ -8,8 +8,11 @@ use App\Http\Requests\ServiceChangeStatusFormRequest;
 use App\Http\Requests\ServiceChooseStatusFormRequest;
 use App\Http\Requests\ServiceFormRequest;
 use App\Services\NotificationService;
+use App\Services\ActivityService;
 use App\Services\PdfService;
+use App\Services\ActivityService;
 use App\Services\ServiceService;
+use App\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +26,7 @@ class ServiceController extends BaseController
         private readonly PdfService $pdfService,
         private readonly NotificationService $notificationService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     public function index( Request $request ): View
@@ -281,43 +284,5 @@ class ServiceController extends BaseController
             ->header( 'Content-Disposition', "inline; filename=\"{$filename}\"" );
     }
 
-    public function cancel( string $code ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        try {
-            $success = $this->serviceService->cancelByCode( $code, $tenantId, 'Cancelado pelo usuário' );
-
-            if ( $success ) {
-                return redirect()->route( 'services.show', $code )->with( 'success', 'Serviço cancelado com sucesso!' );
-            }
-
-            return back()->with( 'error', 'Erro ao cancelar serviço.' );
-        } catch ( \Exception $e ) {
-            return back()->with( 'error', 'Erro ao cancelar serviço: ' . $e->getMessage() );
-        }
-    }
-
-    public function print( string $code, ?string $token = null ): \Illuminate\Http\Response
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $serviceData = $this->serviceService->getServicePrintData( $code, $token, $tenantId );
-
-        if ( !$serviceData ) {
-            abort( 404 );
-        }
-
-        $pdfPath    = 'services/' . $serviceData[ 'service' ]->id . '.pdf';
-        $pdfContent = $this->pdfService->generateServicePdf( $serviceData[ 'service' ], $pdfPath );
-
-        $filename = "servico_{$code}.pdf";
-
-        return response( $pdfContent )
-            ->header( 'Content-Type', 'application/pdf' )
-            ->header( 'Content-Disposition', "inline; filename=\"{$filename}\"" );
-    }
-
 }
+

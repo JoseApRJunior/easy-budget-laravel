@@ -18,6 +18,15 @@ class MonitoringAlertHistory extends Model
     use HasFactory, TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -42,6 +51,7 @@ class MonitoringAlertHistory extends Model
         'threshold_value',
         'unit',
         'metadata',
+        'message',
         'status',
         'acknowledged_by',
         'acknowledged_at',
@@ -51,6 +61,7 @@ class MonitoringAlertHistory extends Model
         'occurrence_count',
         'first_occurrence',
         'last_occurrence',
+        'resolved',
     ];
 
     /**
@@ -59,14 +70,20 @@ class MonitoringAlertHistory extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'current_value'    => 'float',
-        'threshold_value'  => 'float',
+        'current_value'    => 'decimal:3',
+        'threshold_value'  => 'decimal:3',
         'metadata'         => 'array',
-        'acknowledged_at'  => 'datetime',
-        'resolved_at'      => 'datetime',
-        'first_occurrence' => 'datetime',
-        'last_occurrence'  => 'datetime',
+        'resolved'         => 'boolean',
         'tenant_id'        => 'integer',
+        'resolved_by'      => 'integer',
+        'acknowledged_by'  => 'integer',
+        'acknowledged_at'  => 'immutable_datetime',
+        'resolved_at'      => 'immutable_datetime',
+        'occurrence_count' => 'integer',
+        'first_occurrence' => 'immutable_datetime',
+        'last_occurrence'  => 'immutable_datetime',
+        'unit'             => 'string',
+        'status'           => 'string',
         'created_at'       => 'immutable_datetime',
         'updated_at'       => 'immutable_datetime',
     ];
@@ -77,14 +94,6 @@ class MonitoringAlertHistory extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
-    }
-
-    /**
-     * Get the user who acknowledged the alert.
-     */
-    public function acknowledgedBy(): BelongsTo
-    {
-        return $this->belongsTo( User::class, 'acknowledged_by' );
     }
 
     /**

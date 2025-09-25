@@ -13,16 +13,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create( 'users', function (Blueprint $table) {
-            $table->bigIncrements( 'id' );
-            $table->string( 'name' );
-            $table->string( 'email' )->unique();
-            $table->timestamp( 'email_verified_at' )->nullable();
+            $table->id();
+            $table->unsignedBigInteger( 'tenant_id' );
+            $table->string( 'email', 100 );
             $table->string( 'password' );
-            $table->rememberToken();
-            $table->unsignedBigInteger( 'tenant_id' )->nullable();
+            $table->string( 'logo' )->nullable();
+            $table->boolean( 'is_active' )->default( false );
             $table->timestamps();
 
-            $table->foreign( 'tenant_id' )->references( 'id' )->on( 'tenants' )->onDelete( 'cascade' );
+            // Índices para performance
+            $table->index( 'tenant_id', 'idx_tenant' );
+            
+            // Chaves estrangeiras
+            $table->foreign( 'tenant_id', 'fk_users_tenant' )->references( 'id' )->on( 'tenants' );
         } );
     }
 

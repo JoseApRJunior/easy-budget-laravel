@@ -1,70 +1,238 @@
-/* Estilos base para alertas */
-.alert {
-   padding: 1rem;
-   margin-bottom: 1rem;
-   border: none;
-   border-radius: var(--border-radius-sm);
+/**
+ * EasyAlert - Estilos para o sistema de alertas
+ */
+
+/* Container de alertas */
+.easy-alert-container {
+   position: fixed;
    display: flex;
-   align-items: center;
-   gap: 0.75rem;
+   flex-direction: column;
+   gap: 10px;
+   max-width: 350px;
+   width: 100%;
+   z-index: 9999;
+   pointer-events: none;
 }
 
-/* Variantes de alerta */
-.alert-success {
-   background-color: rgba(5, 150, 105, 0.1);
-   color: var(--text-success);
+/* Posicionamento */
+.easy-alert-top-right {
+   top: 20px;
+   right: 20px;
 }
 
-.alert-danger {
-   background-color: rgba(220, 38, 38, 0.1);
-   color: var(--text-error);
+.easy-alert-top-left {
+   top: 20px;
+   left: 20px;
 }
 
-.alert-warning {
-   background-color: rgba(217, 119, 6, 0.1);
-   color: var(--text-warning);
+.easy-alert-bottom-right {
+   bottom: 20px;
+   right: 20px;
+   flex-direction: column-reverse;
 }
 
-.alert-info {
-   background-color: rgba(37, 99, 235, 0.1);
-   color: var(--text-info);
+.easy-alert-bottom-left {
+   bottom: 20px;
+   left: 20px;
+   flex-direction: column-reverse;
 }
 
-/* Ícones de alerta */
-.alert i {
-   font-size: 1.25rem;
+.easy-alert-top-center {
+   top: 20px;
+   left: 50%;
+   transform: translateX(-50%);
 }
 
-/* Botão de fechar */
-.alert .close {
-   padding: 0;
-   background-color: transparent;
-   border: 0;
-   float: right;
-   font-size: 1.5rem;
-   font-weight: 700;
-   line-height: 1;
-   color: inherit;
-   opacity: 0.5;
-   margin-left: auto;
+.easy-alert-bottom-center {
+   bottom: 20px;
+   left: 50%;
+   transform: translateX(-50%);
+   flex-direction: column-reverse;
 }
 
-.alert .close:hover {
-   opacity: 0.75;
-   cursor: pointer;
-}
-
-/* Alerta dismissível */
-.alert-dismissible {
-   padding-right: 3rem;
+/* Alerta individual */
+.easy-alert {
+   background-color: #fff;
+   border-radius: 8px;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+   overflow: hidden;
+   pointer-events: auto;
+   width: 100%;
+   opacity: 0;
+   transform: translateY(-20px);
 }
 
 /* Animações */
-.alert.fade {
-   opacity: 0;
-   transition: opacity 0.15s linear;
+.easy-alert-animated {
+   animation: easy-alert-enter 0.3s forwards;
 }
 
-.alert.fade.show {
+.easy-alert-exit {
+   animation: easy-alert-exit 0.3s forwards;
+}
+
+@keyframes easy-alert-enter {
+   from {
+      opacity: 0;
+      transform: translateY(-20px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+@keyframes easy-alert-exit {
+   from {
+      opacity: 1;
+      transform: translateY(0);
+   }
+   to {
+      opacity: 0;
+      transform: translateY(-20px);
+   }
+}
+
+/* Conteúdo do alerta */
+.easy-alert-content {
+   display: flex;
+   align-items: center;
+   padding: 15px;
+   gap: 12px;
+}
+
+/* Ícone do alerta */
+.easy-alert-icon {
+   font-size: 24px;
+   flex-shrink: 0;
+}
+
+/* Mensagem do alerta */
+.easy-alert-message {
+   flex-grow: 1;
+   font-size: 14px;
+   line-height: 1.5;
+}
+
+/* Botão de fechar */
+.easy-alert-close {
+   background: none;
+   border: none;
+   cursor: pointer;
+   font-size: 20px;
+   line-height: 1;
+   padding: 0;
+   margin-left: 10px;
+   opacity: 0.5;
+   transition: opacity 0.2s;
+}
+
+.easy-alert-close:hover {
    opacity: 1;
+}
+
+/* Barra de progresso */
+.easy-alert-progress {
+   height: 3px;
+   width: 100%;
+   background-color: rgba(0, 0, 0, 0.1);
+   position: relative;
+}
+
+.easy-alert-progress-active::before {
+   content: "";
+   position: absolute;
+   height: 100%;
+   width: 100%;
+   background-color: rgba(0, 0, 0, 0.2);
+   transform-origin: left;
+   animation: easy-alert-progress 5000ms linear forwards;
+}
+
+@keyframes easy-alert-progress {
+   from {
+      transform: scaleX(1);
+   }
+   to {
+      transform: scaleX(0);
+   }
+}
+
+/* Tipos de alertas */
+.easy-alert-success {
+   border-left: 4px solid #28a745;
+}
+
+.easy-alert-success .easy-alert-icon {
+   color: #28a745;
+}
+
+.easy-alert-error {
+   border-left: 4px solid #dc3545;
+}
+
+.easy-alert-error .easy-alert-icon {
+   color: #dc3545;
+}
+
+.easy-alert-warning {
+   border-left: 4px solid #ffc107;
+}
+
+.easy-alert-warning .easy-alert-icon {
+   color: #ffc107;
+}
+
+.easy-alert-info {
+   border-left: 4px solid #17a2b8;
+}
+
+.easy-alert-info .easy-alert-icon {
+   color: #17a2b8;
+}
+
+.easy-alert-question {
+   border-left: 4px solid #6c757d;
+}
+
+.easy-alert-question .easy-alert-icon {
+   color: #6c757d;
+}
+
+/* Tema escuro */
+.easy-alert-container[data-theme="dark"] .easy-alert {
+   background-color: #343a40;
+   color: #fff;
+}
+
+.easy-alert-container[data-theme="dark"] .easy-alert-close {
+   color: #fff;
+}
+
+.easy-alert-container[data-theme="dark"] .easy-alert-progress {
+   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.easy-alert-container[data-theme="dark"] .easy-alert-progress-active::before {
+   background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+   .easy-alert-container {
+      max-width: calc(100% - 40px);
+      width: calc(100% - 40px);
+   }
+
+   .easy-alert-top-center,
+   .easy-alert-bottom-center {
+      width: calc(100% - 40px);
+      max-width: calc(100% - 40px);
+      left: 20px;
+      transform: none;
+   }
+}
+
+.invalid-alert-feedback {
+   color: var(--bs-form-invalid-color);
 }

@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    use HasFactory;
+    use HasFactory, TenantScoped;
 
-    protected $fillable = [ 
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    protected $fillable = [
+        'tenant_id',
         'type',
         'email',
         'message',
@@ -21,7 +32,7 @@ class Notification extends Model
         'updated_at'
     ];
 
-    protected $casts = [ 
+    protected $casts = [
         'sent_at'    => 'datetime',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime'

@@ -11,6 +11,16 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class RolePermission extends Pivot
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -23,7 +33,7 @@ class RolePermission extends Pivot
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'role_id',
         'permission_id',
@@ -41,13 +51,21 @@ class RolePermission extends Pivot
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'immutable_datetime',
-        'updated_at'    => 'immutable_datetime',
+        'created_at'    => 'datetime',
+        'updated_at'    => 'datetime',
     ];
+
+    /**
+     * Accessor para tratar valores zero-date no updated_at.
+     */
+    public function getUpdatedAtAttribute( $value )
+    {
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+    }
 
     /**
      * Get the role that owns the RolePermission.

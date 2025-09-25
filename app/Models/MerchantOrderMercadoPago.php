@@ -10,6 +10,16 @@ use Illuminate\Support\Carbon;
 class MerchantOrderMercadoPago extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -22,7 +32,7 @@ class MerchantOrderMercadoPago extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'provider_id',
         'merchant_order_id',
@@ -37,13 +47,16 @@ class MerchantOrderMercadoPago extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'            => 'integer',
+    protected $casts = [
+        'merchant_order_id'    => 'string',
         'provider_id'          => 'integer',
+        'tenant_id'            => 'integer',
         'plan_subscription_id' => 'integer',
+        'status'               => 'string',
+        'order_status'         => 'string',
         'total_amount'         => 'decimal:2',
         'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'immutable_datetime',
+        'updated_at'           => 'datetime',
     ];
 
     /**

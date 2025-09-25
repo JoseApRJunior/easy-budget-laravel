@@ -3,14 +3,25 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 class Contact extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * The table associated with the model.
@@ -24,7 +35,7 @@ class Contact extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'email',
         'phone',
@@ -38,7 +49,7 @@ class Contact extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'      => 'integer',
         'email'          => 'string',
         'phone'          => 'string',
@@ -46,7 +57,7 @@ class Contact extends Model
         'phone_business' => 'string',
         'website'        => 'string',
         'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**
@@ -55,6 +66,14 @@ class Contact extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the customer associated with the Contact.
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne( Customer::class);
     }
 
 }

@@ -22,13 +22,12 @@ class ServiceItem extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'service_id',
         'product_id',
         'unit_value',
         'quantity',
-        'total',
     ];
 
     /**
@@ -36,7 +35,7 @@ class ServiceItem extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'  => 'integer',
         'service_id' => 'integer',
         'product_id' => 'integer',
@@ -72,11 +71,29 @@ class ServiceItem extends Model
     }
 
     /**
-     * Set the total attribute automatically calculated from quantity and unit_value.
+     * Boot the model and set up event listeners.
      */
-    public function setTotalAttribute($value)
+    protected static function boot()
     {
-        $this->attributes['total'] = (float)$this->quantity * (float)$this->unit_value;
+        parent::boot();
+        static::bootTenantScoped();
+
+        static::saving( function ( ServiceItem $model ) {
+            // Calculate total as quantity * unit_value using safe decimal math
+            $quantity  = (int) ( $model->quantity ?? 0 );
+            $unitValue = (int) ( $model->unit_value ?? '0' );
+            $computed  = 0;
+
+            // Use bcmath if available for precise decimal calculations
+            if ( function_exists( 'bcmul' ) ) {
+                $computed = bcmul( $unitValue, (int) $quantity, 2 );
+            } else {
+                // Fallback to number_format for precise decimal handling
+                $computed = number_format( ( (float) $unitValue ) * $quantity, 2, '.', '' );
+            }
+
+            $model->total = $computed;
+        } );
     }
 
 }

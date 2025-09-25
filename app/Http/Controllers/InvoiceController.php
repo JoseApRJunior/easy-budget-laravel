@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\InvoiceFormRequest;
 use App\Services\InvoiceService;
 use App\Services\PdfService;
+use App\Services\ActivityService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -40,9 +41,9 @@ class InvoiceController extends BaseController
      * @param InvoiceService $invoiceService
      * @param PdfService $pdfService
      */
-    public function __construct( InvoiceService $invoiceService, PdfService $pdfService )
+    public function __construct( InvoiceService $invoiceService, PdfService $pdfService, ActivityService $activityService )
     {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->invoiceService = $invoiceService;
         $this->pdfService     = $pdfService;
     }

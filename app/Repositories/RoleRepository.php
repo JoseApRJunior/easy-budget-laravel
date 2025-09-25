@@ -13,95 +13,73 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class RoleRepository extends AbstractNoTenantRepository implements RepositoryNoTenantInterface, SlugAwareRepositoryInterface
 {
+    protected string $modelClass = Role::class;
+
     public function __construct()
     {
-        parent::__construct( new Role() );
+        parent::__construct();
     }
 
-    public function findById( int $tenantId ): ?Role
+    public function findById( int $id ): ?Role
     {
-        return $this->model->find( $id );
+        return parent::findById( $id );
     }
 
     public function findAll( array $criteria = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
     {
-        $query = $this->model->newQuery();
-        $query->where( $criteria );
-        if ( $orderBy ) {
-            $query->orderBy( $orderBy[ 'column' ] ?? 'id', $orderBy[ 'direction' ] ?? 'asc' );
-        }
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-        if ( $offset ) {
-            $query->offset( $offset );
-        }
-        return $query->get()->toArray();
+        return parent::findAll( $criteria, $orderBy, $limit, $offset );
     }
-
-    public function paginate( int $page = 1, int $perPage = 15, array $criteria = [], ?array $orderBy = null ): LengthAwarePaginator
+    public function paginate( int $page = 1, int $perPage = 15, array $criteria = [], ?array $orderBy = null ): array
     {
-        $query = $this->model->newQuery();
-        $query->where( $criteria );
-        if ( $orderBy ) {
-            $query->orderBy( $orderBy[ 'column' ] ?? 'id', $orderBy[ 'direction' ] ?? 'asc' );
-        }
-        return $query->paginate( $perPage, [ '*' ], 'page', $page );
+        return parent::paginate( $page, $perPage, $criteria, $orderBy );
     }
 
     public function count( array $criteria = [] ): int
     {
-        return $this->model->where( $criteria )->count();
+        return parent::countBy( $criteria );
     }
 
     public function existsByName( string $name ): bool
     {
-        return $this->model->where( 'name', $name )->exists();
+        return parent::existsBy( [ 'name' => $name ] );
     }
 
     public function listActive( ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
     {
-        $query = $this->model->newQuery()->where( 'status', 'active' );
-        if ( $orderBy ) {
-            $query->orderBy( $orderBy[ 'column' ] ?? 'name', $orderBy[ 'direction' ] ?? 'asc' );
-        }
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-        if ( $offset ) {
-            $query->offset( $offset );
-        }
-        return $query->get()->toArray();
+        return parent::findBy( [ 'status' => 'active' ], $orderBy, $limit, $offset );
     }
 
     public function getBySlug( string $slug ): ?Role
     {
-        return $this->model->where( 'slug', $slug )->first();
+        return parent::findBySlug( $slug );
     }
 
     public function existsBySlug( string $slug, ?int $tenantId = null, ?int $excludeId = null ): bool
     {
-        $query = $this->model->newQuery()->where( 'slug', $slug );
+        $criteria = [ 'slug' => $slug ];
         if ( $excludeId ) {
+            // Para exclusão de ID, precisamos usar uma query customizada
+            $query = $this->newQuery()->where( 'slug', $slug );
             $query->where( 'id', '!=', $excludeId );
+            return $query->exists();
         }
         // Ignora $tenantId pois é repositório sem tenant
-        return $query->exists();
+        return parent::existsBy( $criteria );
     }
 
-    public function existsById( int $tenantId ): bool
+    public function existsById( int $id ): bool
     {
-        return $this->model->where( 'id', $id )->exists();
+        return parent::existsBy( [ 'id' => $id ] );
     }
 
     public function deleteManyByIds( array $id ): int
     {
-        return $this->model->whereIn( 'id', $id )->delete();
+        return parent::deleteManyByIds( $id );
     }
 
     public function updateMany( array $id, array $data ): int
     {
-        return $this->model->whereIn( 'id', $id )->update( $data );
+        return parent::updateMany( [ 'id' => $id ], $data );
     }
 
 }

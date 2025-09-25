@@ -1,11 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Easy Budget Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de orçamentos desenvolvido em Laravel com interface moderna e funcionalidades completas para gestão de orçamentos, clientes, produtos e serviços.
+
+## 🚀 Tecnologias Utilizadas
+
+- **Laravel 11** - Framework PHP
+- **Vite** - Build tool moderno para assets
+- **MySQL** - Banco de dados
+- **Bootstrap** - Framework CSS
+- **JavaScript ES6+** - Funcionalidades interativas
+
+## 📦 Estrutura de Assets (Vite)
+
+Este projeto foi migrado para usar **Vite** como bundler de assets, proporcionando:
+
+- ⚡ **Hot Module Replacement (HMR)** - Atualizações instantâneas durante desenvolvimento
+- 🔧 **Build otimizado** - Minificação e otimização automática para produção
+- 🏷️ **Versionamento automático** - Cache busting automático
+- 📱 **Suporte moderno** - ES6+, CSS moderno, e mais
+
+### Estrutura de Assets:
+
+```
+resources/
+├── css/
+│   ├── layout.css
+│   ├── alerts.css
+│   └── navigation-improvements.css
+├── js/
+│   ├── main.js
+│   ├── home.js
+│   └── alert/
+│       └── alert.js
+└── views/
+```
+
+### Comandos de Desenvolvimento:
+
+```bash
+# Desenvolvimento (com HMR)
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview do build de produção
+npm run preview
+```
+
+## 🛠️ Instalação
+
+1. Clone o repositório
+2. Instale as dependências PHP: `composer install`
+3. Instale as dependências Node.js: `npm install`
+4. Configure o arquivo `.env`
+5. Execute as migrações: `php artisan migrate`
+6. Inicie o servidor de desenvolvimento: `php artisan serve`
+7. Em outro terminal, inicie o Vite: `npm run dev`
+
+## 📚 Documentação
+
+- [Backup de Assets Legados](docs/legacy-assets-backup.md) - Documentação dos assets removidos durante a migração para Vite
 
 ## About Laravel
 

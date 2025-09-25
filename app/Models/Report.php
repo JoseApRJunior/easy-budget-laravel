@@ -10,6 +10,16 @@ use Illuminate\Support\Carbon;
 class Report extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
     /**
      * The table associated with the model.
      *
@@ -22,7 +32,7 @@ class Report extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'user_id',
         'hash',
@@ -39,10 +49,17 @@ class Report extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
-        'tenant_id'  => 'integer',
-        'size'       => 'float',
-        'created_at' => 'immutable_datetime',
+    protected $casts = [
+        'tenant_id'   => 'integer',
+        'user_id'     => 'integer',
+        'hash'        => 'string',
+        'type'        => 'string',
+        'description' => 'string',
+        'file_name'   => 'string',
+        'status'      => 'string',
+        'format'      => 'string',
+        'size'        => 'float',
+        'created_at'  => 'immutable_datetime',
     ];
 
     /**

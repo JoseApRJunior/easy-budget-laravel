@@ -27,6 +27,9 @@ return new class extends Migration
             // Slug único para o plano, para URLs amigáveis, limitado a 50 caracteres
             $table->string( 'slug', 50 )->unique();
 
+             // Descriçao do plano limitado a 100 caracteres
+            $table->string( 'description', 100 );
+
             // Recursos do plano em formato JSON, pode ser nulo
             $table->json( 'features' )->nullable();
 

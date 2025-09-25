@@ -18,6 +18,15 @@ class PlanSubscription extends Model
     use HasFactory, TenantScoped;
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    /**
      * Status constants.
      */
     const STATUS_ACTIVE    = 'active';
@@ -37,7 +46,7 @@ class PlanSubscription extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'status',
         'transaction_amount',
         'start_date',
@@ -58,7 +67,7 @@ class PlanSubscription extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'transaction_amount' => 'decimal:2',
         'start_date'         => 'datetime',
         'end_date'           => 'datetime',

@@ -6,11 +6,21 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 class Address extends Model
 {
     use TenantScoped;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
 
     /**
      * The table associated with the model.
@@ -24,7 +34,7 @@ class Address extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'tenant_id',
         'address',
         'address_number',
@@ -39,7 +49,7 @@ class Address extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'      => 'integer',
         'address'        => 'string',
         'address_number' => 'string',
@@ -48,7 +58,7 @@ class Address extends Model
         'state'          => 'string',
         'cep'            => 'string',
         'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**
@@ -57,6 +67,14 @@ class Address extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the customer associated with the Address.
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne( Customer::class);
     }
 
 }

@@ -34,17 +34,20 @@ class BudgetService extends BaseTenantService
     private CategoryRepository   $categoryRepository;
     private ?PdfService          $pdfService;
     private ?NotificationService $notificationService;
+    private ActivityService      $activityService;
 
     public function __construct(
         BudgetRepository $budgetRepository,
         CustomerRepository $customerRepository,
         CategoryRepository $categoryRepository,
+        ActivityService $activityService,
         ?PdfService $pdfService = null,
         ?NotificationService $notificationService = null,
     ) {
         $this->budgetRepository    = $budgetRepository;
         $this->customerRepository  = $customerRepository;
         $this->categoryRepository  = $categoryRepository;
+        $this->activityService     = $activityService;
         $this->pdfService          = $pdfService;
         $this->notificationService = $notificationService;
     }
@@ -445,4 +448,272 @@ class BudgetService extends BaseTenantService
         return $this->success( $printData, 'Dados preparados.' );
     }
 
+    /**
+     * Cria budget com código único e logging de atividade.
+     * Baseado no padrão do sistema antigo.
+     */
+    public function createBudgetWithCode(array $data, int $tenantId, int $userId): ServiceResult
+    {
+        return DB::transaction(function () use ($data, $tenantId, $userId) {
+            try {
+                // Validação
+                $validation = $this->validateForTenant($data, $tenantId);
+                if (!$validation->isSuccess()) {
+                    return $validation;
+                }
+
+                // Gerar código único do orçamento
+                $budgetCode = $this->generateBudgetCode($tenantId);
+                $data['code'] = $budgetCode;
+                $data['user_id'] = $userId;
+
+                // Criar budget
+                $budget = $this->createEntity($data, $tenantId);
+                if (!$this->saveEntity($budget)) {
+                    return ServiceResult::error(OperationStatus::ERROR, 'Falha ao salvar budget.');
+                }
+
+                // Criar itens se presentes
+                if (isset($data['items']) && is_array($data['items'])) {
+                    $this->createBudgetItems($budget, $data['items'], $tenantId);
+                }
+
+                // Calcular totais
+                $this->calculateBudgetTotals($budget);
+
+                // Log da atividade
+                $this->logBudgetActivity('budget_created', $budget, $userId, [
+                    'budget_code' => $budgetCode,
+                    'customer_id' => $budget->customer_id,
+                    'amount' => $budget->amount
+                ]);
+
+                // Enviar notificação se configurado
+                if ($this->notificationService) {
+                    $this->notificationService->sendBudgetCreatedNotification($budget);
+                }
+
+                // Carregar relações
+                $budget->load(['customer', 'category', 'items', 'user']);
+
+                return ServiceResult::success($budget, 'Orçamento criado com sucesso.');
+
+            } catch (Exception $e) {
+                Log::error('Erro ao criar orçamento', [
+                    'tenant_id' => $tenantId,
+                    'user_id' => $userId,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Erro interno ao criar orçamento: ' . $e->getMessage()
+                );
+            }
+        });
+    }
+
+    /**
+     * Gera código único para o orçamento baseado no tenant.
+     */
+    private function generateBudgetCode(int $tenantId): string
+    {
+        $prefix = 'ORC';
+        $year = date('Y');
+        $month = date('m');
+        
+        // Buscar último número sequencial do mês
+        $lastBudget = $this->budgetRepository->getLastBudgetByTenantAndMonth($tenantId, $year, $month);
+        $sequence = $lastBudget ? (int) substr($lastBudget->code, -4) + 1 : 1;
+        
+        return sprintf('%s%s%s%04d', $prefix, $year, $month, $sequence);
+    }
+
+    /**
+     * Cria itens do orçamento.
+     */
+    private function createBudgetItems(Budget $budget, array $items, int $tenantId): void
+    {
+        foreach ($items as $itemData) {
+            $budget->items()->create([
+                'tenant_id' => $tenantId,
+                'budget_id' => $budget->id,
+                'description' => $itemData['description'],
+                'quantity' => $itemData['quantity'],
+                'price' => $itemData['price'],
+                'total' => $itemData['quantity'] * $itemData['price'],
+            ]);
+        }
+    }
+
+    /**
+     * Calcula totais do orçamento.
+     */
+    private function calculateBudgetTotals(Budget $budget): void
+    {
+        $subtotal = $budget->items()->sum(DB::raw('quantity * price'));
+        $discount = $budget->discount_percentage ? ($subtotal * $budget->discount_percentage / 100) : 0;
+        $total = $subtotal - $discount;
+
+        $budget->update([
+            'subtotal' => $subtotal,
+            'discount_amount' => $discount,
+            'total' => $total,
+        ]);
+    }
+
+    /**
+     * Log de atividade do orçamento.
+     */
+    private function logBudgetActivity(string $action, Budget $budget, int $userId, array $details = []): void
+    {
+        $this->activityService->create([
+            'tenant_id' => $budget->tenant_id,
+            'user_id' => $userId,
+            'action' => $action,
+            'entity_type' => 'Budget',
+            'entity_id' => $budget->id,
+            'details' => array_merge([
+                'budget_code' => $budget->code,
+                'status' => $budget->status,
+            ], $details),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
+
+    /**
+     * Atualiza status do orçamento com validações e logging.
+     */
+    public function updateBudgetStatus(int $budgetId, string $newStatus, int $tenantId, int $userId, ?string $reason = null): ServiceResult
+    {
+        return DB::transaction(function () use ($budgetId, $newStatus, $tenantId, $userId, $reason) {
+            $budget = $this->findEntityByIdAndTenantId($budgetId, $tenantId);
+            if (!$budget) {
+                return ServiceResult::notFound('Orçamento não encontrado.');
+            }
+
+            // Validar transição de status
+            if (!$this->isValidStatusTransition($budget->status, $newStatus)) {
+                return ServiceResult::invalidData(
+                    "Transição de status inválida: {$budget->status} -> {$newStatus}"
+                );
+            }
+
+            $oldStatus = $budget->status;
+            $budget->status = $newStatus;
+            $budget->status_updated_at = now();
+            $budget->status_updated_by = $userId;
+
+            if (!$this->saveEntity($budget)) {
+                return ServiceResult::error(OperationStatus::ERROR, 'Falha ao atualizar status.');
+            }
+
+            // Log da atividade
+            $this->logBudgetActivity('status_changed', $budget, $userId, [
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'reason' => $reason,
+            ]);
+
+            // Notificação de mudança de status
+            if ($this->notificationService) {
+                $this->notificationService->sendBudgetStatusChangedNotification($budget, $oldStatus);
+            }
+
+            return ServiceResult::success($budget, 'Status atualizado com sucesso.');
+    });
+}
+
+/**
+ * Valida se a transição de status é permitida.
+ */
+private function isValidStatusTransition(string $currentStatus, string $newStatus): bool
+{
+    $allowedTransitions = [
+        'pending' => ['approved', 'rejected'],
+        'approved' => ['completed', 'rejected'],
+        'rejected' => ['pending'],
+        'completed' => ['finalized'],
+        'finalized' => [], // Status final
+    ];
+
+    return in_array($newStatus, $allowedTransitions[$currentStatus] ?? []);
+}
+
+    /**
+     * Busca orçamentos com filtros avançados baseados no sistema antigo.
+     */
+    public function getBudgetFullById(int $budgetId, int $tenantId): ServiceResult
+    {
+        try {
+            $budget = $this->budgetRepository->getBudgetWithFullDetails($budgetId, $tenantId);
+            
+            if (!$budget) {
+                return ServiceResult::notFound('Orçamento não encontrado.');
+            }
+
+            return ServiceResult::success($budget, 'Orçamento recuperado com detalhes completos.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao buscar orçamento completo', [
+                'budget_id' => $budgetId,
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage()
+            ]);
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao recuperar orçamento: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Duplica orçamento existente.
+     */
+    public function duplicateBudget(int $budgetId, int $tenantId, int $userId, array $overrides = []): ServiceResult
+    {
+        return DB::transaction(function () use ($budgetId, $tenantId, $userId, $overrides) {
+            $originalBudget = $this->findEntityByIdAndTenantId($budgetId, $tenantId);
+            if (!$originalBudget) {
+                return ServiceResult::notFound('Orçamento original não encontrado.');
+            }
+
+            // Preparar dados para duplicação
+            $budgetData = array_merge([
+                'customer_id' => $originalBudget->customer_id,
+                'category_id' => $originalBudget->category_id,
+                'title' => 'Cópia de ' . $originalBudget->title,
+                'description' => $originalBudget->description,
+                'discount_percentage' => $originalBudget->discount_percentage,
+                'status' => 'pending',
+            ], $overrides);
+
+            // Duplicar itens
+            $items = $originalBudget->items->map(function ($item) {
+                return [
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                ];
+            })->toArray();
+
+            $budgetData['items'] = $items;
+
+            // Criar novo orçamento
+            $result = $this->createBudgetWithCode($budgetData, $tenantId, $userId);
+
+            if ($result->isSuccess()) {
+                // Log da duplicação
+                $this->logBudgetActivity('budget_duplicated', $result->getData(), $userId, [
+                    'original_budget_id' => $budgetId,
+                    'original_code' => $originalBudget->code,
+                ]);
+            }
+
+            return $result;
+        });
+    }
 }

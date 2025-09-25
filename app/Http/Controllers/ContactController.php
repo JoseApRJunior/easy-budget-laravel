@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ContactFormRequest;
 use App\Services\ContactService;
+use App\Services\ActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class ContactController extends BaseController
      */
     public function __construct( ContactService $contactService )
     {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->contactService = $contactService;
     }
 
@@ -406,3 +407,4 @@ class ContactController extends BaseController
     }
 
 }
+

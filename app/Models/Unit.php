@@ -23,7 +23,11 @@ class Unit extends Model
     ];
 
     protected $casts = [ 
-        'is_active' => 'boolean',
+        'slug'       => 'string',
+        'name'       => 'string',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**

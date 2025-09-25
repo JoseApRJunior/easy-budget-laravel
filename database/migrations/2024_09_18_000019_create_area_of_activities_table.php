@@ -17,27 +17,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create( 'area_of_activities', function (Blueprint $table) {
-            // Chave primária auto-incrementada de 64 bits
-            $table->bigIncrements( 'id' );
-
-            // Nome da área de atividade, limitado a 100 caracteres
+        Schema::create( 'areas_of_activity', function (Blueprint $table) {
+            $table->id();
+            $table->string( 'slug', 50 )->unique();
             $table->string( 'name', 100 );
-
-            // Slug único para a área de atividade, para URLs amigáveis, limitado a 100 caracteres
-            $table->string( 'slug', 100 )->unique();
-
-            // Descrição detalhada da área de atividade, pode ser nula
-            $table->text( 'description' )->nullable();
-
-            // Flag indicando se a área está ativa, padrão true
             $table->boolean( 'is_active' )->default( true );
-
-            // Timestamps para criação e atualização
             $table->timestamps();
 
-            // Índice no nome para buscas eficientes
-            $table->index( 'name' );
+            // Índices para performance
+            $table->index( 'slug', 'uk_slug' );
         } );
     }
 
@@ -46,7 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists( 'area_of_activities' );
+        Schema::dropIfExists( 'areas_of_activity' );
     }
 
 };
