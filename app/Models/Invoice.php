@@ -37,18 +37,17 @@ class Invoice extends Model
         'tenant_id',
         'service_id',
         'customer_id',
-        'code',
         'invoice_statuses_id',
+        'code',
+        'public_hash',
         'subtotal',
+        'discount',
         'total',
         'due_date',
-        'transaction_date',
         'payment_method',
         'payment_id',
         'transaction_amount',
-        'public_hash',
-        'discount',
-        'description',
+        'transaction_date',
         'notes',
     ];
 
@@ -72,10 +71,9 @@ class Invoice extends Model
         'transaction_amount'  => 'decimal:2',
         'public_hash'         => 'string',
         'discount'            => 'decimal:2',
-        'description'         => 'string',
         'notes'               => 'string',
         'created_at'          => 'immutable_datetime',
-        'updated_at'          => 'immutable_datetime',
+        'updated_at'          => 'datetime',
     ];
 
     /**

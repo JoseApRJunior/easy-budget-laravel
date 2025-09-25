@@ -33,9 +33,9 @@ return new class extends Migration
             $table->unique(['payment_id', 'invoice_id'], 'uk_payment_invoice');
             $table->index('payment_id', 'idx_payment_id');
             $table->index('invoice_id', 'idx_invoice');
-            $table->index('tenant_id', 'idx_tenant');
-            $table->index('status', 'idx_status');
-            $table->index('transaction_date', 'idx_transaction_date');
+            $table->index('tenant_id', 'idx_payment_invoices_tenant');
+            $table->index('status', 'idx_payment_invoices_status');
+            $table->index('transaction_date', 'idx_payment_invoices_transaction_date');
 
             // Chaves estrangeiras
             $table->foreign('invoice_id', 'fk_payment_invoices_invoice')
@@ -62,7 +62,7 @@ return new class extends Migration
 
             // Índices
             $table->index('provider_id', 'idx_provider');
-            $table->index('tenant_id', 'idx_tenant');
+            $table->index('tenant_id', 'idx_payment_plans_tenant');
             $table->index('plan_subscription_id', 'idx_subscription');
 
             // Chaves estrangeiras
@@ -92,7 +92,7 @@ return new class extends Migration
 
             // Índices
             $table->index('provider_id', 'idx_provider');
-            $table->index('tenant_id', 'idx_tenant');
+            $table->index('tenant_id', 'idx_merchant_orders_tenant');
             $table->index('plan_subscription_id', 'idx_subscription');
 
             // Chaves estrangeiras

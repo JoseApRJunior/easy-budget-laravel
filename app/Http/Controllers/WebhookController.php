@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\PaymentService;
+use App\Services\ActivityService;
 use App\Services\WebhookService;
+use App\Services\ActivityService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,7 +46,7 @@ class WebhookController extends BaseController
         WebhookService $webhookService,
         PaymentService $paymentService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->webhookService = $webhookService;
         $this->paymentService = $paymentService;
     }
@@ -1087,3 +1089,4 @@ class WebhookController extends BaseController
     }
 
 }
+

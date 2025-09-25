@@ -11,9 +11,9 @@ use Illuminate\View\View;
 
 class AlertController extends BaseController
 {
-    public function __construct()
+    public function __construct(ActivityService $activityService)
     {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     public function index(): View
@@ -51,3 +51,4 @@ class AlertController extends BaseController
     }
 
 }
+

@@ -8,8 +8,11 @@ use App\Http\Requests\ServiceChangeStatusFormRequest;
 use App\Http\Requests\ServiceChooseStatusFormRequest;
 use App\Http\Requests\ServiceFormRequest;
 use App\Services\NotificationService;
+use App\Services\ActivityService;
 use App\Services\PdfService;
+use App\Services\ActivityService;
 use App\Services\ServiceService;
+use App\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +26,7 @@ class ServiceController extends BaseController
         private readonly PdfService $pdfService,
         private readonly NotificationService $notificationService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     public function index( Request $request ): View
@@ -282,3 +285,4 @@ class ServiceController extends BaseController
     }
 
 }
+

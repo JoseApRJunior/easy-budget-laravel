@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Activity;
+use App\Models\Address;
 use App\Models\AreaOfActivity;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\CommonData;
+use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\MiddlewareMetricHistory;
 use App\Models\MonitoringAlertHistory;
@@ -28,15 +30,11 @@ class Tenant extends Model
     use HasFactory;
 
     /**
-     * Compatibilidade com schema legado dos tenants.
-     * Campos permitidos para manter consistência com o banco.
+     * Compatibilidade com schema atual dos tenants.
+     * Campos permitidos conforme estrutura do banco.
      */
     protected $fillable = [
         'name',
-        'slug',
-        'description',
-        'domain',
-        'is_active',
     ];
 
     protected $casts = [
@@ -142,6 +140,38 @@ class Tenant extends Model
     public function reports(): HasMany
     {
         return $this->hasMany( Report::class);
+    }
+
+    /**
+     * Endereços deste tenant.
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany( Address::class);
+    }
+
+    /**
+     * Contatos deste tenant.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany( Contact::class);
+    }
+
+    /**
+     * Clientes deste tenant.
+     */
+    public function customers(): HasMany
+    {
+        return $this->hasMany( Customer::class);
+    }
+
+    /**
+     * Movimentações de inventário deste tenant.
+     */
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany( InventoryMovement::class);
     }
 
     /**

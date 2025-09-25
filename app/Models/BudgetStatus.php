@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +11,6 @@ use Illuminate\Support\Carbon;
 
 class BudgetStatus extends Model
 {
-    use TenantScoped;
 
     /**
      * Boot the model.
@@ -20,7 +18,6 @@ class BudgetStatus extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
     }
 
     /**
@@ -69,6 +66,7 @@ class BudgetStatus extends Model
         'is_active'   => 'boolean',
         'order_index' => 'integer',
         'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**

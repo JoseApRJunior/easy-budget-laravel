@@ -17,13 +17,13 @@ return new class extends Migration
             $table->unsignedBigInteger( 'user_confirmation_token_id' )->nullable();
 
             // Foreign key constraint
-            $table->foreign( 'user_confirmation_token_id', 'fk_budgets_user_confirmation_token' )
+            $table->foreign( 'user_confirmation_token_id' )
                 ->references( 'id' )
                 ->on( 'user_confirmation_tokens' )
                 ->onDelete( 'set null' );
 
             // Index for performance
-            $table->index( 'user_confirmation_token_id', 'idx_budgets_user_confirmation_token' );
+            $table->index( 'user_confirmation_token_id' );
         } );
     }
 
@@ -33,8 +33,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table( 'budgets', function ( Blueprint $table ) {
-            $table->dropForeign( 'fk_budgets_user_confirmation_token' );
-            $table->dropIndex( 'idx_budgets_user_confirmation_token' );
+            $table->dropForeign( [ 'user_confirmation_token_id' ] );
+            $table->dropIndex( [ 'user_confirmation_token_id' ] );
             $table->dropColumn( 'user_confirmation_token_id' );
         } );
     }

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerFormRequest;
 use App\Services\CustomerService;
+use App\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +16,9 @@ class CustomerController extends BaseController
 {
     public function __construct(
         private readonly CustomerService $customerService,
+        private readonly ActivityService $activityService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     public function index( Request $request ): View

@@ -40,7 +40,7 @@
 
       <div class="mt-4">
         <a href="{{ url( '/' ) }}" class="btn btn-primary btn-lg me-2">
-          <i class="bi bi-house me-2"></i>Ir para Home
+          <i class="bi bi-house me-2"></i>Ir para Dashboard
         </a>
         <a href="{{ url( '/admin/dashboard' ) }}" class="btn btn-outline-primary btn-lg">
           <i class="bi bi-speedometer2 me-2"></i>Ver Dashboard

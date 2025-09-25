@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AddressFormRequest;
 use App\Services\AddressService;
+use App\Services\ActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class AddressController extends BaseController
      */
     public function __construct( AddressService $addressService )
     {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->addressService = $addressService;
     }
 
@@ -348,3 +349,4 @@ class AddressController extends BaseController
     }
 
 }
+

@@ -1,138 +1,25 @@
-@extends( 'layouts.app' )
-
-@section( 'content' )
-<div class="container-fluid min-vh-75 d-flex align-items-center justify-content-center p-3 p-md-5">
-  <div class="row justify-content-center w-100">
-    <div class="col-12 col-sm-11 col-md-9 col-lg-7 col-xl-5">
-      <div class="card shadow-lg border-0 fade-in">
-        <div class="card-body p-4 p-md-5">
-          {{-- Logo e Título --}}
-          <div class="text-center mb-4">
-            <div class="logo-container mb-3">
-              <img src="{{ asset( 'images/logo.png' ) }}" alt="Easy Budget Logo" class="logo-img" height="40" width="40"
-                loading="eager">
-              <span class="logo-text">Easy Budget</span>
-            </div>
-            <h1 class="h3 fw-bold text-primary mb-2">Recuperar Senha</h1>
-            <p class="text-muted small mb-0">Insira seu e-mail para receber o link de recuperação</p>
-          </div>
-
-          {{-- Mensagens de erro/sucesso --}}
-          @if( session( 'success' ) )
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session( 'success' ) }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-          @endif
-
-          @if( session( 'error' ) )
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session( 'error' ) }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-          @endif
-
-          {{-- Formulário de Recuperação --}}
-          <form action="{{ route( 'password.email' ) }}" method="post" id="forgotPasswordForm">
-            @csrf
-            <div class="form-floating mb-4">
-              <input type="email" class="form-control @error( 'email' ) is-invalid @enderror" id="email" name="email"
-                placeholder="nome@exemplo.com" required autocomplete="email" autofocus value="{{ old( 'email' ) }}">
-              <label for="email">Endereço de E-mail</label>
-              @error( 'email' )
-              <div class="invalid-feedback">
-                {{ $message }}
-              </div>
-              @enderror
-              <div class="invalid-feedback d-none" id="emailFeedback">
-                Por favor, insira um e-mail válido.
-              </div>
-            </div>
-
-            <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
-                <i class="bi bi-envelope-fill me-2"></i>
-                <span>Enviar Link</span>
-              </button>
-              <a href="{{ route( 'login' ) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>
-                <span>Voltar para o login</span>
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      {{-- Rodapé do Card --}}
-      <div class="text-center mt-3">
-        <small class="text-muted">
-          <i class="bi bi-shield-lock me-1"></i>
-          <span>Recuperação segura via SSL</span>
-        </small>
-      </div>
+<x-guest-layout>
+    <div class="mb-4 text-sm text-gray-600">
+        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
     </div>
-  </div>
-</div>
-@endsection
 
-@section( 'scripts' )
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('forgotPasswordForm');
-  const emailInput = document.getElementById('email');
-  const emailFeedback = document.getElementById('emailFeedback');
-  const submitButton = document.getElementById('submitButton');
+    <!-- Session Status -->
+    <x-auth-session-status class="mb-4" :status="session('status')" />
 
-  // Função para validar email
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  }
+    <form method="POST" action="{{ route('password.email') }}">
+        @csrf
 
-  // Função para mostrar erro
-  function showError() {
-    emailInput.classList.add('is-invalid');
-    emailFeedback.classList.remove('d-none');
-  }
+        <!-- Email Address -->
+        <div>
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
 
-  // Função para esconder erro
-  function hideError() {
-    emailInput.classList.remove('is-invalid');
-    emailFeedback.classList.add('d-none');
-  }
-
-  // Validação no submit
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const email = emailInput.value.trim();
-
-    if (!email || !validateEmail(email)) {
-      showError();
-      return;
-    }
-
-    // Desabilita o botão e mostra loading
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
-
-    // Submit do formulário
-    form.submit();
-  });
-
-  // Limpa erro quando o usuário começa a digitar
-  emailInput.addEventListener('input', function() {
-    hideError();
-    submitButton.disabled = false;
-    submitButton.innerHTML = '<i class="bi bi-envelope-fill me-2"></i>Enviar Link';
-  });
-
-  // Valida quando o campo perde o foco
-  emailInput.addEventListener('blur', function() {
-    const email = emailInput.value.trim();
-    if (email && !validateEmail(email)) {
-      showError();
-    }
-  });
-});
-</script>
-@endsection
+        <div class="flex items-center justify-end mt-4">
+            <x-primary-button>
+                {{ __('Email Password Reset Link') }}
+            </x-primary-button>
+        </div>
+    </form>
+</x-guest-layout>

@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Model para representar categorias, com tenant_id opcional para compatibilidade com sistema legado.
@@ -42,8 +43,16 @@ class Category extends Model
         'slug'       => 'string',
         'name'       => 'string',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the services for the Category.
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany( Service::class);
+    }
 
     /**
      * Relacionamentos podem ser adicionados aqui se aplicável, ex: products, services.

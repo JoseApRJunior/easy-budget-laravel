@@ -10,6 +10,7 @@ use App\Models\Provider;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -166,6 +167,14 @@ class User extends Authenticatable
     public function activities(): HasMany
     {
         return $this->hasMany( Activity::class);
+    }
+
+    /**
+     * Tokens de confirmação deste usuário.
+     */
+    public function userConfirmationTokens(): HasMany
+    {
+        return $this->hasMany( UserConfirmationToken::class);
     }
 
     /**

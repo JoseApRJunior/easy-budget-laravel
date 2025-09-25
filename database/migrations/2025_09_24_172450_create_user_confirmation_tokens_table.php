@@ -22,17 +22,17 @@ return new class extends Migration
             $table->timestamps();
 
             // Índices para performance
-            $table->index( 'tenant_id', 'idx_user_confirmation_tokens_tenant' );
-            $table->index( 'user_id', 'idx_user_confirmation_tokens_user' );
-            $table->index( 'expires_at', 'idx_user_confirmation_tokens_expires' );
+            $table->index( 'tenant_id' );
+            $table->index( 'user_id' );
+            $table->index( 'expires_at' );
 
             // Chaves estrangeiras
-            $table->foreign( 'tenant_id', 'fk_user_confirmation_tokens_tenant' )
+            $table->foreign( 'tenant_id' )
                 ->references( 'id' )
                 ->on( 'tenants' )
                 ->onDelete( 'cascade' );
 
-            $table->foreign( 'user_id', 'fk_user_confirmation_tokens_user' )
+            $table->foreign( 'user_id' )
                 ->references( 'id' )
                 ->on( 'users' )
                 ->onDelete( 'cascade' );
@@ -44,6 +44,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table( 'user_confirmation_tokens', function ( Blueprint $table ) {
+            $table->dropForeign( [ 'tenant_id' ] );
+            $table->dropForeign( [ 'user_id' ] );
+            $table->dropIndex( [ 'tenant_id' ] );
+            $table->dropIndex( [ 'user_id' ] );
+            $table->dropIndex( [ 'expires_at' ] );
+        } );
+
         Schema::dropIfExists( 'user_confirmation_tokens' );
     }
 

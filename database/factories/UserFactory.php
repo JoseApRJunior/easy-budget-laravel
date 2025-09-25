@@ -19,16 +19,8 @@ class UserFactory extends Factory
     {
         return [ 
             'tenant_id'  => Tenant::factory(),
-            'name'       => $this->faker->name,
-            'first_name' => $this->faker->firstName,
-            'last_name'  => $this->faker->lastName,
             'email'      => $this->faker->unique()->safeEmail,
             'password'   => bcrypt( 'password' ),
-            'phone'      => $this->faker->phoneNumber,
-            'address'    => $this->faker->streetAddress,
-            'city'       => $this->faker->city,
-            'state'      => $this->faker->state,
-            'zip_code'   => $this->faker->postcode,
             'is_active'  => $this->faker->boolean,
             'logo'       => $this->faker->imageUrl,
         ];

@@ -49,13 +49,16 @@ class PaymentMercadoPagoPlan extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'            => 'integer',
+        'payment_id'           => 'string',
         'provider_id'          => 'integer',
+        'tenant_id'            => 'integer',
         'plan_subscription_id' => 'integer',
+        'status'               => 'string',
+        'payment_method'       => 'string',
         'transaction_amount'   => 'decimal:2',
         'transaction_date'     => 'datetime',
         'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'immutable_datetime',
+        'updated_at'           => 'datetime',
     ];
 
     /**

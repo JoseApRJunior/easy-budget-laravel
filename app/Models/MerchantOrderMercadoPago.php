@@ -48,12 +48,15 @@ class MerchantOrderMercadoPago extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'            => 'integer',
+        'merchant_order_id'    => 'string',
         'provider_id'          => 'integer',
+        'tenant_id'            => 'integer',
         'plan_subscription_id' => 'integer',
+        'status'               => 'string',
+        'order_status'         => 'string',
         'total_amount'         => 'decimal:2',
         'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'immutable_datetime',
+        'updated_at'           => 'datetime',
     ];
 
     /**

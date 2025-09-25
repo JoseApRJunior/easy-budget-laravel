@@ -5,15 +5,12 @@ namespace App\Models;
 
 use App\Models\BudgetStatus;
 use App\Models\Customer;
-use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Budget extends Model
 {
@@ -27,14 +24,6 @@ class Budget extends Model
     {
         parent::boot();
         static::bootTenantScoped();
-    }
-
-    /**
-     * Get the tenant that owns the Budget.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo( Tenant::class);
     }
 
     /**
@@ -52,9 +41,9 @@ class Budget extends Model
     protected $fillable = [
         'tenant_id',
         'customer_id',
-        'code',
         'budget_statuses_id',
         'user_confirmation_token_id',
+        'code',
         'due_date',
         'discount',
         'total',
@@ -77,13 +66,21 @@ class Budget extends Model
         'user_confirmation_token_id' => 'integer',
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
-        'due_date'                   => 'datetime',
-        'attachment'                 => 'array',
-        'history'                    => 'array',
+        'due_date'                   => 'date',
+        'attachment'                 => 'string',
+        'history'                    => 'string',
         'pdf_verification_hash'      => 'string',
         'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
+
+    /**
+     * Get the tenant that owns the Budget.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo( Tenant::class);
+    }
 
     /**
      * Get the customer that owns the Budget.
@@ -104,22 +101,6 @@ class Budget extends Model
     public function userConfirmationToken(): BelongsTo
     {
         return $this->belongsTo( UserConfirmationToken::class);
-    }
-
-    /**
-     * Get the services for the Budget.
-     */
-    public function services(): HasMany
-    {
-        return $this->hasMany( Service::class);
-    }
-
-    /**
-     * Accessor para tratar valores zero-date no updated_at.
-     */
-    public function getUpdatedAtAttribute( $value )
-    {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

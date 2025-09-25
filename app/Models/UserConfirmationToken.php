@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Budget;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
@@ -67,6 +69,14 @@ class UserConfirmationToken extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the budgets for the UserConfirmationToken.
+     */
+    public function budgets(): HasMany
+    {
+        return $this->hasMany( Budget::class);
     }
 
 }

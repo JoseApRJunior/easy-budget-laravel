@@ -9,8 +9,6 @@ use App\Models\Traits\TenantScoped;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Activity extends Model
 {
@@ -66,7 +64,7 @@ class Activity extends Model
         'entity_type' => 'string',
         'entity_id'   => 'integer',
         'description' => 'string',
-        'metadata'    => 'array',
+        'metadata'    => 'string',
         'created_at'  => 'immutable_datetime',
     ];
 

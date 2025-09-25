@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 class Address extends Model
@@ -57,7 +58,7 @@ class Address extends Model
         'state'          => 'string',
         'cep'            => 'string',
         'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**
@@ -66,6 +67,14 @@ class Address extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the customer associated with the Address.
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne( Customer::class);
     }
 
 }

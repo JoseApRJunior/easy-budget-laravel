@@ -229,20 +229,33 @@ return new class extends Migration
      */
     private function indexExists( Blueprint $table, string $indexName ): bool
     {
-        $connection   = Schema::getConnection();
-        $databaseName = $connection->getDatabaseName();
-        $tableName    = $table->getTable();
-
-        // Verificar se o índice existe na tabela
-        $indexExists = $connection->select( "
-            SELECT COUNT(*) as count
-            FROM information_schema.statistics
-            WHERE table_schema = '{$databaseName}'
-            AND table_name = '{$tableName}'
-            AND index_name = '{$indexName}'
-        " );
-
-        return $indexExists[ 0 ]->count > 0;
+        $connection = Schema::getConnection();
+        $driver = $connection->getDriverName();
+        
+        try {
+            if ($driver === 'sqlite') {
+                // Para SQLite, usar pragma index_info
+                $result = $connection->select("PRAGMA index_info({$indexName})");
+                return !empty($result);
+            } else {
+                // Para MySQL/MariaDB, usar information_schema
+                $databaseName = $connection->getDatabaseName();
+                $tableName = 'monitoring_alerts_history';
+                
+                $indexExists = $connection->select("
+                    SELECT COUNT(*) as count
+                    FROM information_schema.statistics
+                    WHERE table_schema = '{$databaseName}'
+                    AND table_name = '{$tableName}'
+                    AND index_name = '{$indexName}'
+                ");
+                
+                return $indexExists[0]->count > 0;
+            }
+        } catch (\Exception $e) {
+            // Se houver erro, assumir que o índice não existe
+            return false;
+        }
     }
 
 };

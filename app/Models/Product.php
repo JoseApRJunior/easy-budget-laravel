@@ -6,6 +6,7 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Product extends Model
@@ -58,7 +59,7 @@ class Product extends Model
         'code'        => 'string',
         'image'       => 'string',
         'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**
@@ -70,11 +71,11 @@ class Product extends Model
     }
 
     /**
-     * Accessor para tratar valores zero-date no updated_at.
+     * Movimentações de inventário deste tenant.
      */
-    public function getUpdatedAtAttribute( $value )
+    public function inventoryMovements(): HasMany
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+        return $this->hasMany( InventoryMovement::class);
     }
 
 }

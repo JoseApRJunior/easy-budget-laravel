@@ -48,12 +48,15 @@ class PaymentMercadoPagoInvoice extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'payment_id'         => 'string',
         'tenant_id'          => 'integer',
         'invoice_id'         => 'integer',
+        'status'             => 'string',
+        'payment_method'     => 'string',
         'transaction_amount' => 'decimal:2',
         'transaction_date'   => 'datetime',
         'created_at'         => 'immutable_datetime',
-        'updated_at'         => 'immutable_datetime',
+        'updated_at'         => 'datetime',
     ];
 
     /**

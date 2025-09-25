@@ -10,6 +10,7 @@ use App\Services\CommonDataService;
 use App\Services\ContactService;
 use App\Services\ProviderService;
 use App\Services\UserService;
+use App\Services\ActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,8 +67,9 @@ class ProviderController extends BaseController
         CommonDataService $commonDataService,
         ContactService $contactService,
         AddressService $addressService,
+        ActivityService $activityService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
         $this->providerService   = $providerService;
         $this->userService       = $userService;
         $this->commonDataService = $commonDataService;

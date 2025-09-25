@@ -6,7 +6,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\BudgetFormRequest;
 use App\Http\Requests\BudgetChangeStatusFormRequest;
+use App\Http\Requests\BudgetBulkUpdateStatusFormRequest;
+use App\Http\Requests\BudgetReportFormRequest;
 use App\Services\BudgetService;
+use App\Services\ActivityService;
 use App\Services\PdfService;
 use App\Services\NotificationService;
 use App\Support\ServiceResult;
@@ -24,8 +27,9 @@ class BudgetController extends BaseApiController
         private readonly BudgetService $budgetService,
         private readonly PdfService $pdfService,
         private readonly NotificationService $notificationService,
+        ActivityService $activityService,
     ) {
-        parent::__construct();
+        parent::__construct($activityService);
     }
 
     /**
@@ -390,25 +394,25 @@ class BudgetController extends BaseApiController
     /**
      * Relatório de orçamentos por período.
      */
-    public function report(Request $request): JsonResponse
+    public function report(BudgetReportFormRequest $request): JsonResponse
     {
         try {
             $this->validateRequestMethod($request, 'GET');
             
             $tenantId = $this->tenantId();
 
-            // Validar parâmetros do relatório
-            $this->validateInput($request->all(), [
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'format' => 'sometimes|string|in:summary,detailed'
+            // Os dados já foram validados pelo Form Request
+            $period = $request->get('period');
+            $dateFrom = $request->get('date_from');
+            $dateTo = $request->get('date_to');
+            $format = $request->get('format', 'json');
+            $filters = $request->only([
+                'status', 'customer_id', 'category_id', 'user_id',
+                'amount_min', 'amount_max', 'group_by',
+                'include_items', 'include_totals'
             ]);
 
-            $startDate = $request->get('start_date');
-            $endDate = $request->get('end_date');
-            $format = $request->get('format', 'summary');
-
-            $result = $this->budgetService->getBudgetReport($tenantId, $startDate, $endDate, $format);
+            $result = $this->budgetService->getBudgetReport($tenantId, $dateFrom, $dateTo, $format, $filters);
 
             if (!$result->isSuccess()) {
                 return $this->errorResponse($result);
@@ -416,7 +420,7 @@ class BudgetController extends BaseApiController
 
             // Log da atividade
             $this->logActivity('budget_report_generated', 'budget', null, 
-                "Relatório de orçamentos gerado para período {$startDate} a {$endDate}");
+                "Relatório de orçamentos gerado para período {$dateFrom} a {$dateTo}");
 
             return $this->successResponse($result->data, 'Relatório gerado com sucesso');
 
@@ -501,7 +505,7 @@ class BudgetController extends BaseApiController
     /**
      * Atualização em lote de status de orçamentos.
      */
-    public function bulkUpdateStatus(Request $request): JsonResponse
+    public function bulkUpdateStatus(BudgetBulkUpdateStatusFormRequest $request): JsonResponse
     {
         try {
             $this->validateRequestMethod($request, 'PATCH');
@@ -509,19 +513,15 @@ class BudgetController extends BaseApiController
             $tenantId = $this->tenantId();
             $userId = Auth::id();
 
-            // Validar dados da requisição
-            $this->validateInput($request->all(), [
-                'budget_ids' => 'required|array|min:1|max:50',
-                'budget_ids.*' => 'integer|exists:budgets,id',
-                'status' => 'required|string|in:pending,approved,rejected,completed,finalized'
-            ]);
-
+            // Os dados já foram validados pelo Form Request
             $budgetIds = $request->get('budget_ids');
             $status = $request->get('status');
+            $comment = $request->get('comment');
+            $notifyCustomers = $request->get('notify_customers', false);
 
             DB::beginTransaction();
 
-            $result = $this->budgetService->bulkUpdateStatus($budgetIds, $status, $tenantId, $userId);
+            $result = $this->budgetService->bulkUpdateStatus($budgetIds, $status, $tenantId, $userId, $comment, $notifyCustomers);
 
             if (!$result->isSuccess()) {
                 DB::rollBack();
@@ -533,7 +533,7 @@ class BudgetController extends BaseApiController
             // Log da atividade
             $this->logActivity('budget_bulk_status_update', 'budget', null, 
                 "Status de " . count($budgetIds) . " orçamentos alterado para {$status}",
-                ['budget_ids' => $budgetIds]);
+                ['budget_ids' => $budgetIds, 'comment' => $comment]);
 
             return $this->successResponse([
                 'updated_count' => $result->data,
@@ -554,3 +554,4 @@ class BudgetController extends BaseApiController
         }
     }
 }
+

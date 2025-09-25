@@ -2,23 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InvoiceStatus extends Model
 {
-    use TenantScoped;
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        static::bootTenantScoped();
-    }
 
     /**
      * The table associated with the model.
@@ -37,15 +25,8 @@ class InvoiceStatus extends Model
         'slug',
         'color',
         'icon',
-        'description',
+        'description'
     ];
-
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public $timestamps = false;
 
     /**
      * The attributes that should be cast.
@@ -53,7 +34,13 @@ class InvoiceStatus extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'name'        => 'string',
+        'slug'        => 'string',
         'description' => 'string',
+        'color'       => 'string',
+        'icon'        => 'string',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**

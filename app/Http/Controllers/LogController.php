@@ -10,9 +10,7 @@ use Illuminate\View\View;
 
 class LogController extends BaseController
 {
-    public function __construct()
-    {
-        parent::__construct();
+    public function __construct(ActivityService $activityService) { parent::__construct($activityService);
     }
 
     public function index(): View
@@ -33,3 +31,5 @@ class LogController extends BaseController
     }
 
 }
+
+

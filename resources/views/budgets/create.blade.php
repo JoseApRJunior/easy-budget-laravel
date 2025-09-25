@@ -129,13 +129,81 @@
           </div>
         </div>
 
-        {{-- Botões de ação --}}
+        {{-- Seção de Itens do Orçamento --}}
+        <div class="row g-4 mt-4">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                  <i class="bi bi-list-ul me-2"></i> Itens do Orçamento
+                </h3>
+              </div>
+              <div class="card-body p-4">
+                <div x-data="budgetItems()" id="budget-items-section">
+                  <div class="items-container">
+                    <template x-for="(item, index) in items" :key="index">
+                      <div class="item-row border p-3 mb-3 bg-light rounded">
+                        <div class="row align-items-end">
+                          <div class="col-lg-6 col-md-5 mb-2">
+                            <label class="form-label">Descrição</label>
+                            <input type="text" class="form-control" x-model="item.description" placeholder="Descreva o item/serviço" required>
+                          </div>
+
+                          <div class="col-lg-2 col-md-3 mb-2">
+                            <label class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" x-model.number="item.quantity" min="1" value="1" required>
+                          </div>
+
+                          <div class="col-lg-3 col-md-3 mb-2">
+                            <label class="form-label">Preço Unitário (R$)</label>
+                            <input type="number" class="form-control" x-model.number="item.unit_price" min="0" step="0.01" placeholder="0.00" required>
+                          </div>
+
+                          <div class="col-lg-1 col-md-1">
+                            <button type="button" class="btn btn-outline-danger w-100" @click="removeItem(index)" :disabled="items.length <= 1">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <button type="button" class="btn btn-outline-primary mb-3" @click="addItem()">
+                    <i class="bi bi-plus-circle me-2"></i>Adicionar Item
+                  </button>
+
+                  {{-- Total --}}
+                  <div class="text-end mt-4 border-top pt-3">
+                    <h5 class="text-primary">
+                      <strong>Total Geral: <span x-text="formatCurrency(total)"></span></strong>
+                    </h5>
+                  </div>
+
+                  {{-- Campos ocultos para itens (gerados dinamicamente) --}}
+                  <template x-for="(item, index) in items" :key="index">
+                    <input type="hidden" :name="'items[' + index + '][description]'" :value="item.description">
+                    <input type="hidden" :name="'items[' + index + '][quantity]'" :value="item.quantity">
+                    <input type="hidden" :name="'items[' + index + '][unit_price]'" :value="item.unit_price">
+                    <input type="hidden" :name="'items[' + index + '][total]'" :value="(item.quantity * item.unit_price)">
+                  </template>
+                  <input type="hidden" name="total_value" :value="total">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- Botões de ação (únicos) --}}
+        </div>
+
         <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-          <button type="button" onclick="history.back()" class="btn btn-outline-secondary px-4">
-            <i class="bi bi-arrow-left me-2"></i>Voltar
-          </button>
-          <button type="submit" class="btn btn-primary px-4">
-            <i class="bi bi-check-lg me-2"></i>Criar Orçamento
+          <a href="{{ route( 'budgets.index' ) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+          </a>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>Criar Orçamento
           </button>
         </div>
       </form>
@@ -147,3 +215,38 @@
 @section( 'scripts' )
 @vite( [ 'resources/js/budget_create.js' ] )
 @endsection
+
+
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('budgetItems', () => ({
+      items: @json(old('items', [{ description: '', quantity: 1, unit_price: 0 }])),
+
+      addItem() {
+        this.items.push({
+          description: '',
+          quantity: 1,
+          unit_price: 0
+        });
+      },
+
+      removeItem(index) {
+        if (this.items.length > 1) {
+          this.items.splice(index, 1);
+        }
+      },
+
+      get total() {
+        return this.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+      },
+
+      formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(value);
+      }
+    }));
+  });
+</script>
