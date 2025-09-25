@@ -593,3 +593,62 @@ protected $casts = [
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
 ];
 ```
+
+```sql
+-- Copiando estrutura para tabela easybudget.permissions
+DROP TABLE IF EXISTS `permissions`;
+
+CREATE TABLE
+  IF NOT EXISTS `permissions` (
+    `id` int (11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(255) NOT NULL,
+    `description` varchar(255) DEFAULT NULL,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_permission_name` (`name`)
+  ) ENGINE = InnoDB AUTO_INCREMENT = 6 DEFAULT CHARSET = utf8mb4;
+```
+
+**Correção do model de acordo com o antigo SQL:**
+
+```php
+protected $casts = [
+    'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
+    'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
+    'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
+];
+```
+
+```sql
+-- Copiando estrutura para tabela easybudget.plans
+DROP TABLE IF EXISTS `plans`;
+
+CREATE TABLE
+  IF NOT EXISTS `plans` (
+    `id` int (11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(50) NOT NULL,
+    `slug` varchar(50) NOT NULL,
+    `description` text,
+    `price` decimal(10, 2) NOT NULL,
+    `status` tinyint (1) DEFAULT '1',
+    `max_budgets` int (11) NOT NULL,
+    `max_clients` int (11) NOT NULL,
+    `features` text,
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_plan_slug` (`slug`),
+    KEY `idx_status` (`status`)
+  ) ENGINE = InnoDB AUTO_INCREMENT = 4 DEFAULT CHARSET = utf8mb4;
+```
+
+**Correção do model de acordo com o antigo SQL:**
+
+```php
+protected $casts = [
+    'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
+    'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
+    'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
+];
+```

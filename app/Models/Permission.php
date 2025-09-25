@@ -35,18 +35,14 @@ class Permission extends Model
      */
     protected $fillable = [
         'name',
-        'slug',
         'description',
-        'group',
-        'guard_name',
     ];
 
     protected $casts = [
         'name' => 'string',
-        'slug' => 'string',
         'description' => 'string',
-        'group' => 'string',
-        'guard_name' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
