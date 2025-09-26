@@ -68,6 +68,17 @@ class Activity extends Model
         'created_at'  => 'immutable_datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Get the tenant that owns the Activity.
      */

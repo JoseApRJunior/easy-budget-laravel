@@ -65,10 +65,20 @@ class Customer extends Model
         'common_data_id' => 'integer',
         'contact_id'     => 'integer',
         'address_id'     => 'integer',
-        'status'         => 'string',
+        'status'         => 'string', // enum('active', 'inactive', 'deleted')
         'created_at'     => 'immutable_datetime',
         'updated_at'     => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Get the tenant that owns the Customer.
@@ -108,6 +118,14 @@ class Customer extends Model
     public function budgets(): HasMany
     {
         return $this->hasMany( Budget::class);
+    }
+
+    /**
+     * Get the invoices for the Customer.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany( Invoice::class);
     }
 
     /**

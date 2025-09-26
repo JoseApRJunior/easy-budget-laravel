@@ -46,6 +46,17 @@ class ServiceItem extends Model
         'updated_at' => 'immutable_datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Get the service that owns the ServiceItem.
      */

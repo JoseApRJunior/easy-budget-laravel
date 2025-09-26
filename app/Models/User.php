@@ -77,8 +77,19 @@ class User extends Authenticatable
         'logo'       => 'string',
         'is_active'  => 'boolean',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Get the tenant that owns the User.

@@ -74,6 +74,17 @@ class Budget extends Model
         'updated_at'                 => 'datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Get the tenant that owns the Budget.
      */

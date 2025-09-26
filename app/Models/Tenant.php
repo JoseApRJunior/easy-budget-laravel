@@ -42,6 +42,16 @@ class Tenant extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Relações com entidades do sistema - Tenant é a entidade raiz para multi-tenancy.
      * Não usa TenantScoped trait pois é o modelo pai.
      */
@@ -172,6 +182,14 @@ class Tenant extends Model
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany( InventoryMovement::class);
+    }
+
+    /**
+     * Controle de inventário dos produtos deste tenant.
+     */
+    public function productInventories(): HasMany
+    {
+        return $this->hasMany( ProductInventory::class);
     }
 
     /**

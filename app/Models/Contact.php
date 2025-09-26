@@ -61,6 +61,16 @@ class Contact extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Get the tenant that owns the Contact.
      */
     public function tenant(): BelongsTo
@@ -74,6 +84,14 @@ class Contact extends Model
     public function customer(): HasOne
     {
         return $this->hasOne( Customer::class);
+    }
+
+    /**
+     * Get the provider associated with the Contact.
+     */
+    public function provider(): HasOne
+    {
+        return $this->hasOne( Provider::class);
     }
 
 }

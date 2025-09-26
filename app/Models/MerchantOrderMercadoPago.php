@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class MerchantOrderMercadoPago extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -19,6 +22,26 @@ class MerchantOrderMercadoPago extends Model
         parent::boot();
         static::bootTenantScoped();
     }
+
+    /**
+     * Status constants.
+     */
+    const STATUS_OPEN      = 'open';
+    const STATUS_CLOSED    = 'closed';
+    const STATUS_EXPIRED   = 'expired';
+    const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * Order status constants.
+     */
+    const ORDER_STATUS_PAYMENT_REQUIRED    = 'payment_required';
+    const ORDER_STATUS_PAYMENT_IN_PROCESS  = 'payment_in_process';
+    const ORDER_STATUS_PAYMENT_APPROVED    = 'payment_approved';
+    const ORDER_STATUS_PAYMENT_AUTHORIZED  = 'payment_authorized';
+    const ORDER_STATUS_PAYMENT_IN_MEDATION = 'payment_in_mediation';
+    const ORDER_STATUS_PAYMENT_REJECTED    = 'payment_rejected';
+    const ORDER_STATUS_PAYMENT_CANCELLED   = 'payment_cancelled';
+    const ORDER_STATUS_PAYMENT_UNKNOWN     = 'payment_unknown';
 
     /**
      * The table associated with the model.
@@ -59,8 +82,19 @@ class MerchantOrderMercadoPago extends Model
         'updated_at'           => 'datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
-     * Get the tenant that owns the MerchantOrderMercadoPago.
+     * Obtém o tenant proprietário do MerchantOrderMercadoPago.
      */
     public function tenant(): BelongsTo
     {
@@ -68,7 +102,7 @@ class MerchantOrderMercadoPago extends Model
     }
 
     /**
-     * Get the provider that owns the MerchantOrderMercadoPago.
+     * Obtém o provider proprietário do MerchantOrderMercadoPago.
      */
     public function provider(): BelongsTo
     {
@@ -76,7 +110,7 @@ class MerchantOrderMercadoPago extends Model
     }
 
     /**
-     * Get the plan subscription that owns the MerchantOrderMercadoPago.
+     * Obtém a assinatura do plano proprietária do MerchantOrderMercadoPago.
      */
     public function planSubscription(): BelongsTo
     {

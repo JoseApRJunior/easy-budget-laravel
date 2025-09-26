@@ -47,6 +47,16 @@ class Category extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Get the services for the Category.
      */
     public function services(): HasMany

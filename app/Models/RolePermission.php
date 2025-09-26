@@ -60,6 +60,16 @@ class RolePermission extends Pivot
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Accessor para tratar valores zero-date no updated_at.
      */
     public function getUpdatedAtAttribute( $value )

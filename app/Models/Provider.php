@@ -60,6 +60,16 @@ class Provider extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Orçamentos criados por este provedor.
      */
     public function budgets(): HasMany
@@ -111,6 +121,22 @@ class Provider extends Model
     public function providerCredentials(): HasMany
     {
         return $this->hasMany( ProviderCredential::class);
+    }
+
+    /**
+     * Ordens de pagamento MercadoPago associadas a este provedor.
+     */
+    public function merchantOrderMercadoPago(): HasMany
+    {
+        return $this->hasMany( MerchantOrderMercadoPago::class);
+    }
+
+    /**
+     * Pagamentos de planos MercadoPago associadas a este provedor.
+     */
+    public function paymentMercadoPagoPlans(): HasMany
+    {
+        return $this->hasMany( PaymentMercadoPagoPlan::class);
     }
 
     /**

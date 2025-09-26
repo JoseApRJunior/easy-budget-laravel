@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class PaymentMercadoPagoPlan extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -21,11 +23,36 @@ class PaymentMercadoPagoPlan extends Model
     }
 
     /**
+     * Status constants.
+     */
+    const STATUS_PENDING   = 'pending';
+    const STATUS_APPROVED  = 'approved';
+    const STATUS_REJECTED  = 'rejected';
+    const STATUS_CANCELLED = 'cancelled';
+    const STATUS_REFUNDED  = 'refunded';
+
+    /**
+     * Payment method constants.
+     */
+    const PAYMENT_METHOD_CREDIT_CARD   = 'credit_card';
+    const PAYMENT_METHOD_DEBIT_CARD    = 'debit_card';
+    const PAYMENT_METHOD_BANK_TRANSFER = 'bank_transfer';
+    const PAYMENT_METHOD_TICKET        = 'ticket';
+    const PAYMENT_METHOD_PIX           = 'pix';
+
+    /**
      * The table associated with the model.
      *
      * @var string
      */
     protected $table = 'payment_mercado_pago_plans';
+
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'id';
 
     /**
      * The attributes that are mass assignable.
@@ -61,6 +88,17 @@ class PaymentMercadoPagoPlan extends Model
         'updated_at'           => 'datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Get the tenant that owns the PaymentMercadoPagoPlan.
      */
@@ -83,6 +121,62 @@ class PaymentMercadoPagoPlan extends Model
     public function planSubscription(): BelongsTo
     {
         return $this->belongsTo( PlanSubscription::class);
+    }
+
+    /**
+     * Scope to filter by status.
+     */
+    public function scopeByStatus( $query, string $status )
+    {
+        return $query->where( 'status', $status );
+    }
+
+    /**
+     * Scope to filter by payment method.
+     */
+    public function scopeByPaymentMethod( $query, string $paymentMethod )
+    {
+        return $query->where( 'payment_method', $paymentMethod );
+    }
+
+    /**
+     * Check if the payment is approved.
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
+     * Check if the payment is pending.
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if the payment is rejected.
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    /**
+     * Check if the payment is cancelled.
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    /**
+     * Check if the payment is refunded.
+     */
+    public function isRefunded(): bool
+    {
+        return $this->status === self::STATUS_REFUNDED;
     }
 
 }

@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
-class Support extends Model
+class ProductInventory extends Model
 {
+    use HasFactory;
     use TenantScoped;
 
     /**
@@ -25,7 +26,7 @@ class Support extends Model
      *
      * @var string
      */
-    protected $table = 'supports';
+    protected $table = 'product_inventory';
 
     /**
      * The attributes that are mass assignable.
@@ -33,12 +34,11 @@ class Support extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'email',
-        'subject',
-        'message',
         'tenant_id',
+        'product_id',
+        'quantity',
+        'min_quantity',
+        'max_quantity',
     ];
 
     /**
@@ -47,8 +47,13 @@ class Support extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
-        'created_at' => 'immutable_datetime',
+        'tenant_id'    => 'integer',
+        'product_id'   => 'integer',
+        'quantity'     => 'integer',
+        'min_quantity' => 'integer',
+        'max_quantity' => 'integer',
+        'created_at'   => 'immutable_datetime',
+        'updated_at'   => 'datetime',
     ];
 
     /**
@@ -62,18 +67,19 @@ class Support extends Model
     }
 
     /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public const UPDATED_AT = null;
-
-    /**
-     * Get the tenant that owns the Support.
+     * Get the tenant that owns the ProductInventory.
      */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the product that owns the ProductInventory.
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo( Product::class);
     }
 
 }

@@ -16,14 +16,14 @@ class Profession extends Model
 
     protected $table = 'professions';
 
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'is_active',
         'tenant_id', // Adicionado para compatibilidade com ProfessionEntity legada
     ];
 
-    protected $casts = [ 
+    protected $casts = [
         'tenant_id'  => 'integer',
         'slug'       => 'string',
         'name'       => 'string',
@@ -31,6 +31,16 @@ class Profession extends Model
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Relacionamento com CommonData.

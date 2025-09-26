@@ -23,9 +23,11 @@ class InvoiceStatus extends Model
     protected $fillable = [
         'name',
         'slug',
+        'description',
         'color',
         'icon',
-        'description'
+        'order_index',
+        'is_active'
     ];
 
     /**
@@ -39,9 +41,21 @@ class InvoiceStatus extends Model
         'description' => 'string',
         'color'       => 'string',
         'icon'        => 'string',
+        'order_index' => 'integer',
+        'is_active'   => 'boolean',
         'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Get the invoices for the InvoiceStatus.

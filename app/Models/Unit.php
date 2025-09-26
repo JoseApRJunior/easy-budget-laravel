@@ -16,13 +16,13 @@ class Unit extends Model
 
     protected $table = 'units';
 
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'is_active',
     ];
 
-    protected $casts = [ 
+    protected $casts = [
         'slug'       => 'string',
         'name'       => 'string',
         'is_active'  => 'boolean',
@@ -30,7 +30,15 @@ class Unit extends Model
         'updated_at' => 'immutable_datetime',
     ];
 
-    /**
-     * Relacionamentos podem ser adicionados aqui se necessário.
+
+        /**
+     * Regras de validação para o modelo Plan.
      */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
 }

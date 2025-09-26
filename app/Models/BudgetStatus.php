@@ -69,6 +69,17 @@ class BudgetStatus extends Model
         'updated_at'  => 'datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Indicates if the model should be timestamped.
      *

@@ -60,6 +60,17 @@ class ServiceStatus extends Model
         'created_at'  => 'immutable_datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Indicates if the model should be timestamped.
      *

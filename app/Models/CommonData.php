@@ -7,7 +7,7 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class CommonData extends Model
@@ -57,7 +57,7 @@ class CommonData extends Model
         'tenant_id'           => 'integer',
         'first_name'          => 'string',
         'last_name'           => 'string',
-        'birth_date'          => 'datetime',
+        'birth_date'          => 'date',
         'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',
@@ -69,11 +69,13 @@ class CommonData extends Model
     ];
 
     /**
-     * Get the provider that owns the CommonData.
+     * Regras de validação para o modelo Plan.
      */
-    public function provider(): HasOne
+    public static function businessRules(): array
     {
-        return $this->hasOne( Provider::class);
+        return [
+
+        ];
     }
 
     /**
@@ -101,11 +103,11 @@ class CommonData extends Model
     }
 
     /**
-     * Get the customer associated with the CommonData.
+     * Get the customers associated with the CommonData.
      */
-    public function customer(): HasOne
+    public function customers(): HasMany
     {
-        return $this->hasOne( Customer::class);
+        return $this->hasMany( Customer::class);
     }
 
 }

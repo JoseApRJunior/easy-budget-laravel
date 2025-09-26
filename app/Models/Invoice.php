@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Invoice extends Model
@@ -77,6 +78,16 @@ class Invoice extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Get the tenant that owns the Invoice.
      */
     public function tenant(): BelongsTo
@@ -106,6 +117,14 @@ class Invoice extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo( Service::class);
+    }
+
+    /**
+     * Get the invoice items for the Invoice.
+     */
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany( InvoiceItem::class);
     }
 
     /**

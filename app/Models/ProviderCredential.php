@@ -57,6 +57,16 @@ class ProviderCredential extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Get the provider that owns the ProviderCredential.
      */
     public function provider(): BelongsTo

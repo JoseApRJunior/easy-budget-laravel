@@ -25,12 +25,35 @@ class UserRole extends Pivot
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'user_id',
         'role_id',
         'tenant_id',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'user_id'    => 'integer',
+        'role_id'    => 'integer',
+        'tenant_id'  => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
     /**
      * Indicates if the IDs are auto-incrementing.
      *
@@ -61,26 +84,4 @@ class UserRole extends Pivot
     {
         return $this->belongsTo( Tenant::class);
     }
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [ 
-        'user_id'    => 'integer',
-        'role_id'    => 'integer',
-        'tenant_id'  => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
-
-    /**
-     * Accessor para tratar valores zero-date no updated_at.
-     */
-    public function getUpdatedAtAttribute( $value )
-    {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
-    }
-
 }

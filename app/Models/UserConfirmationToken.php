@@ -55,6 +55,17 @@ class UserConfirmationToken extends Model
         'updated_at' => 'immutable_datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Get the user that owns the UserConfirmationToken.
      */

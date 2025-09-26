@@ -63,6 +63,41 @@ class Product extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Product.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'price'       => 'required|numeric|min:0',
+            'code'        => 'nullable|string|max:50',
+            'active'      => 'boolean',
+            'image'       => 'nullable|string|max:255',
+            'tenant_id'   => 'required|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Validação personalizada para code único por tenant.
+     * Esta validação deve ser usada no contexto de um request onde o tenant_id está disponível.
+     */
+    public static function validateUniqueCodeRule( ?string $code, ?int $excludeId = null ): string
+    {
+        if ( empty( $code ) ) {
+            return 'nullable|string|max:50';
+        }
+
+        $rule = 'unique:products,code';
+
+        if ( $excludeId ) {
+            $rule .= ',' . $excludeId . ',id';
+        }
+
+        return $rule . ',tenant_id,' . request()->user()->tenant_id;
+    }
+
+    /**
      * Get the tenant that owns the Product.
      */
     public function tenant(): BelongsTo
@@ -76,6 +111,14 @@ class Product extends Model
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany( InventoryMovement::class);
+    }
+
+    /**
+     * Controle de inventário do produto.
+     */
+    public function productInventory(): HasMany
+    {
+        return $this->hasMany( ProductInventory::class);
     }
 
 }
