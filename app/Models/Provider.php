@@ -56,7 +56,7 @@ class Provider extends Model
         'address_id'     => 'integer',
         'terms_accepted' => 'boolean',
         'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**
@@ -177,14 +177,6 @@ class Provider extends Model
     public function address(): BelongsTo
     {
         return $this->belongsTo( Address::class);
-    }
-
-    /**
-     * Accessor para tratar valores zero-date no updated_at.
-     */
-    public function getUpdatedAtAttribute( $value )
-    {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

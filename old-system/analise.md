@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `activities` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `addresses` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `areas_of_activity` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `budgets` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS `budget_statuses` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -262,7 +262,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -319,7 +319,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -368,7 +368,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -423,7 +423,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -473,7 +473,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -539,7 +539,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -593,7 +593,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -639,7 +639,7 @@ CREATE TABLE IF NOT EXISTS `invoice_statuses` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -709,7 +709,7 @@ CONSTRAINT `fk_merchant_orders_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `ten
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -778,7 +778,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -844,7 +844,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -888,7 +888,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -926,7 +926,7 @@ CREATE TABLE
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -988,7 +988,7 @@ CONSTRAINT `fk_subscriptions_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenan
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1042,7 +1042,7 @@ CONSTRAINT `fk_products_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1092,7 +1092,7 @@ CONSTRAINT `fk_inventory_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` 
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1138,7 +1138,7 @@ UNIQUE KEY `uk_slug` (`slug`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1197,7 +1197,7 @@ CONSTRAINT `fk_providers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1251,7 +1251,7 @@ CONSTRAINT `provider_credentials_ibfk_2` FOREIGN KEY (`tenant_id`) REFERENCES `t
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1306,7 +1306,7 @@ CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1355,7 +1355,7 @@ KEY `idx_slug` (`slug`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1400,7 +1400,7 @@ UNIQUE KEY `uk_role_name` (`name`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1428,15 +1428,16 @@ Verificar se o relacionamento entre os modelos de dados requer a utilização de
 -- Copiando estrutura para tabela easybudget.role_permissions
 DROP TABLE IF EXISTS `role_permissions`;
 
-CREATE TABLE
-IF NOT EXISTS `role_permissions` (
-`role_id` int (11) NOT NULL,
-`permission_id` int (11) NOT NULL,
-KEY `idx_role` (`role_id`),
-KEY `idx_permission` (`permission_id`),
-CONSTRAINT `fk_role_permissions_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
-CONSTRAINT `fk_role_permissions_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+CREATE TABLE role_permissions (
+    role_id int(11) NOT NULL,
+    permission_id int(11) NOT NULL,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_role (role_id),
+    KEY idx_permission (permission_id),
+    CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ```
 
@@ -1444,7 +1445,7 @@ CONSTRAINT `fk_role_permissions_role` FOREIGN KEY (`role_id`) REFERENCES `roles`
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1498,7 +1499,7 @@ CONSTRAINT `schedules_ibfk_3` FOREIGN KEY (`user_confirmation_token_id`) REFEREN
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1558,7 +1559,7 @@ CONSTRAINT `services_ibfk_4` FOREIGN KEY (`service_statuses_id`) REFERENCES `ser
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1612,7 +1613,7 @@ CONSTRAINT `service_items_ibfk_3` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1661,7 +1662,7 @@ UNIQUE KEY `slug` (`slug`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1720,7 +1721,7 @@ CONSTRAINT `fk_supports_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1764,7 +1765,7 @@ UNIQUE KEY `uk_tenants_name` (`name`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1810,7 +1811,7 @@ UNIQUE KEY `uk_slug` (`slug`)
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1858,7 +1859,7 @@ CONSTRAINT `fk_users_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1909,7 +1910,7 @@ CONSTRAINT `fk_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
@@ -1957,7 +1958,7 @@ CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS

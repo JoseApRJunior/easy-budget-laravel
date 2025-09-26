@@ -46,12 +46,13 @@ class Permission extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Permission.
      */
     public static function businessRules(): array
     {
         return [
-
+            'name'        => 'required|string|max:255|unique:permissions,name',
+            'description' => 'nullable|string|max:500',
         ];
     }
 

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Provider;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -108,6 +109,14 @@ class CommonData extends Model
     public function customers(): HasMany
     {
         return $this->hasMany( Customer::class);
+    }
+
+    /**
+     * Get the providers associated with the CommonData.
+     */
+    public function providers(): HasMany
+    {
+        return $this->hasMany( Provider::class);
     }
 
 }

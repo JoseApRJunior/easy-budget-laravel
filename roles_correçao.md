@@ -2,7 +2,7 @@
 
 ```php
 protected $casts = [
-    'birth_date' => 'date',                 // ✅ Pode ser alterado formato YYYY-MM-DD
+
     'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
     'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
     'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS

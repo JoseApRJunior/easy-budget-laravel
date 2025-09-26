@@ -87,11 +87,11 @@ class Contact extends Model
     }
 
     /**
-     * Get the provider associated with the Contact.
+     * Get the providers associated with the Contact.
      */
-    public function provider(): HasOne
+    public function providers(): HasMany
     {
-        return $this->hasOne( Provider::class);
+        return $this->hasMany( Provider::class);
     }
 
 }

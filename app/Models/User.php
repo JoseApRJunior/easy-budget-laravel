@@ -13,15 +13,12 @@ use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
@@ -80,8 +77,7 @@ class User extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
@@ -213,14 +209,6 @@ class User extends Authenticatable
         return $this->provider?->commonData
             ? ( $this->provider->commonData->first_name . ' ' . $this->provider->commonData->last_name )
             : ( $this->attributes[ 'email' ] ?? '' );
-    }
-
-    /**
-     * Accessor para tratar valores zero-date no updated_at.
-     */
-    public function getUpdatedAtAttribute( $value )
-    {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

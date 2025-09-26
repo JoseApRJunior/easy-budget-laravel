@@ -5,10 +5,8 @@ namespace App\Models;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Support\Carbon;
 
 class UserRole extends Pivot
 {
@@ -40,12 +38,11 @@ class UserRole extends Pivot
         'user_id'    => 'integer',
         'role_id'    => 'integer',
         'tenant_id'  => 'integer',
-        'created_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
@@ -54,6 +51,7 @@ class UserRole extends Pivot
 
         ];
     }
+
     /**
      * Indicates if the IDs are auto-incrementing.
      *
@@ -84,4 +82,5 @@ class UserRole extends Pivot
     {
         return $this->belongsTo( Tenant::class);
     }
+
 }

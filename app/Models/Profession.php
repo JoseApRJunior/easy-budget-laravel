@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Model para representar profissões, com tenant_id opcional para compatibilidade com sistema legado.
+ * Model para representar profissões do sistema.
  */
 class Profession extends Model
 {
@@ -20,25 +20,48 @@ class Profession extends Model
         'slug',
         'name',
         'is_active',
-        'tenant_id', // Adicionado para compatibilidade com ProfessionEntity legada
+    ];
+
+    protected $attributes = [
+        'is_active' => 1, // Valor padrão conforme definido no SQL
     ];
 
     protected $casts = [
-        'tenant_id'  => 'integer',
         'slug'       => 'string',
         'name'       => 'string',
         'is_active'  => 'boolean',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Define as chaves únicas da tabela.
+     */
+    protected array $uniqueKeys = [
+        'slug' => [ 'slug' ],
+    ];
+
+    /**
+     * Regras de validação para o modelo Profession.
      */
     public static function businessRules(): array
     {
         return [
-
+            'slug'      => [
+                'required',
+                'string',
+                'max:50',
+                'unique:professions,slug',
+                'regex:/^[a-z0-9-]+$/'
+            ],
+            'name'      => [
+                'required',
+                'string',
+                'max:100'
+            ],
+            'is_active' => [
+                'boolean'
+            ]
         ];
     }
 

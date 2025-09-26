@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Provider;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
@@ -86,6 +88,14 @@ class Address extends Model
     public function customer(): HasOne
     {
         return $this->hasOne( Customer::class);
+    }
+
+    /**
+     * Get the providers associated with the Address.
+     */
+    public function providers(): HasMany
+    {
+        return $this->hasMany( Provider::class);
     }
 
 }

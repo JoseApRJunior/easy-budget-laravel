@@ -50,8 +50,6 @@ class Report extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'   => 'integer',
-        'user_id'     => 'integer',
         'hash'        => 'string',
         'type'        => 'string',
         'description' => 'string',
@@ -63,13 +61,44 @@ class Report extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Report.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'   => 'required|exists:tenants,id',
+            'user_id'     => 'required|exists:users,id',
+            'hash'        => 'nullable|string|max:64',
+            'type'        => 'required|string|max:50',
+            'description' => 'nullable|string',
+            'file_name'   => 'required|string|max:255',
+            'status'      => 'required|string|max:20|in:pending,processing,completed,failed',
+            'format'      => 'required|string|max:10|in:pdf,xlsx,csv',
+            'size'        => 'required|numeric|min:0',
         ];
+    }
+
+    /**
+     * Validação personalizada para hash único por tenant.
+     * Esta validação deve ser usada no contexto de um request onde o tenant_id está disponível.
+     *
+     * @param  string|null  $hash
+     * @param  int|null  $excludeId
+     * @return string
+     */
+    public static function validateUniqueHashRule( ?string $hash, ?int $excludeId = null ): string
+    {
+        if ( empty( $hash ) ) {
+            return 'nullable|string|max:64';
+        }
+
+        $rule = 'unique:reports,hash';
+
+        if ( $excludeId ) {
+            $rule .= ',' . $excludeId . ',id';
+        }
+
+        return $rule . ',tenant_id,' . request()->user()->tenant_id;
     }
 
     /**

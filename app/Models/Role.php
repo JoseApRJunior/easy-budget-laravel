@@ -15,7 +15,7 @@ class Role extends Model
 
     protected $fillable = [
         'name',
-        'slug',
+        'description',
     ];
 
     /**
@@ -25,16 +25,18 @@ class Role extends Model
      */
 
     protected $casts = [
-        'guard_name' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Role.
      */
     public static function businessRules(): array
     {
         return [
-
+            'name' => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string|max:255',
         ];
     }
 

@@ -55,7 +55,7 @@ class RolePermission extends Pivot
         'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'datetime',
+        'created_at'    => 'immutable_datetime',
         'updated_at'    => 'datetime',
     ];
 
