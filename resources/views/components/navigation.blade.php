@@ -61,13 +61,15 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li>
-                            <a class="dropdown-item" href="{{ route( 'profile.show' ) ?? '#' }}">
+                            <a class="dropdown-item" href="#"
+                                onclick="alert('Funcionalidade de perfil em desenvolvimento')">
                                 <i class="bi bi-person me-2"></i>
                                 Perfil
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{{ route( 'settings' ) ?? '#' }}">
+                            <a class="dropdown-item" href="#"
+                                onclick="alert('Funcionalidade de configurações em desenvolvimento')">
                                 <i class="bi bi-gear me-2"></i>
                                 Configurações
                             </a>
