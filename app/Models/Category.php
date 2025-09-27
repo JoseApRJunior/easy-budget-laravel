@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Category extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory;
 
     /**
      * Boot the model.
@@ -22,7 +21,6 @@ class Category extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
     }
 
     protected $table = 'categories';
@@ -30,7 +28,6 @@ class Category extends Model
     protected $fillable = [
         'slug',
         'name',
-        'tenant_id', // Adicionado para compatibilidade com CategoryEntity legada
     ];
 
     /**
@@ -39,7 +36,6 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
         'slug'       => 'string',
         'name'       => 'string',
         'created_at' => 'immutable_datetime',
@@ -60,46 +56,17 @@ class Category extends Model
     public static function businessRules(): array
     {
         return [
-            'slug'      => 'required|string|max:255|unique:categories,slug',
-            'name'      => 'required|string|max:255',
-            'tenant_id' => 'nullable|integer|exists:tenants,id',
+            'slug' => 'required|string|max:255|unique:categories,slug',
+            'name' => 'required|string|max:255',
         ];
     }
 
     /**
-     * Regras de validação para criação de categoria.
+     * Validação customizada para verificar se o slug .
      */
-    public static function createRules(): array
-    {
-        return [
-            'slug'      => 'required|string|max:255|unique:categories,slug',
-            'name'      => 'required|string|max:255',
-            'tenant_id' => 'nullable|integer|exists:tenants,id',
-        ];
-    }
-
-    /**
-     * Regras de validação para atualização de categoria.
-     */
-    public static function updateRules( int $categoryId ): array
-    {
-        return [
-            'slug'      => 'required|string|max:255|unique:categories,slug,' . $categoryId,
-            'name'      => 'required|string|max:255',
-            'tenant_id' => 'nullable|integer|exists:tenants,id',
-        ];
-    }
-
-    /**
-     * Validação customizada para verificar se o slug é único no tenant.
-     */
-    public static function validateUniqueSlugInTenant( string $slug, ?int $tenantId = null, ?int $excludeCategoryId = null ): bool
+    public static function validateUniqueSlug( string $slug, ?int $excludeCategoryId = null ): bool
     {
         $query = static::where( 'slug', $slug );
-
-        if ( $tenantId ) {
-            $query->where( 'tenant_id', $tenantId );
-        }
 
         if ( $excludeCategoryId ) {
             $query->where( 'id', '!=', $excludeCategoryId );

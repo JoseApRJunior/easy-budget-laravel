@@ -420,10 +420,11 @@ public static function businessRules(): array
 ### **Após completar todas as correções:**
 
 <!-- 1. **Executar análise de sintaxe** em todos os modelos -->
+<!-- 2. **Testar relacionamentos** com queries reais -->
+<!-- 3. **Validar BusinessRules** com dados de teste -->
 
-3. **Validar BusinessRules** com dados de teste
-4. **Verificar integridade** do banco de dados
-5. **Documentar mudanças** implementadas
+<!-- 4. **Verificar integridade** do banco de dados -->
+<!-- 5. **Documentar mudanças** implementadas -->
 
 ### **Ferramentas recomendadas:**
 

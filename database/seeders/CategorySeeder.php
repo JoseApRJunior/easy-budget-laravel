@@ -1,62 +1,44 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Database\Seeders;
 
-use App\Models\Category;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run(): void
     {
-        // Dados das categorias de exemplo, sem ID fixo (auto-increment)
-        $categoriesData = [ 
-            [ 'slug' => 'carpentry', 'name' => 'Carpintaria' ],
-            [ 'slug' => 'construction_civil', 'name' => 'Construção Civil' ],
-            [ 'slug' => 'construction_furniture', 'name' => 'Construção de Móveis' ],
-            [ 'slug' => 'construction_doors', 'name' => 'Construção de Portas' ],
-            [ 'slug' => 'construction_electric', 'name' => 'Elétrica' ],
-            [ 'slug' => 'construction_hydraulic', 'name' => 'Hidráulica' ],
-            [ 'slug' => 'installation_pumps', 'name' => 'Instalação de Bombas' ],
-            [ 'slug' => 'installation_pipes', 'name' => 'Instalação de Tubulações' ],
-            [ 'slug' => 'installation_glass', 'name' => 'Instalação de Vidros' ],
-            [ 'slug' => 'electrical_installation', 'name' => 'Instalação Elétrica' ],
-            [ 'slug' => 'maintenance_pumps', 'name' => 'Manutenção de Bombas' ],
-            [ 'slug' => 'maintenance_vehicles', 'name' => 'Manutenção de Veículos' ],
-            [ 'slug' => 'maintenance_electric', 'name' => 'Manutenção Elétrica' ],
-            [ 'slug' => 'mechanical', 'name' => 'Mecânica' ],
-            [ 'slug' => 'masonry', 'name' => 'Obra de Alvenaria' ],
-            [ 'slug' => 'painting', 'name' => 'Pintura' ],
-            [ 'slug' => 'painting_wall', 'name' => 'Pintura de Parede' ],
-            [ 'slug' => 'painting_ceiling', 'name' => 'Pintura de Teto' ],
-            [ 'slug' => 'reforms', 'name' => 'Reformas' ],
-            [ 'slug' => 'engine_repair', 'name' => 'Reparo de Motores' ],
-            [ 'slug' => 'repair_furniture', 'name' => 'Reparo de Móveis' ],
-            [ 'slug' => 'repair_doors', 'name' => 'Reparo de Portas' ],
-            [ 'slug' => 'glass_repair', 'name' => 'Reparo de Vidros' ],
-            [ 'slug' => 'metal_working', 'name' => 'Serralheria' ],
-            [ 'slug' => 'soldagem', 'name' => 'Soldagem' ],
-            [ 'slug' => 'vidraceiro', 'name' => 'Vidraceiro' ],
-            [ 'slug' => 'others', 'name' => 'Outros' ],
+        $now = now();
+        $categories = [
+            ['slug' => 'hidraulica',        'name' => 'Hidráulica',        'created_at' => $now],
+            ['slug' => 'eletrica',          'name' => 'Elétrica',          'created_at' => $now],
+            ['slug' => 'pintura',           'name' => 'Pintura',           'created_at' => $now],
+            ['slug' => 'alvenaria',         'name' => 'Alvenaria',         'created_at' => $now],
+            ['slug' => 'revestimentos',     'name' => 'Revestimentos',     'created_at' => $now],
+            ['slug' => 'forro',             'name' => 'Forro',             'created_at' => $now],
+            ['slug' => 'drywall',           'name' => 'Drywall',           'created_at' => $now],
+            ['slug' => 'marcenaria',        'name' => 'Marcenaria',        'created_at' => $now],
+            ['slug' => 'serralheria',       'name' => 'Serralheria',       'created_at' => $now],
+            ['slug' => 'impermeabilizacao', 'name' => 'Impermeabilização', 'created_at' => $now],
+            ['slug' => 'telhado',           'name' => 'Telhado',           'created_at' => $now],
+            ['slug' => 'jardinagem',        'name' => 'Jardinagem',        'created_at' => $now],
+            ['slug' => 'limpeza',           'name' => 'Limpeza',           'created_at' => $now],
+            ['slug' => 'climatizacao',      'name' => 'Climatização',      'created_at' => $now],
+            ['slug' => 'automacao',         'name' => 'Automação',         'created_at' => $now],
+            ['slug' => 'vidracaria',        'name' => 'Vidraçaria',        'created_at' => $now],
+            ['slug' => 'gesso',             'name' => 'Gesso',             'created_at' => $now],
+            ['slug' => 'demolicao',         'name' => 'Demolição',         'created_at' => $now],
+            ['slug' => 'moveis-planejados', 'name' => 'Móveis Planejados', 'created_at' => $now],
+            ['slug' => 'iluminacao',        'name' => 'Iluminação',        'created_at' => $now],
+            ['slug' => 'paisagismo',        'name' => 'Paisagismo',        'created_at' => $now],
+            ['slug' => 'calhas',            'name' => 'Calhas',            'created_at' => $now],
+            ['slug' => 'portas-janelas',    'name' => 'Portas e Janelas',  'created_at' => $now],
+            ['slug' => 'piso-elevado',      'name' => 'Piso Elevado',      'created_at' => $now],
+            ['slug' => 'marmoraria',        'name' => 'Marmoraria',        'created_at' => $now],
+            ['slug' => 'outros',            'name' => 'Outros',            'created_at' => $now],
         ];
 
-        // Criar categorias globais (sem tenant_id)
-        foreach ( $categoriesData as $data ) {
-            Category::updateOrCreate(
-                [ 'slug' => $data[ 'slug' ] ],
-                [ 'name' => $data[ 'name' ] ]
-            );
-        }
+        DB::table('categories')->upsert($categories, ['slug'], ['name']);
     }
-
 }

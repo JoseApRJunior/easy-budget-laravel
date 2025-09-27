@@ -74,7 +74,7 @@ class Permission extends Model
      *
      * @return BelongsToMany
      */
-    public function users()
+    public function users(): User
     {
         return User::whereHas( 'roles', function ( $query ) {
             $query->whereHas( 'permissions', function ( $query ) {

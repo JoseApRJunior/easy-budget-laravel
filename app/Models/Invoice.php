@@ -95,7 +95,7 @@ class Invoice extends Model
             'payment_method'      => 'nullable|string|max:50',
             'payment_id'          => 'nullable|string|max:255',
             'transaction_amount'  => 'nullable|numeric|min:0|max:999999.99',
-            'transaction_date'    => 'nullable|datetime',
+            'transaction_date'    => 'nullable|date',
             'notes'               => 'nullable|string|max:65535',
         ];
     }
