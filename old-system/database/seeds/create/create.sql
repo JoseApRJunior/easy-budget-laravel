@@ -400,18 +400,6 @@ CREATE TABLE
   ) ENGINE = InnoDB AUTO_INCREMENT = 6 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Histórico de métricas de performance dos middlewares';
 
 -- Exportação de dados foi desmarcado.
--- Copiando estrutura para tabela easybudget.migrations
-CREATE TABLE
-  IF NOT EXISTS `migrations` (
-    `id` int (11) NOT NULL AUTO_INCREMENT,
-    `migration` varchar(255) NOT NULL,
-    `batch` int (11) NOT NULL,
-    `executed_at` timestamp NOT NULL DEFAULT current_timestamp(),
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_migration` (`migration`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
--- Exportação de dados foi desmarcado.
 -- Copiando estrutura para tabela easybudget.monitoring_alerts_history
 CREATE TABLE
   IF NOT EXISTS `monitoring_alerts_history` (

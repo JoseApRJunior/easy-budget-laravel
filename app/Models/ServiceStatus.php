@@ -5,9 +5,7 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class ServiceStatus extends Model
 {
@@ -58,25 +56,24 @@ class ServiceStatus extends Model
         'order_index' => 'integer',
         'is_active'   => 'boolean',
         'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo ServiceStatus.
      */
     public static function businessRules(): array
     {
         return [
-
+            'slug'        => 'required|string|max:20|unique:service_statuses,slug',
+            'name'        => 'required|string|max:50|unique:service_statuses,name',
+            'description' => 'nullable|string|max:500',
+            'color'       => 'nullable|string|max:7',
+            'icon'        => 'nullable|string|max:30',
+            'order_index' => 'nullable|integer',
+            'is_active'   => 'boolean',
         ];
     }
-
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public const UPDATED_AT = null;
 
     /**
      * Get the services for the ServiceStatus.

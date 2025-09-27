@@ -7,8 +7,6 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Carbon;
 
 class UserConfirmationToken extends Model
 {
@@ -48,22 +46,39 @@ class UserConfirmationToken extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'user_id'    => 'integer',
         'tenant_id'  => 'integer',
         'token'      => 'string',
         'expires_at' => 'datetime',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo UserConfirmationToken.
      */
     public static function businessRules(): array
     {
         return [
-
+            'user_id'    => 'required|integer|exists:users,id',
+            'tenant_id'  => 'required|integer|exists:tenants,id',
+            'token'      => 'required|string|size:64|unique:user_confirmation_tokens,token',
+            'expires_at' => 'required|date|after:now',
         ];
+    }
+
+    /**
+     * Validação customizada para verificar se o token é único no tenant.
+     */
+    public static function validateUniqueTokenInTenant( string $token, int $tenantId, ?int $excludeTokenId = null ): bool
+    {
+        $query = static::where( 'token', $token )->where( 'tenant_id', $tenantId );
+
+        if ( $excludeTokenId ) {
+            $query->where( 'id', '!=', $excludeTokenId );
+        }
+
+        return !$query->exists();
     }
 
     /**
@@ -88,6 +103,14 @@ class UserConfirmationToken extends Model
     public function budgets(): HasMany
     {
         return $this->hasMany( Budget::class);
+    }
+
+    /**
+     * Get the schedules for the UserConfirmationToken.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany( Schedule::class);
     }
 
 }

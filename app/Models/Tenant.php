@@ -36,16 +36,18 @@ class Tenant extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Tenant.
      */
     public static function businessRules(): array
     {
         return [
-
+            'name' => 'required|string|max:255|unique:tenants,name',
         ];
     }
 
@@ -55,11 +57,11 @@ class Tenant extends Model
      */
 
     /**
-     * Usuário pertencente a este tenant.
+     * Usuários pertencentes a este tenant.
      */
-    public function user(): HasOne
+    public function users(): HasMany
     {
-        return $this->hasOne( User::class);
+        return $this->hasMany( User::class);
     }
 
     /**
@@ -188,6 +190,30 @@ class Tenant extends Model
     public function productInventories(): HasMany
     {
         return $this->hasMany( ProductInventory::class);
+    }
+
+    /**
+     * Itens de serviço deste tenant.
+     */
+    public function serviceItems(): HasMany
+    {
+        return $this->hasMany( ServiceItem::class);
+    }
+
+    /**
+     * Agendamentos deste tenant.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany( Schedule::class);
+    }
+
+    /**
+     * Tokens de confirmação de usuários deste tenant.
+     */
+    public function userConfirmationTokens(): HasMany
+    {
+        return $this->hasMany( UserConfirmationToken::class);
     }
 
     /**

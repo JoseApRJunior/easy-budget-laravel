@@ -43,12 +43,38 @@ class UserRole extends Pivot
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo UserRole.
      */
     public static function businessRules(): array
     {
         return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ];
+    }
 
+    /**
+     * Regras de validação para criação de UserRole.
+     */
+    public static function createRules(): array
+    {
+        return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Regras de validação para atualização de UserRole.
+     */
+    public static function updateRules(): array
+    {
+        return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
         ];
     }
 
@@ -81,6 +107,38 @@ class UserRole extends Pivot
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Verifica se esta atribuição de role está ativa para o tenant especificado.
+     */
+    public function isActiveForTenant(int $tenantId): bool
+    {
+        return $this->tenant_id === $tenantId;
+    }
+
+    /**
+     * Scope para buscar UserRoles por tenant.
+     */
+    public function scopeForTenant($query, int $tenantId)
+    {
+        return $query->where('tenant_id', $tenantId);
+    }
+
+    /**
+     * Scope para buscar UserRoles por usuário.
+     */
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Scope para buscar UserRoles por role.
+     */
+    public function scopeForRole($query, int $roleId)
+    {
+        return $query->where('role_id', $roleId);
     }
 
 }

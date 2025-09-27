@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
@@ -61,12 +62,17 @@ class Contact extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Contact.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'      => 'required|integer|exists:tenants,id',
+            'email'          => 'required|email|max:255|unique:contacts,email',
+            'phone'          => 'nullable|string|max:20',
+            'email_business' => 'nullable|email|max:255|unique:contacts,email_business',
+            'phone_business' => 'nullable|string|max:20',
+            'website'        => 'nullable|url|max:255',
         ];
     }
 

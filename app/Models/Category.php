@@ -47,13 +47,73 @@ class Category extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Campos que devem ser tratados como datas imutáveis.
+     */
+    protected $dates = [
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Regras de validação para o modelo Category.
      */
     public static function businessRules(): array
     {
         return [
-
+            'slug'      => 'required|string|max:255|unique:categories,slug',
+            'name'      => 'required|string|max:255',
+            'tenant_id' => 'nullable|integer|exists:tenants,id',
         ];
+    }
+
+    /**
+     * Regras de validação para criação de categoria.
+     */
+    public static function createRules(): array
+    {
+        return [
+            'slug'      => 'required|string|max:255|unique:categories,slug',
+            'name'      => 'required|string|max:255',
+            'tenant_id' => 'nullable|integer|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Regras de validação para atualização de categoria.
+     */
+    public static function updateRules( int $categoryId ): array
+    {
+        return [
+            'slug'      => 'required|string|max:255|unique:categories,slug,' . $categoryId,
+            'name'      => 'required|string|max:255',
+            'tenant_id' => 'nullable|integer|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Validação customizada para verificar se o slug é único no tenant.
+     */
+    public static function validateUniqueSlugInTenant( string $slug, ?int $tenantId = null, ?int $excludeCategoryId = null ): bool
+    {
+        $query = static::where( 'slug', $slug );
+
+        if ( $tenantId ) {
+            $query->where( 'tenant_id', $tenantId );
+        }
+
+        if ( $excludeCategoryId ) {
+            $query->where( 'id', '!=', $excludeCategoryId );
+        }
+
+        return !$query->exists();
+    }
+
+    /**
+     * Validação customizada para verificar se o slug tem formato válido.
+     */
+    public static function validateSlugFormat( string $slug ): bool
+    {
+        return preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug );
     }
 
     /**

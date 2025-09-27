@@ -44,17 +44,17 @@ class AlertSetting extends Model
     protected $casts = [
         'settings'   => 'array',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'settings'  => 'required|array',
         ];
     }
 

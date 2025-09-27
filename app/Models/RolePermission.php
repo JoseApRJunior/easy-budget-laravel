@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

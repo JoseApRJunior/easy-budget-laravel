@@ -35,7 +35,7 @@ class Role extends Model
     public static function businessRules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:roles,name',
+            'name'        => 'required|string|max:255|unique:roles,name',
             'description' => 'nullable|string|max:255',
         ];
     }
@@ -70,7 +70,26 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany( User::class, 'user_roles', 'role_id', 'user_id' )->withPivot( 'tenant_id' )->withTimestamps();
+        return $this->belongsToMany( User::class, 'user_roles', 'role_id', 'user_id' )
+            ->using( UserRole::class)
+            ->withPivot( 'tenant_id' )
+            ->withTimestamps();
+    }
+
+    /**
+     * Get users for a specific tenant.
+     */
+    public function usersForTenant( int $tenantId ): BelongsToMany
+    {
+        return $this->users()->forTenant( $tenantId );
+    }
+
+    /**
+     * Check if role has users in a specific tenant.
+     */
+    public function hasUsersInTenant( int $tenantId ): bool
+    {
+        return $this->users()->forTenant( $tenantId )->exists();
     }
 
 }

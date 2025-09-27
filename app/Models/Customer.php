@@ -13,11 +13,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Customer extends Model
 {
     use HasFactory, TenantScoped;
+
+    public const STATUS_ACTIVE   = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_DELETED  = 'deleted';
+
+    public const STATUSES = [
+        self::STATUS_ACTIVE,
+        self::STATUS_INACTIVE,
+        self::STATUS_DELETED,
+    ];
 
     /**
      * Boot the model.
@@ -65,18 +74,22 @@ class Customer extends Model
         'common_data_id' => 'integer',
         'contact_id'     => 'integer',
         'address_id'     => 'integer',
-        'status'         => 'string', // enum('active', 'inactive', 'deleted')
+        'status'         => 'string', // enum('active', 'inactive', 'deleted') crie const
         'created_at'     => 'immutable_datetime',
         'updated_at'     => 'datetime',
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Customer.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'      => 'required|integer|exists:tenants,id',
+            'common_data_id' => 'nullable|integer|exists:common_datas,id',
+            'contact_id'     => 'nullable|integer|exists:contacts,id',
+            'address_id'     => 'nullable|integer|exists:addresses,id',
+            'status'         => 'required|string|in:' . implode( ',', self::STATUSES ),
         ];
     }
 
@@ -364,166 +377,6 @@ class Customer extends Model
         ] );
 
         return implode( ', ', $parts );
-    }
-
-    /**
-     * Format CPF number.
-     *
-     * @param string $cpf
-     * @return string
-     */
-    private function formatCpf( string $cpf ): string
-    {
-        $cpf = preg_replace( '/\D/', '', $cpf );
-
-        if ( strlen( $cpf ) === 11 ) {
-            return sprintf( '%s.%s.%s-%s',
-                substr( $cpf, 0, 3 ),
-                substr( $cpf, 3, 3 ),
-                substr( $cpf, 6, 3 ),
-                substr( $cpf, 9, 2 ),
-            );
-        }
-
-        return $cpf;
-    }
-
-    /**
-     * Format CNPJ number.
-     *
-     * @param string $cnpj
-     * @return string
-     */
-    private function formatCnpj( string $cnpj ): string
-    {
-        $cnpj = preg_replace( '/\D/', '', $cnpj );
-
-        if ( strlen( $cnpj ) === 14 ) {
-            return sprintf( '%s.%s.%s/%s-%s',
-                substr( $cnpj, 0, 2 ),
-                substr( $cnpj, 2, 3 ),
-                substr( $cnpj, 5, 3 ),
-                substr( $cnpj, 8, 4 ),
-                substr( $cnpj, 12, 2 ),
-            );
-        }
-
-        return $cnpj;
-    }
-
-    /**
-     * Format phone number.
-     *
-     * @param string $phone
-     * @return string
-     */
-    private function formatPhone( string $phone ): string
-    {
-        $phone = preg_replace( '/\D/', '', $phone );
-
-        if ( strlen( $phone ) === 11 ) {
-            return sprintf( '(%s) %s-%s',
-                substr( $phone, 0, 2 ),
-                substr( $phone, 2, 5 ),
-                substr( $phone, 7, 4 ),
-            );
-        }
-
-        if ( strlen( $phone ) === 10 ) {
-            return sprintf( '(%s) %s-%s',
-                substr( $phone, 0, 2 ),
-                substr( $phone, 2, 4 ),
-                substr( $phone, 6, 4 ),
-            );
-        }
-
-        return $phone;
-    }
-
-    /**
-     * Get validation rules for the customer.
-     *
-     * @return array
-     */
-    public function getValidationRules(): array
-    {
-        return [
-            'status' => 'required|in:active,inactive,deleted',
-        ];
-    }
-
-    /**
-     * Validate CPF number.
-     *
-     * @param string $cpf
-     * @return bool
-     */
-    public static function validateCpf( string $cpf ): bool
-    {
-        $cpf = preg_replace( '/\D/', '', $cpf );
-
-        if ( strlen( $cpf ) !== 11 ) {
-            return false;
-        }
-
-        // Check for repeated digits
-        if ( preg_match( '/^(\d)\1{10}$/', $cpf ) ) {
-            return false;
-        }
-
-        // Calculate first digit
-        $sum = 0;
-        for ( $i = 0; $i < 9; $i++ ) {
-            $sum += $cpf[ $i ] * ( 10 - $i );
-        }
-        $digit1 = ( $sum % 11 ) < 2 ? 0 : 11 - ( $sum % 11 );
-
-        // Calculate second digit
-        $sum = 0;
-        for ( $i = 0; $i < 10; $i++ ) {
-            $sum += $cpf[ $i ] * ( 11 - $i );
-        }
-        $digit2 = ( $sum % 11 ) < 2 ? 0 : 11 - ( $sum % 11 );
-
-        return $cpf[ 9 ] == $digit1 && $cpf[ 10 ] == $digit2;
-    }
-
-    /**
-     * Validate CNPJ number.
-     *
-     * @param string $cnpj
-     * @return bool
-     */
-    public static function validateCnpj( string $cnpj ): bool
-    {
-        $cnpj = preg_replace( '/\D/', '', $cnpj );
-
-        if ( strlen( $cnpj ) !== 14 ) {
-            return false;
-        }
-
-        // Check for repeated digits
-        if ( preg_match( '/^(\d)\1{13}$/', $cnpj ) ) {
-            return false;
-        }
-
-        // Calculate first digit
-        $weights = [ 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 ];
-        $sum     = 0;
-        for ( $i = 0; $i < 12; $i++ ) {
-            $sum += $cnpj[ $i ] * $weights[ $i ];
-        }
-        $digit1 = ( $sum % 11 ) < 2 ? 0 : 11 - ( $sum % 11 );
-
-        // Calculate second digit
-        $weights = [ 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 ];
-        $sum     = 0;
-        for ( $i = 0; $i < 13; $i++ ) {
-            $sum += $cnpj[ $i ] * $weights[ $i ];
-        }
-        $digit2 = ( $sum % 11 ) < 2 ? 0 : 11 - ( $sum % 11 );
-
-        return $cnpj[ 12 ] == $digit1 && $cnpj[ 13 ] == $digit2;
     }
 
 }

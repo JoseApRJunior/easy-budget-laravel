@@ -43,17 +43,20 @@ class ServiceItem extends Model
         'quantity'   => 'integer',
         'total'      => 'decimal:2',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo ServiceItem.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'  => 'required|integer|exists:tenants,id',
+            'service_id' => 'required|integer|exists:services,id',
+            'product_id' => 'required|integer|exists:products,id',
+            'unit_value' => 'required|numeric|min:0|max:999999.99',
+            'quantity'   => 'required|integer|min:1|max:999999',
         ];
     }
 
@@ -91,20 +94,41 @@ class ServiceItem extends Model
 
         static::saving( function ( ServiceItem $model ) {
             // Calculate total as quantity * unit_value using safe decimal math
-            $quantity  = (int) ( $model->quantity ?? 0 );
-            $unitValue = (int) ( $model->unit_value ?? '0' );
-            $computed  = 0;
+            $quantity  = $model->quantity ?? 0;
+            $unitValue = $model->unit_value ?? 0;
 
             // Use bcmath if available for precise decimal calculations
             if ( function_exists( 'bcmul' ) ) {
-                $computed = bcmul( $unitValue, (int) $quantity, 2 );
+                $computed = bcmul( (string) $unitValue, (string) $quantity, 2 );
             } else {
                 // Fallback to number_format for precise decimal handling
-                $computed = number_format( ( (float) $unitValue ) * $quantity, 2, '.', '' );
+                $computed = number_format( $unitValue * $quantity, 2, '.', '' );
             }
 
             $model->total = $computed;
         } );
+    }
+
+    /**
+     * Get the calculated total (quantity * unit_value).
+     */
+    public function getCalculatedTotalAttribute(): string
+    {
+        // Use bcmath if available for precise decimal calculations
+        if ( function_exists( 'bcmul' ) ) {
+            return bcmul( (string) $this->unit_value, (string) $this->quantity, 2 );
+        }
+
+        // Fallback to number_format for precise decimal handling
+        return number_format( $this->unit_value * $this->quantity, 2, '.', '' );
+    }
+
+    /**
+     * Get the formatted total as currency.
+     */
+    public function getFormattedTotalAttribute(): string
+    {
+        return 'R$ ' . number_format( $this->total, 2, ',', '.' );
     }
 
 }

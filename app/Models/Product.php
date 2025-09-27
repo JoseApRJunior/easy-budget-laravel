@@ -135,6 +135,16 @@ class Product extends Model
         return $this->hasMany( ProductInventory::class);
     }
 
+    /**
+     * Itens de serviço que utilizam este produto.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ServiceItem>
+     */
+    public function serviceItems(): HasMany
+    {
+        return $this->hasMany( ServiceItem::class);
+    }
+
     // ==================== SCOPES ÚTEIS ====================
 
     /**

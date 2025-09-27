@@ -1982,6 +1982,215 @@ Exemplo a seguir:
 
 Verificar se o relacionamento entre os modelos de dados requer a utilização de BelongsTo, HasMany ou ambos, conforme a necessidade do contexto. Caso seja utilizado algum desses relacionamentos, validar se a classe especificada possui o relacionamento reverso correspondente implementado, verificar melhor formato para campos date/datetime/immutable_datetime/...
 
+```sql
+-- Exportação de dados foi desmarcado.
+-- Copiando estrutura para tabela easybudget.middleware_metrics_history
+CREATE TABLE
+IF NOT EXISTS `middleware_metrics_history` (
+`id` bigint (20) NOT NULL AUTO_INCREMENT,
+`tenant_id` int (11) NOT NULL,
+`middleware_name` varchar(100) NOT NULL,
+`endpoint` varchar(255) NOT NULL,
+`method` varchar(10) NOT NULL,
+`response_time` decimal(10, 3) NOT NULL COMMENT 'Tempo de resposta em milissegundos',
+`memory_usage` bigint (20) NOT NULL COMMENT 'Uso de memória em bytes',
+`cpu_usage` decimal(5, 2) DEFAULT NULL COMMENT 'Uso de CPU em porcentagem',
+`status_code` int (3) NOT NULL,
+`error_message` text DEFAULT NULL,
+`user_id` int (11) DEFAULT NULL,
+`ip_address` varchar(45) DEFAULT NULL,
+`user_agent` text DEFAULT NULL,
+`request_size` bigint (20) DEFAULT NULL COMMENT 'Tamanho da requisição em bytes',
+`response_size` bigint (20) DEFAULT NULL COMMENT 'Tamanho da resposta em bytes',
+`database_queries` int (11) DEFAULT NULL COMMENT 'Número de queries executadas',
+`cache_hits` int (11) DEFAULT NULL COMMENT 'Número de cache hits',
+`cache_misses` int (11) DEFAULT NULL COMMENT 'Número de cache misses',
+`created_at` datetime NOT NULL DEFAULT current_timestamp(),
+PRIMARY KEY (`id`),
+KEY `idx_tenant_id` (`tenant_id`),
+KEY `idx_middleware_name` (`middleware_name`),
+KEY `idx_endpoint` (`endpoint`),
+KEY `idx_method` (`method`),
+KEY `idx_status_code` (`status_code`),
+KEY `idx_response_time` (`response_time`),
+KEY `idx_memory_usage` (`memory_usage`),
+KEY `idx_user_id` (`user_id`),
+KEY `idx_tenant_created` (`tenant_id`, `created_at`),
+KEY `idx_middleware_metrics_tenant_period` (`tenant_id`, `created_at`),
+KEY `idx_middleware_metrics_middleware_name` (`tenant_id`, `middleware_name`, `created_at`),
+KEY `idx_middleware_metrics_endpoint` (`tenant_id`, `endpoint`, `created_at`),
+KEY `idx_middleware_metrics_response_time` (`tenant_id`, `response_time`, `created_at`),
+KEY `idx_middleware_metrics_memory_usage` (`tenant_id`, `memory_usage`, `created_at`),
+KEY `idx_middleware_metrics_status_code` (`tenant_id`, `status_code`, `created_at`),
+KEY `idx_middleware_metrics_aggregation` (
+`tenant_id`,
+`created_at`,
+`response_time`,
+`memory_usage`,
+`status_code`
+),
+CONSTRAINT `fk_middleware_metrics_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+CONSTRAINT `fk_middleware_metrics_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Histórico de métricas de performance dos middlewares';
+```
+
+**Correção do model de acordo com o antigo SQL:**
+
+```php
+protected $casts = [
+
+    'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
+    'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
+    'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
+];
+```
+
+Exemplo a seguir:
+
+```php
+   /**
+     * Regras de validação para o modelo Permission.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:permissions,name',
+            'description' => 'nullable|string|max:500',
+        ];
+    }
+```
+
+Verificar se o relacionamento entre os modelos de dados requer a utilização de BelongsTo, HasMany ou ambos, conforme a necessidade do contexto. Caso seja utilizado algum desses relacionamentos, validar se a classe especificada possui o relacionamento reverso correspondente implementado, verificar melhor formato para campos date/datetime/immutable_datetime/...
+
+```sql
+-- Exportação de dados foi desmarcado.
+-- Copiando estrutura para tabela easybudget.monitoring_alerts_history
+CREATE TABLE
+IF NOT EXISTS `monitoring_alerts_history` (
+`id` bigint (20) NOT NULL AUTO_INCREMENT,
+`tenant_id` int (11) NOT NULL,
+`alert_type` enum (
+'performance',
+'error',
+'security',
+'availability',
+'resource'
+) NOT NULL,
+`severity` enum ('low', 'medium', 'high', 'critical') NOT NULL,
+`middleware_name` varchar(100) NOT NULL,
+`endpoint` varchar(255) DEFAULT NULL,
+`metric_name` varchar(100) NOT NULL,
+`metric_value` decimal(15, 3) NOT NULL,
+`threshold_value` decimal(15, 3) NOT NULL,
+`message` text NOT NULL,
+`additional_data` longtext CHARACTER
+SET
+utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid (`additional_data`)),
+`is_resolved` tinyint (1) NOT NULL DEFAULT 0,
+`resolved_at` datetime DEFAULT NULL,
+`resolved_by` int (11) DEFAULT NULL,
+`resolution_notes` text DEFAULT NULL,
+`notification_sent` tinyint (1) NOT NULL DEFAULT 0,
+`notification_sent_at` datetime DEFAULT NULL,
+`created_at` datetime NOT NULL DEFAULT current_timestamp(),
+`updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+PRIMARY KEY (`id`),
+KEY `idx_tenant_id` (`tenant_id`),
+KEY `idx_alert_type` (`alert_type`),
+KEY `idx_severity` (`severity`),
+KEY `idx_middleware_name` (`middleware_name`),
+KEY `idx_endpoint` (`endpoint`),
+KEY `idx_metric_name` (`metric_name`),
+KEY `idx_is_resolved` (`is_resolved`),
+KEY `idx_created_at` (`created_at`),
+KEY `idx_updated_at` (`updated_at`),
+KEY `idx_notification_sent` (`notification_sent`),
+KEY `idx_tenant_created` (`tenant_id`, `created_at`),
+KEY `idx_severity_created` (`severity`, `created_at`),
+KEY `idx_tenant_middleware` (`tenant_id`, `middleware_name`, `created_at`),
+KEY `idx_tenant_endpoint` (`tenant_id`, `endpoint`, `created_at`),
+KEY `fk_monitoring_alerts_resolved_by` (`resolved_by`),
+CONSTRAINT `fk_monitoring_alerts_resolved_by` FOREIGN KEY (`resolved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+CONSTRAINT `fk_monitoring_alerts_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Histórico de alertas do sistema de monitoramento';
+```
+
+**Correção do model de acordo com o antigo SQL:**
+
+```php
+protected $casts = [
+
+    'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
+    'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
+    'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
+];
+```
+
+Exemplo a seguir:
+
+```php
+   /**
+     * Regras de validação para o modelo Permission.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:permissions,name',
+            'description' => 'nullable|string|max:500',
+        ];
+    }
+```
+
+Verificar se o relacionamento entre os modelos de dados requer a utilização de BelongsTo, HasMany ou ambos, conforme a necessidade do contexto. Caso seja utilizado algum desses relacionamentos, validar se a classe especificada possui o relacionamento reverso correspondente implementado, verificar melhor formato para campos date/datetime/immutable_datetime/..
+
+```sql
+CREATE TABLE `sessions` (
+  `id` INT AUTO_INCREMENT NOT NULL,
+  `user_id` INT NOT NULL,
+  `session_token` VARCHAR(255) NOT NULL,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `user_agent` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
+  `last_activity` DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
+  `expires_at` DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `session_data` JSON DEFAULT NULL,
+  `pay_load` JSON DEFAULT NULL,
+  INDEX `IDX_SESSIONS_USER_ID` (`user_id`),
+  UNIQUE INDEX `UNIQ_USER_SESSIONS_TOKEN` (`session_token`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `FK_SESSIONS_USER` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
+```
+
+**Correção do model de acordo com o antigo SQL:**
+
+```php
+protected $casts = [
+
+    'due_date' => 'date',                  // ✅ Pode ser alterado formato YYYY-MM-DD
+    'created_at' => 'immutable_datetime',  // ✅ Nunca muda formato YYYY-MM-DD HH:MM:SS
+    'updated_at' => 'datetime',            // ✅ Pode ser alterado formato YYYY-MM-DD HH:MM:SS
+];
+```
+
+Exemplo a seguir:
+
+```php
+   /**
+     * Regras de validação para o modelo Permission.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:permissions,name',
+            'description' => 'nullable|string|max:500',
+        ];
+    }
+```
+
+Verificar se o relacionamento entre os modelos de dados requer a utilização de BelongsTo, HasMany ou ambos, conforme a necessidade do contexto. Caso seja utilizado algum desses relacionamentos, validar se a classe especificada possui o relacionamento reverso correspondente implementado, verificar melhor formato para campos date/datetime/immutable_datetime/...
+
 ## Verificar antes de plans
 
 ```php

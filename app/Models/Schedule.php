@@ -53,17 +53,22 @@ class Schedule extends Model
         'start_date_time'            => 'immutable_datetime',
         'end_date_time'              => 'immutable_datetime',
         'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo Schedule.
+     * Implementa validações específicas para agendamentos considerando multi-tenancy.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'                  => 'required|integer|exists:tenants,id',
+            'service_id'                 => 'required|integer|exists:services,id',
+            'user_confirmation_token_id' => 'required|integer|exists:user_confirmation_tokens,id',
+            'start_date_time'            => 'required|date|after:now|date_format:Y-m-d H:i:s',
+            'end_date_time'              => 'required|date|after:start_date_time|date_format:Y-m-d H:i:s',
+            'location'                   => 'nullable|string|max:500',
         ];
     }
 

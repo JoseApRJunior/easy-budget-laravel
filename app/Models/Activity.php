@@ -68,14 +68,19 @@ class Activity extends Model
         'created_at'  => 'immutable_datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo Activity.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'   => 'required|integer|exists:tenants,id',
+            'user_id'     => 'required|integer|exists:users,id',
+            'action_type' => 'required|string|max:50',
+            'entity_type' => 'required|string|max:50',
+            'entity_id'   => 'required|integer',
+            'description' => 'required|string|max:65535',
+            'metadata'    => 'nullable|string|max:65535',
         ];
     }
 

@@ -60,12 +60,17 @@ class Provider extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Provider.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'      => 'required|integer|exists:tenants,id',
+            'user_id'        => 'required|integer|exists:users,id',
+            'common_data_id' => 'nullable|integer|exists:common_datas,id',
+            'contact_id'     => 'nullable|integer|exists:contacts,id',
+            'address_id'     => 'nullable|integer|exists:addresses,id',
+            'terms_accepted' => 'required|boolean',
         ];
     }
 

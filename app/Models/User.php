@@ -78,13 +78,67 @@ class User extends Authenticatable
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Campos que devem ser tratados como datas imutáveis.
+     */
+    protected $dates = [
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Regras de validação para o modelo User.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'email'     => 'required|email|max:100|unique:users,email',
+            'password'  => 'required|string|min:8|max:255|confirmed',
+            'is_active' => 'boolean',
+            'logo'      => 'nullable|string|max:255',
         ];
+    }
+
+    /**
+     * Regras de validação para criação de usuário.
+     */
+    public static function createRules(): array
+    {
+        return [
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'email'     => 'required|email|max:100|unique:users,email',
+            'password'  => 'required|string|min:8|max:255|confirmed',
+            'is_active' => 'boolean',
+            'logo'      => 'nullable|string|max:255',
+        ];
+    }
+
+    /**
+     * Regras de validação para atualização de usuário.
+     */
+    public static function updateRules( int $userId ): array
+    {
+        return [
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'email'     => 'required|email|max:100|unique:users,email,' . $userId,
+            'password'  => 'nullable|string|min:8|max:255|confirmed',
+            'is_active' => 'boolean',
+            'logo'      => 'nullable|string|max:255',
+        ];
+    }
+
+    /**
+     * Validação customizada para verificar se o email é único no tenant.
+     */
+    public static function validateUniqueEmailInTenant( string $email, int $tenantId, ?int $excludeUserId = null ): bool
+    {
+        $query = static::where( 'email', $email )->where( 'tenant_id', $tenantId );
+
+        if ( $excludeUserId ) {
+            $query->where( 'id', '!=', $excludeUserId );
+        }
+
+        return !$query->exists();
     }
 
     /**
@@ -198,6 +252,33 @@ class User extends Authenticatable
     public function hasRole( string $role ): bool
     {
         return $this->getTenantScopedRoles()->where( 'name', $role )->exists();
+    }
+
+    /**
+     * Verifica se o usuário tem uma role específica em um tenant específico.
+     */
+    public function hasRoleInTenant( string $role, int $tenantId ): bool
+    {
+        return $this->roles()
+            ->wherePivot( 'tenant_id', $tenantId )
+            ->where( 'name', $role )
+            ->exists();
+    }
+
+    /**
+     * Verifica se o usuário tem múltiplas roles no tenant atual.
+     */
+    public function hasRoles( array $roles ): bool
+    {
+        return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->count() === count( $roles );
+    }
+
+    /**
+     * Verifica se o usuário tem pelo menos uma das roles especificadas no tenant atual.
+     */
+    public function hasAnyRole( array $roles ): bool
+    {
+        return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
     }
 
     /**

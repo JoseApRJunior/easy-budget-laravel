@@ -78,12 +78,25 @@ class Invoice extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo Invoice.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'           => 'required|integer|exists:tenants,id',
+            'service_id'          => 'required|integer|exists:services,id',
+            'customer_id'         => 'required|integer|exists:customers,id',
+            'invoice_statuses_id' => 'required|integer|exists:invoice_statuses,id',
+            'code'                => 'required|string|max:50|unique:invoices,code',
+            'subtotal'            => 'required|numeric|min:0|max:999999.99',
+            'discount'            => 'required|numeric|min:0|max:999999.99',
+            'total'               => 'required|numeric|min:0|max:999999.99',
+            'due_date'            => 'nullable|date|after:today',
+            'payment_method'      => 'nullable|string|max:50',
+            'payment_id'          => 'nullable|string|max:255',
+            'transaction_amount'  => 'nullable|numeric|min:0|max:999999.99',
+            'transaction_date'    => 'nullable|datetime',
+            'notes'               => 'nullable|string|max:65535',
         ];
     }
 

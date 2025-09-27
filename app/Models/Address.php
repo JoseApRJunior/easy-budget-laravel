@@ -63,14 +63,19 @@ class Address extends Model
         'updated_at'     => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo Address.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'      => 'required|integer|exists:tenants,id',
+            'address'        => 'required|string|max:255',
+            'address_number' => 'nullable|string|max:20',
+            'neighborhood'   => 'required|string|max:100',
+            'city'           => 'required|string|max:100',
+            'state'          => 'required|string|max:2',
+            'cep'            => 'required|string|max:9|regex:/^\d{5}-?\d{3}$/',
         ];
     }
 

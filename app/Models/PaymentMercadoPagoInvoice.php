@@ -86,14 +86,19 @@ class PaymentMercadoPagoInvoice extends Model
         'updated_at'         => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
     {
         return [
-
+            'payment_id'         => 'required|string|max:255',
+            'tenant_id'          => 'required|integer|exists:tenants,id',
+            'invoice_id'         => 'required|integer|exists:invoices,id',
+            'status'             => 'required|string|in:pending,approved,rejected,cancelled,refunded',
+            'payment_method'     => 'required|string|in:credit_card,debit_card,bank_transfer,ticket,pix',
+            'transaction_amount' => 'required|numeric|min:0|max:999999.99',
+            'transaction_date'   => 'nullable|datetime',
         ];
     }
 

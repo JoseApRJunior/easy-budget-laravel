@@ -83,14 +83,22 @@ class Service extends Model
         'updated_at'            => 'datetime',
     ];
 
-
-        /**
-     * Regras de validação para o modelo Plan.
+    /**
+     * Regras de validação para o modelo Service.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'             => 'required|integer|exists:tenants,id',
+            'budget_id'             => 'required|integer|exists:budgets,id',
+            'category_id'           => 'required|integer|exists:categories,id',
+            'service_statuses_id'   => 'required|integer|exists:service_statuses,id',
+            'code'                  => 'required|string|max:50|unique:services,code',
+            'description'           => 'nullable|string',
+            'discount'              => 'required|numeric|min:0|max:999999.99',
+            'total'                 => 'required|numeric|min:0|max:999999.99',
+            'due_date'              => 'nullable|date',
+            'pdf_verification_hash' => 'nullable|string|max:64',
         ];
     }
 
@@ -140,6 +148,14 @@ class Service extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany( Invoice::class);
+    }
+
+    /**
+     * Get the schedules for the Service.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany( Schedule::class);
     }
 
     /**

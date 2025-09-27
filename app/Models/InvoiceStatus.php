@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -53,7 +54,13 @@ class InvoiceStatus extends Model
     public static function businessRules(): array
     {
         return [
-
+            'name'        => 'required|string|max:100|unique:invoice_statuses,name',
+            'slug'        => 'required|string|max:50|unique:invoice_statuses,slug',
+            'description' => 'nullable|string|max:500',
+            'color'       => 'nullable|string|max:7|regex:/^#[0-9A-F]{6}$/i',
+            'icon'        => 'nullable|string|max:50',
+            'order_index' => 'nullable|integer|min:0',
+            'is_active'   => 'required|boolean',
         ];
     }
 

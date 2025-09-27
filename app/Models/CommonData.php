@@ -70,12 +70,21 @@ class CommonData extends Model
     ];
 
     /**
-     * Regras de validação para o modelo Plan.
+     * Regras de validação para o modelo CommonData.
      */
     public static function businessRules(): array
     {
         return [
-
+            'tenant_id'           => 'required|integer|exists:tenants,id',
+            'first_name'          => 'required|string|max:100',
+            'last_name'           => 'required|string|max:100',
+            'birth_date'          => 'nullable|date|before:today',
+            'cnpj'                => 'nullable|string|size:14|unique:common_datas,cnpj',
+            'cpf'                 => 'nullable|string|size:11|unique:common_datas,cpf',
+            'company_name'        => 'nullable|string|max:255',
+            'description'         => 'nullable|string|max:65535',
+            'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
+            'profession_id'       => 'nullable|integer|exists:professions,id',
         ];
     }
 
