@@ -65,7 +65,7 @@ class BudgetService extends BaseTenantService
     protected function createEntity( array $data, int $tenantId ): Model
     {
         $budget = new Budget();
-        $budget->fill( [ 
+        $budget->fill( [
             'tenant_id'   => $tenantId,
             'customer_id' => $data[ 'customer_id' ],
             'category_id' => $data[ 'category_id' ],
@@ -205,12 +205,12 @@ class BudgetService extends BaseTenantService
      */
     protected function validateForTenant( array $data, int $tenant_id, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [ 
-            'customer_id' => [ 
+        $rules = [
+            'customer_id' => [
                 'required',
                 Rule::exists( 'customers', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenant_id ) )
             ],
-            'category_id' => [ 
+            'category_id' => [
                 'required',
                 Rule::exists( 'categories', 'id' )->where( fn( $q ) => $q->where( 'tenant_id', $tenant_id ) )
             ],
@@ -247,7 +247,7 @@ class BudgetService extends BaseTenantService
             // Criar itens se presentes
             if ( isset( $data[ 'items' ] ) && is_array( $data[ 'items' ] ) ) {
                 foreach ( $data[ 'items' ] as $itemData ) {
-                    $budget->items()->create( [ 
+                    $budget->items()->create( [
                         'tenant_id'   => $tenantId,
                         'budget_id'   => $budget->id,
                         'description' => $itemData[ 'description' ],
@@ -350,7 +350,7 @@ class BudgetService extends BaseTenantService
      */
     private function isValidStatusTransition( string $currentStatus, string $newStatus ): bool
     {
-        $validTransitions = [ 
+        $validTransitions = [
             'pending'   => [ 'approved', 'rejected' ],
             'approved'  => [ 'finalized', 'completed', 'rejected' ],
             'rejected'  => [ 'pending' ],
@@ -395,14 +395,14 @@ class BudgetService extends BaseTenantService
 
         $budget->load( [ 'customer', 'category', 'items' ] );
 
-        $totals = [ 
+        $totals = [
             'subtotal'    => $budget->items->sum( fn( $i ) => $i->quantity * $i->price ) ?? 0,
             'tax'         => $budget->tax_amount ?? 0,
             'total'       => $budget->amount,
             'items_count' => $budget->items->count()
         ];
 
-        $showData = [ 
+        $showData = [
             'budget' => $budget,
             'totals' => $totals
         ];
@@ -422,23 +422,23 @@ class BudgetService extends BaseTenantService
 
         $budget->load( [ 'customer', 'category', 'items' ] );
 
-        $printData = [ 
-            'budget' => [ 
+        $printData = [
+            'budget' => [
                 'id'       => $budget->id,
                 'title'    => $budget->title ?? 'Orçamento #' . $budget->id,
                 'status'   => ucfirst( $budget->status ),
                 'customer' => $budget->customer->name ?? 'Cliente não identificado',
                 'category' => $budget->category->name ?? 'Categoria não definida'
             ],
-            'items'  => $budget->items->map( function ($item) {
-                return [ 
+            'items'  => $budget->items->map( function ( $item ) {
+                return [
                     'description' => $item->description,
                     'quantity'    => (float) $item->quantity,
                     'price'       => number_format( (float) $item->price, 2, ',', '.' ),
                     'total'       => number_format( (float) ( $item->quantity * $item->price ), 2, ',', '.' )
                 ];
             } )->toArray(),
-            'totals' => [ 
+            'totals' => [
                 'subtotal' => number_format( $budget->items->sum( fn( $i ) => $i->quantity * $i->price ) ?? 0, 2, ',', '.' ),
                 'total'    => number_format( (float) $budget->amount, 2, ',', '.' ),
                 'currency' => 'R$'
@@ -452,216 +452,200 @@ class BudgetService extends BaseTenantService
      * Cria budget com código único e logging de atividade.
      * Baseado no padrão do sistema antigo.
      */
-    public function createBudgetWithCode(array $data, int $tenantId, int $userId): ServiceResult
+    public function createBudgetWithCode( array $data, int $tenantId, int $userId ): ServiceResult
     {
-        return DB::transaction(function () use ($data, $tenantId, $userId) {
+        return DB::transaction( function () use ($data, $tenantId, $userId) {
             try {
                 // Validação
-                $validation = $this->validateForTenant($data, $tenantId);
-                if (!$validation->isSuccess()) {
+                $validation = $this->validateForTenant( $data, $tenantId );
+                if ( !$validation->isSuccess() ) {
                     return $validation;
                 }
 
                 // Gerar código único do orçamento
-                $budgetCode = $this->generateBudgetCode($tenantId);
-                $data['code'] = $budgetCode;
-                $data['user_id'] = $userId;
+                $budgetCode      = $this->generateBudgetCode( $tenantId );
+                $data[ 'code' ]    = $budgetCode;
+                $data[ 'user_id' ] = $userId;
 
                 // Criar budget
-                $budget = $this->createEntity($data, $tenantId);
-                if (!$this->saveEntity($budget)) {
-                    return ServiceResult::error(OperationStatus::ERROR, 'Falha ao salvar budget.');
+                $budget = $this->createEntity( $data, $tenantId );
+                if ( !$this->saveEntity( $budget ) ) {
+                    return ServiceResult::error( OperationStatus::ERROR, 'Falha ao salvar budget.' );
                 }
 
                 // Criar itens se presentes
-                if (isset($data['items']) && is_array($data['items'])) {
-                    $this->createBudgetItems($budget, $data['items'], $tenantId);
+                if ( isset( $data[ 'items' ] ) && is_array( $data[ 'items' ] ) ) {
+                    $this->createBudgetItems( $budget, $data[ 'items' ], $tenantId );
                 }
 
                 // Calcular totais
-                $this->calculateBudgetTotals($budget);
+                $this->calculateBudgetTotals( $budget );
 
                 // Log da atividade
-                $this->logBudgetActivity('budget_created', $budget, $userId, [
+                $this->logBudgetActivity( 'budget_created', $budget, $userId, [
                     'budget_code' => $budgetCode,
                     'customer_id' => $budget->customer_id,
-                    'amount' => $budget->amount
-                ]);
+                    'amount'      => $budget->amount
+                ] );
 
                 // Enviar notificação se configurado
-                if ($this->notificationService) {
-                    $this->notificationService->sendBudgetCreatedNotification($budget);
+                if ( $this->notificationService ) {
+                    $this->notificationService->sendBudgetCreatedNotification( $budget );
                 }
 
                 // Carregar relações
-                $budget->load(['customer', 'category', 'items', 'user']);
+                $budget->load( [ 'customer', 'category', 'items', 'user' ] );
 
-                return ServiceResult::success($budget, 'Orçamento criado com sucesso.');
+                return ServiceResult::success( $budget, 'Orçamento criado com sucesso.' );
 
-            } catch (Exception $e) {
-                Log::error('Erro ao criar orçamento', [
+            } catch ( Exception $e ) {
+                Log::error( 'Erro ao criar orçamento', [
                     'tenant_id' => $tenantId,
-                    'user_id' => $userId,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
+                    'user_id'   => $userId,
+                    'error'     => $e->getMessage(),
+                    'trace'     => $e->getTraceAsString()
+                ] );
 
                 return ServiceResult::error(
                     OperationStatus::ERROR,
                     'Erro interno ao criar orçamento: ' . $e->getMessage()
                 );
             }
-        });
+        } );
     }
 
     /**
      * Gera código único para o orçamento baseado no tenant.
      */
-    private function generateBudgetCode(int $tenantId): string
+    private function generateBudgetCode( int $tenantId ): string
     {
         $prefix = 'ORC';
-        $year = date('Y');
-        $month = date('m');
-        
+        $year   = date( 'Y' );
+        $month  = date( 'm' );
+
         // Buscar último número sequencial do mês
-        $lastBudget = $this->budgetRepository->getLastBudgetByTenantAndMonth($tenantId, $year, $month);
-        $sequence = $lastBudget ? (int) substr($lastBudget->code, -4) + 1 : 1;
-        
-        return sprintf('%s%s%s%04d', $prefix, $year, $month, $sequence);
+        $lastBudget = $this->budgetRepository->getLastBudgetByTenantAndMonth( $tenantId, $year, $month );
+        $sequence   = $lastBudget ? (int) substr( $lastBudget->code, -4 ) + 1 : 1;
+
+        return sprintf( '%s%s%s%04d', $prefix, $year, $month, $sequence );
     }
 
     /**
      * Cria itens do orçamento.
      */
-    private function createBudgetItems(Budget $budget, array $items, int $tenantId): void
+    private function createBudgetItems( Budget $budget, array $items, int $tenantId ): void
     {
-        foreach ($items as $itemData) {
-            $budget->items()->create([
-                'tenant_id' => $tenantId,
-                'budget_id' => $budget->id,
-                'description' => $itemData['description'],
-                'quantity' => $itemData['quantity'],
-                'price' => $itemData['price'],
-                'total' => $itemData['quantity'] * $itemData['price'],
-            ]);
+        foreach ( $items as $itemData ) {
+            $budget->items()->create( [
+                'tenant_id'   => $tenantId,
+                'budget_id'   => $budget->id,
+                'description' => $itemData[ 'description' ],
+                'quantity'    => $itemData[ 'quantity' ],
+                'price'       => $itemData[ 'price' ],
+                'total'       => $itemData[ 'quantity' ] * $itemData[ 'price' ],
+            ] );
         }
     }
 
     /**
      * Calcula totais do orçamento.
      */
-    private function calculateBudgetTotals(Budget $budget): void
+    private function calculateBudgetTotals( Budget $budget ): void
     {
-        $subtotal = $budget->items()->sum(DB::raw('quantity * price'));
-        $discount = $budget->discount_percentage ? ($subtotal * $budget->discount_percentage / 100) : 0;
-        $total = $subtotal - $discount;
+        $subtotal = $budget->items()->sum( DB::raw( 'quantity * price' ) );
+        $discount = $budget->discount_percentage ? ( $subtotal * $budget->discount_percentage / 100 ) : 0;
+        $total    = $subtotal - $discount;
 
-        $budget->update([
-            'subtotal' => $subtotal,
+        $budget->update( [
+            'subtotal'        => $subtotal,
             'discount_amount' => $discount,
-            'total' => $total,
-        ]);
+            'total'           => $total,
+        ] );
     }
 
     /**
      * Log de atividade do orçamento.
      */
-    private function logBudgetActivity(string $action, Budget $budget, int $userId, array $details = []): void
+    private function logBudgetActivity( string $action, Budget $budget, int $userId, array $details = [] ): void
     {
-        $this->activityService->create([
-            'tenant_id' => $budget->tenant_id,
-            'user_id' => $userId,
-            'action' => $action,
+        $this->activityService->create( [
+            'tenant_id'   => $budget->tenant_id,
+            'user_id'     => $userId,
+            'action'      => $action,
             'entity_type' => 'Budget',
-            'entity_id' => $budget->id,
-            'details' => array_merge([
+            'entity_id'   => $budget->id,
+            'details'     => array_merge( [
                 'budget_code' => $budget->code,
-                'status' => $budget->status,
-            ], $details),
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+                'status'      => $budget->status,
+            ], $details ),
+            'ip_address'  => request()->ip(),
+            'user_agent'  => request()->userAgent(),
+        ] );
     }
 
     /**
      * Atualiza status do orçamento com validações e logging.
      */
-    public function updateBudgetStatus(int $budgetId, string $newStatus, int $tenantId, int $userId, ?string $reason = null): ServiceResult
+    public function updateBudgetStatus( int $budgetId, string $newStatus, int $tenantId, int $userId, ?string $reason = null ): ServiceResult
     {
-        return DB::transaction(function () use ($budgetId, $newStatus, $tenantId, $userId, $reason) {
-            $budget = $this->findEntityByIdAndTenantId($budgetId, $tenantId);
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento não encontrado.');
+        return DB::transaction( function () use ($budgetId, $newStatus, $tenantId, $userId, $reason) {
+            $budget = $this->findEntityByIdAndTenantId( $budgetId, $tenantId );
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento não encontrado.' );
             }
 
             // Validar transição de status
-            if (!$this->isValidStatusTransition($budget->status, $newStatus)) {
+            if ( !$this->isValidStatusTransition( $budget->status, $newStatus ) ) {
                 return ServiceResult::invalidData(
-                    "Transição de status inválida: {$budget->status} -> {$newStatus}"
+                    "Transição de status inválida: {$budget->status} -> {$newStatus}",
                 );
             }
 
-            $oldStatus = $budget->status;
-            $budget->status = $newStatus;
+            $oldStatus                 = $budget->status;
+            $budget->status            = $newStatus;
             $budget->status_updated_at = now();
             $budget->status_updated_by = $userId;
 
-            if (!$this->saveEntity($budget)) {
-                return ServiceResult::error(OperationStatus::ERROR, 'Falha ao atualizar status.');
+            if ( !$this->saveEntity( $budget ) ) {
+                return ServiceResult::error( OperationStatus::ERROR, 'Falha ao atualizar status.' );
             }
 
             // Log da atividade
-            $this->logBudgetActivity('status_changed', $budget, $userId, [
+            $this->logBudgetActivity( 'status_changed', $budget, $userId, [
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
-                'reason' => $reason,
-            ]);
+                'reason'     => $reason,
+            ] );
 
             // Notificação de mudança de status
-            if ($this->notificationService) {
-                $this->notificationService->sendBudgetStatusChangedNotification($budget, $oldStatus);
+            if ( $this->notificationService ) {
+                $this->notificationService->sendBudgetStatusChangedNotification( $budget, $oldStatus );
             }
 
-            return ServiceResult::success($budget, 'Status atualizado com sucesso.');
-    });
-}
-
-/**
- * Valida se a transição de status é permitida.
- */
-private function isValidStatusTransition(string $currentStatus, string $newStatus): bool
-{
-    $allowedTransitions = [
-        'pending' => ['approved', 'rejected'],
-        'approved' => ['completed', 'rejected'],
-        'rejected' => ['pending'],
-        'completed' => ['finalized'],
-        'finalized' => [], // Status final
-    ];
-
-    return in_array($newStatus, $allowedTransitions[$currentStatus] ?? []);
-}
+            return ServiceResult::success( $budget, 'Status atualizado com sucesso.' );
+        } );
+    }
 
     /**
      * Busca orçamentos com filtros avançados baseados no sistema antigo.
      */
-    public function getBudgetFullById(int $budgetId, int $tenantId): ServiceResult
+    public function getBudgetFullById( int $budgetId, int $tenantId ): ServiceResult
     {
         try {
-            $budget = $this->budgetRepository->getBudgetWithFullDetails($budgetId, $tenantId);
-            
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento não encontrado.');
+            $budget = $this->budgetRepository->getBudgetWithFullDetails( $budgetId, $tenantId );
+
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento não encontrado.' );
             }
 
-            return ServiceResult::success($budget, 'Orçamento recuperado com detalhes completos.');
+            return ServiceResult::success( $budget, 'Orçamento recuperado com detalhes completos.' );
 
-        } catch (Exception $e) {
-            Log::error('Erro ao buscar orçamento completo', [
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao buscar orçamento completo', [
                 'budget_id' => $budgetId,
                 'tenant_id' => $tenantId,
-                'error' => $e->getMessage()
-            ]);
+                'error'     => $e->getMessage()
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -673,47 +657,48 @@ private function isValidStatusTransition(string $currentStatus, string $newStatu
     /**
      * Duplica orçamento existente.
      */
-    public function duplicateBudget(int $budgetId, int $tenantId, int $userId, array $overrides = []): ServiceResult
+    public function duplicateBudget( int $budgetId, int $tenantId, int $userId, array $overrides = [] ): ServiceResult
     {
-        return DB::transaction(function () use ($budgetId, $tenantId, $userId, $overrides) {
-            $originalBudget = $this->findEntityByIdAndTenantId($budgetId, $tenantId);
-            if (!$originalBudget) {
-                return ServiceResult::notFound('Orçamento original não encontrado.');
+        return DB::transaction( function () use ($budgetId, $tenantId, $userId, $overrides) {
+            $originalBudget = $this->findEntityByIdAndTenantId( $budgetId, $tenantId );
+            if ( !$originalBudget ) {
+                return ServiceResult::notFound( 'Orçamento original não encontrado.' );
             }
 
             // Preparar dados para duplicação
-            $budgetData = array_merge([
-                'customer_id' => $originalBudget->customer_id,
-                'category_id' => $originalBudget->category_id,
-                'title' => 'Cópia de ' . $originalBudget->title,
-                'description' => $originalBudget->description,
+            $budgetData = array_merge( [
+                'customer_id'         => $originalBudget->customer_id,
+                'category_id'         => $originalBudget->category_id,
+                'title'               => 'Cópia de ' . $originalBudget->title,
+                'description'         => $originalBudget->description,
                 'discount_percentage' => $originalBudget->discount_percentage,
-                'status' => 'pending',
-            ], $overrides);
+                'status'              => 'pending',
+            ], $overrides );
 
             // Duplicar itens
-            $items = $originalBudget->items->map(function ($item) {
+            $items = $originalBudget->items->map( function ( $item ) {
                 return [
                     'description' => $item->description,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
+                    'quantity'    => $item->quantity,
+                    'price'       => $item->price,
                 ];
-            })->toArray();
+            } )->toArray();
 
-            $budgetData['items'] = $items;
+            $budgetData[ 'items' ] = $items;
 
             // Criar novo orçamento
-            $result = $this->createBudgetWithCode($budgetData, $tenantId, $userId);
+            $result = $this->createBudgetWithCode( $budgetData, $tenantId, $userId );
 
-            if ($result->isSuccess()) {
+            if ( $result->isSuccess() ) {
                 // Log da duplicação
-                $this->logBudgetActivity('budget_duplicated', $result->getData(), $userId, [
+                $this->logBudgetActivity( 'budget_duplicated', $result->getData(), $userId, [
                     'original_budget_id' => $budgetId,
-                    'original_code' => $originalBudget->code,
-                ]);
+                    'original_code'      => $originalBudget->code,
+                ] );
             }
 
             return $result;
-        });
+        } );
     }
+
 }
