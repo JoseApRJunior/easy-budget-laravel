@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -37,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton( \App\Services\PaymentMercadoPagoPlanService::class);
         $this->app->singleton( \App\Services\MerchantOrderMercadoPagoService::class);
         $this->app->singleton( \App\Services\InvoiceStatusService::class);
+        $this->app->singleton( \App\Helpers\BladeHelper::class);
 
         // TODO: Implement SupportService, AreaOfActivityService and ProfessionService classes
         // when needed for full functionality
@@ -50,12 +52,6 @@ class AppServiceProvider extends ServiceProvider
         // Registrar services utilitários como singletons
         $this->app->singleton( \App\Services\SharedService::class);
 
-        // Bind interfaces específicas do MercadoPago
-        $this->app->bind( \App\Interfaces\MercadoPagoServiceInterface::class, \App\Services\MercadoPagoService::class);
-        $this->app->bind( \App\Interfaces\PaymentMercadoPagoInvoiceServiceInterface::class, \App\Services\PaymentMercadoPagoInvoiceService::class);
-        $this->app->bind( \App\Interfaces\PaymentMercadoPagoPlanServiceInterface::class, \App\Services\PaymentMercadoPagoPlanService::class);
-        $this->app->bind( \App\Interfaces\MerchantOrderMercadoPagoServiceInterface::class, \App\Services\MerchantOrderMercadoPagoService::class);
-
     }
 
     /**
@@ -63,7 +59,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->registerCustomBladeDirectives();
+    }
+
+    /**
+     * Register custom Blade directives.
+     */
+    protected function registerCustomBladeDirectives(): void
+    {
+        // Diretiva para alertas do sistema
+        Blade::directive( 'alert', function ( $expression ) {
+            return "<?php echo app('App\Helpers\BladeHelper')->alert({$expression}); ?>";
+        } );
+
+        // Diretiva para verificação de recursos do plano
+        Blade::directive( 'checkFeature', function ( $expression ) {
+            return "<?php echo app('App\Helpers\BladeHelper')->checkFeature({$expression}); ?>";
+        } );
     }
 
 }

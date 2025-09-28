@@ -1,93 +1,79 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-100">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield( 'title', 'Easy Budget - Sistema de Orçamentos' )</title>
+
+    <title>@yield( 'title', config( 'app.name', 'Easy Budget' ) )</title>
 
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Estilos customizados -->
-    @stack( 'styles' )
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link href="{{ asset( 'css/app.css' ) }}" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
 
-<body>
-    <!-- Navigation -->
-    @include( 'components.navigation' )
+<body class="d-flex flex-column h-100">
+    @include( 'layouts.navigation' )
 
-    <!-- Main Content -->
-    <main class="container-fluid py-4">
-        @if ( session( 'success' ) )
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                {{ session( 'success' ) }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if ( session( 'error' ) )
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                {{ session( 'error' ) }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if ( $errors->any() )
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Por favor, corrija os seguintes erros:</strong>
-                <ul class="mb-0 mt-2">
-                    @foreach ( $errors->all() as $error )
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+    <main class="flex-shrink-0">
+        @include( 'components.alerts' )
 
         @yield( 'content' )
     </main>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @include( 'layouts.footer' )
 
-    <!-- Scripts customizados -->
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core JS -->
+    <script src="{{ asset( 'js/modules/utils.js' ) }}" type="module"></script>
+    <script src="{{ asset( 'js/main.js' ) }}" type="module"></script>
+    <script src="{{ asset( 'js/alert/alert.js' ) }}"></script>
+
     @stack( 'scripts' )
 
-    <!-- Script para confirmação de exclusão -->
     <script>
-        function confirmDelete( url, itemName = 'este item' ) {
-            if ( confirm( `Tem certeza que deseja excluir ${itemName}? Esta ação não pode ser desfeita.` ) ) {
-                // Criar formulário para POST request com CSRF token
-                const form = document.createElement( 'form' );
-                form.method = 'POST';
-                form.action = url;
+        // Configuração global para AJAX
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Configura o token CSRF para todas as requisições AJAX
+            const csrfToken = document.querySelector( 'meta[name="csrf-token"]' ).content;
 
-                const csrfInput = document.createElement( 'input' );
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = document.querySelector( 'meta[name="csrf-token"]' ).getAttribute( 'content' );
-
-                const methodInput = document.createElement( 'input' );
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-
-                form.appendChild( csrfInput );
-                form.appendChild( methodInput );
-                document.body.appendChild( form );
-                form.submit();
-            }
-        }
+            // Adiciona o token em todas as requisições fetch
+            const originalFetch = window.fetch;
+            window.fetch = function () {
+                let [resource, config] = arguments;
+                if ( config === undefined ) {
+                    config = {};
+                }
+                if ( config.headers === undefined ) {
+                    config.headers = {};
+                }
+                config.headers['X-CSRF-TOKEN'] = csrfToken;
+                return originalFetch( resource, config );
+            };
+        } );
     </script>
 
-    @yield( 'page-scripts' )
+    @yield( 'custom_scripts' )
 </body>
 
 </html>
