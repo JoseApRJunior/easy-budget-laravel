@@ -23,14 +23,6 @@ header {
    z-index: var(--z-sticky);
 }
 
-/* Main Content */
-.main-content {
-   min-height: calc(100vh - 120px);
-   padding: var(--spacing-lg);
-   background-color: var(--bg-color);
-   color: var(--text-color);
-}
-
 /* Combine os estilos do logo */
 .logo-img {
    /* Base styles */
@@ -138,6 +130,17 @@ header {
 }
 .navbar {
    padding: 0;
+}
+
+.navbar-collapse {
+   display: flex;
+   flex-basis: auto;
+   flex-grow: 1;
+   align-items: center;
+}
+
+.navbar-collapse.show {
+   display: flex !important;
 }
 
 .navbar-brand {
@@ -548,20 +551,33 @@ td .form-control {
 .theme-toggle {
    padding: 0.5rem;
    border: none;
-   background: transparent;
+   border-radius: 0.25rem;
    display: flex;
    align-items: center;
    justify-content: center;
    cursor: pointer;
-   color: inherit;
+   transition: all var(--transition-speed) var(--transition-timing);
+   position: relative;
+   z-index: 1000;
 }
 
 .nav-item .bi {
    font-size: 1rem;
 }
 
-.theme-toggle:hover {
-   transform: rotate(15deg);
+.theme-toggle i {
+   font-size: 1.2rem;
+   display: inline-block;
+}
+
+.theme-light .theme-dark-icon,
+.theme-dark .theme-light-icon {
+   display: none;
+}
+
+.theme-light .theme-light-icon,
+.theme-dark .theme-dark-icon {
+   display: inline-block;
 }
 
 /* Adições para os cards */
@@ -906,6 +922,11 @@ main .main-container {
       background-color: var(--primary-color);
       padding: var(--spacing-md);
       margin: var(--spacing-sm) calc(var(--spacing-md) * -1);
+      display: block !important;
+   }
+
+   .navbar-collapse.show {
+      display: block !important;
    }
 
    .nav-link {

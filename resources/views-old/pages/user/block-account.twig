@@ -1,0 +1,35 @@
+{% extends 'layout.twig' %}
+
+
+{% block content %}
+<div class="container-fluid d-flex align-items-center justify-content-center min-vh-75 py-1 py-md-5">
+	<div class="row justify-content-center w-100">
+		<div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+			<div class="card shadow-lg">
+				<div class="card-body p-5 text-center">
+					<h2 class="mb-4 text-primary">Easy Budget</h2>
+					{% if blockAccount %}
+
+					<div class="mb-4">
+						<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+					</div>
+					<h3 class="mb-4 text-success">Conta Bloqueada!</h3>
+					<p class="mb-4">Sua conta foi bloqueada com sucesso.</p>
+					<a href="/support" class="btn btn-primary btn-lg mb-2">Entre em contato com Suporte</a>
+					{% else %}
+					<div class="mb-4">
+						<i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+					</div>
+					<h3 class="mb-4 text-danger">Falha no bloqueio</h3>
+					<p class="mb-4">Desculpe, não foi possível bloquear sua conta.
+						{{message}}</p>
+					<div class="d-grid gap-2">
+						<a href="/support" class="btn btn-primary btn-lg mb-2">Entre em contato com Suporte</a>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

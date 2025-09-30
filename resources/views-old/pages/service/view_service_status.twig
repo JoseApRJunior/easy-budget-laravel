@@ -1,0 +1,376 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+<div class="container-fluid py-1">
+  <!-- Cabeçalho da página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="bi bi-tools me-2"></i>Detalhes do Serviço
+    </h1>
+  </div>
+
+  <!-- Informações do Serviço -->
+  <div class="row g-4 mb-4">
+    <!-- Card de Informações Básicas -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle me-2"></i>Informações do Serviço
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Código:</div>
+                <div class="fw-semibold">{{ service.code }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Data de Criação:</div>
+                <div class="fw-semibold">{{ service.created_at|date('d/m/Y H:i:s') }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Cliente:</div>
+                <div class="fw-semibold">{{ service.customer_name }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Orçamento:</div>
+                <div class="fw-semibold">
+                  {{ service.budget_code }}
+                  {{budget|status_badge|raw}}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Categoria:</div>
+                <div class="fw-semibold">{{ service.category_name }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex">
+                <div class="text-muted me-2">Vencimento:</div>
+                <div
+                  class="fw-semibold {% if service.due_date|date('Y-m-d') < 'now'|date('Y-m-d') %}text-danger{% endif %}">
+                  {{ service.due_date|date('d/m/Y') }}
+                </div>
+                div
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="d-flex">
+                <div class="text-muted me-2">Status:</div>
+                <div>
+                  {{service|status_badge|raw}}
+                </div>
+              </div>
+            </div>
+            <!-- Detalhes do Agendamento -->
+            {% if latest_schedule %}
+            <div class="col-12 mt-3">
+              <div class="card ">
+                <div class="card-header ">
+                  <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Detalhes do Agendamento</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="text-muted small">Início do Serviço</div>
+                      <div class="fw-semibold">{{ latest_schedule.start_date_time|date('d/m/Y H:i') }}</div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="text-muted small">Local</div>
+                      <div class="fw-semibold">{{ latest_schedule.location|default('Não informado') }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="col-12 mt-3">
+              <hr>
+            </div>
+            <div class="col-12">
+              <div class="text-muted mb-2">Descrição Original do Serviço:</div>
+              <div class="p-3 rounded bg-light">{{ service.description|nl2br }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de Resumo Financeiro -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-currency-dollar me-2"></i>Resumo Financeiro
+          </h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush small mb-3">
+            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">
+              Total Bruto:
+              {% if service.status_slug == 'CANCELLED' %}<s class="text-danger fw-bold">R$ {{
+                service.total|number_format(2, ',', '.') }}</s>
+              {% elseif service.status_slug == 'PARTIAL' %}<span class="text-danger fw-bold">R$ {{
+                service.total|number_format(2, ',', '.') }}</span>
+              {% else %}<span class="text-success fw-bold">R$ {{ service.total|number_format(2, ',', '.')
+                }}</span>
+              {% endif %}
+            </li>
+            {% if service.discount|default(0) > 0 %}
+            {% set service_discount = service.discount|default(0) %}
+            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">
+              Desconto:
+              {% if service.status_slug == 'CANCELLED' %}<s class="text-danger fw-bold">- R$ {{
+                service_discount|number_format(2, ',', '.') }}</s>
+              {% else %}<span class="text-danger fw-bold">- R$ {{
+                service_discount|number_format(2, ',', '.') }}</span>
+              {% endif %}
+            </li>
+            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">
+              <strong>Total Líquido:</strong>
+              {% set service_net_total = service.total - service_discount %}
+              {% if service.status_slug == 'CANCELLED' %}<s class="text-danger fw-bold">R$ {{
+                service_net_total|number_format(2, ',', '.') }}</s>
+              {% else %}<strong class="text-success">R$ {{ service_net_total|number_format(2, ',', '.')
+                }}</strong>
+              {% endif %}
+            </li>
+            {% endif %}
+          </ul>
+          {% if service.status_slug == 'PARTIAL' %}
+          <div class="alert alert-warning p-2 small mb-3">
+            <strong>Atenção:</strong> O valor final a ser faturado será calculado com base no trabalho realizado.
+          </div>
+          {% endif %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted">Quantidade de Itens:</div>
+            <div class="fw-semibold">{{ serviceItems|length }}</div>
+          </div>
+
+          <!-- Barra de progresso do serviço -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted">Progresso do serviço:</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+              <div class="progress-bar bg-{{ service.status_slug|status_color_class }}" role="progressbar"
+                style="width: {{ service.status_slug|status_progress }}%;"
+                aria-valuenow="{{ service.status_slug|status_progress }}" aria-valuemin="0" aria-valuemax="100"
+                data-bs-toggle="tooltip" title="{{ service.status_name }}">
+              </div>
+            </div>
+            <small class="text-muted mt-1 d-block">
+              {% if service.status_slug == 'SCHEDULING' %}
+              Serviço aguardando agendamento
+              {% elseif service.status_slug == 'SCHEDULED' %}
+              Serviço agendado, aguardando início
+              {% elseif service.status_slug == 'PREPARING' %}
+              Preparando para execução
+              {% elseif service.status_slug == 'IN_PROGRESS' %}
+              Serviço em andamento
+              {% elseif service.status_slug == 'ON_HOLD' %}
+              Serviço temporariamente em espera
+              {% elseif service.status_slug == 'COMPLETED' %}
+              Serviço concluído com sucesso
+              {% elseif service.status_slug == 'PARTIAL' %}
+              Serviço parcialmente concluído
+              {% elseif service.status_slug == 'CANCELLED' %}
+              Serviço cancelado
+              {% elseif service.status_slug == 'NOT_PERFORMED' %}
+              Serviço não realizado
+              {% endif %}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Itens do Serviço -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-list-check me-2"></i>Itens do Serviço
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table id="results-table" class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 5%">#</th>
+              <th style="width: 10%">Código</th>
+              <th style="width: 40%">Produto</th>
+              <th style="width: 15%">Valor Unitário</th>
+              <th style="width: 10%">Quantidade</th>
+              <th style="width: 20%">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {# Será preenchido via JavaScript #}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="text-end fw-bold">Total Líquido dos Itens de Serviço:</td>
+              {% if service.status_slug == 'PARTIAL' %}
+              <td class="fw-bold text-muted"><s class="text-danger">R$ {{ service.total|number_format(2, ',', '.')
+                  }}</s></td>
+              {% else %}
+              <td class="fw-bold text-success">R$ {{ service.total|number_format(2, ',', '.') }}</td>
+              {% endif %}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {# Paginação #}
+    {% include 'partials/components/table_paginator.twig' %}
+  </div>
+
+  <!-- Botões de Ação -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="/" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+    <small class="text-muted">
+      Última atualização: {{ service.updated_at|date('d/m/Y H:i') }}
+    </small>
+    {# Botões de Ação para o Serviço - Apenas se não for um status final #}
+    <div class="d-flex gap-2">
+      {%if service.status_slug not in ['CANCELLED', 'COMPLETED', 'PARTIAL', 'NOT_PERFORMED', 'EXPIRED'] %}
+      <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionModal"
+        data-action="CANCELLED" data-title="Cancelar Serviço" data-button-class="btn-danger"
+        data-message="Tem certeza que deseja cancelar o serviço {{ service.code }}?">
+        <i class="bi bi-x-circle me-2"></i>Cancelar
+      </button>
+      {%endif %}
+      <a href="/services/print/code/{{ service.code }}/token/{{token}}" class="btn btn-outline-primary" target="_blank">
+        <i class="bi bi-printer me-2"></i>Imprimir
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reutilizável para Ações de Serviço -->
+<div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="actionModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="actionModalMessage"></p>
+        <p class="text-danger mt-2" id="actionModalWarning" style="display: none;">
+          <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+        <form id="actionForm" action="" method="POST">
+          {{ csrf.field|raw }}
+          <input type="hidden" name="token" value="{{ token }}">
+          <input type="hidden" name="service_id" value="{{ service.id }}">
+          <input type="hidden" name="service_code" value="{{ service.code }}">
+          <input type="hidden" name="current_status_id" value="{{ service.status_id }}">
+          <input type="hidden" name="current_status_name" value="{{ service.status_name }}">
+          <input type="hidden" name="current_status_slug" value="{{ service.status_slug }}">
+          <input type="hidden" name="action" id="formActionInput" value="">
+          <button type="submit" class="btn" id="actionConfirmButton">Confirmar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<script src="/assets/js/modules/table-paginator.js"></script>
+
+<script>
+  document.addEventListener( 'DOMContentLoaded', function () {
+    const actionModal = document.getElementById( 'actionModal' );
+    const scheduleModal = document.getElementById( 'scheduleModal' );
+    let serviceItems = JSON.parse( '{{ serviceItems | json_encode | e("js") }}' );
+
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call( document.querySelectorAll( '[data-bs-toggle="tooltip"]' ) )
+    var tooltipList = tooltipTriggerList.map( function ( tooltipTriggerEl ) {
+      return new bootstrap.Tooltip( tooltipTriggerEl )
+    } );
+
+    // Adicionar índices aos itens
+    serviceItems = serviceItems.map( ( item, index ) => ( {
+      ...item,
+      index: index
+    } ) );
+    // Função para formatar cada linha da tabela de serviços
+    function formatServiceRow( item ) {
+      return `
+             <tr>
+                <td>${item.index + 1}</td>
+                <td>${item.code}</td>
+                <td>${item.name}</td>
+                <td>R$ ${parseFloat( item.unit_value ).toLocaleString( 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 } )}</td>
+                <td>${item.quantity}</td>
+                <td>R$ ${( parseFloat( item.unit_value ) * item.quantity ).toLocaleString( 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 } )}</td>
+            </tr>`;
+    }
+
+    // Inicializa o paginador de tabela apenas se houver itens
+    if ( serviceItems.length > 0 ) {
+      const servicePaginator = new TablePaginator( {
+        tableId: "results-table",
+        paginationId: "pagination",
+        infoId: "pagination-info",
+        itemsPerPage: 5,
+        colSpan: 6,
+        formatRow: formatServiceRow
+      } );
+
+      // Atualiza a tabela com os dados extraídos
+      servicePaginator.updateTable( serviceItems );
+    }
+
+    // Lógica para o modal de ação reutilizável
+    if ( actionModal ) {
+      actionModal.addEventListener( 'show.bs.modal', function ( event ) {
+        const button = event.relatedTarget;
+        const action = button.getAttribute( 'data-action' );
+        const title = button.getAttribute( 'data-title' );
+        const message = button.getAttribute( 'data-message' );
+        const buttonClass = button.getAttribute( 'data-button-class' ) || 'btn-primary';
+
+        const modalTitle = actionModal.querySelector( '.modal-title' );
+        const modalMessage = actionModal.querySelector( '#actionModalMessage' );
+        const formActionInput = actionModal.querySelector( '#formActionInput' );
+        const actionForm = actionModal.querySelector( '#actionForm' );
+        const confirmButton = actionModal.querySelector( '#actionConfirmButton' );
+        const modalWarning = actionModal.querySelector( '#actionModalWarning' );
+
+        modalTitle.textContent = title;
+        modalMessage.innerHTML = message; // Usar innerHTML se a mensagem contiver HTML
+        formActionInput.value = action; // Define o valor do input hidden 'action' no formulário
+        actionForm.action = `/services/choose-service-status`; // Rota base para mudança de status
+        modalWarning.style.display = ( action === 'CANCELLED' || action === 'DRAFT' ) ? 'block' : 'none';
+
+        confirmButton.className = 'btn ' + buttonClass;
+      } );
+    }
+  } );
+</script>
+{% endblock %}
