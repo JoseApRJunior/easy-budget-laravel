@@ -1,26 +1,37 @@
 import laravel from "laravel-vite-plugin";
+import { defineConfig } from "vite";
 
-export default {
+export default defineConfig({
    plugins: [
       laravel({
-         input: [
-            "resources/css/variables.css",
-            "resources/css/layout.css",
-            "resources/css/alerts.css",
-            "resources/js/app.js",
+         input: ["resources/css/app.css", "resources/js/app.js"],
+         refresh: [
+            "resources/views/**/*.blade.php",
+            "resources/js/**/*.js",
+            "resources/css/**/*.css",
          ],
-         refresh: true,
       }),
    ],
+   resolve: {
+      alias: {
+         "@": "/resources/js",
+         "@css": "/resources/css",
+      },
+   },
+   build: {
+      manifest: "manifest.json",
+      outDir: "public/build",
+      rollupOptions: {
+         output: {
+            manualChunks: {
+               alpine: ["alpinejs"],
+            },
+         },
+      },
+   },
    server: {
-      host: "localhost",
-      port: 5173,
-      cors: true,
       hmr: {
          host: "localhost",
       },
    },
-   build: {
-      outDir: "public/build",
-   },
-};
+});

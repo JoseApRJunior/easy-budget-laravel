@@ -1,53 +1,46 @@
-{{--
-Layout principal da aplicação Easy Budget
-Convertido de layout.twig para Blade
---}}
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-100">
+<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" class="h-full">
 
-@include( 'layouts.partials.head' )
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<body class="d-flex flex-column h-100">
-    @include( 'layouts.partials.header' )
+    <title>{{ config( 'app.name', 'Easy Budget' ) }} - @yield( 'title', 'Dashboard' )</title>
 
-    <main class="flex-shrink-0">
-        @include( 'layouts.partials.alerts' )
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
 
-        @yield( 'content' )
-    </main> @include( 'layouts.partials.footer' ) <!-- Scripts -->
-    {{-- Scripts --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-    {{-- Vite Assets - Abordagem Oficial Laravel/Vite --}}
-    @vite( 'resources/js/app.js' )
+    <!-- Styles -->
+    @vite( [ 'resources/css/app.css', 'resources/js/app.js' ] )
+    @stack( 'styles' )
+</head>
 
-    {{-- Scripts específicos que ainda usam asset() --}}
+<body class="h-full bg-gray-50 font-sans antialiased">
+    <div class="min-h-full">
+        <!-- Header -->
+        <x-navigation.header />
 
-    @yield( 'scripts' )
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Flash Messages -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <x-flash-messages />
+            </div>
 
-    <script>
-        // Configuração global para AJAX
-        document.addEventListener( 'DOMContentLoaded', function () {
-            // Configura o token CSRF para todas as requisições AJAX
-            const csrfToken = document.querySelector( 'meta[name="csrf-token"]' ).content;
+            <!-- Page Content -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                              @yield( 'content' )
+            </div>
+        </main>
 
-            // Adiciona o token em todas as requisições fetch
-            const originalFetch = window.fetch;
-            window.fetch = function () {
-                let [resource, config] = arguments;
-                if ( config === undefined ) {
-                    config = {};
-                }
-                if ( config.headers === undefined ) {
-                    config.headers = {};
-                }
-                config.headers['X-CSRF-TOKEN'] = csrfToken;
-                return originalFetch( resource, config );
-            };
+        <!-- Footer -->
+        <x-navigation.footer />
+         </div>
 
-        } );
-    </script>
-</body>
-
-</html>
+        @stack( 'scripts' )
+        </body> </html>

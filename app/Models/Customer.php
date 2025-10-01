@@ -142,6 +142,261 @@ class Customer extends Model
     }
 
     /**
+     * Get the addresses for the Customer.
+     */
+    public function addresses()
+    {
+        return $this->hasMany( CustomerAddress::class);
+    }
+
+    /**
+     * Get the primary address for the Customer.
+     */
+    public function primaryAddress()
+    {
+        return $this->hasOne( CustomerAddress::class)->where( 'is_primary', true );
+    }
+
+    /**
+     * Get the contacts for the Customer.
+     */
+    public function contacts()
+    {
+        return $this->hasMany( CustomerContact::class);
+    }
+
+    /**
+     * Get the primary contacts for the Customer.
+     */
+    public function primaryContacts()
+    {
+        return $this->hasMany( CustomerContact::class)->where( 'is_primary', true );
+    }
+
+    /**
+     * Get the interactions for the Customer.
+     */
+    public function interactions()
+    {
+        return $this->hasMany( CustomerInteraction::class);
+    }
+
+    /**
+     * Get the tags for the Customer.
+     */
+    public function tags()
+    {
+        return $this->belongsToMany( CustomerTag::class, 'customer_tag_assignments' );
+    }
+
+    /**
+     * Get the customer's primary email.
+     */
+    public function getPrimaryEmailAttribute(): ?string
+    {
+        $primaryContact = $this->contacts()->where( 'type', 'email' )->where( 'is_primary', true )->first();
+        return $primaryContact?->value;
+    }
+
+    /**
+     * Get the customer's primary phone.
+     */
+    public function getPrimaryPhoneAttribute(): ?string
+    {
+        $primaryContact = $this->contacts()->where( 'type', 'phone' )->where( 'is_primary', true )->first();
+        return $primaryContact?->value;
+    }
+
+    /**
+     * Get the customer's last interaction.
+     */
+    public function getLastInteractionAttribute(): ?CustomerInteraction
+    {
+        return $this->interactions()->latest( 'interaction_date' )->first();
+    }
+
+    /**
+     * Get the customer's interaction count.
+     */
+    public function getInteractionCountAttribute(): int
+    {
+        return $this->interactions()->count();
+    }
+
+    /**
+     * Get the customer's tag count.
+     */
+    public function getTagCountAttribute(): int
+    {
+        return $this->tags()->count();
+    }
+
+    /**
+     * Check if customer has overdue interactions.
+     */
+    public function hasOverdueInteractions(): bool
+    {
+        return $this->interactions()
+            ->whereNotNull( 'next_action_date' )
+            ->where( 'next_action_date', '<', now() )
+            ->where( function ( $query ) {
+                $query->whereNull( 'outcome' )
+                    ->orWhere( 'outcome', '!=', 'completed' );
+            } )
+            ->exists();
+    }
+
+    /**
+     * Get pending follow-ups for the customer.
+     */
+    public function getPendingFollowUpsAttribute()
+    {
+        return $this->interactions()
+            ->whereNotNull( 'next_action' )
+            ->whereNotNull( 'next_action_date' )
+            ->where( 'next_action_date', '>=', now() )
+            ->where( function ( $query ) {
+                $query->whereNull( 'outcome' )
+                    ->orWhere( 'outcome', '!=', 'completed' );
+            } )
+            ->get();
+    }
+
+    /**
+     * Add a tag to the customer.
+     */
+    public function addTag( CustomerTag $tag ): void
+    {
+        if ( !$this->tags()->where( 'customer_tag_id', $tag->id )->exists() ) {
+            $this->tags()->attach( $tag->id );
+        }
+    }
+
+    /**
+     * Remove a tag from the customer.
+     */
+    public function removeTag( CustomerTag $tag ): void
+    {
+        $this->tags()->detach( $tag->id );
+    }
+
+    /**
+     * Sync tags for the customer.
+     */
+    public function syncTags( array $tagIds ): void
+    {
+        $this->tags()->sync( $tagIds );
+    }
+
+    /**
+     * Get the customer's status label.
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match ( $this->status ) {
+            self::STATUS_ACTIVE   => 'Ativo',
+            self::STATUS_INACTIVE => 'Inativo',
+            self::STATUS_DELETED  => 'Excluído',
+            default               => ucfirst( $this->status ),
+        };
+    }
+
+    /**
+     * Get the customer's priority level label.
+     */
+    public function getPriorityLevelLabelAttribute(): string
+    {
+        return match ( $this->priority_level ?? 'normal' ) {
+            'normal'  => 'Normal',
+            'vip'     => 'VIP',
+            'premium' => 'Premium',
+            default   => ucfirst( $this->priority_level ),
+        };
+    }
+
+    /**
+     * Get the customer's type label.
+     */
+    public function getCustomerTypeLabelAttribute(): string
+    {
+        return match ( $this->customer_type ?? 'individual' ) {
+            'individual' => 'Pessoa Física',
+            'company'    => 'Pessoa Jurídica',
+            default      => ucfirst( $this->customer_type ),
+        };
+    }
+
+    /**
+     * Scope para buscar clientes ativos.
+     */
+    public function scopeActive( $query )
+    {
+        return $query->where( 'status', self::STATUS_ACTIVE );
+    }
+
+    /**
+     * Scope para buscar clientes VIP.
+     */
+    public function scopeVip( $query )
+    {
+        return $query->where( 'priority_level', 'vip' );
+    }
+
+    /**
+     * Scope para buscar clientes por tipo.
+     */
+    public function scopeOfType( $query, string $type )
+    {
+        return $query->where( 'customer_type', $type );
+    }
+
+    /**
+     * Scope para buscar clientes com interações recentes.
+     */
+    public function scopeWithRecentInteractions( $query, int $days = 30 )
+    {
+        return $query->whereHas( 'interactions', function ( $q ) use ( $days ) {
+            $q->where( 'interaction_date', '>=', now()->subDays( $days ) );
+        } );
+    }
+
+    /**
+     * Scope para buscar clientes com ações pendentes.
+     */
+    public function scopeWithPendingActions( $query )
+    {
+        return $query->whereHas( 'interactions', function ( $q ) {
+            $q->whereNotNull( 'next_action' )
+                ->whereNotNull( 'next_action_date' )
+                ->where( 'next_action_date', '>=', now() )
+                ->where( function ( $subQuery ) {
+                    $subQuery->whereNull( 'outcome' )
+                        ->orWhere( 'outcome', '!=', 'completed' );
+                } );
+        } );
+    }
+
+    /**
+     * Scope para buscar clientes por tag.
+     */
+    public function scopeWithTag( $query, CustomerTag $tag )
+    {
+        return $query->whereHas( 'tags', function ( $q ) use ( $tag ) {
+            $q->where( 'customer_tags.id', $tag->id );
+        } );
+    }
+
+    /**
+     * Scope para buscar clientes por múltiplas tags.
+     */
+    public function scopeWithTags( $query, array $tagIds )
+    {
+        return $query->whereHas( 'tags', function ( $q ) use ( $tagIds ) {
+            $q->whereIn( 'customer_tags.id', $tagIds );
+        } );
+    }
+
+    /**
      * Accessor para tratar valores zero-date no updated_at.
      */
     public function getUpdatedAtAttribute( $value )

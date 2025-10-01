@@ -1,78 +1,133 @@
-@extends( 'layouts.app' )
+@extends('layouts.guest')
 
-@section( 'content' )
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">{{ __( 'Login' ) }}</div>
+@section('title', 'Login - Easy Budget')
 
-                    <div class="card-body">
-                        <form method="POST" action="{{ route( 'login' ) }}">
-                            @csrf
+@section('content')
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div class="max-w-md w-full">
+        <!-- Card Principal -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <img src="{{ asset('img/logo.png') }}" alt="Easy Budget" class="h-12 mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">Seja bem-vindo</h1>
+                <p class="text-gray-600">Faça login para continuar</p>
+            </div>
 
-                            <div class="row mb-3">
-                                <label for="email"
-                                    class="col-md-4 col-form-label text-md-end">{{ __( 'Email Address' ) }}</label>
+            <!-- Flash Messages -->
+            <x-flash-messages />
 
-                                <div class="col-md-6">
-                                    <input id="email" type="email" class="form-control @error( 'email' ) is-invalid @enderror"
-                                        name="email" value="{{ old( 'email' ) }}" required autocomplete="email" autofocus>
+            <!-- Formulário -->
+            <form method="POST" action="{{ route('login') }}" class="space-y-6">
+                @csrf
 
-                                    @error( 'email' )
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <label for="password"
-                                    class="col-md-4 col-form-label text-md-end">{{ __( 'Password' ) }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="password" type="password"
-                                        class="form-control @error( 'password' ) is-invalid @enderror" name="password"
-                                        required autocomplete="current-password">
-
-                                    @error( 'password' )
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6 offset-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old( 'remember' ) ? 'checked' : '' }}>
-
-                                        <label class="form-check-label" for="remember">
-                                            {{ __( 'Remember Me' ) }}
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mb-0">
-                                <div class="col-md-8 offset-md-4">
-                                    <button type="submit" class="btn btn-primary">
-                                        {{ __( 'Login' ) }}
-                                    </button>
-
-                                    @if ( Route::has( 'password.request' ) )
-                                        <a class="btn btn-link" href="{{ route( 'password.request' ) }}">
-                                            {{ __( 'Forgot Your Password?' ) }}
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                <!-- Email -->
+                <div>
+                    <x-form.input
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value="{{ old('email') }}"
+                        placeholder="seu@email.com"
+                        required
+                        autofocus
+                        :error="$errors->first('email')"
+                    />
                 </div>
+
+                <!-- Senha -->
+                <div x-data="{ showPassword: false }">
+                    <x-form.input
+                        label="Senha"
+                        name="password"
+                        :type="showPassword ? 'text' : 'password'"
+                        placeholder="Sua senha"
+                        required
+                        :error="$errors->first('password')"
+                        container-class="relative"
+                    >
+                        <x-slot:hint>
+                            <button
+                                type="button"
+                                @click="showPassword = !showPassword"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                tabindex="-1"
+                            >
+                                <i :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                            </button>
+                        </x-slot>
+                    </x-form.input>
+                </div>
+
+                <!-- Lembrar-me -->
+                <div class="flex items-center justify-between">
+                    <x-form.checkbox
+                        name="remember"
+                        :checked="old('remember')"
+                    >
+                        Lembrar-me
+                    </x-form.checkbox>
+
+                    <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:text-blue-700">
+                        Esqueceu a senha?
+                    </a>
+                </div>
+
+                <!-- Botão Submit -->
+                <x-ui.button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    class="w-full"
+                >
+                    <i class="bi bi-box-arrow-in-right mr-2"></i>
+                    Entrar
+                </x-ui.button>
+            </form>
+
+            <!-- Links Adicionais -->
+            <div class="mt-6 text-center">
+                <span class="text-gray-600">Não tem uma conta?</span>
+                <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-700 ml-1">
+                    Registre-se
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <i class="bi bi-shield-lock"></i>
+                <span>Login seguro via SSL</span>
             </div>
         </div>
     </div>
+</div>
 @endsection
+
+@push('styles')
+<style>
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg transition-colors duration-200;
+    }
+
+    .btn-primary {
+        @apply bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    }
+
+    .btn-secondary {
+        @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+    }
+
+    .text-2xl {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    @media (max-width: 640px) {
+        .text-2xl {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+@endpush

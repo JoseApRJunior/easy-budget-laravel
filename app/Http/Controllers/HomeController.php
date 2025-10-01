@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Services\PlanService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -28,30 +29,29 @@ class HomeController extends Controller
     }
 
     /**
-     * Exibe a página inicial com planos disponíveis
+     * Exibe a página inicial com os planos disponíveis.
      *
-     * @param Request $request
      * @return View
      */
-    public function index( Request $request ): View
+    public function index(): View
     {
         try {
             $result = $this->planService->list();
 
-            // Verificar se o resultado foi bem-sucedido e se há dados
+            // Verificar se o resultado foi bem-sucedido e extrair dados
             $plansData = [];
             if ( $result->isSuccess() && is_array( $result->getData() ) ) {
                 $plansData = $result->getData();
             }
 
             return view( 'home.index', [
-                'plans' => $plansData,
+                'plans' => $plansData
             ] );
-
         } catch ( Exception $e ) {
-            // Em caso de erro, retorna view com array vazio de planos
+            Log::error( 'Erro ao carregar página inicial: ' . $e->getMessage() );
+
             return view( 'home.index', [
-                'plans' => [],
+                'plans' => []
             ] );
         }
     }
