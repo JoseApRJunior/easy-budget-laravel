@@ -19,7 +19,7 @@ class PlanSeeder extends Seeder
                 'status'      => true,
                 'max_budgets' => 50,
                 'max_clients' => 100,
-                'features'    => json_encode( [ 'support' => 'email', 'reports' => 'basic' ] ),
+                'features'    => json_encode( [ "Acesso a recursos básicos", "Até 3 orçamentos por mês", "1 Cliente por mês" ] ),
                 'created_at'  => $now,
             ],
             [
@@ -30,7 +30,7 @@ class PlanSeeder extends Seeder
                 'status'      => true,
                 'max_budgets' => 1000,
                 'max_clients' => 5000,
-                'features'    => json_encode( [ 'support' => 'priority', 'reports' => 'advanced', 'integrations' => [ 'mercado_pago' ] ] ),
+                'features'    => json_encode( [ "Acesso a recursos básicos", "Até 15 orçamentos por mês", "5 Clientes por mês", "Relatórios básicos" ] ),
                 'created_at'  => $now,
             ],
             [
@@ -41,7 +41,7 @@ class PlanSeeder extends Seeder
                 'status'      => true,
                 'max_budgets' => 100000,
                 'max_clients' => 100000,
-                'features'    => json_encode( [ 'support' => 'dedicated', 'reports' => 'full', 'integrations' => [ 'mercado_pago' ] ] ),
+                'features'    => json_encode( [ "Acesso a todos os recursos", "Orçamentos ilimitados", "Clientes ilimitados", "Relatórios avançados", "Integração com pagamentos", "Gerencimento de projetos" ] ),
                 'created_at'  => $now,
             ],
         ];

@@ -1,0 +1,107 @@
+@extends( 'layouts.app' )
+
+@section( 'title', 'Termos de Serviço' )
+
+@section( 'content' )
+    <div class="container py-1">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <h1 class="mb-4">Termos de Serviço</h1>
+
+                <section class="mb-4">
+                    <h2>1. Aceitação dos Termos</h2>
+                    <p>Ao acessar e usar o Easy Budget, você concorda em cumprir e estar vinculado aos seguintes termos e
+                        condições.
+                        Estes termos se aplicam a todos os usuários da plataforma, sejam eles prestadores de serviços ou
+                        clientes.</p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>2. Descrição do Serviço</h2>
+                    <p>O Easy Budget é uma plataforma para gerenciamento de orçamentos que permite aos prestadores de
+                        serviços
+                        criar, gerenciar e acompanhar orçamentos para seus clientes. A plataforma facilita a comunicação
+                        entre
+                        prestadores de serviços e clientes, oferecendo ferramentas para a criação de orçamentos detalhados,
+                        aprovação
+                        de clientes e acompanhamento de projetos.</p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>3. Responsabilidades do Usuário</h2>
+                    <p>O usuário é responsável por:</p>
+                    <ul>
+                        <li>Manter a confidencialidade de sua conta e senha;</li>
+                        <li>Fornecer informações precisas e atualizadas em seu perfil;</li>
+                        <li>Usar a plataforma de maneira ética e legal;</li>
+                        <li>Respeitar os direitos de outros usuários e clientes;</li>
+                        <li>Cumprir com as obrigações fiscais e legais relacionadas aos serviços prestados ou contratados
+                            através da
+                            plataforma.</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>4. Criação e Gestão de Orçamentos</h2>
+                    <p>Os prestadores de serviços são responsáveis pela precisão das informações fornecidas em seus
+                        orçamentos. Os
+                        clientes devem revisar cuidadosamente os orçamentos antes de aprová-los. Uma vez aprovado, o
+                        orçamento se
+                        torna um acordo entre o prestador de serviços e o cliente.</p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>5. Pagamentos e Taxas</h2>
+                    <p>O Easy Budget oferece diferentes planos de assinatura para prestadores de serviços. Os detalhes sobre
+                        os
+                        planos disponíveis, suas funcionalidades e condições de pagamento estão disponíveis na página de
+                        <a href="{{ url( '/plans' ) }}">Planos</a>. A cobrança é feita de acordo com o plano escolhido e pode
+                        ser mensal ou anual,
+                        conforme a opção selecionada pelo usuário.
+                    </p>
+                    <p>Os pagamentos entre prestadores de serviços e clientes são gerenciados através da plataforma, mas são
+                        de
+                        responsabilidade das partes envolvidas. O Easy Budget atua apenas como facilitador dessas
+                        transações. Todos os
+                        pagamentos devem seguir as leis e regulamentos aplicáveis em cada jurisdição.</p>
+                    <p>Lembramos que é responsabilidade do prestador de serviços emitir as notas fiscais correspondentes aos
+                        serviços prestados, bem como cumprir com todas as obrigações fiscais e tributárias relacionadas à
+                        sua
+                        atividade.</p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>6. Privacidade e Dados</h2>
+                    <p>Tratamos seus dados pessoais de acordo com nossa
+                        <a href="{{ url( '/privacy-policy' ) }}">Política de Privacidade</a>. Ao usar nossa plataforma, você
+                        concorda com a coleta e
+                        uso de suas informações conforme descrito nesta política.
+                    </p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>7. Cancelamento e Encerramento de Conta</h2>
+                    <p>Usuários podem cancelar sua conta a qualquer momento. O encerramento da conta não afeta os orçamentos
+                        já
+                        aprovados ou em andamento. Reservamo-nos o direito de suspender ou encerrar contas que violem estes
+                        termos.
+                    </p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>8. Alterações nos Termos</h2>
+                    <p>Reservamo-nos o direito de modificar estes termos a qualquer momento. Alterações significativas serão
+                        notificadas aos usuários com antecedência.</p>
+                </section>
+
+                <section class="mb-4">
+                    <h2>9. Contato</h2>
+                    <p>Para questões sobre estes termos ou sobre o uso da plataforma, entre em contato através do nosso
+                        suporte em
+                        administrador@easybudget.net.br.</p>
+
+                </section>
+            </div>
+        </div>
+    </div>
+@endsection

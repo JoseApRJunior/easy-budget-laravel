@@ -31,18 +31,17 @@
         </div>
 
         <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
-            @if(isset($plans) && is_array($plans))
-            @foreach($plans as $plan)
+            @foreach ($plans as $plan)
             <div class="col">
                 <div class="card h-100 shadow-sm hover-card">
                     <div class="card-body d-flex flex-column">
                         <div class="text-center mb-4">
-                            @if($plan['slug'] == 'free')
-                                <i class="bi bi-rocket display-6 text-primary mb-2"></i>
-                            @elseif($plan['slug'] == 'basic')
-                                <i class="bi bi-star display-6 text-success mb-2"></i>
+                            @if ($plan['slug'] == 'free')
+                            <i class="bi bi-rocket display-6 text-primary mb-2"></i>
+                            @elseif ($plan['slug'] == 'basic')
+                            <i class="bi bi-star display-6 text-success mb-2"></i>
                             @else
-                                <i class="bi bi-gem display-6 text-info mb-2"></i>
+                            <i class="bi bi-gem display-6 text-info mb-2"></i>
                             @endif
                             <h3 class="card-title h4">{{ $plan['name'] }}</h3>
                             <div class="pricing-header">
@@ -55,10 +54,10 @@
                         <p class="card-text small-text mb-4">{{ $plan['description'] }}</p>
 
                         <ul class="feature-list list-unstyled mb-4">
-                            @foreach($plan['features'] as $feature)
+                            @foreach ($plan['features'] as $feature)
                             <li class="mb-2">
                                 <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                {{ is_array($feature) ? implode(', ', $feature) : $feature }}
+                                {{ $feature }}
                             </li>
                             @endforeach
                         </ul>
@@ -71,14 +70,6 @@
                 </div>
             </div>
             @endforeach
-            @else
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Nenhum plano disponível no momento.
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Formulário de Pré-Cadastro -->
@@ -89,13 +80,13 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form action="{{ route('register') }}" method="POST" id="preRegisterForm" class="needs-validation" novalidate>
+                <form action="/register" method="POST" id="preRegisterForm" class="needs-validation" novalidate>
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label for="plan" class="form-label">Plano Selecionado</label>
-                            <select class="form-select" id="planSelect" name="plan" required>
-                                @foreach($plans as $plan)
+                            <select class="form-select @error('plan') is-invalid @enderror" id="planSelect" name="plan" required>
+                                @foreach ($plans as $plan)
                                 <option value="{{ $plan['slug'] }}" {{ $plan['slug'] != 'free' ? 'disabled' : '' }}>
                                     {{ $plan['name'] }} - R$ {{ number_format($plan['price'], 2, ',', '.') }}
                                     {{ $plan['slug'] != 'free' ? ' - em desenvolvimento' : '' }}
@@ -103,95 +94,73 @@
                                 @endforeach
                             </select>
                             @error('plan')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label for="first_name" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name"
-                                   value="{{ old('first_name') }}" required />
+                            <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" required value="{{ old('first_name') }}" />
                             @error('first_name')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label for="last_name" class="form-label">Sobrenome</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name"
-                                   value="{{ old('last_name') }}" required />
+                            <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" required value="{{ old('last_name') }}" />
                             @error('last_name')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email"
-                                   value="{{ old('email') }}" required />
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" required value="{{ old('email') }}" />
                             @error('email')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label for="phone" class="form-label">Telefone</label>
-                            <input type="tel" class="form-control" id="phone" name="phone"
-                                   value="{{ old('phone') }}" required />
-                            @error('phone')
-                                <div class="text-danger small">{{ $message }}</div>
+                            <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" required value="{{ old('phone') }}" />
+                             @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label for="password" class="form-label">Senha</label>
                             <div class="password-container">
-                                <input type="password" class="form-control" id="password" name="password" required />
+                                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required />
                                 <button type="button" class="password-toggle" data-input="password">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            @error('password')
-                                <div class="text-danger small">{{ $message }}</div>
+                             @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <div class="password-rules" style="display:none;">
                                 <ul>
-                                    <li>
-                                        <i class="fas fa-check-circle" style="color: #ccc;"></i>
-                                        Pelo menos 6 caracteres
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle" style="color: #ccc;"></i>
-                                        Letras minúsculas (a-z)
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle" style="color: #ccc;"></i>
-                                        Letras maiúsculas (A-Z)
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle" style="color: #ccc;"></i>
-                                        Números (0-9)
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle" style="color: #ccc;"></i>
-                                        Caracteres especiais (@#$!%*?&)
-                                    </li>
+                                    <li><i class="fas fa-check-circle" style="color: #ccc;"></i> Pelo menos 6 caracteres</li>
+                                    <li><i class="fas fa-check-circle" style="color: #ccc;"></i> Letras minúsculas (a-z)</li>
+                                    <li><i class="fas fa-check-circle" style="color: #ccc;"></i> Letras maiúsculas (A-Z)</li>
+                                    <li><i class="fas fa-check-circle" style="color: #ccc;"></i> Números (0-9)</li>
+                                    <li><i class="fas fa-check-circle" style="color: #ccc;"></i> Caracteres especiais (@#$!%*?&)</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-md-3">
-                            <label for="confirm_password" class="form-label">Confirmar Senha</label>
+                            <label for="password_confirmation" class="form-label">Confirmar Senha</label>
                             <div class="password-container">
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required />
-                                <button type="button" class="password-toggle" data-input="confirm_password">
+                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required />
+                                <button type="button" class="password-toggle" data-input="password_confirmation">
                                     <i class="bi bi-exclamation-circle error-icon d-none"></i>
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            @error('confirm_password')
-                                <div class="text-danger small">{{ $message }}</div>
-                            @enderror
                         </div>
 
                         <div class="col-md-3">
@@ -204,18 +173,18 @@
                         <div class="mt-4 text-center">
                             <div class="form-check mb-3">
                                 <label class="form-check-label" for="terms_accepted">
-                                    <input class="form-check-input" type="checkbox" id="terms_accepted" name="terms_accepted" required />
-                                    Eu li e aceito os <a href="/terms-of-service" target="_blank">Termos de Serviço</a>
-                                    e a <a href="/privacy-policy" target="_blank">Política de Privacidade</a>.
+                                    <input class="form-check-input @error('terms_accepted') is-invalid @enderror" type="checkbox" id="terms_accepted" name="terms_accepted" required />
+                                    Eu li e aceito os
+                                    <a href="/terms-of-service" target="_blank">Termos de Serviço</a>
+                                    e a
+                                    <a href="/privacy-policy" target="_blank">Política de Privacidade</a>.
                                 </label>
+                                @error('terms_accepted')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
-                            @error('terms_accepted')
-                                <div class="text-danger small">{{ $message }}</div>
-                            @enderror
-                            <small class="small-text d-block mb-3">
-                                Ao se cadastrar, você concorda em receber atualizações sobre nossos serviços por e-mail.
-                                Você pode cancelar a qualquer momento.
-                            </small>
+                            <small class="small-text d-block mb-3">Ao se cadastrar, você concorda em receber atualizações sobre
+                                nossos serviços por e-mail. Você pode cancelar a qualquer momento.</small>
                         </div>
                     </div>
                 </form>

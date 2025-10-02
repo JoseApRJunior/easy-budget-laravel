@@ -1,0 +1,86 @@
+@extends( 'layouts.app' )
+
+@section( 'title', 'Política de Privacidade' )
+
+@section( 'content' )
+    <div class="container py-1">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <h1 class="mb-4">Política de Privacidade</h1>
+
+                <section class="mb-4">
+                    <h2>1. Coleta de Informações</h2>
+                    <p>Coletamos as seguintes informações quando você usa o Easy Budget:</p>
+                    <ul>
+                        <li>Informações da conta (nome, email, senha)</li>
+                        <li>Dados financeiros (transações, categorias, orçamentos)</li>
+                        <li>Dados de uso (preferências, configurações)</li>
+                        <li>Informações técnicas (IP, navegador, dispositivo)</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>2. Uso das Informações</h2>
+                    <p>Utilizamos suas informações para:</p>
+                    <ul>
+                        <li>Fornecer e melhorar nossos serviços</li>
+                        <li>Personalizar sua experiência</li>
+                        <li>Enviar comunicações importantes</li>
+                        <li>Garantir a segurança da sua conta</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>3. Proteção de Dados</h2>
+                    <p>Implementamos medidas de segurança rigorosas:</p>
+                    <ul>
+                        <li>Criptografia de dados sensíveis</li>
+                        <li>Backups regulares e seguros</li>
+                        <li>Acesso restrito às informações</li>
+                        <li>Monitoramento contínuo</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>4. Seus Direitos</h2>
+                    <p>Você tem direito a:</p>
+                    <ul>
+                        <li>Acessar seus dados pessoais</li>
+                        <li>Corrigir informações incorretas</li>
+                        <li>Solicitar exclusão de dados</li>
+                        <li>Exportar suas informações</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>5. Cookies e Rastreamento</h2>
+                    <p>Utilizamos cookies para:</p>
+                    <ul>
+                        <li>Manter sua sessão ativa</li>
+                        <li>Lembrar suas preferências</li>
+                        <li>Melhorar a performance do site</li>
+                        <li>Análise de uso do serviço</li>
+                    </ul>
+                </section>
+
+                <section class="mb-4">
+                    <h2>6. Contato</h2>
+                    <p>Para questões sobre privacidade:</p>
+                    <ul>
+                        <li>Email: admnistrador@easybudget.net.br</li>
+                        <li>Formulário de contato:
+                            <a href="{{ url( '/support#contact' ) }}">Clique aqui</a>
+                        </li>
+                        <li>Prazo de resposta: até 5 dias úteis</li>
+                    </ul>
+                </section>
+
+                <div class="mt-5">
+                    <p class="text-muted">Última atualização:
+                        {{ now()->format( 'd-m-Y' ) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
