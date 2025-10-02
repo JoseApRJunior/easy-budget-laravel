@@ -14,21 +14,17 @@ Route::get( '/dashboard', [ DashboardController::class, 'index' ] )
     ->name( 'dashboard' );
 
 // Páginas públicas
-Route::get( '/about', function () {
-    return view( 'home.about' );
-} )->name( 'about' );
+Route::get( '/about', [ HomeController::class, 'about' ] )->name( 'about' );
 
-Route::get( '/support', function () {
-    return view( 'home.support' );
-} )->name( 'support' );
+Route::get( '/support', [ HomeController::class, 'support' ])->name( 'support' );
 
 Route::get( '/terms-of-service', function () {
-    return view( 'home.terms' );
-} )->name( 'terms-of-service' );
+    return view( 'terms' );
+} )->name( 'terms' );
 
 Route::get( '/privacy-policy', function () {
-    return view( 'home.privacy' );
-} )->name( 'privacy-policy' );
+    return view( 'privacy' );
+} )->name( 'privacy' );
 
 // Rotas do Provider (área logada)
 Route::middleware( 'auth' )->group( function () {

@@ -23,9 +23,7 @@ export default defineConfig({
       outDir: "public/build",
       rollupOptions: {
          output: {
-            manualChunks: {
-               alpine: ["alpinejs"],
-            },
+            manualChunks: undefined,
          },
       },
    },
@@ -33,5 +31,17 @@ export default defineConfig({
       hmr: {
          host: "localhost",
       },
+      watch: {
+         usePolling: true,
+      },
+      proxy: {
+         "/": {
+            target: "http://localhost:8000",
+            changeOrigin: true,
+         },
+      },
+   },
+   css: {
+      postcss: "./postcss.config.js",
    },
 });

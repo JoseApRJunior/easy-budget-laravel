@@ -44,13 +44,13 @@ class HomeController extends Controller
                 $plansData = $result->getData();
             }
 
-            return view( 'home.index', [
+            return view( 'pages.home.index', [
                 'plans' => $plansData
             ] );
         } catch ( Exception $e ) {
             Log::error( 'Erro ao carregar página inicial: ' . $e->getMessage() );
 
-            return view( 'home.index', [
+            return view( 'pages.home.index', [
                 'plans' => []
             ] );
         }
@@ -63,7 +63,7 @@ class HomeController extends Controller
      */
     public function about(): View
     {
-        return view( 'home.about' );
+        return view( 'pages.home.about' );
     }
 
     /**
@@ -73,7 +73,7 @@ class HomeController extends Controller
      */
     public function support(): View
     {
-        return view( 'home.support' );
+        return view( 'pages.home.support' );
     }
 
     /**
