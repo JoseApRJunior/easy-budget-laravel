@@ -1,0 +1,29 @@
+@extends( 'layout' )
+
+@section( 'content' )
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h2 class="mb-0">Erro no Pagamento</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">{{ $message }}</p>
+                        <p>Ocorreu um erro durante o processamento do seu pagamento. Por favor, verifique as informações
+                            abaixo e
+                            tente novamente.</p>
+                        @if ( isset( $error_details ) )
+                            <div class="alert alert-warning">
+                                <h4 class="alert-heading">Detalhes do erro:</h4>
+                                <p>{{ $error_details }}</p>
+                            </div>
+                        @endif
+                        <a href="{{ $invoice_paymant_link }}" class="btn btn-primary">Tentar Novamente</a>
+                        <a href="/support" class="btn btn-secondary">Contatar suporte</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

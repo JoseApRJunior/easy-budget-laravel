@@ -11,6 +11,7 @@ A migração será dividida em etapas, agrupando os arquivos por funcionalidade 
 1. **Migração Incremental:** Focar em um módulo por vez (ex: Autenticação, Clientes, Orçamentos).
 2. **Do Simples ao Complexo:** Começar com páginas mais simples e estáticas (ex: páginas de erro, legais) para depois avançar para as mais complexas com lógica de negócios (ex: admin, orçamentos).
 3. **Validação Contínua:** Após a migração de cada módulo, é recomendado testar as funcionalidades correspondentes para garantir que nada foi quebrado.
+   ra
 
 ## ⚡ Ordem de Migração Sugerida
 
@@ -66,16 +67,16 @@ Migração das entidades principais do sistema. Recomenda-se migrar um CRUD de c
    -  `show.twig`
    -  `update.twig`
    -  `services_and_quotes.twig`
-6. **Fornecedores (`pages/provider/`)**
+6. **Fornecedores (`pages/provider/`) - Concluído**
    -  `index.twig`
    -  `update.twig`
    -  `change_password.twig`
-7. **Produtos (`pages/product/`)**
+7. **Produtos (`pages/product/`) - Concluído**
    -  `index.twig`
    -  `create.twig`
    -  `show.twig`
    -  `update.twig`
-8. **Serviços (`pages/service/`)**
+8. **Serviços (`pages/service/`) - Concluído**
    -  `index.twig`
    -  `create.twig`
    -  `show.twig`
@@ -87,24 +88,9 @@ Migração das entidades principais do sistema. Recomenda-se migrar um CRUD de c
 
 Módulos com maior complexidade e lógica de negócios.
 
-1. **Orçamentos (`pages/budget/`)**
-   -  `index.twig`
-   -  `create.twig`
-   -  `show.twig`
-   -  `update.twig`
-   -  `choose_budget_status.twig`
-   -  `pdf_budget.twig`
-   -  `pdf_budget_print.twig`
-2. **Faturas e Pagamentos (`pages/invoice/` e `pages/payment/`)**
-   -  `invoice/index.twig`
-   -  `invoice/create.twig`
-   -  `invoice/show.twig`
-   -  `invoice/pdf_invoice_print.twig`
-   -  `invoice/payment/` (todos os arquivos: `success`, `failure`, etc.)
-   -  `payment/` (todos os arquivos)
-3. **Planos (`pages/plan/`)**
-   -  `index.twig`
-   -  `status.twig`
+1. **Orçamentos (`pages/budget/`) - Concluído**
+2. **Faturas e Pagamentos (`pages/invoice/` e `pages/payment/`) - Concluído**
+3. **Planos (`pages/plan/`) - Concluído**
 
 ### Etapa 5: Relatórios
 
@@ -150,3 +136,159 @@ Durante a migração, preste atenção aos seguintes padrões:
 3. Siga o plano, migrando um módulo de cada vez.
 
 Este plano servirá como um guia para garantir que a migração seja feita de forma organizada e eficiente.
+
+## Sistema de Backup
+
+### Views Implementadas
+
+-  **Localização**: `resources/views/pages/admin/backup/index.blade.php`
+-  **Funcionalidades**:
+   -  Listagem de backups existentes
+   -  Criação de backup manual
+   -  Restauração de backup
+   -  Limpeza automática de backups antigos
+   -  Exclusão individual de backups
+
+### Service Providers a Implementar
+
+1. **AliasServiceProvider**
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\AliasLoader;
+
+class AliasServiceProvider extends ServiceProvider
+{
+
+    public function register(): void
+    {  $loader = AliasLoader::getInstance();
+        $loader->alias( 'Currency', \App\Helpers\CurrencyHelper::class);
+        $loader->alias( 'DateHelper', \App\Helpers\DateHelper::class);
+    }
+}
+```
+
+2. **ViewComposerServiceProvider**
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+
+class ViewComposerServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        View::composer('*', function ($view) {
+            $view->with([
+                'auth' => auth()->check(),
+                'user' => auth()->user(),
+                'flash' => session('flash'),
+            ]);
+        });
+    }
+}
+```
+
+3. **BladeDirectiveServiceProvider**
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
+
+class BladeDirectiveServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        Blade::directive('money', function ($expression) {
+            return "<?php echo Currency::format($expression); ?>";
+        });
+
+        Blade::directive('date', function ($expression) {
+            return "<?php echo DateHelper::format($expression); ?>";
+        });
+    }
+}
+```
+
+### Registro dos Providers
+
+Adicionar em `config/app.php`:
+
+```php
+'providers' => [
+    // ...
+    App\Providers\AliasServiceProvider::class,
+    App\Providers\ViewComposerServiceProvider::class,
+    App\Providers\BladeDirectiveServiceProvider::class,
+],
+```
+
+### Classes Helper Necessárias
+
+1. **BackupManager**
+
+```php
+namespace App\Services;
+
+class BackupManager
+{
+    public function create()
+    {
+        // Lógica para criar backup
+    }
+
+    public function restore($filename)
+    {
+        // Lógica para restaurar backup
+    }
+
+    public function cleanup($days)
+    {
+        // Lógica para limpar backups antigos
+    }
+}
+```
+
+### Rotas a Implementar
+
+```php
+Route::prefix('admin/backups')->group(function () {
+    Route::get('/', [BackupController::class, 'index'])->name('admin.backups.index');
+    Route::post('/create', [BackupController::class, 'create'])->name('admin.backups.create');
+    Route::post('/restore', [BackupController::class, 'restore'])->name('admin.backups.restore');
+    Route::post('/delete', [BackupController::class, 'delete'])->name('admin.backups.delete');
+    Route::post('/cleanup', [BackupController::class, 'cleanup'])->name('admin.backups.cleanup');
+});
+```
+
+### Dependências Necessárias
+
+```bash
+composer require spatie/laravel-backup
+```
+
+### Configuração de Backup
+
+Publicar configuração:
+
+```bash
+php artisan vendor:publish --provider="Spatie\Backup\BackupServiceProvider"
+```
+
+### Tasks Agendadas
+
+Adicionar ao `App\Console\Kernel`:
+
+```php
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('backup:clean')->daily()->at('01:00');
+    $schedule->command('backup:run')->daily()->at('02:00');
+}
+```

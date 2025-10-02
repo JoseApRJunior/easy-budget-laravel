@@ -19,7 +19,7 @@ if ( !function_exists( 'user_auth' ) ) {
         $authManager = app( 'auth' );
         if ( $authManager->check() ) {
             $user = $authManager->user();
-            return [ 
+            return [
                 'id'       => $user->id,
                 'name'     => $user->name,
                 'email'    => $user->email,
@@ -60,5 +60,19 @@ if ( !function_exists( 'current_user' ) ) {
     function current_user(): ?array
     {
         return user_auth();
+    }
+}
+
+if ( !function_exists( 'money' ) ) {
+    function money( $value, $decimals = 2 )
+    {
+        return app( App\Helpers\CurrencyHelper::class)->format( $value, $decimals );
+    }
+}
+
+if ( !function_exists( 'format_date' ) ) {
+    function format_date( $date, $format = 'd/m/Y' )
+    {
+        return app( App\Helpers\DateHelper::class)->format( $date, $format );
     }
 }

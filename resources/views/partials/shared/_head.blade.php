@@ -18,7 +18,7 @@
     TODO testar css novo quando der tempo
     --}}
     <link rel="stylesheet" href="{{ asset( 'assets/css/layout.css' ) }}" />
-    <link rel="stylesheet" href="{{ asset( 'assets/css/alert/alert.css' ) }}">
+    <link rel="stylesheet" href="{{ asset( 'assets/css/components/alerts.css' ) }}">
     <link rel="preload" href="{{ asset( 'assets/img/logo.png' ) }}" as="image" type="image/png">
     @stack( 'styles' )
 </head>
