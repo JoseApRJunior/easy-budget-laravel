@@ -75,9 +75,9 @@
             </div>
 
             <!-- Call to Action Section -->
-            <div class="row justify-content-center mt-5">
+            <div class="row justify-content-center mt-5  ">
                 <div class="col-lg-8 text-center">
-                    <div class="cta-section bg-primary text-white rounded-3 p-5 shadow-lg">
+                    <div class="cta-section card h-100 shadow-sm hover-card  rounded-3 p-5">
                         <h3 class="mb-3">Pronto para começar?</h3>
                         <p class="lead mb-4">
                             Junte-se a milhares de profissionais que já estão transformando seus negócios com o Easy Budget.
