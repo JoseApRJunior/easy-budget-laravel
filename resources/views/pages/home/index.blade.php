@@ -62,13 +62,7 @@
                                         </li>
                                     @endforeach
                                 </ul>
-
-                                <button type="button" class="btn btn-outline-primary btn-lg mt-auto w-100 select-plan"
-                                    data-plan="{{ $plan[ 'name' ] }}" data-target="#preCadastroForm">
-                                    <i class="bi bi-arrow-right-circle me-2"></i>Selecionar
-                                </button>
                             </div>
-
                         </div>
                     </div>
                 @endforeach

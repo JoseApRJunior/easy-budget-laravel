@@ -14,6 +14,27 @@
             </div>
 
             <div class="col-md-4">
+                <h5 class="mb-3">Suporte</h5>
+                <ul class="list-unstyled footer-links small">
+                    <li class="mb-2">
+                        <a href="mailto:suporte@easybudget.com.br" class="footer-link">
+                            <i class="bi bi-envelope me-2"></i>Fale Conosco
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="{{ route('support') }}" class="footer-link">
+                            <i class="bi bi-ticket me-2"></i>Abrir Chamado
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('support') }}" class="footer-link">
+                            <i class="bi bi-question-circle me-2"></i>Central de Ajuda
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-md-4">
                 <h5 class="mb-3">Conecte-se</h5>
                 <div class="social-links mb-3">
                     <a href="https://www.facebook.com/jrwebdevelopment.2025" aria-label="Facebook">

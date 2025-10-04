@@ -67,12 +67,19 @@ class HomeController extends Controller
     }
 
     /**
-     * Exibe a página de suporte
+     * Exibe a página de suporte e processa formulário de contato
      *
-     * @return View
+     * @param Request $request
+     * @return View|\Illuminate\Http\RedirectResponse
      */
-    public function support(): View
+    public function support( Request $request )
     {
+        // Se for POST, processa o formulário de contato
+        if ( $request->isMethod( 'post' ) ) {
+            return $this->contact( $request );
+        }
+
+        // Se for GET, exibe a página
         return view( 'pages.home.support' );
     }
 
@@ -85,19 +92,27 @@ class HomeController extends Controller
     public function contact( Request $request )
     {
         $validatedData = $request->validate( [
-            'name'    => 'required|string|max:255',
-            'email'   => 'required|email|max:255',
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string|max:1000',
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'email'      => 'required|email|max:255',
+            'subject'    => 'required|string|max:255',
+            'message'    => 'required|string|max:1000',
         ] );
 
         try {
+            // Combina nome e sobrenome
+            $validatedData[ 'name' ] = $validatedData[ 'first_name' ] . ' ' . $validatedData[ 'last_name' ];
+
             // TODO: Implementar envio de email de suporte
             // $this->supportService->sendContactEmail($validatedData);
+
+            Log::info( 'Contato de suporte recebido: ' . $validatedData[ 'name' ] . ' - ' . $validatedData[ 'email' ] );
 
             return redirect()->back()->with( 'success', 'Mensagem enviada com sucesso! Entraremos em contato em breve.' );
 
         } catch ( Exception $e ) {
+            Log::error( 'Erro ao processar contato de suporte: ' . $e->getMessage() );
+
             return redirect()->back()
                 ->with( 'error', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
                 ->withInput();

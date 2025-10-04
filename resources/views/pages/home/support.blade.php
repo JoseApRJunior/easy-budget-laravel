@@ -2,39 +2,42 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container mt-5">
+    <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <h1 class="mb-4">
-                    <i class="bi bi-headset me-2"></i>
-                    Suporte ao Cliente Easy Budget
-                </h1>
+            <div class="col-lg-10 col-xl-8">
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-primary mb-3">
+                        <i class="bi bi-headset me-3"></i>
+                        Suporte ao Cliente Easy Budget
+                    </h1>
+                    <p class="lead ">
+                        Estamos aqui para ajudar com qualquer dúvida ou problema relacionado ao nosso sistema de orçamentos.
+                    </p>
+                </div>
 
                 {{-- Card de Opções --}}
-                <div class="card hover-card mb-4">
-                    <div class="card-header text-white">
-                        <h2 class="h5 mb-0">
-                            <i class="bi bi-question-circle me-2"></i>
-                            Como podemos ajudar?
-                        </h2>
-                    </div>
-                    <div class="card-body">
-                        <p class="lead">
-                            Estamos aqui para ajudar com qualquer dúvida ou problema relacionado ao nosso sistema de
-                            orçamentos. Por
-                            favor, escolha uma das opções abaixo:
+                <div class="card border-0 shadow-sm mb-5">
+                    <div class="card-body text-center p-5 ">
+                        <div class="mb-4">
+                            <i class="bi bi-question-circle " style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="h3 mb-4 fw-bold">Como podemos ajudar?</h2>
+                        <p class="lead  mb-4">
+                            Escolha uma das opções abaixo para obter a ajuda que precisa
                         </p>
-                        <div class="row mt-4">
-                            <div class="col-md-6 mb-3">
-                                <a href="#faq" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-question-circle me-2"></i>
-                                    Perguntas Frequentes
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="#faq" class="btn btn-primary btn-lg w-100 py-3 shadow-sm">
+                                    <i class="bi bi-question-diamond me-2"></i>
+                                    <strong>Perguntas Frequentes</strong>
+                                    <br><small>Encontre respostas rápidas</small>
                                 </a>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <a href="#contact" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-envelope me-2"></i>
-                                    Contato Direto
+                            <div class="col-md-6">
+                                <a href="#contact" class="btn btn-success btn-lg w-100 py-3 shadow-sm">
+                                    <i class="bi bi-envelope-paper me-2"></i>
+                                    <strong>Contato Direto</strong>
+                                    <br><small>Fale com nossa equipe</small>
                                 </a>
                             </div>
                         </div>
@@ -42,10 +45,10 @@
                 </div>
 
                 {{-- FAQ Section --}}
-                <div id="faq" class="card hover-card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h2 class="h5 mb-0">
-                            <i class="bi bi-question-diamond me-2"></i>
+                <div id="faq" class="card border-0 shadow-sm mb-5">
+                    <div class="card-header bg-primary text-white border-0">
+                        <h2 class="h4 mb-0 text-center py-2">
+                            <i class="bi bi-question-diamond me-3"></i>
                             Perguntas Frequentes
                         </h2>
                     </div>
@@ -183,59 +186,166 @@
                 </div>
 
                 {{-- Contact Form --}}
-                <div id="contact" class="card hover-card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h2 class="h5 mb-0">
-                            <i class="bi bi-envelope me-2"></i>
+                <div id="contact" class="card border-0 shadow-sm mb-5">
+                    <div class="card-header bg-success border-0">
+                        <h2 class="h4 mb-0 text-center py-2">
+                            <i class="bi bi-envelope-paper me-3"></i>
                             Entre em Contato
                         </h2>
                     </div>
+                    <div class="card-body p-4">
+                        {{-- Mensagens de feedback --}}
+                        @if ( session( 'success' ) )
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ session( 'success' ) }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        @if ( session( 'error' ) )
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {{ session( 'error' ) }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <div class="text-center mb-4">
+                            <p class="text-muted">Preencha o formulário abaixo e nossa equipe entrará em contato em breve.
+                            </p>
+                        </div>
+                    </div>
                     <div class="card-body">
-                        <form action="/support" method="POST" class="needs-validation" novalidate>
-                            {{ csrf_field() }}
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="first_name" class="form-label">Nome</label>
-                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
-                                    @error( 'first_name' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <form action="{{ route( 'support' ) }}" method="POST" class="needs-validation " novalidate>
+                            @csrf
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="first_name" class="form-label fw-semibold">
+                                        <i class="bi bi-person me-2"></i>Nome
+                                    </label>
+                                    <input type="text"
+                                        class="form-control form-control-lg @error( 'first_name' ) is-invalid @enderror"
+                                        id="first_name" name="first_name" value="{{ old( 'first_name' ) }}" required>
+                                    @error( 'first_name' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="last_name" class="form-label">Sobrenome</label>
-                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
-                                    @error( 'last_name' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div class="col-md-6">
+                                    <label for="last_name" class="form-label fw-semibold">
+                                        <i class="bi bi-person me-2"></i>Sobrenome
+                                    </label>
+                                    <input type="text"
+                                        class="form-control form-control-lg @error( 'last_name' ) is-invalid @enderror"
+                                        id="last_name" name="last_name" value="{{ old( 'last_name' ) }}" required>
+                                    @error( 'last_name' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="email" class="form-label">E-mail</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                                @error( 'email' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="mb-4">
+                                <label for="email" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-2"></i>E-mail
+                                </label>
+                                <input type="email"
+                                    class="form-control form-control-lg @error( 'email' ) is-invalid @enderror" id="email"
+                                    name="email" value="{{ old( 'email' ) }}" required>
+                                @error( 'email' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="mb-3">
-                                <label for="subject" class="form-label">Assunto</label>
-                                <select class="form-select" id="subject" name="subject" required>
+                            <div class="mb-4">
+                                <label for="subject" class="form-label fw-semibold">
+                                    <i class="bi bi-tag me-2"></i>Assunto
+                                </label>
+                                <select class="form-select form-select-lg @error( 'subject' ) is-invalid @enderror"
+                                    id="subject" name="subject" required>
                                     <option value="">Selecione um assunto</option>
-                                    <option value="orçamento">Dúvida sobre orçamentos</option>
-                                    <option value="pagamento">Questões de pagamento</option>
-                                    <option value="técnico">Suporte técnico</option>
-                                    <option value="outro">Outro assunto</option>
+                                    <option value="orçamento" {{ old( 'subject' ) == 'orçamento' ? 'selected' : '' }}>
+                                        Dúvida sobre orçamentos
+                                    </option>
+                                    <option value="pagamento" {{ old( 'subject' ) == 'pagamento' ? 'selected' : '' }}>
+                                        Questões de pagamento
+                                    </option>
+                                    <option value="técnico" {{ old( 'subject' ) == 'técnico' ? 'selected' : '' }}>
+                                        Suporte técnico
+                                    </option>
+                                    <option value="outro" {{ old( 'subject' ) == 'outro' ? 'selected' : '' }}>
+                                        Outro assunto
+                                    </option>
                                 </select>
-                                @error( 'subject' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error( 'subject' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="mb-3">
-                                <label for="message" class="form-label">Mensagem</label>
-                                <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
-                                @error( 'message' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="mb-4">
+                                <label for="message" class="form-label fw-semibold">
+                                    <i class="bi bi-chat-text me-2"></i>Mensagem
+                                </label>
+                                <textarea class="form-control @error( 'message' ) is-invalid @enderror" id="message"
+                                    name="message" rows="5" placeholder="Descreva sua dúvida ou problema em detalhes..."
+                                    required>{{ old( 'message' ) }}</textarea>
+                                @error( 'message' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send me-2"></i>
-                                Enviar Mensagem
-                            </button>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-send me-2"></i>
+                                    Enviar Mensagem
+                                </button>
+                            </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    {{-- Informações de Contato Adicionais --}}
+    <div class="card py-3 mt-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center">
+                        <h3 class="mb-4 fw-bold">Outras Formas de Contato</h3>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-envelope-at text-primary" style="font-size: 2.5rem;"></i>
+                                    <h5 class="mt-3">E-mail</h5>
+                                    <p class="mb-2">suporte@easybudget.com.br</p>
+                                    <a href="mailto:suporte@easybudget.com.br" class="btn btn-outline-primary btn-sm">
+                                        Enviar E-mail
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-clock text-success" style="font-size: 2.5rem;"></i>
+                                    <h5 class="mt-3">Horário</h5>
+                                    <p class="mb-2">Segunda a Sexta<br>08:00 às 18:00</p>
+                                    <small>Horário de Brasília</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-telephone text-info" style="font-size: 2.5rem;"></i>
+                                    <h5 class="mt-3">Telefone</h5>
+                                    <p class="mb-2">(43) 99959-0945</p>
+                                    <a href="tel:+5543999590945" class="btn btn-outline-info btn-sm">
+                                        Ligar Agora
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 {{-- partials/shared/user-menu.blade.php --}}
-<li class="nav-item dropdown">
-    @if( session()->has( 'auth' ) )
+{{-- Menu do usuário autenticado --}}
+@if( session()->has( 'auth' ) )
+    <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle d-flex align-items-center" id="userDropdown" role="button"
             data-bs-toggle="dropdown" aria-expanded="false">
             @php
@@ -49,9 +50,16 @@
                 </form>
             </li>
         </ul>
-    @else
-        <a class="nav-link btn btn-primary btn-sm px-3" href="/login">
-            <i class="bi bi-box-arrow-in-right me-1"></i>Entrar
+    </li>
+@endif
+
+{{-- Botão de login - fora do dropdown --}}
+@if( !session()->has( 'auth' ) )
+    <li class="nav-item">
+        <a class="nav-link btn btn-primary d-flex align-items-center" href="/login">
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            <span>Entrar</span>
         </a>
-    @endif
+    </li>
+@endif
 </li>

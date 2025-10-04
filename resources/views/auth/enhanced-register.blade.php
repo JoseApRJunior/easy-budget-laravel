@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends( 'layouts.app' )
 
-@section('content')
+@section( 'content' )
     <!-- Tela de Registro Aprimorada -->
-    <div class="container-fluid bg-gradient-primary min-vh-100 d-flex align-items-center">
+    <div class="container-fluid  min-vh-100 d-flex align-items-center">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-10 col-lg-12 col-md-9">
@@ -40,17 +40,17 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6">
-                                    <div class="p-5">
+                                <div class="col-lg-6 d-flex ">
+                                    <div class="px-5 py-4 text-center">
                                         <div class="text-center">
                                             <h1 class="h4 text-gray-900 mb-4">Criar uma Conta</h1>
                                         </div>
 
-                                        @if ($errors->any())
+                                        @if ( $errors->any() )
                                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                                 <strong>Ops!</strong> Verifique os erros abaixo:
                                                 <ul class="mb-0 mt-2">
-                                                    @foreach ($errors->all() as $error)
+                                                    @foreach ( $errors->all() as $error )
                                                         <li>{{ $error }}</li>
                                                     @endforeach
                                                 </ul>
@@ -58,7 +58,7 @@
                                             </div>
                                         @endif
 
-                                        <form action="{{ route('register.store') }}" method="POST" class="user needs-validation" novalidate>
+                                        <form action="{{ route( 'register.store' ) }}" method="POST" class="user needs-validation" novalidate>
                                             @csrf
 
                                             <!-- Nome e Sobrenome -->
@@ -68,13 +68,13 @@
                                                         Nome <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="text"
-                                                           class="form-control form-control-user @error('first_name') is-invalid @enderror"
+                                                           class="form-control form-control-user @error( 'first_name' ) is-invalid @enderror"
                                                            id="first_name"
                                                            name="first_name"
-                                                           value="{{ old('first_name') }}"
+                                                           value="{{ old( 'first_name' ) }}"
                                                            placeholder="Digite seu nome"
                                                            required>
-                                                    @error('first_name')
+                                                    @error( 'first_name' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -84,13 +84,13 @@
                                                         Sobrenome <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="text"
-                                                           class="form-control form-control-user @error('last_name') is-invalid @enderror"
+                                                           class="form-control form-control-user @error( 'last_name' ) is-invalid @enderror"
                                                            id="last_name"
                                                            name="last_name"
-                                                           value="{{ old('last_name') }}"
+                                                           value="{{ old( 'last_name' ) }}"
                                                            placeholder="Digite seu sobrenome"
                                                            required>
-                                                    @error('last_name')
+                                                    @error( 'last_name' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -103,13 +103,13 @@
                                                         Email <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="email"
-                                                           class="form-control form-control-user @error('email') is-invalid @enderror"
+                                                           class="form-control form-control-user @error( 'email' ) is-invalid @enderror"
                                                            id="email"
                                                            name="email"
-                                                           value="{{ old('email') }}"
+                                                           value="{{ old( 'email' ) }}"
                                                            placeholder="seu@email.com"
                                                            required>
-                                                    @error('email')
+                                                    @error( 'email' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -119,13 +119,13 @@
                                                         Telefone <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="tel"
-                                                           class="form-control form-control-user @error('phone') is-invalid @enderror"
+                                                           class="form-control form-control-user @error( 'phone' ) is-invalid @enderror"
                                                            id="phone"
                                                            name="phone"
-                                                           value="{{ old('phone') }}"
+                                                           value="{{ old( 'phone' ) }}"
                                                            placeholder="(11) 99999-9999"
                                                            required>
-                                                    @error('phone')
+                                                    @error( 'phone' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -139,7 +139,7 @@
                                                     </label>
                                                     <div class="input-group">
                                                         <input type="password"
-                                                               class="form-control form-control-user @error('password') is-invalid @enderror"
+                                                               class="form-control form-control-user @error( 'password' ) is-invalid @enderror"
                                                                id="password"
                                                                name="password"
                                                                placeholder="Digite sua senha"
@@ -148,7 +148,7 @@
                                                             <i class="bi bi-eye" id="passwordIcon"></i>
                                                         </button>
                                                     </div>
-                                                    @error('password')
+                                                    @error( 'password' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                     <div class="password-strength mt-2" style="display: none;">
@@ -165,7 +165,7 @@
                                                     </label>
                                                     <div class="input-group">
                                                         <input type="password"
-                                                               class="form-control form-control-user @error('password_confirmation') is-invalid @enderror"
+                                                               class="form-control form-control-user @error( 'password_confirmation' ) is-invalid @enderror"
                                                                id="password_confirmation"
                                                                name="password_confirmation"
                                                                placeholder="Confirme sua senha"
@@ -174,7 +174,7 @@
                                                             <i class="bi bi-eye" id="passwordConfirmIcon"></i>
                                                         </button>
                                                     </div>
-                                                    @error('password_confirmation')
+                                                    @error( 'password_confirmation' )
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -186,28 +186,28 @@
                                                     Escolha seu Plano <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="row">
-                                                    @foreach($plans as $plan)
+                                                    @foreach( $plans as $plan )
                                                         <div class="col-md-4 mb-3">
                                                             <div class="form-check border rounded p-3 h-100 plan-option
-                                                                {{ $plan['slug'] === 'free' ? 'border-primary bg-light' : 'border-secondary' }}
-                                                                {{ old('plan') === $plan['slug'] ? 'selected' : '' }}"
-                                                                 data-plan="{{ $plan['slug'] }}">
+                                                                {{ $plan[ 'slug' ] === 'free' ? 'border-primary bg-light' : 'border-secondary' }}
+                                                                {{ old( 'plan' ) === $plan[ 'slug' ] ? 'selected' : '' }}"
+                                                                 data-plan="{{ $plan[ 'slug' ] }}">
                                                                 <input class="form-check-input plan-radio"
                                                                        type="radio"
                                                                        name="plan"
-                                                                       id="plan_{{ $plan['slug'] }}"
-                                                                       value="{{ $plan['slug'] }}"
-                                                                       {{ old('plan', 'free') === $plan['slug'] ? 'checked' : '' }}
-                                                                       {{ $plan['slug'] !== 'free' ? 'disabled' : '' }}>
-                                                                <label class="form-check-label w-100" for="plan_{{ $plan['slug'] }}">
+                                                                       id="plan_{{ $plan[ 'slug' ] }}"
+                                                                       value="{{ $plan[ 'slug' ] }}"
+                                                                       {{ old( 'plan', 'free' ) === $plan[ 'slug' ] ? 'checked' : '' }}
+                                                                       {{ $plan[ 'slug' ] !== 'free' ? 'disabled' : '' }}>
+                                                                <label class="form-check-label w-100" for="plan_{{ $plan[ 'slug' ] }}">
                                                                     <div class="text-center">
-                                                                        <h6 class="mb-2">{{ $plan['name'] }}</h6>
+                                                                        <h6 class="mb-2">{{ $plan[ 'name' ] }}</h6>
                                                                         <div class="plan-price">
                                                                             <span class="currency">R$</span>
-                                                                            <span class="price">{{ number_format($plan['price'], 0, '', '.') }}</span>
+                                                                            <span class="price">{{ number_format( $plan[ 'price' ], 0, '', '.' ) }}</span>
                                                                             <span class="period">/mês</span>
                                                                         </div>
-                                                                        @if($plan['slug'] !== 'free')
+                                                                        @if( $plan[ 'slug' ] !== 'free' )
                                                                             <small class="text-muted">Em desenvolvimento</small>
                                                                         @endif
                                                                     </div>
@@ -216,7 +216,7 @@
                                                         </div>
                                                     @endforeach
                                                 </div>
-                                                @error('plan')
+                                                @error( 'plan' )
                                                     <div class="text-danger small">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -224,12 +224,12 @@
                                             <!-- Termos de Serviço -->
                                             <div class="mb-4">
                                                 <div class="form-check">
-                                                    <input class="form-check-input @error('terms_accepted') is-invalid @enderror"
+                                                    <input class="form-check-input @error( 'terms_accepted' ) is-invalid @enderror"
                                                            type="checkbox"
                                                            id="terms_accepted"
                                                            name="terms_accepted"
                                                            value="1"
-                                                           {{ old('terms_accepted') ? 'checked' : '' }}
+                                                           {{ old( 'terms_accepted' ) ? 'checked' : '' }}
                                                            required>
                                                     <label class="form-check-label" for="terms_accepted">
                                                         Eu li e aceito os
@@ -238,7 +238,7 @@
                                                         <a href="/privacy-policy" target="_blank" class="text-decoration-none">Política de Privacidade</a>.
                                                         <span class="text-danger">*</span>
                                                     </label>
-                                                    @error('terms_accepted')
+                                                    @error( 'terms_accepted' )
                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -256,7 +256,7 @@
                                         <div class="text-center">
                                             <small class="text-muted">
                                                 Já tem uma conta?
-                                                <a href="{{ route('login') }}" class="text-decoration-none">Fazer login</a>
+                                                <a href="{{ route( 'login' ) }}" class="text-decoration-none">Fazer login</a>
                                             </small>
                                         </div>
                                     </div>
@@ -270,7 +270,7 @@
     </div>
 @endsection
 
-@push('styles')
+@push( 'styles' )
 <style>
     .bg-register-image {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -348,7 +348,7 @@
 </style>
 @endpush
 
-@push('scripts')
+@push( 'scripts' )
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle de visibilidade da senha

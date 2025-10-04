@@ -3,30 +3,34 @@
     <ul class="navbar-nav ms-auto">
         {{-- Menu público - sempre visível --}}
         <li class="nav-item">
-            <a class="nav-link" href="/about">
-                <i class="bi bi-info-circle me-1"></i>Sobre
+            <a class="nav-link d-flex align-items-center" href="/about">
+                <i class="bi bi-info-circle me-2"></i>
+                <span>Sobre</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/support">
-                <i class="bi bi-headset me-1"></i>Suporte
+            <a class="nav-link d-flex align-items-center" href="/support">
+                <i class="bi bi-headset me-2"></i>
+                <span>Suporte</span>
             </a>
         </li>
 
         {{-- Menu autenticado - só se tiver sessão --}}
         @if( session()->has( 'auth' ) )
             <li class="nav-item">
-                <a class="nav-link" href="/provider">
-                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                <a class="nav-link d-flex align-items-center" href="/provider">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    <span>Dashboard</span>
                 </a>
             </li>
 
             {{-- Menu administrativo - só se for admin --}}
             @if( admin() )
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="bi bi-shield-lock-fill me-1"></i> Administração
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="adminDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        <span>Administração</span>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                         <li><a class="dropdown-item" href="/admin"><i class="bi bi-house me-2"></i>Home Admin</a></li>
@@ -64,9 +68,10 @@
             {{-- Menu de gerenciamento - só se não estiver na home e estiver autenticado --}}
             @if( request()->path() != '/' && session()->has( 'auth' ) )
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="managementDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="bi bi-kanban me-1"></i> Gerenciar
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="managementDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-kanban me-2"></i>
+                        <span>Gerenciar</span>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="managementDropdown">
                         <li><a class="dropdown-item" href="/provider/budgets"><i
@@ -80,8 +85,9 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/provider/reports">
-                        <i class="bi bi-graph-up me-1" aria-hidden="true"></i> Relatórios
+                    <a class="nav-link d-flex align-items-center" href="/provider/reports">
+                        <i class="bi bi-graph-up me-2" aria-hidden="true"></i>
+                        <span>Relatórios</span>
                     </a>
                 </li>
             @endif
@@ -89,10 +95,10 @@
         @endif
         {{-- Botão de tema - sempre visível --}}
         <li class="nav-item">
-            <button class="nav-link theme-toggle" onclick="toggleTheme()" title="Alternar Tema"
-                aria-label="Alternar Tema">
-                <i class="bi bi-sun-fill theme-light-icon" aria-hidden="true"></i>
-                <i class="bi bi-moon-stars-fill theme-dark-icon" aria-hidden="true"></i>
+            <button class="nav-link theme-toggle d-flex align-items-center justify-content-center"
+                onclick="toggleTheme()" title="Alternar Tema" aria-label="Alternar Tema">
+                <i class="bi bi-sun theme-light-icon" aria-hidden="true"></i>
+                <i class="bi bi-moon theme-dark-icon" aria-hidden="true"></i>
             </button>
         </li>
 
