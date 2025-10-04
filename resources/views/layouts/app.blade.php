@@ -1,28 +1,27 @@
+{{-- layout.blade.php --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" class="h-100">
+<html lang="pt-BR" class="h-100">
 
-@include( 'partials.shared._head' )
+@include( 'partials.shared.head' )
 
 <body class="d-flex flex-column h-100">
-    @include( 'partials.shared._header' )
+    @include( 'partials.shared.header' )
 
     <main class="flex-shrink-0">
-
-        @include( 'partials.components._alerts' )
-
+        @include( 'partials.components.alerts' )
         @yield( 'content' )
-
     </main>
 
-    @include( 'partials.shared._footer' )
+    @include( 'partials.shared.footer' )
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset( 'assets/js/modules/utils.js' ) }}" type="module"></script>
     <script src="{{ asset( 'assets/js/main.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/alert/alert.js' ) }}"></script>
+    <script src="{{ asset( 'assets/js/components/alerts.js' ) }}"></script>
 
     @stack( 'scripts' )
+
     <script>
         // Configuração global para AJAX
         document.addEventListener( 'DOMContentLoaded', function () {

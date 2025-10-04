@@ -46,8 +46,9 @@
                                     <label for="price" class="form-label">Preço</label>
                                     <div class="input-group">
                                         <input type="text"
-                                            class="form-control money-input @error( 'price' ) is-invalid @enderror" id="price"
-                                            name="price" value="{{ old( 'price', '0,00' ) }}" required placeholder="0,00">
+                                            class="form-control money-input @error( 'price' ) is-invalid @enderror"
+                                            id="price" name="price" value="{{ old( 'price', '0,00' ) }}" required
+                                            placeholder="0,00">
                                     </div>
                                     @error( 'price' )
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -83,15 +84,15 @@
                             <div class="text-center mb-3">
                                 <div class="image-preview-container"
                                     style="border: 1px dashed #ccc; background-color: #f8f9fa; width: 120px; height: 120px;">
-                                    <img id="imagePreview" src="/assets/img/img_not_found.png" class="img-fluid rounded"
-                                        alt="Preview da imagem">
+                                    <img id="imagePreview" src="{{ asset( 'assets/img/img_not_found.png' ) }}"
+                                        class="img-fluid rounded" alt="Preview da imagem">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="image" class="form-label">Selecionar Imagem</label>
                                 <div class="position-relative">
-                                    <input type="file" class="form-control @error( 'image' ) is-invalid @enderror" id="image"
-                                        name="image" accept="image/jpeg,image/png" style="padding-right: 120px;">
+                                    <input type="file" class="form-control @error( 'image' ) is-invalid @enderror"
+                                        id="image" name="image" accept="image/jpeg,image/png" style="padding-right: 120px;">
                                     <button type="button" id="uploadButton" class="btn btn-sm btn-primary position-absolute"
                                         style="right: 5px; top: 5px; z-index: 5;">
                                         <i class="bi bi-cloud-arrow-up me-1"></i>Escolher

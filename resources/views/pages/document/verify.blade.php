@@ -1,0 +1,70 @@
+@extends( 'layout' )
+
+@section( 'title', 'Verificação de Documento' )
+
+@section( 'content' )
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light py-3">
+                        <h2 class="h4 mb-0 text-primary">
+                            <i class="bi bi-patch-check-fill me-2"></i>
+                            Verificação de Autenticidade
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if ( $found )
+                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill flex-shrink-0 me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Documento Autêntico</h5>
+                                    Este documento foi verificado em nosso sistema e é genuíno.
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <h5 class="mb-3">Detalhes do Documento</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="fw-medium text-muted">Tipo de Documento</span>
+                                        <strong>{{ $type }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="fw-medium text-muted">Código</span>
+                                        <strong>{{ $document->code }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="fw-medium text-muted">Data de Geração</span>
+                                        <span>{{ \Carbon\Carbon::parse( $document->created_at )->format( 'd/m/Y H:i:s' ) }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="fw-medium text-muted mb-1">Hash de Verificação</div>
+                                        <div class="text-break bg-light p-2 rounded"
+                                            style="font-family: monospace; font-size: 0.85rem;">{{ $hash }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        @else
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <i class="bi bi-x-circle-fill flex-shrink-0 me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Documento Inválido ou Não Encontrado</h5>
+                                    Não foi possível verificar a autenticidade. O código pode estar incorreto ou o documento
+                                    pode não existir
+                                    em nosso sistema.
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-footer text-center bg-light">
+                        <button onclick="window.history.back();" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Voltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

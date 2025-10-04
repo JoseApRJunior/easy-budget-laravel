@@ -56,10 +56,10 @@
                                     <label for="price" class="form-label">Preço</label>
                                     <div class="input-group">
                                         <input type="text"
-                                            class="form-control money-input @error( 'price' ) is-invalid @enderror" id="price"
-                                            name="price"
-                                            value="{{ old( 'price', number_format( $product->price, 2, ',', '.' ) ) }}" required
-                                            placeholder="0,00">
+                                            class="form-control money-input @error( 'price' ) is-invalid @enderror"
+                                            id="price" name="price"
+                                            value="{{ old( 'price', number_format( $product->price, 2, ',', '.' ) ) }}"
+                                            required placeholder="0,00">
                                     </div>
                                     @error( 'price' )
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -73,7 +73,8 @@
                                         name="active" required>
                                         <option value="1" {{ old( 'active', $product->active ) == 1 ? 'selected' : '' }}>Ativo
                                         </option>
-                                        <option value="0" {{ old( 'active', $product->active ) == 0 ? 'selected' : '' }}>Inativo
+                                        <option value="0" {{ old( 'active', $product->active ) == 0 ? 'selected' : '' }}>
+                                            Inativo
                                         </option>
                                     </select>
                                     @error( 'active' )
@@ -101,16 +102,16 @@
                                         <img id="imagePreview" src="{{ asset( 'storage/products/' . $product->image ) }}"
                                             class="img-fluid rounded" alt="Imagem do produto">
                                     @else
-                                        <img id="imagePreview" src="/assets/img/img_not_found.png" class="img-fluid rounded"
-                                            alt="Sem imagem">
+                                        <img id="imagePreview" src="{{ asset( 'assets/img/img_not_found.png' ) }}"
+                                            class="img-fluid rounded" alt="Sem imagem">
                                     @endif
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="image" class="form-label">Alterar Imagem</label>
                                 <div class="position-relative">
-                                    <input type="file" class="form-control @error( 'image' ) is-invalid @enderror" id="image"
-                                        name="image" accept="image/jpeg,image/png" style="padding-right: 120px;">
+                                    <input type="file" class="form-control @error( 'image' ) is-invalid @enderror"
+                                        id="image" name="image" accept="image/jpeg,image/png" style="padding-right: 120px;">
                                     <button type="button" id="uploadButton" class="btn btn-sm btn-primary position-absolute"
                                         style="right: 5px; top: 5px; z-index: 5;">
                                         <i class="bi bi-cloud-arrow-up me-1"></i>Escolher

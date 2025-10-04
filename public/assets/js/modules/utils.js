@@ -95,7 +95,13 @@ export function initializePasswordValidation() {
    const passwordRules = document.querySelector(".password-rules ul");
    const passwordRulesStyle = document.querySelector(".password-rules");
 
-   if (passwordInput && confirmPasswordInput) {
+   // Só inicializa se os elementos essenciais existirem na página
+   if (
+      passwordInput &&
+      confirmPasswordInput &&
+      passwordRules &&
+      passwordRulesStyle
+   ) {
       passwordInput.addEventListener("input", () => {
          if (passwordInput.value.length > 0) {
             passwordRulesStyle.style.display = "block";

@@ -1,18 +1,13 @@
 @props( [ 'featureSlug', 'condition' => true ] )
 
 @php
-    // TODO: A lógica para buscar o recurso e verificar seu status precisa ser implementada.
-    // As funções originais do Twig 'getResource' e 'entityProperty' precisam ser portadas para PHP/Laravel.
-
-    // Exemplo de como a lógica poderia ser implementada (assumindo um Helper):
-    // $resource = \App\Helpers\FeatureHelper::getResource($featureSlug);
-    // $isInactive = $resource && $resource->status === 'inactive';
-
-    // Usando um valor placeholder por enquanto
-    $isInactive = false;
+    // Supondo que exista um serviço para verificar o status do recurso
+    // Em um cenário real, isso seria injetado ou acessado de outra forma
+    $resource   = app( \App\Services\FeatureService::class)->getResource( $featureSlug );
+    $isInactive = $condition && $resource && $resource->status === 'inactive';
 @endphp
 
-@if ( $condition && $isInactive )
+@if ( $isInactive )
     <div class="alert alert-warning m-2 d-flex" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <div>
@@ -21,6 +16,6 @@
     </div>
 @endif
 
-<div class="feature-content @if ( $condition && $isInactive ) feature-disabled @endif">
+<div class="feature-content {{ $isInactive ? 'feature-disabled' : '' }}">
     {{ $slot }}
 </div>

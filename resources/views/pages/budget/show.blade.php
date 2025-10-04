@@ -1,3 +1,8 @@
+@php
+    use App\Helpers\DateHelper;
+    use App\Helpers\StatusHelper;
+@endphp
+
 @extends( 'layout.app' )
 
 @section( 'content' )
@@ -19,9 +24,11 @@
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-end align-items-center mb-4 gap-2">
-            <a href="{{ route( 'budget.edit', $budget->code ) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-pencil me-2"></i>Editar
-            </a>
+            @if ( StatusHelper::status_allows_edit( $budget->status->slug ) )
+                <a href="{{ route( 'budget.edit', $budget->code ) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil me-2"></i>Editar
+                </a>
+            @endif
             <a href="{{ route( 'budget.pdf', $budget->code ) }}" target="_blank" class="btn btn-outline-info">
                 <i class="bi bi-printer me-2"></i>Imprimir
             </a>
@@ -50,8 +57,7 @@
                             <div class="col-md-3">
                                 <small class="text-muted">Status</small>
                                 <div>
-                                    <span class="badge fs-6"
-                                        style="background-color: {{ $budget->status->color }};">{{ $budget->status->name }}</span>
+                                    {!! StatusHelper::status_badge( $budget->status ) !!}
                                 </div>
                             </div>
                         </div>
@@ -81,11 +87,12 @@
                                                 <strong>Email do Cliente:</strong> {{ $budget->customer->email }}
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <strong>Criado em:</strong> {{ $budget->created_at->format( 'd/m/Y H:i' ) }}
+                                                <strong>Criado em:</strong>
+                                                {{ DateHelper::format( $budget->created_at, 'd/m/Y H:i' ) }}
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <strong>Atualizado em:</strong>
-                                                {{ $budget->updated_at->format( 'd/m/Y H:i' ) }}
+                                                {{ DateHelper::format( $budget->updated_at, 'd/m/Y H:i' ) }}
                                             </div>
                                             @if( $budget->payment_terms )
                                                 <div class="col-12 mb-3">
@@ -134,22 +141,24 @@
                                 Descontos: <span>- R$ {{ number_format( $total_discount, 2, ',', '.' ) }}</span></li>
                             <li class="list-group-item d-flex justify-content-between align-items-center h5 mb-0">
                                 <strong>Total a Pagar:</strong> <strong class="text-success">R$
-                                    {{ number_format( $real_total, 2, ',', '.' ) }}</strong></li>
+                                    {{ number_format( $real_total, 2, ',', '.' ) }}</strong>
+                            </li>
                         </ul>
                         <hr>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">Vencimento:</span>
                             <span
-                                class="fw-bold @if( $budget->due_date->isPast() ) text-danger @endif">{{ $budget->due_date->format( 'd/m/Y' ) }}</span>
+                                class="fw-bold @if( $budget->due_date->isPast() ) text-danger @endif">{{ DateHelper::formatBR( $budget->due_date ) }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="text-muted">Serviços:</span>
                             <span class="fw-bold">{{ $budget->services->count() }}</span>
                         </div>
                         <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-{{ $budget->status->progress_class }}" role="progressbar"
-                                style="width: {{ $budget->status->progress_percentage }}%;"
-                                aria-valuenow="{{ $budget->status->progress_percentage }}" aria-valuemin="0"
+                            <div class="progress-bar bg-{{ StatusHelper::status_color_class( $budget->status->color ) }}"
+                                role="progressbar"
+                                style="width: {{ StatusHelper::status_progress( $budget->status->slug ) }}%;"
+                                aria-valuenow="{{ StatusHelper::status_progress( $budget->status->slug ) }}" aria-valuemin="0"
                                 aria-valuemax="100" title="{{ $budget->status->name }}"></div>
                         </div>
                     </div>
@@ -179,8 +188,7 @@
                                 <tr>
                                     <td>{{ $service->code }}</td>
                                     <td>{{ Str::limit( $service->description, 50 ) }}</td>
-                                    <td><span class="badge"
-                                            style="background-color: {{ $service->status->color }};">{{ $service->status->name }}</span>
+                                    <td>{!! StatusHelper::status_badge( $service->status ) !!}
                                     </td>
                                     <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
                                     <td class="text-end">
@@ -215,9 +223,9 @@
                     <div class="modal-body">
                         <p>Selecione o novo status para o orçamento <strong>{{ $budget->code }}</strong>.</p>
                         <select name="status_id" class="form-select">
-                            @foreach( $statuses as $status )
-                                <option value="{{ $status->id }}" {{ $budget->status_id == $status->id ? 'selected' : '' }}>
-                                    {{ $status->name }}
+                            @foreach( StatusHelper::budget_next_statuses( $budget->status->slug ) as $status )
+                                <option value="{{ $status[ 'id' ] }}">
+                                    {{ $status[ 'name' ] }}
                                 </option>
                             @endforeach
                         </select>

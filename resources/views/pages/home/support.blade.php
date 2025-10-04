@@ -1,6 +1,5 @@
+{{-- pages/home/support.blade.php --}}
 @extends( 'layouts.app' )
-
-@section( 'title', 'Suporte' )
 
 @section( 'content' )
     <div class="container mt-5">
@@ -192,63 +191,44 @@
                         </h2>
                     </div>
                     <div class="card-body">
-                        <form action="{{ url( '/support' ) }}" method="POST" class="needs-validation" novalidate>
-                            @csrf
+                        <form action="/support" method="POST" class="needs-validation" novalidate>
+                            {{ csrf_field() }}
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="first_name" class="form-label">Nome</label>
-                                    <input type="text" class="form-control @error( 'first_name' ) is-invalid @enderror"
-                                        id="first_name" name="first_name" value="{{ old( 'first_name' ) }}" required>
-                                    @error( 'first_name' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                    @error( 'first_name' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="last_name" class="form-label">Sobrenome</label>
-                                    <input type="text" class="form-control @error( 'last_name' ) is-invalid @enderror"
-                                        id="last_name" name="last_name" value="{{ old( 'last_name' ) }}" required>
-                                    @error( 'last_name' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                    @error( 'last_name' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="email" class="form-label">E-mail</label>
-                                <input type="email" class="form-control @error( 'email' ) is-invalid @enderror" id="email"
-                                    name="email" value="{{ old( 'email' ) }}" required>
-                                @error( 'email' )
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                @error( 'email' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="mb-3">
                                 <label for="subject" class="form-label">Assunto</label>
-                                <select class="form-select @error( 'subject' ) is-invalid @enderror" id="subject"
-                                    name="subject" required>
+                                <select class="form-select" id="subject" name="subject" required>
                                     <option value="">Selecione um assunto</option>
-                                    <option value="orçamento" @if( old( 'subject' ) == 'orçamento' ) selected @endif>Dúvida sobre
-                                        orçamentos</option>
-                                    <option value="pagamento" @if( old( 'subject' ) == 'pagamento' ) selected @endif>Questões de
-                                        pagamento</option>
-                                    <option value="técnico" @if( old( 'subject' ) == 'técnico' ) selected @endif>Suporte técnico
-                                    </option>
-                                    <option value="outro" @if( old( 'subject' ) == 'outro' ) selected @endif>Outro assunto
-                                    </option>
+                                    <option value="orçamento">Dúvida sobre orçamentos</option>
+                                    <option value="pagamento">Questões de pagamento</option>
+                                    <option value="técnico">Suporte técnico</option>
+                                    <option value="outro">Outro assunto</option>
                                 </select>
-                                @error( 'subject' )
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                @error( 'subject' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="mb-3">
                                 <label for="message" class="form-label">Mensagem</label>
-                                <textarea class="form-control @error( 'message' ) is-invalid @enderror" id="message"
-                                    name="message" rows="4" required>{{ old( 'message' ) }}</textarea>
-                                @error( 'message' )
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                                @error( 'message' ) <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <button type="submit" class="btn btn-primary">

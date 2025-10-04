@@ -41,7 +41,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center">
                         <div class="image-container mb-3">
-                            <img src="{{ $product->image ? asset( 'storage/products/' . $product->image ) : '/assets/img/img_not_found.png' }}"
+                            <img src="{{ $product->image ? asset( 'storage/products/' . $product->image ) : asset( 'assets/img/img_not_found.png' ) }}"
                                 alt="{{ $product->name }}" class="img-fluid rounded" style="max-height: 200px;">
                         </div>
                         <h5 class="card-title">{{ $product->name }}</h5>

@@ -18,7 +18,7 @@
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-end gap-2 mb-4">
-            @if( $service->status_slug === 'DRAFT' )
+            @if ( StatusHelper::status_allows_action( $service->status->slug, 'start_scheduling' ) )
                 <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionModal"
                     data-action="SCHEDULING" data-title="Iniciar Agendamento" data-button-class="btn-success"
                     data-message="Deseja mover o serviço {{ $service->code }} para agendamento?">
@@ -29,9 +29,11 @@
                 target="_blank">
                 <i class="bi bi-printer me-2"></i>Imprimir
             </a>
-            <a href="{{ route( 'provider.services.edit', $service->id ) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-pencil me-2"></i>Editar
-            </a>
+            @if ( StatusHelper::status_allows_edit( $service->status->slug ) )
+                <a href="{{ route( 'provider.services.edit', $service->id ) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil me-2"></i>Editar
+                </a>
+            @endif
             <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                 <i class="bi bi-trash me-2"></i>Excluir
             </button>
@@ -46,14 +48,14 @@
                         <h5 class="card-title mb-0">
                             <i class="bi bi-info-circle me-2"></i>Informações do Serviço
                         </h5>
-                        @include( 'partials.components.status_badge', [ 'status' => $service->status ] )
+                        {!! StatusHelper::status_badge( $service->status ) !!}
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6"><span class="text-muted">Código:</span> <strong
                                     class="ms-2">{{ $service->code }}</strong></div>
                             <div class="col-md-6"><span class="text-muted">Criação:</span> <strong
-                                    class="ms-2">{{ $service->created_at->format( 'd/m/Y H:i' ) }}</strong></div>
+                                    class="ms-2">{{ DateHelper::formatBR( $service->created_at, 'd/m/Y H:i' ) }}</strong></div>
                             <div class="col-md-6"><span class="text-muted">Cliente:</span> <strong
                                     class="ms-2">{{ $service->customer_name }}</strong></div>
                             <div class="col-md-6"><span class="text-muted">Orçamento:</span> <strong
@@ -61,7 +63,7 @@
                             <div class="col-md-6"><span class="text-muted">Categoria:</span> <strong
                                     class="ms-2">{{ $service->category->name }}</strong></div>
                             <div class="col-md-6"><span class="text-muted">Vencimento:</span> <strong
-                                    class="ms-2 {{ $service->due_date->isPast() ? 'text-danger' : '' }}">{{ $service->due_date->format( 'd/m/Y' ) }}</strong>
+                                    class="ms-2 {{ $service->due_date->isPast() ? 'text-danger' : '' }}">{{ DateHelper::formatBR( $service->due_date ) }}</strong>
                             </div>
                             <div class="col-12 mt-3">
                                 <div class="text-muted mb-2">Descrição:</div>
@@ -101,9 +103,10 @@
                                 <span class="text-muted">Progresso:</span>
                             </div>
                             <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-{{ $service->status->slug | status_color_class }}"
-                                    role="progressbar" style="width: {{ $service->status->slug | status_progress }}%;"
-                                    aria-valuenow="{{ $service->status->slug | status_progress }}" aria-valuemin="0"
+                                <div class="progress-bar bg-{{ StatusHelper::status_color_class( $service->status->slug ) }}"
+                                    role="progressbar"
+                                    style="width: {{ StatusHelper::status_progress( $service->status->slug ) }}%;"
+                                    aria-valuenow="{{ StatusHelper::status_progress( $service->status->slug ) }}" aria-valuemin="0"
                                     aria-valuemax="100" data-bs-toggle="tooltip" title="{{ $service->status->name }}"></div>
                             </div>
                             <small class="text-muted mt-1 d-block">{{ $service->status->description }}</small>

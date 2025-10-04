@@ -53,7 +53,7 @@
                             <label for="status" class="form-label">Status</label>
                             <select id="status" name="status" class="form-select">
                                 <option value="">Todos</option>
-                                @foreach ( $service_status as $status )
+                                @foreach ( StatusHelper::service_status_options() as $status )
                                     <option value="{{ $status->id }}" {{ request( 'status' ) == $status->id ? 'selected' : '' }}>
                                         {{ $status->name }}
                                     </option>
@@ -90,10 +90,10 @@
                                 <tr>
                                     <td>{{ $service->code }}</td>
                                     <td>{{ $service->customer_name }}</td>
-                                    <td>{{ $service->created_at->format( 'd/m/Y' ) }}</td>
-                                    <td>{{ $service->due_date->format( 'd/m/Y' ) }}</td>
+                                    <td>{{ DateHelper::formatBR( $service->created_at ) }}</td>
+                                    <td>{{ DateHelper::formatBR( $service->due_date ) }}</td>
                                     <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
-                                    <td>@include( 'partials.components.status_badge', [ 'status' => $service->status ] )</td>
+                                    <td>{!! StatusHelper::status_badge( $service->status ) !!}</td>
                                     <td>
                                         <a href="{{ route( 'provider.services.show', $service->code ) }}"
                                             class="btn btn-sm btn-outline-primary">

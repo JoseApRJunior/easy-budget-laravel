@@ -229,6 +229,9 @@ Adicionar em `config/app.php`:
 ],
 ```
 
+helpers twig anitgo C:\xampp\htdocs\easy-budget-laravel\old-system\app-twig
+C:\xampp\htdocs\easy-budget-laravel\old-system\twig analisar para migrar, as views usavam agora deve ser alterado para laravem
+
 ### Classes Helper Necessárias
 
 1. **BackupManager**

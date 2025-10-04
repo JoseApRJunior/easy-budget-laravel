@@ -12,15 +12,18 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         health: '/up',
     )
     ->withProviders( [
-        // \App\Providers\TwigServiceProvider::class, // Removido - migrando para Blade nativo
+        App\Providers\AliasServiceProvider::class,
+        App\Providers\ViewComposerServiceProvider::class,
+        App\Providers\BladeDirectiveServiceProvider::class,
+        App\Providers\BackupServiceProvider::class,
     ] )
-    ->withMiddleware( function (Middleware $middleware): void {
-        $middleware->alias( [ 
+    ->withMiddleware( function ( Middleware $middleware ): void {
+        $middleware->alias( [
             'tenancy'         => \Stancl\Tenancy\Middleware\InitializeTenancyByPath::class,
             'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
         ] );
 
     } )
-    ->withExceptions( function (Exceptions $exceptions): void {
+    ->withExceptions( function ( Exceptions $exceptions ): void {
         //
     } )->create();

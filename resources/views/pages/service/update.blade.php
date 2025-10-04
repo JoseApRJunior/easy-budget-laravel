@@ -20,10 +20,11 @@
         <!-- Form -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <form id="update-service-form" action="{{ route( 'provider.services.update', $service->id ) }}" method="POST">
+                <form id="update-service-form" action="{{ route( 'provider.services.update', $service->id ) }}"
+                    method="POST">
                     @csrf
                     @method( 'PUT' )
-                    <fieldset {{ $service->status_slug != 'DRAFT' ? 'disabled' : '' }}>
+                    <fieldset {{ !StatusHelper::status_allows_edit( $service->status->slug ) ? 'disabled' : '' }}>
 
                         <!-- Service Information -->
                         <div class="row mb-4">
@@ -41,7 +42,7 @@
                                         <i class="bi bi-calendar-check me-2"></i>Data de Criação
                                     </label>
                                     <input type="text" class="form-control bg-light"
-                                        value="{{ $service->created_at->format( 'd/m/Y H:i' ) }}" disabled>
+                                        value="{{ DateHelper::formatBR( $service->created_at, 'd/m/Y H:i' ) }}" disabled>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -78,7 +79,7 @@
                                         <i class="bi bi-calendar me-2"></i>Previsão de Vencimento
                                     </label>
                                     <input type="date" id="due_date" name="due_date" class="form-control date-input-br"
-                                        value="{{ $service->due_date->format( 'Y-m-d' ) }}" required />
+                                        value="{{ DateHelper::formatBR( $service->due_date, 'Y-m-d' ) }}" required />
                                     @error( 'due_date' )
                                         <div class="text-danger mt-1">{{ $message }}</div>
                                     @enderror
@@ -169,20 +170,15 @@
                         </a>
                     </div>
                     <div>
-                        @if ( $service->status_slug == 'DRAFT' )
+                        @if ( StatusHelper::status_allows_edit( $service->status->slug ) )
                             <button type="submit" form="update-service-form" class="btn btn-primary px-4"
                                 data-bs-toggle="tooltip" title="Salvar as alterações feitas no serviço">
                                 <i class="bi bi-check-lg me-2"></i>Salvar Alterações
                             </button>
-                        @elseif ( $service->status_slug == 'SCHEDULING' )
-                            <div class="alert alert-warning mb-0 py-2 px-3" role="alert" data-bs-toggle="tooltip"
-                                title="Este serviço está aguardando agendamento e não pode ser modificado.">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Aguardando agendamento
-                            </div>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3" role="alert" data-bs-toggle="tooltip"
-                                title="Este serviço não pode ser editado no status atual: {{ $service->status_name }}.">
-                                <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $service->status_name }})
+                                title="Este serviço não pode ser editado no status atual: {{ $service->status->name }}.">
+                                <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $service->status->name }})
                             </div>
                         @endif
                     </div>

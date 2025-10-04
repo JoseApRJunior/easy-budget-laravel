@@ -11,7 +11,8 @@
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route( 'budget.index' ) }}">Orçamentos</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'budget.show', $budget->code ) }}">{{ $budget->code }}</a>
+                    <li class="breadcrumb-item"><a
+                            href="{{ route( 'budget.show', $budget->code ) }}">{{ $budget->code }}</a>
                     </li>
                     <li class="breadcrumb-item active">Editar</li>
                 </ol>
@@ -24,7 +25,7 @@
                 <form id="update-budget-form" action="{{ route( 'budget.update', $budget->id ) }}" method="POST">
                     @csrf
                     @method( 'PUT' )
-                    <fieldset {{ $budget->status->slug !== 'DRAFT' ? 'disabled' : '' }}>
+                    <fieldset {{ !StatusHelper::status_allows_edit( $budget->status->slug ) ? 'disabled' : '' }}>
                         <!-- Budget Information -->
                         <div class="row mb-4">
                             <div class="col-md-2">
@@ -48,7 +49,7 @@
                                     <label for="created_at" class="form-label fw-semibold"><i
                                             class="bi bi-calendar-check me-2"></i>Data de Criação</label>
                                     <input type="text" class="form-control bg-light"
-                                        value="{{ $budget->created_at->format( 'd/m/Y H:i' ) }}" disabled>
+                                        value="{{ DateHelper::formatBR( $budget->created_at, 'd/m/Y H:i' ) }}" disabled>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -56,7 +57,8 @@
                                     <label for="due_date" class="form-label fw-semibold"><i
                                             class="bi bi-calendar me-2"></i>Vencimento</label>
                                     <input type="date" id="due_date" name="due_date" class="form-control"
-                                        value="{{ old( 'due_date', $budget->due_date->format( 'Y-m-d' ) ) }}" required>
+                                        value="{{ old( 'due_date', DateHelper::format( $budget->due_date, 'Y-m-d' ) ) }}"
+                                        required>
                                     @error( 'due_date' )
                                         <div class="text-danger mt-1">{{ $message }}</div>
                                     @enderror
@@ -103,14 +105,10 @@
                         <i class="bi bi-x-circle me-2"></i>Cancelar
                     </a>
                     <div>
-                        @if( $budget->status->slug === 'DRAFT' )
+                        @if ( StatusHelper::status_allows_edit( $budget->status->slug ) )
                             <button type="submit" form="update-budget-form" class="btn btn-primary px-4">
                                 <i class="bi bi-check-lg me-2"></i>Salvar Alterações
                             </button>
-                        @elseif( $budget->status->slug === 'PENDING' )
-                            <div class="alert alert-warning mb-0 py-2 px-3">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Aguardando Aprovação
-                            </div>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3">
                                 <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->name }})
@@ -140,13 +138,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach( $budget->services as $service )
+                                @foreach ( $budget->services as $service )
                                     <tr>
                                         <td>{{ $service->code }}</td>
                                         <td>{{ Str::limit( $service->description, 50 ) }}</td>
                                         <td>
-                                            <span class="badge"
-                                                style="background-color: {{ $service->status->color }}">{{ $service->status->name }}</span>
+                                            {!! StatusHelper::status_badge( $service->status ) !!}
                                         </td>
                                         <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
                                         <td class="text-end">

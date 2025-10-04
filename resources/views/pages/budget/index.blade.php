@@ -1,3 +1,8 @@
+@php
+    use App\Helpers\DateHelper;
+    use App\Helpers\StatusHelper;
+@endphp
+
 @extends( 'layout.app' )
 
 @section( 'content' )
@@ -87,9 +92,9 @@
                             <label for="filter_status" class="form-label">Status</label>
                             <select id="filter_status" name="filter_status" class="form-select">
                                 <option value="">Todos</option>
-                                @foreach( $statuses as $status )
-                                    <option value="{{ $status->slug }}" {{ request( 'filter_status' ) == $status->slug ? 'selected' : '' }}>
-                                        {{ $status->name }}
+                                @foreach( StatusHelper::budget_status_options() as $status )
+                                    <option value="{{ $status[ 'slug' ] }}" {{ request( 'filter_status' ) == $status[ 'slug' ] ? 'selected' : '' }}>
+                                        {{ $status[ 'name' ] }}
                                     </option>
                                 @endforeach
                             </select>
@@ -132,12 +137,11 @@
                                 <tr>
                                     <td>{{ $budget->code }}</td>
                                     <td>{{ $budget->customer->first_name }} {{ $budget->customer->last_name }}</td>
-                                    <td>{{ $budget->created_at->format( 'd/m/Y' ) }}</td>
-                                    <td>{{ $budget->due_date->format( 'd/m/Y' ) }}</td>
+                                    <td>{{ DateHelper::formatBR( $budget->created_at ) }}</td>
+                                    <td>{{ DateHelper::formatBR( $budget->due_date ) }}</td>
                                     <td>R$ {{ number_format( $budget->total, 2, ',', '.' ) }}</td>
                                     <td>
-                                        <span class="badge"
-                                            style="background-color: {{ $budget->status->color }};">{{ $budget->status->name }}</span>
+                                        {!! StatusHelper::status_badge( $budget->status ) !!}
                                     </td>
                                     <td class="text-end">
                                         <a href="{{ route( 'budget.show', $budget->code ) }}"
@@ -145,10 +149,12 @@
                                             title="Ver Detalhes">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route( 'budget.edit', $budget->code ) }}"
-                                            class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
+                                        @if ( StatusHelper::status_allows_edit( $budget->status->slug ) )
+                                            <a href="{{ route( 'budget.edit', $budget->code ) }}"
+                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteBudgetModal" data-budget-code="{{ $budget->code }}"
                                             data-budget-id="{{ $budget->id }}" data-bs-toggle="tooltip" title="Excluir">

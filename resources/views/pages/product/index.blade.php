@@ -132,7 +132,7 @@
                             @forelse ( $products as $product )
                                 <tr>
                                     <td class="text-center align-middle">
-                                        <img src="{{ $product->image ? asset( 'storage/products/' . $product->image ) : '/assets/img/img_not_found.png' }}"
+                                        <img src="{{ $product->image ? asset( 'storage/products/' . $product->image ) : asset('assets/img/img_not_found.png') }}"
                                             alt="{{ $product->name }}" class="img-thumbnail" width="50">
                                     </td>
                                     <td class="align-middle">

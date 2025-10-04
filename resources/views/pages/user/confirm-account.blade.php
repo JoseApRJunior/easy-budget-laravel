@@ -1,38 +1,55 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-75 py-1 py-md-5">
-        <div class="row justify-content-center w-100">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
-                <div class="card shadow-lg">
-                    <div class="card-body p-5 text-center">
-                        <h2 class="mb-4 text-primary">Easy Budget</h2>
-                        @if ( isset( $confirmAccount ) && $confirmAccount )
-
-                            <div class="mb-4">
-                                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-                            </div>
-                            <h3 class="mb-4 text-success">Conta Confirmada!</h3>
-                            <p class="mb-4">Sua conta foi confirmada com sucesso. Agora você pode fazer login e começar a usar o
-                                Easy
-                                Budget.</p>
-                            <a href="{{ route( 'login' ) }}" class="btn btn-primary btn-lg">Ir para o Login</a>
-                        @else
-                            <div class="mb-4">
-                                <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
-                            </div>
-                            <h3 class="mb-4 text-danger">Falha na Confirmação</h3>
-                            <p class="mb-4">Desculpe, não foi possível confirmar sua conta. O link pode ter expirado ou já ter
-                                sido usado.
-                            </p>
-                            <div class="d-grid gap-2">
-                                <a href="{{ route( 'verification.resend' ) }}" class="btn btn-primary btn-lg mb-2">Reenviar Link
-                                    de Confirmação</a>
-                                <a href="{{ route( 'register' ) }}" class="btn btn-outline-secondary">Registrar Novamente</a>
-                            </div>
-                        @endif
-                    </div>
+    <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10">
+                <div class="text-center">
+                    <h2 class="text-2xl font-semibold text-indigo-600">Easy Budget</h2>
                 </div>
+
+                @if ( isset( $confirmAccount ) && $confirmAccount )
+                    <div class="mt-6 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                            <i class="bi bi-check-circle-fill text-green-600 text-3xl"></i>
+                        </div>
+                        <h3 class="mt-5 text-lg leading-6 font-medium text-gray-900">Conta Confirmada!</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <p class="text-sm text-gray-500">
+                                Sua conta foi confirmada com sucesso. Agora você pode fazer login e começar a usar o Easy
+                                Budget.
+                            </p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{{ route( 'login' ) }}"
+                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Ir para o Login
+                            </a>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-6 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                            <i class="bi bi-x-circle-fill text-red-600 text-3xl"></i>
+                        </div>
+                        <h3 class="mt-5 text-lg leading-6 font-medium text-gray-900">Falha na Confirmação</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <p class="text-sm text-gray-500">
+                                Desculpe, não foi possível confirmar sua conta. O link pode ter expirado ou já ter sido usado.
+                            </p>
+                        </div>
+                        <div class="mt-4 space-y-3">
+                            <a href="{{ route( 'verification.resend' ) }}"
+                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Reenviar Link de Confirmação
+                            </a>
+                            <a href="{{ route( 'register' ) }}"
+                                class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Registrar Novamente
+                            </a>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

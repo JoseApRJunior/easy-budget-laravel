@@ -38,14 +38,14 @@ class HomeController extends Controller
         try {
             $result = $this->planService->list();
 
-            // Verificar se o resultado foi bem-sucedido e extrair dados
-            $plansData = [];
-            if ( $result->isSuccess() && is_array( $result->getData() ) ) {
-                $plansData = $result->getData();
+            $plans = [];
+            if ( $result->isSuccess() ) {
+                $data  = $result->getData();
+                $plans = is_array( $data ) ? $data : [];
             }
 
             return view( 'pages.home.index', [
-                'plans' => $plansData
+                'plans' => $plans
             ] );
         } catch ( Exception $e ) {
             Log::error( 'Erro ao carregar página inicial: ' . $e->getMessage() );
@@ -102,6 +102,26 @@ class HomeController extends Controller
                 ->with( 'error', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
                 ->withInput();
         }
+    }
+
+    /**
+     * Exibe a página de termos de serviço
+     *
+     * @return View
+     */
+    public function terms(): View
+    {
+        return view( 'pages.legal.terms_of_service' );
+    }
+
+    /**
+     * Exibe a página de política de privacidade
+     *
+     * @return View
+     */
+    public function privacy(): View
+    {
+        return view( 'pages.legal.privacy_policy' );
     }
 
 }

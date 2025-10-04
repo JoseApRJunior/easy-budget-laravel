@@ -90,7 +90,7 @@
                                     <i class="bi bi-card-text me-2"></i>Descrição
                                 </label>
                                 <textarea id="description" name="description" class="form-control" rows="3" maxlength="255"
-                                    placeholder="Descreva o serviço detalhadamente"></textarea>
+                                    placeholder="Descreva o serviço detalhadamente">{{ old( 'description' ) }}</textarea>
                                 <div class="d-flex justify-content-end">
                                     <small id="char-count" class="text-muted mt-2">255 caracteres restantes</small>
                                 </div>
