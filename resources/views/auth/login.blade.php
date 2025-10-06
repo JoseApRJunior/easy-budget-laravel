@@ -35,7 +35,7 @@
                             {{-- Email Field --}}
                             <div class="mb-4">
                                 <label for="email" class="form-label fw-semibold">
-                                    <i class="bi bi-envelope me-2"></i>Endereço de E-mail
+                                    </i>Endereço de E-mail
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -54,7 +54,7 @@
                             {{-- Password Field --}}
                             <div class="mb-4">
                                 <label for="password" class="form-label fw-semibold">
-                                    <i class="bi bi-key me-2"></i>Senha
+                                    </i>Senha
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -63,13 +63,22 @@
                                     <input id="password-input" name="password" type="password"
                                         autocomplete="current-password" required
                                         class="form-control @error( 'password' ) is-invalid @enderror"
-                                        placeholder="••••••••">
+                                        placeholder="Digite sua senha">
                                     <span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
                                         <i class="bi bi-eye" id="password-icon"></i>
                                     </span>
                                     @error( 'password' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                {{-- Dicas de segurança para senha --}}
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-shield-check me-1"></i>
+                                        Use uma senha forte com pelo menos 8 caracteres, incluindo letras maiúsculas,
+                                        minúsculas, números e caracteres especiais.
+                                    </small>
                                 </div>
                             </div>
                             {{-- Remember Me --}}
