@@ -358,7 +358,7 @@ return new class extends Migration
         // 8) Pagamentos MercadoPago
         Schema::create( 'plan_subscriptions', function ( Blueprint $table ) {
             $table->id();
-            $table->string( 'status', 20 );
+           $table->enum('status', ['active', 'cancelled', 'pending','expired']);
             $table->decimal( 'transaction_amount', 10, 2 );
             $table->dateTime( 'start_date' );
             $table->dateTime( 'end_date' )->nullable();

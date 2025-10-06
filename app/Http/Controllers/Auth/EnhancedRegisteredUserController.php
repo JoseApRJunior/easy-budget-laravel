@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\CommonData;
 use App\Models\Plan;
+use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Tenant;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class EnhancedRegisteredUserController extends Controller
@@ -27,13 +28,7 @@ class EnhancedRegisteredUserController extends Controller
      */
     public function create(): View
     {
-        // Buscar planos ativos disponíveis
-        $plans = Plan::active()
-            ->orderBy( 'price' )
-            ->get()
-            ->toArray();
-
-        return view( 'auth.enhanced-register', compact( 'plans' ) );
+        return view( 'auth.enhanced-register' );
     }
 
     /**
@@ -49,14 +44,12 @@ class EnhancedRegisteredUserController extends Controller
             'email'          => [ 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'phone'          => [ 'required', 'string', 'max:20' ],
             'password'       => [ 'required', 'confirmed', 'min:8' ],
-            'plan'           => [ 'required', 'string', Rule::exists( 'plans', 'slug' )->where( 'status', true ) ],
             'terms_accepted' => [ 'required', 'accepted' ],
         ], [
             'first_name.required'     => 'O nome é obrigatório.',
             'last_name.required'      => 'O sobrenome é obrigatório.',
+            'email.required'          => 'O email é obrigatório.',
             'phone.required'          => 'O telefone é obrigatório.',
-            'plan.required'           => 'A seleção de um plano é obrigatória.',
-            'plan.exists'             => 'O plano selecionado não está disponível.',
             'terms_accepted.required' => 'Você deve aceitar os termos de serviço.',
             'terms_accepted.accepted' => 'Você deve aceitar os termos de serviço.',
         ] );
@@ -65,28 +58,34 @@ class EnhancedRegisteredUserController extends Controller
             DB::beginTransaction();
 
             // 1. Criar ou buscar tenant (por simplicidade, vamos criar um novo tenant)
+            Log::info( 'Criando tenant...', [ 'name' => $request->first_name . ' ' . $request->last_name ] );
             $tenant = Tenant::create( [
-                'name'      => $request->first_name . ' ' . $request->last_name,
-                'domain'    => strtolower( str_replace( ' ', '', $request->first_name . $request->last_name ) ),
+                'name'      => $request->first_name . ' ' . $request->last_name. ' ' . time(),
                 'is_active' => true,
             ] );
+            Log::info( 'Tenant criado com sucesso', [ 'tenant_id' => $tenant->id ] );
 
             // 2. Buscar o plano selecionado
-            $plan = Plan::where( 'slug', $request->plan )->where( 'status', true )->first();
+            Log::info( 'Buscando plano pro...' );
+            $plan = Plan::where( 'slug', 'pro' )->where( 'status', true )->first();
 
             if ( !$plan ) {
                 throw new \Exception( 'Plano selecionado não encontrado ou não está ativo.' );
             }
+            Log::info( 'Plano encontrado', [ 'plan_id' => $plan->id ] );
 
             // 3. Criar o usuário
+            Log::info( 'Criando usuário...' );
             $user = User::create( [
                 'tenant_id' => $tenant->id,
                 'email'     => $request->email,
                 'password'  => Hash::make( $request->password ),
                 'is_active' => true,
             ] );
+            Log::info( 'Usuário criado', [ 'user_id' => $user->id ] );
 
             // 4. Criar os dados comuns
+            Log::info( 'Criando dados comuns...' );
             $commonData = CommonData::create( [
                 'tenant_id'    => $tenant->id,
                 'first_name'   => $request->first_name,
@@ -96,8 +95,10 @@ class EnhancedRegisteredUserController extends Controller
                 'company_name' => null, // Pode ser adicionado posteriormente
                 'description'  => null, // Pode ser adicionado posteriormente
             ] );
+            Log::info( 'Dados comuns criados', [ 'common_data_id' => $commonData->id ] );
 
             // 5. Criar o provider
+            Log::info( 'Criando provider...' );
             $provider = Provider::create( [
                 'tenant_id'      => $tenant->id,
                 'user_id'        => $user->id,
@@ -106,14 +107,26 @@ class EnhancedRegisteredUserController extends Controller
                 'address_id'     => null, // Pode ser adicionado posteriormente
                 'terms_accepted' => $request->terms_accepted,
             ] );
+            Log::info( 'Provider criado', [ 'provider_id' => $provider->id ] );
 
             // 6. Atualizar o common_data_id no provider (relacionamento bidirecional)
             $provider->common_data_id = $commonData->id;
             $provider->save();
 
             // 7. Criar assinatura do plano (se necessário)
-            // Por enquanto, apenas associamos o plano ao provider
-            // Você pode implementar PlanSubscription posteriormente se necessário
+            Log::info( 'Criando assinatura do plano...' );
+            $plan_subscription = PlanSubscription::create( [
+                'tenant_id'          => $tenant->id,
+                'plan_id'            => $plan->id,
+                'user_id'            => $user->id,
+                'provider_id'        => $provider->id,
+                'status'             => 'active',
+                'transaction_amount' => $plan->price ?? 0.00,
+                'transaction_date'         => now(),
+                'start_date'          => now(),
+                'end_date'            => date( 'Y-m-d H:i:s', strtotime( '+7 days' ) ),
+            ] );
+            Log::info( 'Assinatura do plano criada', [ 'subscription_id' => $plan_subscription->id ] );
 
             DB::commit();
 
@@ -140,19 +153,6 @@ class EnhancedRegisteredUserController extends Controller
                 ->withInput()
                 ->withErrors( [ 'registration' => 'Erro interno do servidor. Tente novamente em alguns minutos.' ] );
         }
-    }
-
-    /**
-     * Exibir informações sobre os planos disponíveis.
-     */
-    public function showPlans(): View
-    {
-        $plans = Plan::active()
-            ->orderBy( 'price' )
-            ->get()
-            ->toArray();
-
-        return view( 'auth.plans', compact( 'plans' ) );
     }
 
 }
