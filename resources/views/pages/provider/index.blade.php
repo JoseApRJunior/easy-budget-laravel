@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-1">
@@ -89,7 +89,7 @@
                             <div class="text-end">
                                 <h5 class="mb-0 text-success">
                                     R$
-                                    {{ number_format( $financial_summary[ 'monthly_revenue' ], 2, ',', '.' ) }}
+                                    {{ number_format( $financial_summary[ 'monthly_revenue' ] ?? 0, 2, ',', '.' ) }}
                                 </h5>
                             </div>
                         </div>
@@ -99,13 +99,13 @@
                             <div>
                                 <h6 class="mb-0">Orçamentos Pendentes</h6>
                                 <small class="text-muted">
-                                    {{ $financial_summary[ 'pending_budgets' ][ 'count' ] }} orçamento(s)
+                                    {{ $financial_summary[ 'pending_budgets' ][ 'count' ] ?? 0 }} orçamento(s)
                                 </small>
                             </div>
                             <div class="text-end">
                                 <h5 class="mb-0 text-warning">
                                     R$
-                                    {{ number_format( $financial_summary[ 'pending_budgets' ][ 'total' ], 2, ',', '.' ) }}
+                                    {{ number_format( $financial_summary[ 'pending_budgets' ][ 'total' ] ?? 0, 2, ',', '.' ) }}
                                 </h5>
                             </div>
                         </div>
@@ -115,13 +115,13 @@
                             <div>
                                 <h6 class="mb-0">Pagamentos Atrasados</h6>
                                 <small class="text-muted">
-                                    {{ $financial_summary[ 'overdue_payments' ][ 'count' ] }} pagamento(s)
+                                    {{ $financial_summary[ 'overdue_payments' ][ 'count' ] ?? 0 }} pagamento(s)
                                 </small>
                             </div>
                             <div class="text-end">
                                 <h5 class="mb-0 text-danger">
                                     R$
-                                    {{ number_format( $financial_summary[ 'overdue_payments' ][ 'total' ], 2, ',', '.' ) }}
+                                    {{ number_format( $financial_summary[ 'overdue_payments' ][ 'total' ] ?? 0, 2, ',', '.' ) }}
                                 </h5>
                             </div>
                         </div>
@@ -135,7 +135,7 @@
                             <div class="text-end">
                                 <h5 class="mb-0 text-info">
                                     R$
-                                    {{ number_format( $financial_summary[ 'next_month_projection' ], 2, ',', '.' ) }}
+                                    {{ number_format( $financial_summary[ 'next_month_projection' ] ?? 0, 2, ',', '.' ) }}
                                 </h5>
                             </div>
                         </div>
