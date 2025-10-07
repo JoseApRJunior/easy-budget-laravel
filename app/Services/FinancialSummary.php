@@ -80,12 +80,6 @@ class FinancialSummary
                 'period'                => $currentMonth,
             ];
 
-            Log::info( 'FinancialSummary: Resumo financeiro gerado', [
-                'tenant_id' => $tenantId,
-                'period'    => $currentMonth,
-                'revenue'   => $monthlyRevenue,
-            ] );
-
             return ServiceResult::success(
                 $summary,
                 'Resumo financeiro obtido com sucesso.',
@@ -373,13 +367,13 @@ class FinancialSummary
     {
         $last3Months = Budget::query()
             ->select( [
-                DB::raw( 'DATE_FORMAT(created_at, "%Y-%m") as period' ),
+                DB::raw( 'DATE_FORMAT(budgets.created_at, "%Y-%m") as period' ),
                 DB::raw( 'SUM(total) as revenue' ),
             ] )
             ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
             ->whereIn( 'budget_statuses.slug', self::REVENUE_STATUSES )
-            ->where( 'created_at', '>=', Carbon::now()->subMonths( 3 ) )
+            ->where( 'budgets.created_at', '>=', Carbon::now()->subMonths( 3 ) )
             ->groupBy( 'period' )
             ->orderBy( 'period' )
             ->get();

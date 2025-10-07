@@ -130,7 +130,7 @@
                         <i class="bi bi-info-circle me-3" style="font-size: 1.2rem;"></i>
                         <div>
                             <h6 class="alert-heading mb-2 fw-bold">Credenciais de Teste</h6>
-                            <p class="mb-0"><strong>Prestador:</strong> provider@easybudget.com / password</p>
+                            <p class="mb-0"><strong>Prestador:</strong> provider@easybudget.com / Password1@</p>
                         </div>
                     </div>
                 @endif

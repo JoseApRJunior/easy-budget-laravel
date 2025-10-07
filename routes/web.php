@@ -1,19 +1,29 @@
 <?php
 
+use app\controllers\ActivityController;
+use app\controllers\admin\AlertController;
+use app\controllers\admin\CategoryController;
+use app\controllers\admin\LogController;
+use app\controllers\admin\MonitoringController;
+use app\controllers\admin\RoleController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentVerificationController;
+use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\BudgetController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PublicInvoiceController;
-use App\Http\Controllers\DocumentVerificationController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\ErrorController;
 use Illuminate\Support\Facades\Route;
 
 // Public pages
@@ -24,6 +34,7 @@ Route::get( '/terms-of-service', [ HomeController::class, 'terms' ] )->name( 'te
 Route::get( '/privacy-policy', [ HomeController::class, 'privacy' ] )->name( 'privacy' );
 
 Route::middleware( [ 'auth', 'verified' ] )->group( function () {
+
     // Provider routes
     Route::get( '/provider', [ ProviderController::class, 'index' ] )->name( 'provider.index' );
     Route::get( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
@@ -31,6 +42,18 @@ Route::middleware( [ 'auth', 'verified' ] )->group( function () {
     Route::get( '/provider/change-password', [ ProviderController::class, 'change_password' ] )->name( 'provider.change_password' );
     Route::post( '/provider/change-password', [ ProviderController::class, 'change_password_store' ] )->name( 'provider.change_password_store' );
 
+    // Plan routes
+    Route::prefix( 'plans' )->name( 'plans.' )->group( function () {
+        Route::get( '/', [ PlanController::class, 'index' ] )->name( 'index' );
+        Route::get( '/create', [ PlanController::class, 'create' ] )->name( 'create' );
+        Route::post( '/', [ PlanController::class, 'store' ] )->name( 'store' );
+        Route::get( '/{plan}', [ PlanController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{plan}/edit', [ PlanController::class, 'edit' ] )->name( 'edit' );
+        Route::post( '/{plan}', [ PlanController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{plan}', [ PlanController::class, 'destroy' ] )->name( 'destroy' );
+        Route::post( '/{plan}/activate', [ PlanController::class, 'activate' ] )->name( 'activate' );
+        Route::post( '/{plan}/deactivate', [ PlanController::class, 'deactivate' ] )->name( 'deactivate' );
+    } );
     // Settings routes
     Route::prefix( 'settings' )->name( 'settings.' )->group( function () {
         Route::get( '/', [ SettingsController::class, 'index' ] )->name( 'index' );

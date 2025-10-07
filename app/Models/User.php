@@ -51,6 +51,7 @@ class User extends Authenticatable
         'password',
         'is_active',
         'logo',
+        'remember_token',
     ];
 
     /**
@@ -68,13 +69,14 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
-        'email'      => 'string',
-        'password'   => 'hashed',
-        'logo'       => 'string',
-        'is_active'  => 'boolean',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'datetime',
+        'tenant_id'      => 'integer',
+        'email'          => 'string',
+        'password'       => 'hashed',
+        'logo'           => 'string',
+        'is_active'      => 'boolean',
+        'remember_token' => 'string',
+        'created_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**
