@@ -521,23 +521,78 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        Schema::create( 'sessions', function ( Blueprint $table ) {
+        // Tabelas de cache padrão do Laravel
+        Schema::create( 'cache', function ( Blueprint $table ) {
+            $table->string( 'key' )->primary();
+            $table->mediumText( 'value' );
+            $table->integer( 'expiration' );
+        } );
+
+        Schema::create( 'cache_locks', function ( Blueprint $table ) {
+            $table->string( 'key' )->primary();
+            $table->string( 'owner' );
+            $table->integer( 'expiration' );
+        } );
+
+        // Tabela de auditoria completa
+        Schema::create( 'audit_logs', function ( Blueprint $table ) {
             $table->id();
-            $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
-            $table->string( 'session_token', 255 )->unique();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->onDelete( 'cascade' );
+            $table->foreignId( 'user_id' )->constrained( 'users' )->onDelete( 'cascade' );
+
+            // Informações da ação
+            $table->string( 'action', 100 );
+            $table->string( 'model_type', 255 )->nullable();
+            $table->unsignedBigInteger( 'model_id' )->nullable();
+
+            // Valores antes e depois da mudança
+            $table->json( 'old_values' )->nullable();
+            $table->json( 'new_values' )->nullable();
+
+            // Informações de contexto
             $table->string( 'ip_address', 45 )->nullable();
             $table->text( 'user_agent' )->nullable();
-            $table->timestamp( 'last_activity' )->useCurrent();
-            $table->timestamp( 'expires_at' )->nullable();
-            $table->boolean( 'is_active' )->default( true );
-            $table->json( 'session_data' )->nullable();
-            $table->json( 'pay_load' )->nullable();
+            $table->json( 'metadata' )->nullable();
+
+            // Descrição adicional
+            $table->text( 'description' )->nullable();
+
+            // Classificação da ação
+            $table->enum( 'severity', [ 'low', 'info', 'warning', 'high', 'critical' ] )->default( 'info' );
+            $table->string( 'category', 50 )->nullable();
+            $table->boolean( 'is_system_action' )->default( false );
+
             $table->timestamps();
+
+            // Índices para performance
+            $table->index( [ 'tenant_id', 'created_at' ] );
+            $table->index( [ 'user_id', 'created_at' ] );
+            $table->index( [ 'tenant_id', 'severity' ] );
+            $table->index( [ 'tenant_id', 'category' ] );
+            $table->index( [ 'tenant_id', 'action' ] );
+            $table->index( [ 'model_type', 'model_id' ] );
+
+            // Índice composto para consultas comuns
+            $table->index( [ 'tenant_id', 'user_id', 'created_at' ] );
         } );
+
+        // Tabela sessions padrão do Laravel
+        Schema::create( 'sessions', function ( Blueprint $table ) {
+            $table->string( 'id' )->primary();
+            $table->foreignId( 'user_id' )->nullable()->index()->constrained( 'users' )->nullOnDelete();
+            $table->string( 'ip_address', 45 )->nullable();
+            $table->text( 'user_agent' )->nullable();
+            $table->longText( 'payload' );
+            $table->integer( 'last_activity' )->index();
+        } );
+
     }
 
     public function down(): void
     {
+        Schema::dropIfExists( 'audit_logs' );
+        Schema::dropIfExists( 'cache_locks' );
+        Schema::dropIfExists( 'cache' );
         Schema::dropIfExists( 'sessions' );
         Schema::dropIfExists( 'supports' );
         Schema::dropIfExists( 'activities' );

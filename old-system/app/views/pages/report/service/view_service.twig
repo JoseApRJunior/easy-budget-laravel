@@ -1,0 +1,42 @@
+{% extends "layout.twig" %}
+
+
+{% block content %}
+
+<h1>Relatório de Serviços</h1>
+
+<div class="table-responsive">
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Nº Serviço</th>
+				<th>Data</th>
+				<th>Cliente</th>
+				<th>Descrição</th>
+				<th>Valor Total</th>
+				<th>Status</th>
+				<th>Ações</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for servico in servicos %}
+			<tr>
+				<td>{{ servico.numero }}</td>
+				<td>{{ servico.data }}</td>
+				<td>{{ servico.cliente.nome }}</td>
+				<td>{{ servico.descricao }}</td>
+				<td>{{ servico.valor_total }}</td>
+				<td>{{ servico.status }}</td>
+				<td>
+					<a href="/provider/service/edit/{{ servico.id }}" class="btn btn-sm btn-primary">Editar</a>
+					<a href="/provider/service/delete/{{ servico.id }}" class="btn btn-sm btn-danger">Excluir</a>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+
+<a href="/provider/service/create" class="btn btn-primary">Criar Novo Serviço</a>
+
+{% endblock %}

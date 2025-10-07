@@ -1,0 +1,29 @@
+{# layout_pdf_base.twig #}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>{% block title %}Documento{% endblock %}</title>
+  {# CSS específico para cada tipo de documento #}
+  {% block styles %}{% endblock %}
+</head>
+
+<body>
+  <div class="container">
+
+    {# Conteúdo principal #}
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    {# Rodapé do documento #}
+    <footer class="footer">
+      {% block footer %}
+      {% endblock %}
+    </footer>
+  </div>
+</body>
+
+</html>

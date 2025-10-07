@@ -1,0 +1,36 @@
+{% extends "layout.twig" %}
+
+
+{% block content %}
+
+<h1>Relatório de Cliente</h1>
+
+<div class="table-responsive">
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Nome</th>
+				<th>E-mail</th>
+				<th>Telefone</th>
+				<th>Endereço</th>
+				<th>Ações</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for customer in customers %}
+			<tr>
+				<td>{{ customer.name }}</td>
+				<td>{{ customer.email }}</td>
+				<td>{{ customer.phone }}</td>
+				<td>{{ customer.address }}</td>
+
+				<a href="/provider/customer/edit/id" class="btn btn-sm btn-primary">Editar</a>
+				<a href="/provider/customer/delete/id" class="btn btn-sm btn-danger">Excluir</a>
+			</tr>
+			</td>
+		</tbody>
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div><a href="/provider/customer/create" class="btn btn-primary">Novo Cliente</a>{% endblock %}

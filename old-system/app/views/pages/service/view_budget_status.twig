@@ -1,0 +1,366 @@
+{% extends "layout.twig" %}
+{% block content %}
+<div class="container-fluid py-1">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="bi bi-file-earmark-text me-2"></i>Detalhes do Orçamento
+    </h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Início</a></li> {# Assuming a customer home page #}
+        <li class="breadcrumb-item active">{{ budget.code }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Código</label>
+                <h5 class="mb-0 fw-semibold">{{ budget.code }}</h5>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Prestador</label>
+                <h5 class="mb-0">{{ provider.company_name }}</h5> {# Display provider name #}
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Status</label>
+                <span class="badge" style="background-color: {{ budget.status_color }}">
+                  {{ budget.status_name }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-muted small mb-1">Descrição</label>
+            <p class="mb-0 lead">{{ budget.description }}</p>
+          </div>
+
+          {# Simplified Additional Details - no accordion for PDF-like view #}
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+              <h6 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>Detalhes Adicionais
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="text-muted small">Criado em</label>
+                    <p class="mb-0">{{ budget.created_at | date('d/m/Y H:i:s') }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-0">
+                    <label class="text-muted small">Atualizado em</label>
+                    <p class="mb-0">{{ budget.updated_at | date('d/m/Y H:i:s') }}</p>
+                  </div>
+                </div>
+                {% if budget.payment_terms %}
+                <div class="col-12">
+                  <label class="text-muted small">Condições de Pagamento</label>
+                  <p class="mb-0">{{ budget.payment_terms }}</p>
+                </div>
+                {% endif %}
+                {% if budget.attachment %}
+                <div class="col-md-6">
+                  <label class="text-muted small">Anexos</label>
+                  <p class="mb-0">{{ budget.attachment }}</p>
+                </div>
+                {% endif %}
+                {% if budget.history %}
+                <div class="col-md-6">
+                  <label class="text-muted small">Histórico</label>
+                  <p class="mb-0">{{ budget.history }}</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-currency-dollar me-2"></i>Resumo Financeiro
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted">Total do Orçamento:</div>
+            <div class="h4 mb-0 text-success">R$ {{ budget.total|number_format(2, ',', '.') }}</div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted">Data de Vencimento:</div>
+            <div class="fw-semibold {% if budget.due_date|date('Y-m-d') < 'now'|date('Y-m-d') %}text-danger{% endif %}">
+              {{ budget.due_date|date('d/m/Y') }}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted">Quantidade de Serviços:</div>
+            <div class="fw-semibold">{{ services|length }}</div>
+          </div>
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted">Progresso do Orçamento:</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+              {# You'll need Twig filters for budget.status_slug for color and progress #}
+              <div class="progress-bar bg-{{ budget.status_slug|status_color_class }}" role="progressbar"
+                style="width: {{ budget.status_slug|status_progress }}%;"
+                aria-valuenow="{{ budget.status_slug|status_progress }}" aria-valuemin="0" aria-valuemax="100"
+                data-bs-toggle="tooltip" title="{{ budget.status_name }}">
+              </div>
+            </div>
+            <small class="text-muted mt-1 d-block">
+              {% if budget.status_slug == 'DRAFT' %}
+              Orçamento em elaboração pelo prestador.
+              {% elseif budget.status_slug == 'PENDING' %}
+              Aguardando sua aprovação.
+              {% elseif budget.status_slug == 'APPROVED' %}
+              Orçamento aprovado por você.
+              {% elseif budget.status_slug == 'COMPLETED' %}
+              Orçamento concluído pelo prestador.
+              {% elseif budget.status_slug == 'REJECTED' %}
+              Orçamento rejeitado por você.
+              {% elseif budget.status_slug == 'CANCELLED' %}
+              Orçamento cancelado pelo prestador.
+              {% elseif budget.status_slug == 'EXPIRED' %}
+              Orçamento expirado.
+              {% endif %}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 p-4">
+      <h2 class="h5 mb-0">
+        <i class="bi bi-tools me-2"></i>Serviços Vinculados
+      </h2>
+    </div>
+    <div class="card-body p-4">
+      {% if services %}
+      {% for service in services %}
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-tag me-2"></i>{{ service.category_name }}
+              </h5>
+            </div>
+            <span class="badge" style="background-color: {{ service.status_color }}">
+              {{ service.status_name }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="d-flex flex-column h-100">
+                <div class="mb-3">
+                  <label class="text-muted small">Data de Vencimento</label>
+                  <h5 class="mb-0">{{ service.due_date|date('d/m/Y') }}</h5>
+                </div>
+                <div>
+                  <label class="text-muted small">Valor Total</label>
+                  <h4 class="text-success mb-0">
+                    R$ {{ service.total | number_format(2, ',', '.') }}
+                  </h4>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="h-100">
+                <label class="text-muted small">Descrição</label>
+                <p class="mb-0">{{ service.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            {% for service_item in service_items[service.id] %}
+            <div class="accordion mb-3">
+              <div class="accordion-item border-0 shadow-sm">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseDetails{{ service_item.id }}">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-box me-2"></i>
+                        <span class="fw-semibold">{{ service_item.name }}</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary">
+                          Qtd: {{ service_item.quantity }}
+                        </span>
+                        <span class="badge bg-success">
+                          R$ {{ service_item.price | number_format(2, ',', '.') }}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+                <div id="collapseDetails{{ service_item.id }}" class="accordion-collapse collapse">
+                  <div class="accordion-body ">
+                    <div class="card border-0 shadow-sm">
+                      <div class="card-header bg-transparent">
+                        <h6 class="mb-0">
+                          <i class="bi bi-info-circle me-2"></i>
+                          Detalhes do Item
+                        </h6>
+                      </div>
+                      <div class="card-body">
+                        <div class="row g-4">
+                          <div class="col-12">
+                            <label class="text-muted small">Descrição</label>
+                            <p class="mb-0">{{ service_item.description }}</p>
+                          </div>
+                          <div class="col-md-4">
+                            <label class="text-muted small">Quantidade</label>
+                            <p class="fw-semibold mb-0">
+                              {{ service_item.quantity }}
+                            </p>
+                          </div>
+                          <div class="col-md-4">
+                            <label class="text-muted small">Valor Unitário</label>
+                            <p class="fw-semibold mb-0">
+                              R$ {{ service_item.unit_value | number_format(2, ',', '.')
+                              }}
+                            </p>
+                          </div>
+                          <div class="col-md-4">
+                            <label class="text-muted small">Valor Total</label>
+                            <p class="fw-semibold text-success mb-0">
+                              R$ {{ (service_item.price * service_item.quantity) |
+                              number_format(2, ',', '.') }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle flex-shrink-0 me-2"></i>
+        <div class="flex-grow-1">
+          Nenhum serviço vinculado a este orçamento.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Botões de ação do cliente -->
+  <div class="d-flex justify-content-end mt-4">
+    <div class="d-flex gap-2">
+      {% if budget.status_slug == 'PENDING' %}
+      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#actionModal"
+        data-action="APPROVED" data-title="Aprovar Orçamento" data-button-class="btn-success"
+        data-message="Tem certeza que deseja aprovar este orçamento?">
+        <i class="bi bi-check-circle me-2"></i>Aprovar
+      </button>
+      <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#actionModal"
+        data-action="REJECTED" data-title="Rejeitar Orçamento" data-button-class="btn-danger"
+        data-message="Tem certeza que deseja rejeitar este orçamento?">
+        <i class="bi bi-x-circle me-2"></i>Rejeitar
+      </button>
+      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#actionModal"
+        data-action="CANCELLED" data-title="Cancelar Orçamento" data-button-class="btn-secondary"
+        data-message="Tem certeza que deseja cancelar este orçamento?">
+        <i class="bi bi-slash-circle me-2"></i>Cancelar
+      </button>
+      {% else %}
+      <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle flex-shrink-0 me-2"></i>
+        <div class="flex-grow-1">
+          Este orçamento não está mais aguardando sua ação.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Modal Reutilizável -->
+  <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="actionModalLabel"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="actionModalMessage"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+          <form id="actionForm" action="" method="POST">
+            {{ csrf.field|raw }}
+            <input type="hidden" name="budget_id" value="{{ budget.id }}">
+            <input type="hidden" name="budget_code" value="{{ budget.code }}">
+            <input type="hidden" name="current_status_id" value="{{ budget.budget_statuses_id }}">
+            <input type="hidden" name="current_status_name" value="{{ budget.status_name }}">
+            <input type="hidden" name="current_status_slug" value="{{ budget.status_slug }}">
+            <input type="hidden" name="token" value="{{ token }}">
+            <input type="hidden" name="action" id="actionInput" value="">
+            <button type="submit" class="btn" id="actionConfirmButton">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+
+  {% block scripts %}
+  {{ parent() }}
+  <script>
+    const actionModal = document.getElementById( 'actionModal' );
+    actionModal.addEventListener( 'show.bs.modal', function ( event ) {
+      const button = event.relatedTarget;
+      const action = button.getAttribute( 'data-action' );
+      const title = button.getAttribute( 'data-title' );
+      const message = button.getAttribute( 'data-message' );
+      const buttonClass = button.getAttribute( 'data-button-class' ) || 'btn-primary';
+
+      const modalTitle = actionModal.querySelector( '.modal-title' );
+      const modalMessage = actionModal.querySelector( '#actionModalMessage' );
+      const actionInput = actionModal.querySelector( '#actionInput' );
+      const actionForm = actionModal.querySelector( '#actionForm' );
+      const confirmButton = actionModal.querySelector( '#actionConfirmButton' );
+
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+      actionInput.value = action;
+      actionForm.action = `/budgets/choose-budget-status`;
+
+      confirmButton.className = 'btn';
+      buttonClass.split( ' ' ).forEach( cls => confirmButton.classList.add( cls ) );
+    } );
+  </script>
+  {% endblock %}
