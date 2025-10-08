@@ -1,51 +1,52 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Database\Seeders;
 
-use App\Models\Plan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class PlanSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        DB::transaction( function () {
-            // Plan Basic - Plano básico com recursos essenciais
-            Plan::create( [
+        $now   = now();
+        $plans = [
+            [
                 'name'        => 'Basic',
                 'slug'        => 'basic',
-                'description' => 'Plano básico para iniciantes',
-                'price'       => 9.99,
-                'features'    => [ 'Acesso básico', '10 orçamentos/mês', '5 clientes' ],
-                'is_active'   => true,
-            ] );
-
-            // Plan Pro - Recursos profissionais
-            \App\Models\Plan::create( [
+                'description' => 'Plano básico para começar: limites adequados para pequenos negócios.',
+                'price'       => 29.90,
+                'status'      => true,
+                'max_budgets' => 50,
+                'max_clients' => 100,
+                'features'    => json_encode( [ "Acesso a recursos básicos", "Até 3 orçamentos por mês", "1 Cliente por mês" ] ),
+                'created_at'  => $now,
+            ],
+            [
                 'name'        => 'Pro',
                 'slug'        => 'pro',
-                'description' => 'Plano profissional com mais recursos',
-                'price'       => 19.99,
-                'features'    => [ 'Acesso completo', '50 orçamentos/mês', '20 clientes', 'Relatórios avançados' ],
-                'is_active'   => true,
-            ] );
-
-            // Plan Enterprise - Solução completa para empresas
-            \App\Models\Plan::create( [
+                'description' => 'Plano profissional com recursos avançados e maiores limites.',
+                'price'       => 49.90,
+                'status'      => true,
+                'max_budgets' => 1000,
+                'max_clients' => 5000,
+                'features'    => json_encode( [ "Acesso a recursos básicos", "Até 15 orçamentos por mês", "5 Clientes por mês", "Relatórios básicos" ] ),
+                'created_at'  => $now,
+            ],
+            [
                 'name'        => 'Enterprise',
                 'slug'        => 'enterprise',
-                'description' => 'Plano enterprise com suporte dedicado',
-                'price'       => 49.99,
-                'features'    => [ 'Tudo incluso', 'Orçamentos ilimitados', 'Clientes ilimitados', 'Suporte prioritário', 'Integrações custom' ],
-                'is_active'   => true,
-            ] );
-        } );
+                'description' => 'Plano empresarial totalmente flexível e com limites elevados.',
+                'price'       => 99.90,
+                'status'      => true,
+                'max_budgets' => 100000,
+                'max_clients' => 100000,
+                'features'    => json_encode( [ "Acesso a todos os recursos", "Orçamentos ilimitados", "Clientes ilimitados", "Relatórios avançados", "Integração com pagamentos", "Gerencimento de projetos" ] ),
+                'created_at'  => $now,
+            ],
+        ];
+
+        DB::table( 'plans' )->upsert( $plans, [ 'slug' ], [ 'name', 'description', 'price', 'status', 'max_budgets', 'max_clients', 'features' ] );
     }
 
 }

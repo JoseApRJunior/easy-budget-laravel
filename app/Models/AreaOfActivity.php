@@ -30,6 +30,17 @@ class AreaOfActivity extends Model
         'updated_at' => 'datetime',
     ];
 
+
+        /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
     /**
      * Índices para otimização de consultas
      */

@@ -1,0 +1,213 @@
+{% extends 'layout.twig' %}
+
+{% block content %}
+<div class="container-fluid py-1">
+	<!-- Cabeçalho da página -->
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h1 class="h3 mb-0">
+			<i class="bi bi-file-earmark-text me-2"></i>Editar Orçamento
+		</h1>
+		<nav aria-label="breadcrumb">
+			<ol class="breadcrumb mb-0">
+				<li class="breadcrumb-item"><a href="/provider">Dashboard</a></li>
+				<li class="breadcrumb-item"><a href="/provider/budgets">Orçamentos</a></li>
+				<li class="breadcrumb-item"><a href="/provider/budgets/show/{{ budget.code }}">{{ budget.code }}</a></li>
+				<li class="breadcrumb-item active">Editar</li>
+			</ol>
+		</nav>
+	</div>
+
+	<!-- Formulário -->
+	<div class="card border-0 shadow-sm">
+		<div class="card-body p-4">
+			<form id="update-budget-form" action="/provider/budgets/update/{{ budget.code }}" method="POST">
+				{{ csrf.field|raw }}
+				<input type="hidden" name="id" value="{{ budget.id }}">
+				{# Desabilita os campos se o status não for 'DRAFT' #}
+				<fieldset {% if budget.status_slug !='DRAFT' %}disabled{% endif %}>
+					<!-- Informações do Orçamento -->
+					<div class="row mb-4">
+						<div class="col-md-2">
+							<div class="form-group">
+								<label for="code" class="form-label fw-semibold">
+									<i class="bi bi-hash me-2"></i>Código
+								</label>
+								<input type="text" class="form-control bg-light" value="{{ budget.code }}" name="code" readonly>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label class="form-label fw-semibold">
+									<i class="bi bi-person me-2"></i>Cliente
+								</label>
+								<!-- Campo visível mas desabilitado para o usuário -->
+								<input type="text" class="form-control bg-light" value="{{ budget.customer_name }}" disabled>
+								<input type="hidden" id="customer_id" name="customer_id" value="{{ budget.customer_id }}">
+
+								{{ flash('customer_name')|raw }}
+							</div>
+						</div>
+						<div class="col-md-2">
+							<div class="form-group">
+								<label for="created_at" class="form-label fw-semibold">
+									<i class="bi bi-calendar-check me-2"></i>Data de Criação
+								</label>
+								<input type="text" class="form-control bg-light" name="created_at"
+									value="{{ budget.created_at|date('d/m/Y H:i') }}" disabled>
+							</div>
+						</div>
+						<div class="col-md-2">
+							<div class="form-group">
+								<label for="due_date" class="form-label fw-semibold">
+									<i class="bi bi-calendar me-2"></i>Previsão de Vencimento
+								</label>
+								<input type="date" id="due_date" name="due_date" class="form-control date-input-br"
+									value="{{ budget.due_date|date('Y-m-d') }}" required />
+								<div class="invalid-date-feedback" id="due_date_feedback"></div>
+								{{ flash('due_date')|raw }}
+							</div>
+						</div>
+						<div class="row g-4">
+							<!-- Descrição -->
+							<div class="col-12">
+								<div class="form-group">
+									<label for="description" class="form-label fw-semibold">
+										<i class="bi bi-card-text me-2"></i>Descrição
+									</label>
+									<textarea id="description" name="description" class="form-control" rows="4" maxlength="255"
+										placeholder="Ex: Pintura residencial completa">{{ budget.description }}</textarea>
+									<div class="d-flex justify-content-end">
+										<small id="char-count" class="text-muted mt-2">
+											<span>{{ 255 - (budget.description|length) }}</span> caracteres restantes
+										</small>
+									</div>
+									{{ flash('description')|raw }}
+								</div>
+							</div>
+
+							<!-- Condições de Pagamento (opcional) -->
+							<div class="col-12">
+								<div class="form-group">
+									<label for="payment_terms" class="form-label fw-semibold">
+										<i class="bi bi-credit-card me-2"></i>Condições de Pagamento
+									</label>
+									<textarea id="payment_terms" name="payment_terms" class="form-control" rows="2" maxlength="255"
+										placeholder="Ex: Pagamento em 2x no cartão ou à vista com 5% de desconto">{{ budget.payment_terms }}</textarea>
+									{{ flash('payment_terms')|raw }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</fieldset>
+			</form>
+			<!-- Botões de ação do formulário e navegação -->
+			<div class="d-flex justify-content-between mt-4 pt-4 border-top">
+				<div>
+					<a href="/provider/budgets/show/{{ budget.code }}" class="btn btn-outline-secondary px-4"
+						data-bs-toggle="tooltip" title="Voltar para detalhes sem salvar">
+						<i class="bi bi-x-circle me-2"></i>Cancelar
+					</a>
+				</div>
+				<div>
+					{% if budget.status_slug == 'DRAFT' %}
+					<button type="submit" form="update-budget-form" class="btn btn-primary px-4" data-bs-toggle="tooltip"
+						title="Salvar as alterações feitas no orçamento">
+						<i class="bi bi-check-lg me-2"></i>Salvar Alterações
+					</button>
+					{% elseif budget.status_slug == 'PENDING' %}
+					<div class="alert alert-warning mb-0 py-2 px-3" role="alert" data-bs-toggle="tooltip"
+						title="Este orçamento está aguardando aprovação e não pode ser modificado.">
+						<i class="bi bi-exclamation-triangle-fill me-2"></i>Aguardando Aprovação
+					</div>
+					{% else %}
+					<div class="alert alert-info mb-0 py-2 px-3" role="alert" data-bs-toggle="tooltip"
+						title="Este orçamento não pode ser editado no status atual: {{ budget.status_name }}.">
+						<i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ budget.status_name }})
+					</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Serviços Vinculados -->
+	{% if services %}
+	<div class="card border-0 shadow-sm mt-4">
+		<div class="card-header bg-transparent border-0">
+			<h5 class="card-title mb-0">
+				<i class="bi bi-tools me-2"></i>Serviços Vinculados
+			</h5>
+		</div>
+		<div class="card-body p-0">
+			<div class="table-responsive">
+				<table class="table table-hover mb-0">
+					<thead>
+						<tr>
+							<th>Código</th>
+							<th>Descrição</th>
+							<th>Status</th>
+							<th>Valor</th>
+							<th class="text-end">Ações</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for service in services %}
+						<tr>
+							<td>{{ service.code }}</td>
+							<td>{{ service.description }}</td>
+							<td>
+								<span class="badge" style="background-color: {{ service.status_color }}">
+									{{ service.status_name }}
+								</span>
+							</td>
+							<td>R$ {{ service.total|number_format(2, ',', '.') }}</td>
+							<td class="text-end">
+								<a href="/provider/services/show/{{ service.code}}" class="btn btn-sm btn-outline-primary">
+									<i class="bi bi-eye"></i>
+								</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	{% endif %}
+</div>
+
+<!-- Modal de Cancelamento -->
+<div class="modal fade" id="cancelBudgetModal" tabindex="-1" aria-labelledby="cancelBudgetModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="cancelBudgetModalLabel">Cancelar Orçamento</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<p>Tem certeza que deseja cancelar o orçamento <strong>{{ budget.code }}</strong>?</p>
+				<p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+				<form action="/provider/budgets/cancel/{{ budget.id }}" method="POST">
+					{{ csrf.field|raw }}
+					<button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<!-- Inclusão dos plugins de máscara -->
+<script>let budget = JSON.parse( '{{ budget | json_encode | e("js") }}' );</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<!-- Script próprio para gerenciamento do orçamento -->
+<script src="/assets/js/budget_update.js"></script>
+{% endblock %}

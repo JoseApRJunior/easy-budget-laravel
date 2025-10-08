@@ -5,16 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OperationStatus;
-use App\Interfaces\ServiceNoTenantInterface;
 use App\Models\Budget;
 use App\Models\BudgetStatus;
-use App\Services\Abstracts\BaseNoTenantService;
 use App\Support\ServiceResult;
-use App\Traits\SlugGenerator;
 use Exception;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,10 +27,8 @@ use Illuminate\Support\Facades\Log;
  * - Relatórios consolidados de performance financeira
  * - Análise de tendências e padrões de receita
  */
-class FinancialSummary extends BaseNoTenantService
+class FinancialSummary
 {
-    use SlugGenerator;
-
     /**
      * Status de orçamentos considerados como receita (faturamento).
      */
@@ -53,207 +45,7 @@ class FinancialSummary extends BaseNoTenantService
     private const PROJECTION_STATUSES = [ 'DRAFT', 'PENDING', 'APPROVED', 'IN_PROGRESS' ];
 
     /**
-     * Obtém entidade por ID global.
-     *
-     * @param int $id ID da entidade
-     * @return ServiceResult
-     */
-    public function getById( int $id ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método getById não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Lista entidades com filtros opcionais.
-     *
-     * @param array $filters Filtros para consulta
-     * @return ServiceResult
-     */
-    public function list( array $filters = [] ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método list não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Cria nova entidade global.
-     *
-     * @param array $data Dados para criação
-     * @return ServiceResult
-     */
-    public function create( array $data ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método create não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Atualiza entidade por ID global.
-     *
-     * @param int $id ID da entidade
-     * @param array $data Dados para atualização
-     * @return ServiceResult
-     */
-    public function update( int $id, array $data ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método update não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Deleta entidade por ID global.
-     *
-     * @param int $id ID da entidade
-     * @return ServiceResult
-     */
-    public function delete( int $id ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método delete não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Valida dados para criação/atualização.
-     *
-     * @param array $data Dados a validar
-     * @param bool $isUpdate Define se é atualização
-     * @return ServiceResult
-     */
-    public function validate( array $data, bool $isUpdate = false ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método validate não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Validação específica para entidades globais.
-     *
-     * @param array $data Dados a validar
-     * @param bool $isUpdate Define se é atualização
-     * @return ServiceResult
-     */
-    protected function validateForGlobal( array $data, bool $isUpdate = false ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método validateForGlobal não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Validação específica para tenant (não aplicável para FinancialSummary).
-     *
-     * @param array $data Dados a validar
-     * @param int $tenant_id ID do tenant
-     * @param bool $is_update Define se é atualização
-     * @return ServiceResult
-     */
-    protected function validateForTenant( array $data, int $tenant_id, bool $is_update = false ): ServiceResult
-    {
-        return ServiceResult::error(
-            OperationStatus::NOT_SUPPORTED,
-            'Método validateForTenant não aplicável para FinancialSummary.',
-        );
-    }
-
-    /**
-     * Encontra entidade por ID (sem tenant).
-     *
-     * @param int $id ID da entidade
-     * @return Model|null
-     */
-    protected function findEntityById( int $id ): ?EloquentModel
-    {
-        return null; // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Lista entidades com filtros (sem tenant).
-     *
-     * @param ?array $orderBy Ordem dos resultados
-     * @param ?int $limit Limite de resultados
-     * @return array
-     */
-    protected function listEntities( ?array $orderBy = null, ?int $limit = null ): array
-    {
-        return []; // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Cria nova entidade.
-     *
-     * @param array $data Dados para criação
-     * @return Model
-     */
-    protected function createEntity( array $data ): EloquentModel
-    {
-        return new Budget(); // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Atualiza entidade existente.
-     *
-     * @param int $id ID da entidade
-     * @param array $data Dados para atualização
-     * @return Model
-     */
-    protected function updateEntity( int $id, array $data ): EloquentModel
-    {
-        return new Budget(); // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Deleta entidade.
-     *
-     * @param int $id ID da entidade
-     * @return bool
-     */
-    protected function deleteEntity( int $id ): bool
-    {
-        return false; // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Verifica se pode deletar entidade.
-     *
-     * @param Model $entity Entidade a ser verificada
-     * @return bool
-     */
-    protected function canDeleteEntity( EloquentModel $entity ): bool
-    {
-        return false; // Não aplicável para FinancialSummary
-    }
-
-    /**
-     * Salva entidade.
-     *
-     * @param Model $entity Entidade a ser salva
-     * @return bool
-     */
-    protected function saveEntity( EloquentModel $entity ): bool
-    {
-        return false; // Não aplicável para FinancialSummary
-    }
-
-    /**
      * Obtém o resumo financeiro mensal por tenant.
-     *
-     * Migração do legacy: mantém a mesma lógica de cálculo, mas usando Eloquent
-     * em vez de Doctrine DBAL. Implementa tenant isolation através de queries
-     * filtradas por tenant_id.
      *
      * @param int $tenantId ID do tenant
      * @return ServiceResult Resumo financeiro mensal
@@ -278,7 +70,7 @@ class FinancialSummary extends BaseNoTenantService
             // Análise de tendências (nova funcionalidade)
             $trends = $this->calculateTrends( $tenantId );
 
-            $summary = [ 
+            $summary = [
                 'monthly_revenue'       => $monthlyRevenue,
                 'pending_budgets'       => $pendingBudgets,
                 'overdue_payments'      => $overduePayments,
@@ -288,18 +80,12 @@ class FinancialSummary extends BaseNoTenantService
                 'period'                => $currentMonth,
             ];
 
-            Log::info( 'FinancialSummary: Resumo financeiro gerado', [ 
-                'tenant_id' => $tenantId,
-                'period'    => $currentMonth,
-                'revenue'   => $monthlyRevenue,
-            ] );
-
             return ServiceResult::success(
                 $summary,
                 'Resumo financeiro obtido com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter resumo financeiro', [ 
+            Log::error( 'FinancialSummary: Erro ao obter resumo financeiro', [
                 'tenant_id' => $tenantId,
                 'error'     => $e->getMessage(),
                 'trace'     => $e->getTraceAsString(),
@@ -328,7 +114,7 @@ class FinancialSummary extends BaseNoTenantService
             $statusFilter = $filters[ 'status' ] ?? null;
 
             $consolidatedData = Budget::query()
-                ->select( [ 
+                ->select( [
                     'tenant_id',
                     DB::raw( 'COUNT(*) as total_budgets' ),
                     DB::raw( 'SUM(total) as total_value' ),
@@ -336,11 +122,11 @@ class FinancialSummary extends BaseNoTenantService
                     DB::raw( 'COUNT(CASE WHEN due_date < CURDATE() THEN 1 END) as overdue_count' ),
                     DB::raw( 'SUM(CASE WHEN due_date < CURDATE() THEN total ELSE 0 END) as overdue_value' ),
                 ] )
-                ->when( $period, function ($query, $period) {
+                ->when( $period, function ( $query, $period ) {
                     return $query->whereRaw( 'DATE_FORMAT(created_at, "%Y-%m") = ?', [ $period ] );
                 } )
-                ->when( $statusFilter, function ($query, $statusFilter) {
-                    return $query->whereHas( 'budgetStatus', function ($q) use ($statusFilter) {
+                ->when( $statusFilter, function ( $query, $statusFilter ) {
+                    return $query->whereHas( 'budgetStatus', function ( $q ) use ( $statusFilter ) {
                         $q->where( 'slug', $statusFilter );
                     } );
                 } )
@@ -348,9 +134,9 @@ class FinancialSummary extends BaseNoTenantService
                 ->orderBy( 'total_value', 'desc' )
                 ->get();
 
-            $summary = [ 
+            $summary = [
                 'consolidated' => $consolidatedData,
-                'totals'       => [ 
+                'totals'       => [
                     'total_budgets' => $consolidatedData->sum( 'total_budgets' ),
                     'total_value'   => $consolidatedData->sum( 'total_value' ),
                     'average_value' => $consolidatedData->avg( 'average_value' ),
@@ -361,7 +147,7 @@ class FinancialSummary extends BaseNoTenantService
                 'period'       => $period,
             ];
 
-            Log::info( 'FinancialSummary: Resumo consolidado gerado', [ 
+            Log::info( 'FinancialSummary: Resumo consolidado gerado', [
                 'period'        => $period,
                 'tenants_count' => $consolidatedData->count(),
             ] );
@@ -371,7 +157,7 @@ class FinancialSummary extends BaseNoTenantService
                 'Resumo financeiro consolidado obtido com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter resumo consolidado', [ 
+            Log::error( 'FinancialSummary: Erro ao obter resumo consolidado', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ] );
@@ -401,7 +187,7 @@ class FinancialSummary extends BaseNoTenantService
             $endDate   = Carbon::now()->parse( $period . '-01' )->endOfMonth();
 
             $performanceData = Budget::query()
-                ->select( [ 
+                ->select( [
                     DB::raw( 'DATE_FORMAT(created_at, "%Y-%m") as period' ),
                     DB::raw( 'COUNT(*) as total_budgets' ),
                     DB::raw( 'SUM(total) as total_revenue' ),
@@ -418,10 +204,10 @@ class FinancialSummary extends BaseNoTenantService
             // Calcular tendências
             $trends = $this->calculatePerformanceTrends( $performanceData );
 
-            $analysis = [ 
+            $analysis = [
                 'performance_data' => $performanceData,
                 'trends'           => $trends,
-                'summary'          => [ 
+                'summary'          => [
                     'total_periods'           => $performanceData->count(),
                     'total_revenue'           => $performanceData->sum( 'total_revenue' ),
                     'average_monthly_revenue' => $performanceData->avg( 'total_revenue' ),
@@ -429,14 +215,14 @@ class FinancialSummary extends BaseNoTenantService
                     'growth_rate'             => $trends[ 'growth_rate' ] ?? 0,
                 ],
                 'generated_at'     => Carbon::now()->toISOString(),
-                'analysis_period'  => [ 
+                'analysis_period'  => [
                     'start'  => $startDate->format( 'Y-m' ),
                     'end'    => $endDate->format( 'Y-m' ),
                     'months' => $months,
                 ],
             ];
 
-            Log::info( 'FinancialSummary: Análise de performance gerada', [ 
+            Log::info( 'FinancialSummary: Análise de performance gerada', [
                 'tenant_id' => $tenantId,
                 'period'    => $period,
                 'months'    => $months,
@@ -447,7 +233,7 @@ class FinancialSummary extends BaseNoTenantService
                 'Análise de performance financeira obtida com sucesso.',
             );
         } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter análise de performance', [ 
+            Log::error( 'FinancialSummary: Erro ao obter análise de performance', [
                 'tenant_id' => $tenantId,
                 'error'     => $e->getMessage(),
                 'trace'     => $e->getTraceAsString(),
@@ -474,7 +260,7 @@ class FinancialSummary extends BaseNoTenantService
         $result = $this->getMonthlySummary( $tenantId );
 
         if ( !$result->isSuccess() ) {
-            return [ 
+            return [
                 'monthly_revenue'       => 0,
                 'pending_budgets'       => [ 'total' => 0, 'count' => 0 ],
                 'overdue_payments'      => [ 'total' => 0, 'count' => 0 ],
@@ -484,7 +270,7 @@ class FinancialSummary extends BaseNoTenantService
 
         $data = $result->getData();
 
-        return [ 
+        return [
             'monthly_revenue'       => $data[ 'monthly_revenue' ],
             'pending_budgets'       => $data[ 'pending_budgets' ],
             'overdue_payments'      => $data[ 'overdue_payments' ],
@@ -524,7 +310,7 @@ class FinancialSummary extends BaseNoTenantService
             ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
             ->first();
 
-        return [ 
+        return [
             'total' => (float) ( $result->total ?? 0 ),
             'count' => (int) ( $result->count ?? 0 ),
         ];
@@ -546,7 +332,7 @@ class FinancialSummary extends BaseNoTenantService
             ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
             ->first();
 
-        return [ 
+        return [
             'total' => (float) ( $result->total ?? 0 ),
             'count' => (int) ( $result->count ?? 0 ),
         ];
@@ -580,14 +366,14 @@ class FinancialSummary extends BaseNoTenantService
     private function calculateTrends( int $tenantId ): array
     {
         $last3Months = Budget::query()
-            ->select( [ 
-                DB::raw( 'DATE_FORMAT(created_at, "%Y-%m") as period' ),
+            ->select( [
+                DB::raw( 'DATE_FORMAT(budgets.created_at, "%Y-%m") as period' ),
                 DB::raw( 'SUM(total) as revenue' ),
             ] )
             ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
             ->whereIn( 'budget_statuses.slug', self::REVENUE_STATUSES )
-            ->where( 'created_at', '>=', Carbon::now()->subMonths( 3 ) )
+            ->where( 'budgets.created_at', '>=', Carbon::now()->subMonths( 3 ) )
             ->groupBy( 'period' )
             ->orderBy( 'period' )
             ->get();
@@ -599,7 +385,7 @@ class FinancialSummary extends BaseNoTenantService
         $revenues   = $last3Months->pluck( 'revenue' )->toArray();
         $growthRate = $this->calculateGrowthRate( $revenues );
 
-        return [ 
+        return [
             'trend'            => $growthRate > 0 ? 'growing' : ( $growthRate < 0 ? 'declining' : 'stable' ),
             'growth_rate'      => round( $growthRate, 2 ),
             'periods_analyzed' => $last3Months->count(),
@@ -621,7 +407,7 @@ class FinancialSummary extends BaseNoTenantService
         $revenues   = $performanceData->pluck( 'total_revenue' )->toArray();
         $growthRate = $this->calculateGrowthRate( $revenues );
 
-        return [ 
+        return [
             'trend'            => $growthRate > 0 ? 'growing' : ( $growthRate < 0 ? 'declining' : 'stable' ),
             'growth_rate'      => round( $growthRate, 2 ),
             'periods_analyzed' => $performanceData->count(),

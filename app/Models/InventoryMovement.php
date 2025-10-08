@@ -47,10 +47,24 @@ class InventoryMovement extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'type'       => 'string',
+        'tenant_id'  => 'integer',
+        'product_id' => 'integer',
+        'type'       => 'string', // enum('in', 'out')
         'quantity'   => 'integer',
+        'reason'     => 'string',
         'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Get the tenant that owns the InventoryMovement.

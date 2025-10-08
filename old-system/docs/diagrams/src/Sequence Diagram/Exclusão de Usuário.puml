@@ -1,0 +1,15 @@
+@startuml Exclusão de Usuário
+title Exclusão de Usuário
+
+actor "Administrador" as A
+participant "Sistema" as S
+participant "User Model" as UM
+database "Banco de Dados" as DB
+
+A -> S: Solicita exclusão de usuário
+S -> UM: delete(UserEntity)
+UM -> DB: Executa exclusão do usuário
+DB --> UM: Confirma exclusão
+UM --> S: Retorna resultado da exclusão
+S --> A: Confirma exclusão do usuário
+@enduml

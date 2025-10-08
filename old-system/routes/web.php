@@ -107,7 +107,6 @@ try {
      */
     $router->group( [ 'prefix' => 'admin', 'controller' => 'admin', 'middlewares' => [ 'auth', 'admin' ] ], function () {
         $this->add( '/', 'GET', 'HomeController:index' );
-        $this->add( '/dashboard', 'GET', 'DashboardController:index' );
         $this->add( '/user', 'GET', 'UserController:index' );
         $this->add( '/logs', 'GET', 'LogController:index' );
 
@@ -133,67 +132,6 @@ try {
         $this->add( '/backups/delete', 'POST', 'BackupController:delete' );
         $this->add( '/backups/cleanup', 'POST', 'BackupController:cleanup' );
 
-        // Rotas de admin categories
-        $this->add( '/categories', 'GET', 'CategoryController:index' );
-        $this->add( '/categories/create', 'GET', 'CategoryController:create' );
-        $this->add( '/categories/store', 'POST', 'CategoryController:store' );
-        $this->add( '/categories/show/(:numeric)', 'GET', 'CategoryController:show', [ 'id' ] );
-        $this->add( '/categories/edit/(:numeric)', 'GET', 'CategoryController:edit', [ 'id' ] );
-        $this->add( '/categories/update', 'POST', 'CategoryController:update' );
-        $this->add( '/categories/delete/(:numeric)', 'POST', 'CategoryController:delete', [ 'id' ] );
-
-        // Rotas de admin activities (logs de atividades)
-        $this->add( '/activities', 'GET', 'ActivityController:index' );
-        $this->add( '/activities/show/(:numeric)', 'GET', 'ActivityController:show', [ 'id' ] );
-
-        // Sistema de Monitoramento
-        $this->add( '/monitoring', 'GET', 'MonitoringController:index' );
-        $this->add( '/monitoring/metrics', 'GET', 'MonitoringController:metrics' );
-        $this->add( '/monitoring/api/metrics', 'GET', 'MonitoringController:apiMetrics' );
-        $this->add( '/monitoring/api/reports', 'GET', 'MonitoringController:apiReports' );
-        $this->add( '/monitoring/realtime', 'GET', 'MonitoringController:realTimeMetrics' );
-        $this->add( '/monitoring/record', 'POST', 'MonitoringController:recordMetrics' );
-        $this->add( '/monitoring/cleanup', 'POST', 'MonitoringController:cleanup' );
-        $this->add( '/monitoring/middleware/(:any)', 'GET', 'MonitoringController:middleware', [ 'middlewareName' ] );
-
-        // Sistema de Alertas
-        $this->add( '/alerts', 'GET', 'AlertController:index' );
-        $this->add( '/alerts/api', 'GET', 'AlertController:getAlertsApi' );
-        $this->add( '/alerts/resolve/(:numeric)', 'POST', 'AlertController:resolveAlert', [ 'id' ] );
-        $this->add( '/alerts/check-now', 'POST', 'AlertController:checkNow' );
-        $this->add( '/alerts/settings', 'GET', 'AlertController:settings' );
-        $this->add( '/alerts/settings', 'POST', 'AlertController:settings' );
-        $this->add( '/alerts/history', 'GET', 'AlertController:history' );
-
-        // Rotas admin adicionais referenciadas no menu
-        $this->add( '/users', 'GET', 'UserController:index' );
-        $this->add( '/roles', 'GET', 'RoleController:index' );
-        $this->add( '/tenants', 'GET', 'TenantController:index' );
-        $this->add( '/settings', 'GET', 'SettingsController:index' );
-
-        // API para coleta de métricas movida para MonitoringController
-        $this->add( '/api/metrics/collect', 'POST', 'MonitoringController:recordMetrics' );
-
-        // Rotas de Inteligência Artificial
-        $this->add( '/ai', 'GET', 'AIController:dashboard' );
-        $this->add( '/ai/dataset', 'GET', 'AIController:dataset' );
-        $this->add( '/ai/analyze/budget/(:numeric)', 'GET', 'AIController:analyzeBudget', [ 'budgetId' ] );
-        $this->add( '/ai/insights/user/(:numeric)', 'GET', 'AIController:userInsights', [ 'userId' ] );
-        $this->add( '/ai/alerts', 'GET', 'AIController:getAlerts' );
-        $this->add( '/ai/metrics/roi', 'GET', 'AIController:roiMetrics' );
-
-        // Adicionando rotas com prefixo /admin/ai para compatibilidade com frontend
-        $this->add( '/ai/alerts', 'GET', 'AIController:getAlerts' );
-
-        // Rota de teste para verificar funcionamento
-        $this->add( '/ai/test', 'GET', 'AIController:test' );
-
-        // Adicionando rota de teste no grupo admin também
-        $this->add( '/ai/test-admin', 'GET', 'AIController:test' );
-
-        // Adicionando mais uma rota de teste
-        $this->add( '/ai/health', 'GET', 'AIController:test' );
-
     } );
 
     /**
@@ -218,7 +156,8 @@ try {
         $this->add( '/customers/show/(:numeric)', 'GET', 'CustomerController:show', [ 'id' ] );
         $this->add( '/customers/update/(:numeric)', 'GET', 'CustomerController:update', [ 'id' ] );
         $this->add( '/customers/update', 'POST', 'CustomerController:update_store' );
-        $this->add( '/customers/delete/(:numeric)', 'POST', 'CustomerController:delete_store', [ 'id' ] );
+        //TODO MUDAR ROTAS DELETE PARA POST VERIFICAR MUDANÇA NA URL SE AFETA DELETA REGISTRO ERRADO
+        $this->add( '/customers/delete/(:numeric)', 'DELETE', 'CustomerController:delete_store', [ 'id' ] );
 
         // Rotas de customers exemplo
         $this->add( '/products', 'GET', 'ProductController:index' );
@@ -230,7 +169,7 @@ try {
         $this->add( '/products/update', 'POST', 'ProductController:update_store' );
         $this->add( '/products/deactivate/(:any)', 'POST', 'ProductController:deactivate', [ 'code' ] );
         $this->add( '/products/activate/(:any)', 'POST', 'ProductController:activate', [ 'code' ] );
-        $this->add( '/products/delete/(:any)', 'POST', 'ProductController:delete_store', [ 'code' ] );
+        $this->add( '/products/delete/(:any)', 'DELETE', 'ProductController:delete_store', [ 'code' ] );
 
         // Rotas de services exemplo
         $this->add( '/services', 'GET', 'ServiceController:index' );
@@ -241,11 +180,12 @@ try {
         $this->add( '/services/change-status', 'POST', 'ServiceController:change_status' );
         $this->add( '/services/cancel/(:any)', 'POST', 'ServiceController:cancel', [ 'code' ] );
         $this->add( '/budgets/(:numeric)/services/create', 'GET', 'ServiceController:create', [ 'code' ] );
+        $this->add( '/services/store', 'POST', 'ServiceController:store' );
         $this->add( '/services/(:numeric)', 'GET', 'ServiceController:show' );
         $this->add( '/services/edit/(:any)', 'GET', 'ServiceController:edit', [ 'code' ] );
         $this->add( '/services/update/(:any)', 'GET', 'ServiceController:update', [ 'code' ] );
         $this->add( '/services/update', 'POST', 'ServiceController:update_store', [ 'code' ] );
-        $this->add( '/services/delete/(:any)', 'POST', 'ServiceController:delete_store', [ 'code' ] );
+        $this->add( '/services/delete/(:any)', 'DELETE', 'ServiceController:delete_store', [ 'code' ] );
         $this->add( '/services/print/(:any)', 'GET', 'ServiceController:print', [ 'code' ] );
 
         $this->add( '/budgets', 'GET', 'BudgetController:index' );
@@ -256,7 +196,7 @@ try {
         $this->add( '/budgets/change-status', 'POST', 'BudgetController:change_status' );
         $this->add( '/budgets/update/(:any)', 'GET', 'BudgetController:update', [ 'code' ] );
         $this->add( '/budgets/update/(:any)', 'POST', 'BudgetController:update_store', [ 'code' ] );
-        $this->add( '/budgets/delete/(:any)', 'POST', 'BudgetController:delete_store', [ 'code' ] );
+        $this->add( '/budgets/delete/(:any)', 'DELETE', 'BudgetController:delete_store', [ 'code' ] );
         $this->add( '/budgets/print/(:any)', 'GET', 'BudgetController:print', [ 'code' ] );
 
         // Rotas de reports exemplo

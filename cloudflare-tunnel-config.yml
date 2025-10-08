@@ -1,0 +1,42 @@
+# Configuração do Cloudflare Tunnel para Easy Budget
+# Arquivo configurado com credenciais reais do projeto
+
+# ID do tunnel
+tunnel: 37375574-f138-4588-b38d-6953da23a1d4
+
+# Arquivo de credenciais
+credentials-file: C:/Users/junio/.cloudflared/37375574-f138-4588-b38d-6953da23a1d4.json
+
+# Configurações de ingress - mapeamento de domínios para serviços locais
+ingress:
+  # Mapeia o domínio principal para o servidor PHP local
+  - hostname: dev.easybudget.net.br
+    service: http://localhost:8000
+  
+  # Regra catch-all obrigatória (deve ser a última)
+  - service: http_status:404
+
+# Configurações opcionais
+originRequest:
+  # Timeout para conexões
+  connectTimeout: 30s
+  # Timeout para requisições
+  tlsTimeout: 10s
+  # Desabilitar verificação de certificado para desenvolvimento local
+  noTLSVerify: true
+
+# Logs
+logLevel: info
+logFile: logs/cloudflared.log
+
+# INSTRUÇÕES DE CONFIGURAÇÃO:
+# 1. Instale o cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/
+# 2. Faça login: cloudflared tunnel login
+# 3. Crie um tunnel: cloudflared tunnel create easy-budget
+# 4. Substitua YOUR_TUNNEL_ID_HERE pelo ID do tunnel criado
+# 5. Substitua YOUR_USERNAME pelo seu nome de usuário do Windows
+# 6. Configure seu domínio no Cloudflare Dashboard
+# 7. Substitua your-domain.com pelo seu domínio real
+#
+# Para desenvolvimento local sem domínio, você pode usar:
+# cloudflared tunnel --url http://localhost:8000

@@ -4,285 +4,327 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ServiceChangeStatusFormRequest;
-use App\Http\Requests\ServiceChooseStatusFormRequest;
-use App\Http\Requests\ServiceFormRequest;
-use App\Services\NotificationService;
-use App\Services\ActivityService;
-use App\Services\PdfService;
-use App\Services\ActivityService;
+use App\Http\Requests\ServiceRequest;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Service;
+use App\Models\ServiceStatus;
 use App\Services\ServiceService;
-use App\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
-class ServiceController extends BaseController
+/**
+ * Controller para gestão de serviços - Interface Web
+ *
+ * Gerencia todas as operações relacionadas a serviços através
+ * da interface web, incluindo CRUD, busca e filtros.
+ */
+class ServiceController extends Controller
 {
     public function __construct(
-        private readonly ServiceService $serviceService,
-        private readonly PdfService $pdfService,
-        private readonly NotificationService $notificationService,
-    ) {
-        parent::__construct($activityService);
-    }
+        private ServiceService $serviceService,
+    ) {}
 
+    /**
+     * Lista de serviços com filtros e paginação.
+     */
     public function index( Request $request ): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        $filters = $request->only( [
+            'search', 'status', 'customer_id', 'priority_level',
+            'created_from', 'created_to', 'sort_by', 'sort_direction', 'per_page'
+        ] );
 
-        $this->logActivity(
-            action: 'view_services',
-            entity: 'services',
-            metadata: [ 
-                'tenant_id'   => $tenantId,
-                'provider_id' => $providerId
-            ],
-        );
+        $services = $this->serviceService->searchServices( $filters, auth()->user() );
 
-        $filters  = $request->only( [ 'status', 'budget_code', 'date_from', 'date_to' ] );
-        $services = $this->serviceService->getServicesForProvider( $providerId, $filters );
+        // Dados adicionais para a view
+        $customers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        return $this->renderView( 'pages.service.index', compact( 'services', 'filters' ) );
+        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
+
+        $stats = $this->serviceService->getServiceStats( auth()->user() );
+
+        return view( 'services.index', compact( 'services', 'customers', 'statuses', 'stats', 'filters' ) );
     }
 
-    public function create( ?string $budgetCode = null ): View
+    /**
+     * Formulário de criação de serviço.
+     */
+    public function create(): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        $customers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        $this->logActivity(
-            action: 'view_create_service',
-            entity: 'services',
-            metadata: [ 
-                'tenant_id'   => $tenantId,
-                'provider_id' => $providerId
-            ],
-        );
+        $products = Product::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        $categories = []; // Assume getAllCategories from service
-        $units      = []; // Assume findAllByTenant from service
-        $products   = []; // Assume getAllProductsActive from service
-        $budgets    = $this->serviceService->getBudgetsForServiceCreation( $tenantId, $providerId );
+        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        return $this->renderView( 'pages.service.create', compact( 'budgetCode', 'categories', 'units', 'products', 'budgets' ) );
+        return view( 'services.create', compact( 'customers', 'products', 'statuses' ) );
     }
 
-    public function store( ServiceFormRequest $request ): RedirectResponse
+    /**
+     * Salva serviço.
+     */
+    public function store( ServiceRequest $request ): RedirectResponse
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        try {
+            $service = $this->serviceService->createService( $request->validated(), auth()->user() );
+
+            return redirect()->route( 'services.show', $service->code )
+                ->with( 'success', 'Serviço cadastrado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->withInput()
+                ->with( 'error', 'Erro ao cadastrar serviço: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Exibe detalhes de um serviço.
+     */
+    public function show( Service $service ): View
+    {
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        $service->load( [ 'customer', 'items.product', 'status', 'attachments' ] );
+
+        return view( 'services.show', compact( 'service' ) );
+    }
+
+    /**
+     * Formulário de edição de serviço.
+     */
+    public function edit( Service $service ): View
+    {
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        $customers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
+
+        $products = Product::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
+
+        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
+
+        return view( 'services.edit', compact( 'service', 'customers', 'products', 'statuses' ) );
+    }
+
+    /**
+     * Atualiza serviço.
+     */
+    public function update( ServiceRequest $request, Service $service ): RedirectResponse
+    {
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
 
         try {
-            $result = $this->serviceService->create( $request->validated(), $tenantId, $providerId );
+            $updatedService = $this->serviceService->updateService( $service, $request->validated(), auth()->user() );
 
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Serviço criado com sucesso.',
-                errorMessage: 'Erro ao criar serviço.',
-            );
+            return redirect()->route( 'services.show', $updatedService->code )
+                ->with( 'success', 'Serviço atualizado com sucesso!' );
+
         } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao criar serviço: ' . $e->getMessage() );
+            return back()->withInput()
+                ->with( 'error', 'Erro ao atualizar serviço: ' . $e->getMessage() );
         }
     }
 
-    public function show( string $code ): View
+    /**
+     * Altera status do serviço.
+     */
+    public function changeStatus( Request $request, Service $service ): RedirectResponse
     {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $serviceData = $this->serviceService->getServiceFullByCode( $code, $tenantId );
-
-        if ( !$serviceData ) {
-            return $this->errorRedirect( 'Serviço não encontrado.' );
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $this->logActivity(
-            action: 'view_service',
-            entity: 'services',
-            metadata: [ 'tenant_id' => $tenantId, 'code' => $code ],
-        );
-
-        return $this->renderView( 'pages.service.show', $serviceData );
-    }
-
-    public function edit( string $code ): View
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $serviceData = $this->serviceService->getServiceUpdateData( $code, $tenantId );
-
-        if ( !$serviceData ) {
-            return $this->errorRedirect( 'Serviço não encontrado.' );
-        }
-
-        $this->logActivity(
-            action: 'view_edit_service',
-            entity: 'services',
-            metadata: [ 'tenant_id' => $tenantId, 'code' => $code ],
-        );
-
-        return $this->renderView( 'pages.service.edit', $serviceData );
-    }
-
-    public function update( ServiceFormRequest $request, string $code ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
+        $request->validate( [
+            'status_id' => 'required|exists:service_statuses,id',
+            'notes'     => 'nullable|string|max:1000',
+        ] );
 
         try {
-            $result = $this->serviceService->updateByCode( $code, $request->validated(), $tenantId );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Serviço atualizado com sucesso.',
-                errorMessage: 'Erro ao atualizar serviço.',
+            $updatedService = $this->serviceService->changeServiceStatus(
+                $service,
+                $request->status_id,
+                $request->notes,
+                auth()->user(),
             );
+
+            return redirect()->route( 'services.show', $updatedService->code )
+                ->with( 'success', 'Status do serviço atualizado com sucesso!' );
+
         } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao atualizar serviço: ' . $e->getMessage() );
-        }
-    }
-
-    public function changeStatus( ServiceChangeStatusFormRequest $request, string $code ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        try {
-            $result = $this->serviceService->changeStatusByCode( $code, $request->validated(), $tenantId );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Status do serviço alterado com sucesso!',
-                errorMessage: 'Erro ao alterar status.',
-            );
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao alterar status: ' . $e->getMessage() );
-        }
-    }
-
-    public function viewServiceStatus( string $code, string $token ): View
-    {
-        $serviceData = $this->serviceService->getServiceForStatusView( $code, $token );
-
-        if ( !$serviceData ) {
-            return $this->errorRedirect( 'Serviço não encontrado ou token inválido.' );
-        }
-
-        return $this->renderView( 'pages.service.view-status', $serviceData );
-    }
-
-    public function chooseServiceStatusStore( ServiceChooseStatusFormRequest $request ): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        try {
-            $result = $this->serviceService->handleCustomerStatusChange( $validated[ 'service_id' ], $validated[ 'status' ], $validated[ 'token' ], $validated[ 'comment' ] ?? null );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Status do serviço atualizado com sucesso!',
-                errorMessage: 'Erro ao atualizar status.',
-            );
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao atualizar status: ' . $e->getMessage() );
-        }
-    }
-
-    public function destroy( string $code ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        try {
-            $result = $this->serviceService->deleteByCode( $code, $tenantId );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: request(),
-                successMessage: 'Serviço deletado com sucesso!',
-                errorMessage: 'Erro ao deletar serviço.',
-            );
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao deletar serviço: ' . $e->getMessage() );
+            return back()->with( 'error', 'Erro ao alterar status: ' . $e->getMessage() );
         }
     }
 
     /**
      * Cancela serviço.
-     *
-     * @param string $code
-     * @return RedirectResponse
      */
-    public function cancel( string $code ): RedirectResponse
+    public function cancel( Service $service ): RedirectResponse
     {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $this->logActivity(
-            action: 'cancel_service',
-            entity: 'services',
-            metadata: [ 'tenant_id' => $tenantId, 'code' => $code ],
-        );
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
 
         try {
-            $result = $this->serviceService->cancelByCode( $code, $tenantId, 'Cancelado pelo usuário' );
+            $this->serviceService->cancelService( $service, auth()->user() );
 
-            return $this->handleServiceResult(
-                result: $result,
-                request: request(),
-                successMessage: 'Serviço cancelado com sucesso!',
-                errorMessage: 'Erro ao cancelar serviço.',
-            );
+            return redirect()->route( 'services.show', $service->code )
+                ->with( 'success', 'Serviço cancelado com sucesso!' );
+
         } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao cancelar serviço: ' . $e->getMessage() );
+            return back()->with( 'error', 'Erro ao cancelar serviço: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Imprime serviço.
-     *
-     * @param string $code
-     * @param string|null $token
-     * @return \Illuminate\Http\Response
+     * Remove serviço (soft delete).
      */
-    public function print( string $code, ?string $token = null ): \Illuminate\Http\Response
+    public function destroy( Service $service ): RedirectResponse
     {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $serviceData = $this->serviceService->getServicePrintData( $code, $token, $tenantId );
-
-        if ( !$serviceData ) {
-            return $this->errorRedirect( 'Serviço não encontrado.' );
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $this->logActivity(
-            action: 'print_service',
-            entity: 'services',
-            metadata: [ 'tenant_id' => $tenantId, 'code' => $code ],
-        );
+        try {
+            $this->serviceService->deleteService( $service, auth()->user() );
 
-        $pdfPath    = 'services/' . $serviceData[ 'service' ]->id . '.pdf';
-        $pdfContent = $this->pdfService->generateServicePdf( $serviceData[ 'service' ], $pdfPath );
+            return redirect()->route( 'services.index' )
+                ->with( 'success', 'Serviço removido com sucesso!' );
 
-        $filename = "servico_{$code}.pdf";
+        } catch ( \Exception $e ) {
+            return back()->with( 'error', 'Erro ao remover serviço: ' . $e->getMessage() );
+        }
+    }
 
-        return response( $pdfContent )
-            ->header( 'Content-Type', 'application/pdf' )
-            ->header( 'Content-Disposition', "inline; filename=\"{$filename}\"" );
+    /**
+     * Busca serviços via AJAX.
+     */
+    public function search( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        $request->validate( [
+            'query' => 'required|string|min:2',
+        ] );
+
+        $services = Service::where( 'tenant_id', auth()->user()->tenant_id )
+            ->where( function ( $query ) use ( $request ) {
+                $query->where( 'title', 'like', "%{$request->query}%" )
+                    ->orWhere( 'code', 'like', "%{$request->query}%" )
+                    ->orWhere( 'description', 'like', "%{$request->query}%" )
+                    ->orWhereHas( 'customer', function ( $q ) use ( $request ) {
+                        $q->where( 'company_name', 'like', "%{$request->query}%" )
+                            ->orWhereHas( 'commonData', function ( $subQ ) use ( $request ) {
+                                $subQ->where( 'first_name', 'like', "%{$request->query}%" )
+                                    ->orWhere( 'last_name', 'like', "%{$request->query}%" );
+                            } );
+                    } );
+            } )
+            ->limit( 10 )
+            ->get();
+
+        return response()->json( [
+            'services' => $services->map( function ( $service ) {
+                return [
+                    'id'       => $service->id,
+                    'code'     => $service->code,
+                    'text'     => $service->title,
+                    'customer' => $service->customer?->name ?? $service->customer?->company_name,
+                    'status'   => $service->status?->name,
+                ];
+            } )
+        ] );
+    }
+
+    /**
+     * Imprime serviço.
+     */
+    public function print( Service $service ): View
+    {
+        // Verificar se o serviço pertence ao tenant do usuário
+        if ( $service->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        $service->load( [ 'customer', 'items.product', 'status' ] );
+
+        return view( 'services.print', compact( 'service' ) );
+    }
+
+    /**
+     * Visualiza status do serviço (rota pública com token).
+     */
+    public function viewServiceStatus( string $code, string $token ): View
+    {
+        $service = $this->serviceService->getServiceByCodeAndToken( $code, $token );
+
+        if ( !$service ) {
+            abort( 404, 'Serviço não encontrado ou token inválido.' );
+        }
+
+        return view( 'services.public-status', compact( 'service' ) );
+    }
+
+    /**
+     * Altera status do serviço (rota pública com token).
+     */
+    public function chooseServiceStatus( Request $request ): RedirectResponse
+    {
+        $request->validate( [
+            'code'      => 'required|string',
+            'token'     => 'required|string',
+            'status_id' => 'required|exists:service_statuses,id',
+            'notes'     => 'nullable|string|max:1000',
+        ] );
+
+        try {
+            $service = $this->serviceService->changeServiceStatusByToken(
+                $request->code,
+                $request->token,
+                $request->status_id,
+                $request->notes,
+            );
+
+            return redirect()->back()
+                ->with( 'success', 'Status do serviço atualizado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->with( 'error', 'Erro ao alterar status: ' . $e->getMessage() );
+        }
     }
 
 }
-

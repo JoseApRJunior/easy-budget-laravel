@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -23,9 +24,11 @@ class InvoiceStatus extends Model
     protected $fillable = [
         'name',
         'slug',
+        'description',
         'color',
         'icon',
-        'description'
+        'order_index',
+        'is_active'
     ];
 
     /**
@@ -39,9 +42,27 @@ class InvoiceStatus extends Model
         'description' => 'string',
         'color'       => 'string',
         'icon'        => 'string',
+        'order_index' => 'integer',
+        'is_active'   => 'boolean',
         'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:100|unique:invoice_statuses,name',
+            'slug'        => 'required|string|max:50|unique:invoice_statuses,slug',
+            'description' => 'nullable|string|max:500',
+            'color'       => 'nullable|string|max:7|regex:/^#[0-9A-F]{6}$/i',
+            'icon'        => 'nullable|string|max:50',
+            'order_index' => 'nullable|integer|min:0',
+            'is_active'   => 'required|boolean',
+        ];
+    }
 
     /**
      * Get the invoices for the InvoiceStatus.

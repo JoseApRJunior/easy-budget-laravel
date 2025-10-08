@@ -1,0 +1,47 @@
+/* Animação de fade in */
+@keyframes fadeIn {
+   from {
+      opacity: 0;
+      transform: translateY(10px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+.fade-in {
+   animation: fadeIn 0.3s ease forwards;
+}
+
+/* Transições globais */
+.card,
+.btn,
+.nav-link,
+.social-links a,
+.footer-links a,
+.hover-card {
+   transition: all var(--transition-speed) var(--transition-timing);
+}
+
+/* Otimização de performance */
+@media (prefers-reduced-motion: no-preference) {
+   .hover-card,
+   .btn,
+   .nav-link {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform;
+   }
+}
+
+/* Redução de animações */
+@media (prefers-reduced-motion: reduce) {
+   *,
+   *::before,
+   *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+   }
+}

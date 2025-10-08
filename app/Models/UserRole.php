@@ -5,10 +5,8 @@ namespace App\Models;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Support\Carbon;
 
 class UserRole extends Pivot
 {
@@ -25,11 +23,60 @@ class UserRole extends Pivot
      *
      * @var array<int, string>
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'user_id',
         'role_id',
         'tenant_id',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'user_id'    => 'integer',
+        'role_id'    => 'integer',
+        'tenant_id'  => 'integer',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Regras de validação para o modelo UserRole.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Regras de validação para criação de UserRole.
+     */
+    public static function createRules(): array
+    {
+        return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ];
+    }
+
+    /**
+     * Regras de validação para atualização de UserRole.
+     */
+    public static function updateRules(): array
+    {
+        return [
+            'user_id'   => 'required|integer|exists:users,id',
+            'role_id'   => 'required|integer|exists:roles,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ];
+    }
 
     /**
      * Indicates if the IDs are auto-incrementing.
@@ -63,24 +110,35 @@ class UserRole extends Pivot
     }
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Verifica se esta atribuição de role está ativa para o tenant especificado.
      */
-    protected $casts = [ 
-        'user_id'    => 'integer',
-        'role_id'    => 'integer',
-        'tenant_id'  => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    public function isActiveForTenant(int $tenantId): bool
+    {
+        return $this->tenant_id === $tenantId;
+    }
 
     /**
-     * Accessor para tratar valores zero-date no updated_at.
+     * Scope para buscar UserRoles por tenant.
      */
-    public function getUpdatedAtAttribute( $value )
+    public function scopeForTenant($query, int $tenantId)
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
+        return $query->where('tenant_id', $tenantId);
+    }
+
+    /**
+     * Scope para buscar UserRoles por usuário.
+     */
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Scope para buscar UserRoles por role.
+     */
+    public function scopeForRole($query, int $roleId)
+    {
+        return $query->where('role_id', $roleId);
     }
 
 }

@@ -1,0 +1,153 @@
+@extends( 'layouts.app' )
+
+@section( 'content' )
+    <div class="container-fluid min-vh-100 d-flex align-items-center py-1">
+        <div class="row justify-content-center w-100">
+            <div class="col-12 col-lg-8">
+                <!-- Seção Principal do Erro -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- Ilustração do Erro -->
+                            <div class="col-lg-5 bg-gradient text-white p-5 d-flex align-items-center">
+                                <div class="text-center w-100">
+                                    <div class="display-1 mb-3">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                    </div>
+                                    <h1 class="display-4 fw-bold mb-0">405</h1>
+                                    <p class="lead mb-0">Método não permitido</p>
+                                </div>
+                            </div>
+
+                            <!-- Mensagem e Ações -->
+                            <div class="col-lg-7 p-5">
+                                <div class="text-center text-lg-start">
+                                    <h2 class="h4 mb-4">Oops! Algo deu errado.</h2>
+                                    <p class="text-muted mb-4">
+                                        Desculpe, o método de requisição utilizado não é permitido para esta página.
+                                        Por favor, verifique se você está usando o método correto ou tente uma das opções
+                                        abaixo.
+                                    </p>
+
+                                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-start">
+                                        <a href="{{ url( '/' ) }}" class="btn btn-primary">
+                                            <i class="bi bi-house-door me-2"></i>Página Inicial
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            onclick="window.history.back()">
+                                            <i class="bi bi-arrow-left me-2"></i>Voltar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Ajuda -->
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="display-6 text-primary mb-2">
+                                <i class="bi bi-life-preserver"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Como podemos ajudar?</h3>
+                        </div>
+
+                        <div class="row g-4 justify-content-center">
+                            <!-- Suporte -->
+                            <div class="col-md-4">
+                                <div class="text-center p-3 h-100 rounded bg-light">
+                                    <i class="bi bi-headset display-6 text-primary mb-3"></i>
+                                    <h4 class="h6 mb-2">Suporte Técnico</h4>
+                                    <p class="small text-muted mb-3">
+                                        Precisa de ajuda? Nossa equipe está pronta para atender você.
+                                    </p>
+                                    <a href="{{ url( '/support' ) }}" class="btn btn-sm btn-outline-primary">
+                                        Contatar Suporte
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- FAQ -->
+                            <div class="col-md-4">
+                                <div class="text-center p-3 h-100 rounded bg-light">
+                                    <i class="bi bi-question-circle display-6 text-primary mb-3"></i>
+                                    <h4 class="h6 mb-2">Perguntas Frequentes</h4>
+                                    <p class="small text-muted mb-3">
+                                        Encontre respostas para as dúvidas mais comuns.
+                                    </p>
+                                    <a href="{{ url( '/faq' ) }}" class="btn btn-sm btn-outline-primary">
+                                        Consultar FAQ
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Sobre -->
+                            <div class="col-md-4">
+                                <div class="text-center p-3 h-100 rounded bg-light">
+                                    <i class="bi bi-info-circle display-6 text-primary mb-3"></i>
+                                    <h4 class="h6 mb-2">Sobre o Easy Budget</h4>
+                                    <p class="small text-muted mb-3">
+                                        Conheça mais sobre nossa plataforma.
+                                    </p>
+                                    <a href="{{ url( '/about' ) }}" class="btn btn-sm btn-outline-primary">
+                                        Saiba Mais
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push( 'styles' )
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .btn {
+            border-radius: 0.5rem;
+            padding: 0.625rem 1.25rem;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        .display-1 {
+            font-size: 4rem;
+        }
+
+        .display-6 {
+            font-size: 2.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .card-body {
+                text-align: center;
+            }
+
+            .justify-content-sm-start {
+                justify-content: center !important;
+            }
+
+            .display-1 {
+                font-size: 3rem;
+            }
+
+            .display-4 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+@endpush

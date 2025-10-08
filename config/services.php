@@ -1,6 +1,6 @@
 <?php
 
-return [ 
+return [
 
     /*
     |--------------------------------------------------------------------------
@@ -14,32 +14,36 @@ return [
     |
     */
 
-    'postmark'    => [ 
+    'postmark'    => [
         'token' => env( 'POSTMARK_TOKEN' ),
     ],
 
-    'resend'      => [ 
+    'resend'      => [
         'key' => env( 'RESEND_KEY' ),
     ],
 
-    'ses'         => [ 
+    'ses'         => [
         'key'    => env( 'AWS_ACCESS_KEY_ID' ),
         'secret' => env( 'AWS_SECRET_ACCESS_KEY' ),
         'region' => env( 'AWS_DEFAULT_REGION', 'us-east-1' ),
     ],
 
-    'slack'       => [ 
-        'notifications' => [ 
+    'slack'       => [
+        'notifications' => [
             'bot_user_oauth_token' => env( 'SLACK_BOT_USER_OAUTH_TOKEN' ),
             'channel'              => env( 'SLACK_BOT_USER_DEFAULT_CHANNEL' ),
         ],
     ],
 
-    'mercadopago' => [ 
+    'mercadopago' => [
         'access_token'   => env( 'MERCADO_PAGO_ACCESS_TOKEN' ),
         'webhook_secret' => env( 'MERCADO_PAGO_WEBHOOK_SECRET' ),
         'app_id'         => env( 'MERCADOPAGO_APP_ID' ),
         'client_secret'  => env( 'MERCADOPAGO_CLIENT_SECRET' ),
+    ],
+
+    'google_maps' => [
+        'api_key' => env( 'GOOGLE_MAPS_API_KEY' ),
     ],
 
 ];

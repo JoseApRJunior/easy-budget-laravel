@@ -39,11 +39,22 @@ class Permission extends Model
     ];
 
     protected $casts = [
-        'name' => 'string',
+        'name'        => 'string',
         'description' => 'string',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'datetime',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Permission.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:permissions,name',
+            'description' => 'nullable|string|max:500',
+        ];
+    }
 
     /**
      * Relationship com roles - global, sem tenant scoping.
@@ -63,10 +74,10 @@ class Permission extends Model
      *
      * @return BelongsToMany
      */
-    public function users()
+    public function users(): User
     {
-        return User::whereHas( 'roles', function ($query) {
-            $query->whereHas( 'permissions', function ($query) {
+        return User::whereHas( 'roles', function ( $query ) {
+            $query->whereHas( 'permissions', function ( $query ) {
                 $query->where( 'permission_id', $this->id );
             } );
         } );

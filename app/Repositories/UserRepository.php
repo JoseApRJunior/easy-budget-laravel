@@ -5,76 +5,110 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\User;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Repositório para operações de usuário tenant-aware.
+ * Repositório para operações de usuário tenant-aware
  *
- * Estende AbstractRepository para isolamento de tenant.
+ * Implementa métodos específicos para gerenciamento de usuários
+ * com isolamento automático por tenant_id
  */
-class UserRepository extends AbstractRepository
+class UserRepository extends AbstractTenantRepository
 {
-    /**
-     * @var string Model class
-     */
     protected string $modelClass = User::class;
 
     /**
-     * Encontra usuário por ID e tenant.
+     * Cria uma nova instância do modelo User
      *
-     * @param int $tenantId
-     * @param int $tenantId
-     * @return User|null
+     * @return User
      */
-    public function findByIdAndTenantId( int $id, int $tenantId ): ?User
+    protected function makeModel(): User
     {
-        return $this->findByIdAndTenantId( $id, $tenantId );
+        return new User();
     }
 
     /**
-     * Lista usuários por tenant com filtros.
+     * Encontra usuário por email e tenant
      *
-     * @param int $tenantId
-     * @param array $filters
-     * @param array|null $orderBy
-     * @param int|null $limit
-     * @param int|null $offset
-     * @return array
+     * @param string $email Email do usuário
+     * @param int $tenantId ID do tenant
+     * @return User|null Usuário encontrado ou null
      */
-    public function listByTenantId( int $tenantId, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
+    public function findByEmailAndTenant( string $email, int $tenantId ): ?User
     {
-        return $this->findAllByTenantId( $tenantId, $filters, $orderBy, $limit, $offset );
+        return $this->findOneByCriteriaAndTenant( [ 'email' => $email ], $tenantId );
     }
 
     /**
-     * Conta admins por tenant.
+     * Encontra usuários ativos por tenant
      *
-     * @param int $tenantId
-     * @return int
+     * @param int $tenantId ID do tenant
+     * @return Collection Coleção de usuários ativos
+     */
+    public function findActiveByTenant( int $tenantId ): Collection
+    {
+        return $this->findByCriteriaAndTenant( [ 'is_active' => true ], $tenantId );
+    }
+
+    /**
+     * Valida se email é único no tenant
+     *
+     * @param string $email Email a ser verificado
+     * @param int $tenantId ID do tenant
+     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @return bool True se é único, false caso contrário
+     */
+    public function validateUniqueEmailInTenant( string $email, int $tenantId, ?int $excludeId = null ): bool
+    {
+        return $this->validateUniqueInTenant( 'email', $email, $tenantId, $excludeId );
+    }
+
+    /**
+     * Conta administradores por tenant
+     *
+     * @param int $tenantId ID do tenant
+     * @return int Número de administradores
      */
     public function countAdminsByTenantId( int $tenantId ): int
     {
-        return $this->model::where( 'tenant_id', $tenantId )
-            ->where( 'role', 'admin' ) // Assumir campo role
+        return $this->newQuery()
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'role', 'admin' )
             ->count();
     }
 
     /**
-     * Verifica se slug existe por tenant.
+     * Verifica se slug existe por tenant
      *
-     * @param string $slug
-     * @param int $tenantId
-     * @param int|null $excludeId
-     * @return bool
+     * @param string $slug Slug a ser verificado
+     * @param int $tenantId ID do tenant
+     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @return bool True se existe, false caso contrário
      */
     public function existsBySlugAndTenantId( string $slug, int $tenantId, ?int $excludeId = null ): bool
     {
-        $query = $this->model::where( 'tenant_id', $tenantId )->where( 'slug', $slug );
-        if ( $excludeId ) {
-            $query->where( 'id', '!=', $excludeId );
-        }
-        return $query->exists();
+        return !$this->validateUniqueInTenant( 'slug', $slug, $tenantId, $excludeId );
     }
 
-    // Outros métodos conforme necessário, ex: existsByEmailAndTenantId, etc.
+    /**
+     * Encontra o primeiro registro
+     *
+     * @return User|null Primeiro registro ou null
+     */
+    public function first(): ?User
+    {
+        return $this->newQuery()->first();
+    }
+
+    /**
+     * Encontra o último registro
+     *
+     * @return User|null Último registro ou null
+     */
+    public function last(): ?User
+    {
+        return $this->newQuery()->last();
+    }
+
 }

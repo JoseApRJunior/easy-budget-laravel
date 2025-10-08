@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Invoice extends Model
@@ -77,6 +78,29 @@ class Invoice extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Invoice.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'tenant_id'           => 'required|integer|exists:tenants,id',
+            'service_id'          => 'required|integer|exists:services,id',
+            'customer_id'         => 'required|integer|exists:customers,id',
+            'invoice_statuses_id' => 'required|integer|exists:invoice_statuses,id',
+            'code'                => 'required|string|max:50|unique:invoices,code',
+            'subtotal'            => 'required|numeric|min:0|max:999999.99',
+            'discount'            => 'required|numeric|min:0|max:999999.99',
+            'total'               => 'required|numeric|min:0|max:999999.99',
+            'due_date'            => 'nullable|date|after:today',
+            'payment_method'      => 'nullable|string|max:50',
+            'payment_id'          => 'nullable|string|max:255',
+            'transaction_amount'  => 'nullable|numeric|min:0|max:999999.99',
+            'transaction_date'    => 'nullable|date',
+            'notes'               => 'nullable|string|max:65535',
+        ];
+    }
+
+    /**
      * Get the tenant that owns the Invoice.
      */
     public function tenant(): BelongsTo
@@ -106,6 +130,14 @@ class Invoice extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo( Service::class);
+    }
+
+    /**
+     * Get the invoice items for the Invoice.
+     */
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany( InvoiceItem::class);
     }
 
     /**

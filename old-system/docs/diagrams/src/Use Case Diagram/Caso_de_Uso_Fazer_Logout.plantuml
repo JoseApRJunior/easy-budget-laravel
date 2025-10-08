@@ -1,0 +1,18 @@
+@startuml Fazer Logout
+title Fazer Logout
+left to right direction
+actor Prestador
+actor Sistema
+
+rectangle "Processo de Logout" {
+    Prestador --> (Clicar em Logout)
+    Sistema --> (Confirmar Solicitação de Logout)
+    Sistema --> (Encerrar Sessão)
+    Sistema --> (Redirecionar para Página Inicial Não Autenticada)
+}
+
+rectangle "Fluxos Alternativos" {
+    Sistema --> Prestador : "Erro ao encerrar a sessão"
+    Sistema --> Prestador : "Mensagem de erro e sugestão para tentar novamente"
+}
+@enduml

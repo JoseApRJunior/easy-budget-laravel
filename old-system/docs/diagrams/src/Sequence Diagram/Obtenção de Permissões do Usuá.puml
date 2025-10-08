@@ -1,0 +1,12 @@
+@startuml Obtenção de Permissões do Usuário
+title Obtenção de Permissões do Usuário
+
+actor "Sistema" as S
+participant "User Model" as UM
+database "Banco de Dados" as DB
+
+S -> UM: getUserPermissions(userId)
+UM -> DB: Consulta permissões do usuário
+DB --> UM: Retorna permissões
+UM --> S: Retorna array de permissões
+@enduml

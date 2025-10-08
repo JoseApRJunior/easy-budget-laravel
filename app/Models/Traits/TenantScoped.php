@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Auth;
 class TenantScope implements Scope
 {
     /**
+     * Static flag to prevent recursion when checking auth during tenant resolution.
+     */
+    private static bool $resolvingTenant = false;
+
+    /**
      * Apply the scope to the given query builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $builder
@@ -21,6 +26,11 @@ class TenantScope implements Scope
      */
     public function apply( Builder $builder, Model $model ): void
     {
+        // Skip applying scope if we're already resolving tenant to prevent infinite loop
+        if ( self::$resolvingTenant ) {
+            return;
+        }
+
         $tenantId = $this->getCurrentTenantId( $model );
 
         if ( $tenantId !== null ) {
@@ -42,21 +52,29 @@ class TenantScope implements Scope
             return (int) $testingTenantId;
         }
 
-        // Prioritize authenticated user tenant
-        if ( Auth::check() ) {
-            $user = Auth::user();
-            if ( method_exists( $user, 'tenant' ) && $user->tenant ) {
-                return $user->tenant->id;
+        // Set recursion protection flag before checking auth
+        self::$resolvingTenant = true;
+
+        try {
+            // Prioritize authenticated user tenant
+            if ( Auth::check() ) {
+                $user = Auth::user();
+                if ( method_exists( $user, 'tenant' ) && $user->tenant ) {
+                    return $user->tenant->id;
+                }
             }
-        }
 
-        // Fallback to request context if available
-        if ( request()->has( 'tenant_id' ) ) {
-            return (int) request()->get( 'tenant_id' );
-        }
+            // Fallback to request context if available
+            if ( request()->has( 'tenant_id' ) ) {
+                return (int) request()->get( 'tenant_id' );
+            }
 
-        // Return null if no tenant resolved to avoid applying scope
-        return null;
+            // Return null if no tenant resolved to avoid applying scope
+            return null;
+        } finally {
+            // Always reset the recursion protection flag
+            self::$resolvingTenant = false;
+        }
 
         // Note: In production, implement proper tenant resolution middleware
     }

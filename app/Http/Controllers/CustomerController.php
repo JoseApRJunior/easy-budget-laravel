@@ -4,220 +4,364 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CustomerFormRequest;
+use App\Http\Requests\CustomerPessoaFisicaRequest;
+use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Models\Customer;
+use App\Models\CustomerTag;
 use App\Services\CustomerService;
-use App\Services\ActivityService;
-use Illuminate\Http\RedirectResponse;
+use App\Services\CustomerInteractionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class CustomerController extends BaseController
+/**
+ * Controller para gestão de clientes - Interface Web
+ *
+ * Gerencia todas as operações relacionadas a clientes através
+ * da interface web, incluindo CRUD, busca e filtros.
+ */
+class CustomerController extends Controller
 {
     public function __construct(
-        private readonly CustomerService $customerService,
-        private readonly ActivityService $activityService,
-    ) {
-        parent::__construct($activityService);
-    }
+        private CustomerService $customerService,
+        private CustomerInteractionService $interactionService,
+    ) {}
 
+    /**
+     * Lista de clientes com filtros e paginação.
+     */
     public function index( Request $request ): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        $filters = $request->only( [
+            'search', 'status', 'customer_type', 'priority_level',
+            'tags', 'created_from', 'created_to', 'sort_by', 'sort_direction', 'per_page'
+        ] );
 
-        $this->logActivity(
-            action: 'view_customers',
-            entity: 'customers',
-            metadata: [ 
-                'tenant_id'   => $tenantId,
-                'provider_id' => $providerId
-            ],
-        );
+        $customers = $this->customerService->searchCustomers( $filters, auth()->user() );
 
-        $filters   = $request->only( [ 'name', 'email', 'status' ] );
-        $customers = $this->customerService->search( $filters[ 'name' ] ?? '', $tenantId, $providerId );
+        // Dados adicionais para a view
+        $stats         = $this->customerService->getCustomerStats( auth()->user() );
+        $availableTags = CustomerTag::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        return $this->renderView( 'pages.customer.index', compact( 'customers', 'filters' ) );
+        return view( 'customers.index', compact( 'customers', 'stats', 'availableTags', 'filters' ) );
     }
 
-    public function create(): View
+    /**
+     * Formulário de criação de cliente pessoa física.
+     */
+    public function createPessoaFisica(): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        $availableTags = CustomerTag::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
-        $this->logActivity(
-            action: 'view_create_customer',
-            entity: 'customers',
-            metadata: [ 
-                'tenant_id'   => $tenantId,
-                'provider_id' => $providerId
-            ],
-        );
-
-        return $this->renderView( 'pages.customer.create' );
+        return view( 'customers.create-pessoa-fisica', compact( 'availableTags' ) );
     }
 
-    public function store( CustomerFormRequest $request ): RedirectResponse
+    /**
+     * Formulário de criação de cliente pessoa jurídica.
+     */
+    public function createPessoaJuridica(): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        $availableTags = CustomerTag::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
 
+        return view( 'customers.create-pessoa-juridica', compact( 'availableTags' ) );
+    }
+
+    /**
+     * Salva cliente pessoa física.
+     */
+    public function storePessoaFisica( CustomerPessoaFisicaRequest $request ): RedirectResponse
+    {
         try {
-            $result = $this->customerService->create( $request->validated(), $tenantId, $providerId );
+            $customer = $this->customerService->createPessoaFisica( $request->validated(), auth()->user() );
 
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Cliente criado com sucesso.',
-                errorMessage: 'Erro ao criar cliente.',
-            );
+            return redirect()->route( 'customers.show', $customer )
+                ->with( 'success', 'Cliente pessoa física cadastrado com sucesso!' );
+
         } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao criar cliente: ' . $e->getMessage() );
-        }
-    }
-
-    public function show( int $id ): View
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $customer = $this->customerService->getById( $id, $tenantId );
-
-        if ( !$customer ) {
-            return $this->errorRedirect( 'Cliente não encontrado.' );
-        }
-
-        $this->logActivity(
-            action: 'view_customer',
-            entity: 'customers',
-            entityId: $id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
-
-        return $this->renderView( 'pages.customer.show', compact( 'customer' ) );
-    }
-
-    public function edit( int $id ): View
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        $customer = $this->customerService->getById( $id, $tenantId );
-
-        if ( !$customer ) {
-            return $this->errorRedirect( 'Cliente não encontrado.' );
-        }
-
-        $this->logActivity(
-            action: 'view_edit_customer',
-            entity: 'customers',
-            entityId: $id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
-
-        return $this->renderView( 'pages.customer.edit', compact( 'customer' ) );
-    }
-
-    public function update( CustomerFormRequest $request, int $id ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        try {
-            $result = $this->customerService->update( $id, $request->validated(), $tenantId );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: $request,
-                successMessage: 'Cliente atualizado com sucesso.',
-                errorMessage: 'Erro ao atualizar cliente.',
-            );
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao atualizar cliente: ' . $e->getMessage() );
-        }
-    }
-
-    public function destroy( int $id ): RedirectResponse
-    {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
-
-        try {
-            $result = $this->customerService->delete( $id, $tenantId );
-
-            return $this->handleServiceResult(
-                result: $result,
-                request: request(),
-                successMessage: 'Cliente deletado com sucesso.',
-                errorMessage: 'Erro ao deletar cliente.',
-            );
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro ao deletar cliente: ' . $e->getMessage() );
+            return back()->withInput()
+                ->with( 'error', 'Erro ao cadastrar cliente: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Exibe serviços e orçamentos relacionados ao cliente.
-     *
-     * @param int $id
-     * @return View
+     * Salva cliente pessoa jurídica.
      */
-    public function servicesAndQuotes( int $id ): View
+    public function storePessoaJuridica( CustomerPessoaJuridicaRequest $request ): RedirectResponse
     {
-        $user     = Auth::user();
-        $tenantId = $user->tenant_id ?? 1;
+        try {
+            $customer = $this->customerService->createPessoaJuridica( $request->validated(), auth()->user() );
 
-        $this->logActivity(
-            action: 'view_customer_services_quotes',
-            entity: 'customers',
-            entityId: $id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
+            return redirect()->route( 'customers.show', $customer )
+                ->with( 'success', 'Cliente pessoa jurídica cadastrado com sucesso!' );
 
-        $data = $this->customerService->getServicesAndQuotes( $id, $tenantId );
-
-        if ( empty( $data ) ) {
-            return $this->errorRedirect( 'Dados não encontrados.' );
+        } catch ( \Exception $e ) {
+            return back()->withInput()
+                ->with( 'error', 'Erro ao cadastrar cliente: ' . $e->getMessage() );
         }
-
-        $customer = $this->customerService->getById( $id, $tenantId );
-
-        if ( !$customer ) {
-            return $this->errorRedirect( 'Cliente não encontrado.' );
-        }
-
-        return $this->renderView( 'pages.customer.services-quotes', compact( 'data', 'customer' ) );
     }
 
     /**
-     * Busca clientes via AJAX.
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * Exibe detalhes de um cliente.
      */
-    public function search( Request $request ): JsonResponse
+    public function show( Customer $customer ): View
     {
-        $user       = Auth::user();
-        $tenantId   = $user->tenant_id ?? 1;
-        $providerId = $user->provider_id ?? $user->id;
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
 
-        $this->logActivity(
-            action: 'search_customers',
-            entity: 'customers',
-            metadata: [ 
-                'tenant_id'   => $tenantId,
-                'provider_id' => $providerId
-            ],
+        $customer->load( [
+            'addresses',
+            'contacts',
+            'tags',
+            'interactions' => function ( $query ) {
+                $query->with( 'user' )->orderBy( 'interaction_date', 'desc' )->limit( 10 );
+            }
+        ] );
+
+        // Dados adicionais
+        $interactionTypes      = $this->interactionService->getInteractionTypes();
+        $interactionDirections = $this->interactionService->getInteractionDirections();
+        $interactionOutcomes   = $this->interactionService->getInteractionOutcomes();
+
+        return view( 'customers.show', compact(
+            'customer',
+            'interactionTypes',
+            'interactionDirections',
+            'interactionOutcomes',
+        ) );
+    }
+
+    /**
+     * Formulário de edição de cliente.
+     */
+    public function edit( Customer $customer ): View
+    {
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        $customer->load( [ 'addresses', 'contacts', 'tags' ] );
+
+        $availableTags = CustomerTag::where( 'tenant_id', auth()->user()->tenant_id )
+            ->active()
+            ->ordered()
+            ->get();
+
+        return view( 'customers.edit', compact( 'customer', 'availableTags' ) );
+    }
+
+    /**
+     * Atualiza cliente.
+     */
+    public function update( Request $request, Customer $customer ): RedirectResponse
+    {
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        try {
+            // Validar dados conforme tipo de cliente
+            if ( $customer->customer_type === 'individual' ) {
+                $request->validate( ( new CustomerPessoaFisicaRequest() )->rules() );
+                $validatedData = $request->validated();
+            } else {
+                $request->validate( ( new CustomerPessoaJuridicaRequest() )->rules() );
+                $validatedData = $request->validated();
+            }
+
+            $updatedCustomer = $this->customerService->updateCustomer( $customer, $validatedData, auth()->user() );
+
+            return redirect()->route( 'customers.show', $updatedCustomer )
+                ->with( 'success', 'Cliente atualizado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->withInput()
+                ->with( 'error', 'Erro ao atualizar cliente: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Remove cliente (soft delete).
+     */
+    public function destroy( Customer $customer ): RedirectResponse
+    {
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        try {
+            $this->customerService->deleteCustomer( $customer, auth()->user() );
+
+            return redirect()->route( 'customers.index' )
+                ->with( 'success', 'Cliente removido com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->with( 'error', 'Erro ao remover cliente: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Restaura cliente excluído.
+     */
+    public function restore( Customer $customer ): RedirectResponse
+    {
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        try {
+            $this->customerService->restoreCustomer( $customer, auth()->user() );
+
+            return redirect()->route( 'customers.show', $customer )
+                ->with( 'success', 'Cliente restaurado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->with( 'error', 'Erro ao restaurar cliente: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Duplica cliente.
+     */
+    public function duplicate( Customer $customer ): RedirectResponse
+    {
+        // Verificar se o cliente pertence ao tenant do usuário
+        if ( $customer->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        try {
+            $newCustomer = $this->customerService->duplicateCustomer( $customer, auth()->user() );
+
+            return redirect()->route( 'customers.edit', $newCustomer )
+                ->with( 'success', 'Cliente duplicado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            return back()->with( 'error', 'Erro ao duplicar cliente: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Busca clientes próximos via AJAX.
+     */
+    public function findNearby( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        $request->validate( [
+            'latitude'  => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'radius'    => 'nullable|integer|min:1|max:100',
+        ] );
+
+        $nearbyCustomers = $this->customerService->findNearbyCustomers(
+            $request->latitude,
+            $request->longitude,
+            $request->radius ?? 10,
+            auth()->user(),
         );
 
-        $query     = $request->get( 'q', '' );
-        $customers = $this->customerService->search( $query, $tenantId, $providerId );
+        return response()->json( [
+            'customers' => $nearbyCustomers->map( function ( $customer ) {
+                return [
+                    'id'              => $customer->id,
+                    'name'            => $customer->name ?? $customer->company_name,
+                    'primary_address' => $customer->primary_address?->full_address,
+                    'distance'        => $customer->primary_address?->getDistanceTo(
+                        request( 'latitude' ), request( 'longitude' ),
+                    ),
+                ];
+            } )
+        ] );
+    }
 
-        return response()->json( $customers );
+    /**
+     * Autocomplete para busca de clientes.
+     */
+    public function autocomplete( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        $request->validate( [
+            'query' => 'required|string|min:2',
+        ] );
+
+        $customers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->where( function ( $query ) use ( $request ) {
+                $query->where( 'company_name', 'like', "%{$request->query}%" )
+                    ->orWhere( 'fantasy_name', 'like', "%{$request->query}%" )
+                    ->orWhereHas( 'commonData', function ( $q ) use ( $request ) {
+                        $q->where( 'first_name', 'like', "%{$request->query}%" )
+                            ->orWhere( 'last_name', 'like', "%{$request->query}%" );
+                    } );
+            } )
+            ->limit( 10 )
+            ->get();
+
+        return response()->json( [
+            'customers' => $customers->map( function ( $customer ) {
+                return [
+                    'id'    => $customer->id,
+                    'text'  => $customer->name ?? $customer->company_name,
+                    'email' => $customer->primary_email,
+                    'phone' => $customer->primary_phone,
+                ];
+            } )
+        ] );
+    }
+
+    /**
+     * Exporta lista de clientes.
+     */
+    public function export( Request $request )
+    {
+        $filters = $request->only( [
+            'search', 'status', 'customer_type', 'priority_level', 'tags'
+        ] );
+
+        $customers = $this->customerService->searchCustomers(
+            array_merge( $filters, [ 'per_page' => 1000 ] ),
+            auth()->user(),
+        );
+
+        // TODO: Implementar exportação para Excel/CSV
+        // Por ora, retorna JSON
+        return response()->json( [
+            'customers' => $customers->items(),
+            'total'     => $customers->total(),
+        ] );
+    }
+
+    /**
+     * Dashboard de clientes.
+     */
+    public function dashboard(): View
+    {
+        $stats           = $this->customerService->getCustomerStats( auth()->user() );
+        $recentCustomers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->withRecentInteractions( 7 )
+            ->limit( 5 )
+            ->get();
+
+        $pendingActions      = $this->interactionService->getPendingActions( auth()->user(), 10 );
+        $overdueInteractions = $this->interactionService->getOverdueInteractions( auth()->user() );
+
+        return view( 'customers.dashboard', compact(
+            'stats',
+            'recentCustomers',
+            'pendingActions',
+            'overdueInteractions',
+        ) );
     }
 
 }

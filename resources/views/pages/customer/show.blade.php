@@ -1,0 +1,176 @@
+@extends( 'layout' )
+
+@section( 'content' )
+    <div class="container-fluid py-1">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 d-flex align-items-center">
+                <i class="bi bi-person-badge-fill me-2 "></i>
+                <span>Detalhes do Cliente</span>
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}" class="text-decoration-none">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="{{ url( '/provider/customers' ) }}"
+                            class="text-decoration-none">Clientes</a></li>
+                    <li class="breadcrumb-item active">{{ $customer->first_name }} {{ $customer->last_name }}</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row g-4">
+            <!-- Informações Pessoais -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-header bg-transparent border-0 py-1">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-person-fill me-2 "></i>
+                            <span>Informações Pessoais</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-item mb-3 ">
+                            <label class="text-muted small d-block mb-1">Nome Completo</label>
+                            <p class="mb-0 d-flex align-items-center fw-bold">{{ $customer->first_name }}
+                                {{ $customer->last_name }}</p>
+                            @if ( $customer->status )
+                                <span class="badge bg-success mt-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Ativo
+                                </span>
+                            @endif
+                            <div class="decoration-line"></div>
+                        </div>
+
+                        @php
+                            $personal_info = [
+                                'Email'              => [ 'icon' => 'envelope-fill', 'value' => $customer->email ],
+                                'Email Comercial'    => [ 'icon' => 'envelope-fill', 'value' => $customer->email_business ],
+                                'Telefone'           => [ 'icon' => 'phone-fill', 'value' => $customer->phone ],
+                                'Telefone Comercial' => [ 'icon' => 'telephone-fill', 'value' => $customer->phone_business ],
+                                'Data de Nascimento' => [ 'icon' => 'calendar-fill', 'value' => \Carbon\Carbon::parse( $customer->birth_date )->format( 'd/m/Y' ) ]
+                            ];
+                        @endphp
+
+                        @foreach ( $personal_info as $key => $info )
+                            <div class="info-item mb-3">
+                                <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
+                                <p class="mb-0 d-flex align-items-center">
+                                    <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
+                                    <span>{{ $info[ 'value' ] }}</span>
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Profissionais -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-header bg-transparent border-0 py-1">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-briefcase-fill me-2 "></i>
+                            <span>Informações Profissionais</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $professional_info = [
+                                'Companhia'       => [ 'icon' => 'building', 'value' => $customer->company_name ],
+                                'CNPJ'            => [ 'icon' => 'card-text', 'value' => $customer->cnpj ],
+                                'CPF'             => [ 'icon' => 'person-badge', 'value' => $customer->cpf ],
+                                'Área de Atuação' => [ 'icon' => 'diagram-3', 'value' => $customer->area_of_activity_name ],
+                                'Profissão'       => [ 'icon' => 'person-workspace', 'value' => $customer->profession_name ],
+                                'Website'         => [ 'icon' => 'globe', 'value' => $customer->website ]
+                            ];
+                        @endphp
+
+                        @foreach ( $professional_info as $key => $info )
+                            <div class="info-item mb-3">
+                                <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
+                                <p class="mb-0 d-flex align-items-center">
+                                    <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
+                                    @if ( $key == 'Website' && $info[ 'value' ] )
+                                        <a href="{{ $info[ 'value' ] }}" target="_blank"
+                                            class="text-decoration-none">{{ $info[ 'value' ] }}</a>
+                                    @else
+                                        <span>{{ $info[ 'value' ] }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-header bg-transparent border-0 py-1">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-geo-alt-fill me-2 "></i>
+                            <span>Endereço</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-item mb-3">
+                            <label class="text-muted small d-block mb-1">CEP</label>
+                            <p class="mb-0 d-flex align-items-center">
+                                <i class="bi bi-mailbox me-2 "></i>
+                                <span>{{ $customer->cep }}</span>
+                            </p>
+                        </div>
+
+                        <div class="info-item">
+                            <label class="text-muted small d-block mb-1">Endereço Completo</label>
+                            <p class="mb-0 d-flex align-items-start">
+                                <i class="bi bi-pin-map-fill me-2 "></i>
+                                <span>
+                                    {{ $customer->address }}, {{ $customer->address_number }}<br>
+                                    {{ $customer->neighborhood }}<br>
+                                    {{ $customer->city }} - {{ $customer->state }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descrição -->
+            @if ( $customer->description )
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm card-hover">
+                        <div class="card-header bg-transparent border-0 py-1">
+                            <h5 class="card-title mb-0 d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill me-2 "></i>
+                                <span>Informações Adicionais</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ $customer->description }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+
+        <!-- Botões de Ação -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{{ url( '/provider/customers' ) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+            <small class="text-muted">
+                Última atualização: {{ \Carbon\Carbon::parse( $customer->updated_at )->format( 'd/m/Y H:i' ) }}
+            </small>
+            <div class="d-flex gap-2">
+                <a href="{{ url( '/provider/customers/update/' . $customer->id ) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil-fill me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+    </div>
+@endsection

@@ -1,83 +1,49 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Database\Seeders;
 
-use App\Models\Permission;
-use App\Models\Role;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $adminRole = Role::updateOrCreate(
-            [ 'name' => 'Administrador' ],
-            [
-                'guard_name'  => 'web',
-                'slug'        => 'administrador'
-            ],
-        );
-
-        $userRole = Role::updateOrCreate(
-            [ 'name' => 'Usuário' ],
-            [
-                'guard_name'  => 'web',
-                'slug'        => 'usuario'
-            ],
-        );
-
-        $providerRole = Role::updateOrCreate(
-            [ 'name' => 'Prestador' ],
-            [
-                'guard_name'  => 'web',
-                'slug'        => 'prestador'
-            ],
-        );
-
-        // Criar permissions
-        $permissionNames = [
-            'access-dashboard',
-            'manage-users',
-            'manage-budgets',
-            'manage-customers',
-            'manage-reports',
-            'system-settings',
-        ];
-
-        foreach ( $permissionNames as $name ) {
-            Permission::updateOrCreate(
-                [ 'name' => $name ],
-                [
-                    'guard_name'  => 'web'
-                ],
-            );
+        $tenantId = Tenant::query()->value( 'id' );
+        if ( !$tenantId ) {
+            return; // precisa do tenant criado
         }
 
-        // Associar permissions aos roles (usando sync para evitar duplicatas)
-        $adminPermissions    = [ 'access-dashboard', 'manage-users', 'manage-budgets', 'manage-customers', 'manage-reports', 'system-settings' ];
-        $userPermissions     = [ 'access-dashboard', 'manage-budgets' ];
-        $providerPermissions = [ 'access-dashboard', 'manage-budgets', 'manage-customers' ];
+        $roles = DB::table( 'roles' )->pluck( 'id', 'name' );
+        $perms = DB::table( 'permissions' )->pluck( 'id', 'name' );
 
-        $adminPermissionIds = Permission::whereIn('name', $adminPermissions)->pluck('id')->toArray();
-        $adminRole->permissions()->sync($adminPermissionIds);
+        $assign = [
+            'Admin'    => array_values( $perms->toArray() ), // todas permissões
+            'Provider' => array_values( $perms->toArray() ), // todas permissões
+            'Manager'  => array_values( $perms->filter( function ( $id, $name ) {
+                return !str_ends_with( $name, '.delete' );
+            } )->toArray() ),
+            'Staff'    => array_values( $perms->filter( function ( $id, $name ) {
+                return str_contains( $name, 'budgets.' ) || str_contains( $name, 'services.' );
+            } )->filter( function ( $id, $name ) {
+                return !str_ends_with( $name, '.delete' );
+            } )->toArray() ),
+            'Viewer'   => array_values( $perms->filter( function ( $id, $name ) {
+                return str_ends_with( $name, '.view' );
+            } )->toArray() ),
+        ];
 
-        $userPermissionIds = Permission::whereIn('name', $userPermissions)->pluck('id')->toArray();
-        $userRole->permissions()->sync($userPermissionIds);
-
-        $providerPermissionIds = Permission::whereIn('name', $providerPermissions)->pluck('id')->toArray();
-        $providerRole->permissions()->sync($providerPermissionIds);
-
-        /**
-         * Seeder para RBAC custom: cria roles e permissions globais, attach via relationships Eloquent.
-         * Sem dependências Spatie. Roles: Administrador, Usuário, Prestador. Permissions básicas.
-         * Integração com tenants: assignments scoped via pivot tenant_id em user_roles.
-         */
+        foreach ( $assign as $roleName => $permIds ) {
+            $roleId = $roles[ $roleName ] ?? null;
+            if ( !$roleId ) continue;
+            foreach ( $permIds as $permId ) {
+                DB::table( 'role_permissions' )->updateOrInsert(
+                    [ 'tenant_id' => $tenantId, 'role_id' => $roleId, 'permission_id' => $permId ],
+                    [],
+                );
+            }
+        }
     }
 
 }

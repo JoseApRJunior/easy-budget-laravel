@@ -6,9 +6,7 @@ namespace App\Models;
 
 use App\Models\Activity;
 use App\Models\Address;
-use App\Models\AreaOfActivity;
 use App\Models\Budget;
-use App\Models\Category;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\Invoice;
@@ -16,13 +14,13 @@ use App\Models\MiddlewareMetricHistory;
 use App\Models\MonitoringAlertHistory;
 use App\Models\PlanSubscription;
 use App\Models\Product;
-use App\Models\Profession;
 use App\Models\Provider;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Auth;
 
 class Tenant extends Model
@@ -38,8 +36,20 @@ class Tenant extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Tenant.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name' => 'required|string|max:255|unique:tenants,name',
+        ];
+    }
 
     /**
      * Relações com entidades do sistema - Tenant é a entidade raiz para multi-tenancy.
@@ -55,11 +65,11 @@ class Tenant extends Model
     }
 
     /**
-     * Provedores pertencentes a este tenant.
+     * Provider pertencente a este tenant .
      */
-    public function providers(): HasMany
+    public function provider(): HasOne
     {
-        return $this->hasMany( Provider::class);
+        return $this->hasOne( Provider::class);
     }
 
     /**
@@ -172,6 +182,38 @@ class Tenant extends Model
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany( InventoryMovement::class);
+    }
+
+    /**
+     * Controle de inventário dos produtos deste tenant.
+     */
+    public function productInventories(): HasMany
+    {
+        return $this->hasMany( ProductInventory::class);
+    }
+
+    /**
+     * Itens de serviço deste tenant.
+     */
+    public function serviceItems(): HasMany
+    {
+        return $this->hasMany( ServiceItem::class);
+    }
+
+    /**
+     * Agendamentos deste tenant.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany( Schedule::class);
+    }
+
+    /**
+     * Tokens de confirmação de usuários deste tenant.
+     */
+    public function userConfirmationTokens(): HasMany
+    {
+        return $this->hasMany( UserConfirmationToken::class);
     }
 
     /**

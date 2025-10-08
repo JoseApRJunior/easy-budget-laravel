@@ -1,0 +1,259 @@
+{% extends "layout.twig" %}
+{% block content %}
+<div class="container-fluid py-1">
+  <!-- Cabeçalho -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="bi bi-box me-2"></i>Detalhes do Produto
+    </h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/provider">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/provider/products">Produtos</a></li>
+        <li class="breadcrumb-item active">{{ product.code }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Informações do Produto -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="row">
+        <!-- Imagem do Produto -->
+        <div class="col-md-3 text-center mb-4 mb-md-0">
+          {% if product.image %}
+          <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm"
+            style="max-height: 200px; object-fit: contain;">
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 200px;">
+            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Informações Principais -->
+        <div class="col-md-9">
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Código</label>
+                <h5 class="mb-0 fw-semibold">{{ product.code }}</h5>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Nome</label>
+                <h5 class="mb-0">{{ product.name }}</h5>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Status</label>
+                <div>
+                  {% if product.active %}
+                  <span class="badge bg-success">Ativo</span>
+                  {% else %}
+                  <span class="badge bg-danger">Inativo</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Preço</label>
+                <h4 class="text-success mb-0">R$ {{ product.price | number_format(2, ',', '.') }}</h4>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="d-flex flex-column">
+                <label class="text-muted small mb-1">Descrição</label>
+                <p class="mb-0">{{ product.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalhes Adicionais (Accordion) -->
+      <div class="accordion mt-4" id="productDetails{{ product.id }}">
+        <div class="accordion-item border-0 shadow-sm">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseDetails{{ product.id }}">
+              <i class="bi bi-info-circle me-2"></i>Detalhes Adicionais
+            </button>
+          </h2>
+          <div id="collapseDetails{{ product.id }}" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <div class="row g-4">
+                <!-- Informações de Estoque -->
+                <div class="col-md-6">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                      <h6 class="mb-0">
+                        <i class="bi bi-box-seam me-2"></i>Informações de Estoque
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <label class="text-muted small">Quantidade em Estoque</label>
+                        <p class="mb-0 fw-semibold">
+                          {% if product.stock_quantity is defined %}
+                          {{ product.stock_quantity | default('0') }}
+                          {% else %}
+                          Não disponível
+                          {% endif %}
+                        </p>
+                      </div>
+                      <div class="mb-0">
+                        <label class="text-muted small">Unidade de Medida</label>
+                        <p class="mb-0">
+                          {% if product.unit is defined %}
+                          {{ product.unit }}
+                          {% else %}
+                          Não especificada
+                          {% endif %}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Datas -->
+                <div class="col-md-6">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                      <h6 class="mb-0">
+                        <i class="bi bi-calendar me-2"></i>Datas
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <label class="text-muted small">Criado em</label>
+                        <p class="mb-0">{{ product.created_at | date('d/m/Y H:i:s') }}</p>
+                      </div>
+                      <div class="mb-0">
+                        <label class="text-muted small">Atualizado em</label>
+                        <p class="mb-0">{{ product.updated_at | date('d/m/Y H:i:s') }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Categoria e Tags -->
+                {% if product.category or product.tags %}
+                <div class="col-12">
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                      <h6 class="mb-0">
+                        <i class="bi bi-tag me-2"></i>Categorização
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        {% if product.category %}
+                        <div class="col-md-6 mb-3">
+                          <label class="text-muted small">Categoria</label>
+                          <p class="mb-0">{{ product.category }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if product.tags %}
+                        <div class="col-md-6">
+                          <label class="text-muted small">Tags</label>
+                          <div>
+                            {% for tag in product.tags %}
+                            <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                            {% endfor %}
+                          </div>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botões de Ação -->
+  <div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="d-flex gap-2">
+      <button onclick="history.back()" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+      </button>
+    </div>
+    <small class="text-muted">
+      Última atualização: {{ budget.updated_at|date('d/m/Y H:i') }}
+    </small>
+    <div class="d-flex gap-2">
+      <a href="/provider/products/update/{{ product.id }}" class="btn btn-primary">
+        <i class="bi bi-pencil me-2"></i>Editar
+      </a>
+      {% if product.active %}
+      <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+        <i class="bi bi-x-circle me-2"></i>Desativar
+      </button>
+      {% else %}
+      <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#activateModal">
+        <i class="bi bi-check-circle me-2"></i>Ativar
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Desativação -->
+<div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deactivateModalLabel">Desativar Produto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja desativar o produto <strong>{{ product.name }}</strong>?</p>
+        <p class="text-muted small">Produtos desativados não aparecerão nas listagens de produtos disponíveis.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form action="/provider/products/deactivate/{{ product.id }}" method="POST" style="display: inline;">
+          {{ csrf.field|raw }}
+          <button type="submit" class="btn btn-danger">Desativar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Ativação -->
+<div class="modal fade" id="activateModal" tabindex="-1" aria-labelledby="activateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activateModalLabel">Ativar Produto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja ativar o produto <strong>{{ product.name }}</strong>?</p>
+        <p class="text-muted small">Produtos ativos aparecerão nas listagens de produtos disponíveis.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form action="/provider/products/activate/{{ product.id }}" method="POST" style="display: inline;">
+          {{ csrf.field|raw }}
+          <button type="submit" class="btn btn-success">Ativar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

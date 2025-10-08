@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\CommonData;
+use App\Models\Plan;
+use App\Models\PlanSubscription;
+use App\Models\Provider;
+use App\Models\Tenant;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+
+class EnhancedRegisteredUserController extends Controller
+{
+    /**
+     * Exibir a tela de registro aprimorada.
+     */
+    public function create(): View
+    {
+        return view( 'auth.enhanced-register' );
+    }
+
+    /**
+     * Processar o registro de um novo usuário com estrutura completa.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function store( Request $request ): RedirectResponse
+    {
+        $request->validate( [
+            'first_name'     => [ 'required', 'string', 'max:100' ],
+            'last_name'      => [ 'required', 'string', 'max:100' ],
+            'email'          => [ 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'phone'          => [ 'required', 'string', 'max:20' ],
+            'password'       => [ 'required', 'confirmed', 'min:8' ],
+            'terms_accepted' => [ 'required', 'accepted' ],
+        ], [
+            'first_name.required'     => 'O nome é obrigatório.',
+            'last_name.required'      => 'O sobrenome é obrigatório.',
+            'email.required'          => 'O email é obrigatório.',
+            'phone.required'          => 'O telefone é obrigatório.',
+            'terms_accepted.required' => 'Você deve aceitar os termos de serviço.',
+            'terms_accepted.accepted' => 'Você deve aceitar os termos de serviço.',
+        ] );
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Criar ou buscar tenant (por simplicidade, vamos criar um novo tenant)
+            Log::info( 'Criando tenant...', [ 'name' => $request->first_name . ' ' . $request->last_name ] );
+            $tenant = Tenant::create( [
+                'name'      => $request->first_name . ' ' . $request->last_name. ' ' . time(),
+                'is_active' => true,
+            ] );
+            Log::info( 'Tenant criado com sucesso', [ 'tenant_id' => $tenant->id ] );
+
+            // 2. Buscar o plano selecionado
+            Log::info( 'Buscando plano pro...' );
+            $plan = Plan::where( 'slug', 'pro' )->where( 'status', true )->first();
+
+            if ( !$plan ) {
+                throw new \Exception( 'Plano selecionado não encontrado ou não está ativo.' );
+            }
+            Log::info( 'Plano encontrado', [ 'plan_id' => $plan->id ] );
+
+            // 3. Criar o usuário
+            Log::info( 'Criando usuário...' );
+            $user = User::create( [
+                'tenant_id' => $tenant->id,
+                'email'     => $request->email,
+                'password'  => Hash::make( $request->password ),
+                'is_active' => true,
+            ] );
+            Log::info( 'Usuário criado', [ 'user_id' => $user->id ] );
+
+            // 4. Criar os dados comuns
+            Log::info( 'Criando dados comuns...' );
+            $commonData = CommonData::create( [
+                'tenant_id'    => $tenant->id,
+                'first_name'   => $request->first_name,
+                'last_name'    => $request->last_name,
+                'cpf'          => null, // Pode ser adicionado posteriormente
+                'cnpj'         => null, // Pode ser adicionado posteriormente
+                'company_name' => null, // Pode ser adicionado posteriormente
+                'description'  => null, // Pode ser adicionado posteriormente
+            ] );
+            Log::info( 'Dados comuns criados', [ 'common_data_id' => $commonData->id ] );
+
+            // 5. Criar o provider
+            Log::info( 'Criando provider...' );
+            $provider = Provider::create( [
+                'tenant_id'      => $tenant->id,
+                'user_id'        => $user->id,
+                'common_data_id' => $commonData->id,
+                'contact_id'     => null, // Pode ser adicionado posteriormente
+                'address_id'     => null, // Pode ser adicionado posteriormente
+                'terms_accepted' => $request->terms_accepted,
+            ] );
+            Log::info( 'Provider criado', [ 'provider_id' => $provider->id ] );
+
+            // 6. Atualizar o common_data_id no provider (relacionamento bidirecional)
+            $provider->common_data_id = $commonData->id;
+            $provider->save();
+
+            // 7. Criar assinatura do plano (se necessário)
+            Log::info( 'Criando assinatura do plano...' );
+            $plan_subscription = PlanSubscription::create( [
+                'tenant_id'          => $tenant->id,
+                'plan_id'            => $plan->id,
+                'user_id'            => $user->id,
+                'provider_id'        => $provider->id,
+                'status'             => 'active',
+                'transaction_amount' => $plan->price ?? 0.00,
+                'transaction_date'         => now(),
+                'start_date'          => now(),
+                'end_date'            => date( 'Y-m-d H:i:s', strtotime( '+7 days' ) ),
+            ] );
+            Log::info( 'Assinatura do plano criada', [ 'subscription_id' => $plan_subscription->id ] );
+
+            DB::commit();
+
+            // 8. Disparar evento de registro
+            event( new Registered( $user ) );
+
+            // 9. Fazer login automático
+            Auth::login( $user );
+
+            // 10. Redirecionar para dashboard com mensagem de sucesso
+            return redirect()->route( 'dashboard' )
+                ->with( 'success', 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+
+            // Log do erro para debug
+            Log::error( 'Erro no registro de usuário: ' . $e->getMessage(), [
+                'email' => $request->email,
+                'trace' => $e->getTraceAsString()
+            ] );
+
+            return back()
+                ->withInput()
+                ->withErrors( [ 'registration' => 'Erro interno do servidor. Tente novamente em alguns minutos.' ] );
+        }
+    }
+
+}

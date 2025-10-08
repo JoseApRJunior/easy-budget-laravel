@@ -77,11 +77,30 @@ class Service extends Model
         'description'           => 'string',
         'discount'              => 'decimal:2',
         'total'                 => 'decimal:2',
-        'due_date'              => 'datetime',
+        'due_date'              => 'date',
         'pdf_verification_hash' => 'string',
         'created_at'            => 'immutable_datetime',
-        'updated_at'            => 'immutable_datetime',
+        'updated_at'            => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Service.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'tenant_id'             => 'required|integer|exists:tenants,id',
+            'budget_id'             => 'required|integer|exists:budgets,id',
+            'category_id'           => 'required|integer|exists:categories,id',
+            'service_statuses_id'   => 'required|integer|exists:service_statuses,id',
+            'code'                  => 'required|string|max:50|unique:services,code',
+            'description'           => 'nullable|string',
+            'discount'              => 'required|numeric|min:0|max:999999.99',
+            'total'                 => 'required|numeric|min:0|max:999999.99',
+            'due_date'              => 'nullable|date',
+            'pdf_verification_hash' => 'nullable|string|max:64',
+        ];
+    }
 
     /**
      * Get the tenant that owns the Service.
@@ -121,6 +140,22 @@ class Service extends Model
     public function serviceItems(): HasMany
     {
         return $this->hasMany( ServiceItem::class);
+    }
+
+    /**
+     * Get the invoices for the Service.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany( Invoice::class);
+    }
+
+    /**
+     * Get the schedules for the Service.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany( Schedule::class);
     }
 
     /**

@@ -1,0 +1,81 @@
+/* Estilos base para badges */
+.badge {
+   padding: 0.5rem 0.75rem;
+   font-weight: 500;
+   border-radius: var(--border-radius-sm);
+   display: inline-flex;
+   align-items: center;
+   gap: 0.25rem;
+}
+
+/* Variantes de badges */
+.badge-success {
+   background-color: rgba(5, 150, 105, 0.15);
+   color: var(--text-success);
+   font-weight: 500;
+}
+
+.badge-error {
+   background-color: rgba(220, 38, 38, 0.15);
+   color: var(--text-error);
+   font-weight: 500;
+}
+
+.badge-info {
+   background-color: rgba(37, 99, 235, 0.15);
+   color: var(--text-info);
+   font-weight: 500;
+}
+
+.badge-warning {
+   background-color: rgba(217, 119, 6, 0.15);
+   color: var(--text-warning);
+   font-weight: 500;
+}
+
+/* Background variants */
+.badge.bg-success {
+   background-color: var(--text-success) !important;
+}
+
+.badge.bg-warning {
+   background-color: var(--text-warning) !important;
+   color: var(--dark-text);
+}
+
+/* Status badges */
+.status-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.5rem;
+   padding: 0.5rem 0.75rem;
+   border-radius: 0.25rem;
+   font-weight: 500;
+}
+
+.status-badge i {
+   font-size: 0.875rem;
+}
+
+/* Status colors */
+.error,
+.error-icon {
+   color: var(--text-error);
+}
+
+.success {
+   color: var(--text-success);
+}
+
+.info {
+   color: var(--text-info);
+}
+
+.warning {
+   color: var(--text-warning);
+}
+
+.status-icon {
+   font-size: var(--font-size-large);
+   margin-right: var(--spacing-sm);
+}

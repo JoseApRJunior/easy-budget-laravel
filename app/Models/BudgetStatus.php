@@ -70,6 +70,22 @@ class BudgetStatus extends Model
     ];
 
     /**
+     * Regras de validação para o modelo BudgetStatus.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'slug'        => 'required|string|max:50|unique:budget_statuses,slug',
+            'name'        => 'required|string|max:100|unique:budget_statuses,name',
+            'description' => 'nullable|string|max:500',
+            'color'       => 'nullable|string|max:7|regex:/^#[0-9A-F]{6}$/i',
+            'icon'        => 'nullable|string|max:50',
+            'order_index' => 'nullable|integer|min:0',
+            'is_active'   => 'required|boolean',
+        ];
+    }
+
+    /**
      * Indicates if the model should be timestamped.
      *
      * @var bool

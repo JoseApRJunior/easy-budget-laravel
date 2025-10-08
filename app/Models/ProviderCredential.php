@@ -52,9 +52,26 @@ class ProviderCredential extends Model
         'provider_id' => 'integer',
         'tenant_id'   => 'integer',
         'expires_in'  => 'integer',
-        'created_at'  => 'datetime',
+        'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo ProviderCredential.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'provider_id'             => 'required|exists:providers,id',
+            'tenant_id'               => 'required|exists:tenants,id',
+            'payment_gateway'         => 'required|string|max:50|in:mercadopago,pagseguro,stripe',
+            'user_id_gateway'         => 'required|string|max:50',
+            'access_token_encrypted'  => 'required|string',
+            'refresh_token_encrypted' => 'required|string',
+            'public_key'              => 'required|string|max:50',
+            'expires_in'              => 'nullable|integer',
+        ];
+    }
 
     /**
      * Get the provider that owns the ProviderCredential.

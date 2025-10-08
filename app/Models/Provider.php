@@ -56,8 +56,23 @@ class Provider extends Model
         'address_id'     => 'integer',
         'terms_accepted' => 'boolean',
         'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'immutable_datetime',
+        'updated_at'     => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Provider.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'tenant_id'      => 'required|integer|exists:tenants,id',
+            'user_id'        => 'required|integer|exists:users,id',
+            'common_data_id' => 'nullable|integer|exists:common_datas,id',
+            'contact_id'     => 'nullable|integer|exists:contacts,id',
+            'address_id'     => 'nullable|integer|exists:addresses,id',
+            'terms_accepted' => 'required|boolean',
+        ];
+    }
 
     /**
      * Orçamentos criados por este provedor.
@@ -114,6 +129,22 @@ class Provider extends Model
     }
 
     /**
+     * Ordens de pagamento MercadoPago associadas a este provedor.
+     */
+    public function merchantOrderMercadoPago(): HasMany
+    {
+        return $this->hasMany( MerchantOrderMercadoPago::class);
+    }
+
+    /**
+     * Pagamentos de planos MercadoPago associadas a este provedor.
+     */
+    public function paymentMercadoPagoPlans(): HasMany
+    {
+        return $this->hasMany( PaymentMercadoPagoPlan::class);
+    }
+
+    /**
      * Get the tenant that owns the Provider.
      */
     public function tenant(): BelongsTo
@@ -151,14 +182,6 @@ class Provider extends Model
     public function address(): BelongsTo
     {
         return $this->belongsTo( Address::class);
-    }
-
-    /**
-     * Accessor para tratar valores zero-date no updated_at.
-     */
-    public function getUpdatedAtAttribute( $value )
-    {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
 }

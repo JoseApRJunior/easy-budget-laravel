@@ -59,6 +59,16 @@ class InvoiceItem extends Model
     ];
 
     /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
+
+    /**
      * Get the tenant that owns the InvoiceItem.
      */
     public function tenant(): BelongsTo

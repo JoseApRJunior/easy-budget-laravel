@@ -1,0 +1,31 @@
+@startuml Concluir Cadastro Prestador
+title Concluir Cadastro Prestador
+left to right direction
+
+actor Prestador
+actor Sistema
+actor Admin
+
+rectangle "Completar Cadastro" {
+    Prestador --> (Acessar Tela de Edição)
+    Prestador --> (Preencher Campos Obrigatórios)
+    Sistema --> (Validar Dados)
+    Sistema --> (Atualizar Informações do Prestador)
+}
+
+rectangle "Escolher Plano e Pagamento" {
+    Prestador --> (Escolher Plano)
+    Prestador --> (Direcionado para Tela de Pagamento)
+    Prestador --> (Realizar Pagamento)
+    Sistema --> (Confirmar Pagamento)
+    Sistema --> (Liberar Recursos do Plano Escolhido)
+    Sistema --> Admin : "Notificar Conclusão do Cadastro e Mudança de Plano"
+}
+
+rectangle "Fluxos Alternativos" {
+    Sistema --> Prestador : "Erro na validação dos dados"
+    Sistema --> Prestador : "Pagamento não efetuado dentro do prazo"
+    Sistema --> Prestador : "Solicitar Escolha de Plano Diariamente"
+}
+
+@enduml

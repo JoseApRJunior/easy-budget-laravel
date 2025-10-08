@@ -147,6 +147,14 @@ class PlanService extends BaseNoTenantService
     }
 
     /**
+     * @inheritDoc
+     */
+    public function list( array $filters = [] ): ServiceResult
+    {
+        return parent::list( $filters );
+    }
+
+    /**
     /**
      * Validação específica para planos globais.
      *
@@ -157,8 +165,8 @@ class PlanService extends BaseNoTenantService
     protected function validateForGlobal( array $data, bool $isUpdate = false ): ServiceResult
     {
         $id    = $data[ 'id' ] ?? null;
-        $rules = [ 
-            'name'        => [ 
+        $rules = [
+            'name'        => [
                 'required',
                 'string',
                 'max:255',

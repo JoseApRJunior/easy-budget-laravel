@@ -1,47 +1,42 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
+use App\Helpers\BackupHelper;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
-class BackupController extends BaseController
+class BackupController extends Controller
 {
-    public function __construct(ActivityService $activityService) { parent::__construct($activityService);
+    protected $backupHelper;
+
+    public function __construct( BackupHelper $backupHelper )
+    {
+        $this->backupHelper = $backupHelper;
     }
 
-    public function index(): View
+    public function index()
     {
-        return view( 'pages.backups.index' );
+        $backups = $this->backupHelper->getBackups();
+        return view( 'admin.backups.index', compact( 'backups' ) );
     }
 
-    public function create(): View
+    public function create()
     {
-        return view( 'pages.backups.create' );
+        $this->backupHelper->create();
+        return redirect()->route( 'admin.backups.index' )->with( 'success', 'Backup criado com sucesso.' );
     }
 
-    public function store( Request $request ): RedirectResponse
+    public function restore( Request $request )
     {
-        // Logic to create backup
-        return redirect()->route( 'backups.index' )->with( 'success', 'Backup criado com sucesso!' );
+        $request->validate( [ 'filename' => 'required' ] );
+        $this->backupHelper->restore( $request->filename );
+        return redirect()->route( 'admin.backups.index' )->with( 'success', 'Backup restaurado com sucesso.' );
     }
 
-    public function download( Request $request, string $id ): JsonResponse
+    public function destroy( $filename )
     {
-        // Logic to download backup
-        return response()->json( [ 'status' => 'success' ] );
-    }
-
-    public function restore( Request $request, string $id ): RedirectResponse
-    {
-        // Logic to restore backup
-        return redirect()->route( 'backups.index' )->with( 'success', 'Backup restaurado com sucesso!' );
+        $this->backupHelper->delete( $filename );
+        return redirect()->route( 'admin.backups.index' )->with( 'success', 'Backup excluído com sucesso.' );
     }
 
 }
-
-

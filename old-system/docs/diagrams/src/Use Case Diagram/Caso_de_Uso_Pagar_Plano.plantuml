@@ -1,0 +1,26 @@
+@startuml Pagar Plano
+title Caso de Uso: Pagar Plano
+left to right direction
+
+actor Prestador
+actor Sistema
+actor Admin
+
+rectangle "Pagar Plano" {
+    Prestador --> (Acessar Tela de Pagamento)
+    Sistema --> (Exibir Detalhes do Plano)
+    Sistema --> (Exibir Opções de Pagamento)
+    Prestador --> (Escolher Opção de Pagamento)
+    Prestador --> (Inserir Dados de Pagamento)
+    Prestador --> (Confirmar Pagamento)
+    Sistema --> (Processar Pagamento)
+    Sistema --> (Confirmar Pagamento Bem-sucedido)
+    Sistema --> (Liberar Acesso aos Recursos do Plano)
+    Sistema --> Admin : "Notificar Mudança de Plano"
+}
+
+rectangle "Fluxos Alternativos" {
+    Sistema --> Prestador : "Erro no Processamento do Pagamento"
+    Sistema --> Prestador : "Dados de Pagamento Inválidos"
+}
+@enduml

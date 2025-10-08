@@ -7,80 +7,25 @@ use Illuminate\Support\Facades\DB;
 
 class UnitSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $units = [ 
-            [ 
-                'name'      => 'Unidade',
-                'symbol'    => 'un',
-                'type'      => 'unidade',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Quilograma',
-                'symbol'    => 'kg',
-                'type'      => 'peso',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Grama',
-                'symbol'    => 'g',
-                'type'      => 'peso',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Litro',
-                'symbol'    => 'L',
-                'type'      => 'volume',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Mililitro',
-                'symbol'    => 'ml',
-                'type'      => 'volume',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Metro',
-                'symbol'    => 'm',
-                'type'      => 'comprimento',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Centímetro',
-                'symbol'    => 'cm',
-                'type'      => 'comprimento',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Hora',
-                'symbol'    => 'h',
-                'type'      => 'tempo',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Minuto',
-                'symbol'    => 'min',
-                'type'      => 'tempo',
-                'is_active' => true,
-            ],
-            [ 
-                'name'      => 'Peça',
-                'symbol'    => 'pc',
-                'type'      => 'unidade',
-                'is_active' => true,
-            ],
+        $now = now();
+        $data = [
+            ['slug' => 'un',  'name' => 'Unidade',     'is_active' => true, 'created_at' => $now],
+            ['slug' => 'kg',  'name' => 'Quilograma',  'is_active' => true, 'created_at' => $now],
+            ['slug' => 'g',   'name' => 'Grama',       'is_active' => true, 'created_at' => $now],
+            ['slug' => 'mg',  'name' => 'Miligrama',   'is_active' => true, 'created_at' => $now],
+            ['slug' => 'l',   'name' => 'Litro',       'is_active' => true, 'created_at' => $now],
+            ['slug' => 'ml',  'name' => 'Mililitro',   'is_active' => true, 'created_at' => $now],
+            ['slug' => 'm',   'name' => 'Metro',       'is_active' => true, 'created_at' => $now],
+            ['slug' => 'cm',  'name' => 'Centímetro',  'is_active' => true, 'created_at' => $now],
+            ['slug' => 'mm',  'name' => 'Milímetro',   'is_active' => true, 'created_at' => $now],
+            ['slug' => 'm2',  'name' => 'Metro Quadrado', 'is_active' => true, 'created_at' => $now],
+            ['slug' => 'm3',  'name' => 'Metro Cúbico',   'is_active' => true, 'created_at' => $now],
+            ['slug' => 'h',   'name' => 'Hora',        'is_active' => true, 'created_at' => $now],
+            ['slug' => 'dia', 'name' => 'Dia',         'is_active' => true, 'created_at' => $now],
         ];
 
-        foreach ( $units as $unit ) {
-            DB::table( 'units' )->updateOrInsert(
-                ['name' => $unit['name'], 'symbol' => $unit['symbol']],
-                $unit
-            );
-        }
+        DB::table('units')->upsert($data, ['slug'], ['name','is_active']);
     }
-
 }

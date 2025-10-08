@@ -1,0 +1,13 @@
+@startuml Obtenção de Detalhes do Usuário
+title Obtenção de Detalhes do Usuário
+
+actor "Sistema" as S
+participant "User Model" as UM
+database "Banco de Dados" as DB
+
+S -> UM: getUserById(id)
+UM -> DB: Consulta usuário por ID
+DB --> UM: Retorna dados do usuário
+UM -> UM: Cria UserEntity
+UM --> S: Retorna UserEntity
+@enduml

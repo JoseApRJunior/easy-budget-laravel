@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Provider;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class CommonData extends Model
@@ -57,7 +58,7 @@ class CommonData extends Model
         'tenant_id'           => 'integer',
         'first_name'          => 'string',
         'last_name'           => 'string',
-        'birth_date'          => 'datetime',
+        'birth_date'          => 'date',
         'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',
@@ -69,11 +70,22 @@ class CommonData extends Model
     ];
 
     /**
-     * Get the provider that owns the CommonData.
+     * Regras de validação para o modelo CommonData.
      */
-    public function provider(): HasOne
+    public static function businessRules(): array
     {
-        return $this->hasOne( Provider::class);
+        return [
+            'tenant_id'           => 'required|integer|exists:tenants,id',
+            'first_name'          => 'required|string|max:100',
+            'last_name'           => 'required|string|max:100',
+            'birth_date'          => 'nullable|date|before:today',
+            'cnpj'                => 'nullable|string|size:14|unique:common_datas,cnpj',
+            'cpf'                 => 'nullable|string|size:11|unique:common_datas,cpf',
+            'company_name'        => 'nullable|string|max:255',
+            'description'         => 'nullable|string|max:65535',
+            'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
+            'profession_id'       => 'nullable|integer|exists:professions,id',
+        ];
     }
 
     /**
@@ -101,11 +113,19 @@ class CommonData extends Model
     }
 
     /**
-     * Get the customer associated with the CommonData.
+     * Get the customers associated with the CommonData.
      */
-    public function customer(): HasOne
+    public function customers(): HasMany
     {
-        return $this->hasOne( Customer::class);
+        return $this->hasMany( Customer::class);
+    }
+
+    /**
+     * Get the providers associated with the CommonData.
+     */
+    public function providers(): HasMany
+    {
+        return $this->hasMany( Provider::class);
     }
 
 }

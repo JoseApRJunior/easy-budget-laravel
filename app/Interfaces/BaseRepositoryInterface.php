@@ -7,10 +7,9 @@ namespace App\Interfaces;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Interface base para todos os repositórios
+ * Interface base simplificada para todos os repositórios
  *
- * Define métodos comuns que devem estar disponíveis em todos os repositórios,
- * independentemente de serem tenant-aware ou globais
+ * Define apenas métodos CRUD básicos essenciais
  */
 interface BaseRepositoryInterface
 {
@@ -58,16 +57,17 @@ interface BaseRepositoryInterface
     public function truncate(): bool;
 
     /**
-     * Retorna o primeiro registro da tabela
+     * Encontra um registro por ID
      *
-     * @return Model|null Primeira entidade ou null se não encontrada
+     * @param int|string $id ID do registro
+     * @return Model|null Registro encontrado ou null
      */
     public function first(): ?Model;
 
     /**
-     * Retorna o último registro da tabela
+     * Encontra o último registro
      *
-     * @return Model|null Última entidade ou null se não encontrada
+     * @return Model|null Último registro ou null
      */
     public function last(): ?Model;
 
@@ -76,7 +76,6 @@ interface BaseRepositoryInterface
      *
      * @param callable $callback Função a ser executada dentro da transação
      * @return mixed Retorno da função callback
-     * @throws \Throwable Se ocorrer erro na transação
      */
     public function transaction( callable $callback ): mixed;
 

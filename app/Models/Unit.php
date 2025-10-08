@@ -16,21 +16,30 @@ class Unit extends Model
 
     protected $table = 'units';
 
-    protected $fillable = [ 
+    protected $fillable = [
         'slug',
         'name',
         'is_active',
     ];
 
-    protected $casts = [ 
+    protected $casts = [
         'slug'       => 'string',
         'name'       => 'string',
         'is_active'  => 'boolean',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Relacionamentos podem ser adicionados aqui se necessário.
+     * Regras de validação para o modelo Unit.
      */
+    public static function businessRules(): array
+    {
+        return [
+            'slug'      => 'required|string|max:50|unique:units,slug',
+            'name'      => 'required|string|max:100|unique:units,name',
+            'is_active' => 'boolean',
+        ];
+    }
+
 }

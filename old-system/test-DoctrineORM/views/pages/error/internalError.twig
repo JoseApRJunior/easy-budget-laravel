@@ -1,0 +1,122 @@
+{% extends "layout.twig" %}
+
+
+{% block content %}
+<div class="container-fluid  py-1">
+	<div class="row justify-content-center w-100">
+		<div class="col-12 col-md-8 col-lg-6">
+			<div class="card border-0 shadow-lg">
+				<!-- Cabeçalho -->
+				<div class="card-header  bg-gradient  border-0 py-1">
+					<div class="text-center">
+						<div class="display-1 mb-3">
+							<i class="bi bi-exclamation-triangle"></i>
+						</div>
+						<h1 class="h3 mb-0">Erro Interno do Servidor</h1>
+					</div>
+				</div>
+
+				<!-- Corpo -->
+				<div class="card-body p-5 text-center">
+					<div class="mb-4">
+						<p class="lead mb-3">
+							Desculpe, ocorreu um erro inesperado.
+						</p>
+						<p class="text-muted mb-0">
+							Nossa equipe técnica foi notificada e está trabalhando para resolver o problema.
+						</p>
+					</div>
+
+					<hr class="my-4">
+
+					<div class="mb-4">
+						<h5 class="text-danger mb-3">O que você pode fazer:</h5>
+						<ul class="list-unstyled text-muted">
+							<li class="mb-2">
+								<i class="bi bi-arrow-clockwise me-2"></i>
+								Tente recarregar a página
+							</li>
+							<li class="mb-2">
+								<i class="bi bi-clock-history me-2"></i>
+								Aguarde alguns minutos e tente novamente
+							</li>
+							<li>
+								<i class="bi bi-headset me-2"></i>
+								Entre em contato com nosso suporte
+							</li>
+						</ul>
+					</div>
+
+					<!-- Botões de Ação -->
+					<div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+						<button type="button" class="btn btn-lg btn-outline-danger px-4" onclick="window.history.back()">
+							<i class="bi bi-arrow-left me-2"></i>
+							Voltar
+						</button>
+						<a href="/" class="btn btn-lg btn-danger px-4">
+							<i class="bi bi-house me-2"></i>
+							Página Inicial
+						</a>
+					</div>
+				</div>
+
+				<!-- Rodapé -->
+				<div class="card-footer border-0 text-center py-1">
+					<div class="d-flex justify-content-center align-items-center text-muted">
+						<i class="bi bi-bug me-2"></i>
+						<span>Código de Erro: 500</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Links de Suporte -->
+			<div class="text-center mt-4">
+				<p class="text-muted mb-0">
+					Precisa de ajuda?
+					<a href="/support" class="text-danger text-decoration-none">
+						Entre em contato com nosso suporte
+					</a>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ parent() }}
+<style>
+	body {
+		background-color: #f8f9fa;
+	}
+
+	.card {
+		border-radius: 1rem;
+		overflow: hidden;
+	}
+
+	.btn {
+		border-radius: 0.5rem;
+		padding: 0.75rem 1.5rem;
+		font-weight: 500;
+	}
+
+	.btn-lg {
+		min-width: 160px;
+	}
+
+	.display-1 {
+		font-size: 4rem;
+	}
+
+	@media (max-width: 576px) {
+		.card-body {
+			padding: 2rem !important;
+		}
+
+		.display-1 {
+			font-size: 3rem;
+		}
+	}
+</style>
+{% endblock %}

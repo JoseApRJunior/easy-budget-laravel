@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -55,9 +57,19 @@ class RolePermission extends Pivot
         'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'datetime',
+        'created_at'    => 'immutable_datetime',
         'updated_at'    => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Plan.
+     */
+    public static function businessRules(): array
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Accessor para tratar valores zero-date no updated_at.

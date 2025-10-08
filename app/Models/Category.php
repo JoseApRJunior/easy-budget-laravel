@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Category extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory;
 
     /**
      * Boot the model.
@@ -22,7 +21,6 @@ class Category extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
     }
 
     protected $table = 'categories';
@@ -30,7 +28,6 @@ class Category extends Model
     protected $fillable = [
         'slug',
         'name',
-        'tenant_id', // Adicionado para compatibilidade com CategoryEntity legada
     ];
 
     /**
@@ -39,12 +36,52 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
         'slug'       => 'string',
         'name'       => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Campos que devem ser tratados como datas imutáveis.
+     */
+    protected $dates = [
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Regras de validação para o modelo Category.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'slug' => 'required|string|max:255|unique:categories,slug',
+            'name' => 'required|string|max:255',
+        ];
+    }
+
+    /**
+     * Validação customizada para verificar se o slug .
+     */
+    public static function validateUniqueSlug( string $slug, ?int $excludeCategoryId = null ): bool
+    {
+        $query = static::where( 'slug', $slug );
+
+        if ( $excludeCategoryId ) {
+            $query->where( 'id', '!=', $excludeCategoryId );
+        }
+
+        return !$query->exists();
+    }
+
+    /**
+     * Validação customizada para verificar se o slug tem formato válido.
+     */
+    public static function validateSlugFormat( string $slug ): bool
+    {
+        return preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug );
+    }
 
     /**
      * Get the services for the Category.

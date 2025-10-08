@@ -1,582 +1,468 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProviderFormRequest;
+use App\Entities\AddressEntity;
+use App\Entities\CommonDataEntity;
+use App\Entities\ContactEntity;
+use App\Entities\ProviderEntity;
+use App\Entities\UserEntity;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\UpdateProviderRequest;
+use App\Services\ActivityService;
 use App\Services\AddressService;
 use App\Services\CommonDataService;
 use App\Services\ContactService;
-use App\Services\ProviderService;
+use App\Services\FileUploadService;
+use App\Services\ProviderManagementService;
 use App\Services\UserService;
-use App\Services\ActivityService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
 /**
- * Controlador para gerenciamento de prestadores.
- * Implementa operações tenant-aware para registro, perfil e configurações de prestadores.
- * Migração do sistema legacy app/controllers/ProviderController.php.
+ * Controller moderno para gerenciar operações relacionadas aos providers.
  *
- * @package App\Http\Controllers
- * @author IA
+ * Este controller utiliza Eloquent, Form Requests e injeção de dependências
+ * seguindo os padrões Laravel modernos.
+ *
+ * Funcionalidades:
+ * - Dashboard do provider
+ * - Atualização de dados do provider
+ * - Alteração de senha
+ * - Upload de imagens
  */
-class ProviderController extends BaseController
+class ProviderController extends Controller
 {
-    /**
-     * @var ProviderService
-     */
-    protected ProviderService $providerService;
-
-    /**
-     * @var UserService
-     */
-    protected UserService $userService;
-
-    /**
-     * @var CommonDataService
-     */
-    protected CommonDataService $commonDataService;
-
-    /**
-     * @var ContactService
-     */
-    protected ContactService $contactService;
-
-    /**
-     * @var AddressService
-     */
-    protected AddressService $addressService;
-
-    /**
-     * Construtor da classe ProviderController.
-     *
-     * @param ProviderService $providerService
-     * @param UserService $userService
-     * @param CommonDataService $commonDataService
-     * @param ContactService $contactService
-     * @param AddressService $addressService
-     */
     public function __construct(
-        ProviderService $providerService,
-        UserService $userService,
-        CommonDataService $commonDataService,
-        ContactService $contactService,
-        AddressService $addressService,
-        ActivityService $activityService,
-    ) {
-        parent::__construct($activityService);
-        $this->providerService   = $providerService;
-        $this->userService       = $userService;
-        $this->commonDataService = $commonDataService;
-        $this->contactService    = $contactService;
-        $this->addressService    = $addressService;
-    }
+        private ProviderManagementService $providerService,
+        private UserService $userService,
+        private CommonDataService $commonDataService,
+        private ContactService $contactService,
+        private AddressService $addressService,
+        private ActivityService $activityService,
+        private FileUploadService $fileUpload,
+    ) {}
 
     /**
-     * Exibe o formulário de registro de prestador.
+     * Dashboard do provider com resumo de orçamentos, atividades e financeiro.
      *
      * @return View
      */
-    public function create(): View
+    public function index(): View
     {
-        $this->logActivity(
-            action: 'view_provider_registration',
-            entity: 'providers',
-            metadata: [ 'user_id' => $this->userId() ],
+        $dashboardData = $this->providerService->getDashboardData(
+            Auth::user()->tenant_id,
         );
 
-        return $this->renderView( 'providers.register', [ 
-            'areasOfActivity' => $this->commonDataService->getAreasOfActivity(),
-            'professions'     => $this->commonDataService->getProfessions(),
-            'states'          => $this->getBrazilianStates(),
-            'banks'           => $this->getBrazilianBanks(),
-            'userId'          => Auth::id()
+        return view( 'pages.provider.index', [
+            'budgets'           => $dashboardData[ 'budgets' ],
+            'activities'        => $dashboardData[ 'activities' ],
+            'financial_summary' => $dashboardData[ 'financial_summary' ],
         ] );
     }
 
     /**
-     * Armazena um novo prestador no sistema.
+     * Exibe formulário de atualização do provider.
      *
-     * @param ProviderFormRequest $request
-     * @return RedirectResponse
+     * @return View|RedirectResponse
      */
-    public function store( ProviderFormRequest $request ): RedirectResponse
+    public function update(): View|RedirectResponse
     {
-        $tenantId = $this->tenantId();
-        $userId   = $this->userId();
-
-        if ( !$tenantId || !$userId ) {
-            return $this->errorRedirect( 'Usuário ou tenant não encontrado.' );
-        }
-
         try {
-            $providerData              = $request->validated();
-            $providerData[ 'tenant_id' ] = $tenantId;
-            $providerData[ 'user_id' ]   = $userId;
-            $providerData[ 'status' ]    = 'pending'; // Status inicial pendente
+            $data = $this->providerService->getProviderForUpdate();
 
-            $result = $this->providerService->createProvider( $providerData );
-
-            if ( $result->isSuccess() ) {
-                $this->logActivity(
-                    action: 'create_provider',
-                    entity: 'providers',
-                    entityId: $result->getEntityId(),
-                    metadata: [ 
-                        'tenant_id'     => $tenantId,
-                        'user_id'       => $userId,
-                        'provider_type' => $providerData[ 'provider_type' ]
-                    ],
-                );
-
-                // Enviar email de confirmação
-                $this->providerService->sendRegistrationConfirmation( $result->getEntityId() );
-
-                return $this->successRedirect(
-                    message: 'Registro realizado com sucesso! Aguarde a aprovação da sua conta.',
-                    route: 'provider.dashboard',
-                );
-            }
-
-            return $this->errorRedirect( $result->getError() ?? 'Erro ao criar prestador.' );
-
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro interno ao processar registro: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Exibe o dashboard do prestador.
-     *
-     * @return View
-     */
-    public function dashboard(): View
-    {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado. Você não é um prestador registrado.' );
-        }
-
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
-
-        $this->logActivity(
-            action: 'view_provider_dashboard',
-            entity: 'providers',
-            entityId: $provider->id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
-
-        // Estatísticas do prestador
-        $stats = [ 
-            'total_budgets'    => $this->providerService->getProviderBudgetCount( $provider->id ),
-            'pending_budgets'  => $this->providerService->getProviderPendingBudgetCount( $provider->id ),
-            'total_invoices'   => $this->providerService->getProviderInvoiceCount( $provider->id ),
-            'pending_invoices' => $this->providerService->getProviderPendingInvoiceCount( $provider->id ),
-            'recent_activity'  => $this->providerService->getRecentProviderActivity( $provider->id, 10 )
-        ];
-
-        // Orçamentos recentes
-        $recentBudgets = $this->providerService->getRecentBudgetsForProvider( $provider->id, 5 );
-
-        // Faturas pendentes
-        $pendingInvoices = $this->providerService->getPendingInvoicesForProvider( $provider->id, 5 );
-
-        return $this->renderView( 'providers.dashboard', [ 
-            'provider'        => $provider,
-            'stats'           => $stats,
-            'recentBudgets'   => $recentBudgets,
-            'pendingInvoices' => $pendingInvoices,
-            'tenantId'        => $tenantId
-        ] );
-    }
-
-    /**
-     * Exibe o perfil do prestador.
-     *
-     * @return View
-     */
-    public function profile(): View
-    {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado. Você não é um prestador registrado.' );
-        }
-
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
-
-        $this->logActivity(
-            action: 'view_provider_profile',
-            entity: 'providers',
-            entityId: $provider->id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
-
-        // Carregar dados relacionados
-        $commonData = $this->commonDataService->getCommonDataById( $provider->common_data_id, $tenantId );
-        $contact    = $this->contactService->getContactById( $provider->contact_id, $tenantId );
-        $address    = $this->addressService->getAddressById( $provider->address_id, $tenantId );
-
-        return $this->renderView( 'providers.profile', [ 
-            'provider'        => $provider,
-            'commonData'      => $commonData,
-            'contact'         => $contact,
-            'address'         => $address,
-            'tenantId'        => $tenantId,
-            'areasOfActivity' => $this->commonDataService->getAreasOfActivity(),
-            'professions'     => $this->commonDataService->getProfessions(),
-            'states'          => $this->getBrazilianStates()
-        ] );
-    }
-
-    /**
-     * Atualiza o perfil do prestador.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function updateProfile( Request $request ): RedirectResponse
-    {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado.' );
-        }
-
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
-
-        $request->validate( [ 
-            'company_name'   => 'nullable|string|max:255',
-            'description'    => 'nullable|string|max:1000',
-            'phone'          => 'nullable|string|max:15',
-            'email_business' => 'nullable|email|max:255',
-            'website'        => 'nullable|url|max:255',
-            'address'        => 'nullable|string|max:255',
-            'address_number' => 'nullable|string|max:10',
-            'neighborhood'   => 'nullable|string|max:100',
-            'city'           => 'nullable|string|max:100',
-            'state'          => 'nullable|size:2|in:AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO',
-            'cep'            => 'nullable|string|size:9|regex:/^[0-9]{5}-[0-9]{3}$/',
-            'profile_image'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
-        ] );
-
-        try {
-            $updateData = $request->only( [ 
-                'company_name',
-                'description',
-                'phone',
-                'email_business',
-                'website',
-                'address',
-                'address_number',
-                'neighborhood',
-                'city',
-                'state',
-                'cep'
+            return view( 'pages.provider.update', [
+                'provider'          => $data[ 'provider' ],
+                'areas_of_activity' => $data[ 'areas_of_activity' ],
+                'professions'       => $data[ 'professions' ],
             ] );
-
-            $updateData[ 'tenant_id' ] = $tenantId;
-
-            // Atualizar dados relacionados se fornecidos
-            if (
-                $request->has( 'address' ) || $request->has( 'address_number' ) || $request->has( 'neighborhood' ) ||
-                $request->has( 'city' ) || $request->has( 'state' ) || $request->has( 'cep' )
-            ) {
-
-                $addressData              = $request->only( [ 'address', 'address_number', 'neighborhood', 'city', 'state', 'cep' ] );
-                $addressData[ 'tenant_id' ] = $tenantId;
-
-                $addressResult = $this->addressService->updateAddress( $provider->address_id, $addressData );
-
-                if ( !$addressResult->isSuccess() ) {
-                    return $this->errorRedirect( 'Erro ao atualizar endereço: ' . $addressResult->getError() );
-                }
-            }
-
-            if ( $request->has( 'phone' ) || $request->has( 'email_business' ) || $request->has( 'website' ) ) {
-                $contactData              = $request->only( [ 'phone', 'email_business', 'website' ] );
-                $contactData[ 'tenant_id' ] = $tenantId;
-
-                $contactResult = $this->contactService->updateContact( $provider->contact_id, $contactData );
-
-                if ( !$contactResult->isSuccess() ) {
-                    return $this->errorRedirect( 'Erro ao atualizar contato: ' . $contactResult->getError() );
-                }
-            }
-
-            // Atualizar dados comuns
-            if ( $request->has( 'company_name' ) || $request->has( 'description' ) ) {
-                $commonDataResult = $this->commonDataService->updateCommonData( $provider->common_data_id, $updateData );
-
-                if ( !$commonDataResult->isSuccess() ) {
-                    return $this->errorRedirect( 'Erro ao atualizar dados da empresa: ' . $commonDataResult->getError() );
-                }
-            }
-
-            // Upload de imagem de perfil
-            if ( $request->hasFile( 'profile_image' ) ) {
-                $imagePath                   = $request->file( 'profile_image' )->store( 'provider_profiles', 'public' );
-                $updateData[ 'profile_image' ] = $imagePath;
-
-                $this->providerService->updateProviderProfileImage( $provider->id, $imagePath );
-            }
-
-            $result = $this->providerService->updateProvider( $provider->id, $updateData );
-
-            if ( $result->isSuccess() ) {
-                $this->logActivity(
-                    action: 'update_provider_profile',
-                    entity: 'providers',
-                    entityId: $provider->id,
-                    metadata: [ 'tenant_id' => $tenantId ],
-                );
-
-                return $this->successRedirect(
-                    message: 'Perfil atualizado com sucesso.',
-                    route: 'provider.profile',
-                );
-            }
-
-            return $this->errorRedirect( $result->getError() ?? 'Erro ao atualizar perfil.' );
-
         } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro interno ao atualizar perfil: ' . $e->getMessage() );
+            return redirect()->route( 'provider.index' )
+                ->with( 'error', 'Provider não encontrado' );
         }
     }
 
     /**
-     * Exibe as configurações do prestador.
-     *
-     * @return View
-     */
-    public function settings(): View
-    {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado.' );
-        }
-
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
-
-        $this->logActivity(
-            action: 'view_provider_settings',
-            entity: 'providers',
-            entityId: $provider->id,
-            metadata: [ 'tenant_id' => $tenantId ],
-        );
-
-        $settings = $this->providerService->getProviderSettings( $provider->id );
-        $plans    = $this->providerService->getAvailablePlans();
-
-        return $this->renderView( 'providers.settings', [ 
-            'provider' => $provider,
-            'settings' => $settings,
-            'plans'    => $plans,
-            'tenantId' => $tenantId,
-            'banks'    => $this->getBrazilianBanks()
-        ] );
-    }
-
-    /**
-     * Atualiza configurações do prestador.
+     * Processa atualização dos dados do provider.
      *
      * @param Request $request
      * @return RedirectResponse
      */
-    public function updateSettings( Request $request ): RedirectResponse
+    public function update_store( Request $request ): RedirectResponse
     {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado.' );
-        }
-
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
-
-        $request->validate( [ 
-            'bank_account'                   => 'nullable|array',
-            'bank_account.bank'              => 'nullable|string|max:50',
-            'bank_account.agency'            => 'nullable|string|max:20',
-            'bank_account.account'           => 'nullable|string|max:20',
-            'bank_account.account_type'      => 'nullable|in:checking,savings',
-            'tax_regime'                     => 'nullable|in:simples_nacional,lucro_presumido,lucro_real,none',
-            'notification_preferences'       => 'nullable|array',
-            'notification_preferences.email' => 'nullable|boolean',
-            'notification_preferences.sms'   => 'nullable|boolean',
-            'notification_preferences.push'  => 'nullable|boolean',
-            'plan_id'                        => 'nullable|exists:plans,id',
-            'subscription_auto_renew'        => 'nullable|boolean'
+        // Validar dados do formulário
+        $validated = $request->validate( [
+            'first_name'          => 'required|string|max:255',
+            'last_name'           => 'required|string|max:255',
+            'email'               => 'required|email|max:255',
+            'phone'               => 'nullable|string|max:20',
+            'document'            => 'nullable|string|max:20',
+            'area_of_activity_id' => 'required|integer',
+            'profession_id'       => 'required|integer',
+            'logo'                => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ] );
 
-        try {
-            $settingsData                = $request->only( [ 
-                'bank_account',
-                'tax_regime',
-                'notification_preferences',
-                'plan_id',
-                'subscription_auto_renew'
-            ] );
-            $settingsData[ 'tenant_id' ]   = $tenantId;
-            $settingsData[ 'provider_id' ] = $provider->id;
+        // Dados do formulário sanitizados
+        $data = $request->all();
 
-            $result = $this->providerService->updateProviderSettings( $settingsData );
+        // Verificar se email já existe usando UserService
+        $checkResponse = $this->userService->findByEmail( $data[ 'email' ] );
 
-            if ( $result->isSuccess() ) {
-                $this->logActivity(
-                    action: 'update_provider_settings',
-                    entity: 'providers',
-                    entityId: $provider->id,
-                    metadata: [ 'tenant_id' => $tenantId ],
-                );
-
-                return $this->successRedirect(
-                    message: 'Configurações atualizadas com sucesso.',
-                    route: 'provider.settings',
-                );
+        if ( $checkResponse->isSuccess() ) {
+            /** @var UserEntity $existingUser */
+            $existingUser = $checkResponse->data;
+            if ( $existingUser->getId() != Auth::id() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Este e-mail já está registrado!' );
             }
-
-            return $this->errorRedirect( $result->getError() ?? 'Erro ao atualizar configurações.' );
-
-        } catch ( \Exception $e ) {
-            return $this->errorRedirect( 'Erro interno ao atualizar configurações: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Lista os orçamentos do prestador.
-     *
-     * @param Request $request
-     * @return View
-     */
-    public function budgets( Request $request ): View
-    {
-        $user = Auth::user();
-        if ( !$user || !$user->provider ) {
-            return $this->errorRedirect( 'Acesso negado.' );
         }
 
-        $provider = $user->provider;
-        $tenantId = $this->tenantId();
+        // Processar upload de imagem
+        $info = null;
+        if ( $request->hasFile( 'logo' ) ) {
+            $this->fileUpload->make( 'logo' )
+                ->resize( 200, null, true )
+                ->execute();
+            $info           = $this->fileUpload->get_image_info();
+            $data[ 'logo' ] = $info[ 'path' ];
+        }
 
-        $filters = [ 
-            'status'          => $request->get( 'status' ),
-            'date_from'       => $request->get( 'date_from' ),
-            'date_to'         => $request->get( 'date_to' ),
-            'customer_search' => $request->get( 'customer_search' ),
-            'search'          => $request->get( 'search' )
-        ];
-
-        $budgets = $this->providerService->getBudgetsForProvider(
-            providerId: $provider->id,
-            filters: $filters,
-            perPage: 15,
+        // Buscar dados atuais do usuário usando UserService
+        $userResponse = $this->userService->findByIdAndTenantId(
+            Auth::id(),
+            Auth::user()->tenant_id,
         );
 
-        $stats = $this->providerService->getProviderBudgetStats( $provider->id );
+        if ( !$userResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', 'Usuário não encontrado' );
+        }
 
-        return $this->renderView( 'providers.budgets', [ 
-            'provider' => $provider,
-            'budgets'  => $budgets,
-            'filters'  => $filters,
-            'stats'    => $stats,
-            'tenantId' => $tenantId,
-            'statuses' => [ 'draft', 'sent', 'approved', 'rejected', 'completed', 'cancelled' ]
+        /** @var UserEntity $userData */
+        $userData     = $userResponse->data;
+        $originalData = $userData->toArray();
+
+        // Gerenciar arquivo de logo usando Storage
+        if ( isset( $info[ 'path' ] ) && $originalData[ 'logo' ] !== null && $info[ 'path' ] !== $originalData[ 'logo' ] ) {
+            if ( file_exists( public_path( $originalData[ 'logo' ] ) ) ) {
+                unlink( public_path( $originalData[ 'logo' ] ) );
+            }
+        }
+        $data[ 'logo' ] = isset( $info[ 'path' ] ) ? $info[ 'path' ] : $originalData[ 'logo' ];
+
+        // Criar UserEntity atualizada
+        $userEntity = UserEntity::create( array_merge(
+            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
+            $data,
+        ) );
+
+        // Atualizar usuário usando UserService
+        if ( !empty( array_diff_assoc( $userData->toArray(), $userEntity->toArray() ) ) ) {
+            $updateResponse = $this->userService->update( $userEntity, Auth::user()->tenant_id );
+
+            if ( !$updateResponse->isSuccess() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Falha ao atualizar os dados do usuário: ' . $updateResponse->message );
+            }
+        }
+
+        // Buscar dados atuais de CommonData usando CommonDataService
+        $commonDataResponse = $this->commonDataService->findByIdAndTenantId(
+            Auth::user()->common_data_id,
+            Auth::user()->tenant_id,
+        );
+
+        if ( !$commonDataResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', 'Dados comuns não encontrados' );
+        }
+
+        /** @var CommonDataEntity $commonDataData */
+        $commonDataData = $commonDataResponse->data;
+        $originalData   = $commonDataData->toArray();
+
+        // Converter IDs para inteiros
+        $data[ 'area_of_activity_id' ] = (int) $data[ 'area_of_activity_id' ];
+        $data[ 'profession_id' ]       = (int) $data[ 'profession_id' ];
+
+        // Criar CommonDataEntity atualizada
+        $commonDataEntity = CommonDataEntity::create( array_merge(
+            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
+            $data,
+        ) );
+
+        // Atualizar CommonData usando CommonDataService
+        if ( !empty( array_diff_assoc( $commonDataData->toArray(), $commonDataEntity->toArray() ) ) ) {
+            $updateResponse = $this->commonDataService->update( $commonDataEntity, Auth::user()->tenant_id );
+
+            if ( !$updateResponse->isSuccess() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Falha ao atualizar dados comuns: ' . $updateResponse->message );
+            }
+        }
+
+        // Buscar dados atuais de Contact usando ContactService
+        $contactResponse = $this->contactService->findByIdAndTenantId(
+            Auth::user()->contact_id,
+            Auth::user()->tenant_id,
+        );
+
+        if ( !$contactResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', 'Contato não encontrado' );
+        }
+
+        /** @var ContactEntity $contactData */
+        $contactData  = $contactResponse->data;
+        $originalData = $contactData->toArray();
+
+        // Criar ContactEntity atualizada
+        $contactEntity = ContactEntity::create( array_merge(
+            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
+            $data,
+        ) );
+
+        // Atualizar Contact usando ContactService
+        if ( !empty( array_diff_assoc( $contactData->toArray(), $contactEntity->toArray() ) ) ) {
+            $updateResponse = $this->contactService->update( $contactEntity, Auth::user()->tenant_id );
+
+            if ( !$updateResponse->isSuccess() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Falha ao atualizar contato: ' . $updateResponse->message );
+            }
+        }
+
+        // Buscar dados atuais de Address usando AddressService
+        $addressResponse = $this->addressService->findByIdAndTenantId(
+            Auth::user()->address_id,
+            Auth::user()->tenant_id,
+        );
+
+        if ( !$addressResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', 'Endereço não encontrado' );
+        }
+
+        /** @var AddressEntity $addressData */
+        $addressData  = $addressResponse->data;
+        $originalData = $addressData->toArray();
+
+        // Criar AddressEntity atualizada
+        $addressEntity = AddressEntity::create( array_merge(
+            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
+            $data,
+        ) );
+
+        // Atualizar Address usando AddressService
+        if ( !empty( array_diff_assoc( $addressData->toArray(), $addressEntity->toArray() ) ) ) {
+            $updateResponse = $this->addressService->update( $addressEntity, Auth::user()->tenant_id );
+
+            if ( !$updateResponse->isSuccess() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Falha ao atualizar endereço: ' . $updateResponse->message );
+            }
+        }
+
+        // Buscar dados atuais do provider usando ProviderService
+        $providerResponse = $this->providerService->findByIdAndTenantId(
+            Auth::id(),
+            Auth::user()->tenant_id,
+        );
+
+        if ( !$providerResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', 'Prestador não encontrado' );
+        }
+
+        /** @var ProviderEntity $providerData */
+        $providerData = $providerResponse->data;
+
+        // Criar array com dados do provider para compatibilidade
+        $originalData = [
+            'id'             => $providerData->getId(),
+            'tenant_id'      => $providerData->getTenant()->getId(),
+            'user_id'        => $providerData->getUser()->getId(),
+            'terms_accepted' => $providerData->isTermsAccepted(),
+        ];
+
+        // Criar ProviderEntity atualizada
+        $providerEntity = ProviderEntity::create( array_merge(
+            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
+            $data,
+        ) );
+
+        // Atualizar Provider usando ProviderService
+        if ( !empty( array_diff_assoc( $providerData->toArray(), $providerEntity->toArray() ) ) ) {
+            $updateResponse = $this->providerService->update( $providerEntity, Auth::user()->tenant_id );
+
+            if ( !$updateResponse->isSuccess() ) {
+                return redirect( '/provider/update' )
+                    ->with( 'error', 'Falha ao atualizar prestador: ' . $updateResponse->message );
+            }
+        }
+
+        // Log da atividade usando ActivityService
+        $this->activityService->logActivity(
+            Auth::user()->tenant_id,
+            Auth::id(),
+            1, // provider_updated activity type id
+            'provider',
+            Auth::id(),
+            "Prestador {$data[ 'first_name' ]} {$data[ 'last_name' ]} atualizado com sucesso!",
+            $data,
+        );
+
+        // Limpar sessões relacionadas usando Session facade
+        Session::forget( 'checkPlan' );
+        Session::forget( 'last_updated_session_provider' );
+
+        return redirect( '/settings' )
+            ->with( 'success', 'Prestador atualizado com sucesso!' );
+    }
+
+    /**
+     * Exibe formulário de alteração de senha.
+     *
+     * @return View
+     */
+    public function change_password(): View
+    {
+        return view( 'pages.provider.change_password' );
+    }
+
+    /**
+     * Processa alteração de senha.
+     *
+     * @return RedirectResponse
+     */
+    public function change_password_store( ChangePasswordRequest $request ): RedirectResponse
+    {
+        try {
+            $this->providerService->changePassword( $request->validated()[ 'password' ] );
+
+            return redirect()->route( 'settings.index' )
+                ->with( 'success', 'Senha alterada com sucesso!' );
+        } catch ( \Exception $e ) {
+            return redirect()->route( 'provider.change_password' )
+                ->with( 'error', 'Erro ao atualizar senha: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Exibe relatórios financeiros do provider.
+     *
+     * @return View
+     */
+    public function financial_reports(): View
+    {
+        $financialData = $this->providerService->getFinancialReports(
+            Auth::user()->tenant_id,
+        );
+
+        return view( 'pages.provider.reports.financial', [
+            'financial_summary' => $financialData[ 'financial_summary' ],
+            'monthly_revenue'   => $financialData[ 'monthly_revenue' ],
+            'pending_budgets'   => $financialData[ 'pending_budgets' ],
+            'overdue_payments'  => $financialData[ 'overdue_payments' ],
         ] );
     }
 
     /**
-     * Obtém lista de estados brasileiros.
+     * Exibe relatórios de orçamentos do provider.
      *
-     * @return array
+     * @return View
      */
-    private function getBrazilianStates(): array
+    public function budget_reports(): View
     {
-        return [ 
-            'AC' => 'Acre',
-            'AL' => 'Alagoas',
-            'AP' => 'Amapá',
-            'AM' => 'Amazonas',
-            'BA' => 'Bahia',
-            'CE' => 'Ceará',
-            'DF' => 'Distrito Federal',
-            'ES' => 'Espírito Santo',
-            'GO' => 'Goiás',
-            'MA' => 'Maranhão',
-            'MT' => 'Mato Grosso',
-            'MS' => 'Mato Grosso do Sul',
-            'MG' => 'Minas Gerais',
-            'PA' => 'Pará',
-            'PB' => 'Paraíba',
-            'PR' => 'Paraná',
-            'PE' => 'Pernambuco',
-            'PI' => 'Piauí',
-            'RJ' => 'Rio de Janeiro',
-            'RN' => 'Rio Grande do Norte',
-            'RS' => 'Rio Grande do Sul',
-            'RO' => 'Rondônia',
-            'RR' => 'Roraima',
-            'SC' => 'Santa Catarina',
-            'SP' => 'São Paulo',
-            'SE' => 'Sergipe',
-            'TO' => 'Tocantins'
-        ];
+        $budgetData = $this->providerService->getBudgetReports(
+            Auth::user()->tenant_id,
+        );
+
+        return view( 'pages.provider.reports.budgets', [
+            'budgets'      => $budgetData[ 'budgets' ],
+            'budget_stats' => $budgetData[ 'budget_stats' ],
+            'period'       => $budgetData[ 'period' ],
+        ] );
     }
 
     /**
-     * Obtém lista de bancos brasileiros.
+     * Exporta relatórios de orçamentos em Excel.
      *
-     * @return array
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    private function getBrazilianBanks(): array
+    public function budget_reports_excel()
     {
-        return [ 
-            '001' => 'Banco do Brasil',
-            '003' => 'Banco da Amazônia',
-            '004' => 'Banco do Nordeste',
-            '011' => 'Banco Central do Brasil',
-            '012' => 'Banco de Brasília',
-            '021' => 'Banco BANESTES',
-            '024' => 'Banco de Pernambuco',
-            '025' => 'Banco Aliança do Brasil',
-            '029' => 'Banco Itaú BBA',
-            '033' => 'Banco da Amazônia',
-            '034' => 'Banco Econômico',
-            '035' => 'Banco do Estado do Rio Grande do Sul',
-            '041' => 'Banco do Estado de Rondônia',
-            '047' => 'Banco do Estado de Santa Catarina',
-            '070' => 'Banco da Amazônia',
-            '104' => 'Banco Central do Brasil',
-            '105' => 'Banco do Brasil',
-            '107' => 'Banco do Brasil',
-            '133' => 'Banco do Estado do Rio Grande do Sul',
-            '134' => 'Banco Rendimento',
-            '153' => 'Banco Sudameris Brasil',
-            '154' => 'Banco Santander Brasil',
-            '156' => 'Banco Interamericano de Desenvolvimento',
-            '157' => 'Banco Inter',
-            '158' => 'Banco Ourinvest',
-            '159' => 'Banco Votorantim',
-            '160' => 'Banco Bradesco',
-            '183' => 'Banco Itaú Unibanco',
-            '184' => 'Banco de Desenvolvimento do Espírito Santo',
-            '237' => 'Banco Bradesco',
-            '260' => 'Nubank',
-            '290' => 'Banco Caixa Econômica Federal',
-            '336' => 'Banco C6',
-            '389' => 'Banco Inter',
-            '410' => 'Banco C6',
-            '604' => 'Banco Itaú Unibanco',
-            '637' => 'Banco Bradesco',
-            '748' => 'Banco Cooperativo Sicredi',
-            '756' => 'Banco Cooperativo Sicoob'
-        ];
+        $budgetData = $this->providerService->getBudgetReports(
+            Auth::user()->tenant_id,
+        );
+
+        // Implementar lógica de exportação Excel
+        // Por enquanto retorna uma resposta simples
+        return response()->json( [
+            'success' => true,
+            'message' => 'Exportação Excel será implementada',
+            'data'    => $budgetData,
+        ] );
+    }
+
+    /**
+     * Exporta relatórios de orçamentos em PDF.
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function budget_reports_pdf()
+    {
+        $budgetData = $this->providerService->getBudgetReports(
+            Auth::user()->tenant_id,
+        );
+
+        // Implementar lógica de exportação PDF
+        // Por enquanto retorna uma resposta simples
+        return response()->json( [
+            'success' => true,
+            'message' => 'Exportação PDF será implementada',
+            'data'    => $budgetData,
+        ] );
+    }
+
+    /**
+     * Exibe relatórios de serviços do provider.
+     *
+     * @return View
+     */
+    public function service_reports(): View
+    {
+        $serviceData = $this->providerService->getServiceReports(
+            Auth::user()->tenant_id,
+        );
+
+        return view( 'pages.provider.reports.services', [
+            'services'      => $serviceData[ 'services' ],
+            'service_stats' => $serviceData[ 'service_stats' ],
+            'period'        => $serviceData[ 'period' ],
+        ] );
+    }
+
+    /**
+     * Exibe relatórios de clientes do provider.
+     *
+     * @return View
+     */
+    public function customer_reports(): View
+    {
+        $customerData = $this->providerService->getCustomerReports(
+            Auth::user()->tenant_id,
+        );
+
+        return view( 'pages.provider.reports.customers', [
+            'customers'      => $customerData[ 'customers' ],
+            'customer_stats' => $customerData[ 'customer_stats' ],
+            'period'         => $customerData[ 'period' ],
+        ] );
     }
 
 }

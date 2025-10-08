@@ -13,9 +13,9 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $fillable = [ 
+    protected $fillable = [
         'name',
-        'slug',
+        'description',
     ];
 
     /**
@@ -24,9 +24,21 @@ class Role extends Model
      * Roles são globais, mas assignments a users são scoped via pivot tenant_id em user_roles.
      */
 
-    protected $casts = [ 
-        'guard_name' => 'string',
+    protected $casts = [
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Regras de validação para o modelo Role.
+     */
+    public static function businessRules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string|max:255',
+        ];
+    }
 
     /**
      * Obtém as permissões associadas a este role de forma global.
@@ -58,7 +70,26 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany( User::class, 'user_roles', 'role_id', 'user_id' )->withPivot( 'tenant_id' )->withTimestamps();
+        return $this->belongsToMany( User::class, 'user_roles', 'role_id', 'user_id' )
+            ->using( UserRole::class)
+            ->withPivot( 'tenant_id' )
+            ->withTimestamps();
+    }
+
+    /**
+     * Get users for a specific tenant.
+     */
+    public function usersForTenant( int $tenantId ): BelongsToMany
+    {
+        return $this->users()->forTenant( $tenantId );
+    }
+
+    /**
+     * Check if role has users in a specific tenant.
+     */
+    public function hasUsersInTenant( int $tenantId ): bool
+    {
+        return $this->users()->forTenant( $tenantId )->exists();
     }
 
 }

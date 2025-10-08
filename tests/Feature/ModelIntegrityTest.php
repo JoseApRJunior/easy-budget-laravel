@@ -36,7 +36,8 @@ class ModelIntegrityTest extends TestCase
         $this->assertArrayNotHasKey( 'tenant_id', $profession->getFillable() );
 
         $category = new Category();
-        $this->assertArrayNotHasKey( 'tenant_id', $category->getFillable() );
+        $this->assertArrayHasKey( 'tenant_id', $category->getFillable() );
+        $this->assertArrayHasKey( 'tenant_id', $category->getCasts() );
 
         $plan = new Plan();
         $this->assertArrayNotHasKey( 'tenant_id', $plan->getFillable() );

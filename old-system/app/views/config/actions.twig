@@ -1,0 +1,11 @@
+{# config/actions.twig #}
+{% macro getConfig() %}
+{% set config = translations() %}
+{{ _self.returnConfig(config) }}
+{% endmacro %}
+
+{% macro returnConfig(config) %}
+{% set actionIcons = config.actionIcons %}
+{% set descriptionTranslation = config.descriptionTranslation %}
+{% set textColors = config.textColors %}
+{% endmacro %}

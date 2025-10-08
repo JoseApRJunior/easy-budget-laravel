@@ -1,0 +1,41 @@
+@startuml der_easy_budget
+entity "Tenant" as tenant {
+  * id : int
+nome : varchar
+plano : varchar
+}
+
+
+entity "Usuario" as usuario {
+  * id : int
+nome : varchar
+email : varchar
+senha : varchar
+  tenant_id : int
+}
+
+
+entity "Cliente" as cliente {
+  * id : int
+nome : varchar
+email : varchar
+  tenant_id : int
+}
+
+
+entity "Orcamento" as orcamento {
+  * id : int
+data : date
+valor_total : decimal
+  cliente_id : int
+  usuario_id : int
+  tenant_id : int
+}
+
+
+tenant ||--|{ usuario
+tenant ||--|{ cliente
+tenant ||--|{ orcamento
+usuario ||--|{ orcamento
+cliente ||--|{ orcamento
+@enduml

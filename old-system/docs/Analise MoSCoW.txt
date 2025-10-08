@@ -1,0 +1,54 @@
+Alta Prioridade (MVP - Minimum Viable Product): Must Hvae
+- RF01, RF02, RF03, RF04, RF05, RF06, RF07, RF17, RF18
+- RNF01, RNF02, RNF05, RNF06, RNF12, RNF13
+
+RF01: Cadastro e autenticação de usuários
+RF02: Criação e edição de orçamentos
+RF03: Adição de itens ao orçamento
+RF04: Cálculo automático de totais
+RF05: Envio de orçamentos por e-mail
+RF06: Geração de PDF do orçamento
+RF17: Gerenciamento de tenants (criação, configuração e administração de inquilinos)
+RF18: Isolamento de dados entre tenants
+RNF01: Interface responsiva e amigável
+RNF02: Tempo de resposta rápido (< 2 segundos)
+RNF05: Compatibilidade com navegadores modernos
+RNF06: Backup automático de dados
+RNF12: Arquitetura multitenancy robusta e escalável
+RNF13: Isolamento de recursos computacionais entre tenants
+
+
+Média Prioridade (Pós-MVP):
+- RF08, RF09, RF10, RF14, RF15, RF16, RF19, RF20, RF21
+- RNF03, RNF04, RNF09, RNF14, RNF15
+
+RF08: Histórico de versões do orçamento
+RF09: Comentários e notas em orçamentos
+RF10: Integração com catálogo de produtos/serviços
+RF14: Relatórios e análises de Orçamentos
+RF15: Personalização de modelos de orçamento
+RF16: Exportação de dados em formatos diversos
+RF19: Personalização de interface e funcionalidades por tenant
+RF20: Gerenciamento de planos e limites de uso por tenant
+RF21: Relatórios e análises específicos para cada tenant
+RNF03: Segurança de dados (criptografia, autenticação robusta)
+RNF04: Escalabilidade para suportar múltiplos usuários
+RNF03: Segurança de dados (criptografia, autenticação robusta)
+RNF04: Escalabilidade para suportar múltiplos usuários
+RNF14: Backup e recuperação de dados específicos por tenant
+RNF15: Monitoramento de uso e desempenho por tenant
+
+Baixa Prioridade (Futuras iterações):
+- RF11, RF12, RF13, RF22, RF23, RF24
+- RNF07, RNF08, RNF10, RNF11
+
+RF11: Aprovação eletrônica de orçamentos
+RF12: Notificações por e-mail de status do orçamento
+RF13: Integração com sistemas de pagamento
+RF22: Migração de dados entre tenants (quando necessário)
+RF23: Configuração de domínios personalizados por tenant
+RF24: Gerenciamento de faturamento e cobrança por tenant
+RNF07: Logs de atividades do sistema
+RNF08: Suporte a múltiplos idiomas
+RNF10: Acessibilidade (WCAG 2.1)
+RNF11: Documentação completa do sistema

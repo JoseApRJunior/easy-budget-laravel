@@ -1,0 +1,50 @@
+{% extends "layout.twig" %}
+
+
+
+{% block content %}
+<div class="container mt-5">
+	<div class="row justify-content-center">
+		<div class="col-md-8">
+			<div class="card">
+				<div class="card-body text-center">
+					<h2 class="card-title text-success">
+						<i class="bi bi-check-circle-fill"></i>
+						Pagamento Realizado com Sucesso!
+					</h2>
+					<p class="card-text">
+						Obrigado por sua assinatura. Seu pagamento foi processado com sucesso.
+					</p>
+					<hr>
+					<h4>Detalhes da Transação</h4>
+					<ul class="list-unstyled">
+						<li>
+							<strong>ID da Transação:</strong>
+							{{ payment_id }}
+						</li>
+
+						<li>
+							<strong>Plano:</strong>
+							{{ plan_name }}
+						</li>
+						<li>
+							<strong>Valor:</strong>
+							R$
+							{{ plan_price|number_format(2, ',', '.') }}
+						</li>
+						<li>
+							<strong>Data:</strong>
+							{{ transaction_date|date("d/m/Y H:i:s") }}
+						</li>
+					</ul>
+					<hr>
+					<p>
+						Em breve seu plano será atualizado!
+					</p>
+					<a href="/provider" class="btn btn-primary">Ir para o Dashboard</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

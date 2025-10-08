@@ -1,653 +1,555 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Controllers;
 
-use App\Services\ReportService;
-use App\Services\ActivityService;
-use App\Services\BudgetService;
-use App\Services\ActivityService;
-use App\Services\CustomerService;
-use App\Services\ActivityService;
-use App\Services\InvoiceService;
-use App\Services\ActivityService;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use App\Models\ReportDefinition;
+use App\Models\ReportExecution;
+use App\Models\ReportSchedule;
+use App\Services\ExportService;
+use App\Services\ReportGenerationService;
+use App\Services\ReportSchedulerService;
+use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\BudgetReportExport;
-use App\Exports\FinancialReportExport;
-use App\Exports\CustomerReportExport;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 /**
- * Controlador para geração de relatórios.
- * Implementa diversos tipos de relatórios com exportação PDF/Excel.
- * Migração do sistema legacy app/controllers/ReportController.php.
- *
- * @package App\Http\Controllers
- * @author IA
+ * Controlador principal para gerenciamento de relatórios
+ * Gerencia interface web e operações básicas
  */
-class ReportController extends BaseController
+class ReportController extends Controller
 {
-    /**
-     * @var ReportService
-     */
-    protected ReportService $reportService;
+    private ReportGenerationService $reportGenerationService;
+    private ReportSchedulerService  $reportSchedulerService;
+    private ExportService           $exportService;
 
-    /**
-     * @var BudgetService
-     */
-    protected BudgetService $budgetService;
-
-    /**
-     * @var CustomerService
-     */
-    protected CustomerService $customerService;
-
-    /**
-     * @var InvoiceService
-     */
-    protected InvoiceService $invoiceService;
-
-    /**
-     * Construtor da classe ReportController.
-     *
-     * @param ReportService $reportService
-     * @param BudgetService $budgetService
-     * @param CustomerService $customerService
-     * @param InvoiceService $invoiceService
-     */
     public function __construct(
-        ReportService $reportService,
-        BudgetService $budgetService,
-        CustomerService $customerService,
-        InvoiceService $invoiceService
+        ReportGenerationService $reportGenerationService,
+        ReportSchedulerService $reportSchedulerService,
+        ExportService $exportService,
     ) {
-        parent::__construct($activityService);
-        $this->reportService = $reportService;
-        $this->budgetService = $budgetService;
-        $this->customerService = $customerService;
-        $this->invoiceService = $invoiceService;
+        $this->reportGenerationService = $reportGenerationService;
+        $this->reportSchedulerService  = $reportSchedulerService;
+        $this->exportService           = $exportService;
     }
 
     /**
-     * Exibe a página principal de relatórios com opções.
-     *
-     * @return View
+     * Dashboard principal de relatórios
      */
     public function index(): View
     {
-        $tenantId = $this->tenantId();
+        $user = auth()->user();
 
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
-        }
+        // Obter definições de relatório do usuário
+        $reportDefinitions = ReportDefinition::where( 'tenant_id', $user->tenant_id )
+            ->where( 'user_id', $user->id )
+            ->active()
+            ->orderBy( 'name' )
+            ->get();
 
-        $this->logActivity(
-            action: 'view_reports',
-            entity: 'reports',
-            metadata: ['tenant_id' => $tenantId]
-        );
+        // Obter execuções recentes
+        $recentExecutions = ReportExecution::where( 'tenant_id', $user->tenant_id )
+            ->where( 'user_id', $user->id )
+            ->recent( 7 )
+            ->with( [ 'definition' ] )
+            ->orderBy( 'created_at', 'DESC' )
+            ->limit( 10 )
+            ->get();
 
-        $reportTypes = [
-            'budget' => 'Relatórios de Orçamentos',
-            'financial' => 'Relatórios Financeiros',
-            'customer' => 'Relatórios de Clientes',
-            'product' => 'Relatórios de Produtos',
-            'provider' => 'Relatórios de Prestadores',
-            'activity' => 'Relatórios de Atividades'
+        // Obter agendamentos ativos
+        $activeSchedules = ReportSchedule::where( 'tenant_id', $user->tenant_id )
+            ->where( 'user_id', $user->id )
+            ->active()
+            ->with( [ 'definition' ] )
+            ->orderBy( 'next_run_at' )
+            ->limit( 5 )
+            ->get();
+
+        // Estatísticas rápidas
+        $stats = [
+            'total_definitions' => $reportDefinitions->count(),
+            'total_executions'  => ReportExecution::where( 'tenant_id', $user->tenant_id )
+                ->where( 'user_id', $user->id )
+                ->recent( 30 )
+                ->count(),
+            'active_schedules'  => $activeSchedules->count(),
+            'failed_executions' => ReportExecution::where( 'tenant_id', $user->tenant_id )
+                ->where( 'user_id', $user->id )
+                ->failed()
+                ->recent( 7 )
+                ->count()
         ];
 
-        $recentReports = $this->reportService->getRecentReports($tenantId, 10);
-
-        return $this->renderView('reports.index', [
-            'reportTypes' => $reportTypes,
-            'recentReports' => $recentReports,
-            'tenantId' => $tenantId
-        ]);
+        return view( 'reports.index', compact(
+            'reportDefinitions',
+            'recentExecutions',
+            'activeSchedules',
+            'stats',
+        ) );
     }
 
     /**
-     * Gera relatório de orçamentos.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
+     * Mostra formulário de criação de relatório
      */
-    public function budgetReport(Request $request): View|RedirectResponse
+    public function create(): View
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
-        }
-
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'status' => 'nullable|array',
-            'status.*' => 'in:draft,sent,approved,rejected,completed,cancelled',
-            'customer_id' => 'nullable|integer|exists:customers,id',
-            'provider_id' => 'nullable|integer|exists:providers,id',
-            'category_id' => 'nullable|integer|exists:categories,id',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
-
-        $this->logActivity(
-            action: 'generate_budget_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'format' => $request->get('format', 'html')
-            ]
-        );
-
-        $reportData = $this->reportService->generateBudgetReport(
-            tenantId: $tenantId,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            filters: $request->only(['status', 'customer_id', 'provider_id', 'category_id'])
-        );
-
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.budget', $reportData);
-            $filename = 'relatorio_orcamentos_' . date('Y-m-d') . '.pdf';
-
-            return $pdf->download($filename);
-        }
-
-        if ($request->get('format') === 'excel') {
-            return Excel::download(new BudgetReportExport($reportData),
-                'relatorio_orcamentos_' . date('Y-m-d') . '.xlsx');
-        }
-
-        return $this->renderView('reports.budget', $reportData);
+        return view( 'reports.create' );
     }
 
     /**
-     * Gera relatório financeiro consolidado.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
+     * Salva nova definição de relatório
      */
-    public function financialReport(Request $request): View|RedirectResponse
+    public function store( Request $request ): RedirectResponse
     {
-        $tenantId = $this->tenantId();
+        try {
+            $validated = $request->validate( [
+                'name'          => 'required|string|max:255',
+                'description'   => 'nullable|string',
+                'category'      => 'required|string|in:' . implode( ',', array_keys( ReportDefinition::CATEGORIES ) ),
+                'type'          => 'required|string|in:' . implode( ',', array_keys( ReportDefinition::TYPES ) ),
+                'query_builder' => 'required|array',
+                'config'        => 'required|array',
+                'filters'       => 'nullable|array',
+                'visualization' => 'nullable|array',
+                'is_active'     => 'boolean'
+            ] );
 
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+            $definition = ReportDefinition::create( [
+                'tenant_id'     => auth()->user()->tenant_id,
+                'user_id'       => auth()->id(),
+                'name'          => $validated[ 'name' ],
+                'description'   => $validated[ 'description' ] ?? null,
+                'category'      => $validated[ 'category' ],
+                'type'          => $validated[ 'type' ],
+                'query_builder' => $validated[ 'query_builder' ],
+                'config'        => $validated[ 'config' ],
+                'filters'       => $validated[ 'filters' ] ?? [],
+                'visualization' => $validated[ 'visualization' ] ?? [],
+                'is_active'     => $validated[ 'is_active' ] ?? true,
+                'created_by'    => auth()->id()
+            ] );
+
+            Log::info( 'Nova definição de relatório criada', [
+                'definition_id' => $definition->id,
+                'user_id'       => auth()->id()
+            ] );
+
+            return redirect()->route( 'reports.show', $definition )
+                ->with( 'success', 'Relatório criado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao criar definição de relatório', [
+                'error'   => $e->getMessage(),
+                'user_id' => auth()->id()
+            ] );
+
+            return back()->withInput()
+                ->with( 'error', 'Erro ao criar relatório: ' . $e->getMessage() );
         }
-
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'report_type' => 'required|in:revenue,expenses,profit,all',
-            'payment_method' => 'nullable|array',
-            'payment_method.*' => 'in:cash,credit_card,debit_card,bank_transfer,pix,boleto',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
-
-        $this->logActivity(
-            action: 'generate_financial_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'report_type' => $request->report_type,
-                'format' => $request->get('format', 'html')
-            ]
-        );
-
-        $reportData = $this->reportService->generateFinancialReport(
-            tenantId: $tenantId,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            reportType: $request->report_type,
-            filters: $request->only(['payment_method'])
-        );
-
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.financial', $reportData);
-            $filename = 'relatorio_financeiro_' . $request->report_type . '_' . date('Y-m-d') . '.pdf';
-
-            return $pdf->download($filename);
-        }
-
-        if ($request->get('format') === 'excel') {
-            return Excel::download(new FinancialReportExport($reportData),
-                'relatorio_financeiro_' . $request->report_type . '_' . date('Y-m-d') . '.xlsx');
-        }
-
-        return $this->renderView('reports.financial', $reportData);
     }
 
     /**
-     * Gera relatório de clientes.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
+     * Mostra detalhes de um relatório
      */
-    public function customerReport(Request $request): View|RedirectResponse
+    public function show( ReportDefinition $report ): View
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'report_type' => 'required|in:activity,total_spent,budgets_count,invoices_count',
-            'status' => 'nullable|array',
-            'status.*' => 'in:active,inactive',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
+        // Obter execuções recentes
+        $recentExecutions = $report->executions()
+            ->recent( 30 )
+            ->orderBy( 'created_at', 'DESC' )
+            ->limit( 10 )
+            ->get();
 
-        $this->logActivity(
-            action: 'generate_customer_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'report_type' => $request->report_type,
-                'format' => $request->get('format', 'html')
-            ]
-        );
+        // Obter agendamentos
+        $schedules = $report->schedules()
+            ->orderBy( 'created_at', 'DESC' )
+            ->get();
 
-        $reportData = $this->reportService->generateCustomerReport(
-            tenantId: $tenantId,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            reportType: $request->report_type,
-            filters: $request->only(['status'])
-        );
+        // Dados para gráficos
+        $chartData = $this->prepareChartData( $recentExecutions );
 
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.customers', $reportData);
-            $filename = 'relatorio_clientes_' . $request->report_type . '_' . date('Y-m-d') . '.pdf';
-
-            return $pdf->download($filename);
-        }
-
-        if ($request->get('format') === 'excel') {
-            return Excel::download(new CustomerReportExport($reportData),
-                'relatorio_clientes_' . $request->report_type . '_' . date('Y-m-d') . '.xlsx');
-        }
-
-        return $this->renderView('reports.customers', $reportData);
+        return view( 'reports.show', compact(
+            'report',
+            'recentExecutions',
+            'schedules',
+            'chartData',
+        ) );
     }
 
     /**
-     * Gera relatório de produtos.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
+     * Mostra formulário de edição
      */
-    public function productReport(Request $request): View|RedirectResponse
+    public function edit( ReportDefinition $report ): View
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'report_type' => 'required|in:sales,stock,inventory_value,top_sellers',
-            'category_id' => 'nullable|integer|exists:categories,id',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
-
-        $this->logActivity(
-            action: 'generate_product_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'report_type' => $request->report_type,
-                'format' => $request->get('format', 'html')
-            ]
-        );
-
-        $reportData = $this->reportService->generateProductReport(
-            tenantId: $tenantId,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            reportType: $request->report_type,
-            categoryId: $request->category_id
-        );
-
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.products', $reportData);
-            $filename = 'relatorio_produtos_' . $request->report_type . '_' . date('Y-m-d') . '.pdf';
-
-            return $pdf->download($filename);
-        }
-
-        if ($request->get('format') === 'excel') {
-            // Implementar exportação Excel específica para produtos
-            $filename = 'relatorio_produtos_' . $request->report_type . '_' . date('Y-m-d') . '.xlsx';
-            // return Excel::download(new ProductReportExport($reportData), $filename);
-            return $this->renderView('reports.products', $reportData); // Placeholder
-        }
-
-        return $this->renderView('reports.products', $reportData);
+        return view( 'reports.edit', compact( 'report' ) );
     }
 
     /**
-     * Gera relatório de atividades do sistema.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
+     * Atualiza definição de relatório
      */
-    public function activityReport(Request $request): View|RedirectResponse
+    public function update( Request $request, ReportDefinition $report ): RedirectResponse
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'entity_type' => 'nullable|string|max:50',
-            'action_type' => 'nullable|string|max:50',
-            'user_id' => 'nullable|integer|exists:users,id',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
+        try {
+            $validated = $request->validate( [
+                'name'          => 'required|string|max:255',
+                'description'   => 'nullable|string',
+                'category'      => 'required|string|in:' . implode( ',', array_keys( ReportDefinition::CATEGORIES ) ),
+                'type'          => 'required|string|in:' . implode( ',', array_keys( ReportDefinition::TYPES ) ),
+                'query_builder' => 'required|array',
+                'config'        => 'required|array',
+                'filters'       => 'nullable|array',
+                'visualization' => 'nullable|array',
+                'is_active'     => 'boolean'
+            ] );
 
-        $this->logActivity(
-            action: 'generate_activity_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'format' => $request->get('format', 'html')
-            ]
-        );
+            $report->update( [
+                'name'          => $validated[ 'name' ],
+                'description'   => $validated[ 'description' ] ?? null,
+                'category'      => $validated[ 'category' ],
+                'type'          => $validated[ 'type' ],
+                'query_builder' => $validated[ 'query_builder' ],
+                'config'        => $validated[ 'config' ],
+                'filters'       => $validated[ 'filters' ] ?? [],
+                'visualization' => $validated[ 'visualization' ] ?? [],
+                'is_active'     => $validated[ 'is_active' ] ?? true,
+                'updated_by'    => auth()->id()
+            ] );
 
-        $reportData = $this->reportService->generateActivityReport(
-            tenantId: $tenantId,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            filters: $request->only(['entity_type', 'action_type', 'user_id'])
-        );
+            Log::info( 'Definição de relatório atualizada', [
+                'definition_id' => $report->id,
+                'user_id'       => auth()->id()
+            ] );
 
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.activities', $reportData);
-            $filename = 'relatorio_atividades_' . date('Y-m-d') . '.pdf';
+            return redirect()->route( 'reports.show', $report )
+                ->with( 'success', 'Relatório atualizado com sucesso!' );
 
-            return $pdf->download($filename);
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao atualizar definição de relatório', [
+                'definition_id' => $report->id,
+                'error'         => $e->getMessage()
+            ] );
+
+            return back()->withInput()
+                ->with( 'error', 'Erro ao atualizar relatório: ' . $e->getMessage() );
         }
-
-        if ($request->get('format') === 'excel') {
-            // Implementar exportação Excel para atividades
-            $filename = 'relatorio_atividades_' . date('Y-m-d') . '.xlsx';
-            // return Excel::download(new ActivityReportExport($reportData), $filename);
-            return $this->renderView('reports.activities', $reportData); // Placeholder
-        }
-
-        return $this->renderView('reports.activities', $reportData);
     }
 
     /**
-     * Dashboard de métricas de relatórios.
-     *
-     * @return View
+     * Remove definição de relatório
      */
-    public function metricsDashboard(): View
+    public function destroy( ReportDefinition $report ): RedirectResponse
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $this->logActivity(
-            action: 'view_report_metrics',
-            entity: 'reports',
-            metadata: ['tenant_id' => $tenantId]
-        );
+        try {
+            $reportId = $report->id;
 
-        $metrics = $this->reportService->getReportMetrics($tenantId);
-        $trends = $this->reportService->getReportTrends($tenantId, 30); // Últimos 30 dias
+            // Remover agendamentos relacionados
+            $report->schedules()->delete();
 
-        return $this->renderView('reports.metrics-dashboard', [
-            'metrics' => $metrics,
-            'trends' => $trends,
-            'tenantId' => $tenantId
-        ]);
+            // Remover definição
+            $report->delete();
+
+            Log::info( 'Definição de relatório removida', [
+                'definition_id' => $reportId,
+                'user_id'       => auth()->id()
+            ] );
+
+            return redirect()->route( 'reports.index' )
+                ->with( 'success', 'Relatório removido com sucesso!' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao remover definição de relatório', [
+                'definition_id' => $report->id,
+                'error'         => $e->getMessage()
+            ] );
+
+            return back()->with( 'error', 'Erro ao remover relatório: ' . $e->getMessage() );
+        }
     }
 
     /**
-     * API endpoint para dados de relatórios em tempo real.
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * Gera relatório sob demanda
      */
-    public function apiReportData(Request $request): JsonResponse
+    public function generate( Request $request, ReportDefinition $report ): RedirectResponse
     {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->jsonError('Tenant não encontrado.', statusCode: 403);
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $request->validate([
-            'type' => 'required|string|in:budget_summary,financial_overview,customer_stats,product_performance',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from'
-        ]);
+        try {
+            $filters = $request->get( 'filters', [] );
+            $format  = $request->get( 'format', 'screen' );
 
-        $data = $this->reportService->getReportDataApi(
-            tenantId: $tenantId,
-            type: $request->type,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            filters: $request->only(['category_id', 'customer_id', 'status'])
-        );
+            // Gerar relatório
+            $result = $this->reportGenerationService->generateReport( $report, $filters );
 
-        $this->logActivity(
-            action: 'api_report_data',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'report_type' => $request->type,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to
-            ]
-        );
-
-        return $this->jsonSuccess(
-            data: $data,
-            message: 'Dados do relatório carregados com sucesso.'
-        );
-    }
-
-    /**
-     * Gera relatório personalizado baseado em critérios definidos.
-     *
-     * @param Request $request
-     * @return View|RedirectResponse
-     */
-    public function customReport(Request $request): View|RedirectResponse
-    {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
-        }
-
-        $request->validate([
-            'entities' => 'required|array',
-            'entities.*' => 'in:budgets,services,customers,providers,invoices,products,activities',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'group_by' => 'required|in:date,entity,user,customer,provider,category',
-            'format' => 'nullable|in:html,pdf,excel'
-        ]);
-
-        $this->logActivity(
-            action: 'generate_custom_report',
-            entity: 'reports',
-            metadata: [
-                'tenant_id' => $tenantId,
-                'entities' => $request->entities,
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'group_by' => $request->group_by,
-                'format' => $request->get('format', 'html')
-            ]
-        );
-
-        $reportData = $this->reportService->generateCustomReport(
-            tenantId: $tenantId,
-            entities: $request->entities,
-            dateFrom: $request->date_from,
-            dateTo: $request->date_to,
-            groupBy: $request->group_by,
-            additionalFilters: $request->only(['status', 'payment_method', 'category_id'])
-        );
-
-        if ($request->get('format') === 'pdf') {
-            $pdf = PDF::loadView('reports.custom', $reportData);
-            $filename = 'relatorio_personalizado_' . date('Y-m-d_H-i-s') . '.pdf';
-
-            return $pdf->download($filename);
-        }
-
-        if ($request->get('format') === 'excel') {
-            // Implementar exportação Excel personalizada
-            $filename = 'relatorio_personalizado_' . date('Y-m-d_H-i-s') . '.xlsx';
-            // return Excel::download(new CustomReportExport($reportData), $filename);
-            return $this->renderView('reports.custom', $reportData); // Placeholder
-        }
-
-        return $this->renderView('reports.custom', $reportData);
-    }
-
-    /**
-     * Agenda geração de relatório recorrente.
-     *
-     * @param Request $request
-     * @return RedirectResponse|JsonResponse
-     */
-    public function scheduleReport(Request $request): RedirectResponse|JsonResponse
-    {
-        $tenantId = $this->tenantId();
-
-        if (!$tenantId) {
-            if (request()->expectsJson()) {
-                return $this->jsonError('Tenant não encontrado.', statusCode: 403);
-            }
-            return $this->errorRedirect('Tenant não encontrado.');
-        }
-
-        $request->validate([
-            'report_type' => 'required|string|max:50',
-            'frequency' => 'required|in:daily,weekly,monthly',
-            'time' => 'required|date_format:H:i',
-            'format' => 'required|in:pdf,excel',
-            'recipients' => 'required|array',
-            'recipients.*' => 'email|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from'
-        ]);
-
-        $scheduleData = [
-            'tenant_id' => $tenantId,
-            'report_type' => $request->report_type,
-            'frequency' => $request->frequency,
-            'time' => $request->time,
-            'format' => $request->format,
-            'recipients' => $request->recipients,
-            'date_from' => $request->date_from,
-            'date_to' => $request->date_to,
-            'is_active' => true,
-            'created_by' => $this->userId()
-        ];
-
-        $result = $this->reportService->scheduleReport($scheduleData);
-
-        if (request()->expectsJson()) {
-            if ($result->isSuccess()) {
-                $this->logActivity(
-                    action: 'schedule_report',
-                    entity: 'reports',
-                    entityId: $result->getEntityId(),
-                    metadata: [
-                        'tenant_id' => $tenantId,
-                        'report_type' => $request->report_type,
-                        'frequency' => $request->frequency,
-                        'recipients_count' => count($request->recipients)
-                    ]
-                );
-
-                return $this->jsonSuccess(
-                    data: $result->getData(),
-                    message: 'Relatório agendado com sucesso.'
-                );
+            if ( $format === 'screen' ) {
+                return redirect()->route( 'reports.show', $report )
+                    ->with( 'success', 'Relatório gerado com sucesso!' )
+                    ->with( 'execution_id', $result[ 'execution_id' ] );
+            } else {
+                // Para outros formatos, redirecionar para download
+                return redirect()->route( 'reports.download', $result[ 'execution_id' ] );
             }
 
-            return $this->jsonError(
-                message: $result->getError() ?? 'Erro ao agendar relatório.',
-                statusCode: 422
-            );
-        }
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao gerar relatório', [
+                'definition_id' => $report->id,
+                'error'         => $e->getMessage()
+            ] );
 
-        return $this->handleServiceResult(
-            result: $result,
-            request: $request,
-            successMessage: 'Relatório agendado com sucesso.',
-            errorMessage: 'Erro ao agendar relatório.'
-        );
+            return back()->with( 'error', 'Erro ao gerar relatório: ' . $e->getMessage() );
+        }
     }
 
     /**
-     * Lista relatórios agendados.
-     *
-     * @param Request $request
-     * @return View
+     * Mostra construtor visual de relatórios
      */
-    public function scheduledReports(Request $request): View
+    public function builder(): View
     {
-        $tenantId = $this->tenantId();
+        $availableMetrics = $this->reportGenerationService->getAvailableMetrics();
 
-        if (!$tenantId) {
-            return $this->errorRedirect('Tenant não encontrado.');
+        return view( 'reports.builder', compact( 'availableMetrics' ) );
+    }
+
+    /**
+     * Preview de relatório
+     */
+    public function preview( Request $request ): JsonResponse
+    {
+        try {
+            $config = $request->validate( [
+                'name'          => 'required|string|max:255',
+                'category'      => 'required|string',
+                'type'          => 'required|string',
+                'query_builder' => 'required|array',
+                'filters'       => 'nullable|array'
+            ] );
+
+            // Gerar dados de preview
+            $queryBuilder = app( AdvancedQueryBuilder::class);
+            $queryBuilder->from( $config[ 'query_builder' ][ 'table' ] ?? 'budgets' );
+
+            // Aplicar configuração básica
+            if ( isset( $config[ 'query_builder' ][ 'selects' ] ) ) {
+                foreach ( $config[ 'query_builder' ][ 'selects' ] as $select ) {
+                    $queryBuilder->select( $select[ 'field' ], $select[ 'alias' ] ?? null );
+                }
+            }
+
+            // Aplicar filtros
+            if ( isset( $config[ 'filters' ] ) ) {
+                foreach ( $config[ 'filters' ] as $filter ) {
+                    if ( !empty( $filter[ 'value' ] ) ) {
+                        $queryBuilder->where( $filter[ 'column' ], $filter[ 'operator' ], $filter[ 'value' ] );
+                    }
+                }
+            }
+
+            // Limitar para preview
+            $queryBuilder->limit( 50 );
+
+            $previewData = $queryBuilder->get();
+
+            return response()->json( [
+                'success'       => true,
+                'data'          => $previewData,
+                'columns'       => $this->extractColumns( $previewData ),
+                'total_records' => $previewData->count()
+            ] );
+
+        } catch ( Exception $e ) {
+            return response()->json( [
+                'success' => false,
+                'error'   => $e->getMessage()
+            ], 500 );
+        }
+    }
+
+    /**
+     * Gerenciamento de agendamentos
+     */
+    public function schedules( ReportDefinition $report ): View
+    {
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
         }
 
-        $filters = [
-            'status' => $request->get('status'),
-            'type' => $request->get('type'),
-            'frequency' => $request->get('frequency')
+        $schedules = $report->schedules()
+            ->orderBy( 'created_at', 'DESC' )
+            ->get();
+
+        return view( 'reports.schedules', compact( 'report', 'schedules' ) );
+    }
+
+    /**
+     * Histórico de execuções
+     */
+    public function history( ReportDefinition $report ): View
+    {
+        // Verificar permissão
+        if ( $report->tenant_id !== auth()->user()->tenant_id ) {
+            abort( 403 );
+        }
+
+        $executions = $report->executions()
+            ->orderBy( 'created_at', 'DESC' )
+            ->paginate( 20 );
+
+        return view( 'reports.history', compact( 'report', 'executions' ) );
+    }
+
+    /**
+     * Download de relatório gerado
+     */
+    public function download( string $executionId ): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    {
+        try {
+            $execution = ReportExecution::where( 'execution_id', $executionId )
+                ->where( 'tenant_id', auth()->user()->tenant_id )
+                ->first();
+
+            if ( !$execution ) {
+                abort( 404, 'Relatório não encontrado' );
+            }
+
+            if ( !$execution->isCompleted() ) {
+                return back()->with( 'error', 'Relatório ainda não foi concluído' );
+            }
+
+            $filePath = storage_path( "app/public/{$execution->file_path}" );
+
+            if ( !file_exists( $filePath ) ) {
+                abort( 404, 'Arquivo do relatório não encontrado' );
+            }
+
+            return response()->download( $filePath, basename( $execution->file_path ) );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no download de relatório', [
+                'execution_id' => $executionId,
+                'error'        => $e->getMessage()
+            ] );
+
+            return back()->with( 'error', 'Erro ao baixar relatório' );
+        }
+    }
+
+    /**
+     * Estatísticas do sistema de relatórios
+     */
+    public function stats(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+
+            $stats = [
+                'definitions'       => ReportDefinition::where( 'tenant_id', $user->tenant_id )
+                    ->where( 'user_id', $user->id )
+                    ->count(),
+                'executions_today'  => ReportExecution::where( 'tenant_id', $user->tenant_id )
+                    ->where( 'user_id', $user->id )
+                    ->whereDate( 'created_at', today() )
+                    ->count(),
+                'executions_month'  => ReportExecution::where( 'tenant_id', $user->tenant_id )
+                    ->where( 'user_id', $user->id )
+                    ->whereMonth( 'created_at', now()->month )
+                    ->whereYear( 'created_at', now()->year )
+                    ->count(),
+                'active_schedules'  => ReportSchedule::where( 'tenant_id', $user->tenant_id )
+                    ->where( 'user_id', $user->id )
+                    ->active()
+                    ->count(),
+                'failed_executions' => ReportExecution::where( 'tenant_id', $user->tenant_id )
+                    ->where( 'user_id', $user->id )
+                    ->failed()
+                    ->recent( 7 )
+                    ->count()
+            ];
+
+            return response()->json( [
+                'success' => true,
+                'stats'   => $stats
+            ] );
+
+        } catch ( Exception $e ) {
+            return response()->json( [
+                'success' => false,
+                'error'   => $e->getMessage()
+            ], 500 );
+        }
+    }
+
+    /**
+     * Prepara dados para gráficos
+     */
+    private function prepareChartData( $executions ): array
+    {
+        $chartData = [
+            'execution_trend'     => [],
+            'status_distribution' => [],
+            'performance_metrics' => []
         ];
 
-        $scheduledReports = $this->reportService->getScheduledReports(
-            tenantId: $tenantId,
-            filters: $filters
-        );
+        // Tendência de execuções (últimos 7 dias)
+        $last7Days = collect();
+        for ( $i = 6; $i >= 0; $i-- ) {
+            $date  = now()->subDays( $i )->toDateString();
+            $count = $executions->where( 'created_at', 'like', $date . '%' )->count();
 
-        return $this->renderView('reports.scheduled', [
-            'scheduledReports' => $scheduledReports,
-            'filters' => $filters,
-            'tenantId' => $tenantId,
-            'reportTypes' => ['budget' => 'Orçamentos', 'financial' => 'Financeiro', 'customer' => 'Clientes', 'product' => 'Produtos'],
-            'frequencies' => ['daily' => 'Diário', 'weekly' => 'Semanal', 'monthly' => 'Mensal'],
-            'statuses' => ['active' => 'Ativo', 'inactive' => 'Inativo', 'paused' => 'Pausado']
-        ]);
+            $last7Days->push( [
+                'date'  => $date,
+                'count' => $count
+            ] );
+        }
+
+        $chartData[ 'execution_trend' ] = $last7Days;
+
+        // Distribuição por status
+        $statusCounts                     = $executions->groupBy( 'status' )->map->count();
+        $chartData[ 'status_distribution' ] = [
+            'completed' => $statusCounts->get( 'completed', 0 ),
+            'failed'    => $statusCounts->get( 'failed', 0 ),
+            'running'   => $statusCounts->get( 'running', 0 )
+        ];
+
+        return $chartData;
     }
+
+    /**
+     * Extrai colunas dos dados
+     */
+    private function extractColumns( $data ): array
+    {
+        if ( $data->isEmpty() ) {
+            return [];
+        }
+
+        $firstRow = $data->first();
+        return is_array( $firstRow ) ? array_keys( $firstRow ) : array_keys( (array) $firstRow );
+    }
+
 }
-

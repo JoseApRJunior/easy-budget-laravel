@@ -1,0 +1,11 @@
+RewriteEngine On
+RewriteBase /easybudget1/
+
+# Redirecionar para a pasta public se não estiver lá
+RewriteCond %{REQUEST_URI} !^/easybudget1/public_html/
+RewriteRule ^(.*)$ public_html/$1 [L]
+
+# Se o arquivo/diretório não existe, redirecionar para index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ public_html/index.php [L]

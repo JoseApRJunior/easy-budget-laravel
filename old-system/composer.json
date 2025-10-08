@@ -1,0 +1,51 @@
+{
+   "name": "junio/easy-budget",
+   "description": "Sistema web para gerenciamento de orçamentos simples",
+   "license": "proprietary",
+   "authors": [
+      {
+         "name": "JoseApRJunior",
+         "email": "juniorklan.ju@gmail.com"
+      }
+   ],
+   "require": {
+      "vlucas/phpdotenv": "^5.6",
+      "twig/twig": "^3.15",
+      "respect/validation": "^2.3",
+      "phpmailer/phpmailer": "^6.9",
+      "php-di/php-di": "^7.0",
+      "intervention/image": "^3.11",
+      "doctrine/dbal": "^4.2",
+      "mercadopago/dx-php": "^3.0",
+      "monolog/monolog": "^3.8",
+      "endroid/qr-code": "^6.0",
+      "guzzlehttp/guzzle": "^7.9",
+      "andreoneres/brasilapi-php": "^1.2",
+      "mpdf/mpdf": "^8.2",
+      "phpoffice/phpspreadsheet": "^4.2"
+   },
+   "autoload": {
+      "psr-4": {
+         "app\\": "app",
+         "core\\": "core",
+         "exceptions\\": "exceptions",
+         "http\\": "http"
+      },
+      "files": [
+         "app/helpers/env.php",
+         "app/helpers/functions.php",
+         "core/functions/helpers.php"
+      ]
+   },
+   "require-dev": {
+      "phpstan/phpstan": "^1.10"
+   },
+   "scripts": {
+      "analyse": "phpstan analyse"
+   },
+   "config": {
+      "platform": {
+         "php": "8.3"
+      }
+   }
+}

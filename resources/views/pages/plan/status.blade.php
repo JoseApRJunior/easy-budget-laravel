@@ -1,0 +1,187 @@
+@extends( 'layout' )
+
+@section( 'content' )
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card text-center shadow-sm">
+                    <div class="card-header ">
+                        <h4 class="mb-0">Status do Pagamento</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        @php
+                            $final_statuses   = [ 'approved', 'rejected', 'cancelled', 'refunded', 'charged_back', 'recovered' ];
+                            $pending_statuses = [ 'pending', 'in_process', 'authorized', 'in_mediation' ];
+                          @endphp
+
+                        {{-- --- Bloco para Status Finais --- --}}
+                        @if ( in_array( $payment->status, $final_statuses ) )
+                            <div class="mt-4">
+                                @if ( $payment->status == 'approved' || $payment->status == 'recovered' )
+                                    <div class="alert alert-success" role="alert">
+                                        <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Pagamento Aprovado!
+                                        </h4>
+                                        <p>Sua assinatura para o plano <strong>{{ $subscription->name }}</strong> foi ativada com
+                                            sucesso.</p>
+                                        <hr>
+                                        <a href="/provider" class="btn btn-success">Ir para o Painel</a>
+                                    </div>
+                                @else
+                                    <div class="alert alert-danger" role="alert">
+                                        <h4 class="alert-heading"><i class="bi bi-x-octagon-fill me-2"></i>Pagamento não Concluído
+                                        </h4>
+                                        <p>O status do seu pagamento é <strong>{{ ucfirst( $payment->status ) }}</strong>. Parece que
+                                            houve um
+                                            problema ou a
+                                            transação foi cancelada.</p>
+                                        <hr>
+
+                                        <p class="mb-2">Você pode tentar pagar novamente ou escolher outro plano.</p>
+                                        <form action="/plans/pay" method="post" class="d-grid mb-2">
+                                            @csrf
+                                            <input type="hidden" id="planSlug" name="planSlug" value="{{ $subscription->slug }}"
+                                                required>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-credit-card me-2"></i>
+                                                Tentar Pagar Novamente
+                                            </button>
+                                        </form>
+                                        <a href="/plans" class="btn btn-outline-secondary d-grid">Escolher Outro Plano</a>
+                                    </div>
+                                @endif
+                            </div>
+                            {{-- --- Bloco para Status Pendentes --- --}}
+                        @elseif ( in_array( $payment->status, $pending_statuses ) )
+                                        <p class="lead">Sua assinatura para o plano <strong>{{ $subscription->name }}</strong> no valor de
+                                            <strong>R$ {{
+                            number_format( $subscription->transaction_amount, 2, ',', '.' ) }}</strong> está aguardando
+                                            confirmação.</p>
+                                        {{-- --- Caso 1: PIX --- --}}
+                                        @if ( $payment->payment_method_id == 'pix' )
+                                                <div class="mt-4">
+                                                    <h5>Pague com PIX para ativar seu plano</h5>
+                                                    <p>Escaneie o QR Code abaixo com o app do seu banco:</p>
+                                                    <img src="data:image/png;base64,{{ $payment->point_of_interaction->transaction_data->qr_code_base64 }}"
+                                                        alt="PIX QR Code" class="img-fluid mb-3" style="max-width: 250px;">
+                                                    <p class="text-muted small mt-2">Este código expira em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y H:i" )
+                                            }}</strong></p>
+                                                    <p>Ou use o código "Copia e Cola":</p>
+                                                    <div class="input-group mb-3">
+                                                        <input type="text" id="pixCode" class="form-control"
+                                                            value="{{ $payment->point_of_interaction->transaction_data->qr_code }}" readonly>
+                                                        <button class="btn btn-outline-secondary" type="button"
+                                                            onclick="copyToClipboard('pixCode', this)"><i class="bi bi-clipboard"></i>
+                                                            Copiar</button>
+                                                    </div>
+                                                </div>
+                                                {{-- --- Caso 2: Boleto --- --}}
+                                        @elseif ( $payment->payment_method_id == 'bolbradesco' || $payment->payment_method_id == 'boleto' )
+                                                <div class="mt-4">
+                                                    <h5>Finalize seu pagamento</h5>
+                                                    <p>Clique no botão abaixo para visualizar e pagar o boleto.</p>
+                                                    <a href="{{ $payment->transaction_details->external_resource_url }}" target="_blank"
+                                                        class="btn btn-primary btn-lg"><i class="bi bi-upc-scan"></i> Visualizar Boleto</a>
+                                                    <p class="mt-3">Ou copie a linha digitável abaixo:</p>
+                                                    <div class="input-group mb-3">
+                                                        <input type="text" id="boletoCode" class="form-control"
+                                                            value="{{ $payment->transaction_details->digitable_line }}" readonly>
+                                                        <button class="btn btn-outline-secondary" type="button"
+                                                            onclick="copyToClipboard('boletoCode', this)"><i class="bi bi-clipboard"></i>
+                                                            Copiar</button>
+                                                    </div>
+                                                    <p class="text-muted small mt-2">O boleto vence em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y" )
+                                            }}</strong>
+                                                    </p>
+                                                </div>
+                                                {{-- --- Caso 3: Cartão de Crédito em Análise --- --}}
+                                        @elseif ( $payment->status == 'in_process' )
+                                            <div class="mt-4">
+                                                <div class="spinner-border text-primary mb-3" role="status"><span
+                                                        class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <h5>Pagamento em Análise</h5>
+                                                <p class="text-muted">A operadora do seu cartão está processando o pagamento. Isso pode levar
+                                                    alguns
+                                                    minutos. Você
+                                                    será notificado por e-mail assim que o status for atualizado.</p>
+                                            </div>
+                                            {{-- --- Outros casos pendentes --- --}}
+                                        @else
+                                            <div class="mt-4">
+                                                <p class="text-muted">Aguardando a confirmação do pagamento. Você será notificado assim que o
+                                                    status for
+                                                    atualizado.
+                                                </p>
+                                            </div>
+                                        @endif
+                                        <hr class="my-4">
+                                        <p class="text-muted small">Se você cometeu um erro ou deseja usar outro método de pagamento, pode
+                                            cancelar
+                                            esta
+                                            tentativa.</p>
+                                        <form action="/plans/cancel-pending" method="post" class="d-grid">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-circle me-2"></i>
+                                                Cancelar e Escolher
+                                                Outro
+                                                Plano</button>
+                                        </form>
+                                        {{-- --- Fallback para status não iniciado --- --}}
+                        @elseif ( $payment->status == 'not_started' )
+                            <div class="alert alert-warning" role="alert">
+                                <h4 class="alert-heading"><i class="bi bi-x-exclamation-circle-fill me-2"></i>Pagamento não
+                                    Iniciado</h4>
+                                <p class="mb-2">Você pode iniciar o pagamento clicando no botão abaixo ou escolher outro plano.
+                                </p>
+                                <form action="/plans/pay" method="post" class="d-grid mb-2">
+                                    @csrf
+                                    <input type="hidden" id="planSlug" name="planSlug" value="{{ $subscription->slug }}"
+                                        required>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-credit-card me-2"></i>
+                                        Iniciar Pagamento
+                                    </button>
+                                </form>
+                                <a href="/plans" class="btn btn-outline-secondary d-grid">Escolher Outro Plano</a>
+                            </div>
+                        @else
+                            <div class="alert alert-info mt-4">
+                                <h4 class="alert-heading">Status Desconhecido</h4>
+                                <p>O status atual do seu pagamento é <strong>{{ ucfirst( $payment->status ) }}</strong>. Se
+                                    precisar de ajuda,
+                                    por
+                                    favor, entre em contato com nosso suporte.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section( 'scripts' )
+    <script>
+        function copyToClipboard( inputId, buttonElement ) {
+            const inputElement = document.getElementById( inputId );
+            if ( !inputElement ) return;
+
+            inputElement.select();
+            inputElement.setSelectionRange( 0, 99999 ); // For mobile devices
+
+            try {
+                navigator.clipboard.writeText( inputElement.value ).then( function () {
+                    const originalHtml = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<i class="bi bi-check-lg"></i> Copiado!';
+                    setTimeout( () => {
+                        buttonElement.innerHTML = originalHtml;
+                    }, 2000 );
+                }, function ( err ) {
+                    alert( 'Não foi possível copiar o código. Por favor, copie manualmente.' );
+                } );
+            } catch ( err ) {
+                alert( 'Não foi possível copiar o código. Por favor, copie manualmente.' );
+            }
+        }
+    </script>
+@endsection

@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\RepositoryInterface;
 use App\Models\Category;
-use Illuminate\Database\Eloquent\Model;
 
-class CategoryRepository extends AbstractRepository implements RepositoryInterface
+class CategoryRepository extends AbstractRepository
 {
     protected string $modelClass = Category::class;
 

@@ -1,58 +1,65 @@
-<li class="nav-item dropdown">
-    @auth
-        <a class="nav-link dropdown-toggle d-flex align-items-center px-3 rounded-pill mx-1 nav-link-hover user-menu-toggle"
-            id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <div class="user-avatar me-2">
-                <i class="bi bi-person-circle fs-5"></i>
-            </div>
-            <span
-                class="d-none d-lg-inline">{{ auth()->user()->email ? ucfirst( explode( '@', auth()->user()->email )[ 0 ] ) : 'Usuário' }}</span>
+{{-- partials/shared/user-menu.blade.php --}}
+{{-- Menu do usuário autenticado --}}
+@if( session()->has( 'auth' ) )
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center" id="userDropdown" role="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            @php
+                $email    = session( 'auth.email' );
+                $username = explode( '@', $email )[ 0 ];
+            @endphp
+            <span>{{ ucwords( $username ) }}</span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2" aria-labelledby="userDropdown">
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
             <li>
-                <h6 class="dropdown-header text-primary"><i class="bi bi-person me-2"></i>Minha Conta</h6>
-            </li>
-            <li>
-                <a class="dropdown-item py-2" href="{{ url( '/about' ) }}">
-                    <i class="bi bi-info-circle me-2 text-info"></i>Sobre
+                <a class="dropdown-item" href="/about">
+                    <i class="bi bi-info-circle me-1"></i>Sobre
                 </a>
             </li>
             <li>
-                <a class="dropdown-item py-2" href="{{ url( '/plans' ) }}">
-                    <i class="bi bi-clipboard-check me-2 text-success"></i>Planos
+                <a class="dropdown-item" href="/plans">
+                    <i class="bi bi-clipboard-check me-2"></i>Planos
                 </a>
             </li>
             <li>
-                <a class="dropdown-item py-2" href="{{ url( '/provider/integrations/mercadopago' ) }}">
-                    <i class="bi bi-credit-card-2-front-fill me-2 text-primary"></i>Mercado Pago
+                <a class="dropdown-item" href="/provider/integrations/mercadopago">
+                    <i class="bi bi-credit-card-2-front-fill me-2"></i>Integração Mercado Pago
                 </a>
             </li>
             <li>
-                <a class="dropdown-item py-2" href="{{ url( '/settings' ) }}">
-                    <i class="bi bi-gear me-2 text-secondary"></i>Configurações
+                <a class="dropdown-item" href="/settings">
+                    <i class="bi bi-gear me-2"></i>Configurações
                 </a>
             </li>
             <li>
-                <a class="dropdown-item py-2" href="{{ url( '/support' ) }}">
-                    <i class="bi bi-headset me-2 text-warning"></i>Suporte
+                <a class="dropdown-item" href="/support">
+                    <i class="bi bi-headset me-1"></i>Suporte
                 </a>
             </li>
             <li>
-                <hr class="dropdown-divider my-2">
+                <hr class="dropdown-divider">
             </li>
             <li>
-                <form id="logoutForm" action="{{ url( '/logout' ) }}" method="post">
+                <form id="logoutForm" action="/logout" method="post">
                     @csrf
-                    <input type="hidden" name="__method" value="DELETE">
-                    <button class="dropdown-item text-danger py-2" type="submit">
+                    @method( 'POST' )
+
+                    <button class="dropdown-item text-danger" type="submit">
                         <i class="bi bi-box-arrow-right me-2"></i>Sair
                     </button>
                 </form>
             </li>
         </ul>
-    @else
-        <a class="nav-link btn btn-primary btn-sm px-4 rounded-pill mx-1 login-btn" href="{{ url( '/login' ) }}">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+    </li>
+@endif
+
+{{-- Botão de login - fora do dropdown --}}
+@if( !session()->has( 'auth' ) )
+    <li class="nav-item">
+        <a class="nav-link btn btn-primary d-flex align-items-center" href="/login">
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            <span>Entrar</span>
         </a>
-    @endauth
+    </li>
+@endif
 </li>

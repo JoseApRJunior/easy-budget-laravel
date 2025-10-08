@@ -1,36 +1,48 @@
+{{-- layout.blade.php --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="pt-BR" class="h-100">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+@include( 'partials.shared.head' )
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+<body class="d-flex flex-column h-100">
+    @include( 'partials.shared.header' )
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+    <main class="flex-shrink-0">
+        @include( 'partials.components.alerts' )
+        @yield( 'content' )
+    </main>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+    @include( 'partials.shared.footer' )
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
-        </div>
-    </body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset( 'assets/js/modules/utils.js' ) }}" type="module"></script>
+    <script src="{{ asset( 'assets/js/main.js' ) }}" type="module"></script>
+    <script src="{{ asset( 'assets/js/components/alerts.js' ) }}"></script>
+
+    @stack( 'scripts' )
+
+    <script>
+        // Configuração global para AJAX
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Configura o token CSRF para todas as requisições AJAX
+            const csrfToken = document.querySelector( 'meta[name="csrf-token"]' ).content;
+
+            // Adiciona o token em todas as requisições fetch
+            const originalFetch = window.fetch;
+            window.fetch = function () {
+                let [resource, config] = arguments;
+                if ( config === undefined ) {
+                    config = {};
+                }
+                if ( config.headers === undefined ) {
+                    config.headers = {};
+                }
+                config.headers['X-CSRF-TOKEN'] = csrfToken;
+                return originalFetch( resource, config );
+            };
+        } );
+    </script>
+</body>
+
 </html>

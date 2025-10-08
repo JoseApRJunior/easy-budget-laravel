@@ -11,17 +11,4 @@ document.addEventListener("DOMContentLoaded", function () {
       themeButton.removeAttribute("onclick");
       themeButton.addEventListener("click", toggleTheme);
    }
-
-   // Submenu dropdown
-   document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function(element) {
-      element.addEventListener('click', function(e) {
-         e.preventDefault();
-         e.stopPropagation();
-         
-         const submenu = this.nextElementSibling;
-         if (submenu) {
-            submenu.classList.toggle('show');
-         }
-      });
-   });
 });

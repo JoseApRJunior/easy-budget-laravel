@@ -1,43 +1,44 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pdf extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory;
 
     /**
-     * Boot the model.
+     * The table associated with the model.
+     *
+     * @var string
      */
-    protected static function boot()
-    {
-        parent::boot();
-        static::bootTenantScoped();
-    }
+    protected $table = 'pdfs';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'tenant_id',
         'path',
         'type',
         'data',
+        'metadata',
         'generated_at',
-        'budget_id',
-        'customer_id',
-        'invoice_id',
-        'created_at',
-        'updated_at'
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'data'         => 'array',
+        'metadata'     => 'array',
         'generated_at' => 'datetime',
         'created_at'   => 'immutable_datetime',
-        'updated_at'   => 'immutable_datetime'
+        'updated_at'   => 'datetime',
     ];
 }
