@@ -1,11 +1,6 @@
 <?php
 
-use app\controllers\ActivityController;
-use app\controllers\admin\AlertController;
-use app\controllers\admin\CategoryController;
-use app\controllers\admin\LogController;
-use app\controllers\admin\MonitoringController;
-use app\controllers\admin\RoleController;
+use App\Http\Controllers\TenantController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
@@ -194,59 +189,7 @@ Route::middleware( [ 'auth', 'verified' ] )->group( function () {
             Route::delete( '/{user}', [ UserController::class, 'destroy' ] )->name( 'destroy' );
         } );
 
-        // Categories management
-        Route::prefix( 'categories' )->name( 'categories.' )->group( function () {
-            Route::get( '/', [ CategoryController::class, 'index' ] )->name( 'index' );
-            Route::get( '/create', [ CategoryController::class, 'create' ] )->name( 'create' );
-            Route::post( '/', [ CategoryController::class, 'store' ] )->name( 'store' );
-            Route::get( '/{category}', [ CategoryController::class, 'show' ] )->name( 'show' );
-            Route::get( '/{category}/edit', [ CategoryController::class, 'edit' ] )->name( 'edit' );
-            Route::post( '/{category}', [ CategoryController::class, 'update' ] )->name( 'update' );
-            Route::delete( '/{category}', [ CategoryController::class, 'destroy' ] )->name( 'destroy' );
-        } );
-
-        // Logs and activities
-        Route::prefix( 'activities' )->name( 'activities.' )->group( function () {
-            Route::get( '/', [ ActivityController::class, 'index' ] )->name( 'index' );
-            Route::get( '/{activity}', [ ActivityController::class, 'show' ] )->name( 'show' );
-        } );
-
-        // Monitoring
-        Route::prefix( 'monitoring' )->name( 'monitoring.' )->group( function () {
-            Route::get( '/', [ MonitoringController::class, 'index' ] )->name( 'index' );
-            Route::get( '/metrics', [ MonitoringController::class, 'metrics' ] )->name( 'metrics' );
-            Route::get( '/api/metrics', [ MonitoringController::class, 'apiMetrics' ] )->name( 'api.metrics' );
-            Route::get( '/api/reports', [ MonitoringController::class, 'apiReports' ] )->name( 'api.reports' );
-            Route::get( '/realtime', [ MonitoringController::class, 'realTimeMetrics' ] )->name( 'realtime' );
-            Route::post( '/record', [ MonitoringController::class, 'recordMetrics' ] )->name( 'record' );
-            Route::post( '/cleanup', [ MonitoringController::class, 'cleanup' ] )->name( 'cleanup' );
-            Route::get( '/middleware/{middleware}', [ MonitoringController::class, 'middleware' ] )->name( 'middleware' );
-        } );
-
-        // Alerts
-        Route::prefix( 'alerts' )->name( 'alerts.' )->group( function () {
-            Route::get( '/', [ AlertController::class, 'index' ] )->name( 'index' );
-            Route::get( '/api', [ AlertController::class, 'getAlertsApi' ] )->name( 'api' );
-            Route::post( '/{alert}/resolve', [ AlertController::class, 'resolveAlert' ] )->name( 'resolve' );
-            Route::post( '/check-now', [ AlertController::class, 'checkNow' ] )->name( 'check-now' );
-            Route::get( '/settings', [ AlertController::class, 'settings' ] )->name( 'settings' );
-            Route::post( '/settings', [ AlertController::class, 'updateSettings' ] )->name( 'settings.update' );
-            Route::get( '/history', [ AlertController::class, 'history' ] )->name( 'history' );
-        } );
-
-        // Backup management
-        Route::prefix( 'backups' )->name( 'backups.' )->group( function () {
-            Route::get( '/', [ BackupController::class, 'index' ] )->name( 'index' );
-            Route::post( '/create', [ BackupController::class, 'create' ] )->name( 'create' );
-            Route::post( '/restore', [ BackupController::class, 'restore' ] )->name( 'restore' );
-            Route::delete( '/', [ BackupController::class, 'delete' ] )->name( 'delete' );
-            Route::post( '/cleanup', [ BackupController::class, 'cleanup' ] )->name( 'cleanup' );
-        } );
-
         // Additional admin routes
-        Route::get( '/logs', [ LogController::class, 'index' ] )->name( 'logs' );
-        Route::get( '/roles', [ RoleController::class, 'index' ] )->name( 'roles' );
-        Route::get( '/tenants', [ TenantController::class, 'index' ] )->name( 'tenants' );
         Route::get( '/settings', [ SettingsController::class, 'admin' ] )->name( 'settings' );
     } );
 } );
