@@ -8,7 +8,7 @@
 -  **Engine:** InnoDB
 -  **Charset:** utf8mb4
 -  **Collation:** utf8mb4_unicode_ci
--  **Tabelas:** 35+ tabelas principais
+-  **Tabelas:** 40+ tabelas principais (contando tabelas de sistema)
 -  **Multi-tenant:** Isolamento completo por empresa
 -  **Arquitetura:** Sistema complexo com integração Mercado Pago
 -  **Status:** Schema inicial criado via migration em Laravel 12 (migrado de sistema legado Twig + DoctrineDBAL)
@@ -798,9 +798,7 @@ CREATE TABLE supports (
 );
 ```
 
-�
-
-#### **� Tabelas de Status**
+#### **📊 Tabelas de Status**
 
 ##### **budget_statuses**
 
@@ -853,102 +851,107 @@ CREATE TABLE invoice_statuses (
 );
 ```
 
-````
+#### **⚙️ Tabelas de Configurações**
 
-### **�🔐 Tabelas de Sistema**
-
-#### **🔑 permissions**
+##### **user_settings**
 
 ```sql
-CREATE TABLE permissions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
-);
-````
-
-#### **👤 roles**
-
-```sql
-CREATE TABLE roles (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT,
-    permissions JSON,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
-);
-```
-
-#### **📋 audit_logs**
-
-```sql
-CREATE TABLE audit_logs (
+CREATE TABLE user_settings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED,
     user_id BIGINT UNSIGNED,
-    action VARCHAR(100) NOT NULL,
-    model_type VARCHAR(255),
-    model_id VARCHAR(100),
-    old_values JSON,
-    new_values JSON,
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    severity ENUM('low', 'info', 'warning', 'high', 'critical') DEFAULT 'info',
-    category ENUM('authentication', 'data_modification', 'security', 'system') DEFAULT 'data_modification',
+    avatar VARCHAR(255) NULL,
+    full_name VARCHAR(255) NULL,
+    bio TEXT NULL,
+    phone VARCHAR(20) NULL,
+    birth_date DATE NULL,
+    social_facebook VARCHAR(255) NULL,
+    social_twitter VARCHAR(255) NULL,
+    social_linkedin VARCHAR(255) NULL,
+    social_instagram VARCHAR(255) NULL,
+    theme VARCHAR(20) DEFAULT 'auto',
+    primary_color VARCHAR(7) DEFAULT '#3B82F6',
+    layout_density VARCHAR(20) DEFAULT 'normal',
+    sidebar_position VARCHAR(10) DEFAULT 'left',
+    animations_enabled BOOLEAN DEFAULT TRUE,
+    sound_enabled BOOLEAN DEFAULT TRUE,
+    email_notifications BOOLEAN DEFAULT TRUE,
+    transaction_notifications BOOLEAN DEFAULT TRUE,
+    weekly_reports BOOLEAN DEFAULT FALSE,
+    security_alerts BOOLEAN DEFAULT TRUE,
+    newsletter_subscription BOOLEAN DEFAULT FALSE,
+    push_notifications BOOLEAN DEFAULT FALSE,
+    custom_preferences JSON NULL,
     created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_user_settings_tenant_user (tenant_id, user_id)
 );
 ```
 
-#### **💾 cache**
+##### **system_settings**
 
 ```sql
-CREATE TABLE cache (
-    key VARCHAR(255) PRIMARY KEY,
-    value MEDIUMTEXT NOT NULL,
-    expiration INT NOT NULL
-);
-```
-
-#### **📋 jobs**
-
-```sql
-CREATE TABLE jobs (
+CREATE TABLE system_settings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    queue VARCHAR(255) NOT NULL,
-    payload LONGTEXT NOT NULL,
-    attempts TINYINT UNSIGNED NOT NULL,
-    reserved_at INT UNSIGNED,
-    available_at INT UNSIGNED NOT NULL,
-    created_at INT UNSIGNED NOT NULL
+    tenant_id BIGINT UNSIGNED,
+    company_name VARCHAR(255) NULL,
+    contact_email VARCHAR(255) NULL,
+    phone VARCHAR(20) NULL,
+    website VARCHAR(255) NULL,
+    logo VARCHAR(255) NULL,
+    currency VARCHAR(3) DEFAULT 'BRL',
+    timezone VARCHAR(50) DEFAULT 'America/Sao_Paulo',
+    language VARCHAR(10) DEFAULT 'pt-BR',
+    address_street VARCHAR(255) NULL,
+    address_number VARCHAR(20) NULL,
+    address_complement VARCHAR(100) NULL,
+    address_neighborhood VARCHAR(100) NULL,
+    address_city VARCHAR(100) NULL,
+    address_state VARCHAR(50) NULL,
+    address_zip_code VARCHAR(10) NULL,
+    address_country VARCHAR(50) NULL,
+    maintenance_mode BOOLEAN DEFAULT FALSE,
+    maintenance_message TEXT NULL,
+    registration_enabled BOOLEAN DEFAULT TRUE,
+    email_verification_required BOOLEAN DEFAULT TRUE,
+    session_lifetime INT DEFAULT 120,
+    max_login_attempts INT DEFAULT 5,
+    lockout_duration INT DEFAULT 15,
+    allowed_file_types JSON NULL,
+    max_file_size INT DEFAULT 2048,
+    system_preferences JSON NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_system_settings_tenant (tenant_id)
 );
 ```
 
-#### **💾 cache**
+#### **💾 Tabelas de Cache e Sessões**
+
+##### **cache**
 
 ```sql
 CREATE TABLE cache (
-    key VARCHAR(255) PRIMARY KEY,
-    value MEDIUMTEXT NOT NULL,
+    `key` VARCHAR(255) PRIMARY KEY,
+    `value` MEDIUMTEXT NOT NULL,
     expiration INT NOT NULL
 );
 ```
 
-#### **🔒 cache_locks**
+##### **cache_locks**
 
 ```sql
 CREATE TABLE cache_locks (
-    key VARCHAR(255) PRIMARY KEY,
+    `key` VARCHAR(255) PRIMARY KEY,
     owner VARCHAR(255) NOT NULL,
     expiration INT NOT NULL
 );
 ```
 
-#### **🍪 sessions**
+##### **sessions**
 
 ```sql
 CREATE TABLE sessions (
@@ -958,7 +961,9 @@ CREATE TABLE sessions (
     user_agent TEXT NULL,
     payload LONGTEXT NOT NULL,
     last_activity INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_sessions_user_id (user_id),
+    INDEX idx_sessions_last_activity (last_activity)
 );
 ```
 
@@ -1054,71 +1059,6 @@ invoices (1) ──── (N) payments
 -  Connection pool monitoring
 -  Backup verification
 
-### **🔗 Relacionamentos Chave**
-
-#### **Multi-tenant Isolation**
-
--  Todas as tabelas principais têm `tenant_id`
--  Foreign keys com CASCADE delete para limpeza automática
--  Global scopes aplicados automaticamente
-
-#### **Business Logic Relationships**
-
-```
-tenants (1) ──── (N) users
-tenants (1) ──── (N) customers
-tenants (1) ──── (N) products
-customers (1) ──── (N) budgets
-budgets (1) ──── (N) budget_items
-products (1) ──── (N) budget_items
-budgets (1) ──── (0,1) invoices
-invoices (1) ──── (N) payments
-```
-
-### **📈 Estratégias de Otimização**
-
-#### **Partitioning Strategy**
-
--  **Temporal partitioning** para tabelas de auditoria (por mês/ano)
--  **Tenant-based partitioning** para grandes volumes de dados
--  **Archive strategy** para dados antigos
-
-#### **Query Optimization**
-
--  **Eager loading** para relacionamentos N+1
--  **Select specific columns** para reduzir transferência de dados
--  **Subqueries otimizadas** com índices adequados
--  **Batch operations** para múltiplas atualizações
-
-### **🔒 Segurança e Integridade**
-
-#### **Referential Integrity**
-
--  Foreign key constraints em todos os relacionamentos
--  CASCADE delete para dependências obrigatórias
--  SET NULL para relacionamentos opcionais
-
-#### **Data Validation**
-
--  CHECK constraints para enums e validações
--  NOT NULL constraints para campos obrigatórios
--  UNIQUE constraints para campos únicos
--  JSON validation para campos estruturados
-
-### **📊 Monitoramento e Manutenção**
-
-#### **Performance Monitoring**
-
--  Query execution time tracking
--  Index usage statistics
--  Table size monitoring
--  Slow query logging
-
-#### **Maintenance Tasks**
-
--  Regular index optimization (`OPTIMIZE TABLE`)
--  Deadlock monitoring e resolução
--  Connection pool monitoring
--  Backup verification
-
 Este documento descreve o schema completo e otimizado do banco de dados Easy Budget Laravel, incluindo todas as tabelas, relacionamentos, índices e estratégias de performance implementadas.
+
+**Última atualização:** 08/10/2025 - Revisão completa baseada na migration inicial, adicionadas tabelas faltantes (user_settings, system_settings, cache, cache_locks, sessions) e atualizado contador para 40+ tabelas.

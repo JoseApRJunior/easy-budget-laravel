@@ -100,19 +100,24 @@ php artisan serve
    "require": {
       "php": "^8.3",
       "laravel/framework": "^12.0",
-      "laravel/tinker": "^2.9",
-      "spatie/laravel-permission": "^6.0",
-      "maatwebsite/excel": "^3.1",
-      "barryvdh/laravel-dompdf": "^3.0",
-      "predis/predis": "^2.0"
+      "laravel/sanctum": "^4.2",
+      "laravel/tinker": "^2.10.1",
+      "mercadopago/dx-php": "3",
+      "mpdf/mpdf": "8.2",
+      "phpoffice/phpspreadsheet": "4",
+      "stancl/tenancy": "^3.7"
    },
    "require-dev": {
+      "barryvdh/laravel-debugbar": "^3.16",
       "fakerphp/faker": "^1.23",
-      "laravel/pint": "^1.13",
-      "laravel/sail": "^1.26",
+      "laravel/breeze": "^2.3",
+      "laravel/pail": "^1.2.2",
+      "laravel/pint": "^1.24",
+      "laravel/sail": "^1.41",
       "mockery/mockery": "^1.6",
-      "nunomaduro/collision": "^8.0",
-      "phpunit/phpunit": "^11.0"
+      "nunomaduro/collision": "^8.6",
+      "phpstan/phpstan": "^2.1",
+      "phpunit/phpunit": "^11.5.3"
    }
 }
 ```

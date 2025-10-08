@@ -1,0 +1,27 @@
+@startuml Fazer Login
+title Fazer Login
+left to right direction
+actor Prestador
+actor Sistema
+
+rectangle "Processo de Login" {
+    Prestador --> (Acessar Página Principal)
+    Prestador --> (Clicar em Entrar)
+    Sistema --> (Redirecionar para Página de Login)
+    Prestador --> (Digitar Email)
+    Sistema --> (Validar Email)
+    Prestador --> (Digitar Senha)
+    Sistema --> (Validar Senha)
+    Sistema --> (Autenticar Prestador)
+    Sistema --> (Direcionar à Página Inicial)
+}
+
+rectangle "Fluxos Alternativos" {
+    Prestador --> (Esqueci minha senha) : Clicar em Esqueci minha senha
+    Prestador --> (Fluxo de Recuperação de Senha) : Redirecionar para fluxo de recuperação de senha
+
+    Sistema --> Prestador : Erro na validação dos dados
+    Sistema --> Prestador : E-mail não encontrado
+    Sistema --> Prestador : Senha incorreta
+}
+@enduml

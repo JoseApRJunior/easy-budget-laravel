@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OperationStatus;
-use App\Interfaces\ActivatableInterface;
-use App\Interfaces\BudgetQueryInterface;
-use App\Interfaces\PaginatableInterface;
-use App\Interfaces\SlugableInterface;
+use App\Contracts\Interfaces\ActivatableInterface;
+use App\Contracts\Interfaces\PaginatableInterface;
+use App\Contracts\Interfaces\SlugableInterface;
 use App\Models\Budget;
 use App\Repositories\BudgetRepository;
 use App\Repositories\CategoryRepository;
@@ -463,7 +462,7 @@ class BudgetService extends BaseTenantService
                 }
 
                 // Gerar código único do orçamento
-                $budgetCode      = $this->generateBudgetCode( $tenantId );
+                $budgetCode        = $this->generateBudgetCode( $tenantId );
                 $data[ 'code' ]    = $budgetCode;
                 $data[ 'user_id' ] = $userId;
 

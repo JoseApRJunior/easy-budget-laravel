@@ -13,8 +13,11 @@ Este documento registra tarefas repetitivas e seus workflows para facilitar manu
 
 -  `app/Models/` - Novo modelo
 -  `database/migrations/` - Migration correspondente
--  `app/Http/Controllers/` - Controller se necessário
--  `resources/views/` - Views se necessário
+-  `app/Repositories/` - Repository para acesso a dados
+-  `app/Services/` - Service layer para lógica de negócio
+-  `app/Http/Controllers/` - Controller HTTP
+-  `app/Http/Requests/` - Form requests para validação
+-  `resources/views/` - Views Blade se necessário
 -  `routes/web.php` - Rotas se necessário
 
 **Passos:**
@@ -23,12 +26,14 @@ Este documento registra tarefas repetitivas e seus workflows para facilitar manu
 2. Definir relacionamentos no modelo (belongsTo, hasMany, etc.)
 3. Implementar trait TenantScoped se necessário
 4. Implementar trait Auditable se necessário
-5. Criar controller com `php artisan make:controller NomeModeloController --resource`
-6. Implementar regras de validação no Request correspondente
-7. Criar views Blade na estrutura padrão
-8. Adicionar rotas em `routes/web.php`
-9. Testar funcionalidades CRUD
-10.   Atualizar documentação se necessário
+5. Criar repository com `php artisan make:interface NomeModeloRepository` e implementação
+6. Criar service com `php artisan make:service NomeModeloService` para lógica de negócio
+7. Criar controller com `php artisan make:controller NomeModeloController --resource`
+8. Implementar regras de validação no Request correspondente
+9. Criar views Blade na estrutura padrão (se necessário para interface web)
+10.   Adicionar rotas em `routes/web.php`
+11.   Testar funcionalidades CRUD seguindo arquitetura completa
+12.   Atualizar documentação se necessário
 
 **Considerações importantes:**
 
@@ -37,6 +42,11 @@ Este documento registra tarefas repetitivas e seus workflows para facilitar manu
 -  Considerar índices de performance para queries frequentes
 -  Usar políticas (Policies) para autorização
 -  Implementar validação no lado servidor e cliente
+-  **Arquitetura completa:** Repository para acesso a dados, Service para lógica de negócio
+-  **Service Layer:** Centralizar regras de negócio e validações complexas
+-  **Repository Pattern:** Abstrair operações de banco e permitir testes com mocks
+-  **Dependency Injection:** Usar interfaces para permitir flexibilidade
+-  **Traits TenantScoped e Auditable:** Aplicar automaticamente quando necessário
 
 **Exemplo de implementação:**
 
@@ -57,6 +67,48 @@ class NovoModelo extends Model
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+}
+
+// app/Repositories/NovoModeloRepository.php
+interface NovoModeloRepository
+{
+    public function findByIdAndTenantId(int $id, int $tenantId): ?NovoModelo;
+    public function listByTenantId(int $tenantId, array $filters = []): Collection;
+    public function create(array $data): NovoModelo;
+    public function update(NovoModelo $model, array $data): bool;
+    public function delete(NovoModelo $model): bool;
+}
+
+// app/Services/NovoModeloService.php
+class NovoModeloService extends BaseTenantService
+{
+    private NovoModeloRepository $repository;
+
+    public function __construct(NovoModeloRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    protected function findEntityByIdAndTenantId(int $id, int $tenantId): ?Model
+    {
+        return $this->repository->findByIdAndTenantId($id, $tenantId);
+    }
+
+    protected function listEntitiesByTenantId(int $tenantId, array $filters = []): array
+    {
+        return $this->repository->listByTenantId($tenantId, $filters);
+    }
+
+    public function createByTenantId(array $data, int $tenantId): ServiceResult
+    {
+        $validation = $this->validateForTenant($data, $tenantId);
+        if (!$validation->isSuccess()) {
+            return $validation;
+        }
+
+        $entity = $this->repository->create($data);
+        return $this->success($entity, 'Criado com sucesso.');
     }
 }
 ```
@@ -290,4 +342,32 @@ class NovoModelo extends Model
 -  Documentar decisões arquiteturais importantes
 -  Manter linguagem técnica clara e objetiva
 
+### **🗄️ Atualizar Schema do Banco de Dados**
+
+**Última execução:** Durante análise completa da migration inicial
+**Arquivos modificados:**
+
+-  `.kilocode/rules/memory-bank/database.md` - Documentação do schema
+-  Especialmente seções de tabelas de configurações e cache
+
+**Passos:**
+
+1. Analisar migration completa `database/migrations/2025_09_27_132300_create_initial_schema.php`
+2. Comparar com documentação atual em `database.md`
+3. Identificar tabelas faltantes (user_settings, system_settings, cache, etc.)
+4. Adicionar documentação completa das tabelas ausentes
+5. Atualizar contador total de tabelas (35+ → 40+)
+6. Verificar índices e relacionamentos das novas tabelas
+7. Documentar propósito e uso de cada tabela adicionada
+
+**Considerações importantes:**
+
+-  Sempre contar todas as tabelas incluindo tabelas de sistema Laravel
+-  Documentar relacionamentos foreign key completos
+-  Incluir índices de performance quando aplicável
+-  Manter formato consistente com tabelas existentes
+-  Atualizar visão geral com números corretos
+
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
+
+**Última atualização:** 08/10/2025 - Melhorada tarefa "Adicionar Novo Modelo Eloquent" para incluir arquitetura completa Controller → Services → Repositories → Models e adicionada tarefa "Atualizar Schema do Banco de Dados".

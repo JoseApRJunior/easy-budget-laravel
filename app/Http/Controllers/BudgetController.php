@@ -99,7 +99,7 @@ class BudgetController extends Controller
             'approved' => Budget::where( 'tenant_id', $user->tenant_id )->approved()->count(),
         ];
 
-        return view( 'budgets.index', compact( 'budgets', 'stats', 'filters' ) );
+        return view( 'pages.budget.index', compact( 'budgets', 'stats', 'filters' ) );
     }
 
     /**
@@ -130,7 +130,7 @@ class BudgetController extends Controller
                 ->first();
         }
 
-        return view( 'budgets.create', compact(
+        return view( 'pages.budget.create', compact(
             'customers',
             'categories',
             'templates',
@@ -196,7 +196,7 @@ class BudgetController extends Controller
                 'Orçamento criado via interface web',
             );
 
-            return redirect()->route( 'budgets.show', $budget )
+            return redirect()->route( 'pages.budget.show', $budget )
                 ->with( 'success', 'Orçamento criado com sucesso!' );
 
         } catch ( \Exception $e ) {
@@ -232,7 +232,7 @@ class BudgetController extends Controller
             $this->pdfService->generatePdf( $budget );
         }
 
-        return view( 'budgets.show', compact( 'budget', 'totals' ) );
+        return view( 'pages.budget.show', compact( 'budget', 'totals' ) );
     }
 
     /**
@@ -257,7 +257,7 @@ class BudgetController extends Controller
             ->ordered()
             ->get();
 
-        return view( 'budgets.edit', compact( 'budget', 'customers', 'categories' ) );
+        return view( 'pages.budget.edit', compact( 'budget', 'customers', 'categories' ) );
     }
 
     /**
@@ -332,7 +332,7 @@ class BudgetController extends Controller
                 'Orçamento atualizado via interface web',
             );
 
-            return redirect()->route( 'budgets.show', $budget )
+            return redirect()->route( 'pages.budget.show', $budget )
                 ->with( 'success', 'Orçamento atualizado com sucesso!' );
 
         } catch ( \Exception $e ) {
