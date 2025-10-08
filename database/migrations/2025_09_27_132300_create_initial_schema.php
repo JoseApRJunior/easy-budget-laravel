@@ -521,6 +521,72 @@ return new class extends Migration
             $table->timestamps();
         } );
 
+        // Tabelas de configurações
+        Schema::create( 'user_settings', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
+            $table->string( 'avatar', 255 )->nullable();
+            $table->string( 'full_name', 255 )->nullable();
+            $table->text( 'bio' )->nullable();
+            $table->string( 'phone', 20 )->nullable();
+            $table->date( 'birth_date' )->nullable();
+            $table->string( 'social_facebook', 255 )->nullable();
+            $table->string( 'social_twitter', 255 )->nullable();
+            $table->string( 'social_linkedin', 255 )->nullable();
+            $table->string( 'social_instagram', 255 )->nullable();
+            $table->string( 'theme', 20 )->default( 'auto' );
+            $table->string( 'primary_color', 7 )->default( '#3B82F6' );
+            $table->string( 'layout_density', 20 )->default( 'normal' );
+            $table->string( 'sidebar_position', 10 )->default( 'left' );
+            $table->boolean( 'animations_enabled' )->default( true );
+            $table->boolean( 'sound_enabled' )->default( true );
+            $table->boolean( 'email_notifications' )->default( true );
+            $table->boolean( 'transaction_notifications' )->default( true );
+            $table->boolean( 'weekly_reports' )->default( false );
+            $table->boolean( 'security_alerts' )->default( true );
+            $table->boolean( 'newsletter_subscription' )->default( false );
+            $table->boolean( 'push_notifications' )->default( false );
+            $table->json( 'custom_preferences' )->nullable();
+            $table->timestamps();
+
+            $table->unique( [ 'tenant_id', 'user_id' ], 'uq_user_settings_tenant_user' );
+        } );
+
+        Schema::create( 'system_settings', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->string( 'company_name', 255 )->nullable();
+            $table->string( 'contact_email', 255 )->nullable();
+            $table->string( 'phone', 20 )->nullable();
+            $table->string( 'website', 255 )->nullable();
+            $table->string( 'logo', 255 )->nullable();
+            $table->string( 'currency', 3 )->default( 'BRL' );
+            $table->string( 'timezone', 50 )->default( 'America/Sao_Paulo' );
+            $table->string( 'language', 10 )->default( 'pt-BR' );
+            $table->string( 'address_street', 255 )->nullable();
+            $table->string( 'address_number', 20 )->nullable();
+            $table->string( 'address_complement', 100 )->nullable();
+            $table->string( 'address_neighborhood', 100 )->nullable();
+            $table->string( 'address_city', 100 )->nullable();
+            $table->string( 'address_state', 50 )->nullable();
+            $table->string( 'address_zip_code', 10 )->nullable();
+            $table->string( 'address_country', 50 )->nullable();
+            $table->boolean( 'maintenance_mode' )->default( false );
+            $table->text( 'maintenance_message' )->nullable();
+            $table->boolean( 'registration_enabled' )->default( true );
+            $table->boolean( 'email_verification_required' )->default( true );
+            $table->integer( 'session_lifetime' )->default( 120 );
+            $table->integer( 'max_login_attempts' )->default( 5 );
+            $table->integer( 'lockout_duration' )->default( 15 );
+            $table->json( 'allowed_file_types' )->nullable();
+            $table->integer( 'max_file_size' )->default( 2048 );
+            $table->json( 'system_preferences' )->nullable();
+            $table->timestamps();
+
+            $table->unique( [ 'tenant_id' ], 'uq_system_settings_tenant' );
+        } );
+
         // Tabelas de cache padrão do Laravel
         Schema::create( 'cache', function ( Blueprint $table ) {
             $table->string( 'key' )->primary();
@@ -622,6 +688,8 @@ return new class extends Migration
         Schema::dropIfExists( 'common_datas' );
         Schema::dropIfExists( 'contacts' );
         Schema::dropIfExists( 'addresses' );
+        Schema::dropIfExists( 'user_settings' );
+        Schema::dropIfExists( 'system_settings' );
         Schema::dropIfExists( 'user_roles' );
         Schema::dropIfExists( 'role_permissions' );
         Schema::dropIfExists( 'users' );

@@ -19,80 +19,179 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Criar tenant padrão se não existir
+        // Executar seeders existentes se necessário
+        $this->call( [
+            PlanSeeder::class,
+            UnitSeeder::class,
+            AreasOfActivitySeeder::class,
+            ProfessionSeeder::class,
+            CategorySeeder::class,
+            BudgetStatusSeeder::class,
+            ServiceStatusSeeder::class,
+            InvoiceStatusSeeder::class,
+            RoleSeeder::class,
+            PermissionSeeder::class,
+            RolePermissionSeeder::class,
+        ] );
+
+        // Criar primeiro provider com sua cadeia completa independente
+        $this->createProviderWithFullChain(
+            'Empresa Exemplo Ltda',
+            'provider@easybudget.com',
+            'João',
+            'Silva',
+            '12345678901',
+            '12345678000190',
+            'Av. Paulista',
+            '1000',
+            'Bela Vista',
+            'São Paulo',
+            'SP',
+            '01310-100',
+            'contato@empresa.com',
+            '(11) 99999-9999',
+            'comercial@empresa.com',
+            '(11) 8888-8888',
+            'https://empresa.com.br',
+            'Empresa especializada em serviços de tecnologia',
+        );
+
+        // Criar segundo provider com sua cadeia completa independente
+        $this->createProviderWithFullChain(
+            'Empresa Demo Ltda',
+            'provider2@easybudget.com',
+            'Maria',
+            'Santos',
+            '98765432109',
+            '98765432000110',
+            'Rua da Quitanda',
+            '50',
+            'Centro',
+            'Rio de Janeiro',
+            'RJ',
+            '20040-020',
+            'contato2@empresa.com',
+            '(21) 8888-8888',
+            'comercial2@empresa.com',
+            '(21) 7777-7777',
+            'https://empresa2.com.br',
+            'Empresa de demonstração para testes',
+        );
+    }
+
+    private function createProviderWithFullChain(
+        string $companyName,
+        string $userEmail,
+        string $firstName,
+        string $lastName,
+        string $cpf,
+        string $cnpj,
+        string $address,
+        string $addressNumber,
+        string $neighborhood,
+        string $city,
+        string $state,
+        string $cep,
+        string $contactEmail,
+        string $phone,
+        string $emailBusiness,
+        string $phoneBusiness,
+        string $website,
+        string $description,
+    ): void {
+        // 1. Criar tenant independente para este provider
         $tenant = Tenant::firstOrCreate(
-            [ 'name' => 'Test Tenant' ],
+            [ 'name' => $companyName . ' Tenant' ],
             [
-                'name'      => 'Test Tenant',
+                'name'      => $companyName . ' Tenant',
                 'is_active' => true,
             ],
         );
 
-        // Criar usuário admin para testes
+        // 2. Criar usuário exclusivo para este provider
         $user = User::firstOrCreate(
-            [ 'email' => 'provider@easybudget.com' ],
+            [ 'email' => $userEmail ],
             [
                 'tenant_id' => $tenant->id,
-                'email'     => 'provider@easybudget.com',
+                'email'     => $userEmail,
                 'password'  => Hash::make( 'Password1@' ),
                 'is_active' => true,
             ],
         );
 
-        // Criar dados complementares para o provider (endereço, contato, dados pessoais/empresariais)
-        $address = Address::firstOrCreate(
+        // 3. Criar endereço exclusivo para este provider
+        $addressModel = Address::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cep'       => '01310-100',
+                'cep'       => $cep,
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'address'        => 'Av. Paulista',
-                'address_number' => '1000',
-                'neighborhood'   => 'Bela Vista',
-                'city'           => 'São Paulo',
-                'state'          => 'SP',
-                'cep'            => '01310-100',
+                'address'        => $address,
+                'address_number' => $addressNumber,
+                'neighborhood'   => $neighborhood,
+                'city'           => $city,
+                'state'          => $state,
+                'cep'            => $cep,
             ],
         );
 
+        // 4. Criar contato exclusivo para este provider
         $contact = Contact::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'email'     => 'contato@empresa.com',
+                'email'     => $contactEmail,
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'email'          => 'contato@empresa.com',
-                'phone'          => '(11) 99999-9999',
-                'email_business' => 'comercial@empresa.com',
-                'phone_business' => '(11) 8888-8888',
-                'website'        => 'https://empresa.com.br',
+                'email'          => $contactEmail,
+                'phone'          => $phone,
+                'email_business' => $emailBusiness,
+                'phone_business' => $phoneBusiness,
+                'website'        => $website,
             ],
         );
 
+        // Criar área de atividade e profissão (tabelas globais)
+        $areaOfActivity = \App\Models\AreaOfActivity::firstOrCreate(
+            [ 'slug' => 'tecnologia' ],
+            [
+                'slug'      => 'tecnologia',
+                'name'      => 'Tecnologia da Informação',
+                'is_active' => true,
+            ],
+        );
+
+        $profession = \App\Models\Profession::firstOrCreate(
+            [ 'slug' => 'desenvolvedor' ],
+            [
+                'slug'      => 'desenvolvedor',
+                'name'      => 'Desenvolvedor de Software',
+                'is_active' => true,
+            ],
+        );
+
+        // 5. Criar dados pessoais/empresariais exclusivos para este provider
         $commonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cpf'       => '12345678901',
+                'cpf'       => $cpf,
             ],
             [
-                'tenant_id'    => $tenant->id,
-                'first_name'   => 'João',
-                'last_name'    => 'Silva',
-                'birth_date'   => '1985-05-15',
-                'cpf'          => '12345678901',
-                'cnpj'         => '12345678000190',
-                'company_name' => 'Empresa Exemplo Ltda',
-                'description'  => 'Empresa especializada em serviços de tecnologia',
+                'tenant_id'           => $tenant->id,
+                'first_name'          => $firstName,
+                'last_name'           => $lastName,
+                'birth_date'          => '1985-05-15',
+                'cpf'                 => $cpf,
+                'cnpj'                => $cnpj,
+                'company_name'        => $companyName,
+                'description'         => $description,
+                'area_of_activity_id' => $areaOfActivity->id,
+                'profession_id'       => $profession->id,
             ],
         );
 
-        // Criar provider associado ao usuário de teste com dados completos
-        // Agora o provider terá todos os campos opcionais preenchidos:
-        // - common_data_id: dados pessoais e empresariais
-        // - contact_id: informações de contato
-        // - address_id: endereço completo
+        // 6. Criar provider com todos os dados relacionados
         $provider = Provider::firstOrCreate(
             [
                 'user_id'   => $user->id,
@@ -103,12 +202,12 @@ class DatabaseSeeder extends Seeder
                 'tenant_id'      => $tenant->id,
                 'common_data_id' => $commonData->id,
                 'contact_id'     => $contact->id,
-                'address_id'     => $address->id,
+                'address_id'     => $addressModel->id,
                 'terms_accepted' => true,
             ],
         );
 
-        // Criar role provider se não existir
+        // 7. Associar role provider ao usuário
         $providerRole = Role::firstOrCreate(
             [ 'name' => 'Provider' ],
             [
@@ -117,7 +216,6 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        // Associar usuário à role provider no tenant
         UserRole::firstOrCreate(
             [
                 'user_id'   => $user->id,
@@ -131,8 +229,8 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        // Criar assinatura de plano para o provider de teste
-        $plan = Plan::first(); // Pega o primeiro plano disponível
+        // 8. Criar assinatura de plano para este provider
+        $plan = Plan::first();
         if ( $plan ) {
             PlanSubscription::firstOrCreate(
                 [
@@ -147,7 +245,7 @@ class DatabaseSeeder extends Seeder
                     'status'             => 'active',
                     'transaction_amount' => 29.90,
                     'start_date'         => now(),
-                    'end_date'           => date( 'Y-m-d H:i:s', strtotime( '+1 year' ) ), // ← 1 ano de teste
+                    'end_date'           => date( 'Y-m-d H:i:s', strtotime( '+1 year' ) ),
                     'payment_method'     => 'credit_card',
                     'payment_id'         => 'TEST_' . uniqid(),
                     'public_hash'        => 'TEST_HASH_' . uniqid(),
@@ -155,128 +253,175 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Exemplo: Criar provider adicional para demonstração (opcional)
-        $this->createAdditionalProvider( $tenant );
+        // 9. Criar customer de teste para este provider
+        $this->createCustomerForProvider( $tenant, $provider, $addressModel, $contact );
 
-        // Executar seeders existentes se necessário
-        $this->call( [
-            PlanSeeder::class,
-                // DefaultTenantSeeder::class,
-                // Catálogos globais
-            UnitSeeder::class,
-            AreasOfActivitySeeder::class,
-            ProfessionSeeder::class,
-            CategorySeeder::class,
-                // Statuses
-            BudgetStatusSeeder::class,
-            ServiceStatusSeeder::class,
-            InvoiceStatusSeeder::class,
-                // RBAC
-            RoleSeeder::class,
-            PermissionSeeder::class,
-            RolePermissionSeeder::class,
-        ] );
+        // 10. Criar configurações do sistema para este provider
+        $this->createSystemSettingsForProvider( $tenant, $provider, $commonData, $addressModel, $contact );
+
+        // 11. Criar configurações do usuário para este provider
+        $this->createUserSettingsForProvider( $tenant, $user );
     }
 
-    /**
-     * Criar provider adicional para demonstração
-     * Exemplo de como criar múltiplos providers com dados diferentes
-     */
-    private function createAdditionalProvider( Tenant $tenant ): void
+    private function createCustomerForProvider( Tenant $tenant, Provider $provider, Address $address, Contact $contact ): void
     {
-        // Criar segundo usuário para demonstração
-        $user2 = User::firstOrCreate(
-            [ 'email' => 'provider2@easybudget.com' ],
+        // Criar dados pessoais para o customer (CPF único por empresa)
+        $customerCpf        = '111222333' . $tenant->id . '4';
+        $customerCommonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'email'     => 'provider2@easybudget.com',
-                'password'  => Hash::make( 'Password1@' ),
-                'is_active' => true,
-            ],
-        );
-
-        // Criar dados complementares diferentes para o segundo provider
-        $address2 = Address::firstOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'cep'       => '20040-020',
-            ],
-            [
-                'tenant_id'      => $tenant->id,
-                'address'        => 'Rua da Quitanda',
-                'address_number' => '50',
-                'neighborhood'   => 'Centro',
-                'city'           => 'Rio de Janeiro',
-                'state'          => 'RJ',
-                'cep'            => '20040-020',
-            ],
-        );
-
-        $contact2 = Contact::firstOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'email'     => 'contato2@empresa.com',
-            ],
-            [
-                'tenant_id'      => $tenant->id,
-                'email'          => 'contato2@empresa.com',
-                'phone'          => '(21) 8888-8888',
-                'email_business' => 'comercial2@empresa.com',
-                'phone_business' => '(21) 7777-7777',
-                'website'        => 'https://empresa2.com.br',
-            ],
-        );
-
-        $commonData2 = CommonData::firstOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'cpf'       => '98765432109',
+                'cpf'       => $customerCpf,
             ],
             [
                 'tenant_id'    => $tenant->id,
-                'first_name'   => 'Maria',
-                'last_name'    => 'Santos',
-                'birth_date'   => '1990-08-20',
-                'cpf'          => '98765432109',
-                'cnpj'         => '98765432000110',
-                'company_name' => 'Empresa Demo Ltda',
-                'description'  => 'Empresa de demonstração para testes',
+                'first_name'   => 'Cliente',
+                'last_name'    => 'Teste',
+                'birth_date'   => '1990-03-10',
+                'cpf'          => $customerCpf,
+                'cnpj'         => null,
+                'company_name' => null,
+                'description'  => 'Cliente de teste para demonstração',
             ],
         );
 
-        // Criar segundo provider com dados diferentes
-        $provider2 = Provider::firstOrCreate(
+        // Criar contato específico para o customer (email único por empresa)
+        $customerEmail   = 'cliente' . $tenant->id . '@teste.com';
+        $customerContact = Contact::firstOrCreate(
             [
-                'user_id'   => $user2->id,
+                'tenant_id' => $tenant->id,
+                'email'     => $customerEmail,
+            ],
+            [
+                'tenant_id'      => $tenant->id,
+                'email'          => $customerEmail,
+                'phone'          => '(11) 7777-7777',
+                'email_business' => null,
+                'phone_business' => null,
+                'website'        => null,
+            ],
+        );
+
+        // Criar endereço específico para o customer
+        $customerAddress = Address::firstOrCreate(
+            [
+                'tenant_id' => $tenant->id,
+                'cep'       => '04567-890',
+            ],
+            [
+                'tenant_id'      => $tenant->id,
+                'address'        => 'Rua Augusta',
+                'address_number' => '500',
+                'neighborhood'   => 'Consolação',
+                'city'           => 'São Paulo',
+                'state'          => 'SP',
+                'cep'            => '04567-890',
+            ],
+        );
+
+        // Criar customer vinculado ao provider
+        $customer = \App\Models\Customer::firstOrCreate(
+            [
+                'tenant_id'      => $tenant->id,
+                'common_data_id' => $customerCommonData->id,
+            ],
+            [
+                'tenant_id'      => $tenant->id,
+                'common_data_id' => $customerCommonData->id,
+                'contact_id'     => $customerContact->id,
+                'address_id'     => $customerAddress->id,
+                'status'         => 'active',
+            ],
+        );
+    }
+
+    private function createSystemSettingsForProvider( Tenant $tenant, Provider $provider, CommonData $commonData, Address $address, Contact $contact ): void
+    {
+        \App\Models\SystemSettings::firstOrCreate(
+            [
                 'tenant_id' => $tenant->id,
             ],
             [
-                'user_id'        => $user2->id,
-                'tenant_id'      => $tenant->id,
-                'common_data_id' => $commonData2->id,
-                'contact_id'     => $contact2->id,
-                'address_id'     => $address2->id,
-                'terms_accepted' => true,
+                'tenant_id'                   => $tenant->id,
+                'company_name'                => $commonData->company_name,
+                'contact_email'               => $contact->email_business ?: $contact->email,
+                'phone'                       => $contact->phone_business ?: $contact->phone,
+                'website'                     => $contact->website,
+                'logo'                        => null,
+                'currency'                    => 'BRL',
+                'timezone'                    => 'America/Sao_Paulo',
+                'language'                    => 'pt-BR',
+                'address_street'              => $address->address,
+                'address_number'              => $address->address_number,
+                'address_neighborhood'        => $address->neighborhood,
+                'address_city'                => $address->city,
+                'address_state'               => $address->state,
+                'address_zip_code'            => $address->cep,
+                'address_country'             => 'Brasil',
+                'maintenance_mode'            => false,
+                'maintenance_message'         => null,
+                'registration_enabled'        => true,
+                'email_verification_required' => true,
+                'session_lifetime'            => 120,
+                'max_login_attempts'          => 5,
+                'lockout_duration'            => 15,
+                'allowed_file_types'          => json_encode( [
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/webp',
+                    'application/pdf',
+                    'text/plain',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                ] ),
+                'max_file_size'               => 2048,
+                'system_preferences'          => json_encode( [
+                    'auto_save'    => true,
+                    'compact_mode' => false,
+                    'show_tips'    => true,
+                ] ),
             ],
         );
+    }
 
-        // Buscar role provider para associar ao segundo usuário
-        $providerRole2 = Role::where( 'name', 'Provider' )->first();
-
-        if ( $providerRole2 ) {
-            UserRole::firstOrCreate(
-                [
-                    'user_id'   => $user2->id,
-                    'role_id'   => $providerRole2->id,
-                    'tenant_id' => $tenant->id,
-                ],
-                [
-                    'user_id'   => $user2->id,
-                    'role_id'   => $providerRole2->id,
-                    'tenant_id' => $tenant->id,
-                ],
-            );
-        }
+    private function createUserSettingsForProvider( Tenant $tenant, User $user ): void
+    {
+        \App\Models\UserSettings::firstOrCreate(
+            [
+                'tenant_id' => $tenant->id,
+                'user_id'   => $user->id,
+            ],
+            [
+                'tenant_id'                 => $tenant->id,
+                'user_id'                   => $user->id,
+                'avatar'                    => null,
+                'full_name'                 => $user->name ?? 'Usuário Teste',
+                'bio'                       => 'Configurações padrão do usuário',
+                'phone'                     => null,
+                'birth_date'                => null,
+                'social_facebook'           => null,
+                'social_twitter'            => null,
+                'social_linkedin'           => null,
+                'social_instagram'          => null,
+                'theme'                     => 'auto',
+                'primary_color'             => '#3B82F6',
+                'layout_density'            => 'normal',
+                'sidebar_position'          => 'left',
+                'animations_enabled'        => true,
+                'sound_enabled'             => true,
+                'email_notifications'       => true,
+                'transaction_notifications' => true,
+                'weekly_reports'            => false,
+                'security_alerts'           => true,
+                'newsletter_subscription'   => false,
+                'push_notifications'        => false,
+                'custom_preferences'        => json_encode( [
+                    'auto_save'    => true,
+                    'compact_mode' => false,
+                    'show_tips'    => true,
+                ] ),
+            ],
+        );
     }
 
 }
