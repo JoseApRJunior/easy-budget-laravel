@@ -8,34 +8,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Interface base simplificada para repositórios
+ * Interface base para repositórios.
  *
- * Define apenas métodos CRUD básicos essenciais
+ * Define operações básicas fundamentais sem relação com tenant,
+ * representando as interações essenciais com a camada de persistência.
  */
 interface BaseRepositoryInterface
 {
-    /**
-     * Busca todos os registros
-     */
-    public function all(): Collection;
 
-    /**
-     * Busca registro por ID
-     */
-    public function find( int $id ): ?Model;
-
-    /**
-     * Cria novo registro
-     */
-    public function create( array $data ): Model;
-
-    /**
-     * Atualiza registro existente
-     */
-    public function update( int $id, array $data ): bool;
-
-    /**
-     * Remove registro
-     */
-    public function delete( int $id ): bool;
 }
