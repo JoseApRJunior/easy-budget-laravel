@@ -3,13 +3,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceStatus extends Model
 {
-    use TenantScoped;
 
     /**
      * Boot the model.
@@ -17,7 +15,7 @@ class ServiceStatus extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
+        // Modelo global - não usa tenant scoping
     }
 
     /**
@@ -81,6 +79,23 @@ class ServiceStatus extends Model
     public function services(): HasMany
     {
         return $this->hasMany( Service::class, 'service_statuses_id' );
+    }
+
+    /**
+     * Scope para ordenar status por order_index e nome.
+     */
+    public function scopeOrdered( $query )
+    {
+        return $query->orderBy( 'order_index' )
+            ->orderBy( 'name' );
+    }
+
+    /**
+     * Scope para buscar status ativos.
+     */
+    public function scopeActive( $query )
+    {
+        return $query->where( 'is_active', true );
     }
 
 }

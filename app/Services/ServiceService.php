@@ -275,4 +275,101 @@ class ServiceService extends BaseTenantService implements PaginatableInterface, 
         return $this->error( OperationStatus::NOT_SUPPORTED, 'Busca por slug global não suportada para ServiceService.' );
     }
 
+    /**
+     * Busca serviços com filtros avançados e paginação.
+     *
+     * @param array $filters Filtros de busca (search, status, customer_id, etc.)
+     * @param \App\Models\User $user Usuário autenticado para contexto de tenant
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function searchServices( array $filters, $user ): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $tenantId = $user->tenant_id;
+        $perPage  = $filters[ 'per_page' ] ?? 15;
+
+        // Query base com relacionamentos necessários
+        $query = Service::with( [ 'customer', 'status', 'items' ] )
+            ->where( 'tenant_id', $tenantId );
+
+        // Aplicar filtros
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $search = $filters[ 'search' ];
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'code', 'like', "%{$search}%" )
+                    ->orWhere( 'description', 'like', "%{$search}%" )
+                    ->orWhereHas( 'customer', function ( $customerQuery ) use ( $search ) {
+                        $customerQuery->where( 'company_name', 'like', "%{$search}%" )
+                            ->orWhereHas( 'commonData', function ( $commonQuery ) use ( $search ) {
+                                $commonQuery->where( 'first_name', 'like', "%{$search}%" )
+                                    ->orWhere( 'last_name', 'like', "%{$search}%" );
+                            } );
+                    } );
+            } );
+        }
+
+        if ( !empty( $filters[ 'status' ] ) ) {
+            $query->where( 'service_statuses_id', $filters[ 'status' ] );
+        }
+
+        if ( !empty( $filters[ 'customer_id' ] ) ) {
+            $query->where( 'customer_id', $filters[ 'customer_id' ] );
+        }
+
+        if ( !empty( $filters[ 'priority_level' ] ) ) {
+            $query->where( 'priority_level', $filters[ 'priority_level' ] );
+        }
+
+        // Filtros de data
+        if ( !empty( $filters[ 'created_from' ] ) ) {
+            $query->whereDate( 'created_at', '>=', $filters[ 'created_from' ] );
+        }
+
+        if ( !empty( $filters[ 'created_to' ] ) ) {
+            $query->whereDate( 'created_at', '<=', $filters[ 'created_to' ] );
+        }
+
+        // Ordenação
+        $sortBy        = $filters[ 'sort_by' ] ?? 'created_at';
+        $sortDirection = $filters[ 'sort_direction' ] ?? 'desc';
+
+        $allowedSortFields = [ 'created_at', 'code', 'total', 'due_date' ];
+        if ( in_array( $sortBy, $allowedSortFields ) ) {
+            $query->orderBy( $sortBy, $sortDirection );
+        } else {
+            $query->orderBy( 'created_at', 'desc' );
+        }
+
+        return $query->paginate( $perPage );
+    }
+
+    /**
+     * Obtém estatísticas dos serviços para o dashboard.
+     *
+     * @param \App\Models\User $user Usuário autenticado para contexto de tenant
+     * @return array Estatísticas dos serviços
+     */
+    public function getServiceStats( $user ): array
+    {
+        $tenantId = $user->tenant_id;
+
+        $baseQuery = Service::where( 'tenant_id', $tenantId );
+
+        return [
+            'total'       => ( clone $baseQuery )->count(),
+            'active'      => ( clone $baseQuery )->whereHas( 'status', function ( $q ) {
+                $q->where( 'slug', 'active' );
+            } )->count(),
+            'pending'     => ( clone $baseQuery )->whereHas( 'status', function ( $q ) {
+                $q->where( 'slug', 'pending' );
+            } )->count(),
+            'completed'   => ( clone $baseQuery )->whereHas( 'status', function ( $q ) {
+                $q->where( 'slug', 'completed' );
+            } )->count(),
+            'cancelled'   => ( clone $baseQuery )->whereHas( 'status', function ( $q ) {
+                $q->where( 'slug', 'cancelled' );
+            } )->count(),
+            'total_value' => ( clone $baseQuery )->sum( 'total' ),
+        ];
+    }
+
 }

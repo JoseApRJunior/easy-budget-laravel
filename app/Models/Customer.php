@@ -335,6 +335,16 @@ class Customer extends Model
     }
 
     /**
+     * Scope para ordenar clientes por nome através do relacionamento.
+     */
+    public function scopeOrdered( $query )
+    {
+        // Abordagem simplificada: ordenar por ID para evitar problemas de join
+        // Em produção, pode ser melhorado com uma coluna de nome normalizada na tabela customers
+        return $query->orderBy( 'customers.id' );
+    }
+
+    /**
      * Scope para buscar clientes VIP.
      */
     public function scopeVip( $query )

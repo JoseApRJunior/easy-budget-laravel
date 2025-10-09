@@ -44,14 +44,13 @@ class ServiceController extends Controller
             ->ordered()
             ->get();
 
-        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
-            ->active()
+        $statuses = ServiceStatus::active()
             ->ordered()
             ->get();
 
         $stats = $this->serviceService->getServiceStats( auth()->user() );
 
-        return view( 'services.index', compact( 'services', 'customers', 'statuses', 'stats', 'filters' ) );
+        return view( 'pages.service.index', compact( 'services', 'customers', 'statuses', 'stats', 'filters' ) );
     }
 
     /**
@@ -69,8 +68,7 @@ class ServiceController extends Controller
             ->ordered()
             ->get();
 
-        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
-            ->active()
+        $statuses = ServiceStatus::active()
             ->ordered()
             ->get();
 
@@ -129,8 +127,7 @@ class ServiceController extends Controller
             ->ordered()
             ->get();
 
-        $statuses = ServiceStatus::where( 'tenant_id', auth()->user()->tenant_id )
-            ->active()
+        $statuses = ServiceStatus::active()
             ->ordered()
             ->get();
 
