@@ -311,11 +311,19 @@ header {
 .invalid-feedback::after,
 .theme-dark .theme-light-icon,
 .theme-light .theme-dark-icon {
-   display: none;
+    display: none !important;
 }
 .theme-dark .theme-dark-icon,
 .theme-light .theme-light-icon {
-   display: inline-block;
+    display: inline-block !important;
+}
+
+/* Ocultar ícones baseados no atributo aria-hidden */
+.theme-toggle [aria-hidden="true"] {
+   display: none !important;
+}
+.theme-toggle [aria-hidden="false"] {
+   display: inline-block !important;
 }
 
 .small-text {
