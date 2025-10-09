@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\PlanSubscription;
+
 /**
  * Helper functions for Easy Budget Laravel
  */
@@ -10,20 +12,15 @@
 if ( !function_exists( 'user_auth' ) ) {
     function user_auth(): ?array
     {
-        // Check if user is authenticated via session
-        if ( session()->has( 'auth' ) ) {
-            return session( 'auth' );
-        }
-
-        // Check if user is authenticated via Laravel's auth system
+        // Use only Laravel's auth system for consistency
         $authManager = app( 'auth' );
         if ( $authManager->check() ) {
             $user = $authManager->user();
             return [
                 'id'       => $user->id,
-                'name'     => $user->name,
+                'name'     => $user->name ?? ( $user->first_name . ' ' . $user->last_name ),
                 'email'    => $user->email,
-                'role'     => $user->role ?? 'user',
+                'role'     => $user->role ?? 'provider', // Default to provider for existing users
                 'is_admin' => $user->role === 'admin' || $user->role === 'super_admin'
             ];
         }
@@ -157,25 +154,10 @@ if ( !function_exists( 'checkPlan' ) ) {
 
         // Get active plan subscription
         $activeSubscription = $provider->planSubscriptions()
-            ->where( 'status', \App\Models\PlanSubscription::STATUS_ACTIVE )
+            ->where( 'status', PlanSubscription::STATUS_ACTIVE )
             ->where( 'end_date', '>', now() )
             ->with( 'plan' )
             ->first();
-
-        if ( !$activeSubscription || !$activeSubscription->plan ) {
-            // Return free plan as default
-            return (object) [
-                'id'          => 0,
-                'name'        => 'Plano Gratuito',
-                'slug'        => 'free',
-                'description' => 'Plano gratuito com funcionalidades básicas',
-                'price'       => 0.00,
-                'status'      => true,
-                'max_budgets' => 3,
-                'max_clients' => 5,
-                'features'    => []
-            ];
-        }
 
         return $activeSubscription->plan;
     }
@@ -226,5 +208,92 @@ if ( !function_exists( 'checkPlanPending' ) ) {
         $result->transaction_amount = $pendingSubscription->transaction_amount;
 
         return $result;
+    }
+}
+
+/**
+ * Check if current user has trial plan
+ */
+if ( !function_exists( 'isTrial' ) ) {
+    function isTrial(): bool
+    {
+        $user = user_auth();
+        if ( !$user ) {
+            return false;
+        }
+
+        // Get authenticated Laravel user
+        $authManager = app( 'auth' );
+        if ( !$authManager->check() ) {
+            return false;
+        }
+
+        $laravelUser = $authManager->user();
+        if ( !$laravelUser ) {
+            return false;
+        }
+
+        // Find provider for current user
+        $provider = \App\Models\Provider::where( 'user_id', $laravelUser->id )->first();
+        if ( !$provider ) {
+            return true; // No provider = trial by default
+        }
+
+        // Get active plan subscription
+        $activeSubscription = $provider->planSubscriptions()
+            ->where( 'status', PlanSubscription::STATUS_ACTIVE )
+            ->where( 'end_date', '>', now() )
+            ->first();
+
+        if ( !$activeSubscription ) {
+            return true; // No active subscription = trial
+        }
+
+        // Check if it's trial (payment_method = trial and amount = 0)
+        return strtolower( $activeSubscription->payment_method ) === 'trial' &&
+            $activeSubscription->transaction_amount <= 0;
+    }
+}
+
+/**
+ * Check if trial plan is expired
+ */
+if ( !function_exists( 'isTrialExpired' ) ) {
+    function isTrialExpired(): bool
+    {
+        $user = user_auth();
+        if ( !$user ) {
+            return false;
+        }
+
+        // Get authenticated Laravel user
+        $authManager = app( 'auth' );
+        if ( !$authManager->check() ) {
+            return false;
+        }
+
+        $laravelUser = $authManager->user();
+        if ( !$laravelUser ) {
+            return false;
+        }
+
+        // Find provider for current user
+        $provider = \App\Models\Provider::where( 'user_id', $laravelUser->id )->first();
+        if ( !$provider ) {
+            return false; // No provider = trial not expired
+        }
+
+        // Get active plan subscription
+        $activeSubscription = $provider->planSubscriptions()
+            ->where( 'status', PlanSubscription::STATUS_ACTIVE )
+            ->where( 'end_date', '>', now() )
+            ->first();
+
+        if ( !$activeSubscription ) {
+            return false; // No active subscription = trial not expired
+        }
+
+        // Check if trial is expired (end_date passed)
+        return $activeSubscription->end_date < now();
     }
 }

@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-4">
@@ -10,7 +10,8 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ url( '/admin' ) }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url( '/admin/area-of-activities' ) }}">Áreas de Atividade</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url( '/admin/area-of-activities' ) }}">Áreas de Atividade</a>
+                    </li>
                     <li class="breadcrumb-item active">Nova</li>
                 </ol>
             </nav>
@@ -26,7 +27,8 @@
                         <div class="col-12">
                             <div class="form-floating">
                                 <input type="text" class="form-control @error( 'name' ) is-invalid @enderror" id="name"
-                                    name="name" placeholder="Nome da Área de Atividade" value="{{ old( 'name' ) }}" required>
+                                    name="name" placeholder="Nome da Área de Atividade" value="{{ old( 'name' ) }}"
+                                    required>
                                 <label for="name">Nome da Área de Atividade *</label>
                                 @error( 'name' )
                                     <div class="invalid-feedback">{{ $message }}</div>

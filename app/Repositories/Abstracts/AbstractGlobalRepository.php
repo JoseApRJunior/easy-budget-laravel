@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
 
-use App\Interfaces\GlobalRepositoryInterface;
+use App\Contracts\Interfaces\GlobalRepositoryInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,6 +19,8 @@ use Throwable;
  *
  * Esta classe implementa todos os métodos básicos para repositórios que trabalham
  * com dados globais, sem isolamento por tenant_id
+ *
+ * Atualizado para usar a nova estrutura unificada de contratos/interfaces
  */
 abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
 {
@@ -142,24 +144,34 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     /**
      * Atualiza um registro existente
      *
-     * @param Model $model Registro a ser atualizado
+     * @param int $id ID do registro a ser atualizado
      * @param array $data Dados para atualização
-     * @return Model Registro atualizado
+     * @return bool True se atualizado com sucesso
      */
-    public function update( Model $model, array $data ): Model
+    public function update( int $id, array $data ): bool
     {
+        $model = $this->find( $id );
+        if ( !$model ) {
+            return false;
+        }
+
         $model->update( $data );
-        return $model->fresh();
+        return true;
     }
 
     /**
      * Remove um registro
      *
-     * @param Model $model Registro a ser removido
+     * @param int $id ID do registro a ser removido
      * @return bool True se removido com sucesso
      */
-    public function delete( Model $model ): bool
+    public function delete( int $id ): bool
     {
+        $model = $this->find( $id );
+        if ( !$model ) {
+            return false;
+        }
+
         return $model->delete();
     }
 
@@ -383,14 +395,19 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     /**
      * Conta o número total de registros
      *
+     * @param array $filters Filtros opcionais para contar
      * @return int Número de registros
      */
-    public function count(): int
+    public function count( array $filters = [] ): int
     {
         try {
-            return $this->newQuery()->count();
+            $query = $this->newQuery();
+            if ( !empty( $filters ) ) {
+                $query = $this->applyCriteria( $query, $filters );
+            }
+            return $query->count();
         } catch ( Throwable $e ) {
-            $this->logError( 'count', $e );
+            $this->logError( 'count', $e, [ 'filters' => $filters ] );
             return 0;
         }
     }
@@ -536,6 +553,72 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
             'model'      => $this->getModelClass(),
             'exception'  => $exception
         ], $context ) );
+    }
+
+    // ========== MÉTODOS ESPECÍFICOS DA INTERFACE GlobalRepositoryInterface ==========
+
+    /**
+     * Busca todos os registros sem restrição de tenant
+     */
+    public function findAllGlobal(): Collection
+    {
+        return $this->all();
+    }
+
+    /**
+     * Busca registro por ID sem restrição de tenant
+     */
+    public function findGlobal( int $id ): ?Model
+    {
+        return $this->find( $id );
+    }
+
+    /**
+     * Busca registros com filtros sem restrição de tenant
+     */
+    public function findByGlobal( array $criteria ): Collection
+    {
+        return $this->findByCriteria( $criteria );
+    }
+
+    /**
+     * Conta registros sem restrição de tenant
+     */
+    public function countGlobal( array $filters = [] ): int
+    {
+        return $this->count( $filters );
+    }
+
+    /**
+     * Cria registro global (sem tenant)
+     */
+    public function createGlobal( array $data ): Model
+    {
+        return $this->create( $data );
+    }
+
+    /**
+     * Atualiza registro global
+     */
+    public function updateGlobal( int $id, array $data ): bool
+    {
+        return $this->update( $id, $data );
+    }
+
+    /**
+     * Remove registro global
+     */
+    public function deleteGlobal( int $id ): bool
+    {
+        return $this->delete( $id );
+    }
+
+    /**
+     * Busca registros paginados sem restrição de tenant
+     */
+    public function paginateGlobal( int $perPage = 15, array $filters = [] ): LengthAwarePaginator
+    {
+        return $this->paginate( $perPage, $filters );
     }
 
 }

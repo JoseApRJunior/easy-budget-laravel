@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\TenantController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
@@ -28,10 +27,11 @@ Route::get( '/support', [ HomeController::class, 'support' ] )->name( 'support' 
 Route::get( '/terms-of-service', [ HomeController::class, 'terms' ] )->name( 'terms' );
 Route::get( '/privacy-policy', [ HomeController::class, 'privacy' ] )->name( 'privacy' );
 
-Route::middleware( [ 'auth', 'verified' ] )->group( function () {
+Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
 
     // Provider routes
     Route::get( '/provider', [ ProviderController::class, 'index' ] )->name( 'provider.index' );
+
     Route::get( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
     Route::post( '/provider/update', [ ProviderController::class, 'update_store' ] )->name( 'provider.update_store' );
     Route::get( '/provider/change-password', [ ProviderController::class, 'change_password' ] )->name( 'provider.change_password' );
@@ -246,6 +246,14 @@ Route::prefix( 'webhooks' )->name( 'webhooks.' )->group( function () {
 Route::get( '/not-allowed', [ ErrorController::class, 'notAllowed' ] )->name( 'error.not-allowed' );
 Route::get( '/not-found', [ ErrorController::class, 'notFound' ] )->name( 'error.not-found' );
 Route::get( '/internal-error', [ ErrorController::class, 'internal' ] )->name( 'error.internal' );
+
+// Rota para forçar limpeza de sessão (debug)
+Route::get( '/force-logout', function () {
+    \Illuminate\Support\Facades\Auth::logout();
+    \Illuminate\Support\Facades\Session::flush();
+    \Illuminate\Support\Facades\Session::regenerate();
+    return redirect()->route( 'login' )->with( 'success', 'Sessão limpa com sucesso!' );
+} )->name( 'force-logout' );
 
 // Rotas antigo sistema
 // /**

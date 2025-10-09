@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-1">
@@ -10,7 +10,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}" class="text-decoration-none">Dashboard</a>
+                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}"
+                            class="text-decoration-none">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item"><a href="{{ url( '/provider/customers' ) }}"
                             class="text-decoration-none">Clientes</a></li>
@@ -33,7 +34,8 @@
                         <div class="info-item mb-3 ">
                             <label class="text-muted small d-block mb-1">Nome Completo</label>
                             <p class="mb-0 d-flex align-items-center fw-bold">{{ $customer->first_name }}
-                                {{ $customer->last_name }}</p>
+                                {{ $customer->last_name }}
+                            </p>
                             @if ( $customer->status )
                                 <span class="badge bg-success mt-2">
                                     <i class="bi bi-check-circle-fill me-1"></i>Ativo

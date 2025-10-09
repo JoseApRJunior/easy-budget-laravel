@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 @php
     use App\Helpers\Utils;
 @endphp
@@ -23,7 +23,7 @@
                         @endphp
                         <!-- Cabeçalho do Plano -->
                         <div class="card-header bg-transparent border-0 text-center pt-4 pb-0">
-                            @if ( $plan->slug == 'free' )
+                            @if ( $plan->slug == 'free' || $plan->slug == 'trial' )
                                 <i class="bi bi-rocket display-6 text-primary mb-2"></i>
                             @elseif ( $plan->slug == 'basic' )
                                 <i class="bi bi-star display-6 text-success mb-2"></i>

@@ -2,172 +2,163 @@
 
 declare(strict_types=1);
 
-namespace App\Interfaces;
+namespace App\Repositories\Contracts;
 
+use App\Interfaces\BaseRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Interface para repositórios que são tenant-aware (multi-tenant)
+ * Interface base para repositórios.
  *
- * Esta interface define os métodos padrão para repositórios que trabalham
- * com dados isolados por tenant, garantindo que todas as operações
- * incluam o tenant_id para isolamento de dados
+ * Define contratos para operações CRUD padronizadas com suporte a multi-tenancy.
+ * Baseada no padrão do sistema antigo adaptada para Eloquent ORM.
  */
 interface RepositoryInterface extends BaseRepositoryInterface
 {
     /**
-     * Busca uma entidade pelo ID e tenant_id
-     *
-     * @param int $id ID da entidade
-     * @param int $tenantId ID do tenant
-     * @return Model|null Entidade encontrada ou null
+     * Encontra um registro por ID.
      */
-    public function findByIdAndTenantId( int $id, int $tenantId ): ?Model;
+    public function find( int $id ): ?Model;
 
     /**
-     * Busca múltiplas entidades por seus IDs e tenant_id
-     *
-     * @param array $id Array de IDs das entidades
-     * @param int $tenantId ID do tenant
-     * @return Model[] Array de entidades encontradas
+     * Encontra um registro por ID ou falha.
      */
-    public function findManyByIdsAndTenantId( array $id, int $tenantId ): array;
+    public function findOrFail( int $id ): Model;
 
     /**
-     * Busca entidades por critérios específicos e tenant_id
-     *
-     * @param array $criteria Critérios de busca
-     * @param int $tenantId ID do tenant
-     * @param array|null $orderBy Ordenação opcional [campo => direção]
-     * @param int|null $limit Limite de resultados
-     * @param int|null $offset Offset para paginação
-     * @return Model[] Array de entidades encontradas
+     * Encontra registros por critérios.
      */
-    public function findByAndTenantId(
-        array $criteria,
-        int $tenantId,
-        ?array $orderBy = null,
-        ?int $limit = null,
-        ?int $offset = null,
-    ): array;
+    public function findBy( array $criteria ): Collection;
 
     /**
-     * Busca uma entidade por critérios específicos e tenant_id
-     *
-     * @param array $criteria Critérios de busca
-     * @param int $tenantId ID do tenant
-     * @return Model|null Entidade encontrada ou null
+     * Encontra um registro por critérios.
      */
-    public function findOneByAndTenantId( array $criteria, int $tenantId ): ?Model;
+    public function findOneBy( array $criteria ): ?Model;
 
     /**
-     * Busca todas as entidades de um tenant
-     *
-     * @param int $tenantId ID do tenant
-     * @param array $criteria Critérios adicionais de busca
-     * @param array|null $orderBy Ordenação opcional [campo => direção]
-     * @param int|null $limit Limite de resultados
-     * @param int|null $offset Offset para paginação
-     * @return Model[] Array de todas as entidades do tenant
+     * Obtém todos os registros.
      */
-    public function findAllByTenantId(
-        int $tenantId,
-        array $criteria = [],
-        ?array $orderBy = null,
-        ?int $limit = null,
-        ?int $offset = null,
-    ): array;
+    public function all(): Collection;
 
     /**
-     * Busca entidade por slug e tenant_id
-     *
-     * @param string $slug Slug da entidade
-     * @param int $tenantId ID do tenant
-     * @return Model|null Entidade encontrada ou null
+     * Obtém registros paginados.
      */
-    public function findBySlugAndTenantId( string $slug, int $tenantId ): ?Model;
+    public function paginate( int $perPage = 15, array $columns = [ '*' ] ): LengthAwarePaginator;
 
     /**
+     * Cria um novo registro.
+     */
+    public function create( array $data ): Model;
 
     /**
-     * Salva uma entidade no banco com tenant_id (insert ou update)
-     *
-     * @param Model $entity Entidade a ser salva
-     * @param int $tenantId ID do tenant
-     * @return Model|false Entidade salva ou false em caso de erro
+     * Atualiza um registro.
      */
-    public function save( Model $entity, int $tenantId ): Model|false;
+    public function update( Model $model, array $data ): Model;
 
     /**
-     * Remove uma entidade pelo ID e tenant_id
-     *
-     * @param int $id ID da entidade a ser removida
-     * @param int $tenantId ID do tenant
-     * @return bool True se removeu com sucesso, false caso contrário
+     * Salva um registro (create ou update).
      */
-    public function deleteByIdAndTenantId( int $id, int $tenantId ): bool;
+    public function save( Model $model ): Model;
 
     /**
-     * Remove uma entidade
-     *
-     * @param Model $entity Entidade a ser removida
-     * @param int $tenantId ID do tenant
-     * @return bool True se removeu com sucesso, false caso contrário
+     * Exclui um registro.
      */
-    public function delete( Model $entity, int $tenantId ): bool;
+    public function delete( Model $model ): bool;
 
     /**
-     * Conta entidades por tenant_id
-     *
-     * @param int $tenantId ID do tenant
-     * @param array $criteria Critérios opcionais de busca
-     * @return int Número de entidades encontradas
+     * Exclui um registro por ID.
      */
-    public function countByTenantId( int $tenantId, array $criteria = [] ): int;
+    public function deleteById( int $id ): bool;
 
     /**
-     * Verifica se existe uma entidade por critérios e tenant_id
-     *
-     * @param array $criteria Critérios de busca
-     * @param int $tenantId ID do tenant
-     * @return bool True se existe, false caso contrário
+     * Conta registros por critérios.
      */
-    public function existsByTenantId( array $criteria, int $tenantId ): bool;
+    public function count( array $criteria = [] ): int;
 
     /**
-     * Busca entidades com paginação por tenant_id
-     *
-     * @param int $tenantId ID do tenant
-     * @param int $page Página atual (inicia em 1)
-     * @param int $perPage Itens por página
-     * @param array $criteria Critérios opcionais de busca
-     * @param array|null $orderBy Ordenação opcional
-     * @return array ['data' => Model[], 'total' => int, 'current_page' => int, 'per_page' => int]
+     * Verifica se existe registro com critérios.
      */
-    public function paginateByTenantId(
-        int $tenantId,
-        int $page = 1,
-        int $perPage = 15,
-        array $criteria = [],
-        ?array $orderBy = null,
-    ): array;
+    public function exists( array $criteria ): bool;
 
     /**
-     * Remove múltiplas entidades por IDs e tenant_id
-     *
-     * @param array $id Array de IDs das entidades
-     * @param int $tenantId ID do tenant
-     * @return int Número de entidades removidas
+     * Obtém o primeiro registro ou cria um novo.
      */
-    public function deleteManyByIdsAndTenantId( array $id, int $tenantId ): int;
+    public function firstOrCreate( array $attributes, array $values = [] ): Model;
 
     /**
-     * Atualiza múltiplas entidades por critérios e tenant_id
-     *
-     * @param array $criteria Critérios para seleção
-     * @param array $updates Dados para atualização
-     * @param int $tenantId ID do tenant
-     * @return int Número de entidades atualizadas
+     * Atualiza ou cria um registro.
      */
-    public function updateManyByTenantId( array $criteria, array $updates, int $tenantId ): int;
+    public function updateOrCreate( array $attributes, array $values = [] ): Model;
+
+    /**
+     * Aplica filtros de busca.
+     */
+    public function search( string $term, array $fields = [] ): Collection;
+
+    /**
+     * Obtém registros com relacionamentos.
+     */
+    public function with( array $relations ): self;
+
+    /**
+     * Aplica ordenação.
+     */
+    public function orderBy( string $column, string $direction = 'asc' ): self;
+
+    /**
+     * Aplica filtros WHERE.
+     */
+    public function where( string $column, mixed $operator, mixed $value = null ): self;
+
+    /**
+     * Aplica filtros WHERE IN.
+     */
+    public function whereIn( string $column, array $values ): self;
+
+    /**
+     * Aplica filtros WHERE NOT IN.
+     */
+    public function whereNotIn( string $column, array $values ): self;
+
+    /**
+     * Aplica filtros WHERE BETWEEN.
+     */
+    public function whereBetween( string $column, array $values ): self;
+
+    /**
+     * Aplica filtros WHERE NULL.
+     */
+    public function whereNull( string $column ): self;
+
+    /**
+     * Aplica filtros WHERE NOT NULL.
+     */
+    public function whereNotNull( string $column ): self;
+
+    /**
+     * Limita o número de resultados.
+     */
+    public function limit( int $limit ): self;
+
+    /**
+     * Pula um número de registros.
+     */
+    public function skip( int $offset ): self;
+
+    /**
+     * Executa a query e retorna os resultados.
+     */
+    public function get(): Collection;
+
+    /**
+     * Executa a query e retorna o primeiro resultado.
+     */
+    public function first(): ?Model;
+
+    /**
+     * Reseta os filtros aplicados.
+     */
+    public function reset(): self;
 }

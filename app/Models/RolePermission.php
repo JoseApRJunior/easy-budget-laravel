@@ -5,24 +5,11 @@ namespace App\Models;
 
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\Tenant;
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class RolePermission extends Pivot
 {
-    use TenantScoped;
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        static::bootTenantScoped();
-    }
-
     /**
      * The table associated with the model.
      *
@@ -36,7 +23,6 @@ class RolePermission extends Pivot
      * @var array<int, string>
      */
     protected $fillable = [
-        'tenant_id',
         'role_id',
         'permission_id',
     ];
@@ -46,7 +32,7 @@ class RolePermission extends Pivot
      *
      * @var bool
      */
-    public $incrementing = false;
+    public $incrementing = true;
 
     /**
      * The attributes that should be cast.
@@ -54,7 +40,6 @@ class RolePermission extends Pivot
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'     => 'integer',
         'role_id'       => 'integer',
         'permission_id' => 'integer',
         'created_at'    => 'immutable_datetime',
@@ -93,14 +78,6 @@ class RolePermission extends Pivot
     public function permission(): BelongsTo
     {
         return $this->belongsTo( Permission::class);
-    }
-
-    /**
-     * Get the tenant that owns the RolePermission.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo( Tenant::class);
     }
 
 }

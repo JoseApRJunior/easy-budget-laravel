@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\RepositoryInterface;
+use App\Contracts\Interfaces\RepositoryInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -98,7 +98,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $query  = $this->newQuery();
             $entity = $this->applyTenantFilter( $query, $tenantId )->find( $id );
 
-            $this->logOperation( 'findByIdAndTenantId', [ 
+            $this->logOperation( 'findByIdAndTenantId', [
                 'id'        => $id,
                 'tenant_id' => $tenantId,
                 'found'     => $entity !== null
@@ -120,7 +120,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $query    = $this->newQuery();
             $entities = $this->applyTenantFilter( $query, $tenantId )->whereIn( 'id', $id )->get();
 
-            $this->logOperation( 'findManyByIdsAndTenantId', [ 
+            $this->logOperation( 'findManyByIdsAndTenantId', [
                 'ids_count'   => count( $id ),
                 'tenant_id'   => $tenantId,
                 'found_count' => $entities->count()
@@ -159,7 +159,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $entities = $query->get();
 
-            $this->logOperation( 'findByAndTenantId', [ 
+            $this->logOperation( 'findByAndTenantId', [
                 'criteria'    => $criteria,
                 'tenant_id'   => $tenantId,
                 'found_count' => $entities->count()
@@ -167,7 +167,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $entities->all();
         } catch ( Throwable $e ) {
-            $this->logError( 'findByAndTenantId', $e, [ 
+            $this->logError( 'findByAndTenantId', $e, [
                 'criteria'  => $criteria,
                 'tenant_id' => $tenantId
             ] );
@@ -187,7 +187,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $entity = $query->first();
 
-            $this->logOperation( 'findOneByAndTenantId', [ 
+            $this->logOperation( 'findOneByAndTenantId', [
                 'criteria'  => $criteria,
                 'tenant_id' => $tenantId,
                 'found'     => $entity !== null
@@ -195,7 +195,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $entity;
         } catch ( Throwable $e ) {
-            $this->logError( 'findOneByAndTenantId', $e, [ 
+            $this->logError( 'findOneByAndTenantId', $e, [
                 'criteria'  => $criteria,
                 'tenant_id' => $tenantId
             ] );
@@ -229,7 +229,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $entities = $query->get();
 
-            $this->logOperation( 'findAllByTenantId', [ 
+            $this->logOperation( 'findAllByTenantId', [
                 'criteria'    => $criteria,
                 'tenant_id'   => $tenantId,
                 'found_count' => $entities->count()
@@ -268,14 +268,14 @@ abstract class AbstractRepository implements RepositoryInterface
             $saved = $entity->save();
 
             if ( !$saved ) {
-                $this->logError( 'save', new Exception( 'Save operation failed' ), [ 
+                $this->logError( 'save', new Exception( 'Save operation failed' ), [
                     'entity_id' => $entity->getKey(),
                     'tenant_id' => $tenantId
                 ] );
                 return false;
             }
 
-            $this->logOperation( 'save', [ 
+            $this->logOperation( 'save', [
                 'entity_id' => $entity->getKey(),
                 'tenant_id' => $tenantId,
                 'success'   => true
@@ -283,53 +283,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $entity;
         } catch ( Throwable $e ) {
-            $this->logError( 'save', $e, [ 
-                'entity_id' => $entity->getKey(),
-                'tenant_id' => $tenantId
-            ] );
-            return false;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function update( Model $entity, int $tenantId ): Model|false
-    {
-        try {
-            if ( !( $entity instanceof Model ) ) {
-                throw new Exception( 'Entity must be an instance of Illuminate\Database\Eloquent\Model' );
-            }
-
-            // Verifica se a entidade pertence ao tenant
-            if ( !$this->validateTenantOwnership( $entity, $tenantId ) ) {
-                $this->logOperation( 'update', [ 
-                    'entity_id' => $entity->getKey(),
-                    'tenant_id' => $tenantId,
-                    'error'     => 'Tenant ownership validation failed'
-                ] );
-                return false;
-            }
-
-            $updated = $entity->save();
-
-            if ( !$updated ) {
-                $this->logError( 'update', new Exception( 'Update operation failed' ), [ 
-                    'entity_id' => $entity->getKey(),
-                    'tenant_id' => $tenantId
-                ] );
-                return false;
-            }
-
-            $this->logOperation( 'update', [ 
-                'entity_id' => $entity->getKey(),
-                'tenant_id' => $tenantId,
-                'success'   => true
-            ] );
-
-            return $entity;
-        } catch ( Throwable $e ) {
-            $this->logError( 'update', $e, [ 
+            $this->logError( 'save', $e, [
                 'entity_id' => $entity->getKey(),
                 'tenant_id' => $tenantId
             ] );
@@ -348,7 +302,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $success = $deleted > 0;
 
-            $this->logOperation( 'deleteByIdAndTenantId', [ 
+            $this->logOperation( 'deleteByIdAndTenantId', [
                 'id'        => $id,
                 'tenant_id' => $tenantId,
                 'success'   => $success
@@ -356,7 +310,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $success;
         } catch ( Throwable $e ) {
-            $this->logError( 'deleteByIdAndTenantId', $e, [ 
+            $this->logError( 'deleteByIdAndTenantId', $e, [
                 'id'        => $id,
                 'tenant_id' => $tenantId
             ] );
@@ -367,37 +321,17 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function delete( Model $entity, int $tenantId ): bool
+    public function delete( int $id ): bool
     {
         try {
-            if ( !( $entity instanceof Model ) ) {
-                throw new Exception( 'Entity must be an instance of Illuminate\Database\Eloquent\Model' );
-            }
-
-            // Verifica se a entidade pertence ao tenant
-            if ( !$this->validateTenantOwnership( $entity, $tenantId ) ) {
-                $this->logOperation( 'delete', [ 
-                    'entity_id' => $entity->getKey(),
-                    'tenant_id' => $tenantId,
-                    'error'     => 'Tenant ownership validation failed'
-                ] );
+            $entity = $this->find( $id );
+            if ( !$entity ) {
                 return false;
             }
 
-            $deleted = $entity->delete();
-
-            $this->logOperation( 'delete', [ 
-                'entity_id' => $entity->getKey(),
-                'tenant_id' => $tenantId,
-                'success'   => $deleted
-            ] );
-
-            return $deleted;
+            return $entity->delete();
         } catch ( Throwable $e ) {
-            $this->logError( 'delete', $e, [ 
-                'entity_id' => $entity->getKey(),
-                'tenant_id' => $tenantId
-            ] );
+            $this->logError( 'delete', $e, [ 'id' => $id ] );
             return false;
         }
     }
@@ -414,7 +348,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $query->count();
         } catch ( Throwable $e ) {
-            $this->logError( 'countByTenantId', $e, [ 
+            $this->logError( 'countByTenantId', $e, [
                 'tenant_id' => $tenantId,
                 'criteria'  => $criteria
             ] );
@@ -434,7 +368,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $query->exists();
         } catch ( Throwable $e ) {
-            $this->logError( 'existsByTenantId', $e, [ 
+            $this->logError( 'existsByTenantId', $e, [
                 'criteria'  => $criteria,
                 'tenant_id' => $tenantId
             ] );
@@ -460,7 +394,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $paginatorResult = $query->paginate( $perPage, [ '*' ], 'page', $page );
 
-            return [ 
+            return [
                 'data'         => $paginatorResult->items(),
                 'total'        => $paginatorResult->total(),
                 'current_page' => $paginatorResult->currentPage(),
@@ -470,13 +404,13 @@ abstract class AbstractRepository implements RepositoryInterface
                 'to'           => $paginatorResult->lastItem()
             ];
         } catch ( Throwable $e ) {
-            $this->logError( 'paginateByTenantId', $e, [ 
+            $this->logError( 'paginateByTenantId', $e, [
                 'tenant_id' => $tenantId,
                 'page'      => $page,
                 'per_page'  => $perPage
             ] );
 
-            return [ 
+            return [
                 'data'         => [],
                 'total'        => 0,
                 'current_page' => 1,
@@ -497,7 +431,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $query   = $this->newQuery();
             $deleted = $this->applyTenantFilter( $query, $tenantId )->whereIn( 'id', $id )->delete();
 
-            $this->logOperation( 'deleteManyByIdsAndTenantId', [ 
+            $this->logOperation( 'deleteManyByIdsAndTenantId', [
                 'ids_count'     => count( $id ),
                 'tenant_id'     => $tenantId,
                 'deleted_count' => $deleted
@@ -505,7 +439,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $deleted;
         } catch ( Throwable $e ) {
-            $this->logError( 'deleteManyByIdsAndTenantId', $e, [ 
+            $this->logError( 'deleteManyByIdsAndTenantId', $e, [
                 'ids'       => $id,
                 'tenant_id' => $tenantId
             ] );
@@ -525,7 +459,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $updated = $query->update( $updates );
 
-            $this->logOperation( 'updateManyByTenantId', [ 
+            $this->logOperation( 'updateManyByTenantId', [
                 'criteria'      => $criteria,
                 'updates'       => $updates,
                 'tenant_id'     => $tenantId,
@@ -534,7 +468,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             return $updated;
         } catch ( Throwable $e ) {
-            $this->logError( 'updateManyByTenantId', $e, [ 
+            $this->logError( 'updateManyByTenantId', $e, [
                 'criteria'  => $criteria,
                 'updates'   => $updates,
                 'tenant_id' => $tenantId
@@ -546,12 +480,16 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function count(): int
+    public function count( array $filters = [] ): int
     {
         try {
-            return $this->newQuery()->count();
+            $query = $this->newQuery();
+            if ( !empty( $filters ) ) {
+                $query = $this->applyCriteria( $query, $filters );
+            }
+            return $query->count();
         } catch ( Throwable $e ) {
-            $this->logError( 'count', $e );
+            $this->logError( 'count', $e, [ 'filters' => $filters ] );
             return 0;
         }
     }
@@ -725,7 +663,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     protected function logOperation( string $operation, array $context = [] ): void
     {
-        Log::info( "Repository operation: {$operation}", array_merge( [ 
+        Log::info( "Repository operation: {$operation}", array_merge( [
             'repository' => static::class,
             'model'      => $this->modelClass
         ], $context ) );
@@ -741,7 +679,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     protected function logError( string $operation, Throwable $exception, array $context = [] ): void
     {
-        Log::error( "Repository error in {$operation}: " . $exception->getMessage(), array_merge( [ 
+        Log::error( "Repository error in {$operation}: " . $exception->getMessage(), array_merge( [
             'repository' => static::class,
             'model'      => $this->modelClass,
             'exception'  => $exception

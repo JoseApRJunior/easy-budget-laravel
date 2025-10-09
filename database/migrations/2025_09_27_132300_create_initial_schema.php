@@ -127,11 +127,10 @@ return new class extends Migration
 
         Schema::create( 'role_permissions', function ( Blueprint $table ) {
             $table->id();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'role_id' )->constrained( 'roles' )->cascadeOnDelete();
             $table->foreignId( 'permission_id' )->constrained( 'permissions' )->cascadeOnDelete();
             $table->timestamps();
-            $table->unique( [ 'tenant_id', 'role_id', 'permission_id' ], 'uq_role_permissions' );
+            $table->unique( [ 'role_id', 'permission_id' ], 'uq_role_permissions' );
         } );
 
         Schema::create( 'user_roles', function ( Blueprint $table ) {

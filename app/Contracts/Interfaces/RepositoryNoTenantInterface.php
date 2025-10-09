@@ -6,8 +6,10 @@ namespace App\Contracts\Interfaces;
 
 /**
  * Interface para repositórios sem tenant
+ *
+ * @deprecated Use GlobalRepositoryInterface instead
  */
-interface RepositoryNoTenantInterface extends BaseRepositoryInterface
+interface RepositoryNoTenantInterface extends GlobalRepositoryInterface
 {
     //
 }

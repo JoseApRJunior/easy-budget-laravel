@@ -8,32 +8,45 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Interface base para repositórios
+ * Interface principal que combina funcionalidades básicas e avançadas
+ *
+ * Esta interface pode ser usada diretamente por repositories simples
+ * ou estendida por interfaces mais específicas
  */
-interface RepositoryInterface
+interface RepositoryInterface extends BaseRepositoryInterface
 {
     /**
-     * Busca todos os registros
+     * Busca registros com múltiplos critérios e opções avançadas
      */
-    public function all(): Collection;
+    public function findWithOptions( array $criteria, array $options = [] ): Collection;
 
     /**
-     * Busca registro por ID
+     * Busca primeiro registro com critérios específicos
      */
-    public function find( int $id ): ?Model;
+    public function findOneBy( array $criteria ): ?Model;
 
     /**
-     * Cria novo registro
+     * Busca registros com ordenação específica
      */
-    public function create( array $data ): Model;
+    public function findByOrdered( array $criteria, array $orderBy = [] ): Collection;
 
     /**
-     * Atualiza registro existente
+     * Busca registros com eager loading de relacionamentos
      */
-    public function update( int $id, array $data ): bool;
+    public function findWithRelations( array $criteria, array $relations = [] ): Collection;
 
     /**
-     * Remove registro
+     * Executa operações em lote (batch operations)
      */
-    public function delete( int $id ): bool;
+    public function batchUpdate( array $criteria, array $data ): int;
+
+    /**
+     * Busca registros com cache inteligente
+     */
+    public function findCached( array $criteria, int $ttl = 3600 ): Collection;
+
+    /**
+     * Limpa cache específico do repositório
+     */
+    public function clearCache(): void;
 }

@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 
 @section( 'content' )
@@ -17,7 +17,8 @@
             </nav>
         </div>
 
-        <form id="createForm" action="{{ url( '/provider/customers/create' ) }}" method="POST" enctype="multipart/form-data">
+        <form id="createForm" action="{{ url( '/provider/customers/create' ) }}" method="POST"
+            enctype="multipart/form-data">
             @csrf
 
             <div class="row g-4">

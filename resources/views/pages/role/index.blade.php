@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
 <div class="container-fluid py-4">
@@ -55,8 +55,8 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ url( '/admin/roles/' . $role->id ) }}" class="btn btn-sm btn-outline-info"
-                                                title="Visualizar">
+                                            <a href="{{ url( '/admin/roles/' . $role->id ) }}"
+                                                class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             <a href="{{ url( '/admin/roles/' . $role->id . '/edit' ) }}"

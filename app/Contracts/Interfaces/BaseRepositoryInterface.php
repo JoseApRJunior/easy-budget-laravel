@@ -5,24 +5,37 @@ declare(strict_types=1);
 namespace App\Contracts\Interfaces;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * Interface base para repositórios
+ * Interface base simplificada para repositórios
+ *
+ * Define apenas métodos CRUD básicos essenciais
  */
-interface BaseRepositoryInterface extends RepositoryInterface
+interface BaseRepositoryInterface
 {
     /**
-     * Busca registros com paginação
+     * Busca todos os registros
      */
-    public function paginate( int $perPage = 15, array $filters = [] ): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+    public function all(): Collection;
 
     /**
-     * Busca registros com filtros
+     * Busca registro por ID
      */
-    public function findBy( array $criteria ): Collection;
+    public function find( int $id ): ?Model;
 
     /**
-     * Conta registros com filtros
+     * Cria novo registro
      */
-    public function count( array $filters = [] ): int;
+    public function create( array $data ): Model;
+
+    /**
+     * Atualiza registro existente
+     */
+    public function update( int $id, array $data ): bool;
+
+    /**
+     * Remove registro
+     */
+    public function delete( int $id ): bool;
 }

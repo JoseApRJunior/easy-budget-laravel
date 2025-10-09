@@ -333,7 +333,7 @@ class UserRegistrationService extends BaseTenantService
 
             DB::commit();
 
-            return ServiceResult::success( [ 
+            return ServiceResult::success( [
                 'provider_id' => $provider->id,
                 'tenant_id'   => $tenant_id,
                 'user_id'     => $user->id,
@@ -369,18 +369,18 @@ class UserRegistrationService extends BaseTenantService
             $tokenEntity = $this->tokenRepository->findByTokenAndTenantId( $hashedToken, $tenant_id );
 
             if ( !$tokenEntity ) {
-                throw ValidationException::withMessages([
-                    'token' => ['Token inválido ou expirado.']
-                ]);
+                throw ValidationException::withMessages( [
+                    'token' => [ 'Token inválido ou expirado.' ]
+                ] );
             }
 
             // Verificar se getUserIdByToken também retorna um ID válido
             $userId = $this->userRepository->getUserIdByToken( $token );
-            
+
             if ( !$userId ) {
-                throw ValidationException::withMessages([
-                    'token' => ['Token inválido ou expirado.']
-                ]);
+                throw ValidationException::withMessages( [
+                    'token' => [ 'Token inválido ou expirado.' ]
+                ] );
             }
 
             return true;
@@ -452,7 +452,7 @@ class UserRegistrationService extends BaseTenantService
 
             DB::commit();
 
-            return ServiceResult::success( [ 
+            return ServiceResult::success( [
                 'token' => $token,
                 'user'  => $user
             ], 'E-mail de confirmação reenviado com sucesso.' );
@@ -591,7 +591,7 @@ class UserRegistrationService extends BaseTenantService
         try {
             // Enviar notificação de status usando o serviço de notificação
             $notificationResult = $this->notificationService->sendStatusUpdate( $userId, 'blocked', $reason );
-            
+
             return $notificationResult;
 
         } catch ( Exception $e ) {
@@ -611,7 +611,7 @@ class UserRegistrationService extends BaseTenantService
         try {
             // Buscar usuário por e-mail usando o repositório para compatibilidade com o teste
             $user = $this->userRepository->findByEmail( $email );
-            
+
             if ( !$user ) {
                 // Retornar true mesmo se usuário não existir para prevenir enumeração de e-mails
                 return true;
@@ -619,13 +619,13 @@ class UserRegistrationService extends BaseTenantService
 
             // Gerar token de reset
             $resetToken = Str::random( 60 );
-            
+
             // Salvar token no repositório
             $this->userRepository->saveResetToken( $user->id, $resetToken );
-            
+
             // Enviar e-mail de reset usando o serviço de notificação
             $notificationResult = $this->notificationService->sendPasswordReset( $email, $resetToken );
-            
+
             return $notificationResult;
 
         } catch ( Exception $e ) {
@@ -647,7 +647,7 @@ class UserRegistrationService extends BaseTenantService
         try {
             // Verificar se o token é válido e obter o ID do usuário
             $userId = $this->userRepository->getUserIdByResetToken( $email, $token );
-            
+
             if ( !$userId ) {
                 return false;
             }
@@ -678,7 +678,7 @@ class UserRegistrationService extends BaseTenantService
             $tenantName   = $data[ 'first_name' ] . '_' . $timestamp . '_' . $randomString;
 
             $tenant = new Tenant();
-            $tenant->fill( [ 
+            $tenant->fill( [
                 'name'   => $tenantName,
                 'status' => 'active'
             ] );
@@ -718,7 +718,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $user = new User();
-            $user->fill( [ 
+            $user->fill( [
                 'tenant_id' => $tenant_id,
                 'name'      => $data[ 'first_name' ] . ' ' . $data[ 'last_name' ],
                 'email'     => $data[ 'email' ],
@@ -762,7 +762,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $commonData = new \App\Models\CommonData();
-            $commonData->fill( [ 
+            $commonData->fill( [
                 'tenant_id'  => $tenant_id,
                 'first_name' => $data[ 'first_name' ],
                 'last_name'  => $data[ 'last_name' ]
@@ -803,7 +803,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $contact = new \App\Models\Contact();
-            $contact->fill( [ 
+            $contact->fill( [
                 'tenant_id'      => $tenant_id,
                 'email'          => $data[ 'email' ],
                 'phone'          => $data[ 'phone' ] ?? '',
@@ -844,7 +844,7 @@ class UserRegistrationService extends BaseTenantService
     {
         try {
             $address = new \App\Models\Address();
-            $address->fill( [ 
+            $address->fill( [
                 'tenant_id' => $tenant_id
             ] );
 
@@ -893,7 +893,7 @@ class UserRegistrationService extends BaseTenantService
     ): ServiceResult {
         try {
             $provider = new \App\Models\Provider();
-            $provider->fill( [ 
+            $provider->fill( [
                 'tenant_id'      => $tenant_id,
                 'user_id'        => $user->id,
                 'common_data_id' => $commonData->id,
@@ -954,7 +954,7 @@ class UserRegistrationService extends BaseTenantService
 
             // Criar assinatura do plano
             $planSubscription = new \App\Models\PlanSubscription();
-            $planSubscription->fill( [ 
+            $planSubscription->fill( [
                 'tenant_id'          => $tenant_id,
                 'provider_id'        => $provider->id,
                 'plan_id'            => $plan->id,
@@ -973,10 +973,10 @@ class UserRegistrationService extends BaseTenantService
                 );
             }
 
-            // Se não for plano gratuito, criar assinatura pendente
-            if ( $plan->slug !== 'free' ) {
+            // Se não for plano gratuito/trial, criar assinatura pendente
+            if ( $plan->slug !== 'free' && $plan->slug !== 'trial' ) {
                 $pendingSubscription = new \App\Models\PlanSubscription();
-                $pendingSubscription->fill( [ 
+                $pendingSubscription->fill( [
                     'tenant_id'          => $tenant_id,
                     'provider_id'        => $provider->id,
                     'plan_id'            => $plan->id,
@@ -1024,7 +1024,7 @@ class UserRegistrationService extends BaseTenantService
             $hashedToken = hash( 'sha256', $token );
 
             $tokenEntity = new UserConfirmationToken();
-            $tokenEntity->fill( [ 
+            $tokenEntity->fill( [
                 'token'      => $hashedToken,
                 'user_id'    => $user->id,
                 'tenant_id'  => $tenant_id,
@@ -1115,7 +1115,7 @@ class UserRegistrationService extends BaseTenantService
                 $email,
                 'Senha alterada - Easy Budget',
                 'emails.password-changed',
-                [ 
+                [
                     'first_name' => $firstName,
                     'app_name'   => config( 'app.name', 'Easy Budget' )
                 ],
@@ -1161,7 +1161,7 @@ class UserRegistrationService extends BaseTenantService
      */
     private function validateRegistrationData( array $data, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [ 
+        $rules = [
             'email'          => 'required|email|max:255',
             'password'       => 'required|string|min:8|max:255',
             'first_name'     => 'required|string|max:255',

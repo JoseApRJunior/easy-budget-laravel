@@ -37,7 +37,7 @@
                         <div class="card h-100 shadow-sm hover-card">
                             <div class="card-body d-flex flex-column">
                                 <div class="text-center mb-4">
-                                    @if( $plan[ 'slug' ] == 'free' )
+                                    @if( $plan[ 'slug' ] == 'free' || $plan[ 'slug' ] == 'trial' )
                                         <i class="bi bi-rocket display-6 text-primary mb-2"></i>
                                     @elseif( $plan[ 'slug' ] == 'basic' )
                                         <i class="bi bi-star display-6 text-success mb-2"></i>

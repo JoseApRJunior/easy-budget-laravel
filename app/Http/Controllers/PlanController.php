@@ -53,7 +53,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return view( 'plans.index', [
+            return view( 'provider.plans.index', [
                 'plans' => $result
             ] );
 
@@ -386,7 +386,7 @@ class PlanController extends \Illuminate\Routing\Controller
      *
      * @param Request $request
      * @param string $message
-     * @return JsonResponse|RedirectResponse
+     * @return View|JsonResponse
      */
     private function handleNotFound( Request $request, string $message )
     {
@@ -397,8 +397,11 @@ class PlanController extends \Illuminate\Routing\Controller
             ], 404 );
         }
 
-        return redirect()->route( 'plans.index' )
-            ->with( 'error', $message );
+        // Return view with error instead of redirect
+        $result = $this->planService->list();
+        return view( 'plans.index', [
+            'plans' => $result->isSuccess() ? $result->getData() : []
+        ] )->with( 'error', $message );
     }
 
     /**
@@ -407,7 +410,7 @@ class PlanController extends \Illuminate\Routing\Controller
      * @param Exception $e
      * @param Request $request
      * @param string $defaultMessage
-     * @return JsonResponse|RedirectResponse
+     * @return View|JsonResponse
      */
     private function handleError( Exception $e, Request $request, string $defaultMessage )
     {
@@ -420,8 +423,19 @@ class PlanController extends \Illuminate\Routing\Controller
             ], 500 );
         }
 
-        return redirect()->back()
-            ->with( 'error', $message );
+        // Return view with error instead of redirect
+        try {
+            $result = $this->planService->list();
+            return view( 'plans.index', [
+                'plans' => $result->isSuccess() ? $result->getData() : []
+            ] )->with( 'error', $message );
+        } catch ( Exception $fallbackError ) {
+            // Fallback to simple error view
+            return view( 'errors.generic', [
+                'message' => $message,
+                'error'   => $e
+            ] );
+        }
     }
 
 }
