@@ -7,7 +7,7 @@ namespace App\Services\Domain;
 use App\Enums\OperationStatus;
 use App\Models\Plan;
 use App\Repositories\PlanRepository;
-use App\Services\Domain\Abstracts\AbstractBaseService;
+use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Services\Contracts;
+namespace App\Services\Core\Contracts;
 
 use App\Support\ServiceResult;
 

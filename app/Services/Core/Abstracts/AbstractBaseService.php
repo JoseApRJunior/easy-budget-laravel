@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Services\Abstracts;
+namespace App\Services\Core\Abstracts;
 
 use App\Enums\OperationStatus;
 use App\Models\User;
 use App\Repositories\Contracts\BaseRepositoryInterface;
-use App\Services\Contracts\CrudServiceInterface;
+use App\Services\Core\Contracts\CrudServiceInterface;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -656,6 +656,187 @@ abstract class AbstractBaseService implements CrudServiceInterface
             return $this->success( $entities, 'Listagem realizada com sucesso.' );
         } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, "Erro ao listar recursos.", null, $e );
+        }
+    }
+
+    // --------------------------------------------------------------------------
+    // IMPLEMENTAÇÃO DOS MÉTODOS FALTANTES DO CRUDSERVICEINTERFACE
+    // --------------------------------------------------------------------------
+
+    public function findMany( array $ids, array $with = [] ): ServiceResult
+    {
+        try {
+            $entities = collect();
+            foreach ( $ids as $id ) {
+                $result = $this->findById( $id, $with );
+                if ( $result->isSuccess() ) {
+                    $entities->push( $result->getData() );
+                }
+            }
+            return $this->success( $entities, 'Busca múltipla realizada com sucesso.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao buscar múltiplos recursos.", null, $e );
+        }
+    }
+
+    public function findOneBy( array $criteria, array $with = [] ): ServiceResult
+    {
+        try {
+            $query = $this->repository->getAll();
+            foreach ( $criteria as $field => $value ) {
+                if ( in_array( $field, $this->getSupportedFilters() ) ) {
+                    $query = $query->where( $field, $value );
+                }
+            }
+            $entity = $query->first();
+            if ( !$entity ) {
+                return $this->error( OperationStatus::NOT_FOUND, "Recurso não encontrado com os critérios especificados." );
+            }
+            return $this->success( $entity, 'Busca realizada com sucesso.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao buscar recurso.", null, $e );
+        }
+    }
+
+    public function updateMany( array $ids, array $data ): ServiceResult
+    {
+        try {
+            $updatedCount = 0;
+            foreach ( $ids as $id ) {
+                $result = $this->update( $id, $data );
+                if ( $result->isSuccess() ) {
+                    $updatedCount++;
+                }
+            }
+            return $this->success( [ 'updated_count' => $updatedCount ], "{$updatedCount} recursos atualizados com sucesso." );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao atualizar múltiplos recursos.", null, $e );
+        }
+    }
+
+    public function deleteMany( array $ids ): ServiceResult
+    {
+        try {
+            $deletedCount = 0;
+            foreach ( $ids as $id ) {
+                $result = $this->delete( $id );
+                if ( $result->isSuccess() ) {
+                    $deletedCount++;
+                }
+            }
+            return $this->success( [ 'deleted_count' => $deletedCount ], "{$deletedCount} recursos removidos com sucesso." );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao remover múltiplos recursos.", null, $e );
+        }
+    }
+
+    public function deleteByCriteria( array $criteria ): ServiceResult
+    {
+        try {
+            $query = $this->repository->getAll();
+            foreach ( $criteria as $field => $value ) {
+                if ( in_array( $field, $this->getSupportedFilters() ) ) {
+                    if ( isset( $value[ 'operator' ] ) && isset( $value[ 'value' ] ) ) {
+                        $operator = $value[ 'operator' ];
+                        $filterValue = $value[ 'value' ];
+                        switch ( $operator ) {
+                            case '<': $query = $query->where( $field, '<', $filterValue ); break;
+                            case '<=': $query = $query->where( $field, '<=', $filterValue ); break;
+                            case '>': $query = $query->where( $field, '>', $filterValue ); break;
+                            case '>=': $query = $query->where( $field, '>=', $filterValue ); break;
+                            default: $query = $query->where( $field, $operator, $filterValue );
+                        }
+                    } else {
+                        $query = $query->where( $field, $value );
+                    }
+                }
+            }
+            $deletedCount = $query->count();
+            if ( $deletedCount > 0 ) {
+                $query->delete();
+            }
+            return $this->success( [ 'deleted_count' => $deletedCount ], "{$deletedCount} recursos removidos com sucesso." );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao remover recursos por critérios.", null, $e );
+        }
+    }
+
+    public function exists( array $criteria ): ServiceResult
+    {
+        try {
+            $query = $this->repository->getAll();
+            foreach ( $criteria as $field => $value ) {
+                if ( in_array( $field, $this->getSupportedFilters() ) ) {
+                    $query = $query->where( $field, $value );
+                }
+            }
+            $exists = $query->exists();
+            return $this->success( $exists, $exists ? 'Recurso encontrado.' : 'Recurso não encontrado.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao verificar existência do recurso.", null, $e );
+        }
+    }
+
+    public function duplicate( int $id, array $overrides = [] ): ServiceResult
+    {
+        try {
+            $originalResult = $this->findById( $id );
+            if ( !$originalResult->isSuccess() ) {
+                return $originalResult;
+            }
+            $original = $originalResult->getData();
+            $duplicateData = $original->toArray();
+            unset( $duplicateData[ 'id' ], $duplicateData[ 'created_at' ], $duplicateData[ 'updated_at' ] );
+            $duplicateData = array_merge( $duplicateData, $overrides );
+            return $this->create( $duplicateData );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao duplicar recurso.", null, $e );
+        }
+    }
+
+    public function restore( int $id ): ServiceResult
+    {
+        try {
+            $modelClass = get_class( $this->repository->getAll()->first() );
+            $modelInstance = new $modelClass();
+            if ( !method_exists( $modelInstance, 'restore' ) ) {
+                return $this->error( OperationStatus::ERROR, "Modelo não suporta restauração (soft deletes não habilitado)." );
+            }
+            $entity = $this->repository->getAll()->withTrashed()->find( $id );
+            if ( !$entity ) {
+                return $this->error( OperationStatus::NOT_FOUND, "Recurso com ID {$id} não encontrado." );
+            }
+            if ( !$entity->trashed() ) {
+                return $this->error( OperationStatus::CONFLICT, "Recurso não está excluído, não pode ser restaurado." );
+            }
+            $entity->restore();
+            return $this->success( $entity, 'Recurso restaurado com sucesso.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao restaurar recurso.", null, $e );
+        }
+    }
+
+    public function getStats( array $filters = [] ): ServiceResult
+    {
+        try {
+            $stats = [ 'total' => 0, 'active' => 0, 'inactive' => 0 ];
+            $totalResult = $this->count( $filters );
+            if ( $totalResult->isSuccess() ) {
+                $stats[ 'total' ] = $totalResult->getData();
+            }
+            if ( in_array( 'active', $this->getSupportedFilters() ) ) {
+                $activeResult = $this->count( array_merge( $filters, [ 'active' => true ] ) );
+                if ( $activeResult->isSuccess() ) {
+                    $stats[ 'active' ] = $activeResult->getData();
+                }
+                $inactiveResult = $this->count( array_merge( $filters, [ 'active' => false ] ) );
+                if ( $inactiveResult->isSuccess() ) {
+                    $stats[ 'inactive' ] = $inactiveResult->getData();
+                }
+            }
+            return $this->success( $stats, 'Estatísticas obtidas com sucesso.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, "Erro ao obter estatísticas.", null, $e );
         }
     }
 

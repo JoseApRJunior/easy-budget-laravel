@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Models\Activity;
-use App\Models\Address;
 use App\Models\Budget;
-use App\Models\CommonData;
-use App\Models\Contact;
 use App\Models\Provider;
 use App\Models\User;
-use App\Services\FinancialSummary;
+use App\Services\Domain\ActivityService;
+use App\Services\Infrastructure\FinancialSummary;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

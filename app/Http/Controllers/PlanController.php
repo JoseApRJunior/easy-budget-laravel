@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\OperationStatus;
-use App\Services\PlanService;
+use App\Services\Domain\PlanService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -53,7 +53,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return view( 'provider.plans.index', [
+            return view( 'pages.plan.index', [
                 'plans' => $result
             ] );
 
@@ -78,7 +78,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return view( 'plans.create' );
+            return view( 'pages.plan.create' );
 
         } catch ( Exception $e ) {
             return $this->handleError( $e, $request, 'Erro ao exibir formulário de criação.' );
@@ -120,7 +120,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ], 201 );
             }
 
-            return redirect()->route( 'plans.index' )
+            return redirect()->route( 'pages.plan.index' )
                 ->with( 'success', $message );
 
         } catch ( Exception $e ) {
@@ -154,7 +154,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return view( 'plans.show', [
+            return view( 'pages.plan.show', [
                 'plan' => $plan
             ] );
 
@@ -189,7 +189,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return view( 'plans.edit', [
+            return view( 'pages.plan.edit', [
                 'plan' => $plan
             ] );
 
@@ -234,7 +234,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return redirect()->route( 'plans.index' )
+            return redirect()->route( 'pages.plan.index' )
                 ->with( 'success', $message );
 
         } catch ( Exception $e ) {
@@ -273,7 +273,7 @@ class PlanController extends \Illuminate\Routing\Controller
                 ] );
             }
 
-            return redirect()->route( 'plans.index' )
+            return redirect()->route( 'pages.plan.index' )
                 ->with( 'success', $message );
 
         } catch ( Exception $e ) {

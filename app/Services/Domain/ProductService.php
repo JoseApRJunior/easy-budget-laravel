@@ -2,8 +2,7 @@
 
 namespace App\Services\Domain;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Services\Core\Abstracts\AbstractBaseService;
 
 class ProductService extends AbstractBaseService
 {

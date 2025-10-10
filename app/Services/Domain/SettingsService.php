@@ -7,8 +7,8 @@ namespace App\Services\Domain;
 use App\Models\SystemSettings;
 use App\Models\User;
 use App\Models\UserSettings;
+use App\Services\Core\Abstracts\AbstractBaseService;
 use Exception;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Serviço principal para gerenciamento de configurações
