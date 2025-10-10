@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DesignPatterns;
+namespace App\DesignPatterns\Services;
 
 /**
  * Padrão Unificado para Services no Easy Budget Laravel

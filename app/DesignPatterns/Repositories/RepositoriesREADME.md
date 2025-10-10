@@ -313,6 +313,90 @@ Para aplicar o padrão aos repositories existentes:
 3. **Crie novos níveis** se identificar necessidades não atendidas
 4. **Atualize documentação** conforme evolução
 
+## 🏗️ Arquitetura Dual de Repositories
+
+Durante análise aprofundada, foi identificada uma arquitetura dual fundamental no sistema:
+
+### **AbstractTenantRepository** (Dados Isolados)
+
+**Características:**
+
+-  ✅ **Isolamento:** Dados específicos de cada empresa
+-  ✅ **Global Scope:** Filtros automáticos por `tenant_id`
+-  ✅ **Métodos:** `getAllByTenant()`, `paginateByTenant()`, `countByTenant()`
+-  ✅ **Uso típico:** Clientes, produtos, orçamentos, faturas
+
+**Exemplo de implementação:**
+
+```php
+class CustomerRepository extends AbstractTenantRepository
+{
+    protected function makeModel(): Customer
+    {
+        return new Customer(); // Model com TenantScoped
+    }
+
+    public function findActiveByTenant(int $tenantId): Collection
+    {
+        return $this->getAllByTenant(
+            ['active' => true],
+            ['name' => 'asc']
+        );
+    }
+}
+```
+
+### **AbstractGlobalRepository** (Dados Compartilhados)
+
+**Características:**
+
+-  ✅ **Compartilhado:** Dados acessíveis por todos os tenants
+-  ✅ **Sem isolamento:** Não usa `tenant_id`
+-  ✅ **Métodos:** `getAllGlobal()`, `paginateGlobal()`, `countGlobal()`
+-  ✅ **Uso típico:** Categorias, unidades, configurações, planos
+
+**Exemplo de implementação:**
+
+```php
+class CategoryRepository extends AbstractGlobalRepository
+{
+    protected function makeModel(): Category
+    {
+        return new Category(); // Model sem TenantScoped
+    }
+
+    public function findActive(): Collection
+    {
+        return $this->getAllGlobal(
+            ['active' => true],
+            ['name' => 'asc']
+        );
+    }
+}
+```
+
+### **Quando Usar Cada Tipo:**
+
+| Cenário                          | Tipo   | Exemplo                          | Justificativa                             |
+| -------------------------------- | ------ | -------------------------------- | ----------------------------------------- |
+| **Dados específicos da empresa** | Tenant | Clientes, Produtos, Orçamentos   | Cada empresa gerencia seus próprios dados |
+| **Catálogos compartilhados**     | Global | Categorias, Unidades, Profissões | Mesmas categorias para todas as empresas  |
+| **Configurações do sistema**     | Global | Planos, Configurações            | Compartilhado entre tenants               |
+| **Relatórios consolidados**      | Ambos  | Analytics, Métricas              | Acesso global com filtros por tenant      |
+
+### **Migração Necessária:**
+
+#### **Repositories que precisam migração:**
+
+-  **CustomerRepository:** `AbstractRepository` → `AbstractTenantRepository`
+-  **ProductRepository:** Não existe → `AbstractTenantRepository`
+-  **BudgetRepository:** Não existe → `AbstractTenantRepository`
+
+#### **Repositories já corretos:**
+
+-  **PlanRepository:** `BaseRepositoryInterface` → Manter como está (dados globais)
+-  **CategoryRepository:** Não existe → `AbstractGlobalRepository`
+
 ## 📞 Suporte
 
 Para dúvidas sobre implementação ou sugestões de melhoria:
@@ -326,4 +410,5 @@ Para dúvidas sobre implementação ou sugestões de melhoria:
 
 **Última atualização:** 10/10/2025
 **Status:** ✅ Padrão implementado e documentado
+**Arquitetura Dual:** ✅ Identificada e documentada
 **Próxima revisão:** Em 3 meses ou quando necessário ajustes significativos

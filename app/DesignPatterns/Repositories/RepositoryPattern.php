@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DesignPatterns;
+namespace App\DesignPatterns\Repositories;
 
 /**
  * Padrão Unificado para Repositories no Easy Budget Laravel

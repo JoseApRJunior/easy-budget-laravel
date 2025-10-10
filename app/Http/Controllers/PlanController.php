@@ -52,7 +52,8 @@ class PlanController extends Controller
                     'message' => 'Planos listados com sucesso.'
                 ] );
             }
-
+            \var_dump( $result );
+            exit;
             return view( 'pages.plan.index', [
                 'plans' => $result
             ] );

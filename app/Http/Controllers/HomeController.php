@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Services\PlanService;
+use App\Services\Domain\PlanService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

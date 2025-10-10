@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DesignPatterns;
+namespace App\DesignPatterns\Controllers;
 
 /**
  * Padrão Unificado para Controllers no Easy Budget Laravel
