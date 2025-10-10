@@ -75,22 +75,22 @@
 
 ## 📊 Estado Atual dos Componentes
 
-| **Componente**             | **Status**                        | **Observações**                                         |
-| -------------------------- | --------------------------------- | ------------------------------------------------------- |
-| **Sistema Legado**         | ✅ **70% Funcional**              | Sistema antigo operacional em produção                  |
-| **Backend Laravel**        | ✅ **Arquitetura Otimizada**      | Controller → Services → Repositories → Models           |
-| **Banco de Dados**         | ✅ **100% Atualizado**            | Schema completo migrado para Laravel 12                 |
-| **Multi-tenant**           | ✅ **Implementado**               | Estrutura TenantScoped totalmente funcional             |
-| **Autenticação**           | ✅ **Implementado**               | Sistema RBAC completo e funcional                       |
-| **Auditoria**              | ✅ **Implementado**               | Sistema de logs avançado operacional                    |
-| **Controller Base**        | ✅ **Implementado**               | Integração ServiceResult e funcionalidades padronizadas |
-| **Contratos Aprimorados**  | ✅ **Implementado**               | Documentação rica e exemplos práticos                   |
-| **Service Layer**          | ✅ **Funcionalidades Avançadas**  | Filtros inteligentes e operações em lote                |
-| **Repository Pattern**     | ✅ **Funcionalidades Expandidas** | Operações especializadas implementadas                  |
-| **Módulos CRM**            | 🔄 **Migração**                   | Lógica de negócio sendo adaptada                        |
-| **Sistema de Assinaturas** | ✅ **Implementado**               | Integração Mercado Pago completa                        |
-| **Aplicação Web**          | 🔄 **Desenvolvimento**            | Interface Blade sendo construída                        |
-| **Testes**                 | ❌ **Ausentes**                   | Necessário implementar suite de testes                  |
+| **Componente**             | **Status**                        | **Observações**                                           |
+| -------------------------- | --------------------------------- | --------------------------------------------------------- |
+| **Sistema Legado**         | ✅ **70% Funcional**              | Sistema antigo operacional em produção                    |
+| **Backend Laravel**        | ✅ **Arquitetura Otimizada**      | Controller → Services → Repositories → Models             |
+| **Banco de Dados**         | ✅ **100% Atualizado**            | Schema completo migrado para Laravel 12                   |
+| **Multi-tenant**           | ✅ **Implementado**               | Estrutura TenantScoped totalmente funcional               |
+| **Autenticação**           | ✅ **Implementado**               | Sistema RBAC completo e funcional                         |
+| **Auditoria**              | ✅ **Implementado**               | Sistema de logs avançado operacional                      |
+| **Controller Base**        | ✅ **Implementado**               | Integração ServiceResult e funcionalidades padronizadas   |
+| **Contratos Aprimorados**  | ✅ **Implementado**               | Documentação rica e exemplos práticos                     |
+| **Service Layer**          | ✅ **Reorganizada por Camadas**   | Estrutura dividida em Domain, Application, Infrastructure |
+| **Repository Pattern**     | ✅ **Funcionalidades Expandidas** | Operações especializadas implementadas                    |
+| **Módulos CRM**            | 🔄 **Migração**                   | Lógica de negócio sendo adaptada                          |
+| **Sistema de Assinaturas** | ✅ **Implementado**               | Integração Mercado Pago completa                          |
+| **Aplicação Web**          | 🔄 **Desenvolvimento**            | Interface Blade sendo construída                          |
+| **Testes**                 | ❌ **Ausentes**                   | Necessário implementar suite de testes                    |
 
 ## 🔄 Mudanças Recentes (Última Semana)
 
@@ -109,6 +109,8 @@
 -  **Traits TenantScoped e Auditable** projetados para uso
 
 ### **🚀 Melhorias Arquiteturais Implementadas (Hoje)**
+
+-  **Reorganização da Camada de Serviço** - Estrutura dividida em `Domain`, `Application`, `Infrastructure`, `Core` e `Shared` para melhor alinhamento com Clean Architecture.
 
 -  **Controller Base Avançado** - Integração completa com ServiceResult
 -  **Contratos Expandidos** - Documentação rica em todos os contratos

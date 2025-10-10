@@ -71,15 +71,12 @@ app/
 │       ├── BaseRepositoryInterface.php   # Contrato básico
 │       ├── GlobalRepositoryInterface.php # Contrato global avançado
 │       └── TenantRepositoryInterface.php # Contrato tenant avançado
-├── Services/               # Business logic services
-│   ├── Abstracts/          # Classes abstratas para services
-│   │   └── AbstractBaseService.php # Service base com filtros avançados
-│   └── Contracts/          # Interfaces de serviços
-│       ├── BaseServiceInterface.php      # Interface de composição
-│       ├── CrudServiceInterface.php      # Interface CRUD avançada
-│       ├── CommandServiceInterface.php   # Interface de comandos
-│       ├── ValidationServiceInterface.php # Interface de validação
-│       └── UtilityServiceInterface.php   # Interface utilitária
+├── Services/               # Camada de serviços com arquitetura por responsabilidade
+│   ├── Domain/             # Serviços de Domínio (CRUD, regras de negócio da entidade)
+│   ├── Application/        # Serviços de Aplicação (orquestração, workflows)
+│   ├── Infrastructure/     # Serviços de Infraestrutura (APIs externas, e-mail, cache)
+│   ├── Core/               # Abstrações da camada de serviço (interfaces, classes base)
+│   └── Shared/             # Serviços compartilhados entre camadas
 ├── Support/                # Classes de suporte (ServiceResult)
 ├── Traits/                 # Traits reutilizáveis
 └── View/                   # Sistema de views Blade (herdado)
