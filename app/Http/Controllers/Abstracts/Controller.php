@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Abstracts;
 
 use App\Support\ServiceResult;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

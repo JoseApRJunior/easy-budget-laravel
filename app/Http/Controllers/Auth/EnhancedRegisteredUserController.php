@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\CommonData;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
@@ -60,7 +60,7 @@ class EnhancedRegisteredUserController extends Controller
             // 1. Criar ou buscar tenant (por simplicidade, vamos criar um novo tenant)
             Log::info( 'Criando tenant...', [ 'name' => $request->first_name . ' ' . $request->last_name ] );
             $tenant = Tenant::create( [
-                'name'      => $request->first_name . ' ' . $request->last_name. ' ' . time(),
+                'name'      => $request->first_name . ' ' . $request->last_name . ' ' . time(),
                 'is_active' => true,
             ] );
             Log::info( 'Tenant criado com sucesso', [ 'tenant_id' => $tenant->id ] );
@@ -122,9 +122,9 @@ class EnhancedRegisteredUserController extends Controller
                 'provider_id'        => $provider->id,
                 'status'             => 'active',
                 'transaction_amount' => $plan->price ?? 0.00,
-                'transaction_date'         => now(),
-                'start_date'          => now(),
-                'end_date'            => date( 'Y-m-d H:i:s', strtotime( '+7 days' ) ),
+                'transaction_date'   => now(),
+                'start_date'         => now(),
+                'end_date'           => date( 'Y-m-d H:i:s', strtotime( '+7 days' ) ),
             ] );
             Log::info( 'Assinatura do plano criada', [ 'subscription_id' => $plan_subscription->id ] );
 

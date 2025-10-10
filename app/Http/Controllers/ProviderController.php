@@ -8,6 +8,7 @@ use App\Entities\CommonDataEntity;
 use App\Entities\ContactEntity;
 use App\Entities\ProviderEntity;
 use App\Entities\UserEntity;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\ProviderManagementService;

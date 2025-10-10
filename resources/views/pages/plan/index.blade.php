@@ -94,7 +94,7 @@
                 @php
                     $pendingPlan = checkPlanPending();
                 @endphp
-                @if ( $pendingPlan->status == 'pending' )
+                @if ( $pendingPlan && $pendingPlan->status == 'pending' )
                     <p class="text-muted mb-3">
                         Você possui uma assinatura para o plano
                         <strong>{{ $pendingPlan->name }}</strong>

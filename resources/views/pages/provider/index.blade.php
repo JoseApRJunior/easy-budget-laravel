@@ -32,7 +32,7 @@
                                         window.location.href = "{{ route( 'plans.index' ) }}";
                                     }, 5000);
                                 </script>
-                @elseif ( isTrial() || ( checkPlanPending() && checkPlanPending()->status == 'pending' ) )
+                @elseif ( isTrial() || ( checkPlanPending() && isset( checkPlanPending()->status ) && checkPlanPending()->status == 'pending' ) )
                                     {{-- Modal de Alerta de Plano --}}
                                     <div class="modal fade" id="planAlertModal" tabindex="-1" aria-labelledby="planAlertModalLabel">
                                         <div class="modal-dialog modal-dialog-centered">
@@ -50,10 +50,10 @@
 
                                                 {{-- Corpo do Modal --}}
                                                 <div class="modal-body">
-                                                    @if ( checkPlanPending() && checkPlanPending()->status == 'pending' )
+                                                    @if ( checkPlanPending() && isset( checkPlanPending()->status ) && checkPlanPending()->status == 'pending' )
                                                         <p class="text-muted mb-3">
                                                             Você possui uma assinatura para o plano
-                                                            <strong>{{ checkPlanPending()->name }}</strong>
+                                                            <strong>{{ checkPlanPending()->name ?? 'Plano' }}</strong>
                                                             aguardando pagamento. O que você gostaria de fazer?
                                                         </p>
                                                         <div class="d-flex flex-column gap-2">

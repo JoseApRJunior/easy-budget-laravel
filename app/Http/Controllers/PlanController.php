@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\OperationStatus;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\PlanService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +18,7 @@ use Illuminate\View\View;
  * Este controller gerencia operações CRUD para planos do sistema,
  * incluindo listagem, criação, edição e exclusão de planos.
  */
-class PlanController extends \Illuminate\Routing\Controller
+class PlanController extends Controller
 {
     protected PlanService $planService;
 
@@ -138,7 +138,7 @@ class PlanController extends \Illuminate\Routing\Controller
     public function show( int $id, Request $request ): View|JsonResponse
     {
         try {
-            $result = $this->planService->getById( $id );
+            $result = $this->planService->findById( $id );
 
             if ( !$result->isSuccess() ) {
                 return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
@@ -173,7 +173,7 @@ class PlanController extends \Illuminate\Routing\Controller
     public function edit( int $id, Request $request ): View|JsonResponse
     {
         try {
-            $result = $this->planService->getById( $id );
+            $result = $this->planService->findById( $id );
 
             if ( !$result->isSuccess() ) {
                 return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
@@ -252,7 +252,7 @@ class PlanController extends \Illuminate\Routing\Controller
     public function destroy( int $id, Request $request ): JsonResponse|RedirectResponse
     {
         try {
-            $result = $this->planService->getById( $id );
+            $result = $this->planService->findById( $id );
 
             if ( !$result->isSuccess() ) {
                 return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
@@ -291,7 +291,7 @@ class PlanController extends \Illuminate\Routing\Controller
     public function activate( int $id, Request $request ): JsonResponse|RedirectResponse
     {
         try {
-            $result = $this->planService->getById( $id );
+            $result = $this->planService->findById( $id );
 
             if ( !$result->isSuccess() ) {
                 return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
@@ -330,7 +330,7 @@ class PlanController extends \Illuminate\Routing\Controller
     public function deactivate( int $id, Request $request ): JsonResponse|RedirectResponse
     {
         try {
-            $result = $this->planService->getById( $id );
+            $result = $this->planService->findById( $id );
 
             if ( !$result->isSuccess() ) {
                 return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
@@ -399,7 +399,7 @@ class PlanController extends \Illuminate\Routing\Controller
 
         // Return view with error instead of redirect
         $result = $this->planService->list();
-        return view( 'plans.index', [
+        return view( 'pages.plan.index', [
             'plans' => $result->isSuccess() ? $result->getData() : []
         ] )->with( 'error', $message );
     }
@@ -426,7 +426,7 @@ class PlanController extends \Illuminate\Routing\Controller
         // Return view with error instead of redirect
         try {
             $result = $this->planService->list();
-            return view( 'plans.index', [
+            return view( 'pages.plan.index', [
                 'plans' => $result->isSuccess() ? $result->getData() : []
             ] )->with( 'error', $message );
         } catch ( Exception $fallbackError ) {
