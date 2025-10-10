@@ -11,7 +11,6 @@ use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Tenant;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,14 +64,31 @@ class EnhancedRegisteredUserController extends Controller
             ] );
             Log::info( 'Tenant criado com sucesso', [ 'tenant_id' => $tenant->id ] );
 
-            // 2. Buscar o plano selecionado
-            Log::info( 'Buscando plano pro...' );
-            $plan = Plan::where( 'slug', 'pro' )->where( 'status', true )->first();
+            // 2. Buscar o plano gratuito ou primeiro disponível
+            Log::info( 'Buscando plano disponível...' );
+            $plan = Plan::where( 'status', true )->orderBy( 'price' )->first();
 
             if ( !$plan ) {
-                throw new \Exception( 'Plano selecionado não encontrado ou não está ativo.' );
+                // Criar plano básico se nenhum existir
+                $plan = Plan::create( [
+                    'name'        => 'Plano Básico',
+                    'slug'        => 'basico',
+                    'description' => 'Plano básico para novos usuários',
+                    'price'       => 0.00,
+                    'status'      => true,
+                    'max_budgets' => 10,
+                    'max_clients' => 50,
+                    'features'    => json_encode( [
+                        'budgets' => 10,
+                        'clients' => 50,
+                        'reports' => true,
+                        'support' => 'basic'
+                    ] )
+                ] );
+                Log::info( 'Plano básico criado automaticamente', [ 'plan_id' => $plan->id ] );
+            } else {
+                Log::info( 'Plano encontrado', [ 'plan_id' => $plan->id, 'plan_name' => $plan->name ] );
             }
-            Log::info( 'Plano encontrado', [ 'plan_id' => $plan->id ] );
 
             // 3. Criar o usuário
             Log::info( 'Criando usuário...' );

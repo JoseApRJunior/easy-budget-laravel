@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
         // Força invalidação de qualquer sessão anterior para evitar conflitos entre navegadores
         $this->ensureCleanSession( $request );
 
-        return redirect()->intended( route( 'provider.index', absolute: false ) );
+        return redirect()->intended( route( 'dashboard', absolute: false ) );
     }
 
     /**

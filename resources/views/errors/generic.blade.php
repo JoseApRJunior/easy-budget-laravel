@@ -22,7 +22,7 @@
                         @endif
 
                         <div class="d-flex justify-content-center gap-3">
-                            <a href="{{ route( 'provider.index' ) }}" class="btn btn-primary">
+                            <a href="{{ route( 'dashboard' ) }}" class="btn btn-primary">
                                 <i class="bi bi-house me-2"></i>Voltar ao Painel
                             </a>
                             <button onclick="window.location.reload()" class="btn btn-outline-secondary">

@@ -81,7 +81,7 @@ class ProviderController extends Controller
                 'professions'       => $data[ 'professions' ],
             ] );
         } catch ( \Exception $e ) {
-            return redirect()->route( 'provider.index' )
+            return redirect()->route( 'dashboard' )
                 ->with( 'error', 'Provider não encontrado' );
         }
     }

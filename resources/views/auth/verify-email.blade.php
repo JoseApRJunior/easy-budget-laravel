@@ -1,31 +1,126 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+@extends( 'layouts.app' )
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+@section( 'content' )
+    <main class="container py-5">
+        <!-- Cabeçalho da página -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold  mb-3">
+                Confirmação de E-mail
+            </h1>
+            <p class="lead text-muted">
+                Verifique sua caixa de entrada para ativar sua conta
+            </p>
         </div>
-    @endif
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
+        <!-- Conteúdo principal -->
+        <div class="row g-4">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <!-- Ícone ilustrativo -->
+                        <div class="text-center mb-4">
+                            <i class="bi bi-envelope-check text-primary mb-3" style="font-size: 4rem;"></i>
+                        </div>
 
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
+                        <!-- Mensagem principal -->
+                        <div class="text-center mb-4">
+                            <h5 class="mb-3">E-mail de confirmação enviado!</h5>
+                            <p class="text-muted mb-4">
+                                Enviamos um link de confirmação para o endereço de e-mail fornecido durante o cadastro.
+                                Clique no link para ativar sua conta e começar a usar o Easy Budget.
+                            </p>
+                        </div>
+
+                        <!-- Session Status -->
+                        <x-auth-session-status class="mb-4 text-center" :status="session( 'status' )" />
+
+                        <!-- Instruções -->
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading mb-2">
+                                <i class="bi bi-info-circle me-2"></i>O que fazer agora?
+                            </h6>
+                            <ul class="mb-0 text-start">
+                                <li>Verifique sua caixa de entrada (e também a pasta de spam)</li>
+                                <li>Clique no link de confirmação no e-mail</li>
+                                <li>Após confirmar, você será redirecionado automaticamente</li>
+                                <li>Caso não encontre o e-mail, use o botão abaixo para reenviar</li>
+                            </ul>
+                        </div>
+
+                        <!-- Ações -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <form method="POST" action="{{ route( 'verification.send' ) }}" class="d-grid">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-envelope-arrow-up me-2"></i>
+                                        Reenviar E-mail
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-md-6">
+                                <a href="{{ route( 'force-logout' ) }}" class="btn btn-outline-secondary d-grid">
+                                    <i class="bi bi-box-arrow-right me-2"></i>
+                                    Sair do Sistema
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Ajuda -->
+                        <div class="text-center mt-4 pt-4 border-top">
+                            <small class="text-muted">
+                                Não recebeu o e-mail?
+                                <a href="{{ route( 'support' ) }}" class="text-decoration-none">
+                                    Entre em contato conosco
+                                </a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
+    </main>
+@endsection
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
+@push( 'styles' )
 
-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                {{ __('Log Out') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+@endpush
+
+@push( 'scripts' )
+    <script>
+        // Scripts específicos da página
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Animação suave para elementos
+            const animatedElements = document.querySelectorAll( '.card, .alert' );
+            animatedElements.forEach( ( element, index ) => {
+                setTimeout( () => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(20px)';
+                    element.style.transition = 'all 0.6s ease';
+
+                    setTimeout( () => {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, 100 );
+                }, index * 200 );
+            } );
+
+            // Feedback visual para botões
+            const buttons = document.querySelectorAll( 'button[type="submit"]' );
+            buttons.forEach( button => {
+                button.addEventListener( 'click', function () {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processando...';
+                    this.disabled = true;
+
+                    // Reabilitar após 3 segundos (fallback)
+                    setTimeout( () => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    }, 3000 );
+                } );
+            } );
+        } );
+    </script>
+@endpush

@@ -30,7 +30,7 @@ Route::get( '/privacy-policy', [ HomeController::class, 'privacy' ] )->name( 'pr
 Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
 
     // Provider routes
-    Route::get( '/provider', [ ProviderController::class, 'index' ] )->name( 'provider.index' );
+    Route::get( '/provider', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
 
     Route::get( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
     Route::post( '/provider/update', [ ProviderController::class, 'update_store' ] )->name( 'provider.update_store' );
