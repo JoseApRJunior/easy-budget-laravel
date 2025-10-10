@@ -11,6 +11,28 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
+ * Exemplo prático de Controller usando funcionalidades do Controller base:
+ *
+ * ```php
+ * // Antes (código repetitivo):
+ * $result = $this->planService->list();
+ * $plans = $result->isSuccess() ? $result->getData() : [];
+ * return view('pages.home.index', ['plans' => $plans]);
+ *
+ * // Depois (usando Controller base):
+ * $result = $this->planService->list();
+ * return $this->view('pages.home.index', $result);
+ * ```
+ *
+ * Benefícios:
+ * - ✅ Tratamento padronizado de ServiceResult
+ * - ✅ Logging automático de operações
+ * - ✅ Redirects consistentes com mensagens
+ * - ✅ Validação centralizada
+ * - ✅ Tratamento de erro uniforme
+ */
+
+/**
  * Controller para a página inicial do sistema
  *
  * Gerencia a exibição da home page com planos disponíveis
@@ -38,14 +60,20 @@ class HomeController extends Controller
         try {
             $result = $this->planService->list();
 
-            $plans = [];
             if ( $result->isSuccess() ) {
-                $data  = $result->getData();
-                $plans = is_array( $data ) ? $data : [];
+                $plans = $this->getServiceData( $result, [] );
+                $this->logOperation( 'home_index_accessed', [ 'plans_count' => count( $plans ) ] );
+
+                return view( 'pages.home.index', [
+                    'plans' => $plans
+                ] );
             }
 
+            // Se falhou, loga o erro e retorna view vazia
+            Log::error( 'Erro no serviço de planos: ' . $this->getServiceErrorMessage( $result ) );
+
             return view( 'pages.home.index', [
-                'plans' => $plans
+                'plans' => []
             ] );
         } catch ( Exception $e ) {
             Log::error( 'Erro ao carregar página inicial: ' . $e->getMessage() );
@@ -91,7 +119,7 @@ class HomeController extends Controller
      */
     public function contact( Request $request )
     {
-        $validatedData = $request->validate( [
+        $validatedData = $this->validateRequest( $request, [
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email'      => 'required|email|max:255',
@@ -106,15 +134,18 @@ class HomeController extends Controller
             // TODO: Implementar envio de email de suporte
             // $this->supportService->sendContactEmail($validatedData);
 
-            Log::info( 'Contato de suporte recebido: ' . $validatedData[ 'name' ] . ' - ' . $validatedData[ 'email' ] );
+            $this->logOperation( 'support_contact_received', [
+                'name'    => $validatedData[ 'name' ],
+                'email'   => $validatedData[ 'email' ],
+                'subject' => $validatedData[ 'subject' ]
+            ] );
 
-            return redirect()->back()->with( 'success', 'Mensagem enviada com sucesso! Entraremos em contato em breve.' );
+            return $this->redirectSuccess( 'home.support', 'Mensagem enviada com sucesso! Entraremos em contato em breve.' );
 
         } catch ( Exception $e ) {
             Log::error( 'Erro ao processar contato de suporte: ' . $e->getMessage() );
 
-            return redirect()->back()
-                ->with( 'error', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
+            return $this->redirectError( 'home.support', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
                 ->withInput();
         }
     }
