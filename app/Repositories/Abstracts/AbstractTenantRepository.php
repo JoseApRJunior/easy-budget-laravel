@@ -6,11 +6,68 @@ namespace App\Repositories\Abstracts;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Repositório abstrato base para modelos tenant-scoped.
- * * Assume que o Model retornado por makeModel() possui um Global Scope
- * que filtra automaticamente por tenant_id (HasTenantScope Trait).
+ *
+ * Esta classe é a espinha dorsal para todos os repositórios que operam em
+ * contexto multi-tenant, garantindo isolamento automático de dados por empresa.
+ * Assume que o Model possui Global Scope que filtra automaticamente por tenant_id.
+ *
+ * Funcionalidades principais:
+ * - Isolamento automático por tenant
+ * - Operações CRUD com contexto tenant
+ * - Filtros e paginação avançados
+ * - Busca por slug e código único
+ * - Validação de unicidade dentro do tenant
+ * - Operações em lote
+ *
+ * @package App\Repositories\Abstracts
+ *
+ * @example Exemplo de implementação concreta:
+ * ```php
+ * class ProductRepository extends AbstractTenantRepository
+ * {
+ *     protected function makeModel(): Model
+ *     {
+ *         return new Product(); // Model com TenantScoped trait
+ *     }
+ *
+ *     public function findActiveByCategory(int $categoryId): Collection
+ *     {
+ *         return $this->model->where('category_id', $categoryId)
+ *                           ->where('active', true)
+ *                           ->get();
+ *     }
+ * }
+ * ```
+ *
+ * @example Uso em Service Layer:
+ * ```php
+ * class ProductService extends AbstractBaseService
+ * {
+ *     public function __construct(ProductRepository $repository)
+ *     {
+ *         parent::__construct($repository);
+ *     }
+ *
+ *     public function getActiveProducts(): ServiceResult
+ *     {
+ *         $products = $this->repository->getAllByTenant(
+ *             ['active' => true],
+ *             ['name' => 'asc']
+ *         );
+ *         return $this->success($products);
+ *     }
+ * }
+ * ```
+ *
+ * @example Cenários de uso recomendados:
+ * - **Produtos/Serviços** - Cada empresa gerencia seu catálogo
+ * - **Clientes/CRM** - Dados isolados por empresa
+ * - **Orçamentos/Faturas** - Controle financeiro por tenant
+ * - **Configurações específicas** - Personalização por empresa
  */
 abstract class AbstractTenantRepository implements TenantRepositoryInterface
 {
@@ -27,20 +84,19 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     abstract protected function makeModel(): Model;
 
     // --------------------------------------------------------------------------
-    // MÉTODOS CRUD (O filtro de tenant é aplicado pelo MODEL)
+    // IMPLEMENTAÇÃO DOS MÉTODOS HERDADOS DO BaseRepositoryInterface
     // --------------------------------------------------------------------------
 
     /**
-     * Encontra um registro por ID.
+     * {@inheritdoc}
      */
     public function find( int $id ): ?Model
     {
-        // O find é seguro devido ao Global Scope no Model.
         return $this->model->find( $id );
     }
 
     /**
-     * Busca todos os registros do tenant ativo.
+     * {@inheritdoc}
      */
     public function getAll(): Collection
     {
@@ -48,17 +104,15 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     }
 
     /**
-     * Cria um novo registro.
+     * {@inheritdoc}
      */
     public function create( array $data ): Model
     {
-        // O tenant_id deve ser preenchido aqui, ou na Service Layer, ou no Model.
-        // Se o Service Layer envia o tenant_id, a criação é segura.
         return $this->model->create( $data );
     }
 
     /**
-     * Atualiza um registro existente.
+     * {@inheritdoc}
      */
     public function update( int $id, array $data ): ?Model
     {
@@ -73,11 +127,10 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     }
 
     /**
-     * Remove um registro.
+     * {@inheritdoc}
      */
     public function delete( int $id ): bool
     {
-        // O método find() garante que a deleção só ocorre dentro do tenant.
         $model = $this->find( $id );
 
         if ( !$model ) {
@@ -85,6 +138,229 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         }
 
         return (bool) $model->delete();
+    }
+
+    // --------------------------------------------------------------------------
+    // IMPLEMENTAÇÃO DOS MÉTODOS ESPECÍFICOS DO TenantRepositoryInterface
+    // --------------------------------------------------------------------------
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAllByTenant(
+        array $criteria = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+    ): Collection {
+        $query = $this->model->newQuery();
+
+        // Aplica filtros de tenant automaticamente via Global Scope
+        $this->applyFilters( $query, $criteria );
+
+        // Aplica ordenação
+        if ( $orderBy !== null ) {
+            foreach ( $orderBy as $field => $direction ) {
+                $query->orderBy( $field, $direction );
+            }
+        }
+
+        // Aplica limite e offset
+        if ( $offset !== null ) {
+            $query->offset( $offset );
+        }
+        if ( $limit !== null ) {
+            $query->limit( $limit );
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function paginateByTenant(
+        int $perPage = 15,
+        array $filters = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery();
+
+        // Aplica filtros de tenant automaticamente via Global Scope
+        $this->applyFilters( $query, $filters );
+
+        // Aplica ordenação
+        if ( $orderBy !== null ) {
+            foreach ( $orderBy as $field => $direction ) {
+                $query->orderBy( $field, $direction );
+            }
+        }
+
+        return $query->paginate( $perPage );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countByTenant( array $filters = [] ): int
+    {
+        $query = $this->model->newQuery();
+
+        // Aplica filtros de tenant automaticamente via Global Scope
+        $this->applyFilters( $query, $filters );
+
+        return $query->count();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findByTenantAndSlug( string $slug ): ?Model
+    {
+        return $this->model->where( 'slug', $slug )->first();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findByTenantAndCode( string $code ): ?Model
+    {
+        return $this->model->where( 'code', $code )->first();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isUniqueInTenant( string $field, mixed $value, ?int $excludeId = null ): bool
+    {
+        $query = $this->model->where( $field, $value );
+
+        if ( $excludeId !== null ) {
+            $query->where( 'id', '!=', $excludeId );
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findManyByTenant( array $ids ): Collection
+    {
+        return $this->model->whereIn( 'id', $ids )->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteManyByTenant( array $ids ): int
+    {
+        return $this->model->whereIn( 'id', $ids )->delete();
+    }
+
+    // --------------------------------------------------------------------------
+    // MÉTODOS AUXILIARES PROTEGIDOS
+    // --------------------------------------------------------------------------
+
+    /**
+     * Aplica filtros à query de forma segura e consistente.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['status' => 'active', 'price' => ['operator' => '>', 'value' => 100]])
+     *
+     * @example Uso típico em repositório concreto:
+     * ```php
+     * public function findActiveProducts(): Collection
+     * {
+     *     $filters = [
+     *         'active' => true,
+     *         'price' => ['operator' => '>', 'value' => 0]
+     *     ];
+     *     return $this->getAllByTenant($filters, ['name' => 'asc']);
+     * }
+     * ```
+     */
+    protected function applyFilters( $query, array $filters ): void
+    {
+        foreach ( $filters as $field => $value ) {
+            if ( is_array( $value ) ) {
+                // Suporte a operadores especiais
+                if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
+                    $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
+                } else {
+                    $query->whereIn( $field, $value );
+                }
+            } elseif ( $value !== null ) {
+                $query->where( $field, $value );
+            }
+        }
+    }
+
+    /**
+     * Aplica ordenação à query com validação de campos.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array<string, string> $orderBy
+     */
+    protected function applyOrderBy( $query, array $orderBy ): void
+    {
+        foreach ( $orderBy as $field => $direction ) {
+            $direction = strtolower( $direction ) === 'desc' ? 'desc' : 'asc';
+            $query->orderBy( $field, $direction );
+        }
+    }
+
+    /**
+     * Valida se um campo existe no modelo antes de aplicar filtro.
+     *
+     * @param string $field
+     * @return bool
+     */
+    protected function isValidField( string $field ): bool
+    {
+        return in_array( $field, $this->getFillableFields() );
+    }
+
+    /**
+     * Retorna lista de campos fillable do modelo.
+     *
+     * @return array<string>
+     */
+    protected function getFillableFields(): array
+    {
+        return $this->model->getFillable();
+    }
+
+    /**
+     * Busca registros com relacionamento específico carregado.
+     *
+     * @param array<int> $ids
+     * @param array<string> $with
+     * @return Collection<Model>
+     */
+    public function findManyWithRelations( array $ids, array $with = [] ): Collection
+    {
+        $query = $this->model->whereIn( 'id', $ids );
+
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Busca registros por múltiplos critérios dentro do tenant.
+     *
+     * @param array<string, mixed> $criteria
+     * @return Collection<Model>
+     */
+    public function findByMultipleCriteria( array $criteria ): Collection
+    {
+        $query = $this->model->newQuery();
+        $this->applyFilters( $query, $criteria );
+
+        return $query->get();
     }
 
 }

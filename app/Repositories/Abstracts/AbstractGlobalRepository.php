@@ -10,6 +10,49 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Repositório abstrato base para operações globais (sem tenant_id).
+ *
+ * Esta classe fornece funcionalidades avançadas para repositórios que operam
+ * em contexto global, sem restrições de tenant. É ideal para entidades que
+ * precisam ser acessadas por todos os tenants ou pelo sistema administrativo.
+ *
+ * @package App\Repositories\Abstracts
+ *
+ * @example Exemplo de implementação concreta:
+ * ```php
+ * class CategoryRepository extends AbstractGlobalRepository
+ * {
+ *     protected function makeModel(): Model
+ *     {
+ *         return new Category();
+ *     }
+ *
+ *     public function findBySlug(string $slug): ?Category
+ *     {
+ *         return $this->model->where('slug', $slug)->first();
+ *     }
+ * }
+ * ```
+ *
+ * @example Uso típico em um Controller:
+ * ```php
+ * class CategoryController extends Controller
+ * {
+ *     private CategoryRepository $categoryRepository;
+ *
+ *     public function __construct(CategoryRepository $categoryRepository)
+ *     {
+ *         $this->categoryRepository = $categoryRepository;
+ *     }
+ *
+ *     public function index(Request $request)
+ *     {
+ *         $filters = $request->only(['status', 'type']);
+ *         $categories = $this->categoryRepository->paginateGlobal(20, $filters);
+ *
+ *         return view('categories.index', compact('categories'));
+ *     }
+ * }
+ * ```
  */
 abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
 {
@@ -42,24 +85,13 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     ): Collection {
         $query = $this->model->newQuery();
 
-        // Lógica de filtro (where)
-        if ( !empty( $criteria ) ) {
-            foreach ( $criteria as $field => $value ) {
-                // Simplificado para whereIn e where simples
-                if ( is_array( $value ) ) {
-                    $query->whereIn( $field, $value );
-                } else {
-                    $query->where( $field, $value );
-                }
-            }
-        }
+        // Aplica filtros usando método auxiliar
+        $this->applyFilters( $query, $criteria );
 
-        // Lógica de ordenação, limite e offset...
-        if ( $orderBy !== null ) {
-            foreach ( $orderBy as $field => $direction ) {
-                $query->orderBy( $field, $direction );
-            }
-        }
+        // Aplica ordenação usando método auxiliar
+        $this->applyOrderBy( $query, $orderBy );
+
+        // Aplica paginação manual
         if ( $offset !== null ) {
             $query->offset( $offset );
         }
@@ -105,15 +137,8 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     {
         $query = $this->model->newQuery();
 
-        if ( !empty( $filters ) ) {
-            foreach ( $filters as $field => $value ) {
-                if ( is_array( $value ) ) {
-                    $query->whereIn( $field, $value );
-                } else {
-                    $query->where( $field, $value );
-                }
-            }
-        }
+        // Aplica filtros usando método auxiliar
+        $this->applyFilters( $query, $filters );
 
         return $query->paginate( $perPage );
     }
@@ -122,17 +147,90 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     {
         $query = $this->model->newQuery();
 
-        if ( !empty( $filters ) ) {
-            foreach ( $filters as $field => $value ) {
-                if ( is_array( $value ) ) {
-                    $query->whereIn( $field, $value );
-                } else {
-                    $query->where( $field, $value );
-                }
-            }
-        }
+        // Aplica filtros usando método auxiliar
+        $this->applyFilters( $query, $filters );
 
         return $query->count();
+    }
+
+    // --------------------------------------------------------------------------
+    // MÉTODOS AUXILIARES PROTEGIDOS
+    // --------------------------------------------------------------------------
+
+    /**
+    /**
+     * Aplica filtros à query de forma segura e consistente.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['status' => 'active', 'type' => 'premium'])
+     *
+     * @example Uso típico:
+     * ```php
+     * $filters = [
+     *     'status' => 'active',
+     *     'category_id' => [1, 2, 3],
+     *     'price' => ['operator' => '>', 'value' => 100]
+     * ];
+     * $this->applyFilters($query, $filters);
+     * ```
+     */
+    protected function applyFilters( $query, array $filters ): void
+    {
+        if ( empty( $filters ) ) {
+            return;
+        }
+
+        foreach ( $filters as $field => $value ) {
+            if ( is_array( $value ) ) {
+                // Suporte a operadores especiais
+                if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
+                    $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
+                } else {
+                    $query->whereIn( $field, $value );
+                }
+            } elseif ( $value !== null ) {
+                $query->where( $field, $value );
+            }
+        }
+    }
+
+    /**
+     * Aplica ordenação à query com validação de direção.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array<string, string>|null $orderBy
+     */
+    protected function applyOrderBy( $query, ?array $orderBy ): void
+    {
+        if ( empty( $orderBy ) ) {
+            return;
+        }
+
+        foreach ( $orderBy as $field => $direction ) {
+            $direction = strtolower( $direction ) === 'desc' ? 'desc' : 'asc';
+            $query->orderBy( $field, $direction );
+        }
+    }
+
+    /**
+     * Valida se um campo existe no modelo antes de aplicar filtro.
+     *
+     * @param string $field
+     * @return bool
+     */
+    protected function isValidField( string $field ): bool
+    {
+        return in_array( $field, $this->getFillableFields() );
+    }
+
+    /**
+     * Retorna lista de campos fillable do modelo.
+     *
+     * @return array<string>
+     */
+    protected function getFillableFields(): array
+    {
+        return $this->model->getFillable();
     }
 
 }
