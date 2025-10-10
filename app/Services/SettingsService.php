@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Serviço principal para gerenciamento de configurações
  */
-class SettingsService
+class SettingsService extends AbstractBaseService
 {
     /**
      * Obtém configurações do usuário atual
@@ -229,7 +229,7 @@ class SettingsService
     {
         // Implementação específica para integrações
         // Por enquanto, armazena nas preferências customizadas
-        $customPreferences                 = auth()->user()->settings->custom_preferences ?? [];
+        $customPreferences                   = auth()->user()->settings->custom_preferences ?? [];
         $customPreferences[ 'integrations' ] = $data;
 
         $userSettings = $this->updateUserSettings( [
