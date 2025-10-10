@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OperationStatus;
+use App\Services\Abstracts\AbstractBaseService;
 use App\Services\Abstracts\BaseTenantService;
 use App\Support\ServiceResult;
 use Carbon\Carbon;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class ActivityService extends BaseTenantService
+class ActivityService extends AbstractBaseService
 {
     protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
     {
@@ -76,7 +77,7 @@ class ActivityService extends BaseTenantService
 
     public function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
     {
-        $rules     = [ 
+        $rules     = [
             'action'   => 'required|string',
             'metadata' => 'nullable|array',
             'user_id'  => 'nullable|integer|exists:users,id',
@@ -142,7 +143,7 @@ class ActivityService extends BaseTenantService
      */
     public function logActivity( string $action, array $data = [], int $tenantId ): ServiceResult
     {
-        $activityData = [ 
+        $activityData = [
             'action'     => $action,
             'metadata'   => $data,
             'user_id'    => Auth::id(),
