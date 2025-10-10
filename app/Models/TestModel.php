@@ -1,16 +1,15 @@
 <?php
 
-namespace {{ namespace }};
+namespace App\Models;
 
-{{ factoryImport }}
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Aplicar padrões arquiteturais do projeto Easy Budget Laravel
 // Seguindo sistema de padrões de 3 níveis para Models
 
-class {{ class }} extends Model
+class TestModel extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -169,5 +168,5 @@ class {{ class }} extends Model
     //     ];
     // }
 
-    {{ factory }}
+    //
 }

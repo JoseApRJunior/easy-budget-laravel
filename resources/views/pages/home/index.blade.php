@@ -33,13 +33,13 @@
 
             <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
                 @foreach( $plans as $plan )
-                    <div class="col">
+                    <div class="col position-relative">
                         <div class="card h-100 shadow-sm hover-card">
                             <div class="card-body d-flex flex-column">
                                 <div class="text-center mb-4">
-                                    @if( $plan[ 'slug' ] == 'free' || $plan[ 'slug' ] == 'trial' )
+                                    @if( $plan[ 'slug' ] == 'basic' || $plan[ 'slug' ] == 'trial' )
                                         <i class="bi bi-rocket display-6 text-primary mb-2"></i>
-                                    @elseif( $plan[ 'slug' ] == 'basic' )
+                                    @elseif( $plan[ 'slug' ] == 'pro' )
                                         <i class="bi bi-star display-6 text-success mb-2"></i>
                                     @else
                                         <i class="bi bi-gem display-6 text-info mb-2"></i>
@@ -47,7 +47,7 @@
                                     <h3 class="card-title h4">{{ $plan[ 'name' ] }}</h3>
                                     <div class="pricing-header">
                                         <span class="currency">R$</span>
-                                        <span class="price">{{ number_format( $plan[ 'price' ], 0, '', '.' ) }}</span>
+                                        <span class="price">{{ number_format( $plan[ 'price' ], 2, ',', '.' ) }}</span>
                                         <span class="period">/mês</span>
                                     </div>
                                 </div>
@@ -64,6 +64,16 @@
                                 </ul>
                             </div>
                         </div>
+
+                        <!-- Destaque para Plano Recomendado -->
+                        @if( $plan[ 'slug' ] == 'pro' )
+                            <div class="position-absolute top-0 start-50 translate-middle"
+                                style="z-index: 1000; margin-top: -10px;">
+                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold shadow-lg border">
+                                    <i class="bi bi-star-fill me-1"></i>Mais Popular
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

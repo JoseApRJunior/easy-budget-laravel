@@ -9,32 +9,33 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
-// Aplicar padrões arquiteturais do projeto
+// Aplicar padrões arquiteturais do projeto Easy Budget Laravel
+// Seguindo arquitetura DUAL: AbstractTenantRepository para dados isolados
 use App\Support\ServiceResult;
+use App\Repositories\Contracts\TenantRepositoryInterface;
 
 class {{ class }} extends Controller
 {
     /**
-     * Serviço responsável pela lógica de negócio
-     * Seguindo padrão de injeção de dependência
+     * Repository para acesso a dados isolados por tenant
+     * Aplicando arquitetura DUAL: dados específicos de cada empresa
      */
-    protected $service;
+    protected TenantRepositoryInterface $repository;
 
     /**
      * Construtor com injeção de dependência
-     * Aplicando padrão de 3 níveis para controllers
+     * Aplicando padrão de arquitetura DUAL para multi-tenant
      */
-    public function __construct()
+    public function __construct(TenantRepositoryInterface $repository)
     {
-        // Serviço será injetado automaticamente pelo Laravel
-        // Exemplo: {{ class }}Service $service
+        $this->repository = $repository;
     }
 
     /**
      * Display a listing of the resource.
      *
-     * PADRÃO NÍVEL 2: Controller com filtros e paginação
-     * Suporte híbrido Web + API (View ou JsonResponse)
+     * PADRÃO NÍVEL 3: Controller multi-tenant com filtros avançados
+     * Dados automaticamente isolados por empresa (tenant_id)
      */
     public function index(Request $request): View|JsonResponse
     {
@@ -47,12 +48,13 @@ class {{ class }} extends Controller
                 'page' => 'nullable|integer|min:1'
             ]);
 
-            // Usar service layer para lógica de negócio
-            $result = $this->service->list($filters);
+            // Buscar dados automaticamente filtrados por tenant
+            $result = $this->repository->getAllByTenant(tenant('id'), $filters);
 
             // Log automático da operação
-            Log::info("Listagem de {{ pluralClass }} realizada", [
+            Log::info("Listagem de {{ pluralClass }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'filters' => $filters,
                 'user_id' => auth()->id(),
                 'ip' => $request->ip()
@@ -61,22 +63,24 @@ class {{ class }} extends Controller
             // Resposta híbrida: Web ou API
             if ($request->expectsJson()) {
                 return response()->json([
-                    'success' => $result->isSuccess(),
-                    'data' => $result->getData(),
-                    'message' => $result->getMessage(),
-                    'pagination' => $result->getPagination()
+                    'success' => true,
+                    'data' => $result,
+                    'message' => '{{ pluralClass }} carregados com sucesso',
+                    'tenant_id' => tenant('id')
                 ]);
             }
 
             return view('{{ pluralClass }}.index', [
-                'data' => $result->getData(),
-                'message' => $result->getMessage(),
-                'filters' => $filters
+                'data' => $result,
+                'message' => '{{ pluralClass }} carregados com sucesso',
+                'filters' => $filters,
+                'tenant_id' => tenant('id')
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro na listagem de {{ pluralClass }}", [
+            Log::error("Erro na listagem de {{ pluralClass }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
                 'ip' => $request->ip()
@@ -98,22 +102,23 @@ class {{ class }} extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para criação
+     * PADRÃO NÍVEL 2: Controller multi-tenant para criação
      */
     public function create(): View
     {
         try {
-            // Buscar dados necessários para o formulário
-            $result = $this->service->getCreateData();
+            // Buscar dados necessários automaticamente filtrados por tenant
+            $relatedData = $this->repository->getRelatedDataForCreate(tenant('id'));
 
             return view('{{ pluralClass }}.create', [
-                'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'relatedData' => $relatedData,
+                'tenant_id' => tenant('id')
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao carregar formulário de criação", [
+            Log::error("Erro ao carregar formulário de criação (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);
@@ -126,24 +131,28 @@ class {{ class }} extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * PADRÃO NÍVEL 2: Controller com validação e tratamento de erro
+     * PADRÃO NÍVEL 3: Controller multi-tenant com auditoria completa
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         try {
-            // Validação usando Form Request (será criado automaticamente)
+            // Validação usando Form Request
             $validated = $request->validate([
                 // Campos específicos serão definidos no Form Request
                 'name' => 'required|string|max:255',
-                // Adicionar outros campos conforme necessidade
+                // tenant_id será adicionado automaticamente
             ]);
 
-            // Usar service para lógica de criação
-            $result = $this->service->create($validated);
+            // Adicionar tenant_id automaticamente
+            $validated['tenant_id'] = tenant('id');
 
-            // Log da operação
-            Log::info("{{ class }} criado com sucesso", [
+            // Usar repository para criação com isolamento automático
+            $result = $this->repository->createByTenant($validated, tenant('id'));
+
+            // Log detalhado da operação
+            Log::info("{{ class }} criado (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'data' => $result->getData(),
                 'user_id' => auth()->id(),
                 'ip' => $request->ip()
@@ -154,7 +163,8 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => $result->isSuccess(),
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'tenant_id' => tenant('id')
                 ], $result->isSuccess() ? 201 : 400);
             }
 
@@ -168,8 +178,9 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na criação de {{ class }}", [
+            Log::error("Erro na criação de {{ class }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
                 'ip' => $request->ip()
@@ -192,12 +203,13 @@ class {{ class }} extends Controller
     /**
      * Display the specified resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para visualização
+     * PADRÃO NÍVEL 3: Controller multi-tenant com verificação de propriedade
      */
-    public function show(Request $request, string $id): View|JsonResponse
+    public function show(Request $request, string $id): View|JsonResponse|RedirectResponse
     {
         try {
-            $result = $this->service->find($id);
+            // Buscar dados verificando automaticamente o tenant_id
+            $result = $this->repository->findByIdAndTenantId($id, tenant('id'));
 
             if (!$result->isSuccess()) {
                 if ($request->expectsJson()) {
@@ -215,18 +227,20 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => true,
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'tenant_id' => tenant('id')
                 ]);
             }
 
             return view('{{ pluralClass }}.show', [
                 'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'tenant_id' => tenant('id')
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao visualizar {{ class }}", [
+            Log::error("Erro ao visualizar {{ class }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
@@ -247,26 +261,32 @@ class {{ class }} extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para edição
+     * PADRÃO NÍVEL 3: Controller multi-tenant com verificação de propriedade
      */
     public function edit(Request $request, string $id): View|RedirectResponse
     {
         try {
-            $result = $this->service->find($id);
+            // Buscar dados verificando automaticamente o tenant_id
+            $result = $this->repository->findByIdAndTenantId($id, tenant('id'));
 
             if (!$result->isSuccess()) {
                 return redirect()->route('{{ pluralClass }}.index')
                                ->with('error', $result->getMessage());
             }
 
+            // Buscar dados relacionados filtrados por tenant
+            $relatedData = $this->repository->getRelatedDataForEdit($id, tenant('id'));
+
             return view('{{ pluralClass }}.edit', [
                 'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'relatedData' => $relatedData,
+                'tenant_id' => tenant('id')
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao carregar formulário de edição", [
+            Log::error("Erro ao carregar formulário de edição (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
@@ -280,24 +300,23 @@ class {{ class }} extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * PADRÃO NÍVEL 2: Controller com validação e tratamento completo
+     * PADRÃO NÍVEL 3: Controller multi-tenant com auditoria completa
      */
     public function update(Request $request, string $id): RedirectResponse|JsonResponse
     {
         try {
             // Validação usando Form Request
             $validated = $request->validate([
-                // Campos específicos serão definidos no Form Request
                 'name' => 'required|string|max:255',
-                // Adicionar outros campos conforme necessidade
             ]);
 
-            // Usar service para lógica de atualização
-            $result = $this->service->update($id, $validated);
+            // Usar repository para atualização com verificação automática de tenant
+            $result = $this->repository->updateByTenantId($id, $validated, tenant('id'));
 
-            // Log da operação
-            Log::info("{{ class }} atualizado com sucesso", [
+            // Log detalhado da operação
+            Log::info("{{ class }} atualizado (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'user_id' => auth()->id(),
                 'ip' => $request->ip()
@@ -308,7 +327,8 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => $result->isSuccess(),
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'tenant_id' => tenant('id')
                 ]);
             }
 
@@ -322,8 +342,9 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na atualização de {{ class }}", [
+            Log::error("Erro na atualização de {{ class }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
@@ -347,21 +368,22 @@ class {{ class }} extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * PADRÃO NÍVEL 2: Controller com confirmação e tratamento seguro
+     * PADRÃO NÍVEL 3: Controller multi-tenant com verificação de propriedade
      */
     public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         try {
             // Buscar dados antes da exclusão para log
-            $entityResult = $this->service->find($id);
+            $entityResult = $this->repository->findByIdAndTenantId($id, tenant('id'));
             $entityData = $entityResult->getData();
 
-            // Usar service para lógica de exclusão
-            $result = $this->service->delete($id);
+            // Usar repository para exclusão com verificação automática de tenant
+            $result = $this->repository->deleteByTenantId($id, tenant('id'));
 
-            // Log da operação
-            Log::warning("{{ class }} excluído", [
+            // Log detalhado da operação
+            Log::warning("{{ class }} excluído (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'data' => $entityData,
                 'user_id' => auth()->id(),
@@ -372,7 +394,8 @@ class {{ class }} extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => $result->isSuccess(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'tenant_id' => tenant('id')
                 ]);
             }
 
@@ -385,8 +408,9 @@ class {{ class }} extends Controller
                            ->with('error', $result->getMessage());
 
         } catch (\Exception $e) {
-            Log::error("Erro na exclusão de {{ class }}", [
+            Log::error("Erro na exclusão de {{ class }} (Tenant: " . tenant('id') . ")", [
                 'controller' => static::class,
+                'tenant_id' => tenant('id'),
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),

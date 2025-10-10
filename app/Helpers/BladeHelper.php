@@ -58,13 +58,14 @@ class BladeHelper
 
     /**
      * Obtém um recurso pelo slug.
+     * Usa withoutTenant() para buscar recursos globais independentemente do tenant atual.
      *
      * @param string $slug Slug do recurso
      * @return Resource|null Recurso encontrado ou null
      */
     private function getResource( string $slug ): ?Resource
     {
-        return Resource::where( 'slug', $slug )->first();
+        return Resource::withoutTenant()->where( 'slug', $slug )->first();
     }
 
 }

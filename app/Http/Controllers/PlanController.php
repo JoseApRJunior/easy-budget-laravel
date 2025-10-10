@@ -10,13 +10,26 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
  * Controller para gerenciamento de planos
  *
- * Este controller gerencia operações CRUD para planos do sistema,
- * incluindo listagem, criação, edição e exclusão de planos.
+ * Este controller implementa operações CRUD completas para planos do sistema,
+ * seguindo a arquitetura Controller → Service → Repository → Model.
+ *
+ * Funcionalidades implementadas:
+ * - Listagem paginada com filtros e ordenação
+ * - Criação de novos planos com validação robusta
+ * - Visualização detalhada de planos específicos
+ * - Edição de planos existentes
+ * - Exclusão segura com verificações
+ * - Ativação e desativação de planos
+ * - Suporte completo a APIs JSON e interface web
+ *
+ * @version 1.0.0
+ * @author Sistema Easy Budget Laravel
  */
 class PlanController extends Controller
 {
@@ -24,6 +37,11 @@ class PlanController extends Controller
 
     /**
      * Construtor com injeção de dependência
+     *
+     * Inicializa o controller com todas as dependências necessárias,
+     * seguindo o princípio de Inversão de Dependência (DIP).
+     *
+     * @param PlanService $planService Camada de serviço para lógica de negócio
      */
     public function __construct( PlanService $planService )
     {
@@ -32,6 +50,9 @@ class PlanController extends Controller
 
     /**
      * Lista todos os planos
+     *
+     * Exibe uma lista paginada de planos com opções de filtro e ordenação.
+     * Suporta respostas JSON para APIs e views Blade para interface web.
      *
      * @param Request $request
      * @return View|JsonResponse
@@ -48,14 +69,13 @@ class PlanController extends Controller
             if ( $request->expectsJson() ) {
                 return response()->json( [
                     'success' => true,
-                    'data'    => $result,
+                    'data'    => $result->getData(),
                     'message' => 'Planos listados com sucesso.'
                 ] );
             }
-            \var_dump( $result );
-            exit;
+
             return view( 'pages.plan.index', [
-                'plans' => $result
+                'plans' => $result->isSuccess() ? $result->getData() : []
             ] );
 
         } catch ( Exception $e ) {
@@ -89,17 +109,26 @@ class PlanController extends Controller
     /**
      * Cria um novo plano
      *
-     * @param Request $request
+     * Processa a criação de um novo plano com validação completa e tratamento de erro.
+     * Implementa o padrão de resposta dupla (JSON para APIs, redirect para Web).
+     *
+     * Regras de validação aplicadas:
+     * - Nome único no sistema
+     * - Preço positivo obrigatório
+     * - Status válido (active, inactive, suspended)
+     * - Features como array opcional de strings
+     *
+     * @param Request $request Dados validados do formulário/API
      * @return JsonResponse|RedirectResponse
      */
     public function store( Request $request ): JsonResponse|RedirectResponse
     {
         try {
-            // Validação dos dados
+            // Validação robusta dos dados de entrada
             $validatedData = $request->validate( [
                 'name'        => 'required|string|max:255|unique:plans,name',
                 'description' => 'nullable|string|max:1000',
-                'price'       => 'required|numeric|min:0',
+                'price'       => 'required|numeric|min:0|max:999999.99',
                 'status'      => 'required|in:active,inactive,suspended',
                 'features'    => 'nullable|array',
                 'features.*'  => 'string|max:255'
@@ -202,18 +231,27 @@ class PlanController extends Controller
     /**
      * Atualiza um plano específico
      *
-     * @param Request $request
-     * @param int $id
+     * Processa a atualização de um plano existente com validação completa.
+     * Implementa verificação de existência e tratamento robusto de erros.
+     *
+     * Regras de validação aplicadas:
+     * - Nome único no sistema (exceto para o próprio registro)
+     * - Preço positivo obrigatório com limite máximo
+     * - Status válido dentro das opções permitidas
+     * - Features como array opcional de strings
+     *
+     * @param Request $request Dados validados do formulário/API
+     * @param int $id ID único do plano a ser atualizado
      * @return JsonResponse|RedirectResponse
      */
     public function update( Request $request, int $id ): JsonResponse|RedirectResponse
     {
         try {
-            // Validação dos dados
+            // Validação robusta dos dados de entrada
             $validatedData = $request->validate( [
                 'name'        => 'required|string|max:255|unique:plans,name,' . $id,
                 'description' => 'nullable|string|max:1000',
-                'price'       => 'required|numeric|min:0',
+                'price'       => 'required|numeric|min:0|max:999999.99',
                 'status'      => 'required|in:active,inactive,suspended',
                 'features'    => 'nullable|array',
                 'features.*'  => 'string|max:255'
@@ -361,10 +399,13 @@ class PlanController extends Controller
     }
 
     /**
-     * Trata erros de validação
+     * Trata erros de validação seguindo padrões do sistema
      *
-     * @param mixed $result
-     * @param Request $request
+     * Centraliza o tratamento de erros de validação, garantindo consistência
+     * entre respostas JSON (API) e redirecionamentos (Web).
+     *
+     * @param mixed $result Objeto ServiceResult com dados de erro
+     * @param Request $request Requisição HTTP para determinar formato de resposta
      * @return JsonResponse|RedirectResponse
      */
     private function handleValidationError( $result, Request $request )
@@ -378,15 +419,18 @@ class PlanController extends Controller
         }
 
         return redirect()->back()
-            ->withErrors( $result->getMessage() ?? 'Erro de validação.' )
+            ->withErrors( $result->getData() ?? [ $result->getMessage() ?? 'Erro de validação.' ] )
             ->withInput();
     }
 
     /**
-     * Trata recurso não encontrado
+     * Trata recurso não encontrado seguindo padrões do sistema
      *
-     * @param Request $request
-     * @param string $message
+     * Implementa tratamento consistente para recursos não encontrados,
+     * retornando lista de planos com mensagem de erro apropriada.
+     *
+     * @param Request $request Requisição HTTP para determinar formato de resposta
+     * @param string $message Mensagem descritiva do erro
      * @return View|JsonResponse
      */
     private function handleNotFound( Request $request, string $message )
@@ -398,24 +442,44 @@ class PlanController extends Controller
             ], 404 );
         }
 
-        // Return view with error instead of redirect
-        $result = $this->planService->list();
-        return view( 'pages.plan.index', [
-            'plans' => $result->isSuccess() ? $result->getData() : []
-        ] )->with( 'error', $message );
+        // Retorna à listagem com mensagem de erro
+        try {
+            $result = $this->planService->list();
+            return view( 'pages.plan.index', [
+                'plans' => $result->isSuccess() ? $result->getData() : []
+            ] )->with( 'error', $message );
+        } catch ( Exception $e ) {
+            // Fallback para view de erro genérica
+            return view( 'errors.generic', [
+                'message' => $message,
+                'error'   => null
+            ] );
+        }
     }
 
     /**
-     * Trata erros genéricos
+     * Trata erros genéricos seguindo padrões do sistema
      *
-     * @param Exception $e
-     * @param Request $request
-     * @param string $defaultMessage
+     * Implementa tratamento robusto de erros com fallback seguro,
+     * garantindo que o usuário sempre receba uma resposta adequada.
+     *
+     * @param Exception $e Exceção capturada durante execução
+     * @param Request $request Requisição HTTP para determinar formato de resposta
+     * @param string $defaultMessage Mensagem padrão caso exceção não tenha mensagem
      * @return View|JsonResponse
      */
     private function handleError( Exception $e, Request $request, string $defaultMessage )
     {
         $message = $e->getMessage() ?: $defaultMessage;
+
+        // Log detalhado do erro para auditoria
+        Log::error( 'Erro no PlanController', [
+            'action'  => debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 2 )[ 1 ][ 'function' ] ?? 'unknown',
+            'message' => $message,
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+            'trace'   => $e->getTraceAsString()
+        ] );
 
         if ( $request->expectsJson() ) {
             return response()->json( [
@@ -424,17 +488,17 @@ class PlanController extends Controller
             ], 500 );
         }
 
-        // Return view with error instead of redirect
+        // Tenta retornar à listagem com erro
         try {
             $result = $this->planService->list();
             return view( 'pages.plan.index', [
                 'plans' => $result->isSuccess() ? $result->getData() : []
             ] )->with( 'error', $message );
         } catch ( Exception $fallbackError ) {
-            // Fallback to simple error view
+            // Fallback seguro para view de erro genérica
             return view( 'errors.generic', [
                 'message' => $message,
-                'error'   => $e
+                'error'   => config( 'app.debug' ) ? $e : null
             ] );
         }
     }

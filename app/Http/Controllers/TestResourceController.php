@@ -1,18 +1,17 @@
 <?php
 
-namespace {{ namespace }};
+namespace App\Http\Controllers;
 
-use {{ rootNamespace }}Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 // Aplicar padrões arquiteturais do projeto
 use App\Support\ServiceResult;
 
-class {{ class }} extends Controller
+class TestResourceController
 {
     /**
      * Serviço responsável pela lógica de negócio
@@ -27,7 +26,7 @@ class {{ class }} extends Controller
     public function __construct()
     {
         // Serviço será injetado automaticamente pelo Laravel
-        // Exemplo: {{ class }}Service $service
+        // Exemplo: TestResourceControllerService $service
     }
 
     /**
@@ -142,7 +141,7 @@ class {{ class }} extends Controller
             $result = $this->service->create($validated);
 
             // Log da operação
-            Log::info("{{ class }} criado com sucesso", [
+            Log::info("TestResourceController criado com sucesso", [
                 'controller' => static::class,
                 'data' => $result->getData(),
                 'user_id' => auth()->id(),
@@ -168,7 +167,7 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na criação de {{ class }}", [
+            Log::error("Erro na criação de TestResourceController", [
                 'controller' => static::class,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
@@ -184,7 +183,7 @@ class {{ class }} extends Controller
             }
 
             return redirect()->back()
-                           ->with('error', 'Erro ao criar {{ class }}')
+                           ->with('error', 'Erro ao criar TestResourceController')
                            ->withInput();
         }
     }
@@ -225,7 +224,7 @@ class {{ class }} extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao visualizar {{ class }}", [
+            Log::error("Erro ao visualizar TestResourceController", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
@@ -240,7 +239,7 @@ class {{ class }} extends Controller
             }
 
             return redirect()->route('{{ pluralClass }}.index')
-                           ->with('error', 'Erro ao carregar {{ class }}');
+                           ->with('error', 'Erro ao carregar TestResourceController');
         }
     }
 
@@ -296,7 +295,7 @@ class {{ class }} extends Controller
             $result = $this->service->update($id, $validated);
 
             // Log da operação
-            Log::info("{{ class }} atualizado com sucesso", [
+            Log::info("TestResourceController atualizado com sucesso", [
                 'controller' => static::class,
                 'id' => $id,
                 'user_id' => auth()->id(),
@@ -322,7 +321,7 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na atualização de {{ class }}", [
+            Log::error("Erro na atualização de TestResourceController", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
@@ -339,7 +338,7 @@ class {{ class }} extends Controller
             }
 
             return redirect()->back()
-                           ->with('error', 'Erro ao atualizar {{ class }}')
+                           ->with('error', 'Erro ao atualizar TestResourceController')
                            ->withInput();
         }
     }
@@ -360,7 +359,7 @@ class {{ class }} extends Controller
             $result = $this->service->delete($id);
 
             // Log da operação
-            Log::warning("{{ class }} excluído", [
+            Log::warning("TestResourceController excluído", [
                 'controller' => static::class,
                 'id' => $id,
                 'data' => $entityData,
@@ -385,7 +384,7 @@ class {{ class }} extends Controller
                            ->with('error', $result->getMessage());
 
         } catch (\Exception $e) {
-            Log::error("Erro na exclusão de {{ class }}", [
+            Log::error("Erro na exclusão de TestResourceController", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
@@ -402,7 +401,7 @@ class {{ class }} extends Controller
             }
 
             return redirect()->back()
-                           ->with('error', 'Erro ao excluir {{ class }}');
+                           ->with('error', 'Erro ao excluir TestResourceController');
         }
     }
 }

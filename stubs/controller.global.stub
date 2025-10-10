@@ -9,32 +9,33 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
-// Aplicar padrões arquiteturais do projeto
+// Aplicar padrões arquiteturais do projeto Easy Budget Laravel
+// Seguindo arquitetura DUAL: AbstractGlobalRepository para dados compartilhados
 use App\Support\ServiceResult;
+use App\Repositories\Contracts\GlobalRepositoryInterface;
 
 class {{ class }} extends Controller
 {
     /**
-     * Serviço responsável pela lógica de negócio
-     * Seguindo padrão de injeção de dependência
+     * Repository para acesso a dados compartilhados globalmente
+     * Aplicando arquitetura DUAL: dados comuns a todas as empresas
      */
-    protected $service;
+    protected GlobalRepositoryInterface $repository;
 
     /**
      * Construtor com injeção de dependência
-     * Aplicando padrão de 3 níveis para controllers
+     * Aplicando padrão de arquitetura DUAL para dados globais
      */
-    public function __construct()
+    public function __construct(GlobalRepositoryInterface $repository)
     {
-        // Serviço será injetado automaticamente pelo Laravel
-        // Exemplo: {{ class }}Service $service
+        $this->repository = $repository;
     }
 
     /**
      * Display a listing of the resource.
      *
-     * PADRÃO NÍVEL 2: Controller com filtros e paginação
-     * Suporte híbrido Web + API (View ou JsonResponse)
+     * PADRÃO NÍVEL 3: Controller global com filtros avançados
+     * Dados compartilhados entre todas as empresas (sem isolamento tenant)
      */
     public function index(Request $request): View|JsonResponse
     {
@@ -47,38 +48,41 @@ class {{ class }} extends Controller
                 'page' => 'nullable|integer|min:1'
             ]);
 
-            // Usar service layer para lógica de negócio
-            $result = $this->service->list($filters);
+            // Buscar dados globalmente (sem filtro de tenant)
+            $result = $this->repository->getAll($filters);
 
             // Log automático da operação
-            Log::info("Listagem de {{ pluralClass }} realizada", [
+            Log::info("Listagem global de {{ pluralClass }}", [
                 'controller' => static::class,
                 'filters' => $filters,
                 'user_id' => auth()->id(),
+                'tenant_id' => tenant('id'),
                 'ip' => $request->ip()
             ]);
 
             // Resposta híbrida: Web ou API
             if ($request->expectsJson()) {
                 return response()->json([
-                    'success' => $result->isSuccess(),
-                    'data' => $result->getData(),
-                    'message' => $result->getMessage(),
-                    'pagination' => $result->getPagination()
+                    'success' => true,
+                    'data' => $result,
+                    'message' => '{{ pluralClass }} carregados com sucesso',
+                    'scope' => 'global'
                 ]);
             }
 
             return view('{{ pluralClass }}.index', [
-                'data' => $result->getData(),
-                'message' => $result->getMessage(),
-                'filters' => $filters
+                'data' => $result,
+                'message' => '{{ pluralClass }} carregados com sucesso',
+                'filters' => $filters,
+                'scope' => 'global'
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro na listagem de {{ pluralClass }}", [
+            Log::error("Erro na listagem global de {{ pluralClass }}", [
                 'controller' => static::class,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
+                'tenant_id' => tenant('id'),
                 'ip' => $request->ip()
             ]);
 
@@ -98,24 +102,26 @@ class {{ class }} extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para criação
+     * PADRÃO NÍVEL 2: Controller global para criação
+     * Dados compartilhados não precisam de tenant_id
      */
     public function create(): View
     {
         try {
-            // Buscar dados necessários para o formulário
-            $result = $this->service->getCreateData();
+            // Buscar dados necessários globalmente
+            $relatedData = $this->repository->getRelatedDataForCreate();
 
             return view('{{ pluralClass }}.create', [
-                'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'relatedData' => $relatedData,
+                'scope' => 'global'
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao carregar formulário de criação", [
+            Log::error("Erro ao carregar formulário de criação global", [
                 'controller' => static::class,
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'tenant_id' => tenant('id')
             ]);
 
             return redirect()->route('{{ pluralClass }}.index')
@@ -126,27 +132,30 @@ class {{ class }} extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * PADRÃO NÍVEL 2: Controller com validação e tratamento de erro
+     * PADRÃO NÍVEL 3: Controller global com auditoria completa
+     * Dados compartilhados afetam todas as empresas
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         try {
-            // Validação usando Form Request (será criado automaticamente)
+            // Validação usando Form Request
             $validated = $request->validate([
                 // Campos específicos serão definidos no Form Request
                 'name' => 'required|string|max:255',
-                // Adicionar outros campos conforme necessidade
+                // Sem tenant_id - dados são globais
             ]);
 
-            // Usar service para lógica de criação
-            $result = $this->service->create($validated);
+            // Usar repository para criação global
+            $result = $this->repository->create($validated);
 
-            // Log da operação
-            Log::info("{{ class }} criado com sucesso", [
+            // Log detalhado da operação (dados globais afetam todas as empresas)
+            Log::info("{{ class }} global criado (afeta todas as empresas)", [
                 'controller' => static::class,
                 'data' => $result->getData(),
                 'user_id' => auth()->id(),
-                'ip' => $request->ip()
+                'tenant_id' => tenant('id'),
+                'ip' => $request->ip(),
+                'scope' => 'global'
             ]);
 
             // Resposta híbrida
@@ -154,7 +163,8 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => $result->isSuccess(),
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'scope' => 'global'
                 ], $result->isSuccess() ? 201 : 400);
             }
 
@@ -168,10 +178,11 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na criação de {{ class }}", [
+            Log::error("Erro na criação global de {{ class }}", [
                 'controller' => static::class,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
+                'tenant_id' => tenant('id'),
                 'ip' => $request->ip()
             ]);
 
@@ -192,12 +203,13 @@ class {{ class }} extends Controller
     /**
      * Display the specified resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para visualização
+     * PADRÃO NÍVEL 2: Controller global para visualização
      */
-    public function show(Request $request, string $id): View|JsonResponse
+    public function show(Request $request, string $id): View|JsonResponse|RedirectResponse
     {
         try {
-            $result = $this->service->find($id);
+            // Buscar dados globalmente (sem filtro de tenant)
+            $result = $this->repository->find($id);
 
             if (!$result->isSuccess()) {
                 if ($request->expectsJson()) {
@@ -215,21 +227,23 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => true,
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'scope' => 'global'
                 ]);
             }
 
             return view('{{ pluralClass }}.show', [
                 'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'scope' => 'global'
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao visualizar {{ class }}", [
+            Log::error("Erro ao visualizar {{ class }} global", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'tenant_id' => tenant('id')
             ]);
 
             if ($request->expectsJson()) {
@@ -247,29 +261,35 @@ class {{ class }} extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * PADRÃO NÍVEL 1: Controller básico para edição
+     * PADRÃO NÍVEL 2: Controller global para edição
      */
     public function edit(Request $request, string $id): View|RedirectResponse
     {
         try {
-            $result = $this->service->find($id);
+            // Buscar dados globalmente
+            $result = $this->repository->find($id);
 
             if (!$result->isSuccess()) {
                 return redirect()->route('{{ pluralClass }}.index')
                                ->with('error', $result->getMessage());
             }
 
+            // Buscar dados relacionados globalmente
+            $relatedData = $this->repository->getRelatedDataForEdit($id);
+
             return view('{{ pluralClass }}.edit', [
                 'data' => $result->getData(),
-                'message' => $result->getMessage()
+                'relatedData' => $relatedData,
+                'scope' => 'global'
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Erro ao carregar formulário de edição", [
+            Log::error("Erro ao carregar formulário de edição global", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'tenant_id' => tenant('id')
             ]);
 
             return redirect()->route('{{ pluralClass }}.index')
@@ -280,27 +300,27 @@ class {{ class }} extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * PADRÃO NÍVEL 2: Controller com validação e tratamento completo
+     * PADRÃO NÍVEL 3: Controller global com impacto em todas as empresas
      */
     public function update(Request $request, string $id): RedirectResponse|JsonResponse
     {
         try {
             // Validação usando Form Request
             $validated = $request->validate([
-                // Campos específicos serão definidos no Form Request
                 'name' => 'required|string|max:255',
-                // Adicionar outros campos conforme necessidade
             ]);
 
-            // Usar service para lógica de atualização
-            $result = $this->service->update($id, $validated);
+            // Usar repository para atualização global
+            $result = $this->repository->update($id, $validated);
 
-            // Log da operação
-            Log::info("{{ class }} atualizado com sucesso", [
+            // Log detalhado da operação (dados globais afetam todas as empresas)
+            Log::info("{{ class }} global atualizado (afeta todas as empresas)", [
                 'controller' => static::class,
                 'id' => $id,
                 'user_id' => auth()->id(),
-                'ip' => $request->ip()
+                'tenant_id' => tenant('id'),
+                'ip' => $request->ip(),
+                'scope' => 'global'
             ]);
 
             // Resposta híbrida
@@ -308,7 +328,8 @@ class {{ class }} extends Controller
                 return response()->json([
                     'success' => $result->isSuccess(),
                     'data' => $result->getData(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'scope' => 'global'
                 ]);
             }
 
@@ -322,11 +343,12 @@ class {{ class }} extends Controller
                            ->withInput();
 
         } catch (\Exception $e) {
-            Log::error("Erro na atualização de {{ class }}", [
+            Log::error("Erro na atualização global de {{ class }}", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
+                'tenant_id' => tenant('id'),
                 'ip' => $request->ip()
             ]);
 
@@ -347,32 +369,50 @@ class {{ class }} extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * PADRÃO NÍVEL 2: Controller com confirmação e tratamento seguro
+     * PADRÃO NÍVEL 3: Controller global com impacto crítico
+     * Exclusão de dados compartilhados afeta todas as empresas
      */
     public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         try {
             // Buscar dados antes da exclusão para log
-            $entityResult = $this->service->find($id);
+            $entityResult = $this->repository->find($id);
             $entityData = $entityResult->getData();
 
-            // Usar service para lógica de exclusão
-            $result = $this->service->delete($id);
+            // Verificar se pode ser excluído (dados globais críticos)
+            if (!$this->repository->canBeDeleted($id)) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Este recurso não pode ser excluído pois está em uso'
+                    ], 400);
+                }
 
-            // Log da operação
-            Log::warning("{{ class }} excluído", [
+                return redirect()->back()
+                               ->with('error', 'Este recurso não pode ser excluído pois está em uso');
+            }
+
+            // Usar repository para exclusão global
+            $result = $this->repository->delete($id);
+
+            // Log crítico da operação (dados globais afetam todas as empresas)
+            Log::warning("{{ class }} global excluído (afeta todas as empresas)", [
                 'controller' => static::class,
                 'id' => $id,
                 'data' => $entityData,
                 'user_id' => auth()->id(),
-                'ip' => $request->ip()
+                'tenant_id' => tenant('id'),
+                'ip' => $request->ip(),
+                'scope' => 'global',
+                'impact' => 'critical'
             ]);
 
             // Resposta híbrida
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => $result->isSuccess(),
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
+                    'scope' => 'global'
                 ]);
             }
 
@@ -385,11 +425,12 @@ class {{ class }} extends Controller
                            ->with('error', $result->getMessage());
 
         } catch (\Exception $e) {
-            Log::error("Erro na exclusão de {{ class }}", [
+            Log::error("Erro na exclusão global de {{ class }}", [
                 'controller' => static::class,
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
+                'tenant_id' => tenant('id'),
                 'ip' => $request->ip()
             ]);
 
