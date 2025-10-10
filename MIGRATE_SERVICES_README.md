@@ -62,25 +62,29 @@ php artisan services:migrate-structure --backup --force
 5. **Relatório Detalhado**: Gera relatório JSON com resultados da migração
 6. **Backup Automático**: Cria cópia de segurança quando solicitado
 
-### 🎯 Categorização Automática
+### 🎯 Categorização Automática Aprimorada
 
-#### **Domain Services (18 serviços)**
+O script **automaticamente categoriza todos os 47 serviços** com lógica inteligente por prioridades:
 
--  `CustomerService`, `ProductService`, `BudgetService`
--  `UserService`, `RoleService`, `CategoryService`
--  **Responsabilidade**: CRUD e regras de negócio específicas
+#### **🏗️ Infrastructure Services (16 serviços) - Prioridade ALTA**
+- **MercadoPago**: `MercadoPagoService`, `MerchantOrderMercadoPagoService`, `PaymentMercadoPago*Service`
+- **Cache & Performance**: `CacheService`, `ChartService`, `ChartVisualizationService`
+- **Comunicação**: `MailerService`, `NotificationService`, `WebhookService`
+- **Pagamentos**: `PaymentService`, `PaymentMercadoPago*Service`
+- **Utilitários**: `PdfService`, `EncryptionService`, `GeolocationService`, `MetricsService`
 
-#### **Application Services (14 serviços)**
+#### **📋 Application Services (14 serviços) - Prioridade MÉDIA**
+- **Cálculos**: `BudgetCalculationService`, `FinancialSummary`
+- **Templates**: `BudgetTemplateService`, `EmailTemplateService`
+- **Status**: `BudgetStatusService`, `InvoiceStatusService`, `ServiceStatusService`
+- **Gestão**: `ProviderManagementService`, `CustomerInteractionService`
+- **Operações**: `ExportService`, `FileUploadService`, `SettingsBackupService`
 
--  `BudgetCalculationService`, `UserRegistrationService`
--  `BudgetPdfService`, `EmailTemplateService`
--  **Responsabilidade**: Coordenação de múltiplos Domain Services
-
-#### **Infrastructure Services (16 serviços)**
-
--  `MercadoPagoService`, `PdfService`, `MailerService`
--  `CacheService`, `ChartService`, `PaymentService`
--  **Responsabilidade**: Integração com serviços externos
+#### **🏢 Domain Services (17 serviços) - Prioridade BAIXA**
+- **Entidades Core**: `CustomerService`, `ProductService`, `BudgetService`, `UserService`
+- **Relacionamentos**: `AddressService`, `ContactService`, `CommonDataService`
+- **Sistema**: `RoleService`, `CategoryService`, `AuditService`, `ActivityService`
+- **Configurações**: `SettingsService`, `SupportService`, `PlanService`, `ProviderService`
 
 ## 📋 Fluxo de Migração
 

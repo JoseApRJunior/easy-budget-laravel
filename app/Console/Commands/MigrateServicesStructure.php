@@ -115,23 +115,65 @@ class MigrateServicesStructure extends Command
     ];
 
     /**
-     * Regras de categorização automática baseadas em padrões.
+     * Regras de categorização automática baseadas em padrões aprimorados.
      */
     private array $autoCategorizationRules = [
-        'Domain'         => [
-            'patterns' => [ '*Service.php' ], // Padrão geral para serviços
-            'keywords' => [ 'Customer', 'Product', 'Budget', 'User', 'Role', 'Category', 'Audit', 'Activity' ],
-            'exclude'  => [ 'Calculation', 'Pdf', 'Template', 'Status', 'Management', 'Tracking', 'Export', 'Upload', 'Backup' ]
+        'Infrastructure' => [
+            'patterns' => [
+                '*MercadoPago*.php',
+                '*Cache*.php',
+                '*Chart*.php',
+                '*Mail*.php',
+                '*Payment*.php',
+                '*Pdf*.php',
+                '*Encryption*.php',
+                '*Geolocation*.php',
+                '*Metrics*.php',
+                '*Notification*.php',
+                '*VariableProcessor*.php',
+                '*Webhook*.php'
+            ],
+            'keywords' => [
+                'MercadoPago', 'Cache', 'Chart', 'Mail', 'Payment', 'Pdf',
+                'Encryption', 'Geolocation', 'Metrics', 'Notification',
+                'VariableProcessor', 'Webhook', 'FinancialSummary'
+            ],
+            'priority' => 100 // Alta prioridade - verificar primeiro
         ],
         'Application'    => [
-            'patterns' => [ '*CalculationService.php', '*PdfService.php', '*TemplateService.php', '*StatusService.php' ],
-            'keywords' => [ 'Calculation', 'Pdf', 'Template', 'Status', 'Management', 'Tracking', 'Export', 'Upload', 'Backup', 'Registration', 'Interaction' ],
-            'exclude'  => [ 'MercadoPago', 'Cache', 'Chart', 'Mail', 'Payment' ]
+            'patterns' => [
+                '*Calculation*.php',
+                '*Template*.php',
+                '*Status*.php',
+                '*Management*.php',
+                '*Tracking*.php',
+                '*Export*.php',
+                '*Upload*.php',
+                '*Backup*.php',
+                '*Registration*.php',
+                '*Interaction*.php'
+            ],
+            'keywords' => [
+                'Calculation', 'Template', 'Status', 'Management', 'Tracking',
+                'Export', 'Upload', 'Backup', 'Registration', 'Interaction'
+            ],
+            'priority' => 50
         ],
-        'Infrastructure' => [
-            'patterns' => [ '*MercadoPago*.php', '*Cache*.php', '*Chart*.php', '*Mail*.php', '*Payment*.php', '*Pdf*.php' ],
-            'keywords' => [ 'MercadoPago', 'Cache', 'Chart', 'Mail', 'Payment', 'Pdf', 'Encryption', 'Geolocation', 'Metrics', 'Notification', 'VariableProcessor', 'Webhook' ],
-            'exclude'  => []
+        'Domain'         => [
+            'patterns' => [ '*Service.php' ],
+            'keywords' => [
+                'Customer', 'Product', 'Budget', 'User', 'Role', 'Category',
+                'Audit', 'Activity', 'Address', 'Contact', 'Invoice', 'Plan',
+                'Provider', 'Report', 'Service', 'Settings', 'Support'
+            ],
+            'exclude'  => [
+                'Calculation', 'Pdf', 'Template', 'Status', 'Management', 'Tracking',
+                'Export', 'Upload', 'Backup', 'Registration', 'Interaction',
+                'MercadoPago', 'Cache', 'Chart', 'Mail', 'Payment', 'Pdf',
+                'Encryption', 'Geolocation', 'Metrics', 'Notification',
+                'VariableProcessor', 'Webhook', 'FinancialSummary'
+            ],
+            'priority' => 10 // Menor prioridade - verificar por último
         ]
     ];
 
@@ -215,7 +257,7 @@ class MigrateServicesStructure extends Command
     }
 
     /**
-     * Categoriza serviços automaticamente baseado em regras.
+     * Categoriza serviços automaticamente baseado em regras aprimoradas.
      */
     private function categorizeServicesAutomatically( array $serviceFiles ): array
     {
@@ -230,7 +272,7 @@ class MigrateServicesStructure extends Command
         }
 
         foreach ( $serviceFiles as $serviceFile ) {
-            $categorizedService = $this->categorizeSingleService( $serviceFile );
+            $categorizedService = $this->categorizeSingleServiceImproved( $serviceFile );
 
             if ( $categorizedService ) {
                 $categorized[ $categorizedService ][ 'services' ][]         = $serviceFile;
@@ -242,76 +284,96 @@ class MigrateServicesStructure extends Command
     }
 
     /**
-     * Categoriza um único serviço baseado em regras automáticas.
+     * Categoriza um único serviço baseado em regras automáticas aprimoradas.
      */
-    private function categorizeSingleService( string $serviceFile ): ?string
+    private function categorizeSingleServiceImproved(string $serviceFile): ?string
     {
-        // Verificar regras específicas primeiro
-        foreach ( $this->autoCategorizationRules as $layer => $rules ) {
-            // Verificar padrões
-            foreach ( $rules[ 'patterns' ] as $pattern ) {
-                if ( fnmatch( $pattern, $serviceFile ) ) {
-                    // Verificar se não está na lista de exclusão
-                    $excluded = false;
-                    foreach ( $rules[ 'exclude' ] as $exclude ) {
-                        if ( str_contains( $serviceFile, $exclude ) ) {
-                            $excluded = true;
-                            break;
-                        }
-                    }
-                    if ( !$excluded ) {
-                        return $layer;
+        // Ordenar regras por prioridade (maior primeiro)
+        $sortedRules = collect($this->autoCategorizationRules)
+            ->sortByDesc('priority')
+            ->toArray();
+
+        foreach ($sortedRules as $layer => $rules) {
+            $matched = false;
+
+            // Verificar padrões primeiro
+            foreach ($rules['patterns'] as $pattern) {
+                if (fnmatch($pattern, $serviceFile)) {
+                    $matched = true;
+                    break;
+                }
+            }
+
+            // Se não encontrou por padrão, verificar keywords
+            if (!$matched) {
+                foreach ($rules['keywords'] as $keyword) {
+                    if (str_contains($serviceFile, $keyword)) {
+                        $matched = true;
+                        break;
                     }
                 }
             }
 
-            // Verificar keywords
-            foreach ( $rules[ 'keywords' ] as $keyword ) {
-                if ( str_contains( $serviceFile, $keyword ) ) {
-                    // Verificar se não está na lista de exclusão
-                    $excluded = false;
-                    foreach ( $rules[ 'exclude' ] as $exclude ) {
-                        if ( str_contains( $serviceFile, $exclude ) ) {
-                            $excluded = true;
-                            break;
-                        }
-                    }
-                    if ( !$excluded ) {
-                        return $layer;
+            // Se encontrou correspondência, verificar exclusões
+            if ($matched && isset($rules['exclude'])) {
+                foreach ($rules['exclude'] as $exclude) {
+                    if (str_contains($serviceFile, $exclude)) {
+                        $matched = false;
+                        break;
                     }
                 }
+            }
+
+            if ($matched) {
+                return $layer;
             }
         }
 
         // Fallback: tentar categorizar baseado no nome
-        return $this->categorizeByName( $serviceFile );
+        return $this->categorizeByName($serviceFile);
     }
 
     /**
-     * Categoriza baseado no nome do arquivo.
+     * Categoriza baseado no nome do arquivo com lógica aprimorada.
      */
-    private function categorizeByName( string $serviceFile ): ?string
+    private function categorizeByName(string $serviceFile): ?string
     {
-        $name = strtolower( str_replace( 'Service.php', '', $serviceFile ) );
+        $name = strtolower(str_replace('Service.php', '', $serviceFile));
 
-        // Padrões comuns para cada camada
-        $domainPatterns         = [ 'customer', 'product', 'budget', 'user', 'role', 'category', 'audit', 'activity', 'address', 'contact', 'invoice', 'plan', 'provider', 'report', 'service', 'settings', 'support' ];
-        $applicationPatterns    = [ 'calculation', 'template', 'status', 'management', 'tracking', 'export', 'upload', 'backup', 'registration', 'interaction' ];
-        $infrastructurePatterns = [ 'mercadopago', 'cache', 'chart', 'mail', 'payment', 'pdf', 'encryption', 'geolocation', 'metrics', 'notification', 'variable', 'webhook' ];
+        // Padrões específicos para Infrastructure (verificar primeiro)
+        $infrastructurePatterns = [
+            'mercadopago', 'cache', 'chart', 'mail', 'payment', 'pdf',
+            'encryption', 'geolocation', 'metrics', 'notification',
+            'variableprocessor', 'webhook', 'financialsummary'
+        ];
 
-        if ( $this->matchesAnyPattern( $name, $domainPatterns ) ) {
-            return 'Domain';
-        }
-
-        if ( $this->matchesAnyPattern( $name, $applicationPatterns ) ) {
-            return 'Application';
-        }
-
-        if ( $this->matchesAnyPattern( $name, $infrastructurePatterns ) ) {
+        if ($this->matchesAnyPattern($name, $infrastructurePatterns)) {
             return 'Infrastructure';
         }
 
-        // Se não conseguir categorizar automaticamente, deixar para decisão manual
+        // Padrões para Application
+        $applicationPatterns = [
+            'calculation', 'template', 'status', 'management', 'tracking',
+            'export', 'upload', 'backup', 'registration', 'interaction'
+        ];
+
+        if ($this->matchesAnyPattern($name, $applicationPatterns)) {
+            return 'Application';
+        }
+
+        // Padrões para Domain (tudo que restar que seja serviço de entidade)
+        $domainPatterns = [
+            'customer', 'product', 'budget', 'user', 'role', 'category',
+            'audit', 'activity', 'address', 'contact', 'invoice', 'plan',
+            'provider', 'report', 'service', 'settings', 'support'
+        ];
+
+        if ($this->matchesAnyPattern($name, $domainPatterns)) {
+            return 'Domain';
+        }
+
+        // Se não conseguir categorizar, retorna null para análise manual
+        $this->warn("Não foi possível categorizar automaticamente: {$serviceFile}");
         return null;
     }
 
