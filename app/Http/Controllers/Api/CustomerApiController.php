@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerPessoaFisicaRequest;
 use App\Http\Requests\CustomerPessoaJuridicaRequest;
 use App\Models\Customer;
@@ -191,7 +191,7 @@ class CustomerApiController extends Controller
         $request->validate( CustomerAddress::businessRules() );
 
         try {
-            $addressData                = $request->validated();
+            $addressData                  = $request->validated();
             $addressData[ 'customer_id' ] = $customer->id;
 
             $address = CustomerAddress::create( $addressData );
@@ -272,7 +272,7 @@ class CustomerApiController extends Controller
         $request->validate( CustomerContact::businessRules() );
 
         try {
-            $contactData                = $request->validated();
+            $contactData                  = $request->validated();
             $contactData[ 'customer_id' ] = $customer->id;
 
             $contact = CustomerContact::create( $contactData );
@@ -377,7 +377,7 @@ class CustomerApiController extends Controller
         $request->validate( CustomerInteraction::businessRules() );
 
         try {
-            $interactionData                = $request->validated();
+            $interactionData                  = $request->validated();
             $interactionData[ 'customer_id' ] = $customer->id;
             $interactionData[ 'user_id' ]     = auth()->user()->id;
 

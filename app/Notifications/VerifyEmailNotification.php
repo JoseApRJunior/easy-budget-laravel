@@ -16,7 +16,7 @@ class VerifyEmailNotification extends VerifyEmailBase implements ShouldQueue
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail( $notifiable ): MailMessage
+    public function toMail( $notifiable )
     {
         $verificationUrl = $this->verificationUrl( $notifiable );
 
@@ -36,7 +36,7 @@ class VerifyEmailNotification extends VerifyEmailBase implements ShouldQueue
     {
         return route( 'verification.verify', [
             'id'   => $notifiable->getKey(),
-            'hash' => sha1( $notifiable->getEmailForVerification() ),
+            'hash' => sha1( $notifiable->getKey() . $notifiable->getEmailForVerification() . $notifiable->created_at ),
         ] );
     }
 

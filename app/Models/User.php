@@ -11,6 +11,8 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
+use App\Models\UserRole;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -167,7 +169,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify( new \App\Notifications\VerifyEmailNotification() );
+        $this->notify( new VerifyEmailNotification() );
     }
 
     /**
@@ -183,7 +185,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'user_roles',
             'user_id',
             'role_id',
-        )->using( \App\Models\UserRole::class)
+        )->using( UserRole::class)
             ->withPivot( [ 'tenant_id' ] )
             ->withTimestamps();
     }

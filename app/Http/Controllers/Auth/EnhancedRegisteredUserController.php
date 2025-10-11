@@ -149,10 +149,47 @@ class EnhancedRegisteredUserController extends Controller
             // 8. Disparar evento de registro
             event( new Registered( $user ) );
 
-            // 9. Fazer login automático
+            // 9. Enviar e-mail de verificação
+            try {
+                $user->sendEmailVerificationNotification();
+                Log::info( 'E-mail de verificação enviado', [ 'user_id' => $user->id, 'email' => $user->email ] );
+
+                // Para desenvolvimento, mostrar informações do e-mail enviado
+                if ( app()->environment( 'local' ) ) {
+                    Log::info( 'E-mail de verificação (desenvolvimento):', [
+                        'user_id'          => $user->id,
+                        'email'            => $user->email,
+                        'verification_url' => route( 'verification.verify', [
+                            'id'   => $user->id,
+                            'hash' => sha1( $user->email )
+                        ] )
+                    ] );
+                }
+            } catch ( \Exception $e ) {
+                Log::error( 'Erro ao enviar e-mail de verificação: ' . $e->getMessage(), [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'trace'   => $e->getTraceAsString()
+                ] );
+                // Para desenvolvimento, mostrar erro detalhado
+                if ( app()->environment( 'local' ) ) {
+                    return back()->withErrors( [
+                        'email' => 'Erro no envio de e-mail: ' . $e->getMessage()
+                    ] )->withInput();
+                }
+            }
+
+            // 10. Fazer login automático
             Auth::login( $user );
 
-            // 10. Redirecionar para dashboard com mensagem de sucesso
+            // 11. Redirecionar para dashboard com mensagem de sucesso
+            Log::info( 'Registro concluído com sucesso', [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'tenant_id' => $tenant->id,
+                'plan_id'   => $plan->id
+            ] );
+
             return redirect()->route( 'dashboard' )
                 ->with( 'success', 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.' );
 

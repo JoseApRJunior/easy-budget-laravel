@@ -89,38 +89,17 @@
 
 @push( 'scripts' )
     <script>
-        // Scripts específicos da página
         document.addEventListener( 'DOMContentLoaded', function () {
-            // Animação suave para elementos
-            const animatedElements = document.querySelectorAll( '.card, .alert' );
-            animatedElements.forEach( ( element, index ) => {
-                setTimeout( () => {
-                    element.style.opacity = '0';
-                    element.style.transform = 'translateY(20px)';
-                    element.style.transition = 'all 0.6s ease';
-
-                    setTimeout( () => {
-                        element.style.opacity = '1';
-                        element.style.transform = 'translateY(0)';
-                    }, 100 );
-                }, index * 200 );
-            } );
-
-            // Feedback visual para botões
-            const buttons = document.querySelectorAll( 'button[type="submit"]' );
-            buttons.forEach( button => {
-                button.addEventListener( 'click', function () {
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processando...';
-                    this.disabled = true;
-
-                    // Reabilitar após 3 segundos (fallback)
-                    setTimeout( () => {
-                        this.innerHTML = originalText;
-                        this.disabled = false;
-                    }, 3000 );
+            const form = document.querySelector( 'form[action*="verification.send"]' );
+            if ( form ) {
+                form.addEventListener( 'submit', function ( e ) {
+                    const button = form.querySelector( 'button[type="submit"]' );
+                    if ( button ) {
+                        button.value = 'Enviando...';
+                        button.disabled = true;
+                    }
                 } );
-            } );
+            }
         } );
     </script>
 @endpush

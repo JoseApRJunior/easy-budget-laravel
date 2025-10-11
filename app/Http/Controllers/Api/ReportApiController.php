@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\ReportDefinition;
 use App\Models\ReportExecution;
 use App\Models\ReportSchedule;

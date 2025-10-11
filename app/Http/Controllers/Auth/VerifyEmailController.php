@@ -6,6 +6,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 
 class VerifyEmailController extends Controller
 {
