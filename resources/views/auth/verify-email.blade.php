@@ -4,7 +4,7 @@
     <main class="container py-5">
         <!-- Cabeçalho da página -->
         <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold  mb-3">
+            <h1 class="display-5 fw-bold mb-3">
                 Confirmação de E-mail
             </h1>
             <p class="lead text-muted">
@@ -47,35 +47,58 @@
                             </ul>
                         </div>
 
-                        <!-- Ações -->
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <form method="POST" action="{{ route( 'verification.send' ) }}" class="d-grid">
+                        <!-- Ações Melhoradas - Proporcional -->
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-12 col-sm-8 col-md-6">
+                                <form method="POST" action="{{ route( 'verification.send' ) }}" class="d-grid mb-2">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-semibold">
                                         <i class="bi bi-envelope-arrow-up me-2"></i>
                                         Reenviar E-mail
                                     </button>
                                 </form>
                             </div>
 
-                            <div class="col-md-6">
-                                <a href="{{ route( 'force-logout' ) }}" class="btn btn-outline-secondary d-grid">
-                                    <i class="bi bi-box-arrow-right me-2"></i>
-                                    Sair do Sistema
-                                </a>
+                            <div class="col-12 col-sm-8 col-md-6">
+                                <form method="POST" action="{{ route( 'logout' ) }}" class="d-grid">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-secondary py-2 px-4 fw-semibold">
+                                        Sair do Sistema
+                                    </button>
+                                </form>
                             </div>
                         </div>
 
-                        <!-- Ajuda -->
-                        <div class="text-center mt-4 pt-4 border-top">
-                            <small class="text-muted">
-                                Não recebeu o e-mail?
-                                <a href="{{ route( 'support' ) }}" class="text-decoration-none">
-                                    Entre em contato conosco
-                                </a>
-                            </small>
+
+
+                        <!-- Separador Visual -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr class="my-4">
+                            </div>
                         </div>
+
+                        <!-- Seção de Ajuda Melhorada -->
+                        <div class="row justify-content-center">
+                            <div class="col-12 col-md-8">
+                                <div class="text-center">
+                                    <div class="alert alert-light border">
+                                        <h6 class="alert-heading mb-2">
+                                            <i class="bi bi-question-circle text-muted me-2"></i>
+                                            Precisa de Ajuda?
+                                        </h6>
+                                        <p class="mb-2 text-muted">
+                                            Não conseguiu receber o e-mail de verificação?
+                                        </p>
+                                        <a href="{{ route( 'support' ) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-headset me-1"></i>
+                                            Falar com Suporte
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -84,22 +107,4 @@
 @endsection
 
 @push( 'styles' )
-
-@endpush
-
-@push( 'scripts' )
-    <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            const form = document.querySelector( 'form[action*="verification.send"]' );
-            if ( form ) {
-                form.addEventListener( 'submit', function ( e ) {
-                    const button = form.querySelector( 'button[type="submit"]' );
-                    if ( button ) {
-                        button.value = 'Enviando...';
-                        button.disabled = true;
-                    }
-                } );
-            }
-        } );
-    </script>
 @endpush

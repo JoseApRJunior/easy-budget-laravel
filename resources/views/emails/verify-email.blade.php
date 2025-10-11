@@ -1,5 +1,3 @@
-{{ $content ?? '' }}
-
 {{-- Template personalizado para email de verificação em português --}}
 
 @component( 'mail::message' )
@@ -15,12 +13,11 @@ Confirmar E-mail
 
 Se você não criou uma conta no Easy Budget, ignore este e-mail.
 
-Atenciosamente,
+Atenciosamente,<br>
 Equipe Easy Budget
 
 @component( 'mail::subcopy' )
-Se você estiver tendo problemas para clicar no botão "Confirmar E-mail", copie e cole a URL abaixo em seu navegador:
-<br>
+Se você estiver tendo problemas para clicar no botão "Confirmar E-mail", copie e cole a URL abaixo em seu navegador:<br>
 [{{ $verificationUrl }}]({{ $verificationUrl }})
 @endcomponent
 @endcomponent

@@ -21,12 +21,20 @@ class VerifyEmailNotification extends VerifyEmailBase implements ShouldQueue
         $verificationUrl = $this->verificationUrl( $notifiable );
 
         return ( new MailMessage )
-            ->subject( 'Confirme seu endereço de e-mail' )
-            ->greeting( 'Olá ' . ( $notifiable->provider?->commonData?->first_name ?? 'usuário' ) . '!' )
-            ->line( 'Clique no botão abaixo para confirmar seu endereço de e-mail e ativar sua conta no Easy Budget.' )
-            ->action( 'Confirmar E-mail', $verificationUrl )
-            ->line( 'Se você não criou uma conta no Easy Budget, ignore este e-mail.' )
-            ->salutation( 'Atenciosamente, Equipe Easy Budget' );
+            ->view( 'vendor.notifications.email', [
+                'greeting' => 'Olá ' . ( $notifiable->provider?->commonData?->first_name ?? 'usuário' ) . '!',
+                'introLines' => [
+                    'Clique no botão abaixo para confirmar seu endereço de e-mail e ativar sua conta no Easy Budget.'
+                ],
+                'actionText' => 'Confirmar E-mail',
+                'actionUrl' => $verificationUrl,
+                'outroLines' => [
+                    'Se você não criou uma conta no Easy Budget, ignore este e-mail.',
+                    'Se você estiver tendo problemas para clicar no botão "Confirmar E-mail", copie e cole a URL abaixo em seu navegador:',
+                    $verificationUrl
+                ],
+                'salutation' => 'Atenciosamente, Equipe Easy Budget'
+            ] );
     }
 
     /**
