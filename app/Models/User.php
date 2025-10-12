@@ -169,7 +169,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify( new VerifyEmailNotification() );
+        $notification = new VerifyEmailNotification();
+        $notification->handle( $this );
     }
 
     /**
@@ -294,6 +295,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasAnyRole( array $roles ): bool
     {
         return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+    }
+
+    /**
+     * Get the email address that should be used for verification.
+     */
+    public function getEmailForVerification(): string
+    {
+        return $this->email;
     }
 
     /**

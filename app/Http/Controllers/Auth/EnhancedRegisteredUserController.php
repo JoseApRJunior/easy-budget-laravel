@@ -9,6 +9,7 @@ use App\Models\CommonData;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Provider;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -129,7 +130,30 @@ class EnhancedRegisteredUserController extends Controller
             $provider->common_data_id = $commonData->id;
             $provider->save();
 
-            // 7. Criar assinatura do plano (se necessário)
+            // 7. Buscar o role 'provider' e criar a relação user_roles
+            Log::info( 'Buscando role provider...' );
+            $providerRole = Role::where( 'name', 'provider' )->first();
+
+            if ( $providerRole ) {
+                Log::info( 'Role provider encontrado', [ 'role_id' => $providerRole->id ] );
+
+                // Criar a relação user_roles
+                $user->roles()->attach( $providerRole->id, [
+                    'tenant_id'  => $tenant->id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ] );
+
+                Log::info( 'Relação user_roles criada com sucesso', [
+                    'user_id'   => $user->id,
+                    'role_id'   => $providerRole->id,
+                    'tenant_id' => $tenant->id
+                ] );
+            } else {
+                Log::warning( 'Role provider não encontrado no banco de dados' );
+            }
+
+            // 8. Criar assinatura do plano (se necessário)
             Log::info( 'Criando assinatura do plano...' );
             $plan_subscription = PlanSubscription::create( [
                 'tenant_id'          => $tenant->id,
