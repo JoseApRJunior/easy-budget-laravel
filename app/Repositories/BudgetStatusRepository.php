@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\BudgetStatus;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
 
-class BudgetStatusRepository extends AbstractNoTenantRepository
+class BudgetStatusRepository extends AbstractGlobalRepository
 {
     protected string $modelClass = BudgetStatus::class;
 

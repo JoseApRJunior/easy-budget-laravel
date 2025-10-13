@@ -4,174 +4,67 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\EntityORMInterface;
 use App\Models\Tenant;
-use Exception;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
-use Throwable;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Repositório para gerenciar tenants (não tenant-aware)
  *
- * Estende AbstractNoTenantRepository para operações globais
+ * Estende AbstractGlobalRepository para operações globais
  * de gerenciamento de tenants, como criação, busca e validação
  */
-class TenantRepository extends AbstractNoTenantRepository
+class TenantRepository extends AbstractGlobalRepository
 {
     /**
-     * {@inheritdoc}
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    protected string $modelClass = Tenant::class;
+    protected function makeModel(): Model
+    {
+        return new Tenant();
+    }
 
     /**
-     * Busca tenant por ID
+     * Busca um tenant pelo nome.
      *
-     * @param int $id ID do tenant
+     * @param string $name Nome do tenant
      * @return Tenant|null Tenant encontrado ou null
      */
-    public function findById( int $id ): ?Tenant
+    public function findByName( string $name ): ?Tenant
     {
-        try {
-            $tenant = Tenant::find( $id );
-
-            $this->logOperation( 'findById', [ 
-                'id'    => $id,
-                'found' => $tenant !== null
-            ] );
-
-            return $tenant;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findById', $e, [ 'id' => $id ] );
-            return null;
-        }
+        return $this->model->where( 'name', $name )->first();
     }
 
     /**
-     * Busca todos os tenants ativos
+     * Verifica se existe um tenant com o nome especificado.
      *
-     * @param array|null $orderBy Ordenação opcional
-     * @param int|null $limit Limite de resultados
-     * @return array Array de tenants ativos
+     * @param string $name Nome do tenant
+     * @return bool True se existe
      */
-    public function findActive( ?array $orderBy = null, ?int $limit = null ): array
+    public function existsByName( string $name ): bool
     {
-        try {
-            $query = Tenant::where( 'active', true );
-
-            if ( is_array( $orderBy ) ) {
-                foreach ( $orderBy as $field => $direction ) {
-                    $query->orderBy( $field, $direction );
-                }
-            } else if ( $orderBy ) {
-                $query->orderBy( 'created_at', $orderBy );
-            }
-
-            if ( $limit !== null ) {
-                $query->limit( $limit );
-            }
-
-            $tenants = $query->get()->toArray();
-
-            $this->logOperation( 'findActive', [ 
-                'order_by' => $orderBy,
-                'limit'    => $limit,
-                'count'    => count( $tenants )
-            ] );
-
-            return $tenants;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findActive', $e, [ 'order_by' => $orderBy, 'limit' => $limit ] );
-            return [];
-        }
+        return $this->model->where( 'name', $name )->exists();
     }
 
     /**
-     * Verifica se um domínio já está sendo usado por outro tenant
+     * Busca tenants ativos.
      *
-     * @param string $domain Domínio a ser verificado
-     * @param string|null $excludeId ID do tenant a ser excluído (para updates)
-     * @return bool True se o domínio é único, false caso contrário
+     * @return \Illuminate\Database\Eloquent\Collection<int, Tenant>
      */
-    public function isDomainUnique( string $domain, ?string $excludeId = null ): bool
+    public function findActive()
     {
-        try {
-            $query = Tenant::where( 'domain', $domain );
-
-            if ( $excludeId !== null ) {
-                $query->where( 'id', '!=', $excludeId );
-            }
-
-            $exists = $query->exists();
-
-            $this->logOperation( 'isDomainUnique', [ 
-                'domain'     => $domain,
-                'exclude_id' => $excludeId,
-                'unique'     => !$exists
-            ] );
-
-            return !$exists;
-        } catch ( Throwable $e ) {
-            $this->logError( 'isDomainUnique', $e, [ 'domain' => $domain ] );
-            return false;
-        }
+        return $this->model->where( 'is_active', true )->get();
     }
 
     /**
-     * Cria um novo tenant com dados básicos
+     * Cria um novo tenant.
      *
-     * @param array $data Dados do tenant
-     * @return Tenant|false Tenant criado ou false em caso de erro
+     * @param array<string, mixed> $data Dados do tenant
+     * @return Tenant Tenant criado
      */
-    public function createTenant( array $data ): Tenant|false
+    public function createTenant( array $data ): Tenant
     {
-        try {
-            $tenant = new Tenant( $data );
-            $tenant->save();
-
-            $this->logOperation( 'createTenant', [ 
-                'data'      => $data,
-                'tenant_id' => $tenant->id,
-                'success'   => true
-            ] );
-
-            return $tenant;
-        } catch ( Throwable $e ) {
-            $this->logError( 'createTenant', $e, [ 'data' => $data ] );
-            return false;
-        }
-    }
-
-    /**
-     * Atualiza dados do tenant
-     *
-     * @param string $id ID do tenant
-     * @param array $data Dados para atualização
-     * @return Tenant|false Tenant atualizado ou false em caso de erro
-     */
-    public function updateTenant( string $id, array $data ): Tenant|false
-    {
-        try {
-            $tenant = Tenant::find( $id );
-
-            if ( !$tenant ) {
-                $this->logError( 'updateTenant', new Exception( 'Tenant not found' ), [ 'id' => $id ] );
-                return false;
-            }
-
-            $tenant->fill( $data );
-            $tenant->save();
-
-            $this->logOperation( 'updateTenant', [ 
-                'id'      => $id,
-                'success' => true
-            ] );
-
-            return $tenant;
-        } catch ( Throwable $e ) {
-            $this->logError( 'updateTenant', $e, [ 'id' => $id, 'data' => $data ] );
-            return false;
-        }
+        return $this->create( $data );
     }
 
 }

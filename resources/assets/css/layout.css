@@ -318,6 +318,14 @@ header {
    display: inline-block;
 }
 
+/* Ocultar ícones baseados no atributo aria-hidden */
+.theme-toggle [aria-hidden="true"] {
+   display: none !important;
+}
+.theme-toggle [aria-hidden="false"] {
+   display: inline-block !important;
+}
+
 .small-text {
    color: var(--small-text);
    font-size: 0.875rem;

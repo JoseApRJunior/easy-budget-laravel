@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-4">
@@ -37,7 +37,8 @@
                                 <i class="bi bi-graph-up text-primary fs-1 mb-3"></i>
                                 <h3 class="text-primary mb-1">{{ number_format( $kpis[ 'total_requests' ] ) }}</h3>
                                 <h6 class="text-muted mb-0">Requisições (24h)</h6>
-                                <small class="text-{{ str_starts_with( $kpis[ 'growth_rate' ], '+' ) ? 'success' : 'danger' }}">
+                                <small
+                                    class="text-{{ str_starts_with( $kpis[ 'growth_rate' ], '+' ) ? 'success' : 'danger' }}">
                                     <i
                                         class="bi bi-arrow-{{ str_starts_with( $kpis[ 'growth_rate' ], '+' ) ? 'up' : 'down' }}"></i>
                                     {{ $kpis[ 'growth_rate' ] }} vs período anterior

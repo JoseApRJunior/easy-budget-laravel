@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-4">
@@ -101,11 +101,11 @@
             const div = document.createElement( 'div' );
             div.className = 'input-group mb-2';
             div.innerHTML = `
-            <input type="email" class="form-control" name="emails[]" placeholder="email@exemplo.com" required>
-            <button type="button" class="btn btn-outline-danger" onclick="removeEmailInput(this)">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
+                <input type="email" class="form-control" name="emails[]" placeholder="email@exemplo.com" required>
+                <button type="button" class="btn btn-outline-danger" onclick="removeEmailInput(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
             container.appendChild( div );
         }
 
@@ -121,11 +121,11 @@
             const div = document.createElement( 'div' );
             div.className = 'input-group mb-2';
             div.innerHTML = `
-            <input type="tel" class="form-control" name="phones[]" placeholder="+5511999999999">
-            <button type="button" class="btn btn-outline-danger" onclick="removePhoneInput(this)">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
+                <input type="tel" class="form-control" name="phones[]" placeholder="+5511999999999">
+                <button type="button" class="btn btn-outline-danger" onclick="removePhoneInput(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
             container.appendChild( div );
         }
 

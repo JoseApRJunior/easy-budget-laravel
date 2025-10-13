@@ -3,7 +3,7 @@
     use App\Helpers\StatusHelper;
 @endphp
 
-@extends( 'layout.app' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-1">
@@ -15,7 +15,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.index' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
                 </ol>
             </nav>
@@ -29,7 +29,7 @@
                         <i class="bi bi-file-earmark-plus fs-2 text-primary"></i>
                         <h5 class="card-title mt-3">Novo Orçamento</h5>
                         <p class="card-text">Crie um novo orçamento detalhado para seus clientes.</p>
-                        <a href="{{ route( 'budget.create' ) }}" class="btn btn-primary">Criar Agora</a>
+                        <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary">Criar Agora</a>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,7 @@
                 <h4 class="mb-0">Filtros</h4>
             </div>
             <div class="card-body p-4">
-                <form action="{{ route( 'budget.index' ) }}" method="GET">
+                <form action="{{ route( 'provider.budgets.index' ) }}" method="GET">
                     <div class="row g-3">
                         <div class="col-md-2">
                             <label for="filter_code" class="form-label">Código</label>
@@ -91,12 +91,7 @@
                         <div class="col-md-2">
                             <label for="filter_status" class="form-label">Status</label>
                             <select id="filter_status" name="filter_status" class="form-select">
-                                <option value="">Todos</option>
-                                @foreach( StatusHelper::budget_status_options() as $status )
-                                    <option value="{{ $status[ 'slug' ] }}" {{ request( 'filter_status' ) == $status[ 'slug' ] ? 'selected' : '' }}>
-                                        {{ $status[ 'name' ] }}
-                                    </option>
-                                @endforeach
+                                {!! StatusHelper::budget_status_options( request( 'filter_status' ) ) !!}
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -112,7 +107,7 @@
                         </div>
                         <div class="col-md-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary me-2">Filtrar</button>
-                            <a href="{{ route( 'budget.index' ) }}" class="btn btn-outline-secondary">Limpar</a>
+                            <a href="{{ route( 'provider.budgets.index' ) }}" class="btn btn-outline-secondary">Limpar</a>
                         </div>
                     </div>
                 </form>

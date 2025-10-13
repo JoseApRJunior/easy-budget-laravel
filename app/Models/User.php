@@ -11,6 +11,8 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
+use App\Models\UserRole;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, TenantScoped, Notifiable;
 
@@ -52,6 +54,7 @@ class User extends Authenticatable
         'is_active',
         'logo',
         'remember_token',
+        'email_verified_at',
     ];
 
     /**
@@ -69,14 +72,15 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'      => 'integer',
-        'email'          => 'string',
-        'password'       => 'hashed',
-        'logo'           => 'string',
-        'is_active'      => 'boolean',
-        'remember_token' => 'string',
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'datetime',
+        'tenant_id'         => 'integer',
+        'email'             => 'string',
+        'password'          => 'hashed',
+        'logo'              => 'string',
+        'is_active'         => 'boolean',
+        'remember_token'    => 'string',
+        'email_verified_at' => 'datetime',
+        'created_at'        => 'immutable_datetime',
+        'updated_at'        => 'datetime',
     ];
 
     /**
@@ -172,7 +176,7 @@ class User extends Authenticatable
             'user_roles',
             'user_id',
             'role_id',
-        )->using( \App\Models\UserRole::class)
+        )->using( UserRole::class)
             ->withPivot( [ 'tenant_id' ] )
             ->withTimestamps();
     }
@@ -281,6 +285,14 @@ class User extends Authenticatable
     public function hasAnyRole( array $roles ): bool
     {
         return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+    }
+
+    /**
+     * Get the email address that should be used for verification.
+     */
+    public function getEmailForVerification(): string
+    {
+        return $this->email;
     }
 
     /**

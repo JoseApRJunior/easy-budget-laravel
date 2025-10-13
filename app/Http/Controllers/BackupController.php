@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\BackupHelper;
+use App\Http\Controllers\Abstracts\Controller;
 use Illuminate\Http\Request;
 
 class BackupController extends Controller

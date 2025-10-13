@@ -6,22 +6,31 @@ namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
 use App\Models\Address;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
 
-class AddressRepository extends AbstractRepository implements RepositoryInterface
+class AddressRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = Address::class;
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
+    {
+        return new Address();
+    }
 
     /**
-     * Cria endereços para cliente (suporta múltiplos).
+     * Cria endereços para cliente dentro do tenant atual (suporta múltiplos).
+     *
+     * @param array<array<string, mixed>> $addressesData Dados dos endereços
+     * @param int $customerId ID do cliente
+     * @return array<Address> Endereços criados
      */
-    public function createForCustomer( array $addressesData, int $tenantId, int $customerId ): array
+    public function createForCustomer( array $addressesData, int $customerId ): array
     {
         $addresses = [];
         foreach ( $addressesData as $addressData ) {
-            $address = new Address();
-            $address->fill( [ 
-                'tenant_id'   => $tenantId,
+            $address     = $this->create( [
                 'customer_id' => $customerId,
                 'street'      => $addressData[ 'street' ] ?? null,
                 'number'      => $addressData[ 'number' ] ?? null,
@@ -31,43 +40,45 @@ class AddressRepository extends AbstractRepository implements RepositoryInterfac
                 'is_main'     => $addressData[ 'is_main' ] ?? false,
                 // Outros campos de endereço
             ] );
-            $address->save();
             $addresses[] = $address;
         }
         return $addresses;
     }
 
     /**
-     * Deleta por ID do cliente.
+     * Remove endereços por ID do cliente dentro do tenant atual.
+     *
+     * @param int $customerId ID do cliente
+     * @return int Número de endereços removidos
      */
-    public function deleteByCustomerId( int $customerId, int $tenantId ): bool
+    public function deleteByCustomerId( int $customerId ): int
     {
-        return $this->model::where( 'customer_id', $customerId )
-            ->where( 'tenant_id', $tenantId )
-            ->delete() > 0;
+        return $this->model->where( 'customer_id', $customerId )->delete();
     }
 
     /**
-     * Lista endereços por cliente e tenant.
+     * Lista endereços por cliente dentro do tenant atual.
+     *
+     * @param int $customerId ID do cliente
+     * @return \Illuminate\Database\Eloquent\Collection<int, Address> Endereços do cliente
      */
-    public function listByCustomerIdAndTenantId( int $customerId, int $tenantId ): array
+    public function listByCustomerId( int $customerId ): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->model::where( 'customer_id', $customerId )
-            ->where( 'tenant_id', $tenantId )
-            ->get()
-            ->all();
+        return $this->model->where( 'customer_id', $customerId )->get();
     }
 
     /**
-     * Cria endereços para fornecedor (suporta múltiplos).
+     * Cria endereços para fornecedor dentro do tenant atual (suporta múltiplos).
+     *
+     * @param array<array<string, mixed>> $addressesData Dados dos endereços
+     * @param int $providerId ID do fornecedor
+     * @return array<Address> Endereços criados
      */
-    public function createForProvider( array $addressesData, int $tenantId, int $providerId ): array
+    public function createForProvider( array $addressesData, int $providerId ): array
     {
         $addresses = [];
         foreach ( $addressesData as $addressData ) {
-            $address = new Address();
-            $address->fill( [ 
-                'tenant_id'   => $tenantId,
+            $address     = $this->create( [
                 'provider_id' => $providerId,
                 'street'      => $addressData[ 'street' ] ?? null,
                 'number'      => $addressData[ 'number' ] ?? null,
@@ -77,43 +88,47 @@ class AddressRepository extends AbstractRepository implements RepositoryInterfac
                 'is_main'     => $addressData[ 'is_main' ] ?? false,
                 // Outros campos de endereço
             ] );
-            $address->save();
             $addresses[] = $address;
         }
         return $addresses;
     }
 
     /**
-     * Atualiza endereços para fornecedor: deleta existentes e cria novos.
+     * Atualiza endereços para fornecedor dentro do tenant atual.
+     *
+     * @param array<array<string, mixed>> $addressesData Dados dos novos endereços
+     * @param int $providerId ID do fornecedor
+     * @return array<Address> Novos endereços criados
      */
-    public function updateForProvider( array $addressesData, int $tenantId, int $providerId ): array
+    public function updateForProvider( array $addressesData, int $providerId ): array
     {
         // Deletar endereços existentes
-        $this->deleteByProviderId( $providerId, $tenantId );
+        $this->deleteByProviderId( $providerId );
 
         // Criar novos endereços
-        return $this->createForProvider( $addressesData, $tenantId, $providerId );
+        return $this->createForProvider( $addressesData, $providerId );
     }
 
     /**
-     * Deleta por ID do fornecedor.
+     * Remove endereços por ID do fornecedor dentro do tenant atual.
+     *
+     * @param int $providerId ID do fornecedor
+     * @return int Número de endereços removidos
      */
-    public function deleteByProviderId( int $providerId, int $tenantId ): bool
+    public function deleteByProviderId( int $providerId ): int
     {
-        return $this->model::where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
-            ->delete() > 0;
+        return $this->model->where( 'provider_id', $providerId )->delete();
     }
 
     /**
-     * Lista endereços por fornecedor e tenant.
+     * Lista endereços por fornecedor dentro do tenant atual.
+     *
+     * @param int $providerId ID do fornecedor
+     * @return \Illuminate\Database\Eloquent\Collection<int, Address> Endereços do fornecedor
      */
-    public function listByProviderIdAndTenantId( int $providerId, int $tenantId ): array
+    public function listByProviderId( int $providerId ): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->model::where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
-            ->get()
-            ->all();
+        return $this->model->where( 'provider_id', $providerId )->get();
     }
 
 }

@@ -43,7 +43,6 @@
                 <form id="logoutForm" action="/logout" method="post">
                     @csrf
                     @method( 'POST' )
-
                     <button class="dropdown-item text-danger" type="submit">
                         <i class="bi bi-box-arrow-right me-2"></i>Sair
                     </button>

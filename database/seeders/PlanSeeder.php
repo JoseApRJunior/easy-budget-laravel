@@ -12,6 +12,25 @@ class PlanSeeder extends Seeder
         $now   = now();
         $plans = [
             [
+                'name'        => 'Plano Trial',
+                'slug'        => 'trial',
+                'description' => 'Plano trial de 7 dias para novos usuários conhecerem o sistema.',
+                'price'       => 0.00,
+                'status'      => true,
+                'max_budgets' => 5,
+                'max_clients' => 25,
+                'features'    => json_encode( [
+                    'Plano experimental gratuito',
+                    'Período de teste: 7 dias',
+                    'Até 5 orçamentos',
+                    'Até 25 clientes',
+                    'Relatórios incluídos',
+                    'Suporte básico',
+                    'Sem custo durante o trial'
+                ] ),
+                'created_at'  => $now,
+            ],
+            [
                 'name'        => 'Basic',
                 'slug'        => 'basic',
                 'description' => 'Plano básico para começar: limites adequados para pequenos negócios.',

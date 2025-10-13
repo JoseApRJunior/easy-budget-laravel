@@ -119,6 +119,14 @@ class Service extends Model
     }
 
     /**
+     * Get the customer through the budget relationship.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo( Customer::class, 'customer_id' );
+    }
+
+    /**
      * Get the category that owns the Service.
      */
     public function category(): BelongsTo
@@ -132,6 +140,14 @@ class Service extends Model
     public function serviceStatus(): BelongsTo
     {
         return $this->belongsTo( ServiceStatus::class, 'service_statuses_id' );
+    }
+
+    /**
+     * Alias para serviceStatus() para compatibilidade.
+     */
+    public function status(): BelongsTo
+    {
+        return $this->serviceStatus();
     }
 
     /**

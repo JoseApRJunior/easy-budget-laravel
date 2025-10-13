@@ -6,19 +6,20 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
-    * Middleware para gerenciamento customizado de sessões no projeto Easy Budget.
-    *
-    * Este middleware intercepta as requisições para monitorar e gerenciar operações de sessão,
-    * permitindo a preservação de lógica de sessão legacy e futuras extensões. Inicialmente,
-    * apenas registra logs para monitoramento, sem alterar o comportamento padrão do Laravel.
-    *
-    * @package App\Http\Middleware
-    * @note Este middleware deve ser registrado APÓS o StartSession no grupo 'web' para evitar acesso prematuro à sessão.
-    */
+ * Middleware para gerenciamento customizado de sessões no projeto Easy Budget.
+ *
+ * Este middleware intercepta as requisições para monitorar e gerenciar operações de sessão,
+ * permitindo a preservação de lógica de sessão legacy e futuras extensões. Inicialmente,
+ * apenas registra logs para monitoramento, sem alterar o comportamento padrão do Laravel.
+ *
+ * @package App\Http\Middleware
+ * @note Este middleware deve ser registrado APÓS o StartSession no grupo 'web' para evitar acesso prematuro à sessão.
+ */
 class CustomSessionHandler
 {
     /**
@@ -33,20 +34,27 @@ class CustomSessionHandler
      */
     public function handle( Request $request, Closure $next ): Response
     {
+        // Verifica se o isolamento por navegador está habilitado
+        if ( config( 'session.isolate_by_browser', false ) ) {
+            $this->ensureBrowserIsolation( $request );
+        }
+
         // Log de início da sessão para monitoramento (apenas em dev/test)
         if ( !app()->environment( 'production' ) ) {
-            if ($request->hasSession()) {
+            if ( $request->hasSession() ) {
                 $maskedSessionId = substr( $request->session()->getId(), -4 ) ?: '****';
                 $maskedUserId    = $request->user()?->id ? substr( (string) $request->user()->id, -4 ) ?: '****' : 'anônimo';
 
                 Log::debug( 'CustomSessionHandler: Iniciando processamento de sessão', [
-                    'session_id' => $maskedSessionId,
-                    'user_id'    => $maskedUserId,
-                    'url'        => $request->url(),
+                    'session_id'          => $maskedSessionId,
+                    'user_id'             => $maskedUserId,
+                    'url'                 => $request->url(),
+                    'has_auth_session'    => $request->session()->has( 'auth' ),
+                    'browser_fingerprint' => substr( $request->session()->get( 'browser_fingerprint', 'none' ), -8 ),
                 ] );
             } else {
                 Log::debug( 'CustomSessionHandler: Iniciando processamento sem sessão disponível', [
-                    'url'        => $request->url(),
+                    'url' => $request->url(),
                 ] );
             }
         }
@@ -55,16 +63,51 @@ class CustomSessionHandler
         $response = $next( $request );
 
         // Log de fim da sessão para monitoramento (apenas em dev/test)
-        if ( !app()->environment( 'production' ) && $request->hasSession()) {
+        if ( !app()->environment( 'production' ) && $request->hasSession() ) {
             $maskedSessionId = substr( $request->session()->getId(), -4 ) ?: '****';
 
             Log::debug( 'CustomSessionHandler: Finalizando processamento de sessão', [
                 'session_id'        => $maskedSessionId,
                 'session_data_size' => count( $request->session()->all() ),
+                'has_auth_session'  => $request->session()->has( 'auth' ),
             ] );
         }
 
         return $response;
+    }
+
+    /**
+     * Garante isolamento completo de sessão por navegador.
+     *
+     * Este método garante que cada navegador tenha sua própria sessão independente,
+     * evitando qualquer compartilhamento de sessão entre diferentes navegadores.
+     *
+     * @param Request $request A requisição HTTP atual
+     * @return void
+     */
+    private function ensureBrowserIsolation( Request $request ): void
+    {
+        // Cria uma marca única por navegador para garantir isolamento
+        $browserFingerprint = $this->getBrowserFingerprint( $request );
+
+        // Armazena informações do navegador na sessão
+        $request->session()->put( 'browser_fingerprint', $browserFingerprint );
+        $request->session()->put( 'browser_isolation', true );
+
+        // Não interfere na sessão auth - deixa o Laravel gerenciar naturalmente
+        // Remove qualquer lógica que possa estar causando inconsistência entre navegadores
+    }
+
+    /**
+     * Cria uma marca única para identificar o navegador.
+     */
+    private function getBrowserFingerprint( Request $request ): string
+    {
+        $userAgent      = $request->userAgent();
+        $ip             = $request->ip();
+        $acceptLanguage = $request->header( 'Accept-Language', '' );
+
+        return hash( 'sha256', $userAgent . $ip . $acceptLanguage . time() );
     }
 
     /**

@@ -121,17 +121,17 @@ return new class extends Migration
             $table->string( 'password', 255 );
             $table->boolean( 'is_active' )->default( true );
             $table->string( 'logo', 255 )->nullable();
+            $table->timestamp( 'email_verified_at' )->nullable();
             $table->rememberToken();
             $table->timestamps();
         } );
 
         Schema::create( 'role_permissions', function ( Blueprint $table ) {
             $table->id();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'role_id' )->constrained( 'roles' )->cascadeOnDelete();
             $table->foreignId( 'permission_id' )->constrained( 'permissions' )->cascadeOnDelete();
             $table->timestamps();
-            $table->unique( [ 'tenant_id', 'role_id', 'permission_id' ], 'uq_role_permissions' );
+            $table->unique( [ 'role_id', 'permission_id' ], 'uq_role_permissions' );
         } );
 
         Schema::create( 'user_roles', function ( Blueprint $table ) {
@@ -594,6 +594,30 @@ return new class extends Migration
             $table->integer( 'expiration' );
         } );
 
+        Schema::create( 'jobs', function ( Blueprint $table ) {
+            $table->id();
+            $table->string( 'queue' )->index();
+            $table->longText( 'payload' );
+            $table->unsignedTinyInteger( 'attempts' );
+            $table->unsignedInteger( 'reserved_at' )->nullable();
+            $table->unsignedInteger( 'available_at' );
+            $table->timestamp( 'created_at' )->useCurrent();
+
+            $table->index( [ 'queue', 'reserved_at' ] );
+        } );
+
+        Schema::create( 'failed_jobs', function ( Blueprint $table ) {
+            $table->id();
+            $table->string( 'uuid' )->unique();
+            $table->text( 'connection' );
+            $table->text( 'queue' );
+            $table->longText( 'payload' );
+            $table->longText( 'exception' );
+            $table->timestamp( 'failed_at' )->useCurrent();
+
+            $table->index( [ 'uuid' ] );
+        } );
+
         Schema::create( 'cache_locks', function ( Blueprint $table ) {
             $table->string( 'key' )->primary();
             $table->string( 'owner' );
@@ -657,6 +681,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists( 'audit_logs' );
+        Schema::dropIfExists( 'failed_jobs' );
+        Schema::dropIfExists( 'jobs' );
         Schema::dropIfExists( 'cache_locks' );
         Schema::dropIfExists( 'cache' );
         Schema::dropIfExists( 'sessions' );

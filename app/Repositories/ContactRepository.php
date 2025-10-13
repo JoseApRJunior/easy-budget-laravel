@@ -6,80 +6,119 @@ namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
 use App\Models\Contact;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
 
-class ContactRepository extends AbstractRepository implements RepositoryInterface
+class ContactRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = Contact::class;
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
+    {
+        return new Contact();
+    }
 
     /**
-     * Cria contato para cliente.
+     * Cria contato para cliente dentro do tenant atual.
+     *
+     * @param array<string, mixed> $data Dados do contato
+     * @param int $customerId ID do cliente
+     * @return Contact Contato criado
      */
-    public function createForCustomer( array $data, int $tenantId, int $customerId ): Model
+    public function createForCustomer( array $data, int $customerId ): Contact
     {
-        $contact = new Contact();
-        $contact->fill( [ 
-            'tenant_id'   => $tenantId,
+        return $this->create( array_merge( $data, [
             'customer_id' => $customerId,
-            'phone'       => $data[ 'phone' ] ?? null,
-            'email'       => $data[ 'email' ] ?? null,
-            // Outros campos de contato como mobile, etc.
-        ] );
-        $contact->save();
-        return $contact;
+        ] ) );
     }
 
     /**
-     * Deleta por ID do cliente.
+     * Remove contatos por ID do cliente dentro do tenant atual.
+     *
+     * @param int $customerId ID do cliente
+     * @return int Número de contatos removidos
      */
-    public function deleteByCustomerId( int $customerId, int $tenantId ): bool
+    public function deleteByCustomerId( int $customerId ): int
     {
-        return $this->model->where( 'customer_id', $customerId )
-            ->where( 'tenant_id', $tenantId )
-            ->delete() > 0;
+        return $this->model->where( 'customer_id', $customerId )->delete();
     }
 
     /**
-     * Cria contato para provider.
+     * Cria contato para provider dentro do tenant atual.
+     *
+     * @param array<string, mixed> $data Dados do contato
+     * @param int $providerId ID do provider
+     * @return Contact Contato criado
      */
-    public function createForProvider( array $data, int $tenantId, int $providerId ): Model
+    public function createForProvider( array $data, int $providerId ): Contact
     {
-        $contact = new Contact();
-        $contact->fill( [ 
-            'tenant_id'   => $tenantId,
+        return $this->create( array_merge( $data, [
             'provider_id' => $providerId,
-            'phone'       => $data[ 'phone' ] ?? null,
-            'email'       => $data[ 'email' ] ?? null,
-            // Outros campos de contato
-        ] );
-        $contact->save();
-        return $contact;
+        ] ) );
     }
 
     /**
-     * Atualiza contato para provider.
+     * Atualiza contato para provider dentro do tenant atual.
+     *
+     * @param array<string, mixed> $data Dados para atualização
+     * @param int $providerId ID do provider
+     * @return bool True se atualizado com sucesso
      */
-    public function updateForProvider( array $data, int $tenantId, int $providerId ): bool
+    public function updateForProvider( array $data, int $providerId ): bool
     {
-        $contact = $this->model->where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
-            ->first();
+        $contact = $this->model->where( 'provider_id', $providerId )->first();
         if ( !$contact ) {
             return false;
         }
+
         $contact->fill( $data );
         $contact->save();
         return true;
     }
 
     /**
-     * Deleta por ID do provider.
+     * Remove contatos por ID do provider dentro do tenant atual.
+     *
+     * @param int $providerId ID do provider
+     * @return int Número de contatos removidos
      */
-    public function deleteByProviderId( int $providerId, int $tenantId ): bool
+    public function deleteByProviderId( int $providerId ): int
     {
-        return $this->model->where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
-            ->delete() > 0;
+        return $this->model->where( 'provider_id', $providerId )->delete();
+    }
+
+    /**
+     * Busca contato por email dentro do tenant atual.
+     *
+     * @param string $email Email do contato
+     * @return Contact|null Contato encontrado
+     */
+    public function findByEmail( string $email ): ?Contact
+    {
+        return $this->model->where( 'email', $email )->first();
+    }
+
+    /**
+     * Lista contatos por cliente dentro do tenant atual.
+     *
+     * @param int $customerId ID do cliente
+     * @return \Illuminate\Database\Eloquent\Collection<int, Contact> Contatos do cliente
+     */
+    public function listByCustomerId( int $customerId ): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model->where( 'customer_id', $customerId )->get();
+    }
+
+    /**
+     * Lista contatos por provider dentro do tenant atual.
+     *
+     * @param int $providerId ID do provider
+     * @return \Illuminate\Database\Eloquent\Collection<int, Contact> Contatos do provider
+     */
+    public function listByProviderId( int $providerId ): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model->where( 'provider_id', $providerId )->get();
     }
 
 }

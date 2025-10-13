@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'title', 'Status do Pagamento' )
 
@@ -33,7 +33,8 @@
                                 <div class="card-body">
                                     <h5 class="mb-3">Detalhes da Fatura</h5>
                                     <p class="mb-1"><strong>Fatura Nº:</strong> {{ $invoice->code }}</p>
-                                    <p class="mb-0"><strong>Valor:</strong> R$ {{ number_format( $invoice->total, 2, ',', '.' ) }}
+                                    <p class="mb-0"><strong>Valor:</strong> R$
+                                        {{ number_format( $invoice->total, 2, ',', '.' ) }}
                                     </p>
                                 </div>
                             </div>

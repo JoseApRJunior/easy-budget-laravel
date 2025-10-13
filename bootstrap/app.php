@@ -21,7 +21,14 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         $middleware->alias( [
             'tenancy'         => \Stancl\Tenancy\Middleware\InitializeTenancyByPath::class,
             'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+            'provider'        => \App\Http\Middleware\ProviderMiddleware::class,
         ] );
+
+        // Trust Cloudflare proxies for correct URL generation
+        $middleware->trustProxies(
+            '*', // Trust all proxies (for Cloudflare)
+            30 // Trust X-Forwarded-* headers
+        );
 
     } )
     ->withExceptions( function ( Exceptions $exceptions ): void {

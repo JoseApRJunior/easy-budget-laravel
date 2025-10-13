@@ -2,12 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Provider;
+use App\Models\User;
+use App\Models\UserRole;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
-use App\Models\Provider;
 
 class ProviderMiddleware
 {
@@ -20,8 +21,15 @@ class ProviderMiddleware
         }
 
         // Check if user is a provider
-        if ( !$user->role || $user->role->name !== 'provider' ) {
-            Log::warning( 'Provider access denied', [ 
+        $isProvider = UserRole::where( 'user_id', $user->id )
+            ->where( 'tenant_id', $user->tenant_id )
+            ->whereHas( 'role', function ( $query ) {
+                $query->where( 'name', 'provider' );
+            } )
+            ->exists();
+
+        if ( !$isProvider ) {
+            Log::warning( 'Provider access denied', [
                 'user_id'         => $user->id,
                 'ip'              => $request->ip(),
                 'attempted_route' => $request->route()->getName()
@@ -32,8 +40,19 @@ class ProviderMiddleware
 
         // Check if provider is active
         $provider = Provider::where( 'user_id', $user->id )->first();
-        if ( !$provider || $provider->status !== 'active' ) {
-            abort( 403, 'Acesso negado. Sua conta de provedor não está ativa.' );
+        if ( !$provider || $user->is_active !== true ) {
+            abort( 403, 'Acesso negado. Sua conta de usuário não está ativa.' );
+        }
+
+        // Check if trial is expired and redirect to plans
+        if ( isTrialExpired() ) {
+            Log::info( 'Trial expired - redirecting to plans', [
+                'user_id' => $user->id,
+                'ip'      => $request->ip()
+            ] );
+
+            return redirect()->route( 'plans.index' )
+                ->with( 'warning', 'Seu período de trial expirou. Escolha um plano para continuar usando o sistema.' );
         }
 
         return $next( $request );

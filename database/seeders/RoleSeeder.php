@@ -11,11 +11,11 @@ class RoleSeeder extends Seeder
     {
         $now  = now();
         $data = [
-            [ 'name' => 'Admin', 'description' => 'Acesso total ao sistema', 'created_at' => $now ],
-            [ 'name' => 'Manager', 'description' => 'Gerencia operações e aprovações', 'created_at' => $now ],
-            [ 'name' => 'Staff', 'description' => 'Executa tarefas operacionais', 'created_at' => $now ],
-            [ 'name' => 'Viewer', 'description' => 'Somente leitura', 'created_at' => $now ],
-            [ 'name' => 'Provider', 'description' => 'Provedor de serviços - acesso completo', 'created_at' => $now ],
+            [ 'name' => 'admin', 'description' => 'Acesso total ao sistema', 'created_at' => $now ],
+            [ 'name' => 'manager', 'description' => 'Gerencia operações e aprovações', 'created_at' => $now ],
+            [ 'name' => 'staff', 'description' => 'Executa tarefas operacionais', 'created_at' => $now ],
+            [ 'name' => 'viewer', 'description' => 'Somente leitura', 'created_at' => $now ],
+            [ 'name' => 'provider', 'description' => 'Provedor de serviços - acesso completo', 'created_at' => $now ],
         ];
 
         DB::table( 'roles' )->upsert( $data, [ 'name' ], [ 'description' ] );

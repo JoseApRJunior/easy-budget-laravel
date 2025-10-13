@@ -1,4 +1,4 @@
-@extends( 'layout' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container mt-5">
@@ -30,7 +30,8 @@
                                     <div class="alert alert-danger" role="alert">
                                         <h4 class="alert-heading"><i class="bi bi-x-octagon-fill me-2"></i>Pagamento não Concluído
                                         </h4>
-                                        <p>O status do seu pagamento é <strong>{{ ucfirst( $payment->status ) }}</strong>. Parece que
+                                        <p>O status do seu pagamento é <strong>{{ ucfirst( $payment->status ) }}</strong>. Parece
+                                            que
                                             houve um
                                             problema ou a
                                             transação foi cancelada.</p>
@@ -55,45 +56,46 @@
                                         <p class="lead">Sua assinatura para o plano <strong>{{ $subscription->name }}</strong> no valor de
                                             <strong>R$ {{
                             number_format( $subscription->transaction_amount, 2, ',', '.' ) }}</strong> está aguardando
-                                            confirmação.</p>
+                                            confirmação.
+                                        </p>
                                         {{-- --- Caso 1: PIX --- --}}
                                         @if ( $payment->payment_method_id == 'pix' )
-                                                <div class="mt-4">
-                                                    <h5>Pague com PIX para ativar seu plano</h5>
-                                                    <p>Escaneie o QR Code abaixo com o app do seu banco:</p>
-                                                    <img src="data:image/png;base64,{{ $payment->point_of_interaction->transaction_data->qr_code_base64 }}"
-                                                        alt="PIX QR Code" class="img-fluid mb-3" style="max-width: 250px;">
-                                                    <p class="text-muted small mt-2">Este código expira em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y H:i" )
-                                            }}</strong></p>
-                                                    <p>Ou use o código "Copia e Cola":</p>
-                                                    <div class="input-group mb-3">
-                                                        <input type="text" id="pixCode" class="form-control"
-                                                            value="{{ $payment->point_of_interaction->transaction_data->qr_code }}" readonly>
-                                                        <button class="btn btn-outline-secondary" type="button"
-                                                            onclick="copyToClipboard('pixCode', this)"><i class="bi bi-clipboard"></i>
-                                                            Copiar</button>
-                                                    </div>
+                                            <div class="mt-4">
+                                                <h5>Pague com PIX para ativar seu plano</h5>
+                                                <p>Escaneie o QR Code abaixo com o app do seu banco:</p>
+                                                <img src="data:image/png;base64,{{ $payment->point_of_interaction->transaction_data->qr_code_base64 }}"
+                                                    alt="PIX QR Code" class="img-fluid mb-3" style="max-width: 250px;">
+                                                <p class="text-muted small mt-2">Este código expira em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y H:i" )
+                                                                    }}</strong></p>
+                                                <p>Ou use o código "Copia e Cola":</p>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" id="pixCode" class="form-control"
+                                                        value="{{ $payment->point_of_interaction->transaction_data->qr_code }}" readonly>
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                        onclick="copyToClipboard('pixCode', this)"><i class="bi bi-clipboard"></i>
+                                                        Copiar</button>
                                                 </div>
-                                                {{-- --- Caso 2: Boleto --- --}}
+                                            </div>
+                                            {{-- --- Caso 2: Boleto --- --}}
                                         @elseif ( $payment->payment_method_id == 'bolbradesco' || $payment->payment_method_id == 'boleto' )
-                                                <div class="mt-4">
-                                                    <h5>Finalize seu pagamento</h5>
-                                                    <p>Clique no botão abaixo para visualizar e pagar o boleto.</p>
-                                                    <a href="{{ $payment->transaction_details->external_resource_url }}" target="_blank"
-                                                        class="btn btn-primary btn-lg"><i class="bi bi-upc-scan"></i> Visualizar Boleto</a>
-                                                    <p class="mt-3">Ou copie a linha digitável abaixo:</p>
-                                                    <div class="input-group mb-3">
-                                                        <input type="text" id="boletoCode" class="form-control"
-                                                            value="{{ $payment->transaction_details->digitable_line }}" readonly>
-                                                        <button class="btn btn-outline-secondary" type="button"
-                                                            onclick="copyToClipboard('boletoCode', this)"><i class="bi bi-clipboard"></i>
-                                                            Copiar</button>
-                                                    </div>
-                                                    <p class="text-muted small mt-2">O boleto vence em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y" )
-                                            }}</strong>
-                                                    </p>
+                                            <div class="mt-4">
+                                                <h5>Finalize seu pagamento</h5>
+                                                <p>Clique no botão abaixo para visualizar e pagar o boleto.</p>
+                                                <a href="{{ $payment->transaction_details->external_resource_url }}" target="_blank"
+                                                    class="btn btn-primary btn-lg"><i class="bi bi-upc-scan"></i> Visualizar Boleto</a>
+                                                <p class="mt-3">Ou copie a linha digitável abaixo:</p>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" id="boletoCode" class="form-control"
+                                                        value="{{ $payment->transaction_details->digitable_line }}" readonly>
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                        onclick="copyToClipboard('boletoCode', this)"><i class="bi bi-clipboard"></i>
+                                                        Copiar</button>
                                                 </div>
-                                                {{-- --- Caso 3: Cartão de Crédito em Análise --- --}}
+                                                <p class="text-muted small mt-2">O boleto vence em: <strong>{{ \Carbon\Carbon::parse( $payment->date_of_expiration )->format( "d/m/Y" )
+                                                                    }}</strong>
+                                                </p>
+                                            </div>
+                                            {{-- --- Caso 3: Cartão de Crédito em Análise --- --}}
                                         @elseif ( $payment->status == 'in_process' )
                                             <div class="mt-4">
                                                 <div class="spinner-border text-primary mb-3" role="status"><span

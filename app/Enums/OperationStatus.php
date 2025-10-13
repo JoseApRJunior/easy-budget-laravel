@@ -27,33 +27,6 @@ enum OperationStatus: string
     /** Dados inválidos fornecidos */
     case INVALID_DATA = 'invalid_data';
 
-    /** Operação não suportada */
-    case NOT_SUPPORTED = 'not_supported';
-
-    /** Usuário não autenticado */
-    case UNAUTHORIZED = 'unauthorized';
-
-    /** Token ou recurso expirado */
-    case EXPIRED = 'expired';
-
-    /** Recurso bloqueado */
-    case BLOCKED = 'blocked';
-
-    /** Operação pendente */
-    case PENDING = 'pending';
-
-    /** Limite de taxa excedido */
-    case RATE_LIMITED = 'rate_limited';
-
-    /** Timeout na operação */
-    case TIMEOUT = 'timeout';
-
-    /** Conflito de dados */
-    case CONFLICT = 'conflict';
-
-    /** Erro de validação */
-    case VALIDATION = 'validation';
-
     /**
      * Verifica se o status indica sucesso
      *
@@ -82,20 +55,11 @@ enum OperationStatus: string
     public function getMessage(): string
     {
         return match ( $this ) {
-            self::SUCCESS       => 'Operação realizada com sucesso',
-            self::NOT_FOUND     => 'Recurso não encontrado',
-            self::ERROR         => 'Erro interno do servidor',
-            self::FORBIDDEN     => 'Acesso negado',
-            self::INVALID_DATA  => 'Dados inválidos',
-            self::NOT_SUPPORTED => 'Operação não suportada',
-            self::UNAUTHORIZED  => 'Usuário não autorizado',
-            self::EXPIRED       => 'Recurso expirado',
-            self::BLOCKED       => 'Recurso bloqueado',
-            self::PENDING       => 'Operação pendente',
-            self::RATE_LIMITED  => 'Limite de requisições excedido',
-            self::TIMEOUT       => 'Timeout na operação',
-            self::CONFLICT      => 'Conflito de dados',
-            self::VALIDATION    => 'Erro de validação',
+            self::SUCCESS      => 'Operação realizada com sucesso',
+            self::NOT_FOUND    => 'Recurso não encontrado',
+            self::ERROR        => 'Erro interno do servidor',
+            self::FORBIDDEN    => 'Acesso negado',
+            self::INVALID_DATA => 'Dados inválidos',
         };
     }
 

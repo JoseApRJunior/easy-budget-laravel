@@ -5,43 +5,65 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\UserConfirmationToken;
-use App\Repositories\AbstractRepository;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Repositório para tokens de confirmação de usuário.
  *
- * Estende AbstractRepository para operações tenant-aware.
+ * Estende AbstractTenantRepository para operações tenant-aware
+ * com isolamento automático de dados por empresa.
  */
-class UserConfirmationTokenRepository extends AbstractRepository
+class UserConfirmationTokenRepository extends AbstractTenantRepository
 {
     /**
-     * @var string Model class
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    protected string $modelClass = UserConfirmationToken::class;
-
-    /**
-     * Encontra token por token hash e tenant.
-     *
-     * @param string $tokenHash
-     * @param int $tenantId
-     * @return Model|null
-     */
-    public function findByTokenAndTenantId( string $tokenHash, int $tenantId ): ?Model
+    protected function makeModel(): Model
     {
-        return $this->findOneByAndTenantId( [ 'token' => $tokenHash ], $tenantId );
+        return new UserConfirmationToken();
     }
 
     /**
-     * Deleta tokens por user ID.
+     * Encontra token por token hash dentro do tenant atual.
+     *
+     * @param string $tokenHash
+     * @return UserConfirmationToken|null
+     */
+    public function findByToken( string $tokenHash ): ?UserConfirmationToken
+    {
+        return $this->model->where( 'token', $tokenHash )->first();
+    }
+
+    /**
+     * Deleta tokens por user ID dentro do tenant atual.
      *
      * @param mixed $userId
      * @return bool
      */
     public function deleteByUserId( mixed $userId ): bool
     {
-        return $this->model::where( 'user_id', $userId )->delete() > 0;
+        return $this->model->where( 'user_id', $userId )->delete() > 0;
     }
 
-    // Outros métodos se necessário
+    /**
+     * Encontra tokens expirados dentro do tenant atual.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, UserConfirmationToken>
+     */
+    public function findExpired()
+    {
+        return $this->model->where( 'expires_at', '<', now() )->get();
+    }
+
+    /**
+     * Remove tokens expirados dentro do tenant atual.
+     *
+     * @return int Número de tokens removidos
+     */
+    public function deleteExpired(): int
+    {
+        return $this->model->where( 'expires_at', '<', now() )->delete();
+    }
+
 }

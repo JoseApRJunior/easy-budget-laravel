@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\EntityORMInterface;
 use App\Models\Permission;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +16,7 @@ use Throwable;
  * Estende AbstractNoTenantRepository para operações globais
  * de gerenciamento de permissões do sistema
  */
-class PermissionRepository extends AbstractNoTenantRepository
+class PermissionRepository extends AbstractGlobalRepository
 {
     /**
      * {@inheritdoc}
@@ -35,7 +34,7 @@ class PermissionRepository extends AbstractNoTenantRepository
         try {
             $permission = Permission::where( 'name', $name )->first();
 
-            $this->logOperation( 'findByName', [ 
+            $this->logOperation( 'findByName', [
                 'name'  => $name,
                 'found' => $permission !== null
             ] );
@@ -57,7 +56,7 @@ class PermissionRepository extends AbstractNoTenantRepository
         try {
             $permissions = Permission::orderBy( 'name' )->get()->toArray();
 
-            $this->logOperation( 'findAllOrdered', [ 
+            $this->logOperation( 'findAllOrdered', [
                 'permissions_count' => count( $permissions )
             ] );
 
@@ -80,7 +79,7 @@ class PermissionRepository extends AbstractNoTenantRepository
             $permission = new Permission( $data );
             $permission->save();
 
-            $this->logOperation( 'createPermission', [ 
+            $this->logOperation( 'createPermission', [
                 'data'          => $data,
                 'permission_id' => $permission->id,
                 'success'       => true
@@ -113,7 +112,7 @@ class PermissionRepository extends AbstractNoTenantRepository
             $permission->fill( $data );
             $permission->save();
 
-            $this->logOperation( 'updatePermission', [ 
+            $this->logOperation( 'updatePermission', [
                 'id'      => $id,
                 'success' => true
             ] );
@@ -138,7 +137,7 @@ class PermissionRepository extends AbstractNoTenantRepository
 
             $success = $deleted > 0;
 
-            $this->logOperation( 'deletePermission', [ 
+            $this->logOperation( 'deletePermission', [
                 'id'      => $id,
                 'success' => $success
             ] );
@@ -163,7 +162,7 @@ class PermissionRepository extends AbstractNoTenantRepository
                 ->roles()
                 ->exists();
 
-            $this->logOperation( 'hasAssociatedRoles', [ 
+            $this->logOperation( 'hasAssociatedRoles', [
                 'permission_id' => $permissionId,
                 'has_roles'     => $hasRoles
             ] );

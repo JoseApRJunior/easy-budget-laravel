@@ -98,7 +98,7 @@
             <button class="nav-link theme-toggle d-flex align-items-center justify-content-center"
                 onclick="toggleTheme()" title="Alternar Tema" aria-label="Alternar Tema">
                 <i class="bi bi-sun theme-light-icon" aria-hidden="true"></i>
-                <i class="bi bi-moon theme-dark-icon" aria-hidden="true"></i>
+                <i class="bi bi-moon theme-dark-icon" aria-hidden="false"></i>
             </button>
         </li>
 

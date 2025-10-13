@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         // Criar primeiro provider com sua cadeia completa independente
         $this->createProviderWithFullChain(
             'Empresa Exemplo Ltda',
-            'provider@easybudget.com',
+            'provider@easybudget.net.br',
             'João',
             'Silva',
             '12345678901',
@@ -48,18 +48,18 @@ class DatabaseSeeder extends Seeder
             'São Paulo',
             'SP',
             '01310-100',
-            'contato@empresa.com',
+            'contato@empresa.net.br',
             '(11) 99999-9999',
-            'comercial@empresa.com',
+            'comercial@empresa.net.br',
             '(11) 8888-8888',
-            'https://empresa.com.br',
+            'https://empresa.net.br',
             'Empresa especializada em serviços de tecnologia',
         );
 
         // Criar segundo provider com sua cadeia completa independente
         $this->createProviderWithFullChain(
             'Empresa Demo Ltda',
-            'provider2@easybudget.com',
+            'provider2@easybudget.net.br',
             'Maria',
             'Santos',
             '98765432109',
@@ -70,11 +70,11 @@ class DatabaseSeeder extends Seeder
             'Rio de Janeiro',
             'RJ',
             '20040-020',
-            'contato2@empresa.com',
+            'contato2@empresa.net.br',
             '(21) 8888-8888',
-            'comercial2@empresa.com',
+            'comercial2@empresa.net.br',
             '(21) 7777-7777',
-            'https://empresa2.com.br',
+            'https://empresa2.net.br',
             'Empresa de demonstração para testes',
         );
     }
@@ -243,10 +243,10 @@ class DatabaseSeeder extends Seeder
                     'plan_id'            => $plan->id,
                     'tenant_id'          => $tenant->id,
                     'status'             => 'active',
-                    'transaction_amount' => 29.90,
+                    'transaction_amount' => 00.00,
                     'start_date'         => now(),
                     'end_date'           => date( 'Y-m-d H:i:s', strtotime( '+1 year' ) ),
-                    'payment_method'     => 'credit_card',
+                    'payment_method'     => 'trial',
                     'payment_id'         => 'TEST_' . uniqid(),
                     'public_hash'        => 'TEST_HASH_' . uniqid(),
                 ],
@@ -285,7 +285,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Criar contato específico para o customer (email único por empresa)
-        $customerEmail   = 'cliente' . $tenant->id . '@teste.com';
+        $customerEmail   = 'cliente' . $tenant->id . '@teste.net.br';
         $customerContact = Contact::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,

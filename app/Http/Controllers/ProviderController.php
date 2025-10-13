@@ -8,15 +8,15 @@ use App\Entities\CommonDataEntity;
 use App\Entities\ContactEntity;
 use App\Entities\ProviderEntity;
 use App\Entities\UserEntity;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ChangePasswordRequest;
-use App\Http\Requests\UpdateProviderRequest;
-use App\Services\ActivityService;
-use App\Services\AddressService;
-use App\Services\CommonDataService;
-use App\Services\ContactService;
-use App\Services\FileUploadService;
-use App\Services\ProviderManagementService;
-use App\Services\UserService;
+use App\Services\Application\FileUploadService;
+use App\Services\Application\ProviderManagementService;
+use App\Services\Domain\ActivityService;
+use App\Services\Domain\AddressService;
+use App\Services\Domain\CommonDataService;
+use App\Services\Domain\ContactService;
+use App\Services\Domain\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,7 +81,7 @@ class ProviderController extends Controller
                 'professions'       => $data[ 'professions' ],
             ] );
         } catch ( \Exception $e ) {
-            return redirect()->route( 'provider.index' )
+            return redirect()->route( 'dashboard' )
                 ->with( 'error', 'Provider não encontrado' );
         }
     }

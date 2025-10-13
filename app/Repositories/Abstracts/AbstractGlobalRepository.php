@@ -1,138 +1,107 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
 
-use App\Interfaces\GlobalRepositoryInterface;
-use Exception;
-use Illuminate\Database\Eloquent\Builder;
+use App\Repositories\Contracts\BaseRepositoryInterface;
+use App\Repositories\Contracts\GlobalRepositoryInterface;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
- * Repositório abstrato base para operações globais
+ * Repositório abstrato base para operações globais (sem tenant_id).
  *
- * Esta classe implementa todos os métodos básicos para repositórios que trabalham
- * com dados globais, sem isolamento por tenant_id
+ * Esta classe fornece funcionalidades avançadas para repositórios que operam
+ * em contexto global, sem restrições de tenant. É ideal para entidades que
+ * precisam ser acessadas por todos os tenants ou pelo sistema administrativo.
+ *
+ * Implementa diretamente BaseRepositoryInterface e GlobalRepositoryInterface
+ * sem herança desnecessária, promovendo menor acoplamento e maior flexibilidade.
+ *
+ * @package App\Repositories\Abstracts
+ *
+ * @example Exemplo de implementação concreta:
+ * ```php
+ * class CategoryRepository extends AbstractGlobalRepository
+ * {
+ *     protected function makeModel(): Model
+ *     {
+ *         return new Category();
+ *     }
+ *
+ *     public function findBySlug(string $slug): ?Category
+ *     {
+ *         return $this->model->where('slug', $slug)->first();
+ *     }
+ * }
+ * ```
+ *
+ * @example Uso típico em um Controller:
+ * ```php
+ * class CategoryController extends Controller
+ * {
+ *     private CategoryRepository $categoryRepository;
+ *
+ *     public function __construct(CategoryRepository $categoryRepository)
+ *     {
+ *         $this->categoryRepository = $categoryRepository;
+ *     }
+ *
+ *     public function index(Request $request)
+ *     {
+ *         $filters = $request->only(['status', 'type']);
+ *         $categories = $this->categoryRepository->paginateGlobal(20, $filters);
+ *
+ *         return view('categories.index', compact('categories'));
+ *     }
+ * }
+ * ```
  */
-abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
+abstract class AbstractGlobalRepository implements BaseRepositoryInterface, GlobalRepositoryInterface
 {
-    protected Model   $model;
-    protected Builder $query;
-    protected bool    $resetAfterOperation = true;
-    protected string  $modelClass;
+    use RepositoryFiltersTrait;
 
-    /**
-     * Construtor do repositório
-     *
-     * @throws Exception Se a classe do modelo não for definida
-     */
+    protected Model $model;
+
     public function __construct()
     {
         $this->model = $this->makeModel();
-        $this->reset();
     }
 
     /**
-     * Cria uma nova instância do modelo
-     *
-     * @return Model
-     * @throws Exception
+     * Define o Model a ser utilizado pelo Repositório.
      */
     abstract protected function makeModel(): Model;
 
+    // --------------------------------------------------------------------------
+    // IMPLEMENTAÇÃO DOS MÉTODOS BÁSICOS DO BaseRepositoryInterface
+    // --------------------------------------------------------------------------
+
     /**
-     * Retorna a classe do modelo associado ao repositório
-     *
-     * @return string Nome da classe do modelo
+     * {@inheritdoc}
      */
-    public function getModelClass(): string
+    public function find( int $id ): ?Model
     {
-        return $this->modelClass ?? '';
+        try {
+            return $this->model->findOrFail( $id );
+        } catch ( ModelNotFoundException $e ) {
+            return null;
+        }
     }
 
     /**
-     * Retorna o nome da tabela do modelo
-     *
-     * @return string Nome da tabela
+     * {@inheritdoc}
      */
-    public function getTable(): string
+    public function getAll(): Collection
     {
-        return $this->model->getTable();
+        return $this->model->all();
     }
 
     /**
-     * Cria uma nova instância do modelo
-     *
-     * @param array $attributes Atributos iniciais do modelo
-     * @return Model Nova instância do modelo
-     */
-    public function newModel( array $attributes = [] ): Model
-    {
-        $class = $this->getModelClass();
-        return new $class( $attributes );
-    }
-
-    /**
-     * Retorna uma nova instância de query builder para o modelo
-     *
-     * @return Builder Query builder instance
-     */
-    public function newQuery(): Builder
-    {
-        return $this->model->newQuery();
-    }
-
-    /**
-     * Encontra um registro por ID
-     *
-     * @param int|string $id ID do registro
-     * @return Model|null Registro encontrado ou null
-     */
-    public function find( int|string $id ): ?Model
-    {
-        $result = $this->query->find( $id );
-        $this->resetIfNeeded();
-        return $result;
-    }
-
-    /**
-     * Encontra um registro por ID ou falha com exception
-     *
-     * @param int|string $id ID do registro
-     * @return Model Registro encontrado
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     */
-    public function findOrFail( int|string $id ): Model
-    {
-        $result = $this->query->findOrFail( $id );
-        $this->resetIfNeeded();
-        return $result;
-    }
-
-    /**
-     * Encontra múltiplos registros por IDs
-     *
-     * @param array $ids Array de IDs
-     * @return Collection Coleção de registros encontrados
-     */
-    public function findMany( array $ids ): Collection
-    {
-        $result = $this->query->whereIn( 'id', $ids )->get();
-        $this->resetIfNeeded();
-        return $result;
-    }
-
-    /**
-     * Cria um novo registro
-     *
-     * @param array $data Dados do registro
-     * @return Model Registro criado
+     * {@inheritdoc}
      */
     public function create( array $data ): Model
     {
@@ -140,402 +109,126 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     }
 
     /**
-     * Atualiza um registro existente
-     *
-     * @param Model $model Registro a ser atualizado
-     * @param array $data Dados para atualização
-     * @return Model Registro atualizado
+     * {@inheritdoc}
      */
-    public function update( Model $model, array $data ): Model
+    public function update( int $id, array $data ): ?Model
     {
+        $model = $this->find( $id );
+
+        if ( !$model ) {
+            return null;
+        }
+
         $model->update( $data );
         return $model->fresh();
     }
 
     /**
-     * Remove um registro
-     *
-     * @param Model $model Registro a ser removido
-     * @return bool True se removido com sucesso
+     * {@inheritdoc}
      */
-    public function delete( Model $model ): bool
+    public function delete( int $id ): bool
     {
+        $model = $this->find( $id );
+
+        if ( !$model ) {
+            return false;
+        }
+
         return $model->delete();
     }
 
+    // --------------------------------------------------------------------------
+    // IMPLEMENTAÇÃO DOS MÉTODOS ESPECÍFICOS DO GlobalRepositoryInterface
+    // --------------------------------------------------------------------------
+
     /**
-     * Busca registros por critérios
-     *
-     * @param array $criteria Critérios de busca
-     * @return Collection Coleção de registros encontrados
+     * {@inheritdoc}
      */
-    public function findByCriteria( array $criteria ): Collection
+    public function findGlobal( int $id ): ?Model
     {
-        try {
-            $query = $this->newQuery();
-            $query = $this->applyCriteria( $query, $criteria );
+        return $this->find( $id );
+    }
 
-            $entities = $query->get();
+    /**
+     * {@inheritdoc}
+     */
+    public function getAllGlobal(
+        array $criteria = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+    ): Collection {
+        $query = $this->model->newQuery();
 
-            $this->logOperation( 'findByCriteria', [
-                'criteria'    => $criteria,
-                'found_count' => $entities->count()
-            ] );
+        // Aplica filtros usando trait
+        $this->applyFilters( $query, $criteria );
 
-            return $entities;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findByCriteria', $e, [ 'criteria' => $criteria ] );
-            return collect();
+        // Aplica ordenação usando trait
+        $this->applyOrderBy( $query, $orderBy );
+
+        // Aplica paginação manual
+        if ( $offset !== null ) {
+            $query->offset( $offset );
         }
-    }
-
-    /**
-     * Busca um registro por critérios
-     *
-     * @param array $criteria Critérios de busca
-     * @return Model|null Registro encontrado ou null
-     */
-    public function findOneByCriteria( array $criteria ): ?Model
-    {
-        try {
-            $query = $this->newQuery();
-            $query = $this->applyCriteria( $query, $criteria );
-
-            $entity = $query->first();
-
-            $this->logOperation( 'findOneByCriteria', [
-                'criteria' => $criteria,
-                'found'    => $entity !== null
-            ] );
-
-            return $entity;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findOneByCriteria', $e, [ 'criteria' => $criteria ] );
-            return null;
-        }
-    }
-
-    /**
-     * Busca registro por slug
-     *
-     * @param string $slug Slug do registro
-     * @return Model|null Registro encontrado ou null
-     */
-    public function findBySlug( string $slug ): ?Model
-    {
-        return $this->findOneByCriteria( [ 'slug' => $slug ] );
-    }
-
-    /**
-     * Atualiza múltiplos registros por critérios
-     *
-     * @param array $criteria Critérios para seleção
-     * @param array $updates Dados para atualização
-     * @return int Número de registros atualizados
-     */
-    public function updateMany( array $criteria, array $updates ): int
-    {
-        try {
-            $query = $this->newQuery();
-            $query = $this->applyCriteria( $query, $criteria );
-
-            $updated = $query->update( $updates );
-
-            $this->logOperation( 'updateMany', [
-                'criteria'      => $criteria,
-                'updates'       => $updates,
-                'updated_count' => $updated
-            ] );
-
-            return $updated;
-        } catch ( Throwable $e ) {
-            $this->logError( 'updateMany', $e, [
-                'criteria' => $criteria,
-                'updates'  => $updates
-            ] );
-            return 0;
-        }
-    }
-
-    /**
-     * Remove múltiplos registros por critérios
-     *
-     * @param array $criteria Critérios para seleção
-     * @return int Número de registros removidos
-     */
-    public function deleteMany( array $criteria ): int
-    {
-        try {
-            $query = $this->newQuery();
-            $query = $this->applyCriteria( $query, $criteria );
-
-            $deleted = $query->delete();
-
-            $this->logOperation( 'deleteMany', [
-                'criteria'      => $criteria,
-                'deleted_count' => $deleted
-            ] );
-
-            return $deleted;
-        } catch ( Throwable $e ) {
-            $this->logError( 'deleteMany', $e, [ 'criteria' => $criteria ] );
-            return 0;
-        }
-    }
-
-    /**
-     * Busca registros paginados
-     *
-     * @param int $perPage Itens por página
-     * @param array $criteria Critérios de busca
-     * @return LengthAwarePaginator Paginator com resultados
-     */
-    public function paginate( int $perPage = 15, array $criteria = [] ): LengthAwarePaginator
-    {
-        try {
-            $query = $this->newQuery();
-            $query = $this->applyCriteria( $query, $criteria );
-
-            return $query->paginate( $perPage );
-        } catch ( Throwable $e ) {
-            $this->logError( 'paginate', $e, [ 'per_page' => $perPage ] );
-
-            return new LengthAwarePaginator( [], 0, $perPage );
-        }
-    }
-
-    /**
-     * Valida se um valor é único em um campo
-     *
-     * @param string $field Campo a ser verificado
-     * @param mixed $value Valor a ser verificado
-     * @param int|null $excludeId ID a ser excluído da verificação (para updates)
-     * @return bool True se é único, false caso contrário
-     */
-    public function validateUnique( string $field, mixed $value, ?int $excludeId = null ): bool
-    {
-        $query = $this->newQuery()->where( $field, $value );
-
-        if ( $excludeId ) {
-            $query->where( 'id', '!=', $excludeId );
+        if ( $limit !== null ) {
+            $query->limit( $limit );
         }
 
-        return !$query->exists();
+        return $query->get();
+    }
+
+    // --------------------------------------------------------------------------
+    // MÉTODOS DE ESCRITA (WRITE) - C/ SUFIXO GLOBAL
+    // --------------------------------------------------------------------------
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createGlobal( array $data ): Model
+    {
+        return $this->create( $data );
     }
 
     /**
-     * Executa uma transação de banco de dados
-     *
-     * @param callable $callback Função a ser executada dentro da transação
-     * @return mixed Retorno da função callback
-     * @throws \Throwable Se ocorrer erro na transação
+     * {@inheritdoc}
      */
-    public function transaction( callable $callback ): mixed
+    public function updateGlobal( int $id, array $data ): ?Model
     {
-        return DB::transaction( $callback );
+        return $this->update( $id, $data );
     }
 
     /**
-     * Inicia uma transação manual
-     *
-     * @return void
+     * {@inheritdoc}
      */
-    public function beginTransaction(): void
+    public function deleteGlobal( int $id ): bool
     {
-        DB::beginTransaction();
+        return $this->delete( $id );
     }
 
     /**
-     * Confirma uma transação manual
-     *
-     * @return void
+     * {@inheritdoc}
      */
-    public function commit(): void
+    public function paginateGlobal( int $perPage = 15, array $filters = [] ): LengthAwarePaginator
     {
-        DB::commit();
+        $query = $this->model->newQuery();
+
+        // Aplica filtros usando trait
+        $this->applyFilters( $query, $filters );
+
+        return $query->paginate( $perPage );
     }
 
     /**
-     * Desfaz uma transação manual
-     *
-     * @return void
+     * {@inheritdoc}
      */
-    public function rollback(): void
+    public function countGlobal( array $filters = [] ): int
     {
-        DB::rollback();
-    }
+        $query = $this->model->newQuery();
 
-    /**
-     * Verifica se existem registros na tabela
-     *
-     * @return bool True se existem registros, false caso contrário
-     */
-    public function exists(): bool
-    {
-        try {
-            return $this->newQuery()->exists();
-        } catch ( Throwable $e ) {
-            $this->logError( 'exists', $e );
-            return false;
-        }
-    }
+        // Aplica filtros usando trait
+        $this->applyFilters( $query, $filters );
 
-    /**
-     * Conta o número total de registros
-     *
-     * @return int Número de registros
-     */
-    public function count(): int
-    {
-        try {
-            return $this->newQuery()->count();
-        } catch ( Throwable $e ) {
-            $this->logError( 'count', $e );
-            return 0;
-        }
-    }
-
-    /**
-     * Trunca a tabela (remove todos os registros)
-     *
-     * @return bool True se bem-sucedido, false caso contrário
-     */
-    public function truncate(): bool
-    {
-        try {
-            DB::statement( 'SET FOREIGN_KEY_CHECKS=0;' );
-            $this->model->truncate();
-            DB::statement( 'SET FOREIGN_KEY_CHECKS=1;' );
-            return true;
-        } catch ( Throwable $e ) {
-            $this->logError( 'truncate', $e );
-            return false;
-        }
-    }
-
-    /**
-     * Realiza refresh dos dados da entidade a partir do banco
-     *
-     * @param Model $entity Entidade a ser atualizada
-     * @return Model|null Entidade atualizada ou null se não encontrada
-     */
-    public function refresh( Model $entity ): ?Model
-    {
-        try {
-            if ( $entity instanceof Model ) {
-                $entity->refresh();
-                return $entity;
-            }
-            return null;
-        } catch ( Throwable $e ) {
-            $this->logError( 'refresh', $e, [ 'entity_id' => $entity->getKey() ] );
-            return null;
-        }
-    }
-
-    /**
-     * Encontra o primeiro registro
-     *
-     * @return Model|null Primeiro registro ou null
-     */
-    public function first(): ?Model
-    {
-        try {
-            $result = $this->newQuery()->first();
-            $this->resetIfNeeded();
-            return $result;
-        } catch ( Throwable $e ) {
-            $this->logError( 'first', $e );
-            return null;
-        }
-    }
-
-    /**
-     * Encontra o último registro
-     *
-     * @return Model|null Último registro ou null
-     */
-    public function last(): ?Model
-    {
-        try {
-            $result = $this->newQuery()->orderBy( $this->model->getKeyName(), 'desc' )->first();
-            $this->resetIfNeeded();
-            return $result;
-        } catch ( Throwable $e ) {
-            $this->logError( 'last', $e );
-            return null;
-        }
-    }
-
-    /**
-     * Aplica critérios de busca na query
-     *
-     * @param Builder $query Query builder
-     * @param array $criteria Critérios de busca
-     * @return Builder Query builder com critérios aplicados
-     */
-    protected function applyCriteria( Builder $query, array $criteria ): Builder
-    {
-        foreach ( $criteria as $field => $value ) {
-            if ( is_array( $value ) ) {
-                $query->whereIn( $field, $value );
-            } else {
-                $query->where( $field, $value );
-            }
-        }
-
-        return $query;
-    }
-
-    /**
-     * Reseta a query se necessário
-     */
-    protected function resetIfNeeded(): void
-    {
-        if ( $this->resetAfterOperation ) {
-            $this->reset();
-        }
-    }
-
-    /**
-     * Reseta os filtros aplicados
-     *
-     * @return self
-     */
-    protected function reset(): self
-    {
-        $this->query = $this->model->newQuery();
-        return $this;
-    }
-
-    /**
-     * Registra uma operação no log
-     *
-     * @param string $operation Nome da operação
-     * @param array $context Contexto da operação
-     */
-    protected function logOperation( string $operation, array $context = [] ): void
-    {
-        Log::info( "Global Repository operation: {$operation}", array_merge( [
-            'repository' => static::class,
-            'model'      => $this->getModelClass()
-        ], $context ) );
-    }
-
-    /**
-     * Registra um erro no log
-     *
-     * @param string $operation Nome da operação
-     * @param Throwable $exception Exceção ocorrida
-     * @param array $context Contexto da operação
-     */
-    protected function logError( string $operation, Throwable $exception, array $context = [] ): void
-    {
-        Log::error( "Global Repository error in {$operation}: " . $exception->getMessage(), array_merge( [
-            'repository' => static::class,
-            'model'      => $this->getModelClass(),
-            'exception'  => $exception
-        ], $context ) );
+        return $query->count();
     }
 
 }

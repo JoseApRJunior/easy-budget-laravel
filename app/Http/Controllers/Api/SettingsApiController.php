@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Services\FileUploadService;
 use App\Services\SettingsBackupService;
 use App\Services\SettingsService;

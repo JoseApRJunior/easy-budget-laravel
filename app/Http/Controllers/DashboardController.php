@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Abstracts\Controller;
 use App\Services\ChartService;
 use App\Services\MetricsService;
 use Illuminate\Http\Request;

@@ -1,6 +1,6 @@
 <?php
 
-return [ 
+return [
 
     /*
     |--------------------------------------------------------------------------
@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'paths'      => [ 
+    'paths'      => [
         resource_path( 'views' ),
     ],
 
@@ -44,7 +44,8 @@ return [
     |
     */
 
-    'namespaces' => [ 
+    'namespaces' => [
+        'mail'  => resource_path( 'views/vendor/mail' ),
         'pages' => resource_path( 'views/pages' ),
     ],
 
@@ -59,7 +60,7 @@ return [
     |
     */
 
-    'engines'    => [ 
+    'engines'    => [
         'blade' => 'Illuminate\View\Engines\BladeEngine',
     ],
 

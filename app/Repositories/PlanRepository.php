@@ -6,114 +6,140 @@ namespace App\Repositories;
 
 use App\Models\Plan;
 use App\Repositories\Abstracts\AbstractGlobalRepository;
+use App\Repositories\Contracts\BaseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Repositório para operações de planos globais
  *
- * Implementa métodos específicos para gerenciamento de planos
- * sem isolamento por tenant (dados globais)
+ * Implementa métodos básicos necessários pela arquitetura
+ * e métodos específicos para gerenciamento de planos
  */
 class PlanRepository extends AbstractGlobalRepository
 {
-    protected string $modelClass = Plan::class;
-
     /**
-     * Cria uma nova instância do modelo Plan
-     *
-     * @return Plan
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    protected function makeModel(): Plan
+    protected function makeModel(): \Illuminate\Database\Eloquent\Model
     {
         return new Plan();
     }
 
     /**
-     * Encontra planos ativos
-     *
-     * @return Collection Coleção de planos ativos
+     * {@inheritdoc}
      */
-    public function findActive(): Collection
+    public function find( int $id ): ?Plan
     {
-        return $this->findByCriteria( [ 'status' => true ] );
+        return Plan::find( $id );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAll(): Collection
+    {
+        return Plan::all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function create( array $data ): Plan
+    {
+        return Plan::create( $data );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function update( int $id, array $data ): ?Plan
+    {
+        $plan = Plan::find( $id );
+
+        if ( !$plan ) {
+            return null;
+        }
+
+        $plan->update( $data );
+        return $plan;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function delete( int $id ): bool
+    {
+        return Plan::destroy( $id ) > 0;
+    }
+
+    // --------------------------------------------------------------------------
+    // MÉTODOS ESPECÍFICOS DE NEGÓCIO PARA PLANOS
+    // --------------------------------------------------------------------------
+
+    /**
+     * Encontra planos ativos
+     */
+    public function findActive(): mixed
+    {
+        return Plan::where( 'status', true )->get();
     }
 
     /**
      * Encontra plano por slug
-     *
-     * @param string $slug Slug do plano
-     * @return Plan|null Plano encontrado ou null
      */
-    public function findBySlug( string $slug ): ?Plan
+    public function findBySlug( string $slug ): mixed
     {
-        return $this->findOneByCriteria( [ 'slug' => $slug ] );
+        return Plan::where( 'slug', $slug )->first();
     }
 
     /**
      * Encontra planos ordenados por preço
-     *
-     * @param string $direction Direção da ordenação (asc/desc)
-     * @return Collection Coleção de planos ordenados
      */
-    public function findOrderedByPrice( string $direction = 'asc' ): Collection
+    public function findOrderedByPrice( string $direction = 'asc' ): mixed
     {
-        return $this->newQuery()->orderBy( 'price', $direction )->get();
+        return Plan::orderBy( 'price', $direction )->get();
     }
 
     /**
      * Valida se nome do plano é único
-     *
-     * @param string $name Nome a ser verificado
-     * @param int|null $excludeId ID do plano a ser excluído da verificação
-     * @return bool True se é único, false caso contrário
      */
     public function validateUniqueName( string $name, ?int $excludeId = null ): bool
     {
-        return $this->validateUnique( 'name', $name, $excludeId );
+        $query = Plan::where( 'name', $name );
+
+        if ( $excludeId ) {
+            $query = $query->where( 'id', '!=', $excludeId );
+        }
+
+        return $query->count() === 0;
     }
 
     /**
      * Encontra planos que permitem determinado número de orçamentos
-     *
-     * @param int $budgetCount Número de orçamentos
-     * @return Collection Coleção de planos que atendem o critério
-     * @throws \InvalidArgumentException Se budgetCount for negativo
      */
-    public function findByAllowedBudgets( int $budgetCount ): Collection
+    public function findByAllowedBudgets( int $budgetCount ): mixed
     {
         if ( $budgetCount < 0 ) {
             throw new \InvalidArgumentException( 'Budget count must be non-negative' );
         }
 
-        $result = $this->newQuery()
-            ->where( 'max_budgets', '>=', $budgetCount )
+        return Plan::where( 'max_budgets', '>=', $budgetCount )
             ->where( 'status', true )
             ->get();
-
-        $this->resetIfNeeded();
-        return $result;
     }
 
     /**
      * Encontra planos que permitem determinado número de clientes
-     *
-     * @param int $clientCount Número de clientes
-     * @return Collection Coleção de planos que atendem o critério
-     * @throws \InvalidArgumentException Se clientCount for negativo
      */
-    public function findByAllowedClients( int $clientCount ): Collection
+    public function findByAllowedClients( int $clientCount ): mixed
     {
         if ( $clientCount < 0 ) {
             throw new \InvalidArgumentException( 'Client count must be non-negative' );
         }
 
-        $result = $this->newQuery()
-            ->where( 'max_clients', '>=', $clientCount )
+        return Plan::where( 'max_clients', '>=', $clientCount )
             ->where( 'status', true )
             ->get();
-
-        $this->resetIfNeeded();
-        return $result;
     }
 
 }

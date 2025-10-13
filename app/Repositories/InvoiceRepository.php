@@ -4,15 +4,27 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\RepositoryInterface;
 use App\Models\Invoice;
-use Illuminate\Database\Eloquent\Builder;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class InvoiceRepository extends AbstractRepository implements RepositoryInterface
+/**
+ * Repositório para gerenciamento de faturas.
+ *
+ * Estende AbstractTenantRepository para operações tenant-aware
+ * com isolamento automático de dados por empresa.
+ */
+class InvoiceRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = Invoice::class;
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
+    {
+        return new Invoice();
+    }
 
     public function findByIdAndTenantId( int $id, int $tenantId ): ?Invoice
     {
