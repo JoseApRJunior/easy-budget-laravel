@@ -5,125 +5,140 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Customer;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class CustomerRepository extends AbstractRepository
+/**
+ * Repositório para gerenciamento de clientes.
+ *
+ * Estende AbstractTenantRepository para operações tenant-aware
+ * com isolamento automático de dados por empresa.
+ */
+class CustomerRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = Customer::class;
-
     /**
-     * Lista clientes ativos por tenant.
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    public function listActiveByTenantId( int $tenantId, ?array $orderBy = null, ?int $limit = null ): array
+    protected function makeModel(): Model
     {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->where( 'status', 'active' );
-        if ( $orderBy ) {
-            foreach ( $orderBy as $column => $direction ) {
-                $query->orderBy( $column, $direction );
-            }
-        }
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-        return $query->get()->all();
+        return new Customer();
     }
 
     /**
-     * Conta clientes por tenant.
+     * Lista clientes ativos dentro do tenant atual.
+     *
+     * @param array<string, string>|null $orderBy
+     * @param int|null $limit
+     * @return Collection<Customer>
      */
-    public function countByTenantId( int $tenantId, array $filters = [] ): int
+    public function listActive( ?array $orderBy = null, ?int $limit = null ): Collection
     {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
-        if ( !empty( $filters ) ) {
-            $query->where( $filters );
-        }
-        return $query->count();
+        return $this->getAllByTenant(
+            [ 'status' => 'active' ],
+            $orderBy,
+            $limit,
+        );
     }
 
     /**
-     * Verifica existência por critérios e tenant.
+     * Conta clientes dentro do tenant atual com filtros opcionais.
+     *
+     * @param array<string, mixed> $filters
+     * @return int
      */
-    public function existsByTenantId( array $criteria, int $tenantId ): bool
+    public function countByFilters( array $filters = [] ): int
     {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
-        foreach ( $criteria as $key => $value ) {
-            $query->where( $key, $value );
-        }
-        return $query->exists();
+        return $this->countByTenant( $filters );
     }
 
     /**
-     * Deleta múltiplos por IDs e tenant.
+     * Verifica existência por critérios dentro do tenant atual.
+     *
+     * @param array<string, mixed> $criteria
+     * @return bool
      */
-    public function deleteManyByIdsAndTenantId( array $id, int $tenantId ): int
+    public function existsByCriteria( array $criteria ): bool
     {
-        return $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->whereIn( 'id', $id )
-            ->delete();
+        return $this->findByMultipleCriteria( $criteria )->isNotEmpty();
     }
 
     /**
-     * Atualiza múltiplos por critérios e tenant.
+     * Remove múltiplos clientes por IDs dentro do tenant atual.
+     *
+     * @param array<int> $ids
+     * @return int Número de registros removidos
      */
-    public function updateManyByTenantId( array $criteria, array $updates, int $tenantId ): int
+    public function deleteManyByIds( array $ids ): int
     {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
-        foreach ( $criteria as $key => $value ) {
-            $query->where( $key, $value );
-        }
+        return $this->deleteManyByTenant( $ids );
+    }
+
+    /**
+     * Atualiza múltiplos registros por critérios dentro do tenant atual.
+     *
+     * @param array<string, mixed> $criteria
+     * @param array<string, mixed> $updates
+     * @return int Número de registros atualizados
+     */
+    public function updateManyByCriteria( array $criteria, array $updates ): int
+    {
+        $query = $this->model->newQuery();
+        $this->applyFilters( $query, $criteria );
         return $query->update( $updates );
     }
 
     /**
-     * Encontra por critérios e tenant.
+     * Busca clientes por múltiplos critérios dentro do tenant atual.
+     *
+     * @param array<string, mixed> $criteria
+     * @param array<string, string>|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return Collection<Customer>
      */
-    public function findByAndTenantId( array $criteria, int $tenantId, ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
-    {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
-        foreach ( $criteria as $key => $value ) {
-            $query->where( $key, $value );
-        }
-        if ( $orderBy ) {
-            foreach ( $orderBy as $column => $direction ) {
-                $query->orderBy( $column, $direction );
-            }
-        }
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-        if ( $offset ) {
-            $query->offset( $offset );
-        }
-        return $query->get()->all();
+    public function findByCriteria(
+        array $criteria,
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+    ): Collection {
+        return $this->getAllByTenant( $criteria, $orderBy, $limit, $offset );
     }
 
     /**
-     * Paginação por tenant.
+     * Retorna clientes paginados dentro do tenant atual.
+     *
+     * @param int $perPage
+     * @param array<string, mixed> $criteria
+     * @param array<string, string>|null $orderBy
+     * @return LengthAwarePaginator
      */
-    public function paginateByTenantId( int $tenantId, int $page = 1, int $perPage = 15, array $criteria = [], ?array $orderBy = null ): array
-    {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
-        if ( !empty( $criteria ) ) {
-            $query->where( $criteria );
-        }
-        if ( $orderBy ) {
-            foreach ( $orderBy as $column => $direction ) {
-                $query->orderBy( $column, $direction );
-            }
-        }
-        $paginator = $query->paginate( $perPage, [ '*' ], 'page', $page );
-        return $paginator->toArray();
+    public function paginateByCriteria(
+        int $perPage = 15,
+        array $criteria = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        return $this->paginateByTenant( $perPage, $criteria, $orderBy );
     }
 
     /**
-     * Alias para listagem por tenant (compatibilidade com service).
+     * Lista clientes por filtros (compatibilidade com service).
+     *
+     * @param array<string, mixed> $filters
+     * @param array<string, string>|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return Collection<Customer>
      */
-    public function listByTenantId( int $tenantId, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
-    {
-        return $this->findAllByTenantId( $tenantId, $filters, $orderBy, $limit, $offset );
+    public function listByFilters(
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+    ): Collection {
+        return $this->getAllByTenant( $filters, $orderBy, $limit, $offset );
     }
 
 }

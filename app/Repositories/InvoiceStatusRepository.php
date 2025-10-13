@@ -15,7 +15,7 @@ use App\Models\InvoiceStatus;
  *
  * @package App\Repositories
  */
-class InvoiceStatusRepository extends AbstractNoTenantRepository
+class InvoiceStatusRepository extends AbstractGlobalRepository
 {
     /**
      * Classe do modelo Eloquent associado a este repositório.
@@ -112,7 +112,7 @@ class InvoiceStatusRepository extends AbstractNoTenantRepository
      */
     public function findByOrderIndexRange( int $minOrderIndex, int $maxOrderIndex ): array
     {
-        return $this->findBy( [ 
+        return $this->findBy( [
             [ 'order_index', '>=', $minOrderIndex ],
             [ 'order_index', '<=', $maxOrderIndex ]
         ] );

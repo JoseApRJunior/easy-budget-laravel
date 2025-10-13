@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Plan;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -14,8 +15,16 @@ use Illuminate\Database\Eloquent\Collection;
  * Implementa métodos básicos necessários pela arquitetura
  * e métodos específicos para gerenciamento de planos
  */
-class PlanRepository implements BaseRepositoryInterface
+class PlanRepository extends AbstractGlobalRepository
 {
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): \Illuminate\Database\Eloquent\Model
+    {
+        return new Plan();
+    }
+
     /**
      * {@inheritdoc}
      */

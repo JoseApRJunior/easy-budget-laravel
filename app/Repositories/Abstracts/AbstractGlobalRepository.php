@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
 
+use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Repositories\Contracts\GlobalRepositoryInterface;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -14,6 +17,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Esta classe fornece funcionalidades avançadas para repositórios que operam
  * em contexto global, sem restrições de tenant. É ideal para entidades que
  * precisam ser acessadas por todos os tenants ou pelo sistema administrativo.
+ *
+ * Implementa diretamente BaseRepositoryInterface e GlobalRepositoryInterface
+ * sem herança desnecessária, promovendo menor acoplamento e maior flexibilidade.
  *
  * @package App\Repositories\Abstracts
  *
@@ -54,8 +60,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * }
  * ```
  */
-abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
+abstract class AbstractGlobalRepository implements BaseRepositoryInterface, GlobalRepositoryInterface
 {
+    use RepositoryFiltersTrait;
+
     protected Model $model;
 
     public function __construct()
@@ -69,14 +77,81 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     abstract protected function makeModel(): Model;
 
     // --------------------------------------------------------------------------
-    // MÉTODOS DE LEITURA (READ) - C/ SUFIXO GLOBAL
+    // IMPLEMENTAÇÃO DOS MÉTODOS BÁSICOS DO BaseRepositoryInterface
     // --------------------------------------------------------------------------
 
-    public function findGlobal( int $id ): ?Model
+    /**
+     * {@inheritdoc}
+     */
+    public function find( int $id ): ?Model
     {
-        return $this->model->find( $id );
+        try {
+            return $this->model->findOrFail( $id );
+        } catch ( ModelNotFoundException $e ) {
+            return null;
+        }
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getAll(): Collection
+    {
+        return $this->model->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function create( array $data ): Model
+    {
+        return $this->model->create( $data );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function update( int $id, array $data ): ?Model
+    {
+        $model = $this->find( $id );
+
+        if ( !$model ) {
+            return null;
+        }
+
+        $model->update( $data );
+        return $model->fresh();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function delete( int $id ): bool
+    {
+        $model = $this->find( $id );
+
+        if ( !$model ) {
+            return false;
+        }
+
+        return $model->delete();
+    }
+
+    // --------------------------------------------------------------------------
+    // IMPLEMENTAÇÃO DOS MÉTODOS ESPECÍFICOS DO GlobalRepositoryInterface
+    // --------------------------------------------------------------------------
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findGlobal( int $id ): ?Model
+    {
+        return $this->find( $id );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getAllGlobal(
         array $criteria = [],
         ?array $orderBy = null,
@@ -85,10 +160,10 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     ): Collection {
         $query = $this->model->newQuery();
 
-        // Aplica filtros usando método auxiliar
+        // Aplica filtros usando trait
         $this->applyFilters( $query, $criteria );
 
-        // Aplica ordenação usando método auxiliar
+        // Aplica ordenação usando trait
         $this->applyOrderBy( $query, $orderBy );
 
         // Aplica paginação manual
@@ -106,131 +181,54 @@ abstract class AbstractGlobalRepository implements GlobalRepositoryInterface
     // MÉTODOS DE ESCRITA (WRITE) - C/ SUFIXO GLOBAL
     // --------------------------------------------------------------------------
 
+    /**
+     * {@inheritdoc}
+     */
     public function createGlobal( array $data ): Model
     {
-        return $this->model->create( $data );
+        return $this->create( $data );
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function updateGlobal( int $id, array $data ): ?Model
     {
-        $model = $this->findGlobal( $id );
-
-        if ( !$model ) {
-            return null;
-        }
-
-        $model->update( $data );
-        return $model;
+        return $this->update( $id, $data );
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function deleteGlobal( int $id ): bool
     {
-        // Usa a função estática destroy para deleção por ID
-        return (bool) $this->model->destroy( $id );
+        return $this->delete( $id );
     }
 
-    // --------------------------------------------------------------------------
-    // MÉTODOS DE UTILIDADE (UTILITY)
-    // --------------------------------------------------------------------------
-
+    /**
+     * {@inheritdoc}
+     */
     public function paginateGlobal( int $perPage = 15, array $filters = [] ): LengthAwarePaginator
     {
         $query = $this->model->newQuery();
 
-        // Aplica filtros usando método auxiliar
+        // Aplica filtros usando trait
         $this->applyFilters( $query, $filters );
 
         return $query->paginate( $perPage );
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function countGlobal( array $filters = [] ): int
     {
         $query = $this->model->newQuery();
 
-        // Aplica filtros usando método auxiliar
+        // Aplica filtros usando trait
         $this->applyFilters( $query, $filters );
 
         return $query->count();
-    }
-
-    // --------------------------------------------------------------------------
-    // MÉTODOS AUXILIARES PROTEGIDOS
-    // --------------------------------------------------------------------------
-
-    /**
-    /**
-     * Aplica filtros à query de forma segura e consistente.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['status' => 'active', 'type' => 'premium'])
-     *
-     * @example Uso típico:
-     * ```php
-     * $filters = [
-     *     'status' => 'active',
-     *     'category_id' => [1, 2, 3],
-     *     'price' => ['operator' => '>', 'value' => 100]
-     * ];
-     * $this->applyFilters($query, $filters);
-     * ```
-     */
-    protected function applyFilters( $query, array $filters ): void
-    {
-        if ( empty( $filters ) ) {
-            return;
-        }
-
-        foreach ( $filters as $field => $value ) {
-            if ( is_array( $value ) ) {
-                // Suporte a operadores especiais
-                if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
-                    $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
-                } else {
-                    $query->whereIn( $field, $value );
-                }
-            } elseif ( $value !== null ) {
-                $query->where( $field, $value );
-            }
-        }
-    }
-
-    /**
-     * Aplica ordenação à query com validação de direção.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array<string, string>|null $orderBy
-     */
-    protected function applyOrderBy( $query, ?array $orderBy ): void
-    {
-        if ( empty( $orderBy ) ) {
-            return;
-        }
-
-        foreach ( $orderBy as $field => $direction ) {
-            $direction = strtolower( $direction ) === 'desc' ? 'desc' : 'asc';
-            $query->orderBy( $field, $direction );
-        }
-    }
-
-    /**
-     * Valida se um campo existe no modelo antes de aplicar filtro.
-     *
-     * @param string $field
-     * @return bool
-     */
-    protected function isValidField( string $field ): bool
-    {
-        return in_array( $field, $this->getFillableFields() );
-    }
-
-    /**
-     * Retorna lista de campos fillable do modelo.
-     *
-     * @return array<string>
-     */
-    protected function getFillableFields(): array
-    {
-        return $this->model->getFillable();
     }
 
 }

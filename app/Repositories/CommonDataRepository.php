@@ -6,11 +6,18 @@ namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
 use App\Models\CommonData;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
 
-class CommonDataRepository extends AbstractRepository implements RepositoryInterface
+class CommonDataRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = CommonData::class;
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
+    {
+        return new CommonData();
+    }
 
     /**
      * Cria dados comuns para cliente.
@@ -18,7 +25,7 @@ class CommonDataRepository extends AbstractRepository implements RepositoryInter
     public function createForCustomer( array $data, int $tenantId, int $customerId ): Model
     {
         $commonData = new CommonData();
-        $commonData->fill( [ 
+        $commonData->fill( [
             'tenant_id'   => $tenantId,
             'customer_id' => $customerId,
             'cpf_cnpj'    => $data[ 'cpf_cnpj' ] ?? null,
@@ -45,7 +52,7 @@ class CommonDataRepository extends AbstractRepository implements RepositoryInter
     public function createForProvider( array $data, int $tenantId, int $providerId ): Model
     {
         $commonData = new CommonData();
-        $commonData->fill( [ 
+        $commonData->fill( [
             'tenant_id'   => $tenantId,
             'provider_id' => $providerId,
             'cpf_cnpj'    => $data[ 'cpf_cnpj' ] ?? null,

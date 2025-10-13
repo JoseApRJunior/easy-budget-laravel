@@ -5,29 +5,59 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Role;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class RoleRepository extends AbstractNoTenantRepository
+/**
+ * Repositório para gerenciamento de papéis (roles).
+ *
+ * Estende AbstractGlobalRepository para operações globais
+ * (papéis são compartilhados entre tenants).
+ */
+class RoleRepository extends AbstractGlobalRepository
 {
-    protected string $modelClass = Role::class;
-
-    public function __construct()
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
     {
-        parent::__construct();
+        return new Role();
     }
 
+    /**
+     * Busca papel por nome.
+     *
+     * @param string $name Nome do papel
+     * @return Role|null Papel encontrado
+     */
     public function findByName( string $name ): ?Role
     {
-        return $this->findOneBy( [ 'name' => $name ] );
+        return $this->model->where( 'name', $name )->first();
     }
 
-    public function findActive(): array
+    /**
+     * Lista papéis ativos.
+     *
+     * @return Collection<Role> Papéis ativos
+     */
+    public function findActive(): Collection
     {
-        return $this->findBy( [ 'status' => 'active' ] );
+        return $this->getAllGlobal( [ 'status' => 'active' ] );
     }
 
-    public function findOrderedByName( string $direction = 'asc' ): array
+    /**
+     * Busca papéis ordenados por nome.
+     *
+     * @param string $direction Direção da ordenação (asc/desc)
+     * @return Collection<Role> Papéis ordenados
+     */
+    public function findOrderedByName( string $direction = 'asc' ): Collection
     {
-        return $this->findOrderedBy( 'name', $direction );
+        return $this->getAllGlobal(
+            [],
+            [ 'name' => $direction ],
+        );
     }
 
 }

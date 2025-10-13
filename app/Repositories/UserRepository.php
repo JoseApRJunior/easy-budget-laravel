@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\Models\User;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Repositório para operações de usuário tenant-aware
@@ -16,99 +17,87 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class UserRepository extends AbstractTenantRepository
 {
-    protected string $modelClass = User::class;
-
     /**
-     * Cria uma nova instância do modelo User
-     *
-     * @return User
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    protected function makeModel(): User
+    protected function makeModel(): Model
     {
         return new User();
     }
 
     /**
-     * Encontra usuário por email e tenant
+     * Encontra usuário por email dentro do tenant atual.
      *
      * @param string $email Email do usuário
-     * @param int $tenantId ID do tenant
      * @return User|null Usuário encontrado ou null
      */
-    public function findByEmailAndTenant( string $email, int $tenantId ): ?User
+    public function findByEmail( string $email ): ?User
     {
-        return $this->findOneByCriteriaAndTenant( [ 'email' => $email ], $tenantId );
+        return $this->model->where( 'email', $email )->first();
     }
 
     /**
-     * Encontra usuários ativos por tenant
+     * Encontra usuários ativos dentro do tenant atual.
      *
-     * @param int $tenantId ID do tenant
-     * @return Collection Coleção de usuários ativos
+     * @return Collection<User> Coleção de usuários ativos
      */
-    public function findActiveByTenant( int $tenantId ): Collection
+    public function findActive(): Collection
     {
-        return $this->findByCriteriaAndTenant( [ 'is_active' => true ], $tenantId );
+        return $this->getAllByTenant( [ 'is_active' => true ] );
     }
 
     /**
-     * Valida se email é único no tenant
+     * Valida se email é único dentro do tenant atual.
      *
      * @param string $email Email a ser verificado
-     * @param int $tenantId ID do tenant
      * @param int|null $excludeId ID do usuário a ser excluído da verificação
      * @return bool True se é único, false caso contrário
      */
-    public function validateUniqueEmailInTenant( string $email, int $tenantId, ?int $excludeId = null ): bool
+    public function isEmailUnique( string $email, ?int $excludeId = null ): bool
     {
-        return $this->validateUniqueInTenant( 'email', $email, $tenantId, $excludeId );
+        return $this->isUniqueInTenant( 'email', $email, $excludeId );
     }
 
     /**
-     * Conta administradores por tenant
+     * Conta administradores dentro do tenant atual.
      *
-     * @param int $tenantId ID do tenant
      * @return int Número de administradores
      */
-    public function countAdminsByTenantId( int $tenantId ): int
+    public function countAdmins(): int
     {
-        return $this->newQuery()
-            ->where( 'tenant_id', $tenantId )
-            ->where( 'role', 'admin' )
-            ->count();
+        return $this->countByTenant( [ 'role' => 'admin' ] );
     }
 
     /**
-     * Verifica se slug existe por tenant
+     * Verifica se slug existe dentro do tenant atual.
      *
      * @param string $slug Slug a ser verificado
-     * @param int $tenantId ID do tenant
      * @param int|null $excludeId ID do usuário a ser excluído da verificação
      * @return bool True se existe, false caso contrário
      */
-    public function existsBySlugAndTenantId( string $slug, int $tenantId, ?int $excludeId = null ): bool
+    public function existsBySlug( string $slug, ?int $excludeId = null ): bool
     {
-        return !$this->validateUniqueInTenant( 'slug', $slug, $tenantId, $excludeId );
+        return !$this->isUniqueInTenant( 'slug', $slug, $excludeId );
     }
 
     /**
-     * Encontra o primeiro registro
+     * Encontra o primeiro usuário dentro do tenant atual.
      *
-     * @return User|null Primeiro registro ou null
+     * @return User|null Primeiro usuário ou null
      */
     public function first(): ?User
     {
-        return $this->newQuery()->first();
+        return $this->model->first();
     }
 
     /**
-     * Encontra o último registro
+     * Encontra o último usuário dentro do tenant atual.
      *
-     * @return User|null Último registro ou null
+     * @return User|null Último usuário ou null
      */
     public function last(): ?User
     {
-        return $this->newQuery()->last();
+        return $this->model->latest()->first();
     }
 
 }

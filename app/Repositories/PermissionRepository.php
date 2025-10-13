@@ -16,7 +16,7 @@ use Throwable;
  * Estende AbstractNoTenantRepository para operações globais
  * de gerenciamento de permissões do sistema
  */
-class PermissionRepository extends AbstractNoTenantRepository
+class PermissionRepository extends AbstractGlobalRepository
 {
     /**
      * {@inheritdoc}

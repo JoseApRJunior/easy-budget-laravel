@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
 
+use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -14,6 +17,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Esta classe é a espinha dorsal para todos os repositórios que operam em
  * contexto multi-tenant, garantindo isolamento automático de dados por empresa.
  * Assume que o Model possui Global Scope que filtra automaticamente por tenant_id.
+ *
+ * Implementa diretamente BaseRepositoryInterface e TenantRepositoryInterface
+ * sem herança desnecessária, promovendo menor acoplamento e maior flexibilidade.
  *
  * Funcionalidades principais:
  * - Isolamento automático por tenant
@@ -69,8 +75,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * - **Orçamentos/Faturas** - Controle financeiro por tenant
  * - **Configurações específicas** - Personalização por empresa
  */
-abstract class AbstractTenantRepository implements TenantRepositoryInterface
+abstract class AbstractTenantRepository implements BaseRepositoryInterface, TenantRepositoryInterface
 {
+    use RepositoryFiltersTrait;
+
     protected Model $model;
 
     public function __construct()
@@ -84,7 +92,7 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     abstract protected function makeModel(): Model;
 
     // --------------------------------------------------------------------------
-    // IMPLEMENTAÇÃO DOS MÉTODOS HERDADOS DO BaseRepositoryInterface
+    // IMPLEMENTAÇÃO DOS MÉTODOS BÁSICOS DO BaseRepositoryInterface
     // --------------------------------------------------------------------------
 
     /**
@@ -92,7 +100,11 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
      */
     public function find( int $id ): ?Model
     {
-        return $this->model->find( $id );
+        try {
+            return $this->model->findOrFail( $id );
+        } catch ( ModelNotFoundException $e ) {
+            return null;
+        }
     }
 
     /**
@@ -123,7 +135,7 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         }
 
         $model->update( $data );
-        return $model;
+        return $model->fresh();
     }
 
     /**
@@ -137,7 +149,7 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
             return false;
         }
 
-        return (bool) $model->delete();
+        return $model->delete();
     }
 
     // --------------------------------------------------------------------------
@@ -158,12 +170,8 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         // Aplica filtros de tenant automaticamente via Global Scope
         $this->applyFilters( $query, $criteria );
 
-        // Aplica ordenação
-        if ( $orderBy !== null ) {
-            foreach ( $orderBy as $field => $direction ) {
-                $query->orderBy( $field, $direction );
-            }
-        }
+        // Aplica ordenação usando trait
+        $this->applyOrderBy( $query, $orderBy );
 
         // Aplica limite e offset
         if ( $offset !== null ) {
@@ -189,12 +197,8 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         // Aplica filtros de tenant automaticamente via Global Scope
         $this->applyFilters( $query, $filters );
 
-        // Aplica ordenação
-        if ( $orderBy !== null ) {
-            foreach ( $orderBy as $field => $direction ) {
-                $query->orderBy( $field, $direction );
-            }
-        }
+        // Aplica ordenação usando trait
+        $this->applyOrderBy( $query, $orderBy );
 
         return $query->paginate( $perPage );
     }
@@ -261,75 +265,6 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     // --------------------------------------------------------------------------
     // MÉTODOS AUXILIARES PROTEGIDOS
     // --------------------------------------------------------------------------
-
-    /**
-     * Aplica filtros à query de forma segura e consistente.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['status' => 'active', 'price' => ['operator' => '>', 'value' => 100]])
-     *
-     * @example Uso típico em repositório concreto:
-     * ```php
-     * public function findActiveProducts(): Collection
-     * {
-     *     $filters = [
-     *         'active' => true,
-     *         'price' => ['operator' => '>', 'value' => 0]
-     *     ];
-     *     return $this->getAllByTenant($filters, ['name' => 'asc']);
-     * }
-     * ```
-     */
-    protected function applyFilters( $query, array $filters ): void
-    {
-        foreach ( $filters as $field => $value ) {
-            if ( is_array( $value ) ) {
-                // Suporte a operadores especiais
-                if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
-                    $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
-                } else {
-                    $query->whereIn( $field, $value );
-                }
-            } elseif ( $value !== null ) {
-                $query->where( $field, $value );
-            }
-        }
-    }
-
-    /**
-     * Aplica ordenação à query com validação de campos.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array<string, string> $orderBy
-     */
-    protected function applyOrderBy( $query, array $orderBy ): void
-    {
-        foreach ( $orderBy as $field => $direction ) {
-            $direction = strtolower( $direction ) === 'desc' ? 'desc' : 'asc';
-            $query->orderBy( $field, $direction );
-        }
-    }
-
-    /**
-     * Valida se um campo existe no modelo antes de aplicar filtro.
-     *
-     * @param string $field
-     * @return bool
-     */
-    protected function isValidField( string $field ): bool
-    {
-        return in_array( $field, $this->getFillableFields() );
-    }
-
-    /**
-     * Retorna lista de campos fillable do modelo.
-     *
-     * @return array<string>
-     */
-    protected function getFillableFields(): array
-    {
-        return $this->model->getFillable();
-    }
 
     /**
      * Busca registros com relacionamento específico carregado.

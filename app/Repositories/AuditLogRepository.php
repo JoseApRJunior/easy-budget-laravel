@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\AuditLog;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * Esta classe implementa operações CRUD específicas para o modelo AuditLog,
  * fornecendo acesso controlado e consistente aos dados de auditoria do sistema.
  */
-class AuditLogRepository implements BaseRepositoryInterface
+class AuditLogRepository extends AbstractTenantRepository
 {
     /**
      * Modelo gerenciado por este repositório.
