@@ -57,7 +57,7 @@ class TestTrialPlanCreation extends Command
         $this->info( 'Teste 2: Testando criação via UserRegistrationService' );
 
         $reflection = new \ReflectionClass( $this->userRegistrationService );
-        $method     = $reflection->getMethod( 'findOrCreateTrialPlan' );
+        $method     = $reflection->getMethod( 'findTrialPlan' );
         $method->setAccessible( true );
 
         try {

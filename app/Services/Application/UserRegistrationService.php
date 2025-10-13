@@ -140,7 +140,7 @@ class UserRegistrationService extends AbstractBaseService
                 return $planResult;
             }
             $plan = $planResult->getData();
-            Log::info( 'Plano trial encontrado/criado', [ 'plan_id' => $plan->id, 'plan_name' => $plan->name ] );
+            Log::info( 'Plano trial encontrado com sucesso', [ 'plan_id' => $plan->id, 'plan_name' => $plan->name ] );
 
             // 4. Criar usuário
             Log::info( 'Criando usuário...' );
@@ -319,10 +319,13 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             if ( !$plan ) {
-
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Plano trial não encontrado. Entre em contato com nosso suporte para ativar seu acesso gratuito.',
+                );
             }
 
-            return ServiceResult::success( $plan, 'Plano trial encontrado/criado com sucesso.' );
+            return ServiceResult::success( $plan, 'Plano trial encontrado com sucesso.' );
 
         } catch ( Exception $e ) {
             return ServiceResult::error(
