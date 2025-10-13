@@ -142,4 +142,13 @@ class PlanRepository extends AbstractGlobalRepository
             ->get();
     }
 
+    /**
+     * Salva uma assinatura de plano
+     */
+    public function saveSubscription( $subscription ): mixed
+    {
+        $subscription->save();
+        return $subscription;
+    }
+
 }

@@ -536,8 +536,8 @@ class MailerService
         try {
             $mailable = new WelcomeUser( $user, $tenant, $verificationUrl );
 
-            // Usa queue para processamento assíncrono
-            Mail::queue( $mailable );
+            // Define o destinatário e usa queue para processamento assíncrono
+            Mail::to( $user->email )->queue( $mailable );
 
             Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
                 'user_id'   => $user->id,

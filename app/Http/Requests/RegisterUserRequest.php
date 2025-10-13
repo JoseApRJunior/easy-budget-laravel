@@ -192,7 +192,7 @@ class RegisterUserRequest extends FormRequest
             'email'          => $validated[ 'email' ],
             'phone'          => $validated[ 'phone' ],
             'password'       => $validated[ 'password' ],
-            'terms_accepted' => $validated[ 'terms_accepted' ],
+            'terms_accepted' => (bool) $validated[ 'terms_accepted' ],
         ];
     }
 

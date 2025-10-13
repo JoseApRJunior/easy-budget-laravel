@@ -258,7 +258,7 @@ class UserRegistrationService extends AbstractBaseService
 
             // Criar token de redefinição
             $token     = Str::random( 64 );
-            $expiresAt = now()->addMinutes( config( 'auth.passwords.users.expire', 60 ) );
+            $expiresAt = now()->addMinutes( (int) config( 'auth.passwords.users.expire', 60 ) );
 
             $resetToken = new UserConfirmationToken( [
                 'user_id'    => $user->id,
@@ -267,12 +267,12 @@ class UserRegistrationService extends AbstractBaseService
                 'type'       => 'password_reset',
             ] );
 
-            $this->userConfirmationTokenRepository->save( $resetToken );
+            $this->userConfirmationTokenRepository->create( $resetToken->toArray() );
 
             // Buscar tenant do usuário
             $tenant = null;
             if ( $user->tenant_id ) {
-                $tenant = $this->tenantRepository->findById( $user->tenant_id );
+                $tenant = $this->tenantRepository->find( $user->tenant_id );
             }
 
             // Disparar evento para envio de e-mail de redefinição
@@ -355,7 +355,7 @@ class UserRegistrationService extends AbstractBaseService
                 'description'  => null, // Pode ser adicionado posteriormente
             ] );
 
-            $savedCommonData = $this->commonDataRepository->save( $commonData );
+            $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
 
             return ServiceResult::success( $savedCommonData, 'CommonData criado com sucesso.' );
 
@@ -388,7 +388,7 @@ class UserRegistrationService extends AbstractBaseService
                 'terms_accepted' => $termsAccepted,
             ] );
 
-            $savedProvider = $this->providerRepository->save( $provider );
+            $savedProvider = $this->providerRepository->create( $provider->toArray() );
 
             return ServiceResult::success( $savedProvider, 'Provider criado com sucesso.' );
 
@@ -547,7 +547,7 @@ class UserRegistrationService extends AbstractBaseService
                 'is_active' => true,
             ] );
 
-            $savedTenant = $this->tenantRepository->save( $tenant );
+            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
 
             Log::info( 'Tenant criado com nome único gerado', [
                 'tenant_id'   => $savedTenant->id,
@@ -576,17 +576,15 @@ class UserRegistrationService extends AbstractBaseService
     private function createUser( array $userData, Tenant $tenant ): ServiceResult
     {
         try {
-            $user = new User( [
+            // Criar usuário usando o modelo diretamente para evitar conflitos com o global scope
+            $user = User::withoutTenant()->create( [
                 'tenant_id' => $tenant->id,
-                'name'      => $userData[ 'name' ],
                 'email'     => $userData[ 'email' ],
                 'password'  => Hash::make( $userData[ 'password' ] ),
-                'is_active' => true,
+                'is_active' => false,
             ] );
 
-            $savedUser = $this->userRepository->save( $user );
-
-            return ServiceResult::success( $savedUser, 'Usuário criado com sucesso.' );
+            return ServiceResult::success( $user, 'Usuário criado com sucesso.' );
 
         } catch ( Exception $e ) {
             return ServiceResult::error(
@@ -607,7 +605,7 @@ class UserRegistrationService extends AbstractBaseService
     {
         try {
             $token     = Str::random( 64 );
-            $expiresAt = now()->addMinutes( config( 'auth.verification.expire', 60 ) );
+            $expiresAt = now()->addMinutes( (int) config( 'auth.verification.expire', 60 ) );
 
             $confirmationToken = new UserConfirmationToken( [
                 'user_id'    => $user->id,
@@ -617,7 +615,7 @@ class UserRegistrationService extends AbstractBaseService
                 'type'       => 'email_verification',
             ] );
 
-            $this->userConfirmationTokenRepository->save( $confirmationToken );
+            $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
 
             return ServiceResult::success( $confirmationToken, 'Token de confirmação criado.' );
 

@@ -20,10 +20,14 @@ class CommonDataFactory extends Factory
     public function definition(): array
     {
         return [
-            'tenant_id' => Tenant::factory(),
-            'key' => $this->faker->word,
-            'value' => $this->faker->sentence,
-            'description' => $this->faker->text(100),
+            'tenant_id'    => Tenant::factory(),
+            'first_name'   => $this->faker->firstName,
+            'last_name'    => $this->faker->lastName,
+            'cpf'          => $this->faker->numerify( '###########' ), // CPF brasileiro
+            'cnpj'         => $this->faker->numerify( '##############' ), // CNPJ brasileiro
+            'company_name' => $this->faker->company,
+            'description'  => $this->faker->text( 200 ),
         ];
     }
+
 }
