@@ -21,6 +21,7 @@ use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
+use App\Services\Application\EmailVerificationService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
@@ -64,6 +65,7 @@ class UserRegistrationService extends AbstractBaseService
     protected ProviderRepository              $providerRepository;
     protected PlanRepository                  $planRepository;
     protected RoleRepository                  $roleRepository;
+    protected EmailVerificationService        $emailVerificationService;
 
     public function __construct(
         UserRepository $userRepository,
@@ -73,6 +75,7 @@ class UserRegistrationService extends AbstractBaseService
         ProviderRepository $providerRepository,
         PlanRepository $planRepository,
         RoleRepository $roleRepository,
+        EmailVerificationService $emailVerificationService,
     ) {
         $this->userRepository                  = $userRepository;
         $this->tenantRepository                = $tenantRepository;
@@ -81,6 +84,7 @@ class UserRegistrationService extends AbstractBaseService
         $this->providerRepository              = $providerRepository;
         $this->planRepository                  = $planRepository;
         $this->roleRepository                  = $roleRepository;
+        $this->emailVerificationService        = $emailVerificationService;
     }
 
     /**
@@ -193,10 +197,23 @@ class UserRegistrationService extends AbstractBaseService
 
             DB::commit();
 
-            // 9. Disparar evento para envio de e-mail de boas-vindas
+            // 9. Criar token de verificação de e-mail usando EmailVerificationService
+            Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
+            $tokenResult = $this->createConfirmationToken( $user );
+            if ( !$tokenResult->isSuccess() ) {
+                Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
+                    'user_id' => $user->id,
+                    'error'   => $tokenResult->getMessage(),
+                ] );
+                // Não falhar o registro por causa do token, apenas logar o problema
+            } else {
+                Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+            }
+
+            // 10. Disparar evento para envio de e-mail de boas-vindas
             Event::dispatch( new UserRegistered( $user, $tenant ) );
 
-            // 10. Login automático
+            // 11. Login automático
             Auth::login( $user );
 
             Log::info( 'Registro concluído com sucesso', [
@@ -595,29 +612,16 @@ class UserRegistrationService extends AbstractBaseService
     }
 
     /**
-     * Cria token de confirmação para o usuário.
+     * Cria token de confirmação para o usuário usando EmailVerificationService.
      *
      * @param User $user Usuário
-     * @param Tenant $tenant Tenant do usuário
      * @return ServiceResult Resultado da operação
      */
-    private function createConfirmationToken( User $user, Tenant $tenant ): ServiceResult
+    private function createConfirmationToken( User $user ): ServiceResult
     {
         try {
-            $token     = Str::random( 64 );
-            $expiresAt = now()->addMinutes( (int) config( 'auth.verification.expire', 60 ) );
-
-            $confirmationToken = new UserConfirmationToken( [
-                'user_id'    => $user->id,
-                'tenant_id'  => $tenant->id,
-                'token'      => $token,
-                'expires_at' => $expiresAt,
-                'type'       => 'email_verification',
-            ] );
-
-            $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
-
-            return ServiceResult::success( $confirmationToken, 'Token de confirmação criado.' );
+            // Usar EmailVerificationService para criar token e enviar e-mail
+            return $this->emailVerificationService->createConfirmationToken( $user );
 
         } catch ( Exception $e ) {
             return ServiceResult::error(

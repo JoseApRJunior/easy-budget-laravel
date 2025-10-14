@@ -104,25 +104,72 @@ class WelcomeUser extends Mailable implements ShouldQueue
     /**
      * Gera o link de confirmação de conta.
      *
-     * @return string URL de confirmação
+     * Este método implementa a estratégia de busca de token personalizada:
+     * 1. Busca primeiro por UserConfirmationToken personalizado (sistema atual)
+     * 2. Usa rota /confirm-account para compatibilidade com sistema antigo
+     * 3. Fallback para sistema Laravel built-in se necessário
+     * 4. Tratamento robusto para cenários sem token disponível
+     *
+     * @return string URL de confirmação funcional e segura
      */
     private function generateConfirmationLink(): string
     {
+        // 1. Retorna URL personalizada se fornecida
         if ( $this->verificationUrl ) {
             return $this->verificationUrl;
         }
 
-        // Gera link padrão baseado no token de confirmação mais recente
-        $token = $this->user->userConfirmationTokens()
-            ->where( 'expires_at', '>', now() )
-            ->latest()
-            ->first();
+        // 2. Buscar token personalizado válido (otimizado para evitar N+1)
+        $token = $this->findValidConfirmationToken();
 
         if ( $token ) {
-            return config( 'app.url' ) . '/confirm-account?token=' . $token->token;
+            return $this->buildConfirmationUrl( $token->token );
         }
 
-        return config( 'app.url' ) . '/login';
+        // 3. Fallback para sistema Laravel built-in
+        if ( $this->user->hasVerifiedEmail() ) {
+            return config( 'app.url' ) . '/login';
+        }
+
+        // 4. Retorna URL padrão se nenhum token disponível
+        return config( 'app.url' ) . '/email/verify';
+    }
+
+    /**
+     * Busca token de confirmação válido de forma otimizada.
+     *
+     * Esta implementação evita problemas de N+1 queries através de:
+     * - Query direta sem eager loading desnecessário
+     * - Filtros aplicados no banco de dados
+     * - Tratamento eficiente de resultados
+     *
+     * @return \App\Models\UserConfirmationToken|null Token válido ou null
+     */
+    private function findValidConfirmationToken(): ?\App\Models\UserConfirmationToken
+    {
+        return \App\Models\UserConfirmationToken::where( 'user_id', $this->user->id )
+            ->where( 'expires_at', '>', now() )
+            ->where( 'tenant_id', $this->user->tenant_id )
+            ->latest( 'created_at' )
+            ->first();
+    }
+
+    /**
+     * Constrói URL de confirmação segura.
+     *
+     * @param string $token Token de confirmação
+     * @return string URL completa e funcional
+     */
+    private function buildConfirmationUrl( string $token ): string
+    {
+        // Sanitizar token para evitar problemas de segurança
+        $sanitizedToken = filter_var( $token, FILTER_SANITIZE_STRING );
+
+        if ( empty( $sanitizedToken ) || strlen( $sanitizedToken ) !== 64 ) {
+            return config( 'app.url' ) . '/login';
+        }
+
+        return config( 'app.url' ) . '/confirm-account?token=' . urlencode( $sanitizedToken );
     }
 
 }

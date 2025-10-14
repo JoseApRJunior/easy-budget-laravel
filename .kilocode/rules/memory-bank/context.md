@@ -6,6 +6,51 @@
 
 ## 🔄 Mudanças Recentes
 
+### **✅ Sistema de Verificação de E-mail Implementado**
+
+**Arquitetura híbrida Laravel Sanctum + Sistema Customizado:**
+
+#### **🏗️ Componentes Implementados**
+
+-  **EmailVerificationService** - Serviço completo para lógica de negócio
+-  **EmailVerificationRequested** - Evento para solicitação de verificação
+-  **SendEmailVerificationNotification** - Listener para envio de e-mails
+-  **EmailVerificationController** - Controller para gerenciamento de verificação
+-  **UserConfirmationToken** - Modelo para tokens com isolamento multi-tenant
+
+#### **✨ Funcionalidades Avançadas**
+
+-  **Tokens únicos por usuário** com remoção automática de antigos
+-  **Expiração automática de 30 minutos** com limpeza de tokens expirados
+-  **Tratamento robusto de erros** com logging detalhado
+-  **Isolamento multi-tenant preservado** em todos os componentes
+-  **Uso de eventos para desacoplamento** entre lógica e envio
+-  **Validações de segurança implementadas** em todas as camadas
+
+#### **🏗️ Arquitetura Técnica**
+
+```php
+// Padrão implementado: Controller → Service → Repository → Model
+Controllers/Auth/EmailVerificationController.php
+    ↓ usa
+Services/Application/EmailVerificationService.php
+    ↓ usa
+Repositories/UserConfirmationTokenRepository.php
+    ↓ usa
+Models/UserConfirmationToken.php (com TenantScoped)
+```
+
+#### **📡 Sistema de Eventos**
+
+```php
+// Evento disparado pelo service
+EmailVerificationRequested::class
+    ↓ capturado por
+SendEmailVerificationNotification::class
+    ↓ utiliza
+Services/Infrastructure/MailerService.php
+```
+
 ### **✅ Sistema de Padrões Arquiteturais Completo**
 
 **Implementado sistema completo de padrões com 5 camadas:**

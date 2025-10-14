@@ -739,6 +739,83 @@ class MailerService
     }
 
     /**
+     * Envia e-mail de verificação de conta usando dados estruturados.
+     *
+     * @param array $emailData Dados estruturados do e-mail de verificação
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendEmailVerification( array $emailData ): ServiceResult
+    {
+        try {
+            // Validar dados obrigatórios
+            if ( empty( $emailData[ 'user' ] ) || empty( $emailData[ 'verificationToken' ] ) ) {
+                return ServiceResult::error(
+                    OperationStatus::INVALID_DATA,
+                    'Dados obrigatórios ausentes para e-mail de verificação.',
+                );
+            }
+
+            $user              = $emailData[ 'user' ];
+            $verificationToken = $emailData[ 'verificationToken' ];
+            $tenant            = $emailData[ 'tenant' ] ?? null;
+
+            // Criar URL de verificação
+            $verificationUrl = $emailData[ 'verificationUrl' ] ?? route( 'verification.verify', [
+                'token' => $verificationToken
+            ] );
+
+            // Preparar dados para o template
+            $templateData = [
+                'user'              => $user,
+                'verificationToken' => $verificationToken,
+                'verificationUrl'   => $verificationUrl,
+                'expiresAt'         => $emailData[ 'expiresAt' ] ?? now()->addMinutes( 30 ),
+                'tenant'            => $tenant,
+                'app_name'          => config( 'app.name', 'Easy Budget' ),
+            ];
+
+            // Usar template específico para verificação de e-mail
+            $sent = $this->sendTemplatedEmail(
+                $user->email,
+                'Confirmação de E-mail - ' . config( 'app.name', 'Easy Budget' ),
+                'emails.email-verification',
+                $templateData,
+            );
+
+            if ( $sent ) {
+                Log::info( 'E-mail de verificação enviado com sucesso via template', [
+                    'user_id'   => $user->id,
+                    'email'     => $user->email,
+                    'tenant_id' => $tenant?->id,
+                ] );
+
+                return ServiceResult::success( [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'sent_at' => now()->toDateTimeString(),
+                ], 'E-mail de verificação enviado com sucesso.' );
+            }
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Falha ao enviar e-mail de verificação.',
+            );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enviar e-mail de verificação', [
+                'user_id' => $emailData[ 'user' ]->id ?? null,
+                'email'   => $emailData[ 'user' ]->email ?? null,
+                'error'   => $e->getMessage(),
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao enviar e-mail de verificação: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
      * Envia resposta de suporte usando a Mailable Class SupportResponse.
      *
      * @param array $ticket Dados do ticket de suporte

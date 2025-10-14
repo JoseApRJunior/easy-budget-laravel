@@ -6,15 +6,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\ChartService;
-use App\Services\MetricsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function __construct(
-        private MetricsService $metricsService,
         private ChartService $chartService,
     ) {}
 
@@ -23,7 +23,7 @@ class DashboardController extends Controller
      */
     public function index( Request $request ): View
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
         $period = $request->get( 'period', 'month' );
 
         // Obter dados iniciais com cache curto para boa UX
@@ -45,7 +45,7 @@ class DashboardController extends Controller
             'recentTransactions' => $dashboardData[ 'recent_transactions' ],
             'quickActions'       => $dashboardData[ 'quick_actions' ],
             'currentPeriod'      => $period,
-            'lastUpdated'        => now()->toISOString()
+            'lastUpdated'        => Carbon::now()->toDateTimeString()
         ] );
     }
 
@@ -61,7 +61,7 @@ class DashboardController extends Controller
                 'description' => 'Pagamento recebido - Cliente ABC',
                 'amount'      => 1500.00,
                 'type'        => 'receita',
-                'date'        => now()->subDays( 1 )->toDateString(),
+                'date'        => Carbon::now()->subDays( 1 )->toDateString(),
                 'category'    => 'Vendas',
                 'icon'        => 'plus-circle',
                 'color'       => 'green'
@@ -71,7 +71,7 @@ class DashboardController extends Controller
                 'description' => 'Compra de material escritório',
                 'amount'      => 250.00,
                 'type'        => 'despesa',
-                'date'        => now()->subDays( 2 )->toDateString(),
+                'date'        => Carbon::now()->subDays( 2 )->toDateString(),
                 'category'    => 'Escritório',
                 'icon'        => 'dash-circle',
                 'color'       => 'red'
@@ -81,7 +81,7 @@ class DashboardController extends Controller
                 'description' => 'Serviço de manutenção',
                 'amount'      => 800.00,
                 'type'        => 'despesa',
-                'date'        => now()->subDays( 3 )->toDateString(),
+                'date'        => Carbon::now()->subDays( 3 )->toDateString(),
                 'category'    => 'Manutenção',
                 'icon'        => 'dash-circle',
                 'color'       => 'red'

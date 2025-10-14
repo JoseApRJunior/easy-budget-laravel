@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketResponded;
 use App\Events\UserRegistered;
+use App\Listeners\SendEmailVerificationNotification as SendCustomEmailVerificationNotification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
 use App\Listeners\SendStatusUpdateNotification;
@@ -34,28 +36,32 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
             // Eventos de autenticação padrão do Laravel
-        Registered::class             => [
+        Registered::class                 => [
             SendEmailVerificationNotification::class,
         ],
 
             // Eventos customizados de notificação por e-mail
-        UserRegistered::class         => [
+        UserRegistered::class             => [
             SendWelcomeEmail::class,
         ],
 
-        InvoiceCreated::class         => [
+        InvoiceCreated::class             => [
             SendInvoiceNotification::class,
         ],
 
-        StatusUpdated::class          => [
+        StatusUpdated::class              => [
             SendStatusUpdateNotification::class,
         ],
 
-        PasswordResetRequested::class => [
+        PasswordResetRequested::class     => [
             SendPasswordResetNotification::class,
         ],
 
-        SupportTicketResponded::class => [
+        EmailVerificationRequested::class => [
+            SendCustomEmailVerificationNotification::class,
+        ],
+
+        SupportTicketResponded::class     => [
             SendSupportResponse::class,
         ],
     ];
@@ -104,6 +110,7 @@ class EventServiceProvider extends ServiceProvider
             InvoiceCreated::class,
             StatusUpdated::class,
             PasswordResetRequested::class,
+            EmailVerificationRequested::class,
             SupportTicketResponded::class,
         ];
 
@@ -193,6 +200,14 @@ class EventServiceProvider extends ServiceProvider
                 break;
 
             case PasswordResetRequested::class:
+                $data = [
+                    'user_id'   => $event->user->id,
+                    'email'     => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                ];
+                break;
+
+            case EmailVerificationRequested::class:
                 $data = [
                     'user_id'   => $event->user->id,
                     'email'     => $event->user->email,

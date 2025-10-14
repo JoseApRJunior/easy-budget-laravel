@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\CustomVerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
@@ -198,6 +200,25 @@ Route::middleware( 'auth' )->group( function () {
     Route::get( '/profile', [ ProfileController::class, 'edit' ] )->name( 'profile.edit' );
     Route::patch( '/profile', [ ProfileController::class, 'update' ] )->name( 'profile.update' );
     Route::delete( '/profile', [ ProfileController::class, 'destroy' ] )->name( 'profile.destroy' );
+} );
+
+// Rotas de verificação de e-mail personalizadas
+Route::prefix( 'email' )->name( 'verification.' )->group( function () {
+    Route::get( '/verify', [ CustomVerifyEmailController::class, 'show' ] )->name( 'notice' );
+    Route::get( '/verify/{id}/{hash}', [ CustomVerifyEmailController::class, 'confirmAccount' ] )
+        ->middleware( [ 'signed:relative' ] )
+        ->name( 'verify' );
+} );
+
+// Rota personalizada de confirmação de conta (compatibilidade com sistema antigo)
+Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAccount' ] )->name( 'confirm-account' );
+
+// Rotas de gerenciamento de verificação de e-mail (para usuários logados)
+Route::middleware( 'auth' )->group( function () {
+    Route::prefix( 'email-verification' )->name( 'email-verification.' )->group( function () {
+        Route::get( '/', [ EmailVerificationController::class, 'show' ] )->name( 'show' );
+        Route::post( '/resend', [ EmailVerificationController::class, 'resend' ] )->name( 'resend' );
+    } );
 } );
 
 require __DIR__ . '/auth.php';

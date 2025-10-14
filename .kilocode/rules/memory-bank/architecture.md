@@ -199,6 +199,55 @@ class TenantMiddleware
 }
 ```
 
+#### **📧 Sistema de Verificação de E-mail**
+
+**Arquitetura híbrida implementada com integração Laravel Sanctum + sistema customizado:**
+
+```php
+// Arquitetura híbrida: Laravel Sanctum + Sistema Customizado
+// Combina benefícios do Sanctum com funcionalidades avançadas
+
+// 1. Serviço de verificação de e-mail
+EmailVerificationService::createConfirmationToken(User $user)
+// - Remove tokens antigos automaticamente
+// - Cria token com expiração de 30 minutos
+// - Dispara evento para envio de e-mail
+// - Retorna ServiceResult padronizado
+
+// 2. Evento para envio de e-mail
+EmailVerificationRequested::class
+// - Desacoplamento entre lógica e envio
+// - Permite processamento assíncrono
+// - Facilita testes e manutenção
+
+// 3. Listener para envio efetivo
+SendEmailVerificationNotification::class
+// - Utiliza MailerService para envio
+// - Tratamento robusto de erros
+// - Logging detalhado de todas as operações
+
+// 4. Modelo de token de confirmação
+UserConfirmationToken::class
+// - Trait TenantScoped para isolamento
+// - Validações de negócio implementadas
+// - Relacionamentos com User e Tenant
+
+// 5. Controller para gerenciamento
+EmailVerificationController::class
+// - Endpoints para solicitar verificação
+// - Reenvio de e-mails de verificação
+// - Página de confirmação pendente
+
+// Funcionalidades implementadas:
+// ✅ Tokens únicos por usuário (remoção automática de antigos)
+// ✅ Expiração automática de 30 minutos
+// ✅ Tratamento robusto de erros com logging
+// ✅ Isolamento multi-tenant preservado
+// ✅ Uso de eventos para desacoplamento
+// ✅ Validações de segurança implementadas
+// ✅ Interface responsiva para verificação
+```
+
 #### **📊 Service Layer Pattern Aprimorado**
 
 ```php
@@ -298,6 +347,40 @@ class Tenant extends Model
 5. Redirects to provider.index route
    ↓
 6. Loads dashboard with user context
+```
+
+#### **📧 Fluxo de Verificação de E-mail**
+
+```
+1. User submits registration form
+   ↓
+2. UserRegistrationService::register()
+   ↓
+3. Creates user account (unverified)
+   ↓
+4. EmailVerificationService::createConfirmationToken()
+   ↓
+5. Removes old tokens automatically
+   ↓
+6. Creates new token (30 min expiration)
+   ↓
+7. Dispatches EmailVerificationRequested event
+   ↓
+8. SendEmailVerificationNotification listener handles event
+   ↓
+9. Uses MailerService to send verification email
+   ↓
+10. User receives email with verification link
+    ↓
+11. User clicks verification link
+    ↓
+12. Verification route validates token
+    ↓
+13. Marks user email as verified
+    ↓
+14. Removes used token
+    ↓
+15. Redirects to dashboard with success message
 ```
 
 #### **💰 Fluxo de Criação de Orçamento**
