@@ -7,14 +7,17 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentVerificationController;
+use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MailtrapController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\PublicInvoiceController;
+use App\Http\Controllers\QueueManagementController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
@@ -175,10 +178,49 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
         } );
     } );
 
+    // Queue management routes (disponível para providers e admin)
+    Route::prefix( 'queues' )->name( 'queues.' )->group( function () {
+        Route::get( '/', [ QueueManagementController::class, 'index' ] )->name( 'index' );
+        Route::get( '/stats', [ QueueManagementController::class, 'stats' ] )->name( 'stats' );
+        Route::get( '/health', [ QueueManagementController::class, 'health' ] )->name( 'health' );
+        Route::post( '/cleanup', [ QueueManagementController::class, 'cleanup' ] )->name( 'cleanup' );
+        Route::post( '/retry', [ QueueManagementController::class, 'retry' ] )->name( 'retry' );
+        Route::post( '/test-email', [ QueueManagementController::class, 'testEmail' ] )->name( 'test-email' );
+    } );
+
+    // Email preview routes (disponível para providers e admin)
+    Route::prefix( 'email-preview' )->name( 'email-preview.' )->group( function () {
+        Route::get( '/', [ EmailPreviewController::class, 'index' ] )->name( 'index' );
+        Route::get( '/{emailType}', [ EmailPreviewController::class, 'show' ] )->name( 'show' );
+        Route::get( '/config/data', [ EmailPreviewController::class, 'config' ] )->name( 'config' );
+    } );
+
+    // Mailtrap routes (disponível para providers e admin)
+    Route::prefix( 'mailtrap' )->name( 'mailtrap.' )->group( function () {
+        Route::get( '/', [ MailtrapController::class, 'index' ] )->name( 'index' );
+        Route::get( '/providers', [ MailtrapController::class, 'providers' ] )->name( 'providers' );
+        Route::get( '/tests', [ MailtrapController::class, 'tests' ] )->name( 'tests' );
+        Route::get( '/logs', [ MailtrapController::class, 'logs' ] )->name( 'logs' );
+        Route::get( '/report', [ MailtrapController::class, 'generateReport' ] )->name( 'report' );
+
+        // AJAX routes para funcionalidades dinâmicas
+        Route::post( '/test-provider', [ MailtrapController::class, 'testProvider' ] )->name( 'test-provider' );
+        Route::post( '/run-test', [ MailtrapController::class, 'runTest' ] )->name( 'run-test' );
+        Route::post( '/generate-report', [ MailtrapController::class, 'generateReport' ] )->name( 'generate-report' );
+        Route::post( '/clear-cache', [ MailtrapController::class, 'clearCache' ] )->name( 'clear-cache' );
+        Route::get( '/provider/{provider}/config', [ MailtrapController::class, 'providerConfig' ] )->name( 'provider-config' );
+    } );
+
     // Admin routes básicas
     Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin' ] )->group( function () {
         Route::get( '/', [ HomeController::class, 'admin' ] )->name( 'index' );
         Route::get( '/dashboard', [ DashboardController::class, 'index' ] )->name( 'dashboard' );
+
+        // Queue management for admin (funcionalidades avançadas)
+        Route::prefix( 'queues' )->name( 'queues.' )->group( function () {
+            Route::post( '/work', [ QueueManagementController::class, 'work' ] )->name( 'work' );
+            Route::post( '/stop', [ QueueManagementController::class, 'stop' ] )->name( 'stop' );
+        } );
 
         // User management
         Route::prefix( 'users' )->name( 'users.' )->group( function () {

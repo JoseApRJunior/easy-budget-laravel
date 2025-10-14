@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace App\Services\Infrastructure;
 
 use App\Enums\OperationStatus;
+use App\Mail\BudgetNotificationMail;
+use App\Mail\EmailVerificationMail;
 use App\Mail\InvoiceNotification;
 use App\Mail\PasswordResetNotification;
 use App\Mail\StatusUpdate;
 use App\Mail\SupportResponse;
 use App\Mail\WelcomeUser;
+use App\Models\Budget;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Infrastructure\EmailRateLimitService;
+use App\Services\Infrastructure\EmailSenderService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -54,10 +59,24 @@ class MailerService
     ];
 
     /**
-     * Construtor: inicializa configurações padrão.
+     * Serviço de remetentes de e-mail.
      */
-    public function __construct()
-    {
+    private EmailSenderService $emailSenderService;
+
+    /**
+     * Serviço de rate limiting.
+     */
+    private EmailRateLimitService $rateLimitService;
+
+    /**
+     * Construtor: inicializa configurações padrão e serviços de segurança.
+     */
+    public function __construct(
+        EmailSenderService $emailSenderService,
+        EmailRateLimitService $rateLimitService,
+    ) {
+        $this->emailSenderService = $emailSenderService;
+        $this->rateLimitService   = $rateLimitService;
         $this->initializeDefaultConfig();
     }
 
@@ -1083,6 +1102,211 @@ class MailerService
 
         // Em produção, seria enviado e-mail ou notification para admin
         // Por ora, apenas registra no log
+    }
+
+    /**
+     * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
+     *
+     * @param User $user Usuário que receberá o e-mail
+     * @param string $verificationToken Token de verificação
+     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param array|null $company Dados da empresa (opcional)
+     * @param string|null $verificationUrl URL de verificação personalizada (opcional)
+     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendEmailVerificationMail(
+        User $user,
+        string $verificationToken,
+        ?Tenant $tenant = null,
+        ?array $company = null,
+        ?string $verificationUrl = null,
+        string $locale = 'pt-BR',
+    ): ServiceResult {
+        try {
+            $mailable = new EmailVerificationMail(
+                $user,
+                $verificationToken,
+                $verificationUrl,
+                $tenant,
+                $company,
+                $locale,
+            );
+
+            // Usa queue para processamento assíncrono
+            Mail::to( $user->email )->queue( $mailable );
+
+            Log::info( 'E-mail de verificação enfileirado com sucesso', [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'tenant_id' => $tenant?->id,
+                'locale'    => $locale,
+                'queue'     => 'emails'
+            ] );
+
+            return ServiceResult::success( [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'queued_at' => now()->toDateTimeString(),
+                'queue'     => 'emails',
+                'locale'    => $locale,
+            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enfileirar e-mail de verificação', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'error'   => $e->getMessage(),
+                'locale'  => $locale,
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Envia notificação de orçamento usando a Mailable Class BudgetNotificationMail.
+     *
+     * @param Budget $budget Orçamento relacionado
+     * @param Customer $customer Cliente do orçamento
+     * @param string $notificationType Tipo de notificação
+     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param array|null $company Dados da empresa (opcional)
+     * @param string|null $publicUrl URL pública do orçamento (opcional)
+     * @param string|null $customMessage Mensagem personalizada (opcional)
+     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendBudgetNotificationMail(
+        Budget $budget,
+        Customer $customer,
+        string $notificationType,
+        ?Tenant $tenant = null,
+        ?array $company = null,
+        ?string $publicUrl = null,
+        ?string $customMessage = null,
+        string $locale = 'pt-BR',
+    ): ServiceResult {
+        try {
+            $mailable = new BudgetNotificationMail(
+                $budget,
+                $customer,
+                $notificationType,
+                $tenant,
+                $company,
+                $publicUrl,
+                $customMessage,
+                $locale,
+            );
+
+            // Usa queue para processamento assíncrono
+            Mail::to( $customer->commonData?->email ?? $customer->contact?->email ?? 'cliente@exemplo.com' )->queue( $mailable );
+
+            Log::info( 'Notificação de orçamento enfileirada com sucesso', [
+                'budget_id'         => $budget->id,
+                'budget_code'       => $budget->code,
+                'customer_id'       => $customer->id,
+                'notification_type' => $notificationType,
+                'tenant_id'         => $tenant?->id,
+                'locale'            => $locale,
+                'queue'             => 'emails'
+            ] );
+
+            return ServiceResult::success( [
+                'budget_id'         => $budget->id,
+                'budget_code'       => $budget->code,
+                'customer_id'       => $customer->id,
+                'notification_type' => $notificationType,
+                'queued_at'         => now()->toDateTimeString(),
+                'queue'             => 'emails',
+                'locale'            => $locale,
+            ], 'Notificação de orçamento enfileirada com sucesso para processamento assíncrono.' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enfileirar notificação de orçamento', [
+                'budget_id'         => $budget->id,
+                'customer_id'       => $customer->id,
+                'notification_type' => $notificationType,
+                'error'             => $e->getMessage(),
+                'locale'            => $locale,
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao enfileirar notificação de orçamento: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Envia notificação melhorada de fatura usando a Mailable Class InvoiceNotification atualizada.
+     *
+     * @param Invoice $invoice Fatura a ser notificada
+     * @param Customer $customer Cliente da fatura
+     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param array|null $company Dados da empresa (opcional)
+     * @param string|null $publicLink Link público para visualização (opcional)
+     * @param string|null $customMessage Mensagem personalizada (opcional)
+     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendEnhancedInvoiceNotification(
+        Invoice $invoice,
+        Customer $customer,
+        ?Tenant $tenant = null,
+        ?array $company = null,
+        ?string $publicLink = null,
+        ?string $customMessage = null,
+        string $locale = 'pt-BR',
+    ): ServiceResult {
+        try {
+            $mailable = new InvoiceNotification(
+                $invoice,
+                $customer,
+                $tenant,
+                $company,
+                $publicLink,
+                $customMessage,
+                $locale,
+            );
+
+            // Usa queue para processamento assíncrono
+            Mail::to( $customer->commonData?->email ?? $customer->contact?->email ?? 'cliente@exemplo.com' )->queue( $mailable );
+
+            Log::info( 'Notificação aprimorada de fatura enfileirada com sucesso', [
+                'invoice_id'   => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'customer_id'  => $customer->id,
+                'tenant_id'    => $tenant?->id,
+                'locale'       => $locale,
+                'queue'        => 'emails'
+            ] );
+
+            return ServiceResult::success( [
+                'invoice_id'   => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'customer_id'  => $customer->id,
+                'queued_at'    => now()->toDateTimeString(),
+                'queue'        => 'emails',
+                'locale'       => $locale,
+            ], 'Notificação aprimorada de fatura enfileirada com sucesso para processamento assíncrono.' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enfileirar notificação aprimorada de fatura', [
+                'invoice_id'  => $invoice->id,
+                'customer_id' => $customer->id,
+                'error'       => $e->getMessage(),
+                'locale'      => $locale,
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao enfileirar notificação aprimorada de fatura: ' . $e->getMessage()
+            );
+        }
     }
 
 }

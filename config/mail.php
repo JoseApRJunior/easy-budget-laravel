@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env( 'MAIL_MAILER', 'array' ),
+    'default' => env( 'MAIL_MAILER', env( 'APP_ENV' ) === 'local' ? 'mailtrap' : 'array' ),
 
     /*
     |--------------------------------------------------------------------------
@@ -47,6 +47,15 @@ return [
             'password'     => env( 'EMAIL_PASSWORD', env( 'MAIL_PASSWORD' ) ),
             'timeout'      => null,
             'local_domain' => env( 'MAIL_EHLO_DOMAIN', parse_url( (string) env( 'APP_URL', 'http://localhost' ), PHP_URL_HOST ) ),
+        ],
+
+        'mailtrap'   => [
+            'transport' => 'smtp',
+            'host'      => env( 'MAILTRAP_HOST', 'smtp.mailtrap.io' ),
+            'port'      => env( 'MAILTRAP_PORT', 2525 ),
+            'username'  => env( 'MAILTRAP_USERNAME' ),
+            'password'  => env( 'MAILTRAP_PASSWORD' ),
+            'timeout'   => null,
         ],
 
         'ses'        => [
