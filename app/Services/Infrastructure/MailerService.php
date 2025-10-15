@@ -12,6 +12,7 @@ use App\Mail\PasswordResetNotification;
 use App\Mail\StatusUpdate;
 use App\Mail\SupportResponse;
 use App\Mail\WelcomeUser;
+use App\Mail\WelcomeUserMail;
 use App\Models\Budget;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -553,7 +554,7 @@ class MailerService
         ?string $verificationUrl = null,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUser( $user, $tenant, $verificationUrl );
+            $mailable = new WelcomeUserMail( $user, $tenant, $verificationUrl );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
@@ -797,7 +798,7 @@ class MailerService
             $sent = $this->sendTemplatedEmail(
                 $user->email,
                 'Confirmação de E-mail - ' . config( 'app.name', 'Easy Budget' ),
-                'emails.email-verification',
+                'emails.verification',
                 $templateData,
             );
 

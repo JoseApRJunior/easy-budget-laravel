@@ -305,6 +305,24 @@ Route::prefix( 'webhooks' )->name( 'webhooks.' )->group( function () {
     Route::post( '/', [ WebhookController::class, 'handleWebhookMercadoPago' ] )->name( 'mercadopago' );
 } );
 
+// Rota temporária para teste do template de email (remover em produção)
+Route::get( '/test-email-welcome', function () {
+    // Criar um usuário mock para teste
+    $user = new \App\Models\User( [
+        'id'        => 1,
+        'email'     => 'teste@exemplo.com',
+        'tenant_id' => 1
+    ] );
+
+    $mail = new \App\Mail\WelcomeUserMail(
+        $user,
+        null,
+        'http://localhost:8000/confirm-account?token=test-token-123',
+    );
+
+    return $mail->render();
+} )->name( 'test-email-welcome' );
+
 // Rotas de erro
 Route::get( '/not-allowed', [ ErrorController::class, 'notAllowed' ] )->name( 'error.not-allowed' );
 Route::get( '/not-found', [ ErrorController::class, 'notFound' ] )->name( 'error.not-found' );

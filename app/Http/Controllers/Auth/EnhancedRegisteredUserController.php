@@ -47,23 +47,6 @@ class EnhancedRegisteredUserController extends Controller
         // Registro realizado com sucesso
         $data = $result->getData();
 
-        // Disparar evento adicional de verificação se necessário
-        if ( config( 'app.email_verification_required', true ) ) {
-            try {
-                $data[ 'user' ]->sendEmailVerificationNotification();
-                Log::info( 'E-mail de verificação enviado', [
-                    'user_id' => $data[ 'user' ]->id,
-                    'email'   => $data[ 'user' ]->email
-                ] );
-            } catch ( \Exception $e ) {
-                Log::error( 'Erro ao enviar e-mail de verificação: ' . $e->getMessage(), [
-                    'user_id' => $data[ 'user' ]->id,
-                    'email'   => $data[ 'user' ]->email,
-                    'trace'   => $e->getTraceAsString()
-                ] );
-            }
-        }
-
         // Redirecionar para dashboard com mensagem de sucesso
         return redirect()->route( 'dashboard' )
             ->with( 'success', $data[ 'message' ] );

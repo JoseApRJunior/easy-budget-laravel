@@ -1,7 +1,7 @@
 <x-mail::message>
     # {{ __( 'emails.verification.subject', [ 'app_name' => config( 'app.name', 'Easy Budget' ) ], $locale ) }}
 
-    {{ __( 'emails.verification.greeting', [ 'name' => $user->name ?? $first_name ?? 'usuário' ], $locale ) }}
+    {{ __( 'emails.verification.greeting', [ 'name' => $user_name ?? $first_name ?? 'usuário' ], $locale ) }}
 
     {{ __( 'emails.verification.line1', [ 'app_name' => config( 'app.name', 'Easy Budget' ) ], $locale ) }}
 
@@ -15,7 +15,8 @@
 
     <x-mail::panel>
         <strong>{{ __( 'emails.verification.details', [], $locale ) }}</strong><br>
-        • {{ __( 'emails.verification.email_label', [], $locale ) }} {{ $user->email }}<br>
+        • {{ __( 'emails.verification.email_label', [], $locale ) }} {{ $user_email ?? $user->email ??
+        'usuario@exemplo.com' }}<br>
         • {{ __( 'emails.verification.expires_label', [], $locale ) }} {{ $expiresAt }}<br>
         • {{ __( 'emails.verification.platform_label', [], $locale ) }} {{ config( 'app.name', 'Easy Budget' ) }}
         @if( $tenant )

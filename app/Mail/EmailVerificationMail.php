@@ -52,7 +52,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     /**
      * Locale para internacionalização (pt-BR, en, etc).
      */
-    public string $locale;
+    private string $emailLocale;
 
     /**
      * Cria uma nova instância da mailable.
@@ -77,10 +77,10 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         $this->verificationUrl   = $verificationUrl;
         $this->tenant            = $tenant;
         $this->company           = $company ?? [];
-        $this->locale            = $locale;
+        $this->emailLocale       = $locale;
 
         // Configurar locale para internacionalização
-        app()->setLocale( $this->locale );
+        app()->setLocale( $this->emailLocale );
     }
 
     /**
@@ -91,12 +91,12 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         return new Envelope(
             subject: __( 'emails.verification.subject', [
                 'app_name' => config( 'app.name', 'Easy Budget' )
-            ], $this->locale ),
+            ], $this->emailLocale ),
             tags: [ 'email-verification', 'user-registration' ],
             metadata: [
                 'user_id'            => $this->user->id,
                 'tenant_id'          => $this->tenant?->id,
-                'locale'             => $this->locale,
+                'locale'             => $this->emailLocale,
                 'verification_token' => substr( $this->verificationToken, 0, 8 ) . '...',
             ],
         );
@@ -111,12 +111,15 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
             markdown: 'emails.verification',
             with: [
                 'user'              => $this->user,
+                'first_name'        => $this->getUserFirstName(),
+                'user_name'         => $this->getUserName(),
+                'user_email'        => $this->getUserEmail(),
                 'verificationToken' => $this->verificationToken,
                 'verificationUrl'   => $this->generateVerificationUrl(),
                 'expiresAt'         => now()->addMinutes( 30 )->format( 'd/m/Y H:i:s' ),
                 'tenant'            => $this->tenant,
                 'company'           => $this->getCompanyData(),
-                'locale'            => $this->locale,
+                'locale'            => $this->emailLocale,
                 'appName'           => config( 'app.name', 'Easy Budget' ),
                 'supportEmail'      => $this->getSupportEmail(),
             ],
@@ -243,11 +246,35 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     private function getUserFirstName(): string
     {
-        if ( $this->user->provider?->commonData ) {
+        if ( $this->user && $this->user->provider?->commonData ) {
             return $this->user->provider->commonData->first_name;
         }
 
-        return explode( '@', $this->user->email )[ 0 ];
+        if ( $this->user && $this->user->email ) {
+            return explode( '@', $this->user->email )[ 0 ];
+        }
+
+        return 'usuário';
+    }
+
+    /**
+     * Obtém o e-mail do usuário.
+     *
+     * @return string E-mail do usuário
+     */
+    private function getUserEmail(): string
+    {
+        return $this->user?->email ?? 'usuario@exemplo.com';
+    }
+
+    /**
+     * Obtém o nome do usuário para personalização.
+     *
+     * @return string Nome do usuário
+     */
+    private function getUserName(): string
+    {
+        return $this->getUserFirstName();
     }
 
 }

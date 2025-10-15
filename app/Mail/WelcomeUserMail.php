@@ -19,7 +19,7 @@ use Illuminate\Queue\SerializesModels;
  * Esta classe implementa o padrão ShouldQueue para processamento assíncrono,
  * garantindo melhor performance e confiabilidade no envio de e-mails.
  */
-class WelcomeUser extends Mailable implements ShouldQueue
+class WelcomeUserMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -68,7 +68,7 @@ class WelcomeUser extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.new-user',
+            markdown: 'emails.users.welcome',
             with: [
                 'first_name'       => $this->getUserFirstName(),
                 'confirmationLink' => $this->verificationUrl ?? $this->generateConfirmationLink(),
