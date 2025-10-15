@@ -11,13 +11,12 @@ use App\Mail\InvoiceNotification;
 use App\Mail\PasswordResetNotification;
 use App\Mail\StatusUpdate;
 use App\Mail\SupportResponse;
-use App\Mail\WelcomeUser;
-use App\Models\Budget;
-use App\Models\Customer;
-use App\Models\Invoice;
+use App\Mail\WelcomeUserMail;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Infrastructure\EmailPreviewService;
+use App\Services\Infrastructure\QueueService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\App;
@@ -81,7 +80,7 @@ class EmailPreviewController extends Controller
             'welcome'              => [
                 'name'        => 'Boas-vindas',
                 'description' => 'E-mail enviado para novos usuários',
-                'mailable'    => WelcomeUser::class,
+                'mailable'    => WelcomeUserMail::class,
                 'icon'        => 'user-plus',
                 'category'    => 'authentication',
             ],
@@ -333,8 +332,8 @@ class EmailPreviewController extends Controller
     {
         try {
             return match ( $emailType ) {
-                'welcome'              => view( 'emails.new-user', $data )->render(),
-                'verification'         => view( 'emails.verification', $data )->render(),
+                'welcome'              => view( 'emails.users.welcome', $data )->render(),
+                'verification'         => view( 'emails.users.verification', $data )->render(),
                 'password_reset'       => view( 'emails.password-reset', $data )->render(),
                 'budget_notification'  => view( 'emails.budget-notification', $data )->render(),
                 'invoice_notification' => view( 'emails.invoice-notification', $data )->render(),

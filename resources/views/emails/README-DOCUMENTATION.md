@@ -40,19 +40,19 @@ O Sistema de Preview de E-mails do Easy Budget Laravel é uma ferramenta avança
 
 ```php
 // Rota principal do sistema de preview
-GET /emails/preview
+GET /email-preview
 
 // Preview específico
-GET /emails/preview/{emailType}?locale=pt-BR&device=desktop&tenant_id=1
+GET /email-preview/{emailType}?locale=pt-BR&device=desktop&tenant_id=1
 
 // Comparação de idiomas
-POST /emails/preview/{emailType}/compare-locales
+POST /email-preview/{emailType}/compare-locales
 
 // Teste de fila
-POST /emails/preview/{emailType}/test-queue
+POST /email-preview/{emailType}/test-queue
 
 // Exportação
-GET /emails/preview/{emailType}/export?format=html
+GET /email-preview/{emailType}/export?format=html
 ```
 
 ### 2. Tipos de E-mail Suportados
@@ -274,7 +274,7 @@ class EmailPreviewTest extends TestCase
 
 1. **Preview Básico**
 
-   -  Acesse `/emails/preview`
+   -  Acesse `/email-preview`
    -  Selecione tipo de e-mail
    -  Teste diferentes dispositivos
    -  Verifique diferentes idiomas
@@ -316,14 +316,14 @@ class EmailPreviewTest extends TestCase
 
 ```php
 // Simular erro de renderização
-POST /emails/preview/{type}/simulate-error
+POST /email-preview/{type}/simulate-error
 {
     "error_type": "render_error",
     "locale": "pt-BR"
 }
 
 // Simular erro de fila
-POST /emails/preview/{type}/simulate-error
+POST /email-preview/{type}/simulate-error
 {
     "error_type": "queue_error",
     "locale": "pt-BR"

@@ -49,7 +49,8 @@ class SendEmailVerificationNotification
                 'tenant'            => $event->tenant,
                 'expiresAt'         => now()->addMinutes( 30 ), // 30 minutos
                 'verificationUrl'   => route( 'verification.verify', [
-                    'token' => $event->verificationToken
+                    'id'   => $event->user->id,
+                    'hash' => sha1( $event->verificationToken )
                 ] ),
             ];
 

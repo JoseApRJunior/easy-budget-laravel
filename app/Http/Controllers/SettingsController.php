@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Services\FileUploadService;
-use App\Services\SettingsBackupService;
-use App\Services\SettingsService;
+use App\Services\Application\FileUploadService;
+use App\Services\Application\SettingsBackupService;
+use App\Services\Domain\SettingsService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -11,7 +11,6 @@ use App\Mail\InvoiceNotification;
 use App\Mail\PasswordResetNotification;
 use App\Mail\StatusUpdate;
 use App\Mail\SupportResponse;
-use App\Mail\WelcomeUser;
 use App\Mail\WelcomeUserMail;
 use App\Models\Budget;
 use App\Models\Customer;
@@ -30,7 +29,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
 
 /**
  * Serviço utilitário para operações de e-mail no sistema Easy Budget.
@@ -781,7 +779,8 @@ class MailerService
 
             // Criar URL de verificação
             $verificationUrl = $emailData[ 'verificationUrl' ] ?? route( 'verification.verify', [
-                'token' => $verificationToken
+                'id'   => $user->id,
+                'hash' => sha1( $verificationToken )
             ] );
 
             // Preparar dados para o template

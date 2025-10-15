@@ -428,7 +428,7 @@
                             <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
                                 <div class="email-type-card p-3 h-100" data-email-type="{{ $key }}"
                                     onclick="selectEmailType('{{ $key }}')">
-                                    <div class="email-type-icon bg-light d-flex align-items-center justify-content-center"
+                                    <div class="email-type-icon  d-flex align-items-center justify-content-center"
                                         style="background-color: {{ $email[ 'category' ] === 'authentication' ? '#e3f2fd' : ( $email[ 'category' ] === 'business' ? '#fff3e0' : '#f3e5f5' ) }} !important;">
                                         <i class="fas fa-{{ $email[ 'icon' ] }}"
                                             style="color: {{ $email[ 'category' ] === 'authentication' ? '#2196f3' : ( $email[ 'category' ] === 'business' ? '#ff9800' : '#9c27b0' ) }};"></i>
@@ -706,7 +706,7 @@
             } );
 
             const iframe = document.getElementById( 'emailFrame' );
-            iframe.src = `/emails/preview/${currentEmailType}?${params.toString()}`;
+            iframe.src = `/email-preview/${currentEmailType}?${params.toString()}`;
 
             iframe.onload = function () {
                 hideLoading();
@@ -741,7 +741,7 @@
 
             showLoading();
 
-            fetch( `/emails/preview/${currentEmailType}/test-queue`, {
+            fetch( `/email-preview/${currentEmailType}/test-queue`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -784,7 +784,7 @@
 
             showLoading();
 
-            fetch( `/emails/preview/${currentEmailType}/compare-locales`, {
+            fetch( `/email-preview/${currentEmailType}/compare-locales`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -818,12 +818,12 @@
 
             Object.entries( comparisonData.comparisons ).forEach( ( [locale, comparison] ) => {
                 html += `
-                    <div class="comparison-item">
-                        <div class="comparison-header">
-                            ${getLocaleName( locale )} ${getLocaleFlag( locale )}
-                        </div>
-                        <div class="preview-content">
-                `;
+                                                        <div class="comparison-item">
+                                                            <div class="comparison-header">
+                                                                ${getLocaleName( locale )} ${getLocaleFlag( locale )}
+                                                            </div>
+                                                            <div class="preview-content">
+                                                    `;
 
                 if ( comparison.status === 'success' ) {
                     html += comparison.preview.html;
@@ -832,9 +832,9 @@
                 }
 
                 html += `
-                        </div>
-                    </div>
-                `;
+                                                            </div>
+                                                        </div>
+                                                    `;
             } );
 
             html += `</div>`;
@@ -849,7 +849,7 @@
             }
 
             const link = document.createElement( 'a' );
-            link.href = `/emails/preview/${currentEmailType}/export?locale=${currentLocale}&tenant_id=${currentTenantId || ''}`;
+            link.href = `/email-preview/${currentEmailType}/export?locale=${currentLocale}&tenant_id=${currentTenantId || ''}`;
             link.download = `${currentEmailType}_${currentLocale}_${new Date().toISOString().split( 'T' )[0]}.html`;
             link.click();
         }
@@ -862,7 +862,7 @@
 
             showLoading();
 
-            fetch( `/emails/preview/${currentEmailType}/simulate-error`, {
+            fetch( `/email-preview/${currentEmailType}/simulate-error`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -889,7 +889,7 @@
         }
 
         function clearCache() {
-            fetch( '/emails/preview/clear-cache', {
+            fetch( '/email-preview/clear-cache', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector( 'meta[name="csrf-token"]' ).getAttribute( 'content' )
@@ -910,7 +910,7 @@
         }
 
         function loadStats() {
-            fetch( '/emails/preview/config' )
+            fetch( '/email-preview/config/data' )
                 .then( response => response.json() )
                 .then( data => {
                     if ( data.stats ) {
@@ -985,9 +985,9 @@
                 @foreach( $availableEmails as $key => $email )
                     '{{ $key }}': '{{ $email[ 'name' ] }}',
                 @endforeach
-            };
+                                                };
         return names[emailType] || emailType;
-        }
+                                            }
 
         // Auto-refresh stats a cada 30 segundos
         setInterval( loadStats, 30000 );
