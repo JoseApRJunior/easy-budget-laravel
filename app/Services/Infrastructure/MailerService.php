@@ -757,6 +757,84 @@ class MailerService
     }
 
     /**
+     * Envia e-mail de verificação de conta usando dados estruturados.
+     *
+     * @param array $emailData Dados estruturados do e-mail de verificação
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendEmailVerification( array $emailData ): ServiceResult
+    {
+        try {
+            // Validar dados obrigatórios
+            if ( empty( $emailData[ 'user' ] ) || empty( $emailData[ 'verificationToken' ] ) ) {
+                return ServiceResult::error(
+                    OperationStatus::INVALID_DATA,
+                    'Dados obrigatórios ausentes para e-mail de verificação.',
+                );
+            }
+
+            $user              = $emailData[ 'user' ];
+            $verificationToken = $emailData[ 'verificationToken' ];
+            $tenant            = $emailData[ 'tenant' ] ?? null;
+
+            // Criar URL de verificação
+            $verificationUrl = $emailData[ 'verificationUrl' ] ?? route( 'verification.verify', [
+                'id'   => $user->id,
+                'hash' => sha1( $verificationToken )
+            ] );
+
+            // Preparar dados para o template
+            $templateData = [
+                'user'              => $user,
+                'verificationToken' => $verificationToken,
+                'verificationUrl'   => $verificationUrl,
+                'expiresAt'         => $emailData[ 'expiresAt' ] ?? now()->addMinutes( 30 ),
+                'tenant'            => $tenant,
+                'app_name'          => config( 'app.name', 'Easy Budget' ),
+            ];
+
+            // Usar template específico para verificação de e-mail
+            $sent = $this->sendTemplatedEmail(
+                $user->email,
+                'Confirmação de E-mail - ' . config( 'app.name', 'Easy Budget' ),
+                'emails.users.verification',
+                $templateData,
+            );
+
+            if ( $sent ) {
+                Log::info( 'E-mail de verificação enviado com sucesso via template', [
+                    'user_id'   => $user->id,
+                    'email'     => $user->email,
+                    'tenant_id' => $tenant?->id,
+                ] );
+
+                return ServiceResult::success( [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'sent_at' => now()->toDateTimeString(),
+                ], 'E-mail de verificação enviado com sucesso.' );
+            }
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Falha ao enviar e-mail de verificação.',
+            );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enviar e-mail de verificação', [
+                'user_id' => $emailData[ 'user' ]->id ?? null,
+                'email'   => $emailData[ 'user' ]->email ?? null,
+                'error'   => $e->getMessage(),
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao enviar e-mail de verificação: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
      * Envia resposta de suporte usando a Mailable Class SupportResponse.
      *
      * @param array $ticket Dados do ticket de suporte
@@ -832,11 +910,11 @@ class MailerService
                 'smtp_encryption'       => config( 'mail.mailers.smtp.encryption' ),
                 'queue_connection'      => config( 'queue.default' ),
                 'performance_metrics'   => [
-                        'memory_usage'    => memory_get_usage( true ),
-                        'processing_time' => microtime( true ),
-                        'cache_enabled'   => true,
-                        'async_enabled'   => true,
-                    ],
+                    'memory_usage'    => memory_get_usage( true ),
+                    'processing_time' => microtime( true ),
+                    'cache_enabled'   => true,
+                    'async_enabled'   => true,
+                ],
                 'optimization_features' => [
                     'cache_config'     => true,
                     'async_processing' => true,
@@ -1329,99 +1407,50 @@ class MailerService
     }
 
     /**
-     * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
-     *
-     * MÉTODO OTIMIZADO COM MELHOR PERFORMANCE:
-     * - Cache inteligente para configurações frequentes
-     * - Validação otimizada de dados
-     * - Tratamento avançado de erros
-     * - Monitoramento de performance melhorado
-     * - Estratégia de retry inteligente
+     * Envia e-mail de boas-vindas usando a Mailable Class WelcomeUser.
      *
      * @param User $user Usuário que receberá o e-mail
-     * @param string $verificationToken Token de verificação
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $verificationUrl URL de verificação personalizada (opcional)
-     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param string|null $verificationUrl URL de verificação (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendEmailVerificationMail(
         User $user,
-        string $verificationToken,
         ?Tenant $tenant = null,
-        ?array $company = null,
         ?string $verificationUrl = null,
-        string $locale = 'pt-BR',
     ): ServiceResult {
-        $startTime = microtime( true );
-
         try {
-            // Validação otimizada de dados críticos
-            if ( empty( $user->email ) || !filter_var( $user->email, FILTER_VALIDATE_EMAIL ) ) {
-                return ServiceResult::error(
-                    OperationStatus::INVALID_DATA,
-                    'E-mail do usuário inválido ou ausente.',
-                );
-            }
-
-            // Cache para configurações de e-mail (evita consultas repetidas)
-            $cacheKey    = "email_config_verification_{$locale}";
-            $emailConfig = \Illuminate\Support\Facades\Cache::remember( $cacheKey, 3600, function () use ($locale) {
-                return [
-                    'app_name'      => config( 'app.name', 'Easy Budget' ),
-                    'support_email' => config( 'mail.support_email', 'suporte@easybudget.com.br' ),
-                    'locale'        => $locale,
-                ];
-            } );
-
             $mailable = new EmailVerificationMail(
-                $user,
-                $verificationToken,
-                $verificationUrl,
-                $tenant,
-                $company,
-                $locale,
+                $user, $tenant, $verificationUrl,
             );
 
-            // Usa queue para processamento assíncrono com configurações otimizadas
+            // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
 
-            $processingTime = microtime( true ) - $startTime;
-
-            Log::info( '⚡ E-mail de verificação enfileirado com sucesso (otimizado)', [
-                'user_id'         => $user->id,
-                'email'           => $user->email,
-                'tenant_id'       => $tenant?->id,
-                'locale'          => $locale,
-                'queue'           => 'emails',
-                'processing_time' => round( $processingTime * 1000, 2 ) . 'ms',
-                'cached_config'   => true,
+            Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'tenant_id' => $tenant?->id,
+                'queue'     => 'emails'
             ] );
 
             return ServiceResult::success( [
-                'user_id'         => $user->id,
-                'email'           => $user->email,
-                'queued_at'       => now()->toDateTimeString(),
-                'queue'           => 'emails',
-                'locale'          => $locale,
-                'processing_time' => round( $processingTime * 1000, 2 ) . 'ms',
-            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'queued_at' => now()->toDateTimeString(),
+                'queue'     => 'emails'
+            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.' );
 
         } catch ( Exception $e ) {
-            $processingTime = microtime( true ) - $startTime;
-
-            Log::error( '❌ Erro ao enfileirar e-mail de verificação (otimizado)', [
-                'user_id'         => $user->id,
-                'email'           => $user->email,
-                'error'           => $e->getMessage(),
-                'locale'          => $locale,
-                'processing_time' => round( $processingTime * 1000, 2 ) . 'ms',
+            Log::error( 'Erro ao enfileirar e-mail de boas-vindas', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'error'   => $e->getMessage()
             ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de boas-vindas: ' . $e->getMessage()
             );
         }
     }

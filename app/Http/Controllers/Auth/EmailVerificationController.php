@@ -39,33 +39,9 @@ class EmailVerificationController extends Controller
     }
 
     /**
-     * Exibe página de verificação pendente.
-     */
-    public function show(): View
-    {
-        $user = Auth::user();
-
-        if ( !$user ) {
-            return view( 'auth.login', [
-                'error' => 'Você precisa estar logado para acessar esta página.',
-            ] );
-        }
-
-        if ( $user->hasVerifiedEmail() ) {
-            return view( 'dashboard', [
-                'success' => 'Seu e-mail já está verificado.',
-            ] );
-        }
-
-        return view( 'auth.verify-email-pending', [
-            'user' => $user,
-        ] );
-    }
-
-    /**
      * Solicita novo e-mail de verificação.
      */
-    public function resend( Request $request ): RedirectResponse
+    public function store( Request $request ): RedirectResponse
     {
         $user = Auth::user();
 

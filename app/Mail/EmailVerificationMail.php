@@ -58,29 +58,14 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      * Cria uma nova instância da mailable.
      *
      * @param User $user Usuário que receberá o e-mail
-     * @param string $verificationToken Token de verificação
-     * @param string|null $verificationUrl URL de verificação personalizada (opcional)
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param string|null $verificationUrl URL de verificação de e-mail (opcional)
      */
-    public function __construct(
-        User $user,
-        string $verificationToken,
-        ?string $verificationUrl = null,
-        ?Tenant $tenant = null,
-        ?array $company = null,
-        string $locale = 'pt-BR',
-    ) {
-        $this->user              = $user;
-        $this->verificationToken = $verificationToken;
-        $this->verificationUrl   = $verificationUrl;
-        $this->tenant            = $tenant;
-        $this->company           = $company ?? [];
-        $this->emailLocale       = $locale;
-
-        // Configurar locale para internacionalização
-        app()->setLocale( $this->emailLocale );
+    public function __construct( User $user, ?Tenant $tenant = null, ?string $verificationUrl = null )
+    {
+        $this->user            = $user;
+        $this->tenant          = $tenant;
+        $this->verificationUrl = $verificationUrl;
     }
 
     /**
@@ -89,16 +74,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __( 'emails.verification.subject', [
-                'app_name' => config( 'app.name', 'Easy Budget' )
-            ], $this->emailLocale ),
-            tags: [ 'email-verification', 'user-registration' ],
-            metadata: [
-                'user_id'            => $this->user->id,
-                'tenant_id'          => $this->tenant?->id,
-                'locale'             => $this->emailLocale,
-                'verification_token' => substr( $this->verificationToken, 0, 8 ) . '...',
-            ],
+            subject: 'Bem-vindo ao Easy Budget!',
         );
     }
 
@@ -110,18 +86,11 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.users.verification',
             with: [
-                'user'              => $this->user,
-                'first_name'        => $this->getUserFirstName(),
-                'user_name'         => $this->getUserName(),
-                'user_email'        => $this->getUserEmail(),
-                'verificationToken' => $this->verificationToken,
-                'verificationUrl'   => $this->generateVerificationUrl(),
-                'expiresAt'         => now()->addMinutes( 30 )->format( 'd/m/Y H:i:s' ),
-                'tenant'            => $this->tenant,
-                'company'           => $this->getCompanyData(),
-                'locale'            => $this->emailLocale,
-                'appName'           => config( 'app.name', 'Easy Budget' ),
-                'supportEmail'      => $this->getSupportEmail(),
+                'first_name'       => $this->getUserFirstName(),
+                'confirmationLink' => $this->verificationUrl ?? $this->generateConfirmationLink(),
+                'tenant_name'      => $this->tenant?->name ?? 'Easy Budget',
+                'user'             => $this->user,
+                'tenant'           => $this->tenant,
             ],
         );
     }

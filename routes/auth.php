@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\EnhancedRegisteredUserController;
@@ -44,7 +45,7 @@ Route::middleware( 'auth' )->group( function () {
         ->middleware( [ 'signed', 'throttle:6,1' ] )
         ->name( 'verification.verify' );
 
-    Route::post( 'email/verification-notification', [ EmailVerificationNotificationController::class, 'store' ] )
+    Route::post( 'email/verification-notification', [ EmailVerificationController::class, 'store' ] )
         ->middleware( 'throttle:6,1' )
         ->name( 'verification.send' );
 
