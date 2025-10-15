@@ -112,10 +112,11 @@ class DatabaseSeeder extends Seeder
         $user = User::firstOrCreate(
             [ 'email' => $userEmail ],
             [
-                'tenant_id' => $tenant->id,
-                'email'     => $userEmail,
-                'password'  => Hash::make( 'Password1@' ),
-                'is_active' => true,
+                'tenant_id'         => $tenant->id,
+                'email'             => $userEmail,
+                'password'          => Hash::make( 'Password1@' ),
+                'is_active'         => true,
+                'email_verified_at' => now()
             ],
         );
 

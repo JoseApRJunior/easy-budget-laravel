@@ -1,8 +1,27 @@
-@props( [ 'slot' ] )
+<x-mail::layout>
+{{-- Header --}}
+<x-slot:header>
+<x-mail::header :url="config('app.url')">
+{{ config('app.name') }}
+</x-mail::header>
+</x-slot:header>
 
-{{-- Componente message para e-mails - baseado no componente padrão do Laravel --}}
-<div {{$attributes->merge( [ 'class' => 'max-w-2xl mx-auto bg-white rounded-lg shadow-sm' ] )}}>
-    <div class="px-6 py-4">
-        {{$slot}}
-    </div>
-</div>
+{{-- Body --}}
+{!! $slot !!}
+
+{{-- Subcopy --}}
+@isset($subcopy)
+<x-slot:subcopy>
+<x-mail::subcopy>
+{!! $subcopy !!}
+</x-mail::subcopy>
+</x-slot:subcopy>
+@endisset
+
+{{-- Footer --}}
+<x-slot:footer>
+<x-mail::footer>
+© {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}
+</x-mail::footer>
+</x-slot:footer>
+</x-mail::layout>

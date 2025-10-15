@@ -50,7 +50,7 @@ class SendWelcomeEmail implements ShouldQueue
                 $verificationUrl = $event->user->verification_url ?? null;
             }
 
-            $result = $mailerService->sendWelcomeEmail(
+            $result = $mailerService->sendEmailVerificationMail(
                 $event->user,
                 $event->tenant,
                 $verificationUrl,

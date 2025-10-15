@@ -1,7 +1,14 @@
-@props( [ 'slot' ] )
+<table class="panel" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+<tr>
+<td class="panel-content">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+<tr>
+<td class="panel-item">
+{{ Illuminate\Mail\Markdown::parse($slot) }}
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
 
-<div {{$attributes->merge( [ 'class' => 'bg-gray-50 border border-gray-200 rounded-lg p-4 my-4' ] )}}>
-    <div class="text-sm text-gray-700">
-        {{$slot}}
-    </div>
-</div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
+use App\Events\EmailVerificationRequested;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
 use App\Repositories\UserConfirmationTokenRepository;
@@ -103,7 +104,7 @@ class EmailVerificationService extends AbstractBaseService
 
             // 3. Disparar evento para envio de e-mail de verificação
             // Seguindo o padrão estabelecido de usar eventos ao invés de chamar MailerService diretamente
-            Event::dispatch( new \App\Events\EmailVerificationRequested( $user, $token ) );
+            Event::dispatch( new EmailVerificationRequested( $user, $token ) );
 
             Log::info( 'Token de verificação criado e evento disparado', [
                 'user_id'     => $user->id,
@@ -166,8 +167,8 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // Verificar se usuário está ativo
-            if ( !$user->is_active ) {
-                Log::warning( 'Tentativa de reenvio de e-mail para usuário inativo', [
+            if ( $user->is_active ) {
+                Log::warning( 'Tentativa de reenvio de e-mail para usuário ativo', [
                     'user_id'   => $user->id,
                     'tenant_id' => $user->tenant_id,
                     'email'     => $user->email,
@@ -175,7 +176,7 @@ class EmailVerificationService extends AbstractBaseService
 
                 return ServiceResult::error(
                     OperationStatus::CONFLICT,
-                    'Usuário inativo. Entre em contato com o suporte.',
+                    'Usuário ativo. Entre em contato com o suporte.',
                 );
             }
 

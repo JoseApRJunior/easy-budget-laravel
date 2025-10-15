@@ -255,14 +255,6 @@ Route::prefix( 'email' )->name( 'verification.' )->group( function () {
 // Rota personalizada de confirmação de conta (compatibilidade com sistema antigo)
 Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAccount' ] )->name( 'confirm-account' );
 
-// Rotas de gerenciamento de verificação de e-mail (para usuários logados)
-Route::middleware( 'auth' )->group( function () {
-    Route::prefix( 'email-verification' )->name( 'email-verification.' )->group( function () {
-        Route::get( '/', [ EmailVerificationController::class, 'show' ] )->name( 'show' );
-        Route::post( '/resend', [ EmailVerificationController::class, 'resend' ] )->name( 'resend' );
-    } );
-} );
-
 require __DIR__ . '/auth.php';
 
 // Rotas públicas para orçamentos com token de confirmação

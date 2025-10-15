@@ -27,6 +27,9 @@ enum OperationStatus: string
     /** Dados inválidos fornecidos */
     case INVALID_DATA = 'invalid_data';
 
+    /**   Conflito de dados   */
+    case CONFLICT = 'conflict';
+
     /**
      * Verifica se o status indica sucesso
      *
@@ -60,6 +63,7 @@ enum OperationStatus: string
             self::ERROR        => 'Erro interno do servidor',
             self::FORBIDDEN    => 'Acesso negado',
             self::INVALID_DATA => 'Dados inválidos',
+            self::CONFLICT     => 'Conflito de dados'
         };
     }
 

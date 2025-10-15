@@ -334,9 +334,9 @@ class EmailPreviewController extends Controller
             return match ( $emailType ) {
                 'welcome'              => view( 'emails.users.welcome', $data )->render(),
                 'verification'         => view( 'emails.users.verification', $data )->render(),
-                'password_reset'       => view( 'emails.password-reset', $data )->render(),
-                'budget_notification'  => view( 'emails.budget-notification', $data )->render(),
-                'invoice_notification' => view( 'emails.invoice-notification', $data )->render(),
+                'password_reset'       => view( 'emails.users.password-reset', $data )->render(),
+                'budget_notification'  => view( 'emails.budgets.budget-notification', $data )->render(),
+                'invoice_notification' => view( 'emails.invoides.invoice-notification', $data )->render(),
                 'status_update'        => view( 'emails.status-update', $data )->render(),
                 'support_response'     => view( 'emails.support-response', $data )->render(),
                 default                => '<p>Tipo de e-mail não encontrado</p>',

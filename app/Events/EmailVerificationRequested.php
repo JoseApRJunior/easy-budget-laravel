@@ -11,17 +11,44 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Evento disparado quando um e-mail de verificação é solicitado.
+ * Evento assíncrono disparado quando um e-mail de verificação é solicitado.
  *
- * Este evento segue o padrão estabelecido no sistema para notificações por e-mail,
- * permitindo desacoplamento entre a lógica de negócio e o envio de e-mails.
+ * Este evento implementa ShouldQueue para processamento assíncrono via filas,
+ * garantindo melhor performance e confiabilidade no envio de e-mails.
  *
- * O evento é capturado pelo listener SendEmailVerificationNotification que
+ * ARQUITETURA OTIMIZADA:
+ * - Processamento assíncrono via Laravel Queue
+ * - Retry automático em caso de falhas temporárias
+ * - Balanceamento de carga entre workers
+ * - Persistência de jobs em caso de reinicialização
+ * - Monitoramento de performance e falhas
+ *
+ * O evento é processado pelo listener SendEmailVerificationNotification que
  * utiliza o MailerService para envio efetivo do e-mail.
  */
-class EmailVerificationRequested
+class EmailVerificationRequested implements \Illuminate\Contracts\Queue\ShouldQueue
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    /**
+     * Número máximo de tentativas de processamento.
+     */
+    public int $tries = 3;
+
+    /**
+     * Timeout para processamento (em segundos).
+     */
+    public int $timeout = 30;
+
+    /**
+     * Delay entre tentativas de retry (em segundos).
+     */
+    public int $backoff = 10;
+
+    /**
+     * Fila específica para processamento de e-mails de verificação.
+     */
+    public string $queue = 'emails';
 
     public function __construct(
         public User $user,
@@ -37,6 +64,49 @@ class EmailVerificationRequested
     public function broadcastOn(): array
     {
         return [];
+    }
+
+    /**
+     * Determina se o evento deve ser processado imediatamente ou enfileirado.
+     *
+     * @return bool
+     */
+    public function shouldQueue(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Define configurações específicas para processamento na fila.
+     *
+     * @return array
+     */
+    public function viaQueue(): string
+    {
+        return $this->queue;
+    }
+
+    /**
+     * Trata falhas no processamento do evento.
+     *
+     * @param \Throwable $exception
+     * @return void
+     */
+    public function failed( \Throwable $exception ): void
+    {
+        \Illuminate\Support\Facades\Log::error( 'Falha crítica no processamento assíncrono de e-mail de verificação', [
+            'user_id'   => $this->user->id,
+            'tenant_id' => $this->tenant?->id,
+            'email'     => $this->user->email,
+            'error'     => $exception->getMessage(),
+            'max_tries' => $this->tries,
+            'queue'     => $this->queue,
+        ] );
+
+        // Em produção, poderíamos:
+        // - Notificar administradores sobre falha crítica
+        // - Implementar circuito breaker
+        // - Acionar sistema de monitoramento
     }
 
 }

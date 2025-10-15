@@ -108,7 +108,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.verification',
+            markdown: 'emails.users.verification',
             with: [
                 'user'              => $this->user,
                 'first_name'        => $this->getUserFirstName(),
