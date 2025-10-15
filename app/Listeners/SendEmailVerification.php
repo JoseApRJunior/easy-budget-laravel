@@ -6,29 +6,30 @@ namespace App\Listeners;
 
 use App\Events\EmailVerificationRequested;
 use App\Services\Infrastructure\MailerService;
-use Exception;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Listener para envio de e-mail de verificação.
+ * Listener responsável por enviar e-mail de verificação quando um usuário solicita verificação de e-mail.
  *
- * Este listener captura o evento EmailVerificationRequested e utiliza
- * o MailerService para envio efetivo do e-mail de verificação.
- *
- * Segue o padrão estabelecido no sistema de usar eventos + listeners
- * para desacoplamento entre lógica de negócio e envio de e-mails.
+ * Este listener processa o evento de registro de usuário e envia o e-mail de verificação
+ * contendo o link para ativação da conta. É executado de forma assíncrona através da queue
+ * para melhorar a performance e responsividade da aplicação.
  */
-class SendEmailVerification
+class SendEmailVerification implements ShouldQueue
 {
-    protected MailerService $mailerService;
-
-    public function __construct( MailerService $mailerService )
-    {
-        $this->mailerService = $mailerService;
-    }
+    /**
+     * O número de vezes que o job pode ser executado novamente em caso de falha.
+     */
+    public int $tries = 3;
 
     /**
-     * Trata o evento EmailVerificationRequested.
+     * O tempo em segundos antes de tentar executar o job novamente.
+     */
+    public int $backoff = 30;
+
+    /**
+     * Handle the event.
      *
      * @param EmailVerificationRequested $event
      * @return void
@@ -38,8 +39,8 @@ class SendEmailVerification
         try {
             Log::info( 'Processando evento EmailVerificationRequested para envio de e-mail de verificação', [
                 'user_id'   => $event->user->id,
-                'tenant_id' => $event->user->tenant_id,
                 'email'     => $event->user->email,
+                'tenant_id' => $event->tenant?->id,
             ] );
 
             $mailerService = app( MailerService::class);
@@ -57,35 +58,37 @@ class SendEmailVerification
             );
 
             if ( $result->isSuccess() ) {
-                Log::info( 'E-mail de verificação enviado com sucesso', [
+                Log::info( 'E-mail de verificação enviado com sucesso via evento', [
                     'user_id'   => $event->user->id,
                     'email'     => $event->user->email,
-                    'tenant_id' => $event->user->tenant_id,
+                    'queued_at' => $result->getData()[ 'queued_at' ] ?? null,
                 ] );
             } else {
-                Log::error( 'Falha no envio do e-mail de verificação via MailerService', [
-                    'user_id'   => $event->user->id,
-                    'email'     => $event->user->email,
-                    'tenant_id' => $event->user->tenant_id,
-                    'error'     => $result->getMessage(),
+                Log::error( 'Falha ao enviar e-mail de verificação via evento', [
+                    'user_id' => $event->user->id,
+                    'email'   => $event->user->email,
+                    'error'   => $result->getMessage(),
                 ] );
+
+                // Relança a exceção para que seja tratada pela queue
+                throw new \Exception( 'Falha no envio de e-mail de verificação: ' . $result->getMessage() );
             }
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro crítico no listener SendEmailVerificationNotification', [
-                'user_id'   => $event->user->id,
-                'email'     => $event->user->email,
-                'tenant_id' => $event->user->tenant_id,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
+        } catch ( \Throwable $e ) {
+            Log::error( 'Erro crítico no listener SendEmailVerification', [
+                'user_id' => $event->user->id,
+                'email'   => $event->user->email,
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
             ] );
 
-            // Não relançar exceção para evitar quebrar a cadeia de eventos
+            // Relança a exceção para que seja tratada pela queue
+            throw $e;
         }
     }
 
     /**
-     * Trata falhas no processamento do evento.
+     * Handle a job failure.
      *
      * @param EmailVerificationRequested $event
      * @param \Throwable $exception
@@ -93,18 +96,15 @@ class SendEmailVerification
      */
     public function failed( EmailVerificationRequested $event, \Throwable $exception ): void
     {
-        Log::error( 'Falha crítica no processamento do evento EmailVerificationRequested', [
-            'user_id'   => $event->user->id,
-            'email'     => $event->user->email,
-            'tenant_id' => $event->user->tenant_id,
-            'error'     => $exception->getMessage(),
-            'trace'     => $exception->getTraceAsString(),
+        Log::critical( 'Listener SendEmailVerification falhou após todas as tentativas', [
+            'user_id'  => $event->user->id,
+            'email'    => $event->user->email,
+            'error'    => $exception->getMessage(),
+            'attempts' => $this->tries,
         ] );
 
-        // Em caso de falha crítica, poderíamos implementar:
-        // - Notificação para administradores
-        // - Retry automático
-        // - Fallback para método alternativo de envio
+        // Em produção, poderia notificar administradores sobre a falha
+        // ou implementar lógica de fallback
     }
 
 }

@@ -11,102 +11,29 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Evento assíncrono disparado quando um e-mail de verificação é solicitado.
+ * Evento disparado quando é solicitada a verificação de e-mail de um usuário.
  *
- * Este evento implementa ShouldQueue para processamento assíncrono via filas,
- * garantindo melhor performance e confiabilidade no envio de e-mails.
- *
- * ARQUITETURA OTIMIZADA:
- * - Processamento assíncrono via Laravel Queue
- * - Retry automático em caso de falhas temporárias
- * - Balanceamento de carga entre workers
- * - Persistência de jobs em caso de reinicialização
- * - Monitoramento de performance e falhas
- *
- * O evento é processado pelo listener SendEmailVerificationNotification que
- * utiliza o MailerService para envio efetivo do e-mail.
+ * Este evento é usado especificamente para acionar o envio do e-mail de verificação,
+ * permitindo que o usuário confirme seu endereço de e-mail e ative sua conta.
+ * Diferencia-se do evento de registro por focar exclusivamente no processo de verificação.
  */
-class EmailVerificationRequested implements \Illuminate\Contracts\Queue\ShouldQueue
+class EmailVerificationRequested
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    /**
-     * Número máximo de tentativas de processamento.
-     */
-    public int $tries = 3;
+    public User    $user;
+    public ?Tenant $tenant;
 
     /**
-     * Timeout para processamento (em segundos).
-     */
-    public int $timeout = 30;
-
-    /**
-     * Delay entre tentativas de retry (em segundos).
-     */
-    public int $backoff = 10;
-
-    /**
-     * Fila específica para processamento de e-mails de verificação.
-     */
-    public string $queue = 'emails';
-
-    public function __construct(
-        public User $user,
-        public string $verificationToken,
-        public ?Tenant $tenant = null,
-    ) {}
-
-    /**
-     * Get the channels the event should broadcast on.
+     * Cria uma nova instância do evento.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @param User $user Usuário que se registrou
+     * @param Tenant|null $tenant Tenant do usuário (opcional)
      */
-    public function broadcastOn(): array
+    public function __construct( User $user, ?Tenant $tenant = null )
     {
-        return [];
-    }
-
-    /**
-     * Determina se o evento deve ser processado imediatamente ou enfileirado.
-     *
-     * @return bool
-     */
-    public function shouldQueue(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Define configurações específicas para processamento na fila.
-     *
-     * @return array
-     */
-    public function viaQueue(): string
-    {
-        return $this->queue;
-    }
-
-    /**
-     * Trata falhas no processamento do evento.
-     *
-     * @param \Throwable $exception
-     * @return void
-     */
-    public function failed( \Throwable $exception ): void
-    {
-        \Illuminate\Support\Facades\Log::error( 'Falha crítica no processamento assíncrono de e-mail de verificação', [
-            'user_id'   => $this->user->id,
-            'tenant_id' => $this->tenant?->id,
-            'email'     => $this->user->email,
-            'error'     => $exception->getMessage(),
-            'max_tries' => $this->tries,
-            'queue'     => $this->queue,
-        ] );
-
-        // Em produção, poderíamos:
-        // - Notificar administradores sobre falha crítica
-        // - Implementar circuito breaker
-        // - Acionar sistema de monitoramento
+        $this->user   = $user;
+        $this->tenant = $tenant;
     }
 
 }

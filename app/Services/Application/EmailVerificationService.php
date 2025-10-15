@@ -104,7 +104,7 @@ class EmailVerificationService extends AbstractBaseService
 
             // 3. Disparar evento para envio de e-mail de verificação
             // Seguindo o padrão estabelecido de usar eventos ao invés de chamar MailerService diretamente
-            Event::dispatch( new EmailVerificationRequested( $user, $token ) );
+            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant ) );
 
             Log::info( 'Token de verificação criado e evento disparado', [
                 'user_id'     => $user->id,

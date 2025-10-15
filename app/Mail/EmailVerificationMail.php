@@ -130,6 +130,40 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     }
 
     /**
+     * Gera o link de confirmação de conta.
+     *
+     * Este método implementa a estratégia de busca de token personalizada:
+     * 1. Busca primeiro por UserConfirmationToken personalizado (sistema atual)
+     * 2. Usa rota /confirm-account para compatibilidade com sistema antigo
+     * 3. Fallback para sistema Laravel built-in se necessário
+     * 4. Tratamento robusto para cenários sem token disponível
+     *
+     * @return string URL de confirmação funcional e segura
+     */
+    private function generateConfirmationLink(): string
+    {
+        // 1. Retorna URL personalizada se fornecida
+        if ( $this->verificationUrl ) {
+            return $this->verificationUrl;
+        }
+
+        // 2. Buscar token personalizado válido (otimizado para evitar N+1)
+        $token = $this->findValidConfirmationToken();
+
+        if ( $token ) {
+            return $this->buildConfirmationUrl( $token->token );
+        }
+
+        // 3. Fallback para sistema Laravel built-in
+        if ( $this->user->hasVerifiedEmail() ) {
+            return config( 'app.url' ) . '/login';
+        }
+
+        // 4. Retorna URL padrão se nenhum token disponível
+        return config( 'app.url' ) . '/email/verify';
+    }
+
+    /**
      * Busca token de confirmação válido de forma otimizada.
      *
      * @return \App\Models\UserConfirmationToken|null Token válido ou null

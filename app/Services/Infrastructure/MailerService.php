@@ -539,7 +539,7 @@ class MailerService
     }
 
     /**
-     * Envia e-mail de boas-vindas usando a Mailable Class WelcomeUser.
+     * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
@@ -557,7 +557,7 @@ class MailerService
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
 
-            Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
+            Log::info( 'E-mail de verificação enfileirado com sucesso', [
                 'user_id'   => $user->id,
                 'email'     => $user->email,
                 'tenant_id' => $tenant?->id,
@@ -569,10 +569,10 @@ class MailerService
                 'email'     => $user->email,
                 'queued_at' => now()->toDateTimeString(),
                 'queue'     => 'emails'
-            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.' );
+            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
 
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail de boas-vindas', [
+            Log::error( 'Erro ao enfileirar e-mail de verificação', [
                 'user_id' => $user->id,
                 'email'   => $user->email,
                 'error'   => $e->getMessage()
@@ -580,7 +580,7 @@ class MailerService
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de boas-vindas: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
             );
         }
     }
