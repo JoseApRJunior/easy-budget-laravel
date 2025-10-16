@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Infrastructure\ConfirmationLinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -52,17 +53,28 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     public ?string $confirmationLink;
 
     /**
+     * Serviço para construção segura de links de confirmação.
+     */
+    private ConfirmationLinkService $confirmationLinkService;
+
+    /**
      * Cria uma nova instância da mailable.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
      * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
+     * @param ConfirmationLinkService $confirmationLinkService Serviço de construção de links
      */
-    public function __construct( User $user, ?Tenant $tenant = null, ?string $confirmationLink = null )
-    {
-        $this->user             = $user;
-        $this->tenant           = $tenant;
-        $this->confirmationLink = $confirmationLink;
+    public function __construct(
+        User $user,
+        ?Tenant $tenant = null,
+        ?string $confirmationLink = null,
+        ConfirmationLinkService $confirmationLinkService,
+    ) {
+        $this->user                    = $user;
+        $this->tenant                  = $tenant;
+        $this->confirmationLink        = $confirmationLink;
+        $this->confirmationLinkService = $confirmationLinkService;
     }
 
     /**
@@ -170,7 +182,7 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
         $token = $this->findValidConfirmationToken();
 
         if ( $token ) {
-            $confirmationLink = $this->buildconfirmationLink( $token->token );
+            $confirmationLink = $this->confirmationLinkService->buildWelcomeConfirmationLink( $token->token );
 
             Log::info( 'Token de confirmação encontrado e URL gerada', [
                 'user_id'          => $this->user->id,
@@ -211,59 +223,6 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
             ->where( 'tenant_id', $this->user->tenant_id )
             ->latest( 'created_at' )
             ->first();
-    }
-
-    /**
-     * Constrói URL de confirmação segura baseada no sistema Easy Budget Laravel.
-     *
-     * Estratégia de segurança implementada:
-     * 1. Validação rigorosa do token (deve ter exatamente 64 caracteres)
-     * 2. Sanitização completa para prevenir ataques
-     * 3. Uso de urlencode para caracteres especiais
-     * 4. Rota /confirm-account conforme implementação existente
-     * 5. Fallback seguro para cenários inválidos
-     *
-     * @param string $token Token de confirmação de 64 caracteres
-     * @return string URL completa e funcional ou fallback seguro
-     */
-    private function buildconfirmationLink( string $token ): string
-    {
-        // 1. Validação rigorosa do token
-        if ( empty( $token ) || strlen( $token ) !== self::EXPECTED_TOKEN_LENGTH ) {
-            Log::warning( 'Token de confirmação inválido detectado', [
-                'user_id'         => $this->user->id,
-                'token_length'    => strlen( $token ),
-                'expected_length' => self::EXPECTED_TOKEN_LENGTH
-            ] );
-            return config( 'app.url' ) . '/login';
-        }
-
-        // 2. Sanitização adicional para máxima segurança
-        $sanitizedToken = filter_var( $token, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES );
-
-        // 3. Validação final após sanitização
-        if ( strlen( $sanitizedToken ) !== self::EXPECTED_TOKEN_LENGTH ) {
-            Log::warning( 'Token corrompido após sanitização', [
-                'user_id'          => $this->user->id,
-                'original_length'  => strlen( $token ),
-                'sanitized_length' => strlen( $sanitizedToken ),
-                'expected_length'  => self::EXPECTED_TOKEN_LENGTH
-            ] );
-            return config( 'app.url' ) . '/login';
-        }
-
-        // 4. Construir URL usando configuração do projeto
-        $baseUrl          = rtrim( config( 'app.url' ), '/' );
-        $confirmationLink = $baseUrl . '/confirm-account?token=' . urlencode( $sanitizedToken );
-
-        Log::info( 'URL de confirmação construída com sucesso', [
-            'user_id'          => $this->user->id,
-            'base_url'         => $baseUrl,
-            'token_length'     => strlen( $sanitizedToken ),
-            'confirmationLink' => $confirmationLink
-        ] );
-
-        return $confirmationLink;
     }
 
 }

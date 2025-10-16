@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Infrastructure\ConfirmationLinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -55,17 +56,28 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     private string $emailLocale;
 
     /**
+     * Serviço para construção segura de links de confirmação.
+     */
+    private ConfirmationLinkService $confirmationLinkService;
+
+    /**
      * Cria uma nova instância da mailable.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
      * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
+     * @param ConfirmationLinkService $confirmationLinkService Serviço de construção de links
      */
-    public function __construct( User $user, ?Tenant $tenant = null, ?string $confirmationLink = null )
-    {
-        $this->user             = $user;
-        $this->tenant           = $tenant;
-        $this->confirmationLink = $confirmationLink;
+    public function __construct(
+        User $user,
+        ?Tenant $tenant = null,
+        ?string $confirmationLink = null,
+        ConfirmationLinkService $confirmationLinkService,
+    ) {
+        $this->user                    = $user;
+        $this->tenant                  = $tenant;
+        $this->confirmationLink        = $confirmationLink;
+        $this->confirmationLinkService = $confirmationLinkService;
     }
 
     /**
@@ -128,7 +140,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         $token = $this->findValidConfirmationToken();
 
         if ( $token ) {
-            return $this->buildConfirmationUrl( $token->token );
+            return $this->confirmationLinkService->buildConfirmationLink( $token->token, '/confirm-account', '/email/verify' );
         }
 
         // 3. Fallback para sistema Laravel built-in
@@ -152,25 +164,6 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
             ->where( 'tenant_id', $this->user->tenant_id )
             ->latest( 'created_at' )
             ->first();
-    }
-
-    /**
-     * Constrói URL de confirmação segura.
-     *
-     * @param string $token Token de confirmação
-     * @return string URL completa e funcional
-     */
-    private function buildConfirmationUrl( string $token ): string
-    {
-        // Validar token - deve ter formato alfanumérico e comprimento adequado
-        if ( empty( $token ) || !preg_match( '/^[a-zA-Z0-9]{64}$/', $token ) ) {
-            return config( 'app.url' ) . '/login';
-        }
-
-        // Sanitizar token para uso seguro em URL
-        $sanitizedToken = htmlspecialchars( $token, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-
-        return config( 'app.url' ) . '/confirm-account?token=' . urlencode( $sanitizedToken );
     }
 
     /**

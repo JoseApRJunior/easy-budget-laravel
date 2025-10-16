@@ -552,7 +552,7 @@ class MailerService
         ?string $confirmationLink = null,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink );
+            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class) );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
@@ -1421,7 +1421,7 @@ class MailerService
     ): ServiceResult {
         try {
             $mailable = new EmailVerificationMail(
-                $user, $tenant, $confirmationLink,
+                $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class),
             );
 
             // Define o destinatário e usa queue para processamento assíncrono

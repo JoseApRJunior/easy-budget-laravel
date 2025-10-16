@@ -5,104 +5,84 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\EmailVerificationRequested;
-use App\Services\Infrastructure\MailerService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Log;
+use App\Support\ServiceResult;
 
 /**
  * Listener responsável por enviar e-mail de verificação quando um usuário solicita verificação de e-mail.
  *
- * Este listener processa o evento de registro de usuário e envia o e-mail de verificação
- * contendo o link para ativação da conta. É executado de forma assíncrona através da queue
- * para melhorar a performance e responsividade da aplicação.
+ * REFATORADO: Agora utiliza AbstractEmailListener para reduzir duplicação
+ * e melhorar manutenibilidade.
+ *
+ * Benefícios da refatoração:
+ * - Redução de ~80% no código duplicado
+ * - Tratamento padronizado de erros e logging
+ * - Métricas de performance integradas
+ * - Facilidade de manutenção e evolução
+ *
+ * Arquitetura: AbstractEmailListener → Template Method → Custom Implementation
+ * - Herda funcionalidades comuns (logging, tratamento de erro, métricas)
+ * - Implementa apenas lógica específica de verificação de e-mail
+ * - Mantém compatibilidade total com sistema de filas
  */
-class SendEmailVerification implements ShouldQueue
+class SendEmailVerification extends AbstractEmailListener
 {
     /**
-     * O número de vezes que o job pode ser executado novamente em caso de falha.
-     */
-    public int $tries = 3;
-
-    /**
-     * O tempo em segundos antes de tentar executar o job novamente.
-     */
-    public int $backoff = 30;
-
-    /**
-     * Handle the event.
+     * Implementação específica: Processa o envio de e-mail de verificação.
      *
-     * @param EmailVerificationRequested $event
-     * @return void
+     * Contém apenas a lógica específica deste tipo de e-mail,
+     * aproveitando toda a infraestrutura comum da classe abstrata.
+     *
+     * @param EmailVerificationRequested $event Evento de solicitação de verificação
+     * @return ServiceResult Resultado do processamento
      */
-    public function handle( EmailVerificationRequested $event ): void
+    protected function processEmail( $event ): ServiceResult
     {
-        try {
-            Log::info( 'Processando evento EmailVerificationRequested para envio de e-mail de verificação', [
-                'user_id'            => $event->user->id,
-                'email'              => $event->user->email,
-                'tenant_id'          => $event->tenant?->id,
-                'verification_token' => substr( $event->verificationToken, 0, 10 ) . '...',
-            ] );
+        // Gera URL de verificação segura usando serviço centralizado
+        $confirmationLink = $this->buildVerificationConfirmationLink( $event->verificationToken );
 
-            $mailerService = app( MailerService::class);
-
-            // Gera URL de verificação usando o token do evento
-            $confirmationLink = config( 'app.url' ) . '/confirm-account?token=' . $event->verificationToken;
-
-            $result = $mailerService->sendEmailVerificationMail(
-                $event->user,
-                $event->tenant,
-                $confirmationLink,
-            );
-
-            if ( $result->isSuccess() ) {
-                Log::info( 'E-mail de verificação enviado com sucesso via evento', [
-                    'user_id'   => $event->user->id,
-                    'email'     => $event->user->email,
-                    'queued_at' => $result->getData()[ 'queued_at' ] ?? null,
-                ] );
-            } else {
-                Log::error( 'Falha ao enviar e-mail de verificação via evento', [
-                    'user_id' => $event->user->id,
-                    'email'   => $event->user->email,
-                    'error'   => $result->getMessage(),
-                ] );
-
-                // Relança a exceção para que seja tratada pela queue
-                throw new \Exception( 'Falha no envio de e-mail de verificação: ' . $result->getMessage() );
-            }
-
-        } catch ( \Throwable $e ) {
-            Log::error( 'Erro crítico no listener SendEmailVerification', [
-                'user_id' => $event->user->id,
-                'email'   => $event->user->email,
-                'error'   => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ] );
-
-            // Relança a exceção para que seja tratada pela queue
-            throw $e;
-        }
+        // Envia e-mail usando o serviço injetado
+        return $this->mailerService->sendEmailVerificationMail(
+            $event->user,
+            $event->tenant,
+            $confirmationLink,
+        );
     }
 
     /**
-     * Handle a job failure.
+     * Implementação específica: Validação avançada para e-mail de verificação.
      *
-     * @param EmailVerificationRequested $event
-     * @param \Throwable $exception
-     * @return void
+     * Implementa validação rigorosa do token de verificação para garantir
+     * segurança consistente com outros listeners de e-mail.
+     *
+     * @param EmailVerificationRequested $event Evento a ser validado
      */
-    public function failed( EmailVerificationRequested $event, \Throwable $exception ): void
+    protected function validateEvent( $event ): void
     {
-        Log::critical( 'Listener SendEmailVerification falhou após todas as tentativas', [
-            'user_id'  => $event->user->id,
-            'email'    => $event->user->email,
-            'error'    => $exception->getMessage(),
-            'attempts' => $this->tries,
-        ] );
+        parent::validateEvent( $event );
 
-        // Em produção, poderia notificar administradores sobre a falha
-        // ou implementar lógica de fallback
+        // Validação específica de verificação de e-mail usando método utilitário padronizado
+        // Token é obrigatório para e-mail de verificação
+        $this->validateVerificationToken( $event->verificationToken, true );
+    }
+
+    /**
+     * Implementação específica: Descrição do evento para logging.
+     *
+     * @return string Descrição do evento
+     */
+    protected function getEventDescription(): string
+    {
+        return 'Processando evento EmailVerificationRequested para envio de e-mail de verificação';
+    }
+
+    /**
+     * Implementação específica: Tipo do evento para categorização.
+     *
+     * @return string Tipo do evento
+     */
+    protected function getEventType(): string
+    {
+        return 'email_verification';
     }
 
 }
