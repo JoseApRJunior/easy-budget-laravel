@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\UserConfirmationToken;
 use App\Services\Infrastructure\ConfirmationLinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,6 +14,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Mailable class para envio de e-mail de verificação de conta.
@@ -139,8 +141,17 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         // 2. Buscar token personalizado válido (otimizado para evitar N+1)
         $token = $this->findValidConfirmationToken();
 
-        if ( $token ) {
-            return $this->confirmationLinkService->buildConfirmationLink( $token->token, '/confirm-account', '/email/verify' );
+        if ( $token && !empty( $token->token ) ) {
+            try {
+                return $this->confirmationLinkService->buildConfirmationLink( $token->token, '/confirm-account', '/email/verify' );
+            } catch ( \Throwable $e ) {
+                // Log do erro mas continua com fallback
+                Log::warning( 'Erro ao gerar link de confirmação personalizado', [
+                    'user_id'  => $this->user->id,
+                    'token_id' => $token->id,
+                    'error'    => $e->getMessage()
+                ] );
+            }
         }
 
         // 3. Fallback para sistema Laravel built-in
@@ -155,11 +166,11 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     /**
      * Busca token de confirmação válido de forma otimizada.
      *
-     * @return \App\Models\UserConfirmationToken|null Token válido ou null
+     * @return UserConfirmationToken|null Token válido ou null
      */
-    private function findValidConfirmationToken(): ?\App\Models\UserConfirmationToken
+    private function findValidConfirmationToken(): ?UserConfirmationToken
     {
-        return \App\Models\UserConfirmationToken::where( 'user_id', $this->user->id )
+        return UserConfirmationToken::where( 'user_id', $this->user->id )
             ->where( 'expires_at', '>', now() )
             ->where( 'tenant_id', $this->user->tenant_id )
             ->latest( 'created_at' )
@@ -205,8 +216,13 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     private function getSupportEmail(): string
     {
         // Tentar obter e-mail de suporte do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) ) {
+        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) && !empty( $this->tenant->settings[ 'support_email' ] ) ) {
             return $this->tenant->settings[ 'support_email' ];
+        }
+
+        // Tentar obter e-mail de contato do tenant
+        if ( $this->tenant && isset( $this->tenant->settings[ 'contact_email' ] ) && !empty( $this->tenant->settings[ 'contact_email' ] ) ) {
+            return $this->tenant->settings[ 'contact_email' ];
         }
 
         // E-mail padrão de suporte
@@ -220,13 +236,15 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     private function getUserFirstName(): string
     {
-
-        if ( $this->user && $this->user->provider?->commonData ) {
+        // Tentar obter primeiro nome através do relacionamento provider -> commonData
+        if ( $this->user && $this->user->provider?->commonData?->first_name ) {
             return $this->user->provider->commonData->first_name;
         }
 
+        // Fallback para nome baseado no e-mail
         if ( $this->user && $this->user->email ) {
-            return explode( '@', $this->user->email )[ 0 ];
+            $username = explode( '@', $this->user->email )[ 0 ];
+            return ucfirst( str_replace( [ '.', '_' ], ' ', $username ) );
         }
 
         return 'usuário';

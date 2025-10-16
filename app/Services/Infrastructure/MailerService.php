@@ -539,25 +539,25 @@ class MailerService
     }
 
     /**
-     * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
+     * Envia e-mail de boas-vindas usando a Mailable Class WelcomeUserMail.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $confirmationLink URL de verificação (opcional)
+     * @param string|null $verificationToken Token de verificação (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendWelcomeEmail(
         User $user,
         ?Tenant $tenant = null,
-        ?string $confirmationLink = null,
+        ?string $verificationToken = null,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class) );
+            $mailable = new WelcomeUserMail( $user, $tenant, $verificationToken, app( ConfirmationLinkService::class) );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
 
-            Log::info( 'E-mail de verificação enfileirado com sucesso', [
+            Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
                 'user_id'   => $user->id,
                 'email'     => $user->email,
                 'tenant_id' => $tenant?->id,
@@ -569,10 +569,10 @@ class MailerService
                 'email'     => $user->email,
                 'queued_at' => now()->toDateTimeString(),
                 'queue'     => 'emails'
-            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
+            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.' );
 
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail de verificação', [
+            Log::error( 'Erro ao enfileirar e-mail de boas-vindas', [
                 'user_id' => $user->id,
                 'email'   => $user->email,
                 'error'   => $e->getMessage()
@@ -580,7 +580,7 @@ class MailerService
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de boas-vindas: ' . $e->getMessage()
             );
         }
     }
@@ -1419,6 +1419,7 @@ class MailerService
         ?Tenant $tenant = null,
         ?string $confirmationLink = null,
     ): ServiceResult {
+
         try {
             $mailable = new EmailVerificationMail(
                 $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class),

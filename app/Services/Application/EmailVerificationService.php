@@ -82,7 +82,8 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // 2. Criar novo token com expiração de 30 minutos
-            $token     = Str::random( 64 );
+            // Gerar token usando apenas caracteres hexadecimais minúsculos (a-f, 0-9)
+            $token     = $this->generateSecureToken( 64 );
             $expiresAt = now()->addMinutes( 30 ); // 30 minutos conforme especificado
 
             Log::info( 'Criando novo token de verificação', [
@@ -102,17 +103,12 @@ class EmailVerificationService extends AbstractBaseService
 
             $savedToken = $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
 
-            Log::info( 'Token de verificação criado e evento disparado', [
-                'user_id'     => $user->id,
-                'tenant_id'   => $user->tenant_id,
-                'token_id'    => $savedToken->id,
-                'expires_at'  => $expiresAt,
-                'event_fired' => 'EmailVerificationRequested',
+            Log::info( 'Token de verificação criado', [
+                'user_id'    => $user->id,
+                'tenant_id'  => $user->tenant_id,
+                'token_id'   => $savedToken->id,
+                'expires_at' => $expiresAt
             ] );
-
-            // 3. Disparar evento para envio de e-mail de verificação
-            // Seguindo o padrão estabelecido de usar eventos ao invés de chamar MailerService diretamente
-            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant, $token ) );
 
             return ServiceResult::success( [
                 'token'      => $token,
@@ -200,6 +196,8 @@ class EmailVerificationService extends AbstractBaseService
             } else {
                 Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
             }
+
+            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant, $tokenResult->getData()[ 'token' ] ) );
 
             return $tokenResult;
 
@@ -368,6 +366,23 @@ class EmailVerificationService extends AbstractBaseService
                 $e,
             );
         }
+    }
+
+    /**
+     * Gera token seguro usando padrão criptograficamente seguro do sistema legado.
+     *
+     * Método aprimorado usando random_bytes() para máxima segurança:
+     * - random_bytes(32) gera 32 bytes aleatórios criptograficamente seguros
+     * - bin2hex() converte para 64 caracteres hexadecimais (0-9, a-f)
+     * - Padrão usado com sucesso no sistema legado
+     *
+     * @return string Token seguro de 64 caracteres hexadecimais
+     */
+    private function generateSecureToken( int $length ): string
+    {
+        // Usar padrão mais seguro do sistema legado
+        // random_bytes(32) + bin2hex() = 64 caracteres hexadecimais
+        return bin2hex( random_bytes( 32 ) );
     }
 
     /**

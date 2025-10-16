@@ -5,18 +5,24 @@ require_once 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
 $app->make( Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-echo "Verificando usuários e tenants...\n";
+echo "Testando evento EmailVerificationRequested...\n";
 
-$user   = App\Models\User::first();
-$tenant = App\Models\Tenant::first();
+try {
+    $user = App\Models\User::first();
 
-echo "User: " . ( $user ? $user->email : 'null' ) . "\n";
-echo "Tenant: " . ( $tenant ? $tenant->name : 'null' ) . "\n";
+    if ( !$user ) {
+        echo "Nenhum usuário encontrado para teste\n";
+        exit( 1 );
+    }
 
-if ( $user && $tenant ) {
-    echo "\nTestando evento UserRegistered...\n";
-    event( new App\Events\UserRegistered( $user, $tenant ) );
-    echo "Evento disparado!\n";
-} else {
-    echo "\nNão há usuários ou tenants suficientes para o teste.\n";
+    echo "Usuário encontrado: {$user->id} - {$user->email}\n";
+
+    // Disparar evento
+    event( new App\Events\EmailVerificationRequested( $user, $user->tenant, 'test-token-123' ) );
+
+    echo "Evento disparado com sucesso\n";
+
+} catch ( Exception $e ) {
+    echo "Erro ao testar evento: " . $e->getMessage() . "\n";
+    echo "Trace: " . $e->getTraceAsString() . "\n";
 }

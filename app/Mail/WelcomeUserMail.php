@@ -48,9 +48,9 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     public ?Tenant $tenant;
 
     /**
-     * URL de verificação de e-mail (opcional).
+     * Token de verificação de e-mail (opcional).
      */
-    public ?string $confirmationLink;
+    public ?string $verificationToken;
 
     /**
      * Serviço para construção segura de links de confirmação.
@@ -62,18 +62,18 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
+     * @param string|null $verificationToken Token de verificação de e-mail (opcional)
      * @param ConfirmationLinkService $confirmationLinkService Serviço de construção de links
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
-        ?string $confirmationLink = null,
+        ?string $verificationToken = null,
         ConfirmationLinkService $confirmationLinkService,
     ) {
         $this->user                    = $user;
         $this->tenant                  = $tenant;
-        $this->confirmationLink        = $confirmationLink;
+        $this->verificationToken       = $verificationToken;
         $this->confirmationLinkService = $confirmationLinkService;
     }
 
@@ -92,13 +92,13 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        // Usar link personalizado se fornecido, caso contrário gerar automaticamente
-        $confirmationLink = $this->confirmationLink ?? $this->generateConfirmationLink();
+        // Construir link de confirmação usando o token fornecido
+        $confirmationLink = $this->generateConfirmationLink();
 
         Log::info( 'Preparando conteúdo do e-mail de boas-vindas', [
             'user_id'           => $this->user->id,
             'email'             => $this->user->email,
-            'has_custom_link'   => !empty( $this->confirmationLink ),
+            'has_token'         => !empty( $this->verificationToken ),
             'confirmation_link' => substr( $confirmationLink, 0, 50 ) . '...',
         ] );
 
@@ -169,22 +169,26 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
      */
     private function generateConfirmationLink(): string
     {
-        // 1. Retorna URL personalizada se fornecida (prioridade máxima)
-        if ( $this->confirmationLink ) {
-            Log::info( 'Usando URL de verificação personalizada', [
+        // 1. Usar token fornecido diretamente (prioridade máxima)
+        if ( !empty( $this->verificationToken ) ) {
+            $confirmationLink = $this->confirmationLinkService->buildWelcomeConfirmationLink( $this->verificationToken );
+
+            Log::info( 'URL de confirmação gerada usando token fornecido', [
                 'user_id'          => $this->user->id,
-                'confirmationLink' => $this->confirmationLink
+                'token_length'     => strlen( $this->verificationToken ),
+                'confirmationLink' => $confirmationLink
             ] );
-            return $this->confirmationLink;
+
+            return $confirmationLink;
         }
 
-        // 2. Buscar token personalizado válido usando sistema do projeto
+        // 2. Buscar token personalizado válido usando sistema do projeto (fallback)
         $token = $this->findValidConfirmationToken();
 
         if ( $token ) {
             $confirmationLink = $this->confirmationLinkService->buildWelcomeConfirmationLink( $token->token );
 
-            Log::info( 'Token de confirmação encontrado e URL gerada', [
+            Log::info( 'Token de confirmação encontrado no banco e URL gerada', [
                 'user_id'          => $this->user->id,
                 'token_id'         => $token->id,
                 'expires_at'       => $token->expires_at,
@@ -196,7 +200,7 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
 
         // 3. Cenário sem token disponível - redirecionar para página de verificação
         // onde o usuário pode solicitar um novo token
-        Log::warning( 'Nenhum token de confirmação válido encontrado - redirecionando para página de verificação', [
+        Log::warning( 'Nenhum token de confirmação disponível - redirecionando para página de verificação', [
             'user_id'   => $this->user->id,
             'email'     => $this->user->email,
             'tenant_id' => $this->user->tenant_id,

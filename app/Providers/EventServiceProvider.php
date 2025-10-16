@@ -10,7 +10,7 @@ use App\Events\PasswordResetRequested;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketResponded;
 use App\Events\UserRegistered;
-use App\Listeners\SendEmailVerificationNotification as SendCustomEmailVerificationNotification;
+use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
 use App\Listeners\SendStatusUpdateNotification;
@@ -20,6 +20,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Event Service Provider para registro de eventos e listeners customizados.
@@ -58,7 +60,7 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         EmailVerificationRequested::class => [
-            SendCustomEmailVerificationNotification::class,
+            SendEmailVerification::class,
         ],
 
         SupportTicketResponded::class     => [
@@ -68,6 +70,20 @@ class EventServiceProvider extends ServiceProvider
 
     /**
      * Register any events for your application.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        parent::register();
+
+        // CORREÇÃO: Registrar evento EmailVerificationRequested no register()
+        // Este evento não estava sendo registrado automaticamente pelo Laravel
+        $this->registerEmailVerificationEvent();
+    }
+
+    /**
+     * Bootstrap any application services.
      *
      * @return void
      */
@@ -94,6 +110,37 @@ class EventServiceProvider extends ServiceProvider
         // Exemplo de registro baseado em ambiente
         if ( app()->environment( [ 'local', 'testing' ] ) ) {
             $this->registerDevelopmentEventListeners();
+        }
+    }
+
+    /**
+     * CORREÇÃO: Registra o evento EmailVerificationRequested manualmente.
+     *
+     * Este método foi adicionado como correção para um problema onde o evento
+     * não estava sendo registrado automaticamente pelo Laravel, mesmo estando
+     * presente no array $listen do EventServiceProvider.
+     *
+     * @return void
+     */
+    private function registerEmailVerificationEvent(): void
+    {
+        try {
+            // Registrar o evento manualmente para garantir que seja reconhecido
+            Event::listen( EmailVerificationRequested::class, SendEmailVerification::class);
+
+            Log::info( 'Evento EmailVerificationRequested registrado manualmente com sucesso', [
+                'event'     => EmailVerificationRequested::class,
+                'listener'  => SendEmailVerification::class,
+                'timestamp' => now()->toDateTimeString(),
+            ] );
+        } catch ( Throwable $e ) {
+            Log::error( 'Erro ao registrar evento EmailVerificationRequested manualmente', [
+                'event'    => EmailVerificationRequested::class,
+                'listener' => SendEmailVerification::class,
+                'error'    => $e->getMessage(),
+                'file'     => $e->getFile(),
+                'line'     => $e->getLine(),
+            ] );
         }
     }
 
@@ -132,7 +179,7 @@ class EventServiceProvider extends ServiceProvider
         Event::listen( '*', function ( $eventName, array $data ) {
             // Log detalhado de todos os eventos em desenvolvimento
             if ( app()->hasDebugModeEnabled() ) {
-                \Log::debug( 'Evento disparado em desenvolvimento', [
+                Log::debug( 'Evento disparado em desenvolvimento', [
                     'event'        => $eventName,
                     'data'         => $data,
                     'memory_usage' => memory_get_usage( true ),
@@ -152,7 +199,7 @@ class EventServiceProvider extends ServiceProvider
     {
         $eventName = get_class( $event );
 
-        \Log::info( 'Evento de notificação por e-mail disparado', [
+        Log::info( 'Evento de notificação por e-mail disparado', [
             'event'           => $eventName,
             'event_data'      => $this->extractEventData( $event ),
             'listeners_count' => count( $this->getListenersForEvent( $eventName ) ),
@@ -250,11 +297,14 @@ class EventServiceProvider extends ServiceProvider
     /**
      * Determine if events and listeners should be automatically discovered.
      *
+     * CORREÇÃO: Desabilitar descoberta automática para evitar conflitos
+     * com o registro manual do evento EmailVerificationRequested.
+     *
      * @return bool
      */
     public function shouldDiscoverEvents(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -265,7 +315,7 @@ class EventServiceProvider extends ServiceProvider
     protected function discoverEventsWithin(): array
     {
         return [
-            $this->app->path( 'Listeners' ),
+            app_path( 'Listeners' ),
         ];
     }
 
