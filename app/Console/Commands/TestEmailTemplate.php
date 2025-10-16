@@ -105,11 +105,8 @@ class TestEmailTemplate extends Command
             $mailerService = app( MailerService::class);
             $result        = $mailerService->sendEmailVerificationMail(
                 $user,
-                'test-token-123',
                 $user->tenant,
-                [],
-                null,
-                'pt-BR',
+                config( 'app.url' ) . '/confirm-account?token=test-token-123',
             );
 
             if ( $result->isSuccess() ) {

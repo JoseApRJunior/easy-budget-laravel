@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env( 'MAIL_MAILER', env( 'APP_ENV' ) === 'local' ? 'mailtrap' : 'array' ),
+    'default' => env( 'MAIL_MAILER', env( 'APP_ENV' ) === 'local' ? 'mailtrap' : 'log' ),
 
     /*
     |--------------------------------------------------------------------------

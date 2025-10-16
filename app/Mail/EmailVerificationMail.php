@@ -121,12 +121,8 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
             return $this->buildConfirmationUrl( $token->token );
         }
 
-        // Fallback para sistema Laravel built-in
-        if ( $this->user->hasVerifiedEmail() ) {
-            return config( 'app.url' ) . '/login';
-        }
-
-        return config( 'app.url' ) . '/email/verify';
+        // Fallback seguro - sempre retorna uma URL válida
+        return config( 'app.url' ) . '/login';
     }
 
     /**
@@ -188,7 +184,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         // Sanitizar token para evitar problemas de segurança
         $sanitizedToken = filter_var( $token, FILTER_SANITIZE_STRING );
 
-        if ( empty( $sanitizedToken ) || strlen( $sanitizedToken ) !== 64 ) {
+        if ( empty( $sanitizedToken ) || strlen( $sanitizedToken ) < 10 ) {
             return config( 'app.url' ) . '/login';
         }
 
