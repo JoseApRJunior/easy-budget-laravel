@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
+use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\CommonData;
 use App\Models\Plan;
@@ -208,10 +209,20 @@ class UserRegistrationService extends AbstractBaseService
                 // Não falhar o registro por causa do token, apenas logar o problema
             } else {
                 Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+
+                // Armazenar dados do token para o evento
+                $tokenData                     = $tokenResult->getData();
+                $user->verification_token      = $tokenData[ 'token' ];
+                $user->verification_expires_at = $tokenData[ 'expires_at' ];
             }
 
-            // 10. Disparar evento para envio de e-mail de boas-vindas
-            Event::dispatch( new UserRegistered( $user, $tenant ) );
+            // 10. Disparar evento para envio de e-mail de boas-vindas com dados do token
+            Event::dispatch( new UserRegistered(
+                $user,
+                $tenant,
+                $user->verification_token ?? null,
+                $user->verification_expires_at ?? null
+            ) );
 
             // 11. Login automático
             Auth::login( $user );

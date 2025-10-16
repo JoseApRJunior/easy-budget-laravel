@@ -118,7 +118,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.invoice-notification',
+            view: 'emails.invoice-notification',
             with: [
                 'invoice'       => $this->invoice,
                 'customer'      => $this->customer,

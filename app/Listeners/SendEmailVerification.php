@@ -38,23 +38,21 @@ class SendEmailVerification implements ShouldQueue
     {
         try {
             Log::info( 'Processando evento EmailVerificationRequested para envio de e-mail de verificação', [
-                'user_id'   => $event->user->id,
-                'email'     => $event->user->email,
-                'tenant_id' => $event->tenant?->id,
+                'user_id'            => $event->user->id,
+                'email'              => $event->user->email,
+                'tenant_id'          => $event->tenant?->id,
+                'verification_token' => substr( $event->verificationToken, 0, 10 ) . '...',
             ] );
 
             $mailerService = app( MailerService::class);
 
-            // Gera URL de verificação se necessário
-            $verificationUrl = null;
-            if ( method_exists( $event->user, 'getEmailForVerification' ) ) {
-                $verificationUrl = $event->user->verification_url ?? null;
-            }
+            // Gera URL de verificação usando o token do evento
+            $confirmationLink = config( 'app.url' ) . '/confirm-account?token=' . $event->verificationToken;
 
             $result = $mailerService->sendEmailVerificationMail(
                 $event->user,
                 $event->tenant,
-                $verificationUrl,
+                $confirmationLink,
             );
 
             if ( $result->isSuccess() ) {

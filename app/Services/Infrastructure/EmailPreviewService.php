@@ -302,12 +302,12 @@ class EmailPreviewService
     private function getWelcomeData( string $locale, array $customData = [] ): array
     {
         return array_merge( [
-            'user'            => $this->createPreviewUser(),
-            'first_name'      => 'João',
-            'verificationUrl' => route( 'verification.verify', [ 'id' => 1, 'hash' => 'preview-hash-123' ] ),
-            'app_name'        => config( 'app.name', 'Easy Budget' ),
-            'company_name'    => 'Easy Budget',
-            'login_url'       => route( 'login' ),
+            'user'             => $this->createPreviewUser(),
+            'first_name'       => 'João',
+            'confirmationLink' => route( 'verification.verify', [ 'id' => 1, 'hash' => 'preview-hash-123' ] ),
+            'app_name'         => config( 'app.name', 'Easy Budget' ),
+            'company_name'     => 'Easy Budget',
+            'login_url'        => route( 'login' ),
         ], $customData );
     }
 
@@ -319,7 +319,7 @@ class EmailPreviewService
         return array_merge( [
             'user'              => $this->createPreviewUser(),
             'verificationToken' => 'preview-token-123',
-            'verificationUrl'   => route( 'verification.verify', [ 'id' => 1, 'hash' => 'preview-hash-123' ] ),
+            'confirmationLink'  => route( 'verification.verify', [ 'id' => 1, 'hash' => 'preview-hash-123' ] ),
             'expiresAt'         => now()->addMinutes( 30 )->format( 'd/m/Y H:i:s' ),
             'company'           => [
                 'company_name' => 'Easy Budget',

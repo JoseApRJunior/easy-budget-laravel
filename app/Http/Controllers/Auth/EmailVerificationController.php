@@ -52,7 +52,7 @@ class EmailVerificationController extends Controller
             );
         }
 
-        if ( $user->hasVerifiedEmail() ) {
+        if ( $user->email_verified_at ) {
             return $this->redirectSuccess(
                 'dashboard',
                 'Seu e-mail já está verificado.',

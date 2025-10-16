@@ -37,7 +37,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     /**
      * URL de verificação personalizada.
      */
-    public ?string $verificationUrl;
+    public ?string $confirmationLink;
 
     /**
      * Tenant do usuário (opcional, para contexto multi-tenant).
@@ -59,13 +59,13 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $verificationUrl URL de verificação de e-mail (opcional)
+     * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
      */
-    public function __construct( User $user, ?Tenant $tenant = null, ?string $verificationUrl = null )
+    public function __construct( User $user, ?Tenant $tenant = null, ?string $confirmationLink = null )
     {
-        $this->user            = $user;
-        $this->tenant          = $tenant;
-        $this->verificationUrl = $verificationUrl;
+        $this->user             = $user;
+        $this->tenant           = $tenant;
+        $this->confirmationLink = $confirmationLink;
     }
 
     /**
@@ -83,14 +83,16 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+
         return new Content(
-            markdown: 'emails.users.verification',
+            view: 'emails.users.verification',
             with: [
                 'first_name'       => $this->getUserFirstName(),
-                'confirmationLink' => $this->verificationUrl ?? $this->generateConfirmationLink(),
+                'confirmationLink' => $this->confirmationLink ?? $this->generateConfirmationLink(),
                 'tenant_name'      => $this->tenant?->name ?? 'Easy Budget',
                 'user'             => $this->user,
                 'tenant'           => $this->tenant,
+                'supportEmail'     => $this->getSupportEmail()
             ],
         );
     }
@@ -104,43 +106,22 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Gera a URL de verificação segura.
-     *
-     * @return string URL completa de verificação
-     */
-    private function generateVerificationUrl(): string
-    {
-        if ( $this->verificationUrl ) {
-            return $this->verificationUrl;
-        }
-
-        // Buscar token personalizado válido
-        $token = $this->findValidConfirmationToken();
-
-        if ( $token ) {
-            return $this->buildConfirmationUrl( $token->token );
-        }
-
-        // Fallback seguro - sempre retorna uma URL válida
-        return config( 'app.url' ) . '/login';
-    }
-
-    /**
      * Gera o link de confirmação de conta.
      *
      * Este método implementa a estratégia de busca de token personalizada:
-     * 1. Busca primeiro por UserConfirmationToken personalizado (sistema atual)
-     * 2. Usa rota /confirm-account para compatibilidade com sistema antigo
-     * 3. Fallback para sistema Laravel built-in se necessário
-     * 4. Tratamento robusto para cenários sem token disponível
+     * 1. Usa o confirmationLink fornecido (prioridade máxima)
+     * 2. Busca primeiro por UserConfirmationToken personalizado (sistema atual)
+     * 3. Usa rota /confirm-account para compatibilidade com sistema antigo
+     * 4. Fallback para sistema Laravel built-in se necessário
+     * 5. Tratamento robusto para cenários sem token disponível
      *
      * @return string URL de confirmação funcional e segura
      */
     private function generateConfirmationLink(): string
     {
-        // 1. Retorna URL personalizada se fornecida
-        if ( $this->verificationUrl ) {
-            return $this->verificationUrl;
+        // 1. Retorna URL personalizada se fornecida (prioridade máxima)
+        if ( $this->confirmationLink ) {
+            return $this->confirmationLink;
         }
 
         // 2. Buscar token personalizado válido (otimizado para evitar N+1)
@@ -181,12 +162,13 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     private function buildConfirmationUrl( string $token ): string
     {
-        // Sanitizar token para evitar problemas de segurança
-        $sanitizedToken = filter_var( $token, FILTER_SANITIZE_STRING );
-
-        if ( empty( $sanitizedToken ) || strlen( $sanitizedToken ) < 10 ) {
+        // Validar token - deve ter formato alfanumérico e comprimento adequado
+        if ( empty( $token ) || !preg_match( '/^[a-zA-Z0-9]{64}$/', $token ) ) {
             return config( 'app.url' ) . '/login';
         }
+
+        // Sanitizar token para uso seguro em URL
+        $sanitizedToken = htmlspecialchars( $token, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
         return config( 'app.url' ) . '/confirm-account?token=' . urlencode( $sanitizedToken );
     }
@@ -245,6 +227,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     private function getUserFirstName(): string
     {
+
         if ( $this->user && $this->user->provider?->commonData ) {
             return $this->user->provider->commonData->first_name;
         }

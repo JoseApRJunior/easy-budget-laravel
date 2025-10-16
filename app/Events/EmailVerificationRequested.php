@@ -23,17 +23,20 @@ class EmailVerificationRequested
 
     public User    $user;
     public ?Tenant $tenant;
+    public string  $verificationToken;
 
     /**
      * Cria uma nova instância do evento.
      *
      * @param User $user Usuário que se registrou
      * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param string $verificationToken Token de verificação criado
      */
-    public function __construct( User $user, ?Tenant $tenant = null )
+    public function __construct( User $user, ?Tenant $tenant = null, string $verificationToken )
     {
-        $this->user   = $user;
-        $this->tenant = $tenant;
+        $this->user              = $user;
+        $this->tenant            = $tenant;
+        $this->verificationToken = $verificationToken;
     }
 
 }

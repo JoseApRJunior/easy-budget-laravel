@@ -543,16 +543,16 @@ class MailerService
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $verificationUrl URL de verificação (opcional)
+     * @param string|null $confirmationLink URL de verificação (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendWelcomeEmail(
         User $user,
         ?Tenant $tenant = null,
-        ?string $verificationUrl = null,
+        ?string $confirmationLink = null,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $verificationUrl );
+            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
@@ -778,7 +778,7 @@ class MailerService
             $tenant            = $emailData[ 'tenant' ] ?? null;
 
             // Criar URL de verificação
-            $verificationUrl = $emailData[ 'verificationUrl' ] ?? route( 'verification.verify', [
+            $confirmationLink = $emailData[ 'confirmationLink' ] ?? route( 'verification.verify', [
                 'id'   => $user->id,
                 'hash' => sha1( $verificationToken )
             ] );
@@ -787,7 +787,7 @@ class MailerService
             $templateData = [
                 'user'              => $user,
                 'verificationToken' => $verificationToken,
-                'verificationUrl'   => $verificationUrl,
+                'confirmationLink'  => $confirmationLink,
                 'expiresAt'         => $emailData[ 'expiresAt' ] ?? now()->addMinutes( 30 ),
                 'tenant'            => $tenant,
                 'app_name'          => config( 'app.name', 'Easy Budget' ),
@@ -1077,7 +1077,7 @@ class MailerService
         $baseDelay = $delays[ $attempt - 1 ] ?? 480; // Máximo 8 minutos
 
         // Adicionar jitter (±10%) para evitar thundering herd
-        $jitter      = $baseDelay * 0.1;
+        $jitter      = (int) ( $baseDelay * 0.1 );
         $actualDelay = $baseDelay + rand( -$jitter, $jitter );
 
         Log::info( 'Calculando delay para retry de e-mail', [
@@ -1407,27 +1407,27 @@ class MailerService
     }
 
     /**
-     * Envia e-mail de boas-vindas usando a Mailable Class WelcomeUser.
+     * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $verificationUrl URL de verificação (opcional)
+     * @param string|null $confirmationLink URL de verificação (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendEmailVerificationMail(
         User $user,
         ?Tenant $tenant = null,
-        ?string $verificationUrl = null,
+        ?string $confirmationLink = null,
     ): ServiceResult {
         try {
             $mailable = new EmailVerificationMail(
-                $user, $tenant, $verificationUrl,
+                $user, $tenant, $confirmationLink,
             );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
 
-            Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
+            Log::info( 'E-mail de verificação enfileirado com sucesso', [
                 'user_id'   => $user->id,
                 'email'     => $user->email,
                 'tenant_id' => $tenant?->id,
@@ -1439,10 +1439,10 @@ class MailerService
                 'email'     => $user->email,
                 'queued_at' => now()->toDateTimeString(),
                 'queue'     => 'emails'
-            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.' );
+            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
 
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail de boas-vindas', [
+            Log::error( 'Erro ao enfileirar e-mail de verificação', [
                 'user_id' => $user->id,
                 'email'   => $user->email,
                 'error'   => $e->getMessage()
@@ -1450,7 +1450,7 @@ class MailerService
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de boas-vindas: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
             );
         }
     }
@@ -1491,7 +1491,7 @@ class MailerService
             );
 
             // Usa queue para processamento assíncrono
-            Mail::to( $customer->commonData?->email ?? $customer->contact?->email ?? 'cliente@exemplo.com' )->queue( $mailable );
+            Mail::to( $customer->contact?->email ?? $customer->contact?->email_business )->queue( $mailable );
 
             Log::info( 'Notificação de orçamento enfileirada com sucesso', [
                 'budget_id'         => $budget->id,

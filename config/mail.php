@@ -104,7 +104,7 @@ return [
                 'postmark',
             ],
             'retry_after' => 60,
-        ],
+        ]
 
     ],
 

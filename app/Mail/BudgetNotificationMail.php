@@ -125,7 +125,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.budget-notification',
+            view: 'emails.budget-notification',
             with: [
                 'budget'           => $this->budget,
                 'customer'         => $this->customer,

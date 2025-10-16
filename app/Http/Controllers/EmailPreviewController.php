@@ -314,8 +314,8 @@ class EmailPreviewController extends Controller
     private function getEmailSubject( string $emailType, array $data ): string
     {
         return match ( $emailType ) {
-            'welcome'              => __( 'emails.welcome.subject', [ 'app_name'              => config( 'app.name' ) ], $data[ 'locale' ] ),
-            'verification'         => __( 'emails.verification.subject', [ 'app_name'         => config( 'app.name' ) ], $data[ 'locale' ] ),
+            'welcome'              => __( 'emails.users.welcome.subject', [ 'app_name'              => config( 'app.name' ) ], $data[ 'locale' ] ),
+            'verification'         => __( 'emails.users.verification.subject', [ 'app_name'         => config( 'app.name' ) ], $data[ 'locale' ] ),
             'password_reset'       => __( 'emails.password_reset.subject', [ 'app_name'       => config( 'app.name' ) ], $data[ 'locale' ] ),
             'budget_notification'  => __( 'emails.budget_notification.subject', $data, $data[ 'locale' ] ),
             'invoice_notification' => __( 'emails.invoice_notification.subject', $data, $data[ 'locale' ] ),
@@ -330,15 +330,16 @@ class EmailPreviewController extends Controller
      */
     private function renderEmailHtml( string $emailType, array $data ): string
     {
+
         try {
             return match ( $emailType ) {
-                'welcome'              => view( 'emails.users.welcome', $data )->render(),
-                'verification'         => view( 'emails.users.verification', $data )->render(),
-                'password_reset'       => view( 'emails.users.password-reset', $data )->render(),
-                'budget_notification'  => view( 'emails.budgets.budget-notification', $data )->render(),
-                'invoice_notification' => view( 'emails.invoides.invoice-notification', $data )->render(),
-                'status_update'        => view( 'emails.status-update', $data )->render(),
-                'support_response'     => view( 'emails.support-response', $data )->render(),
+                'welcome'              => $this->renderMailableContent( $emailType, $data ),
+                'verification'         => $this->renderMailableContent( $emailType, $data ),
+                'password_reset'       => $this->renderMailableContent( $emailType, $data ),
+                'budget_notification'  => $this->renderMailableContent( $emailType, $data ),
+                'invoice_notification' => $this->renderMailableContent( $emailType, $data ),
+                'status_update'        => $this->renderMailableContent( $emailType, $data ),
+                'support_response'     => $this->renderMailableContent( $emailType, $data ),
                 default                => '<p>Tipo de e-mail não encontrado</p>',
             };
         } catch ( Exception $e ) {
@@ -348,6 +349,206 @@ class EmailPreviewController extends Controller
             ] );
 
             return '<p>Erro ao renderizar e-mail: ' . $e->getMessage() . '</p>';
+        }
+    }
+
+    /**
+     * Renderiza conteúdo de uma mailable específica, detectando automaticamente se usa markdown ou view.
+     */
+    private function renderMailableContent( string $emailType, array $data ): string
+    {
+        try {
+            // Obter a classe mailable baseada no tipo
+            $mailableClass = $this->getMailableClass( $emailType );
+
+            if ( !$mailableClass ) {
+                return '<p>Classe mailable não encontrada</p>';
+            }
+
+            // Criar instância da mailable com dados de exemplo
+            $mailable = $this->createMailableInstance( $mailableClass, $data );
+
+            // Verificar se a mailable usa markdown ou view
+            $content = $mailable->content();
+
+            if ( isset( $content->markdown ) ) {
+
+                // Usa markdown - renderizar usando sistema de markdown
+                return $this->renderMarkdownEmail( $content->markdown, $content->with );
+            } elseif ( isset( $content->view ) ) {
+                // Usa view - renderizar usando sistema de view
+                return view( $content->view, $content->with )->render();
+            } else {
+                return '<p>Tipo de conteúdo não suportado na mailable</p>';
+            }
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao renderizar conteúdo da mailable', [
+                'email_type' => $emailType,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ] );
+
+            return '<p>Erro ao renderizar e-mail: ' . $e->getMessage() . '</p>';
+        }
+    }
+
+    /**
+     * Obtém a classe mailable baseada no tipo de e-mail.
+     */
+    private function getMailableClass( string $emailType ): ?string
+    {
+        $emailTypes = $this->getAvailableEmailTypes();
+
+        return $emailTypes[ $emailType ][ 'mailable' ] ?? null;
+    }
+
+    /**
+     * Cria instância da mailable com dados apropriados para preview.
+     */
+    private function createMailableInstance( string $mailableClass, array $data ): \Illuminate\Mail\Mailable
+    {
+        // Para WelcomeUserMail, precisamos de um usuário válido
+        if ( $mailableClass === WelcomeUserMail::class) {
+            $user             = $data[ 'user' ] ?? $this->createPreviewUser( $data[ 'tenant' ] ?? null );
+            $tenant           = $data[ 'tenant' ] ?? null;
+            $confirmationLink = $data[ 'confirmationLink' ] ?? 'https://example.com/confirm-account?token=preview_token_1234567890123456789012345678901234567890';
+
+            return new $mailableClass( $user, $tenant, $confirmationLink );
+        }
+
+        // Para EmailVerificationMail, precisamos de um usuário válido
+        if ( $mailableClass === EmailVerificationMail::class) {
+            $user             = $data[ 'user' ] ?? $this->createPreviewUser( $data[ 'tenant' ] ?? null );
+            $tenant           = $data[ 'tenant' ] ?? null;
+            $confirmationLink = $data[ 'confirmationLink' ] ?? 'https://example.com/confirm-account?token=preview_token_1234567890123456789012345678901234567890';
+
+            return new $mailableClass( $user, $tenant, $confirmationLink );
+        }
+
+        // Para PasswordResetNotification, precisamos de usuário e token
+        if ( $mailableClass === PasswordResetNotification::class) {
+            $user   = $data[ 'user' ] ?? $this->createPreviewUser( $data[ 'tenant' ] ?? null );
+            $token  = $data[ 'token' ] ?? 'preview_reset_token_1234567890123456789012345678901234567890';
+            $tenant = $data[ 'tenant' ] ?? null;
+
+            return new $mailableClass( $user, $token, $tenant );
+        }
+
+        // Para outras mailables, usar dados padrão com tratamento seguro
+        try {
+            // Tentar criar com dados fornecidos primeiro
+            if ( !empty( $data ) ) {
+                return new $mailableClass( ...array_values( $data ) );
+            }
+
+            // Fallback: criar instância vazia se possível
+            return new $mailableClass();
+        } catch ( Exception $e ) {
+            Log::warning( 'Erro ao criar instância da mailable, tentando método alternativo', [
+                'mailable_class' => $mailableClass,
+                'error'          => $e->getMessage(),
+            ] );
+
+            // Método alternativo: tentar criar com dados básicos de preview
+            return $this->createMailableInstanceWithFallback( $mailableClass, $data );
+        }
+    }
+
+    /**
+     * Método alternativo para criar instância da mailable quando o método padrão falha.
+     */
+    private function createMailableInstanceWithFallback( string $mailableClass, array $data ): \Illuminate\Mail\Mailable
+    {
+        // Para BudgetNotificationMail
+        if ( $mailableClass === BudgetNotificationMail::class) {
+            $budget = $data[ 'budget' ] ?? (object) [
+                'id'       => 1,
+                'code'     => 'ORC-2025-001',
+                'total'    => 1500.00,
+                'customer' => (object) [ 'name' => 'Cliente Exemplo' ],
+                'tenant'   => $data[ 'tenant' ] ?? null,
+            ];
+            $action = $data[ 'action' ] ?? 'created';
+
+            return new $mailableClass( $budget, $action );
+        }
+
+        // Para InvoiceNotification
+        if ( $mailableClass === InvoiceNotification::class) {
+            $invoice = $data[ 'invoice' ] ?? (object) [
+                'id'       => 1,
+                'code'     => 'FAT-2025-001',
+                'total'    => 1500.00,
+                'customer' => (object) [ 'name' => 'Cliente Exemplo' ],
+                'tenant'   => $data[ 'tenant' ] ?? null,
+            ];
+            $action  = $data[ 'action' ] ?? 'created';
+
+            return new $mailableClass( $invoice, $action );
+        }
+
+        // Para StatusUpdate
+        if ( $mailableClass === StatusUpdate::class) {
+            $entity    = $data[ 'entity' ] ?? (object) [
+                'id'   => 1,
+                'name' => 'Entidade Exemplo',
+                'type' => 'budget',
+            ];
+            $oldStatus = $data[ 'old_status' ] ?? 'pending';
+            $newStatus = $data[ 'new_status' ] ?? 'approved';
+
+            return new $mailableClass( $entity, $oldStatus, $newStatus );
+        }
+
+        // Para SupportResponse
+        if ( $mailableClass === SupportResponse::class) {
+            $ticket   = $data[ 'ticket' ] ?? (object) [
+                'id'       => 1,
+                'subject'  => 'Chamado de Exemplo',
+                'customer' => (object) [ 'name' => 'Cliente Exemplo' ],
+            ];
+            $response = $data[ 'response' ] ?? 'Esta é uma resposta de exemplo para o seu chamado.';
+
+            return new $mailableClass( $ticket, $response );
+        }
+
+        // Fallback genérico - tentar criar com dados vazios
+        try {
+            return new $mailableClass();
+        } catch ( Exception $e ) {
+            Log::error( 'Falha ao criar instância da mailable mesmo com fallback', [
+                'mailable_class' => $mailableClass,
+                'error'          => $e->getMessage(),
+            ] );
+
+            throw new Exception( "Não foi possível criar instância da mailable: {$mailableClass}" );
+        }
+    }
+
+    /**
+     * Renderiza e-mail usando sistema de markdown do Laravel.
+     */
+    private function renderMarkdownEmail( string $markdownTemplate, array $data ): string
+    {
+        try {
+            // Usar o componente markdown do Laravel para renderizar
+            $markdownRenderer = app( \Illuminate\Mail\Markdown::class);
+
+            // Renderizar o template markdown com os dados
+            $htmlString = $markdownRenderer->render( $markdownTemplate, $data );
+
+            // Converter HtmlString para string
+            return $htmlString instanceof \Illuminate\Support\HtmlString
+                ? $htmlString->toHtml()
+                : (string) $htmlString;
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao renderizar template markdown', [
+                'template' => $markdownTemplate,
+                'error'    => $e->getMessage(),
+            ] );
+
+            return '<p>Erro ao renderizar template markdown: ' . $e->getMessage() . '</p>';
         }
     }
 

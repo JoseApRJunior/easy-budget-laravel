@@ -102,10 +102,6 @@ class EmailVerificationService extends AbstractBaseService
 
             $savedToken = $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
 
-            // 3. Disparar evento para envio de e-mail de verificação
-            // Seguindo o padrão estabelecido de usar eventos ao invés de chamar MailerService diretamente
-            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant ) );
-
             Log::info( 'Token de verificação criado e evento disparado', [
                 'user_id'     => $user->id,
                 'tenant_id'   => $user->tenant_id,
@@ -113,6 +109,10 @@ class EmailVerificationService extends AbstractBaseService
                 'expires_at'  => $expiresAt,
                 'event_fired' => 'EmailVerificationRequested',
             ] );
+
+            // 3. Disparar evento para envio de e-mail de verificação
+            // Seguindo o padrão estabelecido de usar eventos ao invés de chamar MailerService diretamente
+            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant, $token ) );
 
             return ServiceResult::success( [
                 'token'      => $token,
@@ -186,8 +186,22 @@ class EmailVerificationService extends AbstractBaseService
                 'email'     => $user->email,
             ] );
 
-            // Reutilizar lógica de criação de token (já remove tokens antigos)
-            return $this->createConfirmationToken( $user );
+            // Reutilizar lógica de criação de token (já remove tokens antigos e dispara evento)
+
+            // Criar token de verificação
+            Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
+            $tokenResult = $this->createConfirmationToken( $user );
+            if ( !$tokenResult->isSuccess() ) {
+                Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
+                    'user_id' => $user->id,
+                    'error'   => $tokenResult->getMessage(),
+                ] );
+                // Não falhar o registro por causa do token, apenas logar o problema
+            } else {
+                Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+            }
+
+            return $tokenResult;
 
         } catch ( Exception $e ) {
             Log::error( 'Erro ao reenviar e-mail de verificação', [
