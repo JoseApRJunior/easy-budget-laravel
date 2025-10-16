@@ -1,31 +1,29 @@
 <x-mail::message>
-   # Bem-vindo ao Easy Budget, {{ $first_name }}!
+    # Bem-vindo ao {{ config( 'app.name', 'Easy Budget' ) }}, {{ $first_name ?? $user_name ?? 'usuário' }}!
 
-   Obrigado por se cadastrar. Para ativar sua conta, clique no botão abaixo.<br>
-   <br>
+    Obrigado por se cadastrar. Para ativar sua conta, clique no botão abaixo.
 
-   <x-mail::button :url="$confirmationLink">
-       Confirmar minha conta
-   </x-mail::button>
+    <x-mail::button :url="$verificationUrl">
+        Confirmar minha conta
+    </x-mail::button>
 
-   <br>
-   Se o botão acima não funcionar, copie e cole o seguinte link no seu navegador:<br>
-   <x-mail::subcopy>
-       {{ $confirmationLink }}
-   </x-mail::subcopy>
+    Se o botão não funcionar, copie e cole este link no seu navegador:
+    <x-mail::subcopy>
+        {{ $verificationUrl }}
+    </x-mail::subcopy>
 
-   <br>
-   Este link expirará em 30 minutos.<br>
-   <br>
+    Este link expira em 30 minutos.
 
-   Se você não se cadastrou no Easy Budget, por favor ignore este e‑mail.<br>
-   <br>
+    Se você não se cadastrou no {{ config( 'app.name', 'Easy Budget' ) }}, ignore este e‑mail.
 
-   <x-mail::panel>
-       Este é um e‑mail automático, por favor não responda.
-   </x-mail::panel>
+    <x-mail::panel>
+        Este é um e‑mail automático, por favor não responda.
+    </x-mail::panel>
 
-   <x-slot name="footer">
-       © {{ date( 'Y' ) }} Easy Budget. Todos os direitos reservados.
-   </x-slot>
+    <x-slot name="footer">
+        © {{ date( 'Y' ) }} {{ config( 'app.name', 'Easy Budget' ) }}.
+        @if( !empty( $supportEmail ) )
+            • Suporte: {{ $supportEmail }}
+        @endif
+    </x-slot>
 </x-mail::message>
