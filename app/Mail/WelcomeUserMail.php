@@ -33,24 +33,19 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     /**
-     * Tamanho esperado do token de confirmação (64 caracteres).
-     */
-    private const EXPECTED_TOKEN_LENGTH = 64;
-
-    /**
      * Usuário que receberá o e-mail de boas-vindas.
      */
     public User $user;
 
     /**
+     * URL de verificação personalizada.
+     */
+    public string $confirmationLink;
+
+    /**
      * Tenant do usuário (opcional, para contexto multi-tenant).
      */
     public ?Tenant $tenant;
-
-    /**
-     * Token de verificação de e-mail (opcional).
-     */
-    public ?string $verificationToken;
 
     /**
      * Serviço para construção segura de links de confirmação.
@@ -62,18 +57,18 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $verificationToken Token de verificação de e-mail (opcional)
+     * @param string $confirmationLink URL de verificação de e-mail
      * @param ConfirmationLinkService $confirmationLinkService Serviço de construção de links
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
-        ?string $verificationToken = null,
+        string $confirmationLink,
         ConfirmationLinkService $confirmationLinkService,
     ) {
         $this->user                    = $user;
         $this->tenant                  = $tenant;
-        $this->verificationToken       = $verificationToken;
+        $this->confirmationLink        = $confirmationLink;
         $this->confirmationLinkService = $confirmationLinkService;
     }
 
@@ -92,24 +87,15 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        // Construir link de confirmação usando o token fornecido
-        $confirmationLink = $this->generateConfirmationLink();
-
-        Log::info( 'Preparando conteúdo do e-mail de boas-vindas', [
-            'user_id'           => $this->user->id,
-            'email'             => $this->user->email,
-            'has_token'         => !empty( $this->verificationToken ),
-            'confirmation_link' => substr( $confirmationLink, 0, 50 ) . '...',
-        ] );
-
         return new Content(
             view: 'emails.users.welcome',
             with: [
                 'first_name'       => $this->getUserFirstName(),
-                'confirmationLink' => $confirmationLink,
+                'confirmationLink' => $this->confirmationLink ?? $this->generateConfirmationLink(),
                 'tenant_name'      => $this->tenant?->name ?? 'Easy Budget',
                 'user'             => $this->user,
                 'tenant'           => $this->tenant,
+                'supportEmail'     => $this->getSupportEmail()
             ],
         );
     }
@@ -171,31 +157,48 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     {
         // 1. Usar token fornecido diretamente (prioridade máxima)
         if ( !empty( $this->verificationToken ) ) {
-            $confirmationLink = $this->confirmationLinkService->buildWelcomeConfirmationLink( $this->verificationToken );
+            try {
+                $confirmationLink = $this->confirmationLinkService->buildConfirmationLink( $this->verificationToken, '/confirm-account', '/email/verify' );
 
-            Log::info( 'URL de confirmação gerada usando token fornecido', [
-                'user_id'          => $this->user->id,
-                'token_length'     => strlen( $this->verificationToken ),
-                'confirmationLink' => $confirmationLink
-            ] );
+                Log::info( 'URL de confirmação gerada usando token fornecido', [
+                    'user_id'          => $this->user->id,
+                    'token_length'     => strlen( $this->verificationToken ),
+                    'confirmationLink' => $confirmationLink
+                ] );
 
-            return $confirmationLink;
+                return $confirmationLink;
+            } catch ( \Throwable $e ) {
+                Log::warning( 'Erro ao gerar link de confirmação com token fornecido', [
+                    'user_id' => $this->user->id,
+                    'error'   => $e->getMessage(),
+                    'action'  => 'fallback_to_token_search'
+                ] );
+            }
         }
 
         // 2. Buscar token personalizado válido usando sistema do projeto (fallback)
         $token = $this->findValidConfirmationToken();
 
         if ( $token ) {
-            $confirmationLink = $this->confirmationLinkService->buildWelcomeConfirmationLink( $token->token );
+            try {
+                $confirmationLink = $this->confirmationLinkService->buildConfirmationLink( $token->token, '/confirm-account', '/email/verify' );
 
-            Log::info( 'Token de confirmação encontrado no banco e URL gerada', [
-                'user_id'          => $this->user->id,
-                'token_id'         => $token->id,
-                'expires_at'       => $token->expires_at,
-                'confirmationLink' => $confirmationLink
-            ] );
+                Log::info( 'Token de confirmação encontrado no banco e URL gerada', [
+                    'user_id'          => $this->user->id,
+                    'token_id'         => $token->id,
+                    'expires_at'       => $token->expires_at,
+                    'confirmationLink' => $confirmationLink
+                ] );
 
-            return $confirmationLink;
+                return $confirmationLink;
+            } catch ( \Throwable $e ) {
+                Log::warning( 'Erro ao gerar link de confirmação com token do banco', [
+                    'user_id'  => $this->user->id,
+                    'token_id' => $token->id,
+                    'error'    => $e->getMessage(),
+                    'action'   => 'fallback_to_verification_page'
+                ] );
+            }
         }
 
         // 3. Cenário sem token disponível - redirecionar para página de verificação
@@ -227,6 +230,73 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
             ->where( 'tenant_id', $this->user->tenant_id )
             ->latest( 'created_at' )
             ->first();
+    }
+
+    /**
+     * Obtém o e-mail de suporte.
+     *
+     * @return string E-mail de suporte
+     */
+    private function getSupportEmail(): string
+    {
+        // Tentar obter e-mail de suporte do tenant
+        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) && !empty( $this->tenant->settings[ 'support_email' ] ) ) {
+            return $this->tenant->settings[ 'support_email' ];
+        }
+
+        // Tentar obter e-mail de contato do tenant
+        if ( $this->tenant && isset( $this->tenant->settings[ 'contact_email' ] ) && !empty( $this->tenant->settings[ 'contact_email' ] ) ) {
+            return $this->tenant->settings[ 'contact_email' ];
+        }
+
+        // E-mail padrão de suporte
+        return config( 'mail.support_email', 'suporte@easybudget.com.br' );
+    }
+
+    /**
+     * Obtém dados da empresa para o template.
+     *
+     * @return array Dados da empresa
+     */
+    private function getCompanyData(): array
+    {
+        if ( $this->tenant ) {
+            return [
+                'company_name'   => $this->tenant->name,
+                'email'          => null,
+                'email_business' => null,
+                'phone'          => null,
+                'phone_business' => null,
+            ];
+        }
+
+        return [
+            'company_name'   => config( 'app.name', 'Easy Budget' ),
+            'email'          => null,
+            'email_business' => null,
+            'phone'          => null,
+            'phone_business' => null,
+        ];
+    }
+
+    /**
+     * Obtém o e-mail do usuário.
+     *
+     * @return string E-mail do usuário
+     */
+    private function getUserEmail(): string
+    {
+        return $this->user?->email ?? 'usuario@exemplo.com';
+    }
+
+    /**
+     * Obtém o nome do usuário para personalização.
+     *
+     * @return string Nome do usuário
+     */
+    private function getUserName(): string
+    {
+        return $this->getUserFirstName();
     }
 
 }

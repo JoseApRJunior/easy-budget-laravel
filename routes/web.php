@@ -193,6 +193,8 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
         Route::get( '/config/data', [ EmailPreviewController::class, 'config' ] )->name( 'config' );
     } );
 
+    // Alert preview routes (disponível para providers e admin)
+
     // Mailtrap routes (disponível para providers e admin)
     Route::prefix( 'mailtrap' )->name( 'mailtrap.' )->group( function () {
         Route::get( '/', [ MailtrapController::class, 'index' ] )->name( 'index' );

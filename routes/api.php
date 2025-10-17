@@ -1,12 +1,14 @@
 <?php
 
-use App\Http\Controllers\Api\BudgetController as ApiBudgetController;
-use App\Http\Controllers\Api\CustomerApiController;
-use App\Http\Controllers\Api\MetricsController;
+use App\Http\Controllers\Api\BudgetApiController;
 use App\Http\Controllers\Api\ChartDataController;
+use App\Http\Controllers\Api\CustomerApiController;
+use App\Http\Controllers\Api\EmailTemplateApiController;
+use App\Http\Controllers\Api\MetricsController;
 use App\Http\Controllers\Api\SettingsApiController;
 use App\Http\Controllers\BudgetController;
-use Illuminate\Http\Request;
+use App\Services\Application\EmailTemplateService;
+use App\Services\Infrastructure\VariableProcessor;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -115,82 +117,82 @@ Route::middleware( 'auth' )->group( function () {
     // Budget Module - APIs RESTful
     Route::prefix( 'budgets' )->name( 'api.budgets.' )->group( function () {
         // CRUD básico
-        Route::get( '/', [ App\Http\Controllers\Api\BudgetApiController::class, 'index' ] )->name( 'index' );
-        Route::post( '/', [ App\Http\Controllers\Api\BudgetApiController::class, 'store' ] )->name( 'store' );
-        Route::get( '/{budget}', [ App\Http\Controllers\Api\BudgetApiController::class, 'show' ] )->name( 'show' );
-        Route::put( '/{budget}', [ App\Http\Controllers\Api\BudgetApiController::class, 'update' ] )->name( 'update' );
-        Route::delete( '/{budget}', [ App\Http\Controllers\Api\BudgetApiController::class, 'destroy' ] )->name( 'destroy' );
+        Route::get( '/', [ BudgetApiController::class, 'index' ] )->name( 'index' );
+        Route::post( '/', [ BudgetApiController::class, 'store' ] )->name( 'store' );
+        Route::get( '/{budget}', [ BudgetApiController::class, 'show' ] )->name( 'show' );
+        Route::put( '/{budget}', [ BudgetApiController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{budget}', [ BudgetApiController::class, 'destroy' ] )->name( 'destroy' );
 
         // Itens do orçamento
-        Route::post( '/{budget}/items', [ App\Http\Controllers\Api\BudgetApiController::class, 'addItem' ] )->name( 'add-item' );
-        Route::put( '/{budget}/items/{item}', [ App\Http\Controllers\Api\BudgetApiController::class, 'updateItem' ] )->name( 'update-item' );
-        Route::delete( '/{budget}/items/{item}', [ App\Http\Controllers\Api\BudgetApiController::class, 'removeItem' ] )->name( 'remove-item' );
+        Route::post( '/{budget}/items', [ BudgetApiController::class, 'addItem' ] )->name( 'add-item' );
+        Route::put( '/{budget}/items/{item}', [ BudgetApiController::class, 'updateItem' ] )->name( 'update-item' );
+        Route::delete( '/{budget}/items/{item}', [ BudgetApiController::class, 'removeItem' ] )->name( 'remove-item' );
 
         // Workflow de aprovação
-        Route::post( '/{budget}/send', [ App\Http\Controllers\Api\BudgetApiController::class, 'sendToCustomer' ] )->name( 'send' );
-        Route::post( '/{budget}/approve', [ App\Http\Controllers\Api\BudgetApiController::class, 'approve' ] )->name( 'approve' );
-        Route::post( '/{budget}/reject', [ App\Http\Controllers\Api\BudgetApiController::class, 'reject' ] )->name( 'reject' );
+        Route::post( '/{budget}/send', [ BudgetApiController::class, 'sendToCustomer' ] )->name( 'send' );
+        Route::post( '/{budget}/approve', [ BudgetApiController::class, 'approve' ] )->name( 'approve' );
+        Route::post( '/{budget}/reject', [ BudgetApiController::class, 'reject' ] )->name( 'reject' );
 
         // Versionamento
-        Route::get( '/{budget}/versions', [ App\Http\Controllers\Api\BudgetApiController::class, 'getVersions' ] )->name( 'versions' );
-        Route::post( '/{budget}/create-version', [ App\Http\Controllers\Api\BudgetApiController::class, 'createVersion' ] )->name( 'create-version' );
-        Route::post( '/{budget}/restore-version/{version}', [ App\Http\Controllers\Api\BudgetApiController::class, 'restoreVersion' ] )->name( 'restore-version' );
+        Route::get( '/{budget}/versions', [ BudgetApiController::class, 'getVersions' ] )->name( 'versions' );
+        Route::post( '/{budget}/create-version', [ BudgetApiController::class, 'createVersion' ] )->name( 'create-version' );
+        Route::post( '/{budget}/restore-version/{version}', [ BudgetApiController::class, 'restoreVersion' ] )->name( 'restore-version' );
 
         // PDF e documentos
-        Route::get( '/{budget}/pdf', [ App\Http\Controllers\Api\BudgetApiController::class, 'generatePdf' ] )->name( 'generate-pdf' );
-        Route::post( '/{budget}/email', [ App\Http\Controllers\Api\BudgetApiController::class, 'emailBudget' ] )->name( 'email' );
+        Route::get( '/{budget}/pdf', [ BudgetApiController::class, 'generatePdf' ] )->name( 'generate-pdf' );
+        Route::post( '/{budget}/email', [ BudgetApiController::class, 'emailBudget' ] )->name( 'email' );
 
         // Templates
-        Route::get( '/templates', [ App\Http\Controllers\Api\BudgetApiController::class, 'getTemplates' ] )->name( 'templates' );
-        Route::post( '/templates', [ App\Http\Controllers\Api\BudgetApiController::class, 'createTemplate' ] )->name( 'create-template' );
-        Route::put( '/templates/{template}', [ App\Http\Controllers\Api\BudgetApiController::class, 'updateTemplate' ] )->name( 'update-template' );
+        Route::get( '/templates', [ BudgetApiController::class, 'getTemplates' ] )->name( 'templates' );
+        Route::post( '/templates', [ BudgetApiController::class, 'createTemplate' ] )->name( 'create-template' );
+        Route::put( '/templates/{template}', [ BudgetApiController::class, 'updateTemplate' ] )->name( 'update-template' );
 
         // Cálculos
-        Route::post( '/calculate', [ App\Http\Controllers\Api\BudgetApiController::class, 'calculateTotals' ] )->name( 'calculate' );
+        Route::post( '/calculate', [ BudgetApiController::class, 'calculateTotals' ] )->name( 'calculate' );
     } );
 
     // Email Templates Module - APIs RESTful
     Route::prefix( 'email-templates' )->name( 'api.email-templates.' )->group( function () {
         // CRUD básico
-        Route::get( '/', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'index' ] )->name( 'index' );
-        Route::post( '/', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'store' ] )->name( 'store' );
-        Route::get( '/{template}', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'show' ] )->name( 'show' );
-        Route::put( '/{template}', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'update' ] )->name( 'update' );
-        Route::delete( '/{template}', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'destroy' ] )->name( 'destroy' );
+        Route::get( '/', [ EmailTemplateApiController::class, 'index' ] )->name( 'index' );
+        Route::post( '/', [ EmailTemplateApiController::class, 'store' ] )->name( 'store' );
+        Route::get( '/{template}', [ EmailTemplateApiController::class, 'show' ] )->name( 'show' );
+        Route::put( '/{template}', [ EmailTemplateApiController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{template}', [ EmailTemplateApiController::class, 'destroy' ] )->name( 'destroy' );
 
         // Funcionalidades específicas
-        Route::get( '/{template}/preview', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'preview' ] )->name( 'preview' );
-        Route::post( '/{template}/test', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'sendTest' ] )->name( 'send-test' );
-        Route::post( '/{template}/duplicate', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'duplicate' ] )->name( 'duplicate' );
-        Route::get( '/{template}/stats', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'getStats' ] )->name( 'stats' );
+        Route::get( '/{template}/preview', [ EmailTemplateApiController::class, 'preview' ] )->name( 'preview' );
+        Route::post( '/{template}/test', [ EmailTemplateApiController::class, 'sendTest' ] )->name( 'send-test' );
+        Route::post( '/{template}/duplicate', [ EmailTemplateApiController::class, 'duplicate' ] )->name( 'duplicate' );
+        Route::get( '/{template}/stats', [ EmailTemplateApiController::class, 'getStats' ] )->name( 'stats' );
 
         // Variáveis disponíveis
-        Route::get( '/variables/available', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'getVariables' ] )->name( 'variables' );
+        Route::get( '/variables/available', [ EmailTemplateApiController::class, 'getVariables' ] )->name( 'variables' );
 
         // Estatísticas gerais
-        Route::get( '/analytics', [ App\Http\Controllers\Api\EmailTemplateApiController::class, 'getAnalytics' ] )->name( 'analytics' );
+        Route::get( '/analytics', [ EmailTemplateApiController::class, 'getAnalytics' ] )->name( 'analytics' );
 
         // Templates predefinidos
         Route::get( '/presets/transactional', function () {
-            $controller = new App\Http\Controllers\Api\EmailTemplateApiController(
-                app( App\Services\EmailTemplateService::class),
-                app( App\Services\VariableProcessor::class),
+            $controller = new EmailTemplateApiController(
+                app( EmailTemplateService::class),
+                app( VariableProcessor::class),
             );
             return $controller->getPresets( request() );
         } )->name( 'presets.transactional' );
 
         Route::get( '/presets/promotional', function () {
-            $controller = new App\Http\Controllers\Api\EmailTemplateApiController(
-                app( App\Services\EmailTemplateService::class),
-                app( App\Services\VariableProcessor::class),
+            $controller = new EmailTemplateApiController(
+                app( EmailTemplateService::class),
+                app( VariableProcessor::class),
             );
             return $controller->getPresets( request() );
         } )->name( 'presets.promotional' );
 
         Route::get( '/presets/notifications', function () {
-            $controller = new App\Http\Controllers\Api\EmailTemplateApiController(
-                app( App\Services\EmailTemplateService::class),
-                app( App\Services\VariableProcessor::class),
+            $controller = new EmailTemplateApiController(
+                app( EmailTemplateService::class),
+                app( VariableProcessor::class),
             );
             return $controller->getPresets( request() );
         } )->name( 'presets.notifications' );

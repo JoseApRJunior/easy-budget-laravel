@@ -6,6 +6,7 @@ namespace App\Services\Application;
 
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
+use App\Services\Infrastructure\VariableProcessor;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Log;

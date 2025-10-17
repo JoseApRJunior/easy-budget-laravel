@@ -150,7 +150,7 @@ class SendWelcomeEmail implements ShouldQueue
             }
 
             // Gera URL de confirmação segura usando serviço centralizado
-            $confirmationLink = $this->buildWelcomeConfirmationLink( $event->verificationToken );
+            $confirmationLink = $this->confirmationLinkService->buildConfirmationLinkByContext( $event->verificationToken, 'welcome' );
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendWelcomeEmail(
@@ -401,12 +401,13 @@ class SendWelcomeEmail implements ShouldQueue
     /**
      * Constrói URL de confirmação para e-mails de boas-vindas.
      *
+     * @deprecated Use buildConfirmationLinkByContext() com contexto 'welcome'
      * @param string|null $token Token de confirmação
      * @return string URL de confirmação
      */
     protected function buildWelcomeConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildWelcomeConfirmationLink( $token );
+        return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'welcome' );
     }
 
     /**

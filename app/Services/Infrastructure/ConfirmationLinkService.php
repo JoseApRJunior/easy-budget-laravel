@@ -148,29 +148,55 @@ class ConfirmationLinkService
     }
 
     /**
+     * Constrói URL de confirmação unificada para diferentes contextos de e-mail.
+     *
+     * Método unificado que elimina duplicação entre métodos específicos,
+     * permitindo configuração flexível do contexto de confirmação.
+     *
+     * @param string|null $token Token de confirmação
+     * @param string $context Contexto do e-mail ('welcome' ou 'verification')
+     * @return string URL de confirmação
+     */
+    public function buildConfirmationLinkByContext( ?string $token, string $context = 'welcome' ): string
+    {
+        $fallbackRoutes = [
+            'welcome'      => '/login',
+            'verification' => '/email/verify',
+        ];
+
+        $fallbackRoute = $fallbackRoutes[ $context ] ?? '/login';
+
+        Log::info( 'Construindo URL de confirmação por contexto', [
+            'context'        => $context,
+            'fallback_route' => $fallbackRoute,
+            'token_length'   => strlen( $token ?? '' ),
+        ] );
+
+        return $this->buildConfirmationLink( $token, '/confirm-account', $fallbackRoute );
+    }
+
+    /**
      * Constrói URL de confirmação para e-mails de boas-vindas.
      *
-     * Método específico para o contexto de boas-vindas com logging adicional.
-     *
+     * @deprecated Use buildConfirmationLinkByContext() com contexto 'welcome'
      * @param string|null $token Token de confirmação
      * @return string URL de confirmação
      */
     public function buildWelcomeConfirmationLink( ?string $token ): string
     {
-        return $this->buildConfirmationLink( $token, '/confirm-account', '/login' );
+        return $this->buildConfirmationLinkByContext( $token, 'welcome' );
     }
 
     /**
      * Constrói URL de confirmação para e-mails de verificação.
      *
-     * Método específico para o contexto de verificação de e-mail.
-     *
+     * @deprecated Use buildConfirmationLinkByContext() com contexto 'verification'
      * @param string|null $token Token de confirmação
      * @return string URL de confirmação
      */
     public function buildVerificationConfirmationLink( ?string $token ): string
     {
-        return $this->buildConfirmationLink( $token, '/confirm-account', '/email/verify' );
+        return $this->buildConfirmationLinkByContext( $token, 'verification' );
     }
 
     /**

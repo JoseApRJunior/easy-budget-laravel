@@ -161,7 +161,7 @@ class SendEmailVerification implements ShouldQueue
             }
 
             // Gera URL de verificação segura usando serviço centralizado
-            $confirmationLink = $this->buildVerificationConfirmationLink( $event->verificationToken );
+            $confirmationLink = $this->confirmationLinkService->buildConfirmationLinkByContext( $event->verificationToken, 'verification' );
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendEmailVerificationMail(
@@ -431,12 +431,13 @@ class SendEmailVerification implements ShouldQueue
     /**
      * Constrói URL de confirmação para e-mails de verificação.
      *
+     * @deprecated Use buildConfirmationLinkByContext() com contexto 'verification'
      * @param string|null $token Token de confirmação
      * @return string URL de confirmação
      */
     protected function buildVerificationConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildVerificationConfirmationLink( $token );
+        return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'verification' );
     }
 
     /**

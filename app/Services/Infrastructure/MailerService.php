@@ -543,16 +543,16 @@ class MailerService
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $verificationToken Token de verificação (opcional)
+     * @param  string $confirmationLink URL de verificação
      * @return ServiceResult Resultado da operação
      */
     public function sendWelcomeEmail(
         User $user,
         ?Tenant $tenant = null,
-        ?string $verificationToken = null,
+        string $confirmationLink,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $verificationToken, app( ConfirmationLinkService::class) );
+            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class) );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
@@ -1411,13 +1411,13 @@ class MailerService
      *
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $confirmationLink URL de verificação (opcional)
+     * @param string $confirmationLink URL de verificação
      * @return ServiceResult Resultado da operação
      */
     public function sendEmailVerificationMail(
         User $user,
         ?Tenant $tenant = null,
-        ?string $confirmationLink = null,
+        string $confirmationLink,
     ): ServiceResult {
 
         try {

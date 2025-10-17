@@ -1,6 +1,8 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
+    @include( 'partials.components.alerts' )
+
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">

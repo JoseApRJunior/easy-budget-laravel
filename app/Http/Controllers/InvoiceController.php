@@ -10,7 +10,7 @@ use App\Http\Requests\InvoiceRequest;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Tenant;
-use App\Services\Application\InvoiceService;
+use App\Services\Domain\InvoiceService;
 use App\Support\ServiceResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

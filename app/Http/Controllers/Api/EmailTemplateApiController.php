@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\EmailTemplate;
-use App\Services\EmailTemplateService;
-use App\Services\VariableProcessor;
+use App\Services\Application\EmailTemplateService;
+use App\Services\Infrastructure\VariableProcessor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Models\EmailTemplate;
+use App\Services\Infrastructure\VariableProcessor;
 use App\Support\ServiceResult;
 use App\Traits\SlugGenerator;
 use Exception;

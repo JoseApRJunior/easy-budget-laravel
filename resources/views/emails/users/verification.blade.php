@@ -79,6 +79,31 @@
             background: #ffffff;
         }
 
+        .notice {
+            background: #ecfdf5;
+            border: 1px solid #34d399;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .notice .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border-radius: 50%;
+            background: #10b981;
+            color: #fff;
+            text-align: center;
+            line-height: 20px;
+            font-size: 14px;
+        }
+
         @media (max-width:420px) {
             .content {
                 padding: 16px;
@@ -98,6 +123,18 @@
         </div>
 
         <div class="content">
+            @if( !empty( $resent ) )
+                <div class="notice" role="status">
+                    <span class="icon">✓</span>
+                    <div>
+                        E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.
+                        @if( !empty( $resentAt ) )
+                            <div style="font-weight:400; font-size:13px; margin-top:6px;">Enviado em: {{ $resentAt }}</div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <p>Olá <strong>{{ $first_name ?? 'usuário' }}</strong>,</p>
 
             <p>Obrigado por se cadastrar. Para ativar sua conta, clique no botão abaixo.</p>
@@ -122,8 +159,7 @@
 
         <div class="footer">
             © {{ date( 'Y' ) }} {{ config( 'app.name', 'Easy Budget' ) }}. Todos os direitos reservados.
-            @if( !empty( $supportEmail ) )<br>Suporte: <a
-            href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
+            @if( !empty( $supportEmail ) )<br>Suporte: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
         </div>
     </div>
 </body>

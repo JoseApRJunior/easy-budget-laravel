@@ -33,29 +33,14 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
     public User $user;
 
     /**
-     * Token de verificação de e-mail.
-     */
-    public string $verificationToken;
-
-    /**
      * URL de verificação personalizada.
      */
-    public ?string $confirmationLink;
+    public string $confirmationLink;
 
     /**
      * Tenant do usuário (opcional, para contexto multi-tenant).
      */
     public ?Tenant $tenant;
-
-    /**
-     * Dados adicionais da empresa para o template.
-     */
-    public array $company;
-
-    /**
-     * Locale para internacionalização (pt-BR, en, etc).
-     */
-    private string $emailLocale;
 
     /**
      * Serviço para construção segura de links de confirmação.
@@ -184,11 +169,6 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     private function getCompanyData(): array
     {
-        if ( !empty( $this->company ) ) {
-            return $this->company;
-        }
-
-        // Tentar obter dados da empresa através do tenant
         if ( $this->tenant ) {
             return [
                 'company_name'   => $this->tenant->name,

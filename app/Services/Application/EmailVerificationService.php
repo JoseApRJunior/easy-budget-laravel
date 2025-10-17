@@ -197,7 +197,10 @@ class EmailVerificationService extends AbstractBaseService
                 Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
             }
 
-            Event::dispatch( new EmailVerificationRequested( $user, $user->tenant, $tokenResult->getData()[ 'token' ] ) );
+            Event::dispatch( new EmailVerificationRequested(
+                $user,
+                $user->tenant,
+                $tokenResult->getData()[ 'token' ] ) );
 
             return $tokenResult;
 

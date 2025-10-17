@@ -5,7 +5,6 @@ namespace app\controllers;
 use app\database\models\Invoice;
 use app\database\models\InvoiceStatuses;
 use app\database\services\ActivityService;
-use app\database\services\InvoiceService;
 use app\database\services\NotificationService;
 use app\database\services\PaymentMercadoPagoInvoiceService;
 use app\database\services\PdfService;
@@ -31,40 +30,40 @@ class InvoiceController extends AbstractController
         private PaymentMercadoPagoInvoiceService $paymentMercadoPagoInvoiceService,
         Request $request,
     ) {
-        parent::__construct($request);
+        parent::__construct( $request );
     }
 
     public function index(): Response
     {
         $invoice_statuses = $this->invoiceStatuses->getAllStatuses();
 
-        return new Response($this->twig->env->render('pages/invoice/index.twig', [
+        return new Response( $this->twig->env->render( 'pages/invoice/index.twig', [
             'invoice_statuses' => $invoice_statuses,
-        ]));
+        ] ) );
     }
 
-    public function create($code): Response
+    public function create( $code ): Response
     {
-        $code = $this->sanitize->sanitizeParamValue($code, 'string');
+        $code = $this->sanitize->sanitizeParamValue( $code, 'string' );
 
-        $response = $this->invoiceService->generateInvoiceDataFromService($code);
+        $response = $this->invoiceService->generateInvoiceDataFromService( $code );
 
-        if ($response[ 'status' ] === 'error') {
-            return Redirect::redirect('/provider/services')->withMessage('error', $response[ 'message' ]);
+        if ( $response[ 'status' ] === 'error' ) {
+            return Redirect::redirect( '/provider/services' )->withMessage( 'error', $response[ 'message' ] );
         }
 
-        $invoiceExists = $this->invoiceModel->findBy([
-            'tenant_id' => $this->authenticated->tenant_id,
+        $invoiceExists = $this->invoiceModel->findBy( [
+            'tenant_id'  => $this->authenticated->tenant_id,
             'service_id' => $response[ 'data' ][ 'service_id' ],
-        ]);
+        ] );
 
-        if (!$invoiceExists instanceof EntityNotFound) {
-            return Redirect::redirect('/provider/invoices')->withMessage('error', 'Já existe uma fatura para este serviço.');
+        if ( !$invoiceExists instanceof EntityNotFound ) {
+            return Redirect::redirect( '/provider/invoices' )->withMessage( 'error', 'Já existe uma fatura para este serviço.' );
         }
 
-        return new Response($this->twig->env->render('pages/invoice/create.twig', [
+        return new Response( $this->twig->env->render( 'pages/invoice/create.twig', [
             'invoice' => $response[ 'data' ],
-        ]));
+        ] ) );
     }
 
     public function store(): Response
@@ -74,15 +73,15 @@ class InvoiceController extends AbstractController
 
             // A validação do JSON agora é tratada pelo seu método get.
             $invoiceData = $data[ 'invoice_data' ] ?? null;
-            $payload = [
+            $payload     = [
                 'service_code' => $data[ 'service_code' ],
-                'invoice' => $invoiceData,
+                'invoice'      => $invoiceData,
             ];
 
-            $response = $this->invoiceService->storeInvoice($payload);
+            $response = $this->invoiceService->storeInvoice( $payload );
 
-            if ($response[ 'status' ] === 'error') {
-                return Redirect::redirect('/provider/invoices/create/' . $data[ 'service_code' ])->withMessage('error', $response[ 'message' ]);
+            if ( $response[ 'status' ] === 'error' ) {
+                return Redirect::redirect( '/provider/invoices/create/' . $data[ 'service_code' ] )->withMessage( 'error', $response[ 'message' ] );
             }
 
             $this->activityLogger(
@@ -96,55 +95,55 @@ class InvoiceController extends AbstractController
             );
 
             // Obter os dados completos da fatura recém-criada para o e-mail
-            $invoice = $this->invoice->getInvoiceFullByCode($response[ 'data' ][ 'code' ], $this->authenticated->tenant_id);
+            $invoice = $this->invoice->getInvoiceFullByCode( $response[ 'data' ][ 'code' ], $this->authenticated->tenant_id );
 
-            if ($invoice instanceof EntityNotFound) {
-                return Redirect::redirect('/provider/invoices')->withMessage('error', 'Fatura não encontrada.');
+            if ( $invoice instanceof EntityNotFound ) {
+                return Redirect::redirect( '/provider/invoices' )->withMessage( 'error', 'Fatura não encontrada.' );
             }
 
             // Enviar e-mail de notificação para o cliente
 
-            $responseEmail = $this->notificationService->sendNewInvoiceNotification($this->authenticated, $invoice, (object) $invoiceData[ 'customer_details' ]);
-            if (!$responseEmail) {
-                return Redirect::redirect('/provider/invoices/create/' . $data[ 'service_code' ])->withMessage('error', 'Ocorreu um erro ao enviar o e-mail de notificação.');
+            $responseEmail = $this->notificationService->sendNewInvoiceNotification( $this->authenticated, $invoice, (object) $invoiceData[ 'customer_details' ] );
+            if ( !$responseEmail ) {
+                return Redirect::redirect( '/provider/invoices/create/' . $data[ 'service_code' ] )->withMessage( 'error', 'Ocorreu um erro ao enviar o e-mail de notificação.' );
             }
 
-            return Redirect::redirect('/provider/invoices')->withMessage('success', $response[ 'message' ]);
-        } catch (\Throwable $e) {
-            getDetailedErrorInfo($e);
+            return Redirect::redirect( '/provider/invoices' )->withMessage( 'success', $response[ 'message' ] );
+        } catch ( \Throwable $e ) {
+            getDetailedErrorInfo( $e );
 
-            return Redirect::redirect('/provider/invoices')->withMessage('error', 'Ocorreu um erro inesperado ao gerar a fatura.');
+            return Redirect::redirect( '/provider/invoices' )->withMessage( 'error', 'Ocorreu um erro inesperado ao gerar a fatura.' );
         }
     }
 
-    public function show($code): Response
+    public function show( $code ): Response
     {
-        $code = $this->sanitize->sanitizeParamValue($code, 'string');
+        $code = $this->sanitize->sanitizeParamValue( $code, 'string' );
 
-        $invoice = $this->invoice->getInvoiceFullByCode($code, $this->authenticated->tenant_id);
+        $invoice = $this->invoice->getInvoiceFullByCode( $code, $this->authenticated->tenant_id );
 
-        if ($invoice instanceof EntityNotFound) {
-            return Redirect::redirect('/provider/invoices')->withMessage('error', 'Fatura não encontrada.');
+        if ( $invoice instanceof EntityNotFound ) {
+            return Redirect::redirect( '/provider/invoices' )->withMessage( 'error', 'Fatura não encontrada.' );
         }
 
-        return new Response($this->twig->env->render('pages/invoice/show.twig', [ 'invoice' => $invoice ]));
+        return new Response( $this->twig->env->render( 'pages/invoice/show.twig', [ 'invoice' => $invoice ] ) );
     }
 
-    public function print($code): Response
+    public function print( $code ): Response
     {
-        $code = $this->sanitize->sanitizeParamValue($code, 'string');
+        $code = $this->sanitize->sanitizeParamValue( $code, 'string' );
 
-        $invoice = $this->invoice->getInvoiceFullByCode($code, $this->authenticated->tenant_id);
+        $invoice = $this->invoice->getInvoiceFullByCode( $code, $this->authenticated->tenant_id );
 
-        if ($invoice instanceof EntityNotFound) {
-            return Redirect::redirect('/provider/invoices')->withMessage('error', 'Fatura não encontrada.');
+        if ( $invoice instanceof EntityNotFound ) {
+            return Redirect::redirect( '/provider/invoices' )->withMessage( 'error', 'Fatura não encontrada.' );
         }
 
         /**  @var \app\database\entities\InvoiceEntity $invoice */
-        $response = $this->pdfService->generateInvoicePdf($this->authenticated, $invoice, );
+        $response = $this->pdfService->generateInvoicePdf( $this->authenticated, $invoice, );
 
         // Sanitize the filename to remove potentially harmful characters and prevent header injection.
-        $safeFilename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $response[ 'fileName' ]);
+        $safeFilename = preg_replace( '/[^a-zA-Z0-9_.-]/', '_', $response[ 'fileName' ] );
 
         return new Response(
             $response[ 'content' ],
@@ -174,9 +173,9 @@ class InvoiceController extends AbstractController
     //     }
     // }
 
-    public function activityLogger(int $tenant_id, int $user_id, string $action_type, string $entity_type, int $entity_id, string $description, array $metadata = [])
+    public function activityLogger( int $tenant_id, int $user_id, string $action_type, string $entity_type, int $entity_id, string $description, array $metadata = [] )
     {
-        $this->activityService->logActivity($tenant_id, $user_id, $action_type, $entity_type, $entity_id, $description, $metadata);
+        $this->activityService->logActivity( $tenant_id, $user_id, $action_type, $entity_type, $entity_id, $description, $metadata );
     }
 
 }
