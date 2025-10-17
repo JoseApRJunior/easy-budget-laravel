@@ -123,18 +123,6 @@
         </div>
 
         <div class="content">
-            @if( !empty( $resent ) )
-                <div class="notice" role="status">
-                    <span class="icon">✓</span>
-                    <div>
-                        E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.
-                        @if( !empty( $resentAt ) )
-                            <div style="font-weight:400; font-size:13px; margin-top:6px;">Enviado em: {{ $resentAt }}</div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
             <p>Olá <strong>{{ $first_name ?? 'usuário' }}</strong>,</p>
 
             <p>Obrigado por se cadastrar. Para ativar sua conta, clique no botão abaixo.</p>
@@ -159,7 +147,8 @@
 
         <div class="footer">
             © {{ date( 'Y' ) }} {{ config( 'app.name', 'Easy Budget' ) }}. Todos os direitos reservados.
-            @if( !empty( $supportEmail ) )<br>Suporte: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
+            @if( !empty( $supportEmail ) )<br>Suporte: <a
+            href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
         </div>
     </div>
 </body>
