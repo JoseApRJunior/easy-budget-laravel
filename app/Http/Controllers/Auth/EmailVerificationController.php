@@ -63,13 +63,13 @@ class EmailVerificationController extends Controller
 
         if ( $result->isSuccess() ) {
             return $this->redirectSuccess(
-                'verification.notice',
+                'verification.prompt',
                 'E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.',
             );
         }
 
         return $this->redirectError(
-            'verification.notice',
+            'verification.prompt',
             $result->getMessage(),
         );
     }

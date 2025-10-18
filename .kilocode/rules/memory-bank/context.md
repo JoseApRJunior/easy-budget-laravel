@@ -204,7 +204,37 @@ class CategoryRepository extends AbstractGlobalRepository
 -  **BudgetRepository:** Criar usando `AbstractTenantRepository`
 -  **CategoryRepository:** Criar usando `AbstractGlobalRepository`
 
-### **3. Melhorias Contínuas**
+### **3. Evolução do Sistema de E-mails**
+
+#### **📊 Monitoramento de Métricas Avançado**
+-  **Implementar EmailMetricsService** para coleta detalhada de métricas
+-  **Criar tabelas para armazenamento** de métricas de e-mail (taxas de abertura, cliques, bounces)
+-  **Dashboard de métricas** para administradores e providers
+-  **Alertas automáticos** para métricas fora do padrão
+-  **Relatórios de performance** por período e tipo de e-mail
+
+#### **🧪 A/B Testing de Templates**
+-  **EmailABTestService** para gerenciar testes A/B
+-  **Sistema de variantes** de templates de e-mail
+-  **Rastreamento automático** de performance por variante
+-  **Otimização automática** baseada em resultados
+-  **Interface para criação** e gerenciamento de testes
+
+#### **📧 Expansão de Tipos de E-mail**
+-  **E-mails transacionais:** Confirmação de pagamento, atualização de pedidos
+-  **E-mails de marketing:** Newsletters, promoções, campanhas sazonais
+-  **E-mails de reengajamento:** Para clientes inativos
+-  **E-mails educativos:** Tutoriais, dicas de uso do sistema
+-  **E-mails de feedback:** Pesquisas de satisfação, avaliações
+
+#### **📈 Analytics Completo**
+-  **EmailAnalyticsService** para análise avançada
+-  **Rastreamento de eventos:** Aberturas, cliques, descadastros
+-  **Análise de comportamento** do usuário
+-  **Segmentação inteligente** baseada em interações
+-  **ROI de campanhas** de e-mail
+
+### **4. Melhorias Contínuas**
 
 -  **Extrair JavaScript inline** das views
 -  **Implementar componentes reutilizáveis**

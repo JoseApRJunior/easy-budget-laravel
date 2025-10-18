@@ -9,7 +9,7 @@
  * - PasswordResetNotification
  *
  * Para executar:
- * php artisan tinker --execute="include 'test_emails_tinker.php'; testEmailSystem('juniorklan.ju@gmail.com',3);"
+ * php artisan tinker --execute="include 'tests/test_emails_tinker.php'; testEmailSystem('juniorklan.ju@gmail.com',3);"
  */
 
 use App\Mail\EmailVerificationMail;
