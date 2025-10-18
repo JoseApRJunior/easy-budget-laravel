@@ -81,11 +81,14 @@
         </div>
         <div class='content'>
             <p>Olá {{ $first_name }},</p>
-            <p>Você solicitou uma nova senha para sua conta no Easy Budget. Aqui está sua nova senha:</p>
-            <div class='password-box'>{{ $message }}</div>
-            <p>Por favor, faça login com esta senha e altere-a imediatamente por motivos de segurança.</p>
-            <p>Se você não solicitou esta alteração, por favor, entre em contato conosco imediatamente.</p>
-            <a href="{{ $url }}" class="btn">Acessar Easy Budget</a>
+            <p>Você solicitou uma redefinição de senha para sua conta no Easy Budget.</p>
+            <p>Clique no botão abaixo para redefinir sua senha. Este link é válido por 1 hora:</p>
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="{{ $reset_link }}" class="btn" style="background-color: #0D6EFD;">Redefinir Senha</a>
+            </p>
+            <p><strong>Link de redefinição:</strong> <a href="{{ $reset_link }}">{{ $reset_link }}</a></p>
+            <p><strong>Válido até:</strong> {{ $expires_at }}</p>
+            <p>Se você não solicitou esta redefinição, por favor, ignore este e-mail.</p>
         </div>
         <div class='footer'>
             <p>Este é um e-mail automático, por favor não responda.</p>

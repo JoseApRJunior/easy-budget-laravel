@@ -4,63 +4,46 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Models\Tenant;
+use App\Mail\Concerns\AbstractBaseSimpleEmail;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 /**
  * Mailable class para envio de e-mail de redefinição de senha.
  *
- * Esta classe implementa o padrão ShouldQueue para processamento assíncrono,
- * garantindo melhor performance e confiabilidade no envio de e-mails.
+ * Esta classe herda de BaseSimpleEmail, aproveitando toda a lógica comum
+ * de tratamento de dados do usuário, empresa e multi-tenant.
+ * Implementa o padrão ShouldQueue para processamento assíncrono.
  */
-class PasswordResetNotification extends Mailable implements ShouldQueue
+class PasswordResetNotification extends AbstractBaseSimpleEmail
 {
-    use Queueable, SerializesModels;
-
-    /**
-     * Usuário que receberá o e-mail de redefinição de senha.
-     */
-    public User $user;
-
     /**
      * Token de redefinição de senha.
      */
-    public string $token;
-
-    /**
-     * Tenant do usuário (opcional, para contexto multi-tenant).
-     */
-    public ?Tenant $tenant;
-
-    /**
-     * Dados adicionais da empresa para o template.
-     */
-    public array $company;
+    private string $token;
 
     /**
      * Cria uma nova instância da mailable.
      *
      * @param User $user Usuário que receberá o e-mail
      * @param string $token Token de redefinição de senha
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
      */
     public function __construct(
         User $user,
         string $token,
-        ?Tenant $tenant = null,
-        ?array $company = null,
     ) {
-        $this->user    = $user;
-        $this->token   = $token;
-        $this->tenant  = $tenant;
-        $this->company = $company ?? [];
+        parent::__construct( $user, null, [
+            'token' => $token,
+        ] );
+
+        $this->token = $token;
+
+        // Log da operação de criação do e-mail
+        $this->logEmailOperation( 'password_reset_notification_created', [
+            'token_length' => strlen( $token ),
+            'user_email'   => $this->getUserEmail(),
+        ] );
     }
 
     /**
@@ -78,19 +61,48 @@ class PasswordResetNotification extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        return new Content(
-            view: 'emails.forgot-password',
-            with: [
-                'first_name' => $this->getUserFirstName(),
-                'reset_link' => $this->generateResetLink(),
-                'token'      => $this->token,
-                'expires_at' => now()->addHours( 1 )->format( 'd/m/Y H:i:s' ),
-                'app_name'   => config( 'app.name', 'Easy Budget' ),
-                'company'    => $this->getCompanyData(),
-                'tenant'     => $this->tenant,
-                'user'       => $this->user,
-            ],
-        );
+        try {
+            $templateData = $this->getTemplateData();
+
+            $resetLink = $this->generateResetLink();
+            $expiresAt = now()->addHours( 1 )->format( 'd/m/Y H:i:s' );
+            $appName   = config( 'app.name', 'Easy Budget' );
+
+            // Log dos dados do template para auditoria
+            $this->logEmailOperation( 'password_reset_content_generated', [
+                'has_reset_link' => !empty( $resetLink ),
+                'expires_at'     => $expiresAt,
+                'app_name'       => $appName,
+            ] );
+
+            return new Content(
+                view: 'emails.users.forgot-password',
+                with: array_merge( $templateData, [
+                    'reset_link' => $resetLink,
+                    'expires_at' => $expiresAt,
+                    'app_name'   => $appName,
+                ] ),
+            );
+
+        } catch ( \Throwable $e ) {
+            $this->handleEmailError( $e, 'generate_password_reset_content', [
+                'user_email' => $this->getUserEmail(),
+                'token'      => substr( $this->token, 0, 10 ) . '...', // Log parcial do token por segurança
+            ] );
+
+            // Em caso de erro, fornecer dados mínimos para o template não quebrar
+            return new Content(
+                view: 'emails.users.forgot-password',
+                with: [
+                    'first_name' => $this->getUserFirstName(),
+                    'name'       => $this->getUserName(),
+                    'email'      => $this->getUserEmail(),
+                    'reset_link' => config( 'app.url' ) . '/login',
+                    'expires_at' => now()->addHours( 1 )->format( 'd/m/Y H:i:s' ),
+                    'app_name'   => config( 'app.name', 'Easy Budget' ),
+                ],
+            );
+        }
     }
 
     /**
@@ -102,65 +114,47 @@ class PasswordResetNotification extends Mailable implements ShouldQueue
     }
 
     /**
-     * Obtém o primeiro nome do usuário.
-     *
-     * @return string Primeiro nome do usuário ou e-mail se nome não disponível
-     */
-    private function getUserFirstName(): string
-    {
-        if ( $this->user->provider?->commonData ) {
-            return $this->user->provider->commonData->first_name;
-        }
-
-        return explode( '@', $this->user->email )[ 0 ];
-    }
-
-    /**
      * Gera o link de redefinição de senha.
      *
-     * @return string URL de redefinição de senha
+     * Estratégia baseada no sistema real do projeto Easy Budget Laravel:
+     * 1. Usa configuração padrão do ambiente
+     * 2. Tratamento específico para desenvolvimento local
+     * 3. Construção segura da URL com parâmetros
+     * 4. Logging detalhado para auditoria e debugging
+     *
+     * @return string URL de redefinição de senha funcional e segura
      */
     private function generateResetLink(): string
     {
-        $baseUrl = config( 'app.url' );
+        try {
+            $baseUrl = config( 'app.url' );
 
-        // Para desenvolvimento local, usar localhost
-        if ( app()->environment( 'local' ) ) {
-            $baseUrl = 'http://localhost:8000';
+            // Para desenvolvimento local, usar localhost
+            if ( app()->environment( 'local' ) ) {
+                $baseUrl = 'https://dev.easybudget.net.br';
+            }
+
+            $resetUrl = $baseUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode( $this->getUserEmail() );
+
+            // Log da geração do link para auditoria
+            $this->logEmailOperation( 'password_reset_link_generated', [
+                'base_url'     => $baseUrl,
+                'token_length' => strlen( $this->token ),
+                'user_email'   => $this->getUserEmail(),
+                'reset_url'    => $resetUrl,
+            ] );
+
+            return $resetUrl;
+
+        } catch ( \Throwable $e ) {
+            $this->handleEmailError( $e, 'generate_password_reset_link', [
+                'user_email'   => $this->getUserEmail(),
+                'token_length' => strlen( $this->token ),
+            ] );
+
+            // Fallback para URL padrão em caso de erro
+            return config( 'app.url', 'https://dev.easybudget.net.br' ) . '/reset-password';
         }
-
-        return $baseUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode( $this->user->email );
-    }
-
-    /**
-     * Obtém dados da empresa para o template.
-     *
-     * @return array Dados da empresa
-     */
-    private function getCompanyData(): array
-    {
-        if ( !empty( $this->company ) ) {
-            return $this->company;
-        }
-
-        // Tentar obter dados da empresa através do tenant
-        if ( $this->tenant ) {
-            return [
-                'company_name'   => $this->tenant->name,
-                'email'          => null,
-                'email_business' => null,
-                'phone'          => null,
-                'phone_business' => null,
-            ];
-        }
-
-        return [
-            'company_name'   => 'Easy Budget',
-            'email'          => null,
-            'email_business' => null,
-            'phone'          => null,
-            'phone_business' => null,
-        ];
     }
 
 }

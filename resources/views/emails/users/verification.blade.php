@@ -138,6 +138,17 @@
 
             <p style="margin-top:18px;">Este link expira em 30 minutos.</p>
 
+            <div class="notice">
+                <span class="icon">ℹ</span>
+                <div>
+                    <strong>Link expirado ou não recebido?</strong><br>
+                    Caso o link tenha expirado ou você não tenha recebido o e-mail inicial,
+                    <a href="{{ route( 'verification.notice' ) }}"
+                        style="color: #065f46; text-decoration: underline; font-weight: 600;">clique aqui para solicitar
+                        um novo e-mail de verificação</a>.
+                </div>
+            </div>
+
             <p>Se você não se cadastrou no {{ config( 'app.name', 'Easy Budget' ) }}, por favor ignore este e‑mail.</p>
 
             <div class="panel">

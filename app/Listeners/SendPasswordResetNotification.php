@@ -165,6 +165,7 @@ class SendPasswordResetNotification implements ShouldQueue
                 $event->user,
                 $event->resetToken,
                 $event->tenant,
+                null, // company parameter (opcional)
             );
 
         } catch ( Throwable $e ) {

@@ -122,7 +122,7 @@ class ConfirmationLinkService
         $sanitized = htmlspecialchars( $token, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
         // Camada 2: Sanitização adicional para máxima segurança
-        $sanitized = filter_var( $sanitized, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES );
+        $sanitized = filter_var( $sanitized, FILTER_UNSAFE_RAW, FILTER_FLAG_NO_ENCODE_QUOTES );
 
         // Camada 3: Validação final após sanitização
         if ( strlen( $sanitized ) !== self::EXPECTED_TOKEN_LENGTH ) {
