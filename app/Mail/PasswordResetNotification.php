@@ -129,11 +129,6 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
         try {
             $baseUrl = config( 'app.url' );
 
-            // Para desenvolvimento local, usar localhost
-            if ( app()->environment( 'local' ) ) {
-                $baseUrl = 'https://dev.easybudget.net.br';
-            }
-
             $resetUrl = $baseUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode( $this->getUserEmail() );
 
             // Log da geração do link para auditoria
