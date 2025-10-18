@@ -212,7 +212,7 @@ class CustomVerifyEmailControllerTest extends TestCase
 
         // Assert
         $response->assertStatus( 200 );
-        $response->assertViewIs( 'auth.verify-email-error' );
+        $response->assertViewIs( 'auth.verify-email' );
         $response->assertViewHas( 'error', 'Token de verificação ausente.' );
     }
 

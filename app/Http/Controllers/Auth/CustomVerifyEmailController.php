@@ -62,7 +62,7 @@ class CustomVerifyEmailController extends Controller
         $token = $request->query( 'token' );
 
         if ( !$token ) {
-            return view( 'auth.verify-email-error', [
+            return view( 'auth.verify-email', [
                 'error' => 'Token de verificação ausente.',
                 'title' => 'Link inválido'
             ] );
@@ -85,7 +85,7 @@ class CustomVerifyEmailController extends Controller
      * 5. Dispara evento Verified do Laravel
      * 6. Remove token usado após confirmação
      * 7. Ativa usuário se necessário (is_active = true)
-     * 8. Redireciona para dashboard com mensagem de sucesso
+     * 8. Redireciona para login com mensagem de sucesso
      * 9. Tratamento completo de cenários de erro
      *
      * @param Request $request Requisição HTTP com token na query string
@@ -156,7 +156,7 @@ class CustomVerifyEmailController extends Controller
             $user->markEmailAsVerified();
 
             // 5. Disparar evento Verified do Laravel
-            Event::dispatch( new Verified( $user ) );
+            // Event::dispatch( new Verified( $user ) );
 
             // 6. Remover token usado após confirmação
             $this->userConfirmationTokenRepository->delete( $confirmationToken->id );
@@ -171,19 +171,16 @@ class CustomVerifyEmailController extends Controller
                 ] );
             }
 
-            // 8. Login automático do usuário após verificação
-            Auth::login( $user );
-
-            // 9. Logging de segurança/auditoria
+            // 8. Logging de segurança/auditoria
             $this->logSecurityEvent( 'EMAIL_VERIFICADO', $user->id, $user->tenant_id, [
                 'ip'         => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'token_id'   => $confirmationToken->id,
             ] );
 
-            // 10. Redirecionar para dashboard com mensagem de sucesso
+            // 9. Redirecionar para login com mensagem de sucesso
             return $this->redirectSuccess(
-                'dashboard',
+                'login',
                 'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
             );
 

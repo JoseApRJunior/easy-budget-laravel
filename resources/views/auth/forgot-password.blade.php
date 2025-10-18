@@ -10,17 +10,6 @@
                 </h1>
                 <p class="text-muted mb-0">Digite seu e-mail para receber o link de reset</p>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route( 'home' ) }}">Início</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route( 'login' ) }}">Login</a>
-                    </li>
-                    <li class="breadcrumb-item active">Recuperação</li>
-                </ol>
-            </nav>
         </div>
 
         <!-- Formulário -->
@@ -31,42 +20,39 @@
                         <form method="POST" action="{{ route( 'password.email' ) }}" id="forgotPasswordForm">
                             @csrf
 
-                            <!-- Seções do formulário -->
-                            @section( 'form-sections' )
-                                <!-- Dados de Recuperação -->
-                                <div class="form-section">
-                                    <h5 class="section-title">
-                                        <i class="bi bi-envelope-arrow-up me-2"></i>Recuperação de Senha
-                                    </h5>
+                            <!-- Dados de Recuperação -->
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="bi bi-envelope-arrow-up me-2"></i>Recuperação de Senha
+                                </h5>
 
-                                    <!-- Email -->
-                                    <div class="mb-4">
-                                        <label for="email" class="form-label fw-semibold">
-                                            Endereço de E-mail <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="bi bi-envelope"></i>
-                                            </span>
-                                            <input id="email" name="email" type="email" value="{{ old( 'email' ) }}" required
-                                                autofocus class="form-control @error( 'email' ) is-invalid @enderror"
-                                                placeholder="seu@email.com">
-                                            @error( 'email' )
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                <!-- Email -->
+                                <div class="mb-4">
+                                    <label for="email" class="form-label fw-semibold">
+                                        Endereço de E-mail <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-envelope"></i>
+                                        </span>
+                                        <input id="email" name="email" type="email" value="{{ old( 'email' ) }}" required
+                                            autofocus class="form-control @error( 'email' ) is-invalid @enderror"
+                                            placeholder="seu@email.com">
+                                        @error( 'email' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
 
-                                        <!-- Instruções -->
-                                        <div class="mt-2">
-                                            <small class="text-muted">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Digite o e-mail associado à sua conta. Você receberá um link para criar uma nova
-                                                senha.
-                                            </small>
-                                        </div>
+                                    <!-- Instruções -->
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Digite o e-mail associado à sua conta. Você receberá um link para criar uma nova
+                                            senha.
+                                        </small>
                                     </div>
                                 </div>
-                            @endsection
+                            </div>
 
                             <!-- Botões de ação -->
                             <div class="d-flex justify-content-between pt-4 border-top">
