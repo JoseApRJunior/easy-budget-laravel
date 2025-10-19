@@ -61,6 +61,17 @@ class NewPasswordController extends Controller
             'timestamp'  => now()->toISOString()
         ] );
 
+        // ADICIONADO: Log detalhado para diagnóstico do processo de reset
+        Log::info( 'NewPasswordController: Dados recebidos para reset de senha', [
+            'email'           => $request->email,
+            'token_present'   => !empty( $request->token ),
+            'token_length'    => strlen( $request->token ?? '' ),
+            'password_length' => strlen( $request->password ?? '' ),
+            'ip'              => $request->ip(),
+            'user_agent'      => $request->userAgent(),
+            'timestamp'       => now()->toISOString()
+        ] );
+
         try {
             $request->validate( [
                 'token'    => [ 'required' ],

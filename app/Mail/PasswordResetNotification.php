@@ -97,7 +97,7 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
                     'first_name' => $this->getUserFirstName(),
                     'name'       => $this->getUserName(),
                     'email'      => $this->getUserEmail(),
-                    'reset_link' => config( 'app.url' ) . '/login',
+                    'reset_link' => route( 'password.reset', [ 'token' => $this->token ], false ),
                     'expires_at' => now()->addHours( 1 )->format( 'd/m/Y H:i:s' ),
                     'app_name'   => config( 'app.name', 'Easy Budget' ),
                 ],
@@ -117,23 +117,24 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
      * Gera o link de redefinição de senha.
      *
      * Estratégia baseada no sistema real do projeto Easy Budget Laravel:
-     * 1. Usa configuração padrão do ambiente
-     * 2. Tratamento específico para desenvolvimento local
-     * 3. Construção segura da URL com parâmetros
-     * 4. Logging detalhado para auditoria e debugging
+     * 1. Usa route() helper para gerar URL com rota nomeada
+     * 2. Passa token como parâmetro de rota
+     * 3. Tratamento específico para desenvolvimento local
+     * 4. Construção segura da URL com parâmetros
+     * 5. Logging detalhado para auditoria e debugging
      *
      * @return string URL de redefinição de senha funcional e segura
      */
     private function generateResetLink(): string
     {
         try {
-            $baseUrl = config( 'app.url' );
-
-            $resetUrl = $baseUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode( $this->getUserEmail() );
+            // Usar route() helper para gerar URL com rota nomeada
+            // A rota 'password.reset' espera um parâmetro 'token'
+            $resetUrl = route( 'password.reset', [ 'token' => $this->token ], false );
 
             // Log da geração do link para auditoria
             $this->logEmailOperation( 'password_reset_link_generated', [
-                'base_url'     => $baseUrl,
+                'route_name'   => 'password.reset',
                 'token_length' => strlen( $this->token ),
                 'user_email'   => $this->getUserEmail(),
                 'reset_url'    => $resetUrl,
@@ -148,7 +149,7 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
             ] );
 
             // Fallback para URL padrão em caso de erro
-            return config( 'app.url', 'https://dev.easybudget.net.br' ) . '/reset-password';
+            return route( 'password.reset', [ 'token' => $this->token ], false );
         }
     }
 

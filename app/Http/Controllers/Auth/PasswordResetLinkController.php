@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\PasswordResetRequested;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
@@ -34,42 +38,162 @@ class PasswordResetLinkController extends Controller
     /**
      * Handle an incoming password reset link request.
      *
+     * Implementa fluxo completo de reset de senha com:
+     * - Validação de e-mail
+     * - Geração de token de reset via Laravel Password broker
+     * - Disparo de evento personalizado PasswordResetRequested
+     * - Integração com sistema de e-mail avançado (MailerService)
+     * - Logging detalhado para auditoria
+     * - Tratamento robusto de erros
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store( Request $request ): RedirectResponse
     {
         try {
+            // 1. Validação do e-mail
             $request->validate( [
                 'email' => [ 'required', 'email' ],
             ] );
 
-            // We will send the password reset link to this user. Once we have attempted
-            // to send the link, we will examine the response then see the message we
-            // need to show to the user. Finally, we'll send out a proper response.
-            $status = Password::sendResetLink(
-                $request->only( 'email' ),
-            );
+            Log::info( 'PasswordResetLinkController: Iniciando processo de reset de senha', [
+                'email'      => $request->email,
+                'ip'         => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp'  => now()->toISOString()
+            ] );
 
-            Log::info( 'PasswordResetLinkController: Status do envio de link de reset', [
-                'email'       => $request->email,
-                'status'      => $status,
-                'status_code' => $status === Password::RESET_LINK_SENT ? 'success' : 'error',
+            // 2. Buscar usuário pelo e-mail
+            $user = User::where( 'email', $request->email )->first();
+
+            if ( !$user ) {
+                Log::warning( 'PasswordResetLinkController: Tentativa de reset para e-mail não registrado', [
+                    'email'      => $request->email,
+                    'ip'         => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+                // Retornar mensagem genérica por segurança (não revelar se e-mail existe)
+                return back()->with( 'status', __( 'passwords.sent' ) );
+            }
+
+            // 3. Verificar se usuário está ativo
+            if ( !$user->is_active ) {
+                Log::warning( 'PasswordResetLinkController: Tentativa de reset para usuário inativo', [
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'is_active'  => $user->is_active,
+                    'ip'         => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+                // Retornar mensagem genérica por segurança
+                return back()->with( 'status', __( 'passwords.sent' ) );
+            }
+
+            // 4. Gerar token de reset usando Laravel Password broker
+            $resetToken = Password::createToken( $user );
+
+            Log::info( 'PasswordResetLinkController: Token de reset gerado com sucesso', [
+                'user_id'      => $user->id,
+                'email'        => $user->email,
+                'token_length' => strlen( $resetToken ),
+                'timestamp'    => now()->toISOString()
+            ] );
+
+            // 5. Obter tenant do usuário
+            $tenant = $user->tenant;
+
+            if ( !$tenant ) {
+                Log::error( 'PasswordResetLinkController: Tenant não encontrado para usuário', [
+                    'user_id'   => $user->id,
+                    'email'     => $user->email,
+                    'tenant_id' => $user->tenant_id,
+                    'timestamp' => now()->toISOString()
+                ] );
+
+                return back()->withInput( $request->only( 'email' ) )
+                    ->withErrors( [ 'email' => 'Erro ao processar solicitação. Tente novamente mais tarde.' ] );
+            }
+
+            // 6. Disparar evento personalizado PasswordResetRequested
+            // Este evento será capturado pelo listener SendPasswordResetNotification
+            // que utilizará o MailerService para enviar o e-mail com template personalizado
+            try {
+                PasswordResetRequested::dispatch( $user, $resetToken, $tenant );
+
+                Log::info( 'PasswordResetLinkController: Evento PasswordResetRequested disparado com sucesso', [
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'tenant_id'  => $tenant->id,
+                    'event_type' => 'password_reset_requested',
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+            } catch ( \Throwable $e ) {
+                Log::error( 'PasswordResetLinkController: Erro ao disparar evento PasswordResetRequested', [
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'tenant_id'  => $tenant->id,
+                    'error'      => $e->getMessage(),
+                    'error_type' => get_class( $e ),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+                // Mesmo com erro no evento, retornar sucesso para não revelar detalhes
+                return back()->with( 'status', __( 'passwords.sent' ) );
+            }
+
+            // 7. Log de auditoria - sucesso
+            Log::info( 'PasswordResetLinkController: Processo de reset de senha completado com sucesso', [
+                'user_id'    => $user->id,
+                'email'      => $user->email,
+                'tenant_id'  => $tenant->id,
+                'ip'         => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'event_type' => 'password_reset_link_sent',
+                'timestamp'  => now()->toISOString()
+            ] );
+
+            // 8. Log antes de definir mensagem de sessão
+            Log::info( 'PasswordResetLinkController: Definindo mensagem de sessão de sucesso', [
+                'user_id'     => $user->id,
+                'email'       => $user->email,
+                'session_key' => 'status',
+                'message'     => __( 'passwords.sent' ),
                 'timestamp'   => now()->toISOString()
             ] );
 
-            return $status == Password::RESET_LINK_SENT
-                ? back()->with( 'status', __( $status ) )
-                : back()->withInput( $request->only( 'email' ) )
-                    ->withErrors( [ 'email' => __( $status ) ] );
+            // 8. Retornar resposta de sucesso
+            $response = back()->with( 'status', __( 'passwords.sent' ) );
+
+            // 9. Log após definir mensagem de sessão
+            Log::info( 'PasswordResetLinkController: Verificando se mensagem foi definida na sessão', [
+                'user_id'      => $user->id,
+                'email'        => $user->email,
+                'session_data' => session()->all(),
+                'has_status'   => session()->has( 'status' ),
+                'status_value' => session( 'status' ),
+                'timestamp'    => now()->toISOString()
+            ] );
+
+            return $response;
+
         } catch ( \Throwable $e ) {
             Log::error( 'PasswordResetLinkController: Erro no processo de reset de senha', [
-                'email'      => $request->email,
+                'email'      => $request->email ?? null,
                 'error'      => $e->getMessage(),
+                'error_type' => get_class( $e ),
                 'file'       => $e->getFile(),
                 'line'       => $e->getLine(),
                 'trace'      => $e->getTraceAsString(),
                 'ip'         => $request->ip(),
-                'user_agent' => $request->userAgent()
+                'user_agent' => $request->userAgent(),
+                'timestamp'  => now()->toISOString()
             ] );
 
             return back()->withInput( $request->only( 'email' ) )

@@ -229,7 +229,7 @@ class MailerService
         string $resetToken,
     ): ServiceResult {
         try {
-            $resetLink = \config( 'app.url' ) . '/reset-password?token=' . $resetToken;
+            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], false );
             $subject   = 'Redefinição de senha - Easy Budget';
 
             $templateData = [
@@ -728,7 +728,7 @@ class MailerService
                 $company,
             );
 
-            Mail::send( $mailable );
+            Mail::to( $user->email )->send( $mailable );
 
             Log::info( 'E-mail de redefinição de senha enviado com sucesso', [
                 'user_id'   => $user->id,
