@@ -19,6 +19,7 @@ use App\Http\Controllers\QueueManagementController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,8 @@ use Illuminate\Support\Facades\Route;
 // Public pages
 Route::get( '/', [ HomeController::class, 'index' ] )->name( 'home' );
 Route::get( '/about', [ HomeController::class, 'about' ] )->name( 'about' );
-Route::get( '/support', [ HomeController::class, 'support' ] )->name( 'support' );
+Route::get( '/support', [ SupportController::class, 'index' ] )->name( 'support' );
+Route::post( '/support', [ SupportController::class, 'store' ] )->name( 'support.store' );
 Route::get( '/terms-of-service', [ HomeController::class, 'terms' ] )->name( 'terms' );
 Route::get( '/privacy-policy', [ HomeController::class, 'privacy' ] )->name( 'privacy' );
 
