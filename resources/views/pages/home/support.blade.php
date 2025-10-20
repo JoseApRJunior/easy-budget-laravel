@@ -305,8 +305,8 @@
                                 <div class="text-center p-3">
                                     <i class="bi bi-envelope-at text-primary" style="font-size: 2.5rem;"></i>
                                     <h5 class="mt-3">E-mail</h5>
-                                    <p class="mb-2">suporte@easybudget.com.br</p>
-                                    <a href="mailto:suporte@easybudget.com.br" class="btn btn-outline-primary btn-sm">
+                                    <p class="mb-2">suporte@easybudget.net.br</p>
+                                    <a href="mailto:suporte@easybudget.net.br" class="btn btn-outline-primary btn-sm">
                                         Enviar E-mail
                                     </a>
                                 </div>

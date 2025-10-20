@@ -8,12 +8,14 @@ use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
 use App\Events\StatusUpdated;
+use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
 use App\Events\UserRegistered;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
 use App\Listeners\SendStatusUpdateNotification;
+use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
 use App\Listeners\SendWelcomeEmail;
 use Illuminate\Auth\Events\Registered;
@@ -63,6 +65,10 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerification::class,
         ],
 
+        SupportTicketCreated::class       => [
+            SendSupportContactEmail::class,
+        ],
+
         SupportTicketResponded::class     => [
             SendSupportResponse::class,
         ],
@@ -76,10 +82,6 @@ class EventServiceProvider extends ServiceProvider
     public function register(): void
     {
         parent::register();
-
-        // CORREÇÃO: Registrar evento EmailVerificationRequested no register()
-        // Este evento não estava sendo registrado automaticamente pelo Laravel
-        $this->registerEmailVerificationEvent();
     }
 
     /**
@@ -114,37 +116,6 @@ class EventServiceProvider extends ServiceProvider
     }
 
     /**
-     * CORREÇÃO: Registra o evento EmailVerificationRequested manualmente.
-     *
-     * Este método foi adicionado como correção para um problema onde o evento
-     * não estava sendo registrado automaticamente pelo Laravel, mesmo estando
-     * presente no array $listen do EventServiceProvider.
-     *
-     * @return void
-     */
-    private function registerEmailVerificationEvent(): void
-    {
-        try {
-            // Registrar o evento manualmente para garantir que seja reconhecido
-            Event::listen( EmailVerificationRequested::class, SendEmailVerification::class);
-
-            Log::info( 'Evento EmailVerificationRequested registrado manualmente com sucesso', [
-                'event'     => EmailVerificationRequested::class,
-                'listener'  => SendEmailVerification::class,
-                'timestamp' => now()->toDateTimeString(),
-            ] );
-        } catch ( Throwable $e ) {
-            Log::error( 'Erro ao registrar evento EmailVerificationRequested manualmente', [
-                'event'    => EmailVerificationRequested::class,
-                'listener' => SendEmailVerification::class,
-                'error'    => $e->getMessage(),
-                'file'     => $e->getFile(),
-                'line'     => $e->getLine(),
-            ] );
-        }
-    }
-
-    /**
      * Registra listeners específicos para notificações por e-mail.
      *
      * @return void
@@ -158,6 +129,7 @@ class EventServiceProvider extends ServiceProvider
             StatusUpdated::class,
             PasswordResetRequested::class,
             EmailVerificationRequested::class,
+            SupportTicketCreated::class,
             SupportTicketResponded::class,
         ];
 
@@ -259,6 +231,15 @@ class EventServiceProvider extends ServiceProvider
                     'user_id'   => $event->user->id,
                     'email'     => $event->user->email,
                     'tenant_id' => $event->tenant?->id,
+                ];
+                break;
+
+            case SupportTicketCreated::class:
+                $data = [
+                    'support_id' => $event->support->id,
+                    'email'      => $event->support->email,
+                    'subject'    => $event->support->subject,
+                    'tenant_id'  => $event->tenant?->id,
                 ];
                 break;
 

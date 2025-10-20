@@ -249,7 +249,7 @@ class EmailPreviewController extends Controller
     {
         return new User( [
             'id'        => 1,
-            'email'     => 'preview@easybudget.com.br',
+            'email'     => 'preview@easybudget.net.br',
             'name'      => 'João Silva',
             'tenant_id' => $tenant?->id ?? 1,
         ] );

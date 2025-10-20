@@ -323,7 +323,7 @@ class EmailPreviewService
             'expiresAt'         => now()->addMinutes( 30 )->format( 'd/m/Y H:i:s' ),
             'company'           => [
                 'company_name' => 'Easy Budget',
-                'email'        => 'contato@easybudget.com.br',
+                'email'        => 'contato@easybudget.net.br',
                 'phone'        => '(11) 99999-9999',
             ],
         ], $customData );
@@ -404,7 +404,7 @@ class EmailPreviewService
     {
         return new User( [
             'id'         => 1,
-            'email'      => 'preview@easybudget.com.br',
+            'email'      => 'preview@easybudget.net.br',
             'name'       => 'João Silva',
             'first_name' => 'João',
             'last_name'  => 'Silva',
