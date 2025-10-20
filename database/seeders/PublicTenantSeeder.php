@@ -8,9 +8,11 @@ use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\Role;
+use App\Models\SystemSettings;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Models\UserSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,11 +32,6 @@ class PublicTenantSeeder extends Seeder
     public const PUBLIC_TENANT_ID = 1;
 
     /**
-     * ID fixo para o admin padrão (apenas para organização de dados).
-     */
-    public const DEFAULT_ADMIN_ID = 999; // ID alto para não conflitar
-
-    /**
      * Run the database seeds.
      */
     public function run(): void
@@ -45,7 +42,7 @@ class PublicTenantSeeder extends Seeder
         $tenant = Tenant::updateOrCreate(
             [ 'id' => self::PUBLIC_TENANT_ID ],
             [
-                'name'       => 'Sistema Público',
+                'name'       => 'Tenant Público',
                 'is_active'  => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -59,8 +56,8 @@ class PublicTenantSeeder extends Seeder
         $this->createPublicTenantData( $tenant, $publicUser );
 
         $this->command->info( '✅ Tenant público criado com ID: ' . self::PUBLIC_TENANT_ID );
-        $this->command->info( '📧 Nome: Sistema Público' );
-        $this->command->info( '👤 Admin técnico: admin@easybudget.com.br (ID: ' . self::DEFAULT_ADMIN_ID . ')' );
+        $this->command->info( '📧 Nome: Tenant Público' );
+        $this->command->info( '👤 Admin técnico: tenantpublic@easybudget.net.br (ID: ' . self::PUBLIC_TENANT_ID . ')' );
         $this->command->info( '🎯 Usado para: Mensagens de contato de usuários não autenticados' );
         $this->command->info( '⚠️  Este tenant é apenas para dados públicos, não para login de usuários' );
     }
@@ -71,11 +68,11 @@ class PublicTenantSeeder extends Seeder
     private function createPublicUser( Tenant $tenant ): User
     {
         return User::updateOrCreate(
-            [ 'id' => self::DEFAULT_ADMIN_ID ],
+            [ 'id' => self::PUBLIC_TENANT_ID ],
             [
-                'id'                => self::DEFAULT_ADMIN_ID,
+                'id'                => self::PUBLIC_TENANT_ID,
                 'tenant_id'         => $tenant->id,
-                'email'             => 'admin@easybudget.com.br',
+                'email'             => 'tenantpublic@easybudget.com.br',
                 'password'          => Hash::make( 'AdminPassword1@' ),
                 'is_active'         => true,
                 'email_verified_at' => now(),
@@ -195,7 +192,7 @@ class PublicTenantSeeder extends Seeder
      */
     private function createPublicSystemSettings( Tenant $tenant, CommonData $commonData, Address $address, Contact $contact ): void
     {
-        \App\Models\SystemSettings::firstOrCreate(
+        SystemSettings::firstOrCreate(
             [ 'tenant_id' => $tenant->id ],
             [
                 'tenant_id'                   => $tenant->id,
@@ -245,7 +242,7 @@ class PublicTenantSeeder extends Seeder
      */
     private function createPublicUserSettings( Tenant $tenant, User $user ): void
     {
-        \App\Models\UserSettings::firstOrCreate(
+        UserSettings::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
                 'user_id'   => $user->id,
