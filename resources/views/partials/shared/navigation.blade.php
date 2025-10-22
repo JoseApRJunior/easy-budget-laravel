@@ -36,40 +36,46 @@
                 <span>Administração</span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">
-                        <i class="bi bi-house me-2"></i>Home Admin</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.monitoring' ) }}">
-                        <i class="bi bi-speedometer2 me-2"></i>Dashboard Executivo</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.alerts.index' ) }}">
-                        <i class="bi bi-graph-up me-2"></i>Monitoramento Técnico</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.alerts.settings' ) }}">
-                        <i class="bi bi-exclamation-triangle me-2"></i>Alertas</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.plans.index' ) }}">
-                        <i class="bi bi-card-checklist me-2"></i>Assinaturas</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.backups.index' ) }}">
-                        <i class="bi bi-database me-2"></i>Backups</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.logs.index' ) }}">
-                        <i class="bi bi-terminal me-2"></i>Logs</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.activities.index' ) }}">
-                        <i class="bi bi-activity me-2"></i>Atividades</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.ai.index' ) }}">
-                        <i class="bi bi-robot me-2"></i>Inteligência Artificial</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.categories.index' ) }}">
-                        <i class="bi bi-tags me-2"></i>Categorias</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.users.index' ) }}">
-                        <i class="bi bi-people me-2"></i>Usuários</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.roles.index' ) }}">
-                        <i class="bi bi-shield-check me-2"></i>Perfis</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.tenants.index' ) }}">
-                        <i class="bi bi-building me-2"></i>Tenants</a></li>
-                <li><a class="dropdown-item" href="{{ route( 'admin.settings.index' ) }}">
-                        <i class="bi bi-gear me-2"></i>Configurações</a></li>
+                {{-- Rotas implementadas --}}
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                    <i class="bi bi-house me-2"></i>Home Admin</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.settings') }}">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard Executivo</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.users.index') }}">
+                    <i class="bi bi-people me-2"></i>Usuários</a></li>
+
+                {{-- Rotas futuras - comentadas por enquanto --}}
+                {{-- Sistema de Monitoramento (FUTURO) --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.monitoring.index') }}">
+                    <i class="bi bi-graph-up me-2"></i>Monitoramento Técnico</a></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.alerts.index') }}">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Alertas</a></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.alerts.settings') }}">
+                    <i class="bi bi-gear me-2"></i>Configurações de Alertas</a></li> --}}
+
+                {{-- Sistema de Backup (FUTURO) --}}
+                {{-- <li><hr class="dropdown-divider"></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.backups.index') }}">
+                    <i class="bi bi-database me-2"></i>Backups</a></li> --}}
+
+                {{-- Sistema de Logs (FUTURO) --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.logs.index') }}">
+                    <i class="bi bi-terminal me-2"></i>Logs</a></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.activities.index') }}">
+                    <i class="bi bi-activity me-2"></i>Atividades</a></li> --}}
+
+                {{-- Sistema de IA (FUTURO) --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.ai.dashboard') }}">
+                    <i class="bi bi-robot me-2"></i>Inteligência Artificial</a></li> --}}
+
+                {{-- Gestão avançada (FUTURO) --}}
+                {{-- <li><hr class="dropdown-divider"></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.categories.index') }}">
+                    <i class="bi bi-tags me-2"></i>Categorias</a></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.roles.index') }}">
+                    <i class="bi bi-shield-check me-2"></i>Perfis</a></li> --}}
+                {{-- <li><a class="dropdown-item" href="{{ route('admin.tenants.index') }}">
+                    <i class="bi bi-building me-2"></i>Tenants</a></li> --}}
             </ul>
         </li>
         @endrole
