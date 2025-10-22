@@ -1,108 +1,56 @@
 {{-- partials/shared/navigation.blade.php --}}
-<div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ms-auto">
-        {{-- Menu público - sempre visível --}}
-        <li class="nav-item">
-            <a class="nav-link d-flex align-items-center" href="/about">
-                <i class="bi bi-info-circle me-2"></i>
-                <span>Sobre</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link d-flex align-items-center" href="/support">
-                <i class="bi bi-headset me-2"></i>
-                <span>Suporte</span>
-            </a>
-        </li>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url( '/' ) }}">
+            EasyBudget
+        </a>
 
-        {{-- Menu autenticado - só se tiver sessão --}}
-        @if( session()->has( 'auth' ) )
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center" href="/provider">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
 
-            {{-- Menu administrativo - só se for admin --}}
-            @if( admin() )
+                {{-- Visitante --}}
+                @guest
+                    <li class="nav-item">
+                        <a class="btn btn-google btn-primary" href="{{ route( 'google.login' ) }}">
+                            <i class="fab fa-google"></i> Entrar com Google
+                        </a>
+                    </li>
+                @endguest
+
+                {{-- Usuário autenticado --}}
+                @auth
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="adminDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-shield-lock-fill me-2"></i>
-                        <span>Administração</span>
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ auth()->user()->avatar ?? asset( 'images/default-avatar.png' ) }}" alt="Avatar"
+                            class="rounded-circle me-2" width="32" height="32">
+                        {{ auth()->user()->name ?? auth()->user()->email }}
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                        <li><a class="dropdown-item" href="/admin"><i class="bi bi-house me-2"></i>Home Admin</a></li>
-                        <li><a class="dropdown-item" href="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard
-                                Executivo</a></li>
-                        <li><a class="dropdown-item" href="/admin/monitoring"><i class="bi bi-graph-up me-2"></i>Monitoramento
-                                Técnico</a></li>
-                        <li><a class="dropdown-item" href="/admin/alerts"><i
-                                    class="bi bi-exclamation-triangle me-2"></i>Alertas</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="{{ route( 'profile' ) }}">Meu Perfil</a></li>
+
+                        @role( 'admin' )
+                        <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">Administração</a></li>
+                        @endrole
+
+                        @anyrole( [ 'manager', 'editor' ] )
+                        <li><a class="dropdown-item" href="{{ route( 'manager.panel' ) }}">Painel de Gestão</a></li>
+                        @endanyrole
+
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="/admin/plans/subscriptions"><i
-                                    class="bi bi-card-checklist me-2"></i>Assinaturas</a></li>
-                        <li><a class="dropdown-item" href="/admin/backups"><i class="bi bi-database me-2"></i>Backups</a></li>
-                        <li><a class="dropdown-item" href="/admin/logs"><i class="bi bi-terminal me-2"></i>Logs</a></li>
-                        <li><a class="dropdown-item" href="/admin/activities"><i class="bi bi-activity me-2"></i>Atividades</a>
-                        </li>
-                        <li><a class="dropdown-item" href="/admin/ai"><i class="bi bi-robot me-2"></i>Inteligência
-                                Artificial</a></li>
                         <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="/admin/categories"><i class="bi bi-tags me-2"></i>Categorias</a></li>
-                        <li><a class="dropdown-item" href="/admin/users"><i class="bi bi-people me-2"></i>Usuários</a>
-                        </li>
-                        <li><a class="dropdown-item" href="/admin/roles"><i class="bi bi-shield-check me-2"></i>Perfis</a></li>
-                        <li><a class="dropdown-item" href="/admin/tenants"><i class="bi bi-building me-2"></i>Tenants</a></li>
-                        <li><a class="dropdown-item" href="/admin/settings"><i class="bi bi-gear me-2"></i>Configurações</a>
+                            <form action="{{ route( 'logout' ) }}" method="POST">
+                                @csrf
+                                <button class="dropdown-item" type="submit">Sair</button>
+                            </form>
                         </li>
                     </ul>
                 </li>
-            @endif
+                @endauth
 
-            {{-- Menu de gerenciamento - só se não estiver na home e estiver autenticado --}}
-            @if( request()->path() != '/' && session()->has( 'auth' ) )
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="managementDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-kanban me-2"></i>
-                        <span>Gerenciar</span>
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="managementDropdown">
-                        <li><a class="dropdown-item" href="/provider/budgets"><i
-                                    class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
-                        <li><a class="dropdown-item" href="/provider/services"><i class="bi bi-tools me-2"></i>Serviços</a></li>
-                        <li><a class="dropdown-item" href="/provider/invoices"><i class="bi bi-receipt me-2"></i>Faturas</a>
-                        </li>
-                        <li><a class="dropdown-item" href="/provider/customers"><i class="bi bi-people me-2"></i>Clientes</a>
-                        </li>
-                        <li><a class="dropdown-item" href="/provider/products"><i class="bi bi-box me-2"></i>Produtos</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center" href="/provider/reports">
-                        <i class="bi bi-graph-up me-2" aria-hidden="true"></i>
-                        <span>Relatórios</span>
-                    </a>
-                </li>
-            @endif
-
-        @endif
-        {{-- Botão de tema - sempre visível --}}
-        <li class="nav-item">
-            <button class="nav-link theme-toggle d-flex align-items-center justify-content-center"
-                onclick="toggleTheme()" title="Alternar Tema" aria-label="Alternar Tema">
-                <i class="bi bi-sun theme-light-icon" aria-hidden="true"></i>
-                <i class="bi bi-moon theme-dark-icon" aria-hidden="false"></i>
-            </button>
-        </li>
-
-        {{-- Menu do usuário - sempre incluído --}}
-        @include( 'partials.shared.user-menu' )
-    </ul>
-</div>
+            </ul>
+        </div>
+    </div>
+</nav>

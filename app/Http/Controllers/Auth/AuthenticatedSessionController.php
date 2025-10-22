@@ -28,9 +28,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Define sessão 'auth' para compatibilidade com sistema existente
-        $this->createCustomSession( $request );
-
         // Força invalidação de qualquer sessão anterior para evitar conflitos entre navegadores
         $this->ensureCleanSession( $request );
 
@@ -86,22 +83,6 @@ class AuthenticatedSessionController extends Controller
         $acceptLanguage = $request->header( 'Accept-Language', '' );
 
         return hash( 'sha256', $userAgent . $ip . $acceptLanguage );
-    }
-
-    // app/Http/Controllers/Auth/AuthenticatedSessionController.php
-    private function createCustomSession( Request $request ): void
-    {
-        $user = Auth::user();
-
-        session( [
-            'auth' => [
-                'id'       => $user->id,
-                'name'     => $user->name ?? $user->first_name . ' ' . $user->last_name,
-                'email'    => $user->email,
-                'role'     => $user->role ?? 'provider',
-                'is_admin' => $user->role === 'admin' || $user->role === 'super_admin'
-            ]
-        ] );
     }
 
 }

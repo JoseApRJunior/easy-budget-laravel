@@ -90,8 +90,12 @@
 
                             <!-- Botões de ação -->
                             <div class="d-flex justify-content-between pt-4 border-top">
-                                <a href="{{ route( 'register' ) }}" class="btn btn-outline-primary">
+                                <a href="{{ route( 'register' ) }}" class="btn btn-primary">
                                     <i class="bi bi-person-plus me-2"></i>Criar Conta
+                                </a>
+                                <a href="{{ route( 'auth.google' ) }}" class="btn btn-google btn-primary">
+                                    <i class="bi bi-google"></i>
+                                    Continuar com Google
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>Entrar

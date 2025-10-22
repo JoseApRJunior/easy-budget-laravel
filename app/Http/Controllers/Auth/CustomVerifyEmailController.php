@@ -178,9 +178,12 @@ class CustomVerifyEmailController extends Controller
                 'token_id'   => $confirmationToken->id,
             ] );
 
-            // 9. Redirecionar para login com mensagem de sucesso
+            // 9. Fazer login automático do usuário após verificação bem-sucedida
+            Auth::login( $user );
+
+            // 10. Redirecionar para dashboard com sessão completa
             return $this->redirectSuccess(
-                'login',
+                'dashboard',
                 'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
             );
 

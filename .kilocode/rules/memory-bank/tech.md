@@ -149,7 +149,7 @@ APP_NAME="Easy Budget Laravel"
 APP_ENV=local
 APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxx
 APP_DEBUG=false
-APP_URL=http://localhost:8000
+APP_URL=https://dev.easybudget.net.br
 
 # Database
 DB_CONNECTION=mysql
