@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Log;
 class SocialAuthenticationService extends AbstractBaseService implements SocialAuthenticationInterface
 {
     private OAuthClientInterface    $oauthClient;
-    private UserRepository          $userRepository;
     private UserRegistrationService $userRegistrationService;
 
     public function __construct(
@@ -119,6 +118,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             $registrationData = [
                 'first_name'     => $firstName,
                 'last_name'      => $lastName,
+                'name'           => $userData[ 'name' ], // ✅ Nome completo do Google para o campo name do usuário
                 'email'          => $userData[ 'email' ],
                 'password'       => 'TempPass123!@#', // Senha temporária (será substituída)
                 'phone'          => '+5511999999999', // Telefone padrão para login social

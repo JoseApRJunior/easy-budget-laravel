@@ -26,7 +26,6 @@ use App\Services\Application\EmailVerificationService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
@@ -598,6 +597,7 @@ class UserRegistrationService extends AbstractBaseService
             // Criar usuário usando o modelo diretamente para evitar conflitos com o global scope
             $user = User::withoutTenant()->create( [
                 'tenant_id' => $tenant->id,
+                'name'      => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ], // ✅ Nome completo do usuário
                 'email'     => $userData[ 'email' ],
                 'password'  => Hash::make( $userData[ 'password' ] ),
                 'is_active' => false,
