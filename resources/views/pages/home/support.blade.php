@@ -194,22 +194,6 @@
                         </h2>
                     </div>
                     <div class="card-body p-4">
-                        {{-- Mensagens de feedback --}}
-                        @if ( session( 'success' ) )
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ session( 'success' ) }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        @if ( session( 'error' ) )
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                {{ session( 'error' ) }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
 
                         <div class="text-center mb-4">
                             <p class="text-muted">Preencha o formulário abaixo e nossa equipe entrará em contato em breve.
@@ -321,8 +305,8 @@
                                 <div class="text-center p-3">
                                     <i class="bi bi-envelope-at text-primary" style="font-size: 2.5rem;"></i>
                                     <h5 class="mt-3">E-mail</h5>
-                                    <p class="mb-2">suporte@easybudget.com.br</p>
-                                    <a href="mailto:suporte@easybudget.com.br" class="btn btn-outline-primary btn-sm">
+                                    <p class="mb-2">suporte@easybudget.net.br</p>
+                                    <a href="mailto:suporte@easybudget.net.br" class="btn btn-outline-primary btn-sm">
                                         Enviar E-mail
                                     </a>
                                 </div>

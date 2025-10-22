@@ -50,6 +50,16 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     public ?string $publicLink;
 
     /**
+     * Mensagem personalizada para a notificação.
+     */
+    public ?string $customMessage;
+
+    /**
+     * Locale para internacionalização (pt-BR, en, etc).
+     */
+    public string $locale;
+
+    /**
      * Cria uma nova instância da mailable.
      *
      * @param Invoice $invoice Fatura a ser notificada
@@ -57,6 +67,8 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      * @param Tenant|null $tenant Tenant do usuário (opcional)
      * @param array|null $company Dados da empresa (opcional)
      * @param string|null $publicLink Link público para visualização (opcional)
+     * @param string|null $customMessage Mensagem personalizada (opcional)
+     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
      */
     public function __construct(
         Invoice $invoice,
@@ -64,46 +76,69 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         ?Tenant $tenant = null,
         ?array $company = null,
         ?string $publicLink = null,
+        ?string $customMessage = null,
+        string $locale = 'pt-BR',
     ) {
-        $this->invoice    = $invoice;
-        $this->customer   = $customer;
-        $this->tenant     = $tenant;
-        $this->company    = $company ?? [];
-        $this->publicLink = $publicLink;
+        $this->invoice       = $invoice;
+        $this->customer      = $customer;
+        $this->tenant        = $tenant;
+        $this->company       = $company ?? [];
+        $this->publicLink    = $publicLink;
+        $this->customMessage = $customMessage;
+        $this->locale        = $locale;
+
+        // Configurar locale para internacionalização
+        app()->setLocale( $this->locale );
     }
 
     /**
-     * Define o envelope do e-mail (assunto).
+     * Define o envelope do e-mail (assunto e metadados).
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Sua Fatura ' . $this->invoice->code,
+            subject: __( 'emails.invoice.subject', [
+                'invoice_code' => $this->invoice->code,
+            ], $this->locale ),
+            tags: [ 'invoice-notification', 'billing' ],
+            metadata: [
+                'invoice_id'   => $this->invoice->id,
+                'invoice_code' => $this->invoice->code,
+                'customer_id'  => $this->customer->id,
+                'tenant_id'    => $this->tenant?->id,
+                'locale'       => $this->locale,
+                'total_amount' => $this->invoice->total,
+            ],
         );
     }
 
     /**
-     * Define o conteúdo do e-mail.
+     * Define o conteúdo do e-mail usando Markdown.
      */
     public function content(): Content
     {
         return new Content(
-            view: 'emails.new-invoice',
+            view: 'emails.invoice-notification',
             with: [
-                'invoice'     => [
+                'invoice'       => $this->invoice,
+                'customer'      => $this->customer,
+                'tenant'        => $this->tenant,
+                'company'       => $this->getCompanyData(),
+                'locale'        => $this->locale,
+                'appName'       => config( 'app.name', 'Easy Budget' ),
+                'supportEmail'  => $this->getSupportEmail(),
+                'customMessage' => $this->customMessage,
+                'publicLink'    => $this->publicLink ?? $this->generatePublicLink(),
+                'invoiceData'   => [
                     'code'           => $this->invoice->code,
-                    'customer_name'  => $this->getCustomerName(),
-                    'total'          => $this->invoice->total,
-                    'due_date'       => $this->invoice->due_date,
-                    'subtotal'       => $this->invoice->subtotal,
-                    'discount'       => $this->invoice->discount,
+                    'total'          => number_format( $this->invoice->total, 2, ',', '.' ),
+                    'subtotal'       => number_format( $this->invoice->subtotal, 2, ',', '.' ),
+                    'discount'       => number_format( $this->invoice->discount, 2, ',', '.' ),
+                    'due_date'       => $this->invoice->due_date?->format( 'd/m/Y' ),
                     'payment_method' => $this->invoice->payment_method,
                     'notes'          => $this->invoice->notes,
+                    'customer_name'  => $this->getCustomerName(),
                 ],
-                'public_link' => $this->publicLink ?? $this->generatePublicLink(),
-                'company'     => $this->getCompanyData(),
-                'tenant'      => $this->tenant,
-                'customer'    => $this->customer,
             ],
         );
     }
@@ -188,6 +223,22 @@ class InvoiceNotification extends Mailable implements ShouldQueue
             'phone'          => null,
             'phone_business' => null,
         ];
+    }
+
+    /**
+     * Obtém o e-mail de suporte.
+     *
+     * @return string E-mail de suporte
+     */
+    private function getSupportEmail(): string
+    {
+        // Tentar obter e-mail de suporte do tenant
+        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) ) {
+            return $this->tenant->settings[ 'support_email' ];
+        }
+
+        // E-mail padrão de suporte
+        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
     }
 
 }

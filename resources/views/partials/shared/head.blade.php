@@ -22,4 +22,7 @@
     <link rel="preload" href="{{ asset( 'assets/img/logo.png' ) }}" as="image" type="image/png">
 
     @stack( 'styles' )
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.3.6/dist/cdn.min.js"></script>
 </head>

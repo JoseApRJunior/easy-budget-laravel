@@ -17,7 +17,7 @@
                 <h5 class="mb-3">Suporte</h5>
                 <ul class="list-unstyled footer-links small">
                     <li class="mb-2">
-                        <a href="mailto:suporte@easybudget.com.br" class="footer-link">
+                        <a href="mailto:suporte@easybudget.net.br" class="footer-link">
                             <i class="bi bi-envelope me-2"></i>Fale Conosco
                         </a>
                     </li>

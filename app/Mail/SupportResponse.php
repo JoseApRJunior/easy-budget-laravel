@@ -155,7 +155,7 @@ class SupportResponse extends Mailable implements ShouldQueue
         }
 
         // E-mail padrão de suporte
-        return config( 'mail.support_email', 'suporte@easybudget.com.br' );
+        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
     }
 
     /**

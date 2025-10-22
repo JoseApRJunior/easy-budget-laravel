@@ -6,7 +6,6 @@ namespace App\Repositories;
 
 use App\Models\AuditLog;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use App\Repositories\Contracts\BaseRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +20,15 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * Modelo gerenciado por este repositório.
      */
-    protected AuditLog $model;
+    protected Model $model;
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function makeModel(): Model
+    {
+        return new AuditLog();
+    }
 
     /**
      * Construtor do repositório.

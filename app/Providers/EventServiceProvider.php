@@ -4,20 +4,26 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
 use App\Events\StatusUpdated;
+use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
 use App\Events\UserRegistered;
+use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
 use App\Listeners\SendStatusUpdateNotification;
+use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
 use App\Listeners\SendWelcomeEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Event Service Provider para registro de eventos e listeners customizados.
@@ -34,34 +40,52 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
             // Eventos de autenticação padrão do Laravel
-        Registered::class             => [
+        Registered::class                 => [
             SendEmailVerificationNotification::class,
         ],
 
             // Eventos customizados de notificação por e-mail
-        UserRegistered::class         => [
+        UserRegistered::class             => [
             SendWelcomeEmail::class,
         ],
 
-        InvoiceCreated::class         => [
+        InvoiceCreated::class             => [
             SendInvoiceNotification::class,
         ],
 
-        StatusUpdated::class          => [
+        StatusUpdated::class              => [
             SendStatusUpdateNotification::class,
         ],
 
-        PasswordResetRequested::class => [
+        PasswordResetRequested::class     => [
             SendPasswordResetNotification::class,
         ],
 
-        SupportTicketResponded::class => [
+        EmailVerificationRequested::class => [
+            SendEmailVerification::class,
+        ],
+
+        SupportTicketCreated::class       => [
+            SendSupportContactEmail::class,
+        ],
+
+        SupportTicketResponded::class     => [
             SendSupportResponse::class,
         ],
     ];
 
     /**
      * Register any events for your application.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        parent::register();
+    }
+
+    /**
+     * Bootstrap any application services.
      *
      * @return void
      */
@@ -104,6 +128,8 @@ class EventServiceProvider extends ServiceProvider
             InvoiceCreated::class,
             StatusUpdated::class,
             PasswordResetRequested::class,
+            EmailVerificationRequested::class,
+            SupportTicketCreated::class,
             SupportTicketResponded::class,
         ];
 
@@ -125,7 +151,7 @@ class EventServiceProvider extends ServiceProvider
         Event::listen( '*', function ( $eventName, array $data ) {
             // Log detalhado de todos os eventos em desenvolvimento
             if ( app()->hasDebugModeEnabled() ) {
-                \Log::debug( 'Evento disparado em desenvolvimento', [
+                Log::debug( 'Evento disparado em desenvolvimento', [
                     'event'        => $eventName,
                     'data'         => $data,
                     'memory_usage' => memory_get_usage( true ),
@@ -145,7 +171,7 @@ class EventServiceProvider extends ServiceProvider
     {
         $eventName = get_class( $event );
 
-        \Log::info( 'Evento de notificação por e-mail disparado', [
+        Log::info( 'Evento de notificação por e-mail disparado', [
             'event'           => $eventName,
             'event_data'      => $this->extractEventData( $event ),
             'listeners_count' => count( $this->getListenersForEvent( $eventName ) ),
@@ -200,6 +226,23 @@ class EventServiceProvider extends ServiceProvider
                 ];
                 break;
 
+            case EmailVerificationRequested::class:
+                $data = [
+                    'user_id'   => $event->user->id,
+                    'email'     => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                ];
+                break;
+
+            case SupportTicketCreated::class:
+                $data = [
+                    'support_id' => $event->support->id,
+                    'email'      => $event->support->email,
+                    'subject'    => $event->support->subject,
+                    'tenant_id'  => $event->tenant?->id,
+                ];
+                break;
+
             case SupportTicketResponded::class:
                 $data = [
                     'ticket_id'      => $event->ticket[ 'id' ] ?? null,
@@ -235,11 +278,14 @@ class EventServiceProvider extends ServiceProvider
     /**
      * Determine if events and listeners should be automatically discovered.
      *
+     * CORREÇÃO: Desabilitar descoberta automática para evitar conflitos
+     * com o registro manual do evento EmailVerificationRequested.
+     *
      * @return bool
      */
     public function shouldDiscoverEvents(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -250,7 +296,7 @@ class EventServiceProvider extends ServiceProvider
     protected function discoverEventsWithin(): array
     {
         return [
-            $this->app->path( 'Listeners' ),
+            app_path( 'Listeners' ),
         ];
     }
 

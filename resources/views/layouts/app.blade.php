@@ -9,6 +9,9 @@
 
     <main class="flex-shrink-0">
         @include( 'partials.components.alerts' )
+        @if ( session()->has( 'trial_expired_warning' ) )
+            @include( 'partials.components.trial-expired-warning' )
+        @endif
         @yield( 'content' )
     </main>
 

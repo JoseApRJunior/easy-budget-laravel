@@ -199,6 +199,108 @@ class TenantMiddleware
 }
 ```
 
+#### **📧 Sistema de Verificação de E-mail**
+
+**Arquitetura híbrida implementada com integração Laravel Sanctum + sistema customizado:**
+
+```php
+// Arquitetura híbrida: Laravel Sanctum + Sistema Customizado
+// Combina benefícios do Sanctum com funcionalidades avançadas
+
+// 1. Serviço de verificação de e-mail
+EmailVerificationService::createConfirmationToken(User $user)
+// - Remove tokens antigos automaticamente
+// - Cria token com expiração de 30 minutos
+// - Dispara evento para envio de e-mail
+// - Retorna ServiceResult padronizado
+
+// 2. Evento para envio de e-mail
+EmailVerificationRequested::class
+// - Desacoplamento entre lógica e envio
+// - Permite processamento assíncrono
+// - Facilita testes e manutenção
+
+// 3. Listener para envio efetivo
+SendEmailVerificationNotification::class
+// - Utiliza MailerService para envio
+// - Tratamento robusto de erros
+// - Logging detalhado de todas as operações
+
+// 4. Modelo de token de confirmação
+UserConfirmationToken::class
+// - Trait TenantScoped para isolamento
+// - Validações de negócio implementadas
+// - Relacionamentos com User e Tenant
+
+// 5. Controller para gerenciamento
+EmailVerificationController::class
+// - Endpoints para solicitar verificação
+// - Reenvio de e-mails de verificação
+// - Página de confirmação pendente
+
+// Funcionalidades implementadas:
+// ✅ Tokens únicos por usuário (remoção automática de antigos)
+// ✅ Expiração automática de 30 minutos
+// ✅ Tratamento robusto de erros com logging
+// ✅ Isolamento multi-tenant preservado
+// ✅ Uso de eventos para desacoplamento
+// ✅ Validações de segurança implementadas
+// ✅ Interface responsiva para verificação
+```
+
+#### **🚀 Sistema de E-mail Avançado (Próxima Evolução)**
+
+**Arquitetura proposta para expansão completa do sistema de e-mails:**
+
+```php
+// ESTRUTURA PROPOSTA PARA EVOLUÇÃO:
+
+// 1. Camada de Analytics e Métricas
+EmailAnalyticsService::class
+// - Coleta e análise de métricas avançadas
+// - Rastreamento de abertura, cliques, bounces
+// - Análise de comportamento do usuário
+// - Cálculo de ROI de campanhas
+
+// 2. Sistema de A/B Testing
+EmailABTestService::class
+// - Gerenciamento de variantes de templates
+// - Distribuição inteligente de testes
+// - Análise estatística de resultados
+// - Otimização automática baseada em performance
+
+// 3. Templates Dinâmicos
+EmailTemplateService::class
+// - Sistema de templates com variantes
+// - Personalização baseada em dados do usuário
+// - Suporte a múltiplos idiomas
+// - Versionamento de templates
+
+// 4. Automação de E-mails
+EmailAutomationService::class
+// - Workflows baseados em eventos
+// - Segmentação avançada de usuários
+// - Triggers automáticos (boas-vindas, abandono, etc.)
+// - Campanhas recorrentes
+
+// 5. Dashboard de Métricas
+EmailMetricsController::class
+// - Interface para visualização de métricas
+// - Relatórios em tempo real
+// - Alertas configuráveis
+// - Exportação de dados
+
+// Funcionalidades Planejadas:
+// 🔄 Monitoramento avançado de métricas
+// 🧪 A/B testing de templates
+// 📧 Expansão de tipos de e-mail
+// 📈 Analytics completo
+// 🎯 Segmentação avançada
+// 🤖 Automação baseada em eventos
+// 🌍 Suporte multilíngue
+// 📊 Dashboard administrativo
+```
+
 #### **📊 Service Layer Pattern Aprimorado**
 
 ```php
@@ -298,6 +400,40 @@ class Tenant extends Model
 5. Redirects to provider.index route
    ↓
 6. Loads dashboard with user context
+```
+
+#### **📧 Fluxo de Verificação de E-mail**
+
+```
+1. User submits registration form
+   ↓
+2. UserRegistrationService::register()
+   ↓
+3. Creates user account (unverified)
+   ↓
+4. EmailVerificationService::createConfirmationToken()
+   ↓
+5. Removes old tokens automatically
+   ↓
+6. Creates new token (30 min expiration)
+   ↓
+7. Dispatches EmailVerificationRequested event
+   ↓
+8. SendEmailVerificationNotification listener handles event
+   ↓
+9. Uses MailerService to send verification email
+   ↓
+10. User receives email with verification link
+    ↓
+11. User clicks verification link
+    ↓
+12. Verification route validates token
+    ↓
+13. Marks user email as verified
+    ↓
+14. Removes used token
+    ↓
+15. Redirects to dashboard with success message
 ```
 
 #### **💰 Fluxo de Criação de Orçamento**

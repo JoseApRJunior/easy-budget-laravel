@@ -31,8 +31,6 @@
                             </p>
                         </div>
 
-                        <!-- Session Status -->
-                        <x-auth-session-status class="mb-4 text-center" :status="session( 'status' )" />
 
                         <!-- Instruções -->
                         <div class="alert alert-info" role="alert">

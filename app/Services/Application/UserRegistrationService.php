@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
+use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\CommonData;
 use App\Models\Plan;
@@ -21,6 +22,7 @@ use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
+use App\Services\Application\EmailVerificationService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
@@ -64,6 +66,7 @@ class UserRegistrationService extends AbstractBaseService
     protected ProviderRepository              $providerRepository;
     protected PlanRepository                  $planRepository;
     protected RoleRepository                  $roleRepository;
+    protected EmailVerificationService        $emailVerificationService;
 
     public function __construct(
         UserRepository $userRepository,
@@ -73,6 +76,7 @@ class UserRegistrationService extends AbstractBaseService
         ProviderRepository $providerRepository,
         PlanRepository $planRepository,
         RoleRepository $roleRepository,
+        EmailVerificationService $emailVerificationService,
     ) {
         $this->userRepository                  = $userRepository;
         $this->tenantRepository                = $tenantRepository;
@@ -81,6 +85,7 @@ class UserRegistrationService extends AbstractBaseService
         $this->providerRepository              = $providerRepository;
         $this->planRepository                  = $planRepository;
         $this->roleRepository                  = $roleRepository;
+        $this->emailVerificationService        = $emailVerificationService;
     }
 
     /**
@@ -193,11 +198,25 @@ class UserRegistrationService extends AbstractBaseService
 
             DB::commit();
 
-            // 9. Disparar evento para envio de e-mail de boas-vindas
-            Event::dispatch( new UserRegistered( $user, $tenant ) );
+            // 9. Criar token de verificação de e-mail usando EmailVerificationService
+            Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
+            $tokenResult = $this->createConfirmationToken( $user );
+            if ( !$tokenResult->isSuccess() ) {
+                Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
+                    'user_id' => $user->id,
+                    'error'   => $tokenResult->getMessage(),
+                ] );
+                // Não falhar o registro por causa do token, apenas logar o problema
+            } else {
+                Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+            }
 
-            // 10. Login automático
-            Auth::login( $user );
+            // 10. Disparar evento para envio de e-mail de boas-vindas com dados do token
+            Event::dispatch( new UserRegistered(
+                $user,
+                $tenant,
+                $tokenResult->getData()[ 'token' ],
+            ) );
 
             Log::info( 'Registro concluído com sucesso', [
                 'user_id'         => $user->id,
@@ -258,7 +277,7 @@ class UserRegistrationService extends AbstractBaseService
 
             // Criar token de redefinição
             $token     = Str::random( 64 );
-            $expiresAt = now()->addMinutes( config( 'auth.passwords.users.expire', 60 ) );
+            $expiresAt = now()->addMinutes( (int) config( 'auth.passwords.users.expire', 60 ) );
 
             $resetToken = new UserConfirmationToken( [
                 'user_id'    => $user->id,
@@ -267,12 +286,12 @@ class UserRegistrationService extends AbstractBaseService
                 'type'       => 'password_reset',
             ] );
 
-            $this->userConfirmationTokenRepository->save( $resetToken );
+            $this->userConfirmationTokenRepository->create( $resetToken->toArray() );
 
             // Buscar tenant do usuário
             $tenant = null;
             if ( $user->tenant_id ) {
-                $tenant = $this->tenantRepository->findById( $user->tenant_id );
+                $tenant = $this->tenantRepository->find( $user->tenant_id );
             }
 
             // Disparar evento para envio de e-mail de redefinição
@@ -355,7 +374,7 @@ class UserRegistrationService extends AbstractBaseService
                 'description'  => null, // Pode ser adicionado posteriormente
             ] );
 
-            $savedCommonData = $this->commonDataRepository->save( $commonData );
+            $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
 
             return ServiceResult::success( $savedCommonData, 'CommonData criado com sucesso.' );
 
@@ -388,7 +407,7 @@ class UserRegistrationService extends AbstractBaseService
                 'terms_accepted' => $termsAccepted,
             ] );
 
-            $savedProvider = $this->providerRepository->save( $provider );
+            $savedProvider = $this->providerRepository->create( $provider->toArray() );
 
             return ServiceResult::success( $savedProvider, 'Provider criado com sucesso.' );
 
@@ -547,7 +566,7 @@ class UserRegistrationService extends AbstractBaseService
                 'is_active' => true,
             ] );
 
-            $savedTenant = $this->tenantRepository->save( $tenant );
+            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
 
             Log::info( 'Tenant criado com nome único gerado', [
                 'tenant_id'   => $savedTenant->id,
@@ -576,17 +595,15 @@ class UserRegistrationService extends AbstractBaseService
     private function createUser( array $userData, Tenant $tenant ): ServiceResult
     {
         try {
-            $user = new User( [
+            // Criar usuário usando o modelo diretamente para evitar conflitos com o global scope
+            $user = User::withoutTenant()->create( [
                 'tenant_id' => $tenant->id,
-                'name'      => $userData[ 'name' ],
                 'email'     => $userData[ 'email' ],
                 'password'  => Hash::make( $userData[ 'password' ] ),
-                'is_active' => true,
+                'is_active' => false,
             ] );
 
-            $savedUser = $this->userRepository->save( $user );
-
-            return ServiceResult::success( $savedUser, 'Usuário criado com sucesso.' );
+            return ServiceResult::success( $user, 'Usuário criado com sucesso.' );
 
         } catch ( Exception $e ) {
             return ServiceResult::error(
@@ -597,29 +614,16 @@ class UserRegistrationService extends AbstractBaseService
     }
 
     /**
-     * Cria token de confirmação para o usuário.
+     * Cria token de confirmação para o usuário usando EmailVerificationService.
      *
      * @param User $user Usuário
-     * @param Tenant $tenant Tenant do usuário
      * @return ServiceResult Resultado da operação
      */
-    private function createConfirmationToken( User $user, Tenant $tenant ): ServiceResult
+    private function createConfirmationToken( User $user ): ServiceResult
     {
         try {
-            $token     = Str::random( 64 );
-            $expiresAt = now()->addMinutes( config( 'auth.verification.expire', 60 ) );
-
-            $confirmationToken = new UserConfirmationToken( [
-                'user_id'    => $user->id,
-                'tenant_id'  => $tenant->id,
-                'token'      => $token,
-                'expires_at' => $expiresAt,
-                'type'       => 'email_verification',
-            ] );
-
-            $this->userConfirmationTokenRepository->save( $confirmationToken );
-
-            return ServiceResult::success( $confirmationToken, 'Token de confirmação criado.' );
+            // Usar EmailVerificationService para criar token e enviar e-mail
+            return $this->emailVerificationService->createConfirmationToken( $user );
 
         } catch ( Exception $e ) {
             return ServiceResult::error(

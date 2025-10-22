@@ -676,6 +676,13 @@ return new class extends Migration
             $table->integer( 'last_activity' )->index();
         } );
 
+        // Tabela password_reset_tokens padrão do Laravel
+        Schema::create( 'password_reset_tokens', function ( Blueprint $table ) {
+            $table->string( 'email' )->primary();
+            $table->string( 'token' );
+            $table->timestamp( 'created_at' )->nullable();
+        } );
+
     }
 
     public function down(): void
@@ -685,6 +692,7 @@ return new class extends Migration
         Schema::dropIfExists( 'jobs' );
         Schema::dropIfExists( 'cache_locks' );
         Schema::dropIfExists( 'cache' );
+        Schema::dropIfExists( 'password_reset_tokens' );
         Schema::dropIfExists( 'sessions' );
         Schema::dropIfExists( 'supports' );
         Schema::dropIfExists( 'activities' );

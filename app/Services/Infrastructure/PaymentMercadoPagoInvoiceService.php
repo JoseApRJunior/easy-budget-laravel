@@ -8,6 +8,7 @@ use App\Enums\OperationStatus;
 use App\Interfaces\PaymentMercadoPagoInvoiceServiceInterface;
 use App\Models\Invoice;
 use App\Models\PaymentMercadoPagoInvoice;
+use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
 use App\Support\ServiceResult;
 use Exception;

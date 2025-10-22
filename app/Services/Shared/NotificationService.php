@@ -4,15 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
 
-use App\Enums\OperationStatus;
-use App\Interfaces\ServiceNoTenantInterface;
-use App\Models\Notification;
-use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
-use App\Support\ServiceResult;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
+use App\Services\Core\Abstracts\AbstractBaseService;
 
 class NotificationService extends AbstractBaseService
 {

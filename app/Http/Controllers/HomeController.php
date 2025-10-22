@@ -96,62 +96,6 @@ class HomeController extends Controller
     }
 
     /**
-     * Exibe a página de suporte e processa formulário de contato
-     *
-     * @param Request $request
-     * @return View|\Illuminate\Http\RedirectResponse
-     */
-    public function support( Request $request )
-    {
-        // Se for POST, processa o formulário de contato
-        if ( $request->isMethod( 'post' ) ) {
-            return $this->contact( $request );
-        }
-
-        // Se for GET, exibe a página
-        return view( 'pages.home.support' );
-    }
-
-    /**
-     * Processa o contato de suporte
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function contact( Request $request )
-    {
-        $validatedData = $this->validateRequest( $request, [
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
-            'email'      => 'required|email|max:255',
-            'subject'    => 'required|string|max:255',
-            'message'    => 'required|string|max:1000',
-        ] );
-
-        try {
-            // Combina nome e sobrenome
-            $validatedData[ 'name' ] = $validatedData[ 'first_name' ] . ' ' . $validatedData[ 'last_name' ];
-
-            // TODO: Implementar envio de email de suporte
-            // $this->supportService->sendContactEmail($validatedData);
-
-            $this->logOperation( 'support_contact_received', [
-                'name'    => $validatedData[ 'name' ],
-                'email'   => $validatedData[ 'email' ],
-                'subject' => $validatedData[ 'subject' ]
-            ] );
-
-            return $this->redirectSuccess( 'home.support', 'Mensagem enviada com sucesso! Entraremos em contato em breve.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao processar contato de suporte: ' . $e->getMessage() );
-
-            return $this->redirectError( 'home.support', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
-                ->withInput();
-        }
-    }
-
-    /**
      * Exibe a página de termos de serviço
      *
      * @return View

@@ -615,3 +615,92 @@ Confira o anexo para o resumo.
 A personalização de e-mails no Laravel envolve uma combinação de recursos poderosos de templating, internacionalização, processamento assíncrono e segurança. Compreendendo e aplicando os métodos, classes e boas práticas listadas neste guia, é possível implementar comunicações transacionais robustas, bonitas, seguras e escaláveis em qualquer aplicação Laravel. Explorar ao máximo componentes Blade, layouts com Markdown, variáveis dinâmicas e ferramentas de teste como Mailtrap e MailHog transforma simples notificações em canais profissionais de relacionamento com o usuário, seja qual for o porte ou o segmento do projeto.
 
 ---
+
+Ótimo! Vou preparar um guia técnico completo sobre como personalizar e-mails no Laravel, incluindo templates, layouts, variáveis dinâmicas, suporte a múltiplos idiomas e práticas de teste. Isso levará alguns minutos, então fique à vontade para fazer uma pausa — o conteúdo será salvo aqui na conversa para você acessar quando quiser. Até já!
+
+**Para notificações de cadastro, reenvio e recuperação de senha, o ideal é usar _Mailables_ com templates Markdown e filas (queues). Já para mudanças de status em serviços, orçamentos e faturamento, recomendo usar _Notifications_ com canais múltiplos (e-mail, banco de dados, broadcast) e lógica condicional.**
+
+Aqui vai uma análise detalhada para cada tipo de notificação:
+
+---
+
+### 🧾 1. Cadastro de usuário, reenvio e recuperação de senha
+
+Essas notificações são **críticas e sensíveis**, então precisam ser:
+
+-  **Seguras** (evitar exposição de dados)
+-  **Claras e diretas**
+-  **Personalizadas com nome e contexto**
+-  **Rastreáveis** (logs ou banco de dados)
+
+**Melhor abordagem:**
+
+-  Use **Mailables** (`php artisan make:mail`) com **templates Markdown** (`resources/views/vendor/mail/html`).
+-  Configure **filas** (`Queueable`) para não travar o processo de cadastro.
+-  Use **assuntos personalizados** e **variáveis dinâmicas** (nome, link de ativação, IP, data).
+-  Exemplo de uso:
+   ```php
+   Mail::to($user->email)->send(new WelcomeUserMail($user));
+   ```
+
+**Dica extra:** Use `Notification::route('mail', $user->email)->notify(new PasswordResetNotification($token));` para recuperação de senha com `Notifications`.
+
+---
+
+### 🛠️ 2. Mudança de status em serviços e orçamentos
+
+Essas notificações são **transacionais e informativas**, então precisam ser:
+
+-  **Automáticas e em tempo real**
+-  **Contextuais** (mostrar status anterior e novo)
+-  **Armazenadas para histórico**
+-  **Possivelmente multicanal** (e-mail, painel, push)
+
+**Melhor abordagem:**
+
+-  Use **Notifications** (`php artisan make:notification`) com canal de **e-mail + database**.
+-  Configure o `via()` para múltiplos canais:
+   ```php
+   public function via($notifiable)
+   {
+       return ['mail', 'database'];
+   }
+   ```
+-  Use `Notification::send($users, new StatusChangedNotification($service))` para enviar em lote.
+
+**Dica extra:** Use `broadcast` se quiser mostrar em tempo real no painel do usuário.
+
+---
+
+### 💰 3. Área de faturamento
+
+Essas notificações são **financeiras e formais**, então precisam ser:
+
+-  **Claras e detalhadas**
+-  **Comprováveis** (PDF, links, valores)
+-  **Armazenadas e auditáveis**
+-  **Possivelmente com anexos**
+
+**Melhor abordagem:**
+
+-  Use **Mailables** com layout formal e possibilidade de **anexar PDFs** (boleto, nota fiscal).
+-  Exemplo:
+   ```php
+   $email = new InvoiceMail($invoice);
+   $email->attach(storage_path('invoices/'.$invoice->pdf));
+   Mail::to($user->email)->send($email);
+   ```
+
+**Dica extra:** Use `tags` e `metadata` para rastrear entregas e aberturas.
+
+---
+
+### 🧠 Minha sugestão final
+
+| Tipo de Notificação           | Melhor Abordagem     | Canal Ideal       | Extras Recomendados         |
+| ----------------------------- | -------------------- | ----------------- | --------------------------- |
+| Cadastro / Senha              | Mailables + Markdown | E-mail            | Fila, assunto personalizado |
+| Status de Serviço / Orçamento | Notifications        | E-mail + Database | Broadcast, histórico        |
+| Faturamento                   | Mailables + Anexo    | E-mail            | PDF, tags, logs             |
+
+Se quiser, posso revisar seus templates atuais e sugerir melhorias visuais e de conteúdo. Quer que eu faça isso?
