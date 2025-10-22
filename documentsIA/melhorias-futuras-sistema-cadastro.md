@@ -52,9 +52,6 @@ Facilitar o cadastro e login através de redes sociais, melhorando a experiênci
 #### **Plataformas a Integrar**
 
 -  **Google OAuth 2.0** - Principal prioridade
--  **Facebook Login** - Segunda prioridade
--  **Microsoft Account** - Terceira prioridade
--  **Apple Sign In** - Para dispositivos iOS
 
 #### **Funcionalidades**
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
@@ -256,6 +257,12 @@ Route::prefix( 'email' )->name( 'verification.' )->group( function () {
 
 // Rota personalizada de confirmação de conta (compatibilidade com sistema antigo)
 Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAccount' ] )->name( 'confirm-account' );
+
+// Rotas de autenticação social com Google OAuth
+Route::prefix( 'auth' )->name( 'auth.' )->group( function () {
+    Route::get( '/google', [ App\Http\Controllers\Auth\GoogleController::class, 'redirect' ] )->name( 'google' );
+    Route::get( '/google/callback', [ GoogleController::class, 'callback' ] )->name( 'google.callback' );
+} );
 
 require __DIR__ . '/auth.php';
 

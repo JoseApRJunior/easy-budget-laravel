@@ -117,8 +117,11 @@ return new class extends Migration
         Schema::create( 'users', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->string( 'name', 150 )->nullable(); // novo campo para armazenar nome do Google
             $table->string( 'email', 100 )->unique();
-            $table->string( 'password', 255 );
+            $table->string( 'password', 255 )->nullable(); // pode ser nulo em login social
+            $table->string( 'google_id', 255 )->nullable(); // novo campo para ID do Google
+            $table->string( 'avatar', 255 )->nullable(); // novo campo para avatar do Google
             $table->boolean( 'is_active' )->default( true );
             $table->string( 'logo', 255 )->nullable();
             $table->timestamp( 'email_verified_at' )->nullable();

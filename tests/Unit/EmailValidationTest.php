@@ -198,7 +198,7 @@ class EmailValidationTest extends TestCase
         // Arrange
         $testCases = [
             'https://example.com/confirm',
-            'http://localhost:8000/verify',
+            'https://dev.easybudget.net.br/verify',
             'https://subdominio.exemplo.com/path?param=value',
             '/relative/path',
             '#anchor'

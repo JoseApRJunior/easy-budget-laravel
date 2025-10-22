@@ -8,6 +8,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\RegisterUserRequest;
 use App\Services\Application\UserRegistrationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -46,6 +47,9 @@ class EnhancedRegisteredUserController extends Controller
 
         // Registro realizado com sucesso
         $data = $result->getData();
+
+        // ✅ Login automático do usuário após registro bem-sucedido
+        Auth::login( $data[ 'user' ] );
 
         // Redirecionar para dashboard com mensagem de sucesso
         return redirect()->route( 'dashboard' )

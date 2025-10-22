@@ -4,14 +4,26 @@ namespace App\Helpers;
 
 class CurrencyHelper
 {
-    public static function format( $value, $decimals = 2 ): string
+    /**
+     * Formata valor monetário em BRL.
+     */
+    public static function format( $value, int $decimals = 2 ): string
     {
-        return 'R$ ' . number_format( $value, $decimals, ',', '.' );
+        return 'R$ ' . number_format( (float) $value, $decimals, ',', '.' );
     }
 
+    /**
+     * Remove formatação de moeda e retorna float.
+     */
     public static function unformat( $value ): float
     {
-        return (float) str_replace( [ 'R$', '.', ',' ], [ '', '', '.' ], $value );
+        // Remove tudo que não for número, vírgula ou ponto
+        $clean = preg_replace( '/[^0-9,.-]/', '', $value );
+
+        // Troca vírgula por ponto para decimal
+        $clean = str_replace( ',', '.', $clean );
+
+        return (float) $clean;
     }
 
 }

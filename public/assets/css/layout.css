@@ -219,6 +219,16 @@ header {
    background-color: var(--secondary-hover);
 }
 
+.btn-google {
+   background-color: #db4437;
+   color: #fff;
+   border: none;
+}
+.btn-google:hover {
+   background-color: #c23321;
+   color: #fff;
+}
+
 /* Badges personalizados */
 .badge {
    padding: 0.5rem 0.75rem;
@@ -311,11 +321,11 @@ header {
 .invalid-feedback::after,
 .theme-dark .theme-light-icon,
 .theme-light .theme-dark-icon {
-    display: none !important;
+   display: none !important;
 }
 .theme-dark .theme-dark-icon,
 .theme-light .theme-light-icon {
-    display: inline-block !important;
+   display: inline-block !important;
 }
 
 /* Ocultar ícones baseados no atributo aria-hidden */
@@ -1567,4 +1577,29 @@ main .main-container {
 /* Dark theme support */
 .theme-dark .service-progress {
    background-color: var(--dark-surface);
+}
+
+.sidebar {
+   width: 250px;
+}
+
+.sidebar .nav-link {
+   color: #333;
+   padding: 0.5rem 0.75rem;
+   border-radius: 4px;
+}
+
+.sidebar .nav-link:hover {
+   background-color: #f8f9fa;
+   color: #000;
+}
+
+.btn-google {
+   background-color: #db4437;
+   color: #fff;
+   border: none;
+}
+.btn-google:hover {
+   background-color: #c23321;
+   color: #fff;
 }
