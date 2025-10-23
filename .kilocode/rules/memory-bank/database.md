@@ -8,7 +8,7 @@
 -  **Engine:** InnoDB
 -  **Charset:** utf8mb4
 -  **Collation:** utf8mb4_unicode_ci
--  **Tabelas:** 40+ tabelas principais (contando tabelas de sistema)
+-  **Tabelas:** 50+ tabelas principais (contando tabelas de sistema)
 -  **Multi-tenant:** Isolamento completo por empresa
 -  **Arquitetura:** Sistema complexo com integração Mercado Pago
 -  **Status:** Schema inicial criado via migration em Laravel 12 (migrado de sistema legado Twig + DoctrineDBAL)
@@ -1061,4 +1061,4 @@ invoices (1) ──── (N) payments
 
 Este documento descreve o schema completo e otimizado do banco de dados Easy Budget Laravel, incluindo todas as tabelas, relacionamentos, índices e estratégias de performance implementadas.
 
-**Última atualização:** 08/10/2025 - Revisão completa baseada na migration inicial, adicionadas tabelas faltantes (user_settings, system_settings, cache, cache_locks, sessions) e atualizado contador para 40+ tabelas.
+**Última atualização:** 23/10/2025 - Revisão completa baseada na migration inicial, adicionadas tabelas faltantes (user_settings, system_settings, cache, cache_locks, sessions, audit_logs) e atualizado contador para 50+ tabelas.

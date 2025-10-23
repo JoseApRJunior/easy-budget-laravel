@@ -1,8 +1,14 @@
 <div class="col-md-6">
     <div class="mb-3">
         <label class="small text-muted">Nome</label>
-        <p class="mb-0 fw-semibold">{{ auth()->user()->provider()->commonData()->first_name }}
-            {{ auth()->user()->last_name }}</p>
+        <p class="mb-0 fw-semibold">
+            @if( auth()->user()->provider && auth()->user()->provider->commonData )
+                {{ auth()->user()->provider->commonData->first_name ?? 'Não informado' }}
+                {{ auth()->user()->provider->commonData->last_name ?? '' }}
+            @else
+                {{ auth()->user()->name ?? 'Não informado' }}
+            @endif
+        </p>
     </div>
 </div>
 <div class="col-md-6">
@@ -14,20 +20,36 @@
 <div class="col-md-6">
     <div class="mb-3">
         <label class="small text-muted">E-mail Comercial</label>
-        <p class="mb-0">{{ auth()->user()->email_business }}</p>
+        <p class="mb-0">
+            @if( auth()->user()->provider && auth()->user()->provider->contact )
+                {{ auth()->user()->provider->contact->email_business ?? 'Não informado' }}
+            @else
+                Não informado
+            @endif
+        </p>
     </div>
 </div>
 <div class="col-md-6">
     <div class="mb-3">
         <label class="small text-muted">Telefone</label>
-        <p class="mb-0">{{ auth()->user()->phone ?? 'Não informado' }}</p>
+        <p class="mb-0">
+            @if( auth()->user()->provider && auth()->user()->provider->contact )
+                {{ auth()->user()->provider->contact->phone ?? 'Não informado' }}
+            @else
+                Não informado
+            @endif
+        </p>
     </div>
 </div>
 <div class="col-md-6">
     <div class="mb-3">
         <label class="small text-muted">Data de Nascimento</label>
         <p class="mb-0">
-            {{ auth()->user()->birth_date ? auth()->user()->birth_date->format( 'd/m/Y' ) : 'Não informado' }}
+            @if( auth()->user()->provider && auth()->user()->provider->commonData && auth()->user()->provider->commonData->birth_date )
+                {{ auth()->user()->provider->commonData->birth_date->format( 'd/m/Y' ) }}
+            @else
+                Não informado
+            @endif
         </p>
     </div>
 </div>

@@ -694,7 +694,7 @@ class ApiThrottleMiddleware
 
 Este documento descreve a arquitetura técnica completa do Easy Budget Laravel, incluindo padrões utilizados, estrutura de código, fluxos críticos e estratégias de performance implementadas.
 
-**Última atualização:** 10/10/2025 - ✅ **Revisão completa com melhorias significativas**:
+**Última atualização:** 23/10/2025 - ✅ **Revisão completa com melhorias significativas**:
 
 -  Controller base avançado implementado com integração ServiceResult
 -  Contratos de repositórios e services expandidos com documentação rica
