@@ -1,6 +1,4 @@
-Perfeito, Jose! Com base nesse resumo estratégico e na estrutura padrão do Speckit Constitution, aqui está a versão atualizada e formalizada do artefato `/speckit.constitution` para o projeto Easy Budget Laravel:
-
----
+## Use sempre brach `dev-junior`
 
 # Easy Budget Laravel Constitution
 
