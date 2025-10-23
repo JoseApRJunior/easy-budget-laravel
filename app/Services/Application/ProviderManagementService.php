@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Enums\OperationStatus;
 use App\Models\Activity;
+use App\Models\AreaOfActivity;
 use App\Models\Budget;
+use App\Models\Profession;
 use App\Models\Provider;
 use App\Models\User;
 use App\Services\Domain\ActivityService;
 use App\Services\Infrastructure\FinancialSummary;
+use App\Support\ServiceResult;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -61,32 +65,32 @@ class ProviderManagementService
     /**
      * Get provider data for update form.
      */
-    public function getProviderForUpdate(): array
+    public function getProviderForUpdate(): ServiceResult
     {
         $user     = auth()->user();
         $provider = $user->provider;
 
         if ( !$provider ) {
-            throw new \Exception( 'Provider não encontrado' );
+            return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
         }
 
-        return [
+        return ServiceResult::success( [
             'provider'          => $provider->load( [ 'user', 'commonData', 'contact', 'address' ] ),
-            'areas_of_activity' => \App\Models\AreaOfActivity::where( 'tenant_id', $user->tenant_id )->get(),
-            'professions'       => \App\Models\Profession::where( 'tenant_id', $user->tenant_id )->get(),
-        ];
+            'areas_of_activity' => AreaOfActivity::get(),
+            'professions'       => Profession::get(),
+        ] );
     }
 
     /**
      * Update provider data.
      */
-    public function updateProvider( array $data ): void
+    public function updateProvider( array $data ): ServiceResult
     {
         $user     = auth()->user();
         $provider = $user->provider;
 
         if ( !$provider ) {
-            throw new \Exception( 'Provider não encontrado' );
+            return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
         }
 
         DB::transaction( function () use ($provider, $data, $user) {
@@ -145,6 +149,8 @@ class ProviderManagementService
                 $data,
             );
         } );
+
+        return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
     }
 
     /**

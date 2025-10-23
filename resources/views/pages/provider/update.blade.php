@@ -9,8 +9,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.profile' ) }}">Perfil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Perfil</a></li>
                     <li class="breadcrumb-item active">Atualizar</li>
                 </ol>
             </nav>
@@ -84,7 +84,7 @@
                                     <div class="logo-upload-container">
                                         <div class="logo-preview-wrapper mb-3 p-3 bg-light rounded-3 hover-shadow">
                                             <img id="preview"
-                                                src="{{ $provider->logo ? asset( 'storage/' . $provider->logo ) : asset( 'assets/img/img_not_found.png' ) }}"
+                                                src="{{ $provider->user->logo ? asset( 'storage/' . $provider->user->logo ) : asset( 'assets/img/img_not_found.png' ) }}"
                                                 alt="Logo da empresa" class="logo-image img-fluid rounded-3 shadow-sm"
                                                 width="150" height="150">
                                         </div>
@@ -103,27 +103,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Coluna da Descrição -->
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <label for="description" class="form-label fw-bold mb-3">
-                                            Descrição Profissional
-                                        </label>
-                                        <textarea
-                                            class="form-control form-control-lg shadow-sm rounded-3 @error( 'description' ) is-invalid @enderror"
-                                            id="description" name="description" rows="4" maxlength="250"
-                                            placeholder="Descreva sua experiência profissional..."
-                                            style="resize: none;">{{ old( 'description', $provider->description ) }}</textarea>
-                                        <div class="d-flex justify-content-end mt-2">
-                                            <small class="text-muted">
-                                                <span id="char-count-value" class="fw-semibold">250</span> caracteres
-                                                restantes
-                                            </small>
-                                        </div>
-                                        @error( 'description' ) <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -155,7 +134,7 @@
                     <button type="submit" class="btn btn-primary" id="updateButton">
                         <i class="bi bi-check-circle me-2"></i>Atualizar Cadastro
                     </button>
-                    <a href="{{ route( 'provider.profile' ) }}" class="btn btn-outline-secondary">
+                    <a href="{{ route( 'settings.index' ) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle me-2"></i>Cancelar
                     </a>
                 </div>
@@ -176,6 +155,15 @@
     <script src="{{ asset( 'assets/js/modules/character-counter.js' ) }}" type="module"></script>
     <script src="{{ asset( 'assets/js/provider_update.js' ) }}" type="module"></script>
     <script>
+        $( document ).ready( function () {
+            $( '#phone' ).mask( '(00) 00000-0000' );
+            $( '#phone_business' ).mask( '(00) 00000-0000' );
+            $( '#cnpj' ).mask( '00.000.000/0000-00' );
+            $( '#cpf' ).mask( '000.000.000-00' );
+            $( '#cep' ).mask( '00000-000' );
+        } );
+    </script>
+    <script>
         document.getElementById( 'logo' ).addEventListener( 'change', function ( e ) {
             const file = e.target.files[0];
             const maxSize = this.dataset.maxSize;
@@ -190,6 +178,34 @@
                 const reader = new FileReader();
                 reader.onload = function ( e ) {
                     document.getElementById( 'preview' ).src = e.target.result;
+                }
+                reader.readAsDataURL( file );
+            }
+        } );
+
+        document.getElementById( 'avatar' ).addEventListener( 'change', function ( e ) {
+            const file = e.target.files[0];
+            const maxSize = 5242880; // 5MB
+
+            if ( file ) {
+                if ( file.size > maxSize ) {
+                    alert( 'O arquivo é muito grande. O tamanho máximo permitido é 5MB.' );
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function ( e ) {
+                    const img = document.createElement( 'img' );
+                    img.src = e.target.result;
+                    img.className = 'img-thumbnail';
+                    img.width = 100;
+                    img.height = 100;
+                    const container = document.querySelector( '#avatar + div' );
+                    if ( container ) {
+                        container.innerHTML = '';
+                        container.appendChild( img );
+                    }
                 }
                 reader.readAsDataURL( file );
             }

@@ -17,6 +17,7 @@ use App\Services\Domain\AddressService;
 use App\Services\Domain\CommonDataService;
 use App\Services\Domain\ContactService;
 use App\Services\Domain\UserService;
+use App\Support\ServiceResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,18 +75,22 @@ class ProviderController extends Controller
      */
     public function update(): View|RedirectResponse
     {
-        try {
-            $data = $this->providerService->getProviderForUpdate();
+        $user     = auth()->user();
+        $provider = $user->provider;
 
-            return view( 'pages.provider.update', [
-                'provider'          => $data[ 'provider' ],
-                'areas_of_activity' => $data[ 'areas_of_activity' ],
-                'professions'       => $data[ 'professions' ],
-            ] );
-        } catch ( \Exception $e ) {
-            return redirect()->route( 'dashboard' )
+        if ( !$provider ) {
+            return redirect( '/provider' )
                 ->with( 'error', 'Provider não encontrado' );
         }
+
+        // Carregar relacionamentos necessários
+        $provider->load( [ 'commonData', 'contact', 'address' ] );
+
+        return view( 'pages.provider.update', [
+            'provider'          => $provider,
+            'areas_of_activity' => \App\Models\AreaOfActivity::all(),
+            'professions'       => \App\Models\Profession::all(),
+        ] );
     }
 
     /**
@@ -102,14 +107,26 @@ class ProviderController extends Controller
             'last_name'           => 'required|string|max:255',
             'email'               => 'required|email|max:255',
             'phone'               => 'nullable|string|max:20',
-            'document'            => 'nullable|string|max:20',
+            'phone_business'      => 'nullable|string|max:20',
+            'birth_date'          => 'nullable|date|before:today',
+            'cnpj'                => 'nullable|string|max:14',
+            'cpf'                 => 'nullable|string|max:11',
             'area_of_activity_id' => 'required|integer',
             'profession_id'       => 'required|integer',
             'logo'                => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'avatar'              => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'description'         => 'nullable|string|max:250',
         ] );
 
         // Dados do formulário sanitizados
         $data = $request->all();
+
+        // Mapear cnpj e cpf para document se necessário
+        if ( !empty( $data[ 'cnpj' ] ) ) {
+            $data[ 'document' ] = $data[ 'cnpj' ];
+        } elseif ( !empty( $data[ 'cpf' ] ) ) {
+            $data[ 'document' ] = $data[ 'cpf' ];
+        }
 
         // Verificar se email já existe usando UserService
         $checkResponse = $this->userService->findByEmail( $data[ 'email' ] );
@@ -131,6 +148,16 @@ class ProviderController extends Controller
                 ->execute();
             $info           = $this->fileUpload->get_image_info();
             $data[ 'logo' ] = $info[ 'path' ];
+        }
+
+        // Processar upload de avatar
+        $avatarInfo = null;
+        if ( $request->hasFile( 'avatar' ) ) {
+            $this->fileUpload->make( 'avatar' )
+                ->resize( 150, 150, true )
+                ->execute();
+            $avatarInfo       = $this->fileUpload->get_image_info();
+            $data[ 'avatar' ] = $avatarInfo[ 'path' ];
         }
 
         // Buscar dados atuais do usuário usando UserService
@@ -155,6 +182,14 @@ class ProviderController extends Controller
             }
         }
         $data[ 'logo' ] = isset( $info[ 'path' ] ) ? $info[ 'path' ] : $originalData[ 'logo' ];
+
+        // Gerenciar arquivo de avatar usando Storage
+        if ( isset( $avatarInfo[ 'path' ] ) && $originalData[ 'avatar' ] !== null && $avatarInfo[ 'path' ] !== $originalData[ 'avatar' ] ) {
+            if ( file_exists( public_path( $originalData[ 'avatar' ] ) ) ) {
+                unlink( public_path( $originalData[ 'avatar' ] ) );
+            }
+        }
+        $data[ 'avatar' ] = isset( $avatarInfo[ 'path' ] ) ? $avatarInfo[ 'path' ] : $originalData[ 'avatar' ];
 
         // Criar UserEntity atualizada
         $userEntity = UserEntity::create( array_merge(
@@ -269,54 +304,13 @@ class ProviderController extends Controller
             }
         }
 
-        // Buscar dados atuais do provider usando ProviderService
-        $providerResponse = $this->providerService->findByIdAndTenantId(
-            Auth::id(),
-            Auth::user()->tenant_id,
-        );
-
-        if ( !$providerResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', 'Prestador não encontrado' );
-        }
-
-        /** @var ProviderEntity $providerData */
-        $providerData = $providerResponse->data;
-
-        // Criar array com dados do provider para compatibilidade
-        $originalData = [
-            'id'             => $providerData->getId(),
-            'tenant_id'      => $providerData->getTenant()->getId(),
-            'user_id'        => $providerData->getUser()->getId(),
-            'terms_accepted' => $providerData->isTermsAccepted(),
-        ];
-
-        // Criar ProviderEntity atualizada
-        $providerEntity = ProviderEntity::create( array_merge(
-            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
-            $data,
-        ) );
-
         // Atualizar Provider usando ProviderService
-        if ( !empty( array_diff_assoc( $providerData->toArray(), $providerEntity->toArray() ) ) ) {
-            $updateResponse = $this->providerService->update( $providerEntity, Auth::user()->tenant_id );
+        $updateResponse = $this->providerService->updateProvider( $data );
 
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Falha ao atualizar prestador: ' . $updateResponse->message );
-            }
+        if ( !$updateResponse->isSuccess() ) {
+            return redirect( '/provider/update' )
+                ->with( 'error', $updateResponse->getMessage() );
         }
-
-        // Log da atividade usando ActivityService
-        $this->activityService->logActivity(
-            Auth::user()->tenant_id,
-            Auth::id(),
-            1, // provider_updated activity type id
-            'provider',
-            Auth::id(),
-            "Prestador {$data[ 'first_name' ]} {$data[ 'last_name' ]} atualizado com sucesso!",
-            $data,
-        );
 
         // Limpar sessões relacionadas usando Session facade
         Session::forget( 'checkPlan' );

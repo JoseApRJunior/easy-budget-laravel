@@ -6,6 +6,19 @@ The Easy Budget Platform is a comprehensive business management solution designe
 
 The platform supports multi-tenant architecture, ensuring complete data isolation between businesses, and includes robust security features like comprehensive auditing and secure authentication. It aims to reduce administrative overhead by 60% while improving operational efficiency and business growth for service providers.
 
+## Legacy System Business Logic
+
+The legacy system at `C:\xampp\htdocs\easy-budget-laravel\old-system` is a budget management system built with Twig templates and DoctrineDBAL. It provides the following core features:
+
+- **User Management:** Creation and management of service providers and clients
+- **Authentication:** User login and authorization
+- **Budget Management:** Creation, editing, and tracking of budgets
+- **Templating:** Dynamic views using Twig
+- **Middleware:** Custom request handling
+- **Database:** Abstraction layer with DoctrineDBAL
+
+The new Laravel system migrates these features to modern architecture while preserving the business logic.
+
 ## Migration Context
 
 This platform implementation represents the **completion of the partial migration** from the existing legacy system located at `C:\xampp\htdocs\easy-budget-laravel\old-system` (Twig + DoctrineDBAL) to Laravel 12 with modern architecture. The project has already been partially migrated, with core components like controllers, services, models, and database migrations already implemented in Laravel. The remaining work focuses on completing the migration, ensuring full feature parity, and optimizing the modernized system.
