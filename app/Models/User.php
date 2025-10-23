@@ -41,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'google_id',
         'avatar',
+        'google_data',
         'is_active',
         'logo',
         'remember_token',
@@ -60,6 +61,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password'          => 'hashed',
         'google_id'         => 'string',
         'avatar'            => 'string',
+        'google_data'       => 'array',
         'logo'              => 'string',
         'is_active'         => 'boolean',
         'remember_token'    => 'string',
@@ -192,9 +194,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getNameAttribute(): string
     {
-        return $this->provider?->commonData
-            ? ( $this->provider->commonData->first_name . ' ' . $this->provider->commonData->last_name )
-            : ( $this->attributes[ 'email' ] ?? '' );
+        // Prioriza o campo name se estiver preenchido (para Google OAuth)
+        if ( !empty( $this->attributes[ 'name' ] ) ) {
+            return $this->attributes[ 'name' ];
+        }
+
+        // Fallback para dados do provider se disponível
+        if ( $this->provider?->commonData ) {
+            return $this->provider->commonData->first_name . ' ' . $this->provider->commonData->last_name;
+        }
+
+        // Último fallback para e-mail
+        return $this->attributes[ 'email' ] ?? '';
     }
 
     /* ==========================

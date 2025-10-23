@@ -473,9 +473,13 @@ class UserRegistrationService extends AbstractBaseService
                 'provider_id'        => $provider->id,
                 'status'             => 'active',
                 'transaction_amount' => $plan->price ?? 0.00,
-                'transaction_date'   => now(),
                 'start_date'         => now(),
                 'end_date'           => now()->addDays( 7 ), // Trial de 7 dias
+                'transaction_date'   => now(),
+                'payment_method'     => 'trial',
+                'payment_id'         => 'TEST_' . uniqid(),
+                'public_hash'        => 'TEST_HASH_' . uniqid(),
+
             ] );
 
             $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );

@@ -18,7 +18,7 @@
         data-bs-toggle="dropdown" aria-expanded="false">
         <img src="{{ auth()->user()->avatar ?? asset( 'assets/img/default-avatar.png' ) }}" alt="Avatar"
             class="rounded-circle me-2" width="32" height="32">
-        {{ auth()->user()->name ?? auth()->user()->email }}
+        {{ Str::before( auth()->user()->name, ' ' ) ?: auth()->user()->name ?? auth()->user()->email }}
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
 

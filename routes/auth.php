@@ -35,6 +35,8 @@ Route::middleware( 'guest' )->group( function () {
 
     Route::post( 'reset-password', [ NewPasswordController::class, 'store' ] )
         ->name( 'password.store' );
+
+    // Google OAuth routes are defined in web.php with proper auth. prefix
 } );
 
 Route::middleware( 'auth' )->group( function () {
@@ -58,4 +60,6 @@ Route::middleware( 'auth' )->group( function () {
 
     Route::post( 'logout', [ AuthenticatedSessionController::class, 'destroy' ] )
         ->name( 'logout' );
+
+    // Google OAuth routes are defined in web.php with proper auth. prefix
 } );

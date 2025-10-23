@@ -111,7 +111,6 @@
                                         <i class="bi bi-info-circle me-2"></i>Credenciais de Teste
                                     </h6>
                                     <p class="mb-1"><strong>Prestador:</strong> provider@easybudget.net.br / Password1@</p>
-                                    <p class="mb-0"><strong>Admin:</strong> admin@easybudget.net.br / Password1@</p>
                                 </div>
                             </div>
                         @endif

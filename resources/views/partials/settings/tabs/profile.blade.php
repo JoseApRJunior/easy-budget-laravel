@@ -5,7 +5,7 @@
         </div>
         <div class="card-body">
             <div class="row g-4">
-                @include( 'partials.settings.profile.logo' )
+                @include( 'partials.settings.profile.avatar' )
                 @include( 'partials.settings.profile.info' )
             </div>
         </div>

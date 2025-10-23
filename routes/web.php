@@ -264,6 +264,11 @@ Route::prefix( 'auth' )->name( 'auth.' )->group( function () {
     Route::get( '/google/callback', [ GoogleController::class, 'callback' ] )->name( 'google.callback' );
 } );
 
+// Google OAuth unlink route (requires authentication)
+Route::middleware( 'auth' )->group( function () {
+    Route::post( '/auth/google/unlink', [ GoogleController::class, 'unlink' ] )->name( 'auth.google.unlink' );
+} );
+
 require __DIR__ . '/auth.php';
 
 // Rotas públicas para orçamentos com token de confirmação

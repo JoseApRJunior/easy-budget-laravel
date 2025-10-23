@@ -64,8 +64,8 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 return $this->success( $existingUser, 'Usuário autenticado com sucesso via ' . ucfirst( $provider ) );
             }
 
-            // Verifica se e-mail já está em uso por outro usuário
-            if ( $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
+            // Verifica se e-mail existe e não está em uso por outro usuário
+            if ( !empty( $userData[ 'email' ] ) && $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
                 return $this->error( 'E-mail já cadastrado', 'Este e-mail já está sendo utilizado por outra conta.' );
             }
 

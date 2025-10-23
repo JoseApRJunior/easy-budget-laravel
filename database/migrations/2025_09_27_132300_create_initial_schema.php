@@ -122,11 +122,16 @@ return new class extends Migration
             $table->string( 'password', 255 )->nullable(); // pode ser nulo em login social
             $table->string( 'google_id', 255 )->nullable(); // novo campo para ID do Google
             $table->string( 'avatar', 255 )->nullable(); // novo campo para avatar do Google
+            $table->json( 'google_data' )->nullable(); // dados adicionais do perfil Google
             $table->boolean( 'is_active' )->default( true );
             $table->string( 'logo', 255 )->nullable();
             $table->timestamp( 'email_verified_at' )->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            // Performance indexes for Google OAuth
+            $table->index( 'google_id' );
+            $table->index( [ 'tenant_id', 'google_id' ] );
         } );
 
         Schema::create( 'role_permissions', function ( Blueprint $table ) {
