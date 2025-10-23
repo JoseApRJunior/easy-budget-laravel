@@ -38,7 +38,7 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
     // Provider routes
     Route::get( '/', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
     Route::get( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
-    Route::post( '/provider/update', [ ProviderController::class, 'update_store' ] )->name( 'provider.update_store' );
+    Route::match( [ 'post', 'put' ], '/provider/update', [ ProviderController::class, 'update_store' ] )->name( 'provider.update_store' );
     Route::get( '/provider/change-password', [ ProviderController::class, 'change_password' ] )->name( 'provider.change_password' );
     Route::post( '/provider/change-password', [ ProviderController::class, 'change_password_store' ] )->name( 'provider.change_password_store' );
 
