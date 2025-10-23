@@ -1,6 +1,6 @@
 # Data Model: Login com Google (OAuth 2.0)
 
-**Feature**: `001-login-google`
+**Feature**: `dev-junior`
 **Created**: 2025-10-21
 **Status**: Defined
 **Phase**: 1 - Design & Contracts

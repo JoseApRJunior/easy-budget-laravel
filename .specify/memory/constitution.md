@@ -1,5 +1,7 @@
 # Easy Budget Laravel – Constitution
 
+manter no branch dev-junior
+
 ## Core Principles
 
 ### I. Segurança em Primeiro Lugar

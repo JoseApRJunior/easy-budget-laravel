@@ -1,3 +1,4 @@
+manter no branch dev-junior
 # Sistema de Orçamentos (Budgets) - Especificação Completa
 
 ## 📋 Visão Geral
