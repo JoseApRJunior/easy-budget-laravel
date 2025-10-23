@@ -3,11 +3,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Entities\AddressEntity;
-use App\Entities\CommonDataEntity;
-use App\Entities\ContactEntity;
-use App\Entities\ProviderEntity;
-use App\Entities\UserEntity;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Services\Application\FileUploadService;
@@ -69,255 +64,26 @@ class ProviderController extends Controller
     }
 
     /**
-     * Exibe formulário de atualização do provider.
+     * Exibe formulário de atualização do provider (legacy - redireciona para nova estrutura).
      *
-     * @return View|RedirectResponse
+     * @return RedirectResponse
      */
-    public function update(): View|RedirectResponse
+    public function update(): RedirectResponse
     {
-        $user     = auth()->user();
-        $provider = $user->provider;
-
-        if ( !$provider ) {
-            return redirect( '/provider' )
-                ->with( 'error', 'Provider não encontrado' );
-        }
-
-        // Carregar relacionamentos necessários
-        $provider->load( [ 'commonData', 'contact', 'address' ] );
-
-        return view( 'pages.provider.update', [
-            'provider'          => $provider,
-            'areas_of_activity' => \App\Models\AreaOfActivity::all(),
-            'professions'       => \App\Models\Profession::all(),
-        ] );
+        return redirect()->route( 'provider.business.edit' )
+            ->with( 'info', 'Use a nova interface separada para atualizar seus dados.' );
     }
 
     /**
-     * Processa atualização dos dados do provider.
+     * Processa atualização dos dados do provider (legacy - redireciona para nova estrutura).
      *
      * @param Request $request
      * @return RedirectResponse
      */
     public function update_store( Request $request ): RedirectResponse
     {
-        // Validar dados do formulário
-        $validated = $request->validate( [
-            'first_name'          => 'required|string|max:255',
-            'last_name'           => 'required|string|max:255',
-            'email'               => 'required|email|max:255',
-            'phone'               => 'nullable|string|max:20',
-            'phone_business'      => 'nullable|string|max:20',
-            'birth_date'          => 'nullable|date|before:today',
-            'cnpj'                => 'nullable|string|max:14',
-            'cpf'                 => 'nullable|string|max:11',
-            'area_of_activity_id' => 'required|integer',
-            'profession_id'       => 'required|integer',
-            'logo'                => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'avatar'              => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'description'         => 'nullable|string|max:250',
-        ] );
-
-        // Dados do formulário sanitizados
-        $data = $request->all();
-
-        // Mapear cnpj e cpf para document se necessário
-        if ( !empty( $data[ 'cnpj' ] ) ) {
-            $data[ 'document' ] = $data[ 'cnpj' ];
-        } elseif ( !empty( $data[ 'cpf' ] ) ) {
-            $data[ 'document' ] = $data[ 'cpf' ];
-        }
-
-        // Verificar se email já existe usando UserService
-        $checkResponse = $this->userService->findByEmail( $data[ 'email' ] );
-
-        if ( $checkResponse->isSuccess() ) {
-            /** @var UserEntity $existingUser */
-            $existingUser = $checkResponse->data;
-            if ( $existingUser->getId() != Auth::id() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Este e-mail já está registrado!' );
-            }
-        }
-
-        // Processar upload de imagem
-        $info = null;
-        if ( $request->hasFile( 'logo' ) ) {
-            $this->fileUpload->make( 'logo' )
-                ->resize( 200, null, true )
-                ->execute();
-            $info           = $this->fileUpload->get_image_info();
-            $data[ 'logo' ] = $info[ 'path' ];
-        }
-
-        // Processar upload de avatar
-        $avatarInfo = null;
-        if ( $request->hasFile( 'avatar' ) ) {
-            $this->fileUpload->make( 'avatar' )
-                ->resize( 150, 150, true )
-                ->execute();
-            $avatarInfo       = $this->fileUpload->get_image_info();
-            $data[ 'avatar' ] = $avatarInfo[ 'path' ];
-        }
-
-        // Buscar dados atuais do usuário usando UserService
-        $userResponse = $this->userService->findByIdAndTenantId(
-            Auth::id(),
-            Auth::user()->tenant_id,
-        );
-
-        if ( !$userResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', 'Usuário não encontrado' );
-        }
-
-        /** @var UserEntity $userData */
-        $userData     = $userResponse->data;
-        $originalData = $userData->toArray();
-
-        // Gerenciar arquivo de logo usando Storage
-        if ( isset( $info[ 'path' ] ) && $originalData[ 'logo' ] !== null && $info[ 'path' ] !== $originalData[ 'logo' ] ) {
-            if ( file_exists( public_path( $originalData[ 'logo' ] ) ) ) {
-                unlink( public_path( $originalData[ 'logo' ] ) );
-            }
-        }
-        $data[ 'logo' ] = isset( $info[ 'path' ] ) ? $info[ 'path' ] : $originalData[ 'logo' ];
-
-        // Gerenciar arquivo de avatar usando Storage
-        if ( isset( $avatarInfo[ 'path' ] ) && $originalData[ 'avatar' ] !== null && $avatarInfo[ 'path' ] !== $originalData[ 'avatar' ] ) {
-            if ( file_exists( public_path( $originalData[ 'avatar' ] ) ) ) {
-                unlink( public_path( $originalData[ 'avatar' ] ) );
-            }
-        }
-        $data[ 'avatar' ] = isset( $avatarInfo[ 'path' ] ) ? $avatarInfo[ 'path' ] : $originalData[ 'avatar' ];
-
-        // Criar UserEntity atualizada
-        $userEntity = UserEntity::create( array_merge(
-            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
-            $data,
-        ) );
-
-        // Atualizar usuário usando UserService
-        if ( !empty( array_diff_assoc( $userData->toArray(), $userEntity->toArray() ) ) ) {
-            $updateResponse = $this->userService->update( $userEntity, Auth::user()->tenant_id );
-
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Falha ao atualizar os dados do usuário: ' . $updateResponse->message );
-            }
-        }
-
-        // Buscar dados atuais de CommonData usando CommonDataService
-        $commonDataResponse = $this->commonDataService->findByIdAndTenantId(
-            Auth::user()->common_data_id,
-            Auth::user()->tenant_id,
-        );
-
-        if ( !$commonDataResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', 'Dados comuns não encontrados' );
-        }
-
-        /** @var CommonDataEntity $commonDataData */
-        $commonDataData = $commonDataResponse->data;
-        $originalData   = $commonDataData->toArray();
-
-        // Converter IDs para inteiros
-        $data[ 'area_of_activity_id' ] = (int) $data[ 'area_of_activity_id' ];
-        $data[ 'profession_id' ]       = (int) $data[ 'profession_id' ];
-
-        // Criar CommonDataEntity atualizada
-        $commonDataEntity = CommonDataEntity::create( array_merge(
-            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
-            $data,
-        ) );
-
-        // Atualizar CommonData usando CommonDataService
-        if ( !empty( array_diff_assoc( $commonDataData->toArray(), $commonDataEntity->toArray() ) ) ) {
-            $updateResponse = $this->commonDataService->update( $commonDataEntity, Auth::user()->tenant_id );
-
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Falha ao atualizar dados comuns: ' . $updateResponse->message );
-            }
-        }
-
-        // Buscar dados atuais de Contact usando ContactService
-        $contactResponse = $this->contactService->findByIdAndTenantId(
-            Auth::user()->contact_id,
-            Auth::user()->tenant_id,
-        );
-
-        if ( !$contactResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', 'Contato não encontrado' );
-        }
-
-        /** @var ContactEntity $contactData */
-        $contactData  = $contactResponse->data;
-        $originalData = $contactData->toArray();
-
-        // Criar ContactEntity atualizada
-        $contactEntity = ContactEntity::create( array_merge(
-            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
-            $data,
-        ) );
-
-        // Atualizar Contact usando ContactService
-        if ( !empty( array_diff_assoc( $contactData->toArray(), $contactEntity->toArray() ) ) ) {
-            $updateResponse = $this->contactService->update( $contactEntity, Auth::user()->tenant_id );
-
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Falha ao atualizar contato: ' . $updateResponse->message );
-            }
-        }
-
-        // Buscar dados atuais de Address usando AddressService
-        $addressResponse = $this->addressService->findByIdAndTenantId(
-            Auth::user()->address_id,
-            Auth::user()->tenant_id,
-        );
-
-        if ( !$addressResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', 'Endereço não encontrado' );
-        }
-
-        /** @var AddressEntity $addressData */
-        $addressData  = $addressResponse->data;
-        $originalData = $addressData->toArray();
-
-        // Criar AddressEntity atualizada
-        $addressEntity = AddressEntity::create( array_merge(
-            array_diff_key( $originalData, array_flip( [ 'created_at', 'updated_at' ] ) ),
-            $data,
-        ) );
-
-        // Atualizar Address usando AddressService
-        if ( !empty( array_diff_assoc( $addressData->toArray(), $addressEntity->toArray() ) ) ) {
-            $updateResponse = $this->addressService->update( $addressEntity, Auth::user()->tenant_id );
-
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/update' )
-                    ->with( 'error', 'Falha ao atualizar endereço: ' . $updateResponse->message );
-            }
-        }
-
-        // Atualizar Provider usando ProviderService
-        $updateResponse = $this->providerService->updateProvider( $data );
-
-        if ( !$updateResponse->isSuccess() ) {
-            return redirect( '/provider/update' )
-                ->with( 'error', $updateResponse->getMessage() );
-        }
-
-        // Limpar sessões relacionadas usando Session facade
-        Session::forget( 'checkPlan' );
-        Session::forget( 'last_updated_session_provider' );
-
-        return redirect( '/settings' )
-            ->with( 'success', 'Prestador atualizado com sucesso!' );
+        return redirect()->route( 'provider.business.edit' )
+            ->with( 'info', 'Use a nova interface separada para atualizar seus dados.' );
     }
 
     /**

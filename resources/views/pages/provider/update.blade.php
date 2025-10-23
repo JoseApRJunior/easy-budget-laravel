@@ -10,13 +10,72 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Perfil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Atualizar</li>
                 </ol>
             </nav>
         </div>
 
-        <form id="updateForm" action="{{ route( 'provider.update' ) }}" method="POST" enctype="multipart/form-data">
+        <!-- Mensagem informativa sobre nova estrutura -->
+        <div class="alert alert-info border-0 shadow-sm" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Nova estrutura de perfil implementada!</h5>
+                    <p class="mb-0">
+                        Agora você pode gerenciar seus dados de forma mais organizada.
+                        Escolha qual seção deseja atualizar:
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões para as novas telas -->
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Perfil Pessoal</h5>
+                        <p class="card-text text-muted">
+                            Atualize seus dados pessoais, foto de perfil e redes sociais.
+                        </p>
+                        <a href="{{ route( 'profile.edit' ) }}" class="btn btn-primary">
+                            <i class="bi bi-person me-2"></i>Editar Perfil Pessoal
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-building text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Dados Empresariais</h5>
+                        <p class="card-text text-muted">
+                            Gerencie informações da empresa, endereço, contato e logo.
+                        </p>
+                        <a href="{{ route( 'provider.business.edit' ) }}" class="btn btn-success">
+                            <i class="bi bi-building me-2"></i>Editar Dados Empresariais
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão para voltar -->
+        <div class="text-center mt-4">
+            <a href="{{ route( 'settings.index' ) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Voltar para Configurações
+            </a>
+        </div>
+
+        <!-- Formulário legacy (oculto) para compatibilidade -->
+        <form id="updateForm" action="{{ route( 'provider.update' ) }}" method="POST" enctype="multipart/form-data" style="display: none;">
             @csrf
             @method( 'PUT' )
             <div class="row g-4">
@@ -147,68 +206,19 @@
 @endsection
 
 @push( 'scripts' )
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script src="{{ asset( 'assets/js/modules/masks/index.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/modules/form-validation.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/modules/cep-service.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/modules/image-preview.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/modules/character-counter.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/provider_update.js' ) }}" type="module"></script>
     <script>
-        $( document ).ready( function () {
-            $( '#phone' ).mask( '(00) 00000-0000' );
-            $( '#phone_business' ).mask( '(00) 00000-0000' );
-            $( '#cnpj' ).mask( '00.000.000/0000-00' );
-            $( '#cpf' ).mask( '000.000.000-00' );
-            $( '#cep' ).mask( '00000-000' );
-        } );
-    </script>
-    <script>
-        document.getElementById( 'logo' ).addEventListener( 'change', function ( e ) {
-            const file = e.target.files[0];
-            const maxSize = this.dataset.maxSize;
-
-            if ( file ) {
-                if ( file.size > maxSize ) {
-                    alert( 'O arquivo é muito grande. O tamanho máximo permitido é 5MB.' );
-                    this.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function ( e ) {
-                    document.getElementById( 'preview' ).src = e.target.result;
-                }
-                reader.readAsDataURL( file );
-            }
-        } );
-
-        document.getElementById( 'avatar' ).addEventListener( 'change', function ( e ) {
-            const file = e.target.files[0];
-            const maxSize = 5242880; // 5MB
-
-            if ( file ) {
-                if ( file.size > maxSize ) {
-                    alert( 'O arquivo é muito grande. O tamanho máximo permitido é 5MB.' );
-                    this.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function ( e ) {
-                    const img = document.createElement( 'img' );
-                    img.src = e.target.result;
-                    img.className = 'img-thumbnail';
-                    img.width = 100;
-                    img.height = 100;
-                    const container = document.querySelector( '#avatar + div' );
-                    if ( container ) {
-                        container.innerHTML = '';
-                        container.appendChild( img );
-                    }
-                }
-                reader.readAsDataURL( file );
-            }
+        // Scripts específicos para a página de transição
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Adicionar feedback visual aos botões
+            const buttons = document.querySelectorAll( '.btn' );
+            buttons.forEach( button => {
+                button.addEventListener( 'click', function () {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout( () => {
+                        this.style.transform = 'scale(1)';
+                    }, 150 );
+                } );
+            } );
         } );
     </script>
 @endpush

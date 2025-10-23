@@ -37,6 +37,17 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
 
     // Provider routes
     Route::get( '/', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
+
+    // Profile routes (dados pessoais)
+    Route::get( '/profile', [ \App\Http\Controllers\ProfileController::class, 'edit' ] )->name( 'profile.edit' );
+    Route::patch( '/profile', [ \App\Http\Controllers\ProfileController::class, 'update' ] )->name( 'profile.update' );
+    Route::delete( '/profile', [ \App\Http\Controllers\ProfileController::class, 'destroy' ] )->name( 'profile.destroy' );
+
+    // Provider business routes (dados empresariais)
+    Route::get( '/provider/business/edit', [ \App\Http\Controllers\ProviderBusinessController::class, 'edit' ] )->name( 'provider.business.edit' );
+    Route::patch( '/provider/business', [ \App\Http\Controllers\ProviderBusinessController::class, 'update' ] )->name( 'provider.business.update' );
+
+    // Legacy provider routes (manter para compatibilidade)
     Route::get( '/provider/update', [ ProviderController::class, 'update' ] )->name( 'provider.update' );
     Route::match( [ 'post', 'put' ], '/provider/update', [ ProviderController::class, 'update_store' ] )->name( 'provider.update_store' );
     Route::get( '/provider/change-password', [ ProviderController::class, 'change_password' ] )->name( 'provider.change_password' );
