@@ -81,6 +81,13 @@ class SettingsController extends Controller
                     'user_settings' => $userSettings,
                 ],
             ],
+            'provider'      => [
+                'label' => 'Provider',
+                'icon'  => 'building',
+                'data'  => [
+                    'provider' => auth()->user()->provider,
+                ],
+            ],
         ];
 
         return view( 'settings.index', [
