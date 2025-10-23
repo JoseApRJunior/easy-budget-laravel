@@ -62,7 +62,9 @@ class ProviderController extends Controller
             'budgets'           => $dashboardData[ 'budgets' ],
             'activities'        => $dashboardData[ 'activities' ],
             'financial_summary' => $dashboardData[ 'financial_summary' ],
+            'total_activities'  => count( $dashboardData[ 'activities' ] ),
         ] );
+
     }
 
     /**

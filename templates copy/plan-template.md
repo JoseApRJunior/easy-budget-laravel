@@ -1,6 +1,6 @@
 # Implementation Plan: Login com Google (OAuth 2.0)
 
-**Branch**: `001-login-google` | **Date**: 2025-10-21 | **Spec**: `/specs/001-login-google/spec.md`
+**Branch**: `dev-junior` | **Date**: 2025-10-21 | **Spec**: `/specs/001-login-google/spec.md`
 **Input**: Feature specification from `/specs/001-login-google/spec.md`
 
 ---

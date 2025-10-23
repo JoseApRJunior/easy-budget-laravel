@@ -1,6 +1,6 @@
 # Feature Specification: Login com Google (OAuth 2.0)
 
-**Feature Branch**: `001-login-google`
+**Feature Branch**: `dev-junior`
 **Created**: 2025-10-21
 **Status**: Draft
 **Input**: User description: "Permitir login/cadastro via conta Google usando OAuth 2.0"

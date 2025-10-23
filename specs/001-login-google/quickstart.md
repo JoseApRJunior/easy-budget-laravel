@@ -115,9 +115,6 @@ resources/views/
 └── partials/
     └── google_login_button.blade.php    # Botão de login Google
 
-database/migrations/
-└── 2025_10_21_000000_add_google_fields_to_users_table.php
-
 routes/
 └── auth.php                             # Rotas OAuth
 ```

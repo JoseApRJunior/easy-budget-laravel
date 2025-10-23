@@ -1,0 +1,26 @@
+# Laravel Sail
+/vendor
+/node_modules
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/storage/app/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+/.env
+.env.backup
+.env.production
+.phpunit.result.cache
+/storage/pail
+/public/build
+/public/hot
+.DS_Store
+Thumbs.db
+*.log
+coverage/
+.phpunit.cache
+.idea/
+.vscode/

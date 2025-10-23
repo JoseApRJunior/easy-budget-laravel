@@ -1,0 +1,42 @@
+# Laravel
+/vendor
+/storage
+/bootstrap/cache
+/public/build
+/public/hot
+/node_modules
+
+# Logs and cache
+*.log
+.phpunit.result.cache
+.phpunit.cache
+coverage/
+
+# Environment files
+.env*
+
+# IDE files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+
+# Laravel specific
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.min.js
+*.min.css

@@ -264,6 +264,11 @@ Route::prefix( 'auth' )->name( 'auth.' )->group( function () {
     Route::get( '/google/callback', [ GoogleController::class, 'callback' ] )->name( 'google.callback' );
 } );
 
+// Google OAuth unlink route (requires authentication)
+Route::middleware( 'auth' )->group( function () {
+    Route::post( '/auth/google/unlink', [ GoogleController::class, 'unlink' ] )->name( 'auth.google.unlink' );
+} );
+
 require __DIR__ . '/auth.php';
 
 // Rotas públicas para orçamentos com token de confirmação
@@ -310,3 +315,83 @@ Route::prefix( 'webhooks' )->name( 'webhooks.' )->group( function () {
 Route::get( '/not-allowed', [ ErrorController::class, 'notAllowed' ] )->name( 'error.not-allowed' );
 Route::get( '/not-found', [ ErrorController::class, 'notFound' ] )->name( 'error.not-found' );
 Route::get( '/internal-error', [ ErrorController::class, 'internal' ] )->name( 'error.internal' );
+
+/*
+|--------------------------------------------------------------------------
+| ROTAS FUTURAS - Sistema de Monitoramento e IA (Para implementar)
+|--------------------------------------------------------------------------
+| Estas rotas serão implementadas quando o sistema estiver maduro
+| Comentadas por enquanto conforme solicitado
+*/
+
+// Sistema de Monitoramento Avançado (FUTURO)
+// Route::prefix('admin/monitoring')->name('admin.monitoring.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [MonitoringController::class, 'index'])->name('index');
+//     Route::get('/metrics', [MonitoringController::class, 'metrics'])->name('metrics');
+//     Route::get('/api/metrics', [MonitoringController::class, 'apiMetrics'])->name('api.metrics');
+//     Route::get('/api/reports', [MonitoringController::class, 'apiReports'])->name('api.reports');
+//     Route::get('/realtime', [MonitoringController::class, 'realTimeMetrics'])->name('realtime');
+//     Route::post('/record', [MonitoringController::class, 'recordMetrics'])->name('record');
+//     Route::post('/cleanup', [MonitoringController::class, 'cleanup'])->name('cleanup');
+//     Route::get('/middleware/{middleware}', [MonitoringController::class, 'middleware'])->name('middleware');
+// });
+
+// Sistema de Alertas Avançado (FUTURO)
+// Route::prefix('admin/alerts')->name('admin.alerts.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [AlertController::class, 'index'])->name('index');
+//     Route::get('/api', [AlertController::class, 'getAlertsApi'])->name('api');
+//     Route::post('/resolve/{id}', [AlertController::class, 'resolveAlert'])->name('resolve');
+//     Route::post('/check-now', [AlertController::class, 'checkNow'])->name('check-now');
+//     Route::get('/settings', [AlertController::class, 'settings'])->name('settings');
+//     Route::post('/settings', [AlertController::class, 'settings'])->name('settings.store');
+//     Route::get('/history', [AlertController::class, 'history'])->name('history');
+// });
+
+// Sistema de Backup Avançado (FUTURO)
+// Route::prefix('admin/backups')->name('admin.backups.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [BackupController::class, 'index'])->name('index');
+//     Route::post('/create', [BackupController::class, 'create'])->name('create');
+//     Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
+//     Route::post('/delete', [BackupController::class, 'delete'])->name('delete');
+//     Route::post('/cleanup', [BackupController::class, 'cleanup'])->name('cleanup');
+// });
+
+// Sistema de Inteligência Artificial (FUTURO)
+// Route::prefix('admin/ai')->name('admin.ai.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [AIController::class, 'dashboard'])->name('dashboard');
+//     Route::get('/dataset', [AIController::class, 'dataset'])->name('dataset');
+//     Route::get('/analyze/budget/{budget}', [AIController::class, 'analyzeBudget'])->name('analyze.budget');
+//     Route::get('/insights/user/{user}', [AIController::class, 'userInsights'])->name('insights.user');
+//     Route::get('/alerts', [AIController::class, 'getAlerts'])->name('alerts');
+//     Route::get('/metrics/roi', [AIController::class, 'roiMetrics'])->name('metrics.roi');
+//     Route::get('/test', [AIController::class, 'test'])->name('test');
+//     Route::get('/health', [AIController::class, 'health'])->name('health');
+// });
+
+// Sistema de Logs Avançado (FUTURO)
+// Route::prefix('admin/logs')->name('admin.logs.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [LogController::class, 'index'])->name('index');
+//     Route::get('/show/{id}', [LogController::class, 'show'])->name('show');
+//     Route::get('/export', [LogController::class, 'export'])->name('export');
+//     Route::post('/cleanup', [LogController::class, 'cleanup'])->name('cleanup');
+// });
+
+// Sistema de Atividades (FUTURO)
+// Route::prefix('admin/activities')->name('admin.activities.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [ActivityController::class, 'index'])->name('index');
+//     Route::get('/show/{id}', [ActivityController::class, 'show'])->name('show');
+//     Route::get('/export', [ActivityController::class, 'export'])->name('export');
+// });
+
+// Mercado Pago Integration Routes (FUTURO)
+// Route::prefix('provider/integrations')->name('provider.integrations.')->middleware(['auth', 'verified', 'provider'])->group(function () {
+//     Route::get('/mercadopago', [MercadoPagoController::class, 'index'])->name('mercadopago');
+//     Route::get('/mercadopago/callback', [MercadoPagoController::class, 'callback'])->name('mercadopago.callback');
+//     Route::post('/mercadopago/disconnect', [MercadoPagoController::class, 'disconnect'])->name('mercadopago.disconnect');
+// });
+
+/*
+|--------------------------------------------------------------------------
+| FIM DAS ROTAS FUTURAS
+|--------------------------------------------------------------------------
+*/

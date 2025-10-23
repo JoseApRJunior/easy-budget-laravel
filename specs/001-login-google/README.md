@@ -16,7 +16,7 @@ Este documento descreve a implementação completa do sistema de autenticação 
 
 ### **📁 Estrutura de Arquivos**
 
-```
+````
 app/
 ├── Contracts/Interfaces/Auth/
 │   ├── OAuthClientInterface.php           # Interface para clientes OAuth
@@ -43,9 +43,7 @@ config/
 routes/
 └── web.php                                # Rotas de autenticação Google
 
-database/migrations/
-└── 2025_10_21_100759_add_google_fields_to_users_table.php
-```
+
 
 ## 🔧 Componentes Principais
 
@@ -126,7 +124,7 @@ Quando um usuário faz login com Google OAuth, a conta é **automaticamente veri
 
 // ✅ Automático: Usuário ativo (experiência fluida)
 'is_active' => true,
-```
+````
 
 **Razões para Verificação Automática:**
 

@@ -103,9 +103,6 @@ class GoogleController extends Controller
             // Loga o usuário
             Auth::login( $authResult->getData() );
 
-            // Cria sessão customizada para compatibilidade com sistema existente
-            $this->createCustomSession( $request );
-
             // Garante sessão limpa para evitar conflitos
             $this->ensureCleanSession( $request );
 
@@ -127,61 +124,6 @@ class GoogleController extends Controller
             ] );
 
             return redirect()->route( 'home' )->with( 'error', 'Erro interno durante a autenticação. Tente novamente.' );
-        }
-    }
-
-    /**
-     * Cria sessão customizada para compatibilidade com sistema existente
-     *
-     * Este método garante que a sessão tenha todos os dados necessários
-     * para o funcionamento correto do sistema após login via Google OAuth.
-     *
-     * @param Request $request
-     * @return void
-     */
-    private function createCustomSession( Request $request ): void
-    {
-        try {
-            $user = Auth::user();
-
-            // Dados essenciais da sessão
-            session( [
-                'auth'                => true, // Sessão necessária para o menu de navegação
-                'user_id'             => $user->id,
-                'user_name'           => $user->name ?? $user->email,
-                'user_email'          => $user->email,
-                'user_role'           => $user->role ?? 'provider',
-                'tenant_id'           => $user->tenant_id,
-                'login_method'        => 'google_oauth',
-                'login_time'          => now()->toISOString(),
-                'session_fingerprint' => $this->generateSessionFingerprint( $request ),
-            ] );
-
-            // Dados específicos do provider se aplicável
-            if ( $user->tenant_id ) {
-                $provider = $user->provider ?? null;
-                if ( $provider ) {
-                    session( [
-                        'provider_id'    => $provider->id,
-                        'provider_name'  => $provider->company_name ?? $user->name,
-                        'provider_logo'  => $provider->logo ?? $user->logo,
-                        'terms_accepted' => $provider->terms_accepted,
-                    ] );
-                }
-            }
-
-            Log::info( 'Sessão customizada criada para Google OAuth', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'ip'        => $request->ip(),
-            ] );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao criar sessão customizada Google OAuth', [
-                'error'   => $e->getMessage(),
-                'user_id' => Auth::id(),
-                'ip'      => $request->ip(),
-            ] );
         }
     }
 
@@ -253,6 +195,53 @@ class GoogleController extends Controller
         ];
 
         return hash( 'sha256', json_encode( $fingerprintData ) );
+    }
+
+    /**
+     * Desvincula a conta Google do usuário
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function unlink( Request $request ): RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Verifica se o usuário tem conta Google vinculada
+            if ( !$user->google_id ) {
+                Log::info( 'Tentativa de desvinculação sem conta Google', [
+                    'user_id' => $user->id,
+                    'ip'      => $request->ip(),
+                ] );
+
+                return redirect()->back()->with( 'error', 'Nenhuma conta Google vinculada para desvincular.' );
+            }
+
+            // Desvincula a conta Google
+            $user->update( [
+                'google_id'   => null,
+                'avatar'      => null,
+                'google_data' => null,
+            ] );
+
+            Log::info( 'Conta Google desvinculada com sucesso', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'ip'      => $request->ip(),
+            ] );
+
+            return redirect()->back()->with( 'success', 'Conta Google desvinculada com sucesso.' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao desvincular conta Google', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'ip'      => $request->ip(),
+            ] );
+
+            return redirect()->back()->with( 'error', 'Erro ao desvincular conta Google. Tente novamente.' );
+        }
     }
 
 }

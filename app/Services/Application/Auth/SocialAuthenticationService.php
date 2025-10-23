@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Log;
 class SocialAuthenticationService extends AbstractBaseService implements SocialAuthenticationInterface
 {
     private OAuthClientInterface    $oauthClient;
-    private UserRepository          $userRepository;
     private UserRegistrationService $userRegistrationService;
 
     public function __construct(
@@ -65,8 +64,8 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 return $this->success( $existingUser, 'Usuário autenticado com sucesso via ' . ucfirst( $provider ) );
             }
 
-            // Verifica se e-mail já está em uso por outro usuário
-            if ( $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
+            // Verifica se e-mail existe e não está em uso por outro usuário
+            if ( !empty( $userData[ 'email' ] ) && $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
                 return $this->error( 'E-mail já cadastrado', 'Este e-mail já está sendo utilizado por outra conta.' );
             }
 
@@ -119,6 +118,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             $registrationData = [
                 'first_name'     => $firstName,
                 'last_name'      => $lastName,
+                'name'           => $userData[ 'name' ], // ✅ Nome completo do Google para o campo name do usuário
                 'email'          => $userData[ 'email' ],
                 'password'       => 'TempPass123!@#', // Senha temporária (será substituída)
                 'phone'          => '+5511999999999', // Telefone padrão para login social

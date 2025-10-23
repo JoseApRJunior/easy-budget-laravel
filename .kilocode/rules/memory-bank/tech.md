@@ -4,8 +4,8 @@
 
 ### **🏗️ Backend**
 
--  **Framework:** Laravel 12 (PHP 8.3+)
--  **Linguagem:** PHP 8.3+
+-  **Framework:** Laravel 12 (PHP 8.2+)
+-  **Linguagem:** PHP 8.2+
 -  **Web Server:** Apache/Nginx
 -  **Banco de Dados:** MySQL 8.0+
 -  **Cache:** Redis 7.0+
@@ -40,7 +40,7 @@
 
 ```bash
 # PHP Requirements
-PHP >= 8.3
+PHP >= 8.2
 PDO Extension
 Mbstring Extension
 OpenSSL Extension

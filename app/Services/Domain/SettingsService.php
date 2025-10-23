@@ -380,7 +380,14 @@ class SettingsService extends AbstractBaseService
      */
     public function getCompleteUserSettings( ?User $user = null ): array
     {
-        $user         = $user ?? auth()->user();
+        $user = $user ?? auth()->user();
+
+        // Carrega relacionamentos necessários para o perfil
+        $user->load( [
+            'provider.commonData',
+            'provider.contact'
+        ] );
+
         $userSettings = $this->getUserSettings( $user );
 
         return [

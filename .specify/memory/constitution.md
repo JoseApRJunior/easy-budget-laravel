@@ -1,45 +1,64 @@
-# Easy Budget Laravel – Constitution
+Perfeito, Jose! Com base nesse resumo estratégico e na estrutura padrão do Speckit Constitution, aqui está a versão atualizada e formalizada do artefato `/speckit.constitution` para o projeto Easy Budget Laravel:
+
+---
+
+# Easy Budget Laravel Constitution
 
 ## Core Principles
 
-### I. Segurança em Primeiro Lugar
+### I. Arquitetura Padronizada
 
-Todas as implementações devem priorizar a proteção de dados do usuário. Autenticação via Google OAuth 2.0 deve seguir as melhores práticas de segurança, incluindo uso de HTTPS, tokens expiram automaticamente e proteção contra CSRF.
+Todas as funcionalidades devem seguir a arquitetura MVC com Service Layer e Repository Pattern. As camadas obrigatórias são: Controller → Service → Repository → Model → View. Traits `TenantScoped` e `Auditable` devem ser aplicadas sempre que necessário. O sistema é multi-tenant por padrão, com isolamento completo por `tenant_id`.
 
-### II. Experiência de Usuário Fluida
+### II. Segurança em Primeiro Lugar
 
-O login social deve ser simples, rápido e intuitivo. O usuário deve conseguir se cadastrar ou logar com um clique, sem fricção desnecessária.
+Autenticação via Google OAuth 2.0 deve seguir as melhores práticas usando Laravel Socialite. Tokens são criptografados e expiram automaticamente. Proteções contra CSRF, XSS e SQL Injection são obrigatórias. Auditoria completa deve ser aplicada em todas as ações sensíveis, com severidade, categoria e metadados.
 
 ### III. Testes Obrigatórios (NON-NEGOTIABLE)
 
-Cada funcionalidade de autenticação deve ser coberta por testes unitários e de integração. Fluxos de login, callback e vinculação de contas precisam ser validados antes de produção.
+Toda funcionalidade deve ter testes unitários e de integração. Cobertura mínima futura: 80%. Testes obrigatórios para login, reset de senha, verificação de e-mail, permissões e middleware de trial. Testes devem validar fluxos completos e garantir estabilidade antes de produção.
 
-### IV. Integração Confiável
+### IV. Evolução Guiada por Especificações
 
-A integração com o Google deve ser resiliente a falhas externas. Devemos implementar tratamento de erros, fallback e logs estruturados para monitorar problemas.
+Toda nova lógica deve iniciar com `/speckit.specify`, seguida por `/speckit.plan`, `/speckit.tasks`, `/speckit.implement` e `/speckit.analyze`. Esse fluxo garante consistência, rastreabilidade e alinhamento técnico com os padrões do projeto.
 
-### V. Simplicidade e Escalabilidade
+### V. Observabilidade e Simplicidade
 
-A arquitetura deve ser simples, baseada em Laravel Socialite, mas preparada para expansão futura (ex.: Facebook, Apple ID). Evitar complexidade desnecessária.
+Logs estruturados devem ser implementados em todas as operações críticas. Métricas de performance e segurança devem ser monitoradas continuamente. A arquitetura deve permanecer simples e escalável, evitando complexidade desnecessária. Dashboards e relatórios devem ser otimizados para decisões rápidas.
 
-## Requisitos de Segurança
+---
 
--  Seguir OWASP Top 10.
--  Armazenar apenas os dados mínimos necessários (nome, e-mail, avatar, Google ID).
--  Tokens de acesso nunca devem ser persistidos em texto puro.
--  Conformidade com LGPD/GDPR.
+## Requisitos Técnicos e de Segurança
+
+-  Laravel 12, PHP 8.3+, MySQL 8.0+, Redis 7.0+
+-  Blade + Bootstrap 5.3 + jQuery 3.7
+-  Autenticação via Socialite + Sanctum
+-  Rate limiting por IP e tenant
+-  Auditoria com severidade e categoria
+-  Conformidade com LGPD/GDPR e OWASP Top 10
+-  Tokens nunca armazenados em texto puro
+-  APP_DEBUG sempre desativado em produção
+
+---
 
 ## Fluxo de Desenvolvimento
 
--  Pull Requests exigem revisão obrigatória.
--  Testes automatizados devem passar antes do merge.
--  Checklist de segurança deve ser validada em cada entrega.
--  Deploy só após aprovação em ambiente de staging.
+-  Pull Requests exigem revisão obrigatória
+-  Testes automatizados devem passar antes do merge
+-  Deploy somente após aprovação em ambiente de staging
+-  Checklist de segurança e arquitetura deve ser validado
+-  Documentação atualizada em `DesignPatterns/README-GERAL.md`
+-  Novos modelos devem seguir o fluxo completo: Model → Repository → Service → Controller → View
+-  Permissões RBAC devem ser registradas via seeder e validadas com `@can` ou `PermissionService`
+
+---
 
 ## Governance
 
--  Esta constituição tem prioridade sobre outras práticas.
--  Alterações exigem documentação, aprovação em revisão e plano de migração.
--  Complexidade deve ser sempre justificada.
+Esta constituição tem prioridade sobre outras práticas. Alterações exigem documentação, aprovação em revisão e plano de migração. Complexidade deve ser sempre justificada. Todos os PRs e revisões devem verificar conformidade com esta constituição. Use os artefatos Speckit como guia de runtime para desenvolvimento.
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-21 | **Last Amended**: 2025-10-21
+**Version**: 2.0.0 | **Ratified**: 23/10/2025 | **Last Amended**: 23/10/2025
+
+---
+
+Se quiser, posso salvar esse artefato como base para futuras especificações ou gerar um `/speckit.specify` para a próxima funcionalidade. Deseja que eu faça isso agora?

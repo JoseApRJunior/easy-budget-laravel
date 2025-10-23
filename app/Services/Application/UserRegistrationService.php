@@ -26,7 +26,6 @@ use App\Services\Application\EmailVerificationService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
@@ -474,9 +473,13 @@ class UserRegistrationService extends AbstractBaseService
                 'provider_id'        => $provider->id,
                 'status'             => 'active',
                 'transaction_amount' => $plan->price ?? 0.00,
-                'transaction_date'   => now(),
                 'start_date'         => now(),
                 'end_date'           => now()->addDays( 7 ), // Trial de 7 dias
+                'transaction_date'   => now(),
+                'payment_method'     => 'trial',
+                'payment_id'         => 'TEST_' . uniqid(),
+                'public_hash'        => 'TEST_HASH_' . uniqid(),
+
             ] );
 
             $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );
@@ -598,6 +601,7 @@ class UserRegistrationService extends AbstractBaseService
             // Criar usuário usando o modelo diretamente para evitar conflitos com o global scope
             $user = User::withoutTenant()->create( [
                 'tenant_id' => $tenant->id,
+                'name'      => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ], // ✅ Nome completo do usuário
                 'email'     => $userData[ 'email' ],
                 'password'  => Hash::make( $userData[ 'password' ] ),
                 'is_active' => false,
