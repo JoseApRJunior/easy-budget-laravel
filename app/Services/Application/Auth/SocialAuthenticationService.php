@@ -120,7 +120,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'last_name'      => $lastName,
                 'name'           => $userData[ 'name' ], // ✅ Nome completo do Google para o campo name do usuário
                 'email'          => $userData[ 'email' ],
-                'password'       => 'TempPass123!@#', // Senha temporária (será substituída)
+                'password'       => null, // ✅ Sem senha para usuários sociais
                 'phone'          => '+5511999999999', // Telefone padrão para login social
                 'terms_accepted' => true, // Aceito automaticamente para login social
             ];
@@ -142,7 +142,6 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'avatar'            => $userData[ 'avatar' ] ?? null,
                 'email_verified_at' => now(), // ✅ E-mail verificado automaticamente (Google já verifica)
                 'is_active'         => true,  // ✅ Usuário ativo automaticamente (login social fluido)
-                'password'          => null,  // ✅ Remove senha temporária para usuários sociais
             ] );
 
             \Illuminate\Support\Facades\Log::info( 'Senha removida para usuário social', [

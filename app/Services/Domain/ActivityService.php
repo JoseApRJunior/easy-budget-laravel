@@ -36,13 +36,10 @@ class ActivityService extends AbstractBaseService
             'id',
             'tenant_id',
             'user_id',
-            'action',
-            'model_type',
-            'model_id',
-            'severity',
-            'category',
+            'action_type',
+            'entity_type',
+            'entity_id',
             'created_at',
-            'updated_at',
         ];
     }
 
@@ -54,9 +51,7 @@ class ActivityService extends AbstractBaseService
         return [
             'id',
             'created_at',
-            'updated_at',
-            'action',
-            'severity',
+            'action_type',
         ];
     }
 
@@ -78,13 +73,11 @@ class ActivityService extends AbstractBaseService
             $activityData = [
                 'tenant_id'   => $user?->tenant_id ?? 1,
                 'user_id'     => $user?->id,
-                'action'      => $action,
-                'model_type'  => $modelType,
-                'model_id'    => $modelId,
+                'action_type' => $action,
+                'entity_type' => $modelType,
+                'entity_id'   => $modelId,
                 'description' => $description,
-                'severity'    => $severity,
-                'category'    => $category,
-                'metadata'    => $metadata,
+                'metadata'    => json_encode( $metadata ),
                 'ip_address'  => request()->ip(),
                 'user_agent'  => request()->userAgent(),
             ];

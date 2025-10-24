@@ -183,7 +183,7 @@ class CustomVerifyEmailController extends Controller
 
             // 10. Redirecionar para dashboard com sessão completa
             return $this->redirectSuccess(
-                'dashboard',
+                'provider.dashboard',
                 'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
             );
 

@@ -117,7 +117,8 @@ class UserRegistrationService extends AbstractBaseService
             // 1. Validação básica dos dados obrigatórios
             if (
                 empty( $userData[ 'first_name' ] ) || empty( $userData[ 'last_name' ] ) ||
-                empty( $userData[ 'email' ] ) || empty( $userData[ 'password' ] ) ||
+                empty( $userData[ 'email' ] ) ||
+                ( empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) || // Permite null para social login
                 empty( $userData[ 'phone' ] ) || empty( $userData[ 'terms_accepted' ] )
             ) {
                 return ServiceResult::error(
@@ -603,7 +604,7 @@ class UserRegistrationService extends AbstractBaseService
                 'tenant_id' => $tenant->id,
                 'name'      => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ], // ✅ Nome completo do usuário
                 'email'     => $userData[ 'email' ],
-                'password'  => Hash::make( $userData[ 'password' ] ),
+                'password'  => $userData[ 'password' ] ? Hash::make( $userData[ 'password' ] ) : null,
                 'is_active' => false,
             ] );
 

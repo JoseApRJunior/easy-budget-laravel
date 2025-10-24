@@ -49,7 +49,7 @@ class RegistrationEdgeCasesTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verificar que tenant foi criado com nome único
         $this->assertDatabaseHas( 'tenants', [
@@ -65,7 +65,7 @@ class RegistrationEdgeCasesTest extends TestCase
             ->first();
 
         $this->assertNotNull( $tenant );
-        $this->assertStringContains( '-3', $tenant->name ); // Deve ser joao-silva-3
+        $this->assertStringContainsString( '-3', $tenant->name ); // Deve ser joao-silva-3
     }
 
     /**
@@ -154,7 +154,7 @@ class RegistrationEdgeCasesTest extends TestCase
             $response = $this->postJson( '/register', $completeData );
 
             // Assert
-            $response->assertRedirect( '/dashboard' );
+            $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
             $response->assertSessionHas( 'success' );
 
             // Verificar se usuário foi criado
@@ -203,7 +203,7 @@ class RegistrationEdgeCasesTest extends TestCase
             $response = $this->postJson( '/register', $completeData );
 
             // Assert
-            $response->assertRedirect( '/dashboard' );
+            $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
             $response->assertSessionHas( 'success' );
 
             // Verificar se usuário foi criado
@@ -290,7 +290,7 @@ class RegistrationEdgeCasesTest extends TestCase
             $response = $this->postJson( '/register', $userData );
 
             // Assert
-            $response->assertRedirect( '/dashboard' );
+            $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
             $response->assertSessionHas( 'success' );
 
             // Verificar se telefone foi salvo corretamente
@@ -331,7 +331,7 @@ class RegistrationEdgeCasesTest extends TestCase
             $response = $this->postJson( '/register', $userData );
 
             // Assert
-            $response->assertRedirect( '/dashboard' );
+            $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
             $response->assertSessionHas( 'success' );
 
             // Verificar se senha foi hasheada corretamente
@@ -451,7 +451,7 @@ class RegistrationEdgeCasesTest extends TestCase
             $response = $this->postJson( '/register', $userData );
 
             // Assert
-            $response->assertRedirect( '/dashboard' );
+            $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
             $response->assertSessionHas( 'success' );
 
             // Verificar se telefone foi formatado e salvo

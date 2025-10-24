@@ -44,7 +44,7 @@ class EmailVerificationIntegrationTest extends TestCase
         $registrationResponse = $this->post( '/register', $userData );
 
         // Assert 1: Registro bem-sucedido
-        $registrationResponse->assertRedirect( 'dashboard' );
+        $registrationResponse->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $registrationResponse->assertSessionHas( 'success' );
 
         // Verificar que usuário foi criado
@@ -76,7 +76,7 @@ class EmailVerificationIntegrationTest extends TestCase
         $verificationResponse = $this->get( '/confirm-account?token=' . $token->token );
 
         // Assert 2: Verificação bem-sucedida
-        $verificationResponse->assertRedirect( 'dashboard' );
+        $verificationResponse->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $verificationResponse->assertSessionHas( 'success' );
 
         // Verificar que usuário foi ativado e e-mail verificado
@@ -318,7 +318,7 @@ class EmailVerificationIntegrationTest extends TestCase
 
         // Assert
         // Apenas a primeira deve funcionar, as outras devem falhar
-        $responses[ 0 ]->assertRedirect( 'dashboard' );
+        $responses[ 0 ]->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $responses[ 1 ]->assertRedirect( 'login' );
         $responses[ 2 ]->assertRedirect( 'login' );
 

@@ -89,7 +89,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
         ] );
 
         $this->actingAs( $this->user )
-            ->get( route( 'dashboard' ) )
+            ->get( route( 'provider.dashboard' ) )
             ->assertStatus( 200 )
             ->assertSessionHas( 'trial_expired_warning', true );
     }
@@ -221,7 +221,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
 
         // Dashboard
         $this->actingAs( $this->user )
-            ->get( route( 'dashboard' ) )
+            ->get( route( 'provider.dashboard' ) )
             ->assertStatus( 200 )
             ->assertSessionMissing( 'trial_expired_warning' );
 

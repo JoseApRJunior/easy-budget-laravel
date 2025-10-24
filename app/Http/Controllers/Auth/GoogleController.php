@@ -113,7 +113,7 @@ class GoogleController extends Controller
             ] );
 
             // Redireciona para o dashboard
-            return redirect()->route( 'dashboard' )->with( 'success', $authResult->getMessage() );
+            return redirect()->route( 'provider.dashboard' )->with( 'success', $authResult->getMessage() );
 
         } catch ( \Exception $e ) {
             Log::error( 'Erro no callback do Google OAuth', [

@@ -9,7 +9,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Atualizar</li>
                 </ol>
@@ -75,7 +75,8 @@
         </div>
 
         <!-- Formulário legacy (oculto) para compatibilidade -->
-        <form id="updateForm" action="{{ route( 'provider.update' ) }}" method="POST" enctype="multipart/form-data" style="display: none;">
+        <form id="updateForm" action="{{ route( 'provider.update' ) }}" method="POST" enctype="multipart/form-data"
+            style="display: none;">
             @csrf
             @method( 'PUT' )
             <div class="row g-4">

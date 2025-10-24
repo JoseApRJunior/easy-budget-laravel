@@ -17,7 +17,7 @@ class ProviderMiddleware
      * Estas são rotas básicas de visualização e configuração
      */
     private const ALLOWED_ROUTES_WITH_EXPIRED_TRIAL = [
-        'dashboard',                    // Dashboard principal
+        'provider.dashboard',           // Dashboard principal
         'provider.update',              // Atualizar perfil
         'provider.update_store',        // Salvar atualização de perfil
         'provider.change_password',     // Mudar senha

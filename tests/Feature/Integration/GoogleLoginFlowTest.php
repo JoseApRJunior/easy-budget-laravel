@@ -62,7 +62,7 @@ class GoogleLoginFlowTest extends TestCase
         ] ) );
 
         // Deve redirecionar para dashboard após login
-        $response->assertRedirect( route( 'dashboard' ) );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verifica se usuário foi criado no banco
         $this->assertDatabaseHas( 'users', [
@@ -108,7 +108,7 @@ class GoogleLoginFlowTest extends TestCase
         ] ) );
 
         // Deve redirecionar para dashboard
-        $response->assertRedirect( route( 'dashboard' ) );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verifica se dados foram atualizados
         $existingUser->refresh();

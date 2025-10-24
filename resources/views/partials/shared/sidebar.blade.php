@@ -44,7 +44,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link d-flex align-items-center" href="{{ route( 'dashboard' ) }}">
+                <a class="nav-link d-flex align-items-center" href="{{ route( 'provider.dashboard' ) }}">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
                 </a>
             </li>

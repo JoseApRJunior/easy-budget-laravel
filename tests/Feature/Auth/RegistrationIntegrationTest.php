@@ -61,7 +61,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
 
         // Verificar se usuário foi criado no banco
@@ -239,7 +239,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verificar se telefone foi formatado e salvo corretamente
         $this->assertDatabaseHas( 'contacts', [
@@ -273,7 +273,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verificar que tenant foi criado com nome único
         $this->assertDatabaseHas( 'tenants', [
@@ -321,7 +321,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
 
         // Verificar que usuário foi criado mesmo com falha no e-mail
@@ -366,7 +366,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->post( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
     }
 

@@ -38,7 +38,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         $response = $this->get( '/confirm-account?token=' . $token->token );
 
         // Assert
-        $response->assertRedirect( 'dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
 
         // Verificar que usuário foi ativado e e-mail verificado
@@ -177,7 +177,7 @@ class CustomVerifyEmailControllerTest extends TestCase
 
         // Primeiro uso do token (deve funcionar)
         $response1 = $this->get( '/confirm-account?token=' . $token->token );
-        $response1->assertRedirect( 'dashboard' );
+        $response1->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Segundo uso do mesmo token (já foi removido)
         $response2 = $this->get( '/confirm-account?token=' . $token->token );

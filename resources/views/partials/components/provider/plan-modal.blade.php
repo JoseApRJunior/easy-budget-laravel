@@ -37,7 +37,7 @@
                         atualizar para um plano com mais recursos.
                     </p>
                     <div class="d-flex flex-column gap-2">
-                        <a href="{{ route( 'plans.index' ) }}" class="btn btn-outline-primary">
+                        <a href="{{ route( 'provider.plans.index' ) }}" class="btn btn-outline-primary">
                             <i class="bi bi-arrow-up-circle me-2"></i>
                             Conhecer Planos
                         </a>

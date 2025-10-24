@@ -54,7 +54,7 @@ class EmailVerificationController extends Controller
 
         if ( $user->email_verified_at ) {
             return $this->redirectSuccess(
-                'dashboard',
+                'provider.dashboard',
                 'Seu e-mail já está verificado.',
             );
         }

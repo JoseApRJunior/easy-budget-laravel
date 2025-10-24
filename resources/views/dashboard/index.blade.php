@@ -92,8 +92,8 @@
                   <a href="{{ route( 'admin.settings' ) }}" class="btn btn-info">
                     <i class="bi bi-gear me-1"></i> Configurações do Sistema
                   </a>
-                  <a href="{{ route( 'admin.reports.index' ) }}" class="btn btn-outline-success">
-                    <i class="bi bi-graph-up me-1"></i> Relatórios do Sistema
+                  <a href="{{ route( 'admin.index' ) }}" class="btn btn-outline-success">
+                    <i class="bi bi-speedometer me-1"></i> Painel Principal
                   </a>
                 </div>
               </div>

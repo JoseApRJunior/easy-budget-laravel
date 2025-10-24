@@ -52,7 +52,7 @@ class EnhancedRegisteredUserController extends Controller
         Auth::login( $data[ 'user' ] );
 
         // Redirecionar para dashboard com mensagem de sucesso
-        return redirect()->route( 'dashboard' )
+        return redirect()->route( 'provider.dashboard' )
             ->with( 'success', $data[ 'message' ] );
     }
 
