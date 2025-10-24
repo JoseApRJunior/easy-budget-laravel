@@ -159,6 +159,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany( UserConfirmationToken::class);
     }
 
+    public function settings(): HasOne
+    {
+        return $this->hasOne( UserSettings::class);
+    }
+
     public function scopeActive( $query ): Builder
     {
         return $query->where( 'is_active', true );

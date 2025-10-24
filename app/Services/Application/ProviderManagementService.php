@@ -15,6 +15,7 @@ use App\Services\Domain\ActivityService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Support\ServiceResult;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class ProviderManagementService
      */
     public function getDashboardData( int $tenantId ): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Buscar orçamentos recentes
         $budgets = Budget::where( 'tenant_id', $tenantId )
@@ -67,7 +68,7 @@ class ProviderManagementService
      */
     public function getProviderForUpdate(): ServiceResult
     {
-        $user     = auth()->user();
+        $user     = Auth::user();
         $provider = $user->provider;
 
         if ( !$provider ) {
@@ -86,12 +87,15 @@ class ProviderManagementService
      */
     public function updateProvider( array $data ): ServiceResult
     {
-        $user     = auth()->user();
+        $user     = Auth::user();
         $provider = $user->provider;
 
         if ( !$provider ) {
             return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
         }
+
+        // Load relationships if not already loaded
+        $provider->load( [ 'commonData', 'contact', 'address' ] );
 
         DB::transaction( function () use ($provider, $data, $user) {
             // Handle logo upload
@@ -102,41 +106,60 @@ class ProviderManagementService
 
             // Update User
             $user->update( [
-                'email' => $data[ 'email' ],
+                'email' => $data[ 'email' ] ?? $user->email,
                 'logo'  => $data[ 'logo' ] ?? $user->logo,
             ] );
 
-            // Update CommonData
-            $provider->commonData->update( [
-                'first_name'          => $data[ 'first_name' ],
-                'last_name'           => $data[ 'last_name' ],
-                'birth_date'          => $data[ 'birth_date' ] ?? null,
-                'cnpj'                => $data[ 'cnpj' ] ?? null,
-                'cpf'                 => $data[ 'cpf' ] ?? null,
-                'company_name'        => $data[ 'company_name' ] ?? null,
-                'description'         => $data[ 'description' ] ?? null,
-                'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-                'profession_id'       => $data[ 'profession_id' ] ?? null,
-            ] );
+            // Update CommonData if exists
+            if ( $provider->commonData ) {
+                $commonDataUpdate = [
+                    'company_name'        => $data[ 'company_name' ] ?? $provider->commonData->company_name,
+                    'cnpj'                => $data[ 'cnpj' ] ?? $provider->commonData->cnpj,
+                    'cpf'                 => $data[ 'cpf' ] ?? $provider->commonData->cpf,
+                    'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? $provider->commonData->area_of_activity_id,
+                    'profession_id'       => $data[ 'profession_id' ] ?? $provider->commonData->profession_id,
+                    'description'         => $data[ 'description' ] ?? $provider->commonData->description,
+                ];
 
-            // Update Contact
-            $provider->contact->update( [
-                'email'          => $data[ 'email' ], // Sync with user email
-                'phone'          => $data[ 'phone' ] ?? null,
-                'email_business' => $data[ 'email_business' ] ?? null,
-                'phone_business' => $data[ 'phone_business' ] ?? null,
-                'website'        => $data[ 'website' ] ?? null,
-            ] );
+                // Only update if there are changes - compare only the fields being updated
+                $currentCommonData = $provider->commonData->only( array_keys( $commonDataUpdate ) );
+                if ( !empty( array_diff_assoc( $commonDataUpdate, $currentCommonData->toArray() ) ) ) {
+                    $provider->commonData->update( $commonDataUpdate );
+                }
+            }
 
-            // Update Address
-            $provider->address->update( [
-                'address'        => $data[ 'address' ],
-                'address_number' => $data[ 'address_number' ] ?? null,
-                'neighborhood'   => $data[ 'neighborhood' ],
-                'city'           => $data[ 'city' ],
-                'state'          => $data[ 'state' ],
-                'cep'            => $data[ 'cep' ],
-            ] );
+            // Update Contact if exists
+            if ( $provider->contact ) {
+                $contactUpdate = [
+                    'email_business' => $data[ 'email_business' ] ?? $provider->contact->email_business,
+                    'phone_business' => $data[ 'phone_business' ] ?? $provider->contact->phone_business,
+                    'website'        => $data[ 'website' ] ?? $provider->contact->website,
+                ];
+
+                // Only update if there are changes - compare only the fields being updated
+                $currentContact = $provider->contact->only( array_keys( $contactUpdate ) );
+                if ( !empty( array_diff_assoc( $contactUpdate, $currentContact->toArray() ) ) ) {
+                    $provider->contact->update( $contactUpdate );
+                }
+            }
+
+            // Update Address if exists
+            if ( $provider->address ) {
+                $addressUpdate = [
+                    'address'        => $data[ 'address' ] ?? $provider->address->address,
+                    'address_number' => $data[ 'address_number' ] ?? $provider->address->address_number,
+                    'neighborhood'   => $data[ 'neighborhood' ] ?? $provider->address->neighborhood,
+                    'city'           => $data[ 'city' ] ?? $provider->address->city,
+                    'state'          => $data[ 'state' ] ?? $provider->address->state,
+                    'cep'            => $data[ 'cep' ] ?? $provider->address->cep,
+                ];
+
+                // Only update if there are changes - compare only the fields being updated
+                $currentAddress = $provider->address->only( array_keys( $addressUpdate ) );
+                if ( !empty( array_diff_assoc( $addressUpdate, $currentAddress->toArray() ) ) ) {
+                    $provider->address->update( $addressUpdate );
+                }
+            }
 
             // Log activity
             $this->activityService->logActivity(
@@ -145,7 +168,7 @@ class ProviderManagementService
                 'provider_updated',
                 'provider',
                 $provider->id,
-                "Prestador {$data[ 'first_name' ]} {$data[ 'last_name' ]} atualizado com sucesso!",
+                "Provider atualizado com sucesso!",
                 $data,
             );
         } );
@@ -158,7 +181,7 @@ class ProviderManagementService
      */
     public function changePassword( string $newPassword ): void
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $user->update( [
             'password' => Hash::make( $newPassword )
@@ -168,7 +191,7 @@ class ProviderManagementService
         $this->activityService->logActivity(
             $user->tenant_id,
             $user->id,
-            'user_updated',
+            'password_changed',
             'user',
             $user->id,
             'Senha atualizada com sucesso!',

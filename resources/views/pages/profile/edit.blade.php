@@ -1,5 +1,7 @@
 @extends( 'layouts.app' )
 
+@section( 'title', 'Perfil Pessoal' )
+
 @section( 'content' )
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->

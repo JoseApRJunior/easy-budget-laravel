@@ -67,11 +67,11 @@ class ProfileController extends Controller
 
             // Processar upload de avatar se fornecido
             if ( $request->hasFile( 'avatar' ) ) {
-                $this->fileUploadService->make( 'avatar' )
-                    ->resize( 150, 150, true )
-                    ->execute();
-                $avatarInfo          = $this->fileUploadService->get_image_info();
-                $validated[ 'avatar' ] = $avatarInfo[ 'path' ];
+                $avatarFile   = $request->file( 'avatar' );
+                $avatarResult = $this->fileUploadService->uploadAvatar( $avatarFile, Auth::id(), $tenantId );
+                if ( $avatarResult[ 'success' ] ) {
+                    $validated[ 'avatar' ] = $avatarResult[ 'paths' ][ 'original' ];
+                }
             }
 
             // Atualizar dados pessoais

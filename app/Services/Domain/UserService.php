@@ -35,6 +35,25 @@ class UserService extends AbstractBaseService
     }
 
     /**
+     * Encontra usuário por ID (usa tenant do usuário atual).
+     */
+    public function findById( int $id, array $with = [] ): ServiceResult
+    {
+        try {
+            // Usar o método da classe abstrata que já tem tratamento de erro
+            $result = parent::findById( $id, $with );
+
+            if ( !$result->isSuccess() ) {
+                return $result;
+            }
+
+            return $this->success( $result->getData(), 'Usuário encontrado com sucesso' );
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro ao buscar usuário: ' . $e->getMessage() );
+        }
+    }
+
+    /**
      * Encontra usuário por ID e tenant ID.
      */
     public function findByIdAndTenantId( int $id, int $tenantId ): ServiceResult
@@ -111,7 +130,7 @@ class UserService extends AbstractBaseService
                     'social_twitter'   => $data[ 'social_twitter' ] ?? null,
                     'social_linkedin'  => $data[ 'social_linkedin' ] ?? null,
                     'social_instagram' => $data[ 'social_instagram' ] ?? null,
-                ] );
+                ], $user );
             }
 
             return $this->success( $this->repository->find( $user->id ), 'Dados pessoais atualizados com sucesso' );
@@ -127,6 +146,11 @@ class UserService extends AbstractBaseService
     {
         try {
             $user = Auth::user();
+
+            // Verificar se o usuário pertence ao tenant correto
+            if ( $user->tenant_id !== $tenantId ) {
+                return $this->error( 'Usuário não pertence ao tenant especificado' );
+            }
 
             // Carregar relacionamentos necessários usando repository
             $userWithRelations = $this->repository->find( $user->id );

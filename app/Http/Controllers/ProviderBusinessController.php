@@ -83,11 +83,11 @@ class ProviderBusinessController extends Controller
 
             // Processar upload de logo se fornecido
             if ( $request->hasFile( 'logo' ) ) {
-                $this->fileUpload->make( 'logo' )
-                    ->resize( 200, null, true )
-                    ->execute();
-                $logoInfo            = $this->fileUpload->get_image_info();
-                $validated[ 'logo' ] = $logoInfo[ 'path' ];
+                $logoFile   = $request->file( 'logo' );
+                $logoResult = $this->fileUpload->uploadCompanyLogo( $logoFile, $user->tenant_id );
+                if ( $logoResult[ 'success' ] ) {
+                    $validated[ 'logo' ] = $logoResult[ 'paths' ][ 'original' ];
+                }
             }
 
             // Buscar dados atuais do usuário
@@ -101,16 +101,22 @@ class ProviderBusinessController extends Controller
             $originalData = $userModel->toArray();
 
             // Gerenciar arquivo de logo usando Storage
-            if ( isset( $logoInfo[ 'path' ] ) && $originalData[ 'logo' ] !== null && $logoInfo[ 'path' ] !== $originalData[ 'logo' ] ) {
+            if ( isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] && $originalData[ 'logo' ] !== null && $logoResult[ 'paths' ][ 'original' ] !== $originalData[ 'logo' ] ) {
                 if ( file_exists( public_path( $originalData[ 'logo' ] ) ) ) {
                     unlink( public_path( $originalData[ 'logo' ] ) );
                 }
             }
-            $validated[ 'logo' ] = isset( $logoInfo[ 'path' ] ) ? $logoInfo[ 'path' ] : $originalData[ 'logo' ];
+            $validated[ 'logo' ] = isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] ? $logoResult[ 'paths' ][ 'original' ] : $originalData[ 'logo' ];
 
             // Atualizar dados do usuário (logo)
             if ( !empty( array_diff_assoc( $userModel->toArray(), [ 'logo' => $validated[ 'logo' ] ] ) ) ) {
                 $this->userService->update( $user->id, [ 'logo' => $validated[ 'logo' ] ] );
+            }
+
+            // Verificar se o usuário tem os IDs necessários
+            if ( !$user->common_data_id ) {
+                return redirect( '/provider/business/edit' )
+                    ->with( 'error', 'Dados comuns não configurados para este usuário' );
             }
 
             // Buscar dados atuais de CommonData
@@ -131,32 +137,38 @@ class ProviderBusinessController extends Controller
                 $this->commonDataService->update( $commonDataModel->id, $validated );
             }
 
-            // Buscar dados atuais de Contact
-            $contactData = $this->contactService->findById( $user->contact_id );
-            if ( !$contactData->isSuccess() ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', 'Contato não encontrado' );
+            // Verificar se o usuário tem contact_id antes de buscar
+            if ( $user->contact_id ) {
+                // Buscar dados atuais de Contact
+                $contactData = $this->contactService->findById( $user->contact_id );
+                if ( !$contactData->isSuccess() ) {
+                    return redirect( '/provider/business/edit' )
+                        ->with( 'error', 'Contato não encontrado' );
+                }
+
+                $contactModel = $contactData->getData();
+
+                // Atualizar Contact
+                if ( !empty( array_diff_assoc( $contactModel->toArray(), $validated ) ) ) {
+                    $this->contactService->update( $contactModel->id, $validated );
+                }
             }
 
-            $contactModel = $contactData->getData();
+            // Verificar se o usuário tem address_id antes de buscar
+            if ( $user->address_id ) {
+                // Buscar dados atuais de Address
+                $addressData = $this->addressService->findById( $user->address_id );
+                if ( !$addressData->isSuccess() ) {
+                    return redirect( '/provider/business/edit' )
+                        ->with( 'error', 'Endereço não encontrado' );
+                }
 
-            // Atualizar Contact
-            if ( !empty( array_diff_assoc( $contactModel->toArray(), $validated ) ) ) {
-                $this->contactService->update( $contactModel->id, $validated );
-            }
+                $addressModel = $addressData->getData();
 
-            // Buscar dados atuais de Address
-            $addressData = $this->addressService->findById( $user->address_id );
-            if ( !$addressData->isSuccess() ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', 'Endereço não encontrado' );
-            }
-
-            $addressModel = $addressData->getData();
-
-            // Atualizar Address
-            if ( !empty( array_diff_assoc( $addressModel->toArray(), $validated ) ) ) {
-                $this->addressService->update( $addressModel->id, $validated );
+                // Atualizar Address
+                if ( !empty( array_diff_assoc( $addressModel->toArray(), $validated ) ) ) {
+                    $this->addressService->update( $addressModel->id, $validated );
+                }
             }
 
             // Atualizar Provider
