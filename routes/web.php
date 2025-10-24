@@ -328,7 +328,7 @@ Route::group( [], function () {
 // Redirects for legacy routes to maintain compatibility
 Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
     Route::redirect( '/provider/update', '/provider/business/edit' )->name( 'provider.update.redirect' );
-    Route::redirect( '/provider/change-password', '/settings/security' )->name( 'provider.change_password.redirect' );
+
 } );
 
 require __DIR__ . '/auth.php';

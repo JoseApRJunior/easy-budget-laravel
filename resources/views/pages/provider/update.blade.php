@@ -42,7 +42,7 @@
                         <p class="card-text text-muted">
                             Atualize seus dados pessoais, foto de perfil e redes sociais.
                         </p>
-                        <a href="{{ route( 'profile.edit' ) }}" class="btn btn-primary">
+                        <a href="{{ route( 'settings.profile.edit' ) }}" class="btn btn-primary">
                             <i class="bi bi-person me-2"></i>Editar Perfil Pessoal
                         </a>
                     </div>

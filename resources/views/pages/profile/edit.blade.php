@@ -12,12 +12,13 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Perfil Pessoal</li>
                 </ol>
             </nav>
         </div>
 
-        <form action="{{ route( 'profile.update' ) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route( 'settings.profile.update' ) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method( 'PATCH' )
 

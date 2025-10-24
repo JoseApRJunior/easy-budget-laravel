@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Activity;
 use App\Models\Permission;
+use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Role;
 use App\Models\Tenant;

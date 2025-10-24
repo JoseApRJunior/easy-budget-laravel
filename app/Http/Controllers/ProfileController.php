@@ -78,7 +78,7 @@ class ProfileController extends Controller
             $result = $this->userService->updatePersonalData( $validated, $tenantId );
 
             if ( !$result->isSuccess() ) {
-                return redirect()->route( 'profile.edit' )
+                return redirect()->route( 'settings.profile.edit' )
                     ->with( 'error', $result->getMessage() );
             }
 
@@ -86,7 +86,7 @@ class ProfileController extends Controller
                 ->with( 'success', 'Perfil atualizado com sucesso!' );
 
         } catch ( \Exception $e ) {
-            return redirect()->route( 'profile.edit' )
+            return redirect()->route( 'settings.profile.edit' )
                 ->with( 'error', 'Erro ao atualizar perfil: ' . $e->getMessage() );
         }
     }
@@ -102,7 +102,7 @@ class ProfileController extends Controller
             $result = $this->settingsService->removeAvatar();
 
             if ( !$result[ 'success' ] ) {
-                return redirect()->route( 'profile.edit' )
+                return redirect()->route( 'settings.profile.edit' )
                     ->with( 'error', $result[ 'message' ] );
             }
 
@@ -110,7 +110,7 @@ class ProfileController extends Controller
                 ->with( 'success', 'Avatar removido com sucesso!' );
 
         } catch ( \Exception $e ) {
-            return redirect()->route( 'profile.edit' )
+            return redirect()->route( 'settings.profile.edit' )
                 ->with( 'error', 'Erro ao remover avatar: ' . $e->getMessage() );
         }
     }

@@ -12,6 +12,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Dados Empresariais</li>
                 </ol>
             </nav>
@@ -269,7 +270,7 @@
                     </a>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route( 'profile.edit' ) }}" class="btn btn-outline-info">
+                    <a href="{{ route( 'settings.profile.edit' ) }}" class="btn btn-outline-info">
                         <i class="bi bi-person me-2"></i>Perfil Pessoal
                     </a>
                 </div>

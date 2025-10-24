@@ -1,6 +1,6 @@
 <div class="card-footer bg-transparent border-0">
     <div class="d-flex justify-content-end gap-2">
-        <a href="{{ route( 'profile.edit' ) }}" class="btn btn-outline-primary">
+        <a href="{{ route( 'settings.profile.edit' ) }}" class="btn btn-outline-primary">
             <i class="bi bi-person me-2"></i>Editar Perfil Pessoal
         </a>
         <a href="{{ route( 'provider.business.edit' ) }}" class="btn btn-outline-info">

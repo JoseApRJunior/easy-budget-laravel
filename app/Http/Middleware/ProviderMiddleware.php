@@ -34,9 +34,9 @@ class ProviderMiddleware
         'settings.audit',               // Auditoria
         'plans.index',                  // Visualizar planos
         'plans.show',                   // Visualizar detalhes do plano
-        'profile.edit',                 // Editar perfil
-        'profile.update',               // Atualizar perfil
-        'profile.destroy',              // Deletar perfil
+        'settings.profile.edit',        // Editar perfil
+        'settings.profile.update',      // Atualizar perfil
+        'settings.profile.destroy',     // Deletar perfil
     ];
 
     /**
