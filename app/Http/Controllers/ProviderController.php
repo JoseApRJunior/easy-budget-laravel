@@ -93,7 +93,13 @@ class ProviderController extends Controller
      */
     public function change_password(): View
     {
-        return view( 'pages.provider.change_password' );
+        $user         = Auth::user();
+        $isGoogleUser = is_null( $user->password );
+
+        return view( 'pages.provider.change_password', [
+            'isGoogleUser' => $isGoogleUser,
+            'userEmail'    => $user->email,
+        ] );
     }
 
     /**
@@ -106,8 +112,12 @@ class ProviderController extends Controller
         try {
             $this->providerService->changePassword( $request->validated()[ 'password' ] );
 
+            $user           = Auth::user();
+            $isGoogleUser   = is_null( $user->password );
+            $successMessage = $isGoogleUser ? 'Senha definida com sucesso!' : 'Senha alterada com sucesso!';
+
             return redirect()->route( 'settings.index' )
-                ->with( 'success', 'Senha alterada com sucesso!' );
+                ->with( 'success', $successMessage );
         } catch ( \Exception $e ) {
             return redirect()->route( 'provider.change_password' )
                 ->with( 'error', 'Erro ao atualizar senha: ' . $e->getMessage() );

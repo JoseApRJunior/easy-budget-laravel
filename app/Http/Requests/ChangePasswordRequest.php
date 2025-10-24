@@ -24,6 +24,17 @@ class ChangePasswordRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = auth()->user();
+
+        // Se usuário não tem senha (Google OAuth), não requer current_password
+        if ( is_null( $user->password ) ) {
+            return [
+                'password'              => 'required|string|min:8|max:255|confirmed',
+                'password_confirmation' => 'required|string',
+            ];
+        }
+
+        // Usuário normal com senha - requer validação da senha atual
         return [
             'current_password'      => 'required|string',
             'password'              => 'required|string|min:8|max:255|confirmed|different:current_password',
@@ -38,14 +49,23 @@ class ChangePasswordRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'current_password.required'      => 'A senha atual é obrigatória.',
+        $user         = auth()->user();
+        $isGoogleUser = is_null( $user->password );
+
+        $messages = [
             'password.required'              => 'A nova senha é obrigatória.',
             'password.min'                   => 'A nova senha deve ter pelo menos 8 caracteres.',
             'password.confirmed'             => 'A confirmação da senha não corresponde.',
-            'password.different'             => 'A nova senha deve ser diferente da senha atual.',
             'password_confirmation.required' => 'A confirmação da senha é obrigatória.',
         ];
+
+        // Só adicionar mensagens de current_password se o usuário tiver senha
+        if ( !$isGoogleUser ) {
+            $messages[ 'current_password.required' ] = 'A senha atual é obrigatória.';
+            $messages[ 'password.different' ]        = 'A nova senha deve ser diferente da senha atual.';
+        }
+
+        return $messages;
     }
 
     /**
@@ -59,9 +79,11 @@ class ChangePasswordRequest extends FormRequest
         $validator->after( function ( $validator ) {
             $user = auth()->user();
 
-            // Verificar se a senha atual está correta
-            if ( !Hash::check( $this->current_password, $user->password ) ) {
-                $validator->errors()->add( 'current_password', 'A senha atual está incorreta.' );
+            // Só validar senha atual se o usuário tiver senha (não é Google OAuth)
+            if ( !is_null( $user->password ) && isset( $this->current_password ) ) {
+                if ( !Hash::check( $this->current_password, $user->password ) ) {
+                    $validator->errors()->add( 'current_password', 'A senha atual está incorreta.' );
+                }
             }
         } );
     }

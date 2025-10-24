@@ -181,21 +181,28 @@ class ProviderManagementService
      */
     public function changePassword( string $newPassword ): void
     {
-        $user = Auth::user();
+        $user         = Auth::user();
+        $isGoogleUser = is_null( $user->password );
 
         $user->update( [
             'password' => Hash::make( $newPassword )
         ] );
 
         // Log activity
+        $activityType    = $isGoogleUser ? 'password_set' : 'password_changed';
+        $activityMessage = $isGoogleUser ? 'Primeira senha definida com sucesso!' : 'Senha atualizada com sucesso!';
+
         $this->activityService->logActivity(
             $user->tenant_id,
             $user->id,
-            'password_changed',
+            $activityType,
             'user',
             $user->id,
-            'Senha atualizada com sucesso!',
-            [ 'email' => $user->email ],
+            $activityMessage,
+            [
+                'email'          => $user->email,
+                'is_google_user' => $isGoogleUser,
+            ],
         );
     }
 

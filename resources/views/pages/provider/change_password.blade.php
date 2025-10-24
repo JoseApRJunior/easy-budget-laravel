@@ -24,11 +24,19 @@
                                 <i class="bi bi-shield-lock display-4 text-primary"></i>
                             </div>
                             <h2 class="fw-bold text-primary mb-2">
-                                Alterar Senha
+                                @if( $isGoogleUser ?? false )
+                                    Definir Senha
+                                @else
+                                    Alterar Senha
+                                @endif
                             </h2>
                             <p class="text-muted small mb-0">
-                                Digite sua senha atual e a nova senha para alterar. Certifique-se de que a nova senha seja
-                                forte e segura.
+                                @if( $isGoogleUser ?? false )
+                                    Você se cadastrou usando Google. Defina uma senha para sua conta para maior segurança.
+                                @else
+                                    Digite sua senha atual e a nova senha para alterar. Certifique-se de que a nova senha seja
+                                    forte e segura.
+                                @endif
                             </p>
                         </div>
 
@@ -51,25 +59,33 @@
                             id="changePasswordForm">
                             @csrf
 
-                            <div class="form-floating password-container mb-3">
-                                <input type="password"
-                                    class="form-control @error( 'current_password' ) is-invalid @enderror"
-                                    id="current_password" name="current_password" required
-                                    aria-describedby="current_password_help" />
-                                <label for="current_password" class="form-label">
-                                    Senha atual
-                                </label>
-                                <button type="button" class="password-toggle" data-input="current_password"
-                                    aria-label="Mostrar/ocultar senha atual">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                @error( 'current_password' )
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div id="current_password_help" class="form-text">
-                                    Digite a senha que você usa atualmente para fazer login.
+                            @if( !( $isGoogleUser ?? false ) )
+                                <div class="form-floating password-container mb-3">
+                                    <input type="password"
+                                        class="form-control @error( 'current_password' ) is-invalid @enderror"
+                                        id="current_password" name="current_password" required
+                                        aria-describedby="current_password_help" />
+                                    <label for="current_password" class="form-label">
+                                        Senha atual
+                                    </label>
+                                    <button type="button" class="password-toggle" data-input="current_password"
+                                        aria-label="Mostrar/ocultar senha atual">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    @error( 'current_password' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div id="current_password_help" class="form-text">
+                                        Digite a senha que você usa atualmente para fazer login.
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Usuário Google OAuth:</strong> Você se cadastrou usando sua conta Google.
+                                    Esta será a primeira senha da sua conta.
+                                </div>
+                            @endif
 
                             <div class="form-floating password-container mb-3">
                                 <input type="password" class="form-control @error( 'password' ) is-invalid @enderror"
@@ -116,7 +132,12 @@
 
                             <div class="d-grid mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-check-circle me-2"></i>Alterar Senha
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    @if( $isGoogleUser ?? false )
+                                        Definir Senha
+                                    @else
+                                        Alterar Senha
+                                    @endif
                                 </button>
                             </div>
                         </form>
@@ -257,10 +278,13 @@
 
             // Validação no submit do formulário
             const form = document.getElementById( 'changePasswordForm' );
+            const isGoogleUser = {{ $isGoogleUser ?? false ? 'true' : 'false' }};
+
             form.addEventListener( 'submit', function ( e ) {
                 const password = passwordInput.value;
                 const confirmation = passwordConfirmationInput.value;
 
+                // Verificar se as senhas coincidem
                 if ( password !== confirmation ) {
                     e.preventDefault();
                     passwordConfirmationInput.classList.add( 'is-invalid' );
@@ -278,22 +302,24 @@
                     return false;
                 }
 
-                // Verificar força da senha
-                const strength = calculatePasswordStrength( password );
-                if ( strength.percentage < 60 ) {
-                    e.preventDefault();
-                    passwordInput.classList.add( 'is-invalid' );
-                    passwordInput.focus();
+                // Só verificar força da senha se não for usuário Google OAuth
+                if ( !isGoogleUser ) {
+                    const strength = calculatePasswordStrength( password );
+                    if ( strength.percentage < 60 ) {
+                        e.preventDefault();
+                        passwordInput.classList.add( 'is-invalid' );
+                        passwordInput.focus();
 
-                    let feedback = passwordInput.parentNode.querySelector( '.invalid-feedback' );
-                    if ( !feedback ) {
-                        feedback = document.createElement( 'div' );
-                        feedback.className = 'invalid-feedback';
-                        passwordInput.parentNode.appendChild( feedback );
+                        let feedback = passwordInput.parentNode.querySelector( '.invalid-feedback' );
+                        if ( !feedback ) {
+                            feedback = document.createElement( 'div' );
+                            feedback.className = 'invalid-feedback';
+                            passwordInput.parentNode.appendChild( feedback );
+                        }
+                        feedback.textContent = 'A senha deve ser pelo menos "Boa" para ser aceita.';
+
+                        return false;
                     }
-                    feedback.textContent = 'A senha deve ser pelo menos "Boa" para ser aceita.';
-
-                    return false;
                 }
             } );
         } );
