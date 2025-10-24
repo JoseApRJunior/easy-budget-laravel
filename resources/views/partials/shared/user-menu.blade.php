@@ -23,14 +23,8 @@
     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
 
         {{-- Links comuns para todos os usuários --}}
-        <li><a class="dropdown-item" href="{{ route( 'profile.edit' ) }}">
-                <i class="bi bi-person me-2"></i>Perfil Pessoal</a></li>
-        <li><a class="dropdown-item" href="{{ route( 'provider.business.edit' ) }}">
-                <i class="bi bi-building me-2"></i>Dados Empresariais</a></li>
         <li><a class="dropdown-item" href="{{ route( 'settings.index' ) }}">
                 <i class="bi bi-gear me-2"></i>Configurações</a></li>
-        <li><a class="dropdown-item" href="{{ url( '/about' ) }}">
-                <i class="bi bi-info-circle me-2"></i>Sobre</a></li>
         {{-- Acesso administrativo - apenas para admins --}}
         @role( 'admin' )
         <li>

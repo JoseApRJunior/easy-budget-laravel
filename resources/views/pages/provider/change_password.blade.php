@@ -14,11 +14,13 @@
                                 Insira sua nova senha
                             </p>
                         </div>
-                        <form action="{{ route( 'provider.change-password.update' ) }}" method="post" id="changePasswordForm">
+                        <form action="{{ route( 'provider.change_password_store' ) }}" method="post"
+                            id="changePasswordForm">
                             @csrf
 
                             <div class="form-floating password-container mb-3">
-                                <input type="password" class="form-control @error( 'current_password' ) is-invalid @enderror"
+                                <input type="password"
+                                    class="form-control @error( 'current_password' ) is-invalid @enderror"
                                     id="current_password" name="current_password" required />
                                 <label for="current_password" class="form-label">
                                     Senha atual

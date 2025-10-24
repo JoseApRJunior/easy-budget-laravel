@@ -11,7 +11,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Dados Empresariais</li>
                 </ol>
             </nav>

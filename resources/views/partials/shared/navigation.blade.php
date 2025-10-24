@@ -21,7 +21,7 @@
         @auth
         {{-- Dashboard - acesso rápido --}}
         <li class="nav-item">
-            <a class="nav-link d-flex align-items-center" href="{{ route( 'dashboard' ) }}">
+            <a class="nav-link d-flex align-items-center" href="{{ route( 'provider.dashboard' ) }}">
                 <i class="bi bi-speedometer2 me-2"></i>
                 <span>Dashboard</span>
             </a>
@@ -99,14 +99,9 @@
                             <i class="bi bi-people me-2"></i>Clientes</a></li>
                     <li><a class="dropdown-item" href="{{ route( 'provider.products.index' ) }}">
                             <i class="bi bi-box me-2"></i>Produtos</a></li>
+                            <li><a class="dropdown-item" href="{{ route( 'provider.reports.index' ) }}">
+                            <i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
                 </ul>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center" href="{{ route( 'provider.reports.index' ) }}">
-                    <i class="bi bi-graph-up me-2"></i>
-                    <span>Relatórios</span>
-                </a>
-            </li>
         @endif
         @endauth
 
