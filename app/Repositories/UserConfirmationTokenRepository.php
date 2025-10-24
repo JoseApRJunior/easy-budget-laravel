@@ -27,12 +27,15 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
     /**
      * Encontra token por token hash dentro do tenant atual.
      *
+     * Busca case-insensitive para evitar problemas de compatibilidade
+     * entre geração e validação de tokens.
+     *
      * @param string $tokenHash
      * @return UserConfirmationToken|null
      */
     public function findByToken( string $tokenHash ): ?UserConfirmationToken
     {
-        return $this->model->where( 'token', $tokenHash )->first();
+        return $this->model->whereRaw( 'LOWER(token) = LOWER(?)', [ $tokenHash ] )->first();
     }
 
     /**

@@ -69,10 +69,12 @@ class UserConfirmationToken extends Model
 
     /**
      * Validação customizada para verificar se o token é único no tenant.
+     *
+     * Busca case-insensitive para evitar problemas de compatibilidade.
      */
     public static function validateUniqueTokenInTenant( string $token, int $tenantId, ?int $excludeTokenId = null ): bool
     {
-        $query = static::where( 'token', $token )->where( 'tenant_id', $tenantId );
+        $query = static::whereRaw( 'LOWER(token) = LOWER(?)', [ $token ] )->where( 'tenant_id', $tenantId );
 
         if ( $excludeTokenId ) {
             $query->where( 'id', '!=', $excludeTokenId );
