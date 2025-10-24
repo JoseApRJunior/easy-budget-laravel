@@ -9,7 +9,9 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InvoiceRequest;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\InvoiceStatus;
 use App\Models\Tenant;
+use App\Models\UserConfirmationToken;
 use App\Services\Domain\InvoiceService;
 use App\Support\ServiceResult;
 use Illuminate\Http\RedirectResponse;
@@ -285,6 +287,162 @@ class InvoiceController extends Controller
                 route( 'invoices.show', $invoice->id ),
                 'Erro interno ao atualizar status da fatura. Tente novamente.',
             );
+        }
+    }
+
+    /**
+     * Display the invoice status page for public access.
+     */
+    public function viewInvoiceStatus( string $code, string $token ): View|RedirectResponse
+    {
+        try {
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
+                    $query->where( 'token', $token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [ 'customer', 'invoiceStatus', 'userConfirmationToken', 'service', 'tenant' ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired', [
+                    'code'  => $code,
+                    'token' => $token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            return view( 'invoices.public.view-status', [
+                'invoice' => $invoice,
+                'token'   => $token
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in viewInvoiceStatus', [
+                'code'  => $code,
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'ip'    => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Process the invoice status selection for public access.
+     */
+    public function chooseInvoiceStatus( Request $request ): RedirectResponse
+    {
+        try {
+            $request->validate( [
+                'invoice_code'      => 'required|string',
+                'token'             => 'required|string|size:64',
+                'invoice_status_id' => 'required|integer|exists:invoice_statuses,id'
+            ] );
+
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $request->invoice_code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $request ) {
+                    $query->where( 'token', $request->token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [ 'customer', 'invoiceStatus', 'userConfirmationToken' ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired in choose status', [
+                    'code'  => $request->invoice_code,
+                    'token' => $request->token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            // Validate that the selected status is allowed
+            $selectedStatus = InvoiceStatus::find( $request->invoice_status_id );
+            if ( !$selectedStatus || !in_array( $selectedStatus->slug, [ 'pago', 'cancelado', 'vencido' ] ) ) {
+                Log::warning( 'Invalid invoice status selected', [
+                    'invoice_code' => $request->invoice_code,
+                    'status_id'    => $request->invoice_status_id,
+                    'ip'           => request()->ip()
+                ] );
+                return redirect()->back()->with( 'error', 'Status inválido selecionado.' );
+            }
+
+            // Update invoice status
+            $invoice->update( [
+                'invoice_statuses_id' => $request->invoice_status_id,
+                'updated_at'          => now()
+            ] );
+
+            // Log the action
+            Log::info( 'Invoice status updated via public link', [
+                'invoice_id'   => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'old_status'   => $invoice->invoiceStatus->name,
+                'new_status'   => $selectedStatus->name,
+                'ip'           => request()->ip()
+            ] );
+
+            return redirect()->route( 'invoices.public.view-status', [
+                'code'  => $invoice->code,
+                'token' => $request->token
+            ] )->with( 'success', 'Status da fatura atualizado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in chooseInvoiceStatus', [
+                'error'   => $e->getMessage(),
+                'request' => $request->all(),
+                'ip'      => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Print invoice for public access.
+     */
+    public function print( string $code, string $token ): View|RedirectResponse
+    {
+        try {
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
+                    $query->where( 'token', $token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [
+                    'customer',
+                    'invoiceStatus',
+                    'items.product',
+                    'userConfirmationToken',
+                    'service.budget.tenant'
+                ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired for print', [
+                    'code'  => $code,
+                    'token' => $token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            return view( 'invoices.public.print', [
+                'invoice' => $invoice
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in invoice print', [
+                'code'  => $code,
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'ip'    => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
         }
     }
 

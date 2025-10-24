@@ -16,7 +16,7 @@ if ( !function_exists( 'money' ) ) {
 if ( !function_exists( 'format_date' ) ) {
     function format_date( $date, $format = 'd/m/Y' )
     {
-        return app( App\Helpers\DateHelper::class)->format( $date, $format );
+        return app( App\Helpers\DateHelper::class)->formatDateOrDefault( $date, $format );
     }
 }
 
@@ -29,6 +29,27 @@ if ( !function_exists( 'month_year_pt' ) ) {
         return \Carbon\Carbon::parse( $date )
             ->locale( 'pt_BR' )
             ->translatedFormat( 'F/Y' );
+    }
+}
+
+/**
+ * Format time difference in human readable format
+ */
+if ( !function_exists( 'time_diff' ) ) {
+    function time_diff( $datetime ): string
+    {
+        $now  = now();
+        $diff = $now->diff( $datetime );
+
+        if ( $diff->days > 0 ) {
+            return $diff->days . ' dia' . ( $diff->days > 1 ? 's' : '' ) . ' atrás';
+        } elseif ( $diff->h > 0 ) {
+            return $diff->h . ' hora' . ( $diff->h > 1 ? 's' : '' ) . ' atrás';
+        } elseif ( $diff->i > 0 ) {
+            return $diff->i . ' minuto' . ( $diff->i > 1 ? 's' : '' ) . ' atrás';
+        } else {
+            return 'agora mesmo';
+        }
     }
 }
 

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\ChartService;
+use App\Services\MetricsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,7 @@ class DashboardController extends Controller
 {
     public function __construct(
         private ChartService $chartService,
+        private MetricsService $metricsService,
     ) {}
 
     /**

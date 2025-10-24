@@ -27,8 +27,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email'    => [ 'required', 'string', 'email' ],
+            'password' => [ 'required', 'string' ],
         ];
     }
 
@@ -41,15 +41,30 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        // Buscar usuário para verificar se é social login
+        $user = \App\Models\User::where( 'email', $this->input( 'email' ) )->first();
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        if ( $user && !empty( $user->google_id ) ) {
+            \Illuminate\Support\Facades\Log::warning( 'Tentativa de login local para usuário Google OAuth', [
+                'email'   => $this->input( 'email' ),
+                'user_id' => $user->id,
+                'ip'      => $this->ip(),
+            ] );
+
+            throw ValidationException::withMessages( [
+                'email' => 'Esta conta usa login social (Google). Use o botão "Login com Google" para acessar.',
+            ] );
         }
 
-        RateLimiter::clear($this->throttleKey());
+        if ( !Auth::attempt( $this->only( 'email', 'password' ), $this->boolean( 'remember' ) ) ) {
+            RateLimiter::hit( $this->throttleKey() );
+
+            throw ValidationException::withMessages( [
+                'email' => trans( 'auth.failed' ),
+            ] );
+        }
+
+        RateLimiter::clear( $this->throttleKey() );
     }
 
     /**
@@ -59,20 +74,20 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if ( !RateLimiter::tooManyAttempts( $this->throttleKey(), 5 ) ) {
             return;
         }
 
-        event(new Lockout($this));
+        event( new Lockout( $this ) );
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = RateLimiter::availableIn( $this->throttleKey() );
 
-        throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+        throw ValidationException::withMessages( [
+            'email' => trans( 'auth.throttle', [
                 'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
+                'minutes' => ceil( $seconds / 60 ),
+            ] ),
+        ] );
     }
 
     /**
@@ -80,6 +95,7 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate( Str::lower( $this->string( 'email' ) ) . '|' . $this->ip() );
     }
+
 }

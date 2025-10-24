@@ -10,6 +10,7 @@ use App\Models\ServiceItem;
 use App\Models\ServiceStatus;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +46,7 @@ class Service extends Model
         'budget_id',
         'category_id',
         'service_statuses_id',
+        'user_confirmation_token_id',
         'code',
         'description',
         'pdf_verification_hash',
@@ -69,18 +71,19 @@ class Service extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'             => 'integer',
-        'budget_id'             => 'integer',
-        'category_id'           => 'integer',
-        'service_statuses_id'   => 'integer',
-        'code'                  => 'string',
-        'description'           => 'string',
-        'discount'              => 'decimal:2',
-        'total'                 => 'decimal:2',
-        'due_date'              => 'date',
-        'pdf_verification_hash' => 'string',
-        'created_at'            => 'immutable_datetime',
-        'updated_at'            => 'datetime',
+        'tenant_id'                  => 'integer',
+        'budget_id'                  => 'integer',
+        'category_id'                => 'integer',
+        'service_statuses_id'        => 'integer',
+        'user_confirmation_token_id' => 'integer',
+        'code'                       => 'string',
+        'description'                => 'string',
+        'discount'                   => 'decimal:2',
+        'total'                      => 'decimal:2',
+        'due_date'                   => 'date',
+        'pdf_verification_hash'      => 'string',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
 
     /**
@@ -89,23 +92,24 @@ class Service extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'             => 'required|integer|exists:tenants,id',
-            'budget_id'             => 'required|integer|exists:budgets,id',
-            'category_id'           => 'required|integer|exists:categories,id',
-            'service_statuses_id'   => 'required|integer|exists:service_statuses,id',
-            'code'                  => 'required|string|max:50|unique:services,code',
-            'description'           => 'nullable|string',
-            'discount'              => 'required|numeric|min:0|max:999999.99',
-            'total'                 => 'required|numeric|min:0|max:999999.99',
-            'due_date'              => 'nullable|date',
-            'pdf_verification_hash' => 'nullable|string|max:64',
+            'tenant_id'                  => 'required|integer|exists:tenants,id',
+            'budget_id'                  => 'required|integer|exists:budgets,id',
+            'category_id'                => 'required|integer|exists:categories,id',
+            'service_statuses_id'        => 'required|integer|exists:service_statuses,id',
+            'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
+            'code'                       => 'required|string|max:50|unique:services,code',
+            'description'                => 'nullable|string',
+            'discount'                   => 'required|numeric|min:0|max:999999.99',
+            'total'                      => 'required|numeric|min:0|max:999999.99',
+            'due_date'                   => 'nullable|date',
+            'pdf_verification_hash'      => 'nullable|string|max:64',
         ];
     }
 
     /**
      * Get the tenant that owns the Service.
      */
-    public function tenant(): BelongsTo
+    public function tenant()
     {
         return $this->belongsTo( Tenant::class);
     }
@@ -113,7 +117,7 @@ class Service extends Model
     /**
      * Get the budget that owns the Service.
      */
-    public function budget(): BelongsTo
+    public function budget()
     {
         return $this->belongsTo( Budget::class);
     }
@@ -121,7 +125,7 @@ class Service extends Model
     /**
      * Get the customer through the budget relationship.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo( Customer::class, 'customer_id' );
     }
@@ -129,7 +133,7 @@ class Service extends Model
     /**
      * Get the category that owns the Service.
      */
-    public function category(): BelongsTo
+    public function category()
     {
         return $this->belongsTo( Category::class);
     }
@@ -137,15 +141,23 @@ class Service extends Model
     /**
      * Get the service status that owns the Service.
      */
-    public function serviceStatus(): BelongsTo
+    public function serviceStatus()
     {
         return $this->belongsTo( ServiceStatus::class, 'service_statuses_id' );
     }
 
     /**
+     * Get the user confirmation token for the Service.
+     */
+    public function userConfirmationToken()
+    {
+        return $this->belongsTo( UserConfirmationToken::class);
+    }
+
+    /**
      * Alias para serviceStatus() para compatibilidade.
      */
-    public function status(): BelongsTo
+    public function status()
     {
         return $this->serviceStatus();
     }
@@ -153,7 +165,7 @@ class Service extends Model
     /**
      * Get the service items for the Service.
      */
-    public function serviceItems(): HasMany
+    public function serviceItems()
     {
         return $this->hasMany( ServiceItem::class);
     }
@@ -161,7 +173,7 @@ class Service extends Model
     /**
      * Get the invoices for the Service.
      */
-    public function invoices(): HasMany
+    public function invoices()
     {
         return $this->hasMany( Invoice::class);
     }
@@ -169,7 +181,7 @@ class Service extends Model
     /**
      * Get the schedules for the Service.
      */
-    public function schedules(): HasMany
+    public function schedules()
     {
         return $this->hasMany( Schedule::class);
     }

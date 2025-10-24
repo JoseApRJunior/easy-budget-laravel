@@ -143,6 +143,18 @@ class ChartService
     }
 
     /**
+     * Obtém dados iniciais para gráficos do dashboard
+     */
+    public function getInitialChartData( int $userId, string $period ): array
+    {
+        return [
+            'monthly_revenue'      => $this->getMonthlyRevenueChart( $userId, (int) date( 'Y' ) ),
+            'expenses_by_category' => $this->getExpensesByCategoryChart( $userId, $period ),
+            'monthly_evolution'    => $this->getMonthlyEvolutionChart( $userId, 6 )
+        ];
+    }
+
+    /**
      * Obtém ID do tenant do usuário
      */
     private function getTenantId( int $userId ): int

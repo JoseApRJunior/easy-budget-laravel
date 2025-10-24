@@ -142,6 +142,13 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'avatar'            => $userData[ 'avatar' ] ?? null,
                 'email_verified_at' => now(), // ✅ E-mail verificado automaticamente (Google já verifica)
                 'is_active'         => true,  // ✅ Usuário ativo automaticamente (login social fluido)
+                'password'          => null,  // ✅ Remove senha temporária para usuários sociais
+            ] );
+
+            \Illuminate\Support\Facades\Log::info( 'Senha removida para usuário social', [
+                'provider' => $provider,
+                'user_id'  => $user->id,
+                'email'    => $user->email,
             ] );
 
             Log::info( 'Usuário criado via autenticação social usando UserRegistrationService', [
