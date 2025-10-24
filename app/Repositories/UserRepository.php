@@ -26,14 +26,14 @@ class UserRepository extends AbstractTenantRepository
     }
 
     /**
-     * Encontra usuário por email dentro do tenant atual.
+     * Encontra usuário por email independentemente do tenant (busca global).
      *
      * @param string $email Email do usuário
      * @return User|null Usuário encontrado ou null
      */
     public function findByEmail( string $email ): ?User
     {
-        return $this->model->where( 'email', $email )->first();
+        return $this->model->withoutTenant()->where( 'email', $email )->first();
     }
 
     /**

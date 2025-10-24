@@ -6,6 +6,7 @@ namespace App\Services\Application\Auth;
 
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
+use App\Events\SocialLoginWelcome;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -13,6 +14,7 @@ use App\Services\Application\UserRegistrationService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -156,6 +158,10 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'email'     => $user->email,
                 'google_id' => $userData[ 'id' ],
             ] );
+
+            // Dispara evento de boas-vindas para login social
+            $tenant = $user->tenant; // Obtém o tenant do usuário
+            Event::dispatch( new SocialLoginWelcome( $user, $tenant, $provider ) );
 
             return $this->success( $user, 'Usuário criado com sucesso via ' . ucfirst( $provider ) );
 

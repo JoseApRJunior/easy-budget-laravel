@@ -39,6 +39,27 @@
                     </div>
                 @endif
 
+                <!-- Opção de login social -->
+                <div class="mb-6">
+                    <div class="text-center mb-4">
+                        <p class="text-gray-600">Ou faça login rapidamente com:</p>
+                    </div>
+                    <a href="{{ route( 'auth.google' ) }}"
+                        class="w-full flex justify-center py-2 px-4 border border-red-300 rounded-md shadow-sm bg-white text-sm font-medium text-red-600 hover:bg-red-50 mb-4">
+                        <i class="bi bi-google me-2"></i>
+                        Continuar com Google
+                    </a>
+                </div>
+
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Ou use sua conta</span>
+                    </div>
+                </div>
+
                 <form class="space-y-6" action="{{ route( 'login' ) }}" method="POST">
                     @csrf
                     <div>

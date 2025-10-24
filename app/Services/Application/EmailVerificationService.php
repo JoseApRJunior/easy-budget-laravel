@@ -374,18 +374,17 @@ class EmailVerificationService extends AbstractBaseService
     /**
      * Gera token seguro usando padrão criptograficamente seguro do sistema legado.
      *
-     * Método aprimorado usando random_bytes() para máxima segurança:
-     * - random_bytes(32) gera 32 bytes aleatórios criptograficamente seguros
-     * - bin2hex() converte para 64 caracteres hexadecimais (0-9, a-f)
+     * Método aprimorado usando Str::random() do Laravel para máxima compatibilidade:
+     * - Str::random(64) gera 64 caracteres aleatórios seguros
      * - Padrão usado com sucesso no sistema legado
      *
      * @return string Token seguro de 64 caracteres hexadecimais
      */
     private function generateSecureToken( int $length ): string
     {
-        // Usar padrão mais seguro do sistema legado
-        // random_bytes(32) + bin2hex() = 64 caracteres hexadecimais
-        return bin2hex( random_bytes( 32 ) );
+        // Usar Str::random() do Laravel para máxima compatibilidade
+        // Gera string aleatória segura de 64 caracteres
+        return Str::random( 64 );
     }
 
     /**
