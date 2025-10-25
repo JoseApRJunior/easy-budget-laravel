@@ -77,7 +77,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         // 1. Usar token fornecido diretamente (prioridade máxima)
         if ( !empty( $this->verificationToken ) ) {
             try {
-                $confirmationLink = $this->linkService->buildConfirmationLink(
+                $confirmationLink = $this->linkService->buildLink(
                     $this->verificationToken,
                     '/confirm-account',
                     '/email/verify',
@@ -101,7 +101,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
 
         if ( $token ) {
             try {
-                $confirmationLink = $this->linkService->buildConfirmationLink(
+                $confirmationLink = $this->linkService->buildLink(
                     $token->token,
                     '/confirm-account',
                     '/email/verify',

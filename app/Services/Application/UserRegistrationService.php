@@ -204,17 +204,24 @@ class UserRegistrationService extends AbstractBaseService
 
             // 9. Criar token de verificação de e-mail usando UserConfirmationTokenService
             Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
-            $token       = generateSecureTokenUrl();
-            $expiresAt   = now()->addMinutes( 30 );
-            $tokenResult = $this->userConfirmationTokenService->createToken( $user, $token, TokenType::EMAIL_VERIFICATION, $expiresAt );
+            $tokenResult = $this->userConfirmationTokenService->createTokenWithGeneration(
+                $user,
+                TokenType::EMAIL_VERIFICATION,
+                30, // 30 minutos de expiração
+                32, // 32 bytes de comprimento
+                'base64url' // formato seguro para URLs
+            );
+
             if ( !$tokenResult->isSuccess() ) {
                 Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
                     'user_id' => $user->id,
                     'error'   => $tokenResult->getMessage(),
                 ] );
                 // Não falhar o registro por causa do token, apenas logar o problema
+                $token = null; // Token será null se falhou
             } else {
                 Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+                $token = $tokenResult->getData()[ 'token' ]; // Extrair token do resultado
             }
 
             // 10. Disparar evento para envio de e-mail de boas-vindas com dados do token

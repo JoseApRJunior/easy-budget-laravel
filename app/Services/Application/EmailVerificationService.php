@@ -58,8 +58,9 @@ class EmailVerificationService extends AbstractBaseService
     /**
      * Cria token de confirmação para verificação de e-mail.
      *
-     * Este método delega a lógica de criação para o UserConfirmationTokenService
-     * e gerencia o envio de e-mail através de eventos.
+     * Este método delega toda a lógica de criação de token para o UserConfirmationTokenService,
+     * que agora é responsável por gerar o token seguro e gerenciar sua persistência.
+     * Este serviço foca apenas em orquestrar o processo e disparar eventos.
      *
      * @param User $user Usuário que receberá o token de verificação
      * @return ServiceResult Resultado da operação
@@ -67,29 +68,29 @@ class EmailVerificationService extends AbstractBaseService
     public function createConfirmationToken( User $user ): ServiceResult
     {
         try {
-            // Gerar token e expiração
-            $token     = generateSecureTokenUrl();
-            $expiresAt = now()->addMinutes( 30 );
-
-            Log::info( 'Gerando token de verificação', [
-                'user_id'    => $user->id,
-                'tenant_id'  => $user->tenant_id,
-                'email'      => $user->email,
-                'expires_at' => $expiresAt,
-            ] );
-
-            // Delegar criação para UserConfirmationTokenService
-            Log::info( 'Delegando criação de token para UserConfirmationTokenService', [
+            Log::info( 'Iniciando criação de token de verificação', [
                 'user_id'   => $user->id,
                 'tenant_id' => $user->tenant_id,
                 'email'     => $user->email,
             ] );
 
-            $tokenResult = $this->userConfirmationTokenService->createToken( $user, $token, TokenType::EMAIL_VERIFICATION, $expiresAt );
+            // Delegar criação completa para UserConfirmationTokenService
+            // Este método agora gera o token, calcula expiração e persiste no banco
+            $tokenResult = $this->userConfirmationTokenService->createTokenWithGeneration(
+                $user,
+                TokenType::EMAIL_VERIFICATION,
+                30, // 30 minutos de expiração
+                32, // 32 bytes de comprimento
+                'base64url' // formato seguro para URLs
+            );
 
             if ( !$tokenResult->isSuccess() ) {
                 return $tokenResult;
             }
+
+            // Extrair token do resultado para disparar evento
+            $tokenData = $tokenResult->getData();
+            $token     = $tokenData[ 'token' ];
 
             // Disparar evento para envio de e-mail de verificação
             Log::info( 'Disparando evento EmailVerificationRequested', [
@@ -110,7 +111,7 @@ class EmailVerificationService extends AbstractBaseService
                 'email'     => $user->email,
             ] );
 
-            return ServiceResult::success( $tokenResult->getData(), 'Token de verificação criado com sucesso. E-mail enviado.' );
+            return ServiceResult::success( $tokenData, 'Token de verificação criado com sucesso. E-mail enviado.' );
 
         } catch ( Exception $e ) {
             Log::error( 'Erro ao criar token de verificação', [

@@ -402,7 +402,7 @@ class SendPasswordResetNotification implements ShouldQueue
         string $route = '/confirm-account',
         string $fallbackRoute = '/login',
     ): string {
-        return $this->linkService->buildConfirmationLink( $token, $route, $fallbackRoute );
+        return $this->linkService->buildLink( $token, $route, $fallbackRoute );
     }
 
     /**
