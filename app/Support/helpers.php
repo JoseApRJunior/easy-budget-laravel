@@ -8,7 +8,7 @@
  * Gera um token seguro usando padrão criptograficamente seguro.
  *
  * Utiliza random_bytes() para gerar bytes aleatórios e converte para o formato
- * especificado. Cada byte gera 2 caracteres em hexadecimal ou ~1.37 caracteres em base64.
+ * especificado. Cada byte gera 2 caracteres em hexadecimal ou ~1.37 caracteres em base64url.
  * O comprimento final do token varia conforme o formato:
  * - 'hex': 2 * $length caracteres
  * - 'base64': ceil(4 * $length / 3) caracteres (aproximado, devido ao padding)
@@ -87,7 +87,7 @@ function validateAndSanitizeToken( string $token, string $format = 'hex' ): ?str
     }
 
     $patterns = [
-        // 32 bytes em hex → 64 caracteres hexadecimais
+        // 32 bytes em hex → 64 caracteres hexadecimais (formato legado)
         'hex'          => '/^[a-f0-9]{64}$/i',
 
         // 32 bytes em base64 → 43 ou 44 caracteres (com padding "=")
@@ -96,7 +96,7 @@ function validateAndSanitizeToken( string $token, string $format = 'hex' ): ?str
         // 32 bytes em base64url → 43 caracteres, sem + / = (formato padrão para e-mails)
         'base64url'    => '/^[A-Za-z0-9\-_]{43}$/',
 
-        // Token alfanumérico genérico de 64 caracteres
+        // Token alfanumérico genérico de 64 caracteres (formato legado)
         'alphanumeric' => '/^[a-zA-Z0-9]{64}$/',
     ];
 

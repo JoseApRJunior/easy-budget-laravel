@@ -402,7 +402,7 @@ class PasswordResetIntegrationTest extends TestCase
         // Act: Gerar token usando Password broker
         $token = Password::createToken( $user );
 
-        // Assert: Token deve ser válido (Laravel Password broker usa formato hex: 32 bytes = 64 caracteres)
+        // Assert: Token deve ser válido (formato base64url: 32 bytes = 43 caracteres)
         $this->assertNotNull( $token );
         $this->assertEquals( 64, strlen( $token ) );
         $this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $token );

@@ -136,16 +136,8 @@ class SendWelcomeEmail implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de boas-vindas' );
             }
 
-            // Validação rigorosa do token de verificação
-            if ( !$event->verificationToken ) {
-                throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado para boas-vindas' );
-            }
-
-            if ( strlen( $event->verificationToken ) !== 64 ) {
-                throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido para boas-vindas' );
-            }
-
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+            // Validação rigorosa do token de verificação usando formato base64url
+            if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de verificação com formato inválido para boas-vindas' );
             }
 
@@ -203,13 +195,8 @@ class SendWelcomeEmail implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado para boas-vindas' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->verificationToken ) !== 64 ) {
-            throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido para boas-vindas' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+        // Validação de formato do token usando base64url (32 bytes = 43 caracteres)
+        if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
             throw new \InvalidArgumentException( 'Token de verificação com formato inválido para boas-vindas' );
         }
 
@@ -411,14 +398,14 @@ class SendWelcomeEmail implements ShouldQueue
     }
 
     /**
-     * Verifica se um token é válido usando o serviço centralizado.
+     * Verifica se um token é válido usando o formato base64url.
      *
      * @param string|null $token Token a ser verificado
      * @return bool True se válido, false caso contrário
      */
     protected function isValidConfirmationToken( ?string $token ): bool
     {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
+        return validateAndSanitizeToken( $token, 'base64url' ) !== false;
     }
 
 }
