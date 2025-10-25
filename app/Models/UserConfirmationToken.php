@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Models\Budget;
 use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserConfirmationToken extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.

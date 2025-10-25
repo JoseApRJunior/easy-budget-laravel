@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Provider;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
+use App\Models\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
@@ -26,6 +29,26 @@ class CustomVerifyEmailControllerTest extends TestCase
             'tenant_id'         => $tenant->id,
             'email_verified_at' => null,
             'is_active'         => false,
+        ] );
+
+        // Criar role provider
+        $role = \App\Models\Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        \App\Models\UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        \App\Models\Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
         ] );
 
         $token = UserConfirmationToken::factory()->create( [
@@ -61,7 +84,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Token de verificação ausente', session( 'error' ) );
+        self::assertStringContainsString( 'Token de verificação ausente', session( 'error' ) );
     }
 
     /**
@@ -75,7 +98,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Token de verificação inválido', session( 'error' ) );
+        self::assertStringContainsString( 'Token de verificação inválido', session( 'error' ) );
     }
 
     /**
@@ -87,6 +110,26 @@ class CustomVerifyEmailControllerTest extends TestCase
         $tenant = Tenant::factory()->create();
         $user   = User::factory()->create( [
             'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar role provider
+        $role = \App\Models\Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        \App\Models\UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        \App\Models\Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
         ] );
 
         $token = UserConfirmationToken::factory()->create( [
@@ -101,7 +144,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Token de verificação inválido ou expirado', session( 'error' ) );
+        self::assertStringContainsString( 'Token de verificação inválido ou expirado', session( 'error' ) );
 
         // Verificar que token foi removido
         self::assertNull( UserConfirmationToken::find( $token->id ) );
@@ -114,11 +157,43 @@ class CustomVerifyEmailControllerTest extends TestCase
     {
         // Arrange
         $tenant = Tenant::factory()->create();
-        $token  = UserConfirmationToken::factory()->create( [
-            'user_id'    => 99999, // ID que não existe
+        $user   = User::factory()->create( [
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar role provider
+        $role = \App\Models\Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        \App\Models\UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        \App\Models\Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
+        ] );
+
+        // Criar token primeiro
+        $token = UserConfirmationToken::factory()->create( [
+            'user_id'    => $user->id,
             'tenant_id'  => $tenant->id,
             'expires_at' => now()->addMinutes( 30 ),
         ] );
+
+        // Verificar se o token foi criado corretamente
+        $this->assertNotNull( $token->id );
+        $this->assertNotNull( $token->token );
+
+        // Tornar usuário inativo em vez de deletar (para evitar CASCADE delete do token)
+        $user->update( [ 'is_active' => false ] );
 
         // Act
         $response = $this->get( '/confirm-account?token=' . $token->token );
@@ -126,7 +201,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Usuário não encontrado', session( 'error' ) );
+        self::assertStringContainsString( 'Usuário não encontrado', session( 'error' ) );
     }
 
     /**
@@ -141,6 +216,26 @@ class CustomVerifyEmailControllerTest extends TestCase
             'tenant_id' => $tenant1->id,
         ] );
 
+        // Criar role provider
+        $role = \App\Models\Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        \App\Models\UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant1->id,
+        ] );
+
+        // Criar provider
+        \App\Models\Provider::create( [
+            'tenant_id'      => $tenant1->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
+        ] );
+
         $token = UserConfirmationToken::factory()->create( [
             'user_id'    => $user->id,
             'tenant_id'  => $tenant2->id, // Tenant diferente
@@ -153,7 +248,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Erro de validação de segurança', session( 'error' ) );
+        self::assertStringContainsString( 'Erro de validação de segurança', session( 'error' ) );
     }
 
     /**
@@ -167,6 +262,26 @@ class CustomVerifyEmailControllerTest extends TestCase
             'tenant_id'         => $tenant->id,
             'email_verified_at' => now(),
             'is_active'         => true,
+        ] );
+
+        // Criar role provider
+        $role = Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
         ] );
 
         $token = UserConfirmationToken::factory()->create( [
@@ -185,7 +300,7 @@ class CustomVerifyEmailControllerTest extends TestCase
         // Assert
         $response2->assertRedirect( 'login' );
         $response2->assertSessionHas( 'error' );
-        self::assertStringContains( 'Token de verificação inválido', session( 'error' ) );
+        self::assertStringContainsString( 'Token de verificação inválido', session( 'error' ) );
     }
 
     /**
@@ -193,13 +308,16 @@ class CustomVerifyEmailControllerTest extends TestCase
      */
     public function test_show_verification_page(): void
     {
+        // Arrange
+        $validToken = generateSecureToken( 32, 'base64url' );
+
         // Act
-        $response = $this->get( '/confirm-account?token=valid-token-123' );
+        $response = $this->get( '/email/verify?token=' . $validToken );
 
         // Assert
         $response->assertStatus( 200 );
         $response->assertViewIs( 'auth.verify-email' );
-        $response->assertViewHas( 'token', 'valid-token-123' );
+        $response->assertViewHas( 'token', $validToken );
     }
 
     /**
@@ -208,7 +326,7 @@ class CustomVerifyEmailControllerTest extends TestCase
     public function test_show_verification_page_without_token(): void
     {
         // Act
-        $response = $this->get( '/confirm-account' );
+        $response = $this->get( '/email/verify' );
 
         // Assert
         $response->assertStatus( 200 );
@@ -226,7 +344,27 @@ class CustomVerifyEmailControllerTest extends TestCase
         $user   = User::factory()->create( [
             'tenant_id'         => $tenant->id,
             'email_verified_at' => null,
-            'is_active'         => false,
+            'is_active'         => true,
+        ] );
+
+        // Criar role provider
+        $role = \App\Models\Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        \App\Models\UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        \App\Models\Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
         ] );
 
         $token = UserConfirmationToken::factory()->create( [
@@ -259,6 +397,26 @@ class CustomVerifyEmailControllerTest extends TestCase
             'is_active'         => false,
         ] );
 
+        // Criar role provider
+        $role = Role::firstOrCreate(
+            [ 'name' => 'provider' ],
+            [ 'description' => 'Provider Role' ],
+        );
+
+        // Associar role ao usuário
+        UserRole::create( [
+            'user_id'   => $user->id,
+            'role_id'   => $role->id,
+            'tenant_id' => $tenant->id,
+        ] );
+
+        // Criar provider
+        Provider::create( [
+            'tenant_id'      => $tenant->id,
+            'user_id'        => $user->id,
+            'terms_accepted' => true,
+        ] );
+
         $token = UserConfirmationToken::factory()->create( [
             'user_id'    => $user->id,
             'tenant_id'  => $tenant->id,
@@ -266,17 +424,27 @@ class CustomVerifyEmailControllerTest extends TestCase
         ] );
 
         // Mock para gerar exceção no markEmailAsVerified
-        $this->mock( \App\Models\User::class, function ( $mock ) {
-            $mock->shouldReceive( 'markEmailAsVerified' )->andThrow( new \Exception( 'Database error' ) );
-        } );
+        $userMock = \Mockery::mock( $user )->makePartial();
+        $userMock->shouldReceive( 'markEmailAsVerified' )->andThrow( new \Exception( 'Database error' ) );
+
+        // Mock do repository para retornar o usuário mockado
+        $repositoryMock = \Mockery::mock( \App\Repositories\UserRepository::class)->makePartial();
+        $repositoryMock->shouldReceive( 'find' )->andReturn( $userMock );
+        $this->app->instance( \App\Repositories\UserRepository::class, $repositoryMock );
+
+        // Mock do UserConfirmationTokenRepository para retornar o token válido
+        $tokenRepositoryMock = \Mockery::mock( \App\Repositories\UserConfirmationTokenRepository::class)->makePartial();
+        $tokenRepositoryMock->shouldReceive( 'findByToken' )->andReturn( $token );
+        $tokenRepositoryMock->shouldReceive( 'delete' )->andReturn( true );
+        $this->app->instance( \App\Repositories\UserConfirmationTokenRepository::class, $tokenRepositoryMock );
 
         // Act
         $response = $this->get( '/confirm-account?token=' . $token->token );
 
         // Assert
-        $response->assertRedirect( 'login' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Erro interno durante a verificação', session( 'error' ) );
+        self::assertStringContainsString( 'Erro interno durante a verificação', session( 'error' ) );
     }
 
 }

@@ -23,16 +23,6 @@ use Illuminate\Support\Facades\Log;
 class ConfirmationLinkService
 {
     /**
-     * Tamanho esperado do token de confirmação (64 caracteres).
-     */
-    private const EXPECTED_TOKEN_LENGTH = 64;
-
-    /**
-     * Padrão regex para validação de tokens alfanuméricos.
-     */
-    private const TOKEN_PATTERN = '/^[a-zA-Z0-9]{64}$/';
-
-    /**
      * Constrói URL de confirmação segura.
      *
      * Estratégia de segurança implementada:
@@ -63,11 +53,11 @@ class ConfirmationLinkService
         }
 
         // Caso 2: Validação rigorosa do token
-        if ( !$this->isValidToken( $token ) ) {
+        if ( !validateAndSanitizeToken( $token, 'base64url' ) ) {
             Log::warning( 'Token de confirmação inválido detectado', [
                 'token_length'    => strlen( $token ),
-                'expected_length' => self::EXPECTED_TOKEN_LENGTH,
-                'token_pattern'   => 'alphanumeric_64_chars',
+                'expected_length' => 43,
+                'token_pattern'   => 'base64url',
                 'action'          => 'redirect_to_fallback',
                 'fallback_route'  => $fallbackRoute
             ] );
@@ -75,7 +65,15 @@ class ConfirmationLinkService
         }
 
         // Caso 3: Token válido - construir URL segura
-        $sanitizedToken  = $this->sanitizeToken( $token );
+        $sanitizedToken = validateAndSanitizeToken( $token, 'base64url' );
+        if ( !$sanitizedToken ) {
+            Log::warning( 'Token inválido após sanitização', [
+                'token_length'   => strlen( $token ),
+                'action'         => 'redirect_to_fallback',
+                'fallback_route' => $fallbackRoute
+            ] );
+            return $this->buildBaseUrl() . $fallbackRoute;
+        }
         $confirmationUrl = $this->buildBaseUrl() . $route . '?token=' . urlencode( $sanitizedToken );
 
         Log::info( 'URL de confirmação construída com sucesso', [
@@ -91,50 +89,6 @@ class ConfirmationLinkService
         ] );
 
         return $confirmationUrl;
-    }
-
-    /**
-     * Valida se o token tem formato correto.
-     *
-     * @param string $token Token a ser validado
-     * @return bool True se válido, false caso contrário
-     */
-    private function isValidToken( string $token ): bool
-    {
-        return strlen( $token ) === self::EXPECTED_TOKEN_LENGTH &&
-            preg_match( self::TOKEN_PATTERN, $token );
-    }
-
-    /**
-     * Sanitiza token para uso seguro em URLs.
-     *
-     * Usa múltiplas camadas de sanitização para máxima segurança:
-     * 1. Sanitização HTML para prevenir ataques XSS
-     * 2. Sanitização geral para caracteres especiais
-     * 3. Validação final após sanitização
-     *
-     * @param string $token Token original
-     * @return string Token sanitizado
-     */
-    private function sanitizeToken( string $token ): string
-    {
-        // Camada 1: Sanitização HTML
-        $sanitized = htmlspecialchars( $token, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-
-        // Camada 2: Sanitização adicional para máxima segurança
-        $sanitized = filter_var( $sanitized, FILTER_UNSAFE_RAW, FILTER_FLAG_NO_ENCODE_QUOTES );
-
-        // Camada 3: Validação final após sanitização
-        if ( strlen( $sanitized ) !== self::EXPECTED_TOKEN_LENGTH ) {
-            Log::warning( 'Token corrompido após sanitização', [
-                'original_length'  => strlen( $token ),
-                'sanitized_length' => strlen( $sanitized ),
-                'expected_length'  => self::EXPECTED_TOKEN_LENGTH
-            ] );
-            return '';
-        }
-
-        return $sanitized;
     }
 
     /**
@@ -197,49 +151,6 @@ class ConfirmationLinkService
     public function buildVerificationConfirmationLink( ?string $token ): string
     {
         return $this->buildConfirmationLinkByContext( $token, 'verification' );
-    }
-
-    /**
-     * Verifica se um token é válido sem construir URL.
-     *
-     * Método utilitário para validações rápidas.
-     *
-     * @param string|null $token Token a ser verificado
-     * @return bool True se válido, false caso contrário
-     */
-    public function isValidConfirmationToken( ?string $token ): bool
-    {
-        return !empty( $token ) && $this->isValidToken( $token );
-    }
-
-    /**
-     * Obtém informações sobre um token para debugging.
-     *
-     * @param string|null $token Token a ser analisado
-     * @return array Informações do token
-     */
-    public function getTokenInfo( ?string $token ): array
-    {
-        if ( empty( $token ) ) {
-            return [
-                'is_valid' => false,
-                'length'   => 0,
-                'reason'   => 'token_empty'
-            ];
-        }
-
-        $length             = strlen( $token );
-        $has_correct_length = $length === self::EXPECTED_TOKEN_LENGTH;
-        $matches_pattern    = preg_match( self::TOKEN_PATTERN, $token );
-
-        return [
-            'is_valid'           => $has_correct_length && $matches_pattern,
-            'length'             => $length,
-            'expected_length'    => self::EXPECTED_TOKEN_LENGTH,
-            'has_correct_length' => $has_correct_length,
-            'matches_pattern'    => $matches_pattern,
-            'reason'             => $has_correct_length && $matches_pattern ? 'valid' : 'invalid_format'
-        ];
     }
 
 }

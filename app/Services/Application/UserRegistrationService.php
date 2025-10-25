@@ -276,7 +276,7 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             // Criar token de redefinição
-            $token     = Str::random( 64 );
+            $token     = generateSecureToken( 32, 'base64url' );
             $expiresAt = now()->addMinutes( (int) config( 'auth.passwords.users.expire', 60 ) );
 
             $resetToken = new UserConfirmationToken( [

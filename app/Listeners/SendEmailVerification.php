@@ -141,11 +141,11 @@ class SendEmailVerification implements ShouldQueue
                 throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado' );
             }
 
-            if ( strlen( $event->verificationToken ) !== 64 ) {
+            if ( strlen( $event->verificationToken ) !== 43 ) {
                 throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido' );
             }
 
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+            if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de verificação com formato inválido' );
             }
 
@@ -220,7 +220,7 @@ class SendEmailVerification implements ShouldQueue
         }
 
         // Validação de comprimento do token
-        if ( strlen( $event->verificationToken ) !== 64 ) {
+        if ( strlen( $event->verificationToken ) !== 43 ) {
             Log::error( 'Token de verificação com comprimento inválido', [
                 'token_length'    => strlen( $event->verificationToken ),
                 'expected_length' => 64,
@@ -231,11 +231,11 @@ class SendEmailVerification implements ShouldQueue
         }
 
         // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+        if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
             Log::error( 'Token de verificação com formato inválido', [
                 'token_length'    => strlen( $event->verificationToken ),
                 'token_sample'    => substr( $event->verificationToken, 0, 10 ) . '...',
-                'expected_length' => 64,
+                'expected_length' => 43,
                 'expected_format' => 'hexadecimal_minúsculo',
                 'user_id'         => $event->user->id,
                 'tenant_id'       => $event->tenant?->id,
@@ -438,17 +438,6 @@ class SendEmailVerification implements ShouldQueue
     protected function buildVerificationConfirmationLink( ?string $token ): string
     {
         return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'verification' );
-    }
-
-    /**
-     * Verifica se um token é válido usando o serviço centralizado.
-     *
-     * @param string|null $token Token a ser verificado
-     * @return bool True se válido, false caso contrário
-     */
-    protected function isValidConfirmationToken( ?string $token ): bool
-    {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
     }
 
 }

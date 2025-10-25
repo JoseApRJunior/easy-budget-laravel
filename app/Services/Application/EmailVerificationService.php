@@ -82,8 +82,7 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // 2. Criar novo token com expiração de 30 minutos
-            // Gerar token usando apenas caracteres hexadecimais minúsculos (a-f, 0-9)
-            $token     = $this->generateSecureToken( 64 );
+            $token     = generateSecureToken( 32, 'base64url' );
             $expiresAt = now()->addMinutes( 30 ); // 30 minutos conforme especificado
 
             Log::info( 'Criando novo token de verificação', [
@@ -369,22 +368,6 @@ class EmailVerificationService extends AbstractBaseService
                 $e,
             );
         }
-    }
-
-    /**
-     * Gera token seguro usando padrão criptograficamente seguro.
-     *
-     * Método aprimorado usando bin2hex(random_bytes(32)) para gerar tokens
-     * no formato hexadecimal minúsculo, garantindo compatibilidade com validações
-     * e evitando problemas de case sensitivity.
-     *
-     * @return string Token seguro de 64 caracteres hexadecimais minúsculos
-     */
-    private function generateSecureToken( int $length ): string
-    {
-        // Usar bin2hex(random_bytes(32)) para gerar 64 caracteres hexadecimais minúsculos
-        // Evita problemas de case sensitivity e garante formato consistente
-        return bin2hex( random_bytes( 32 ) );
     }
 
     /**
