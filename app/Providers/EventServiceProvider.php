@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
+use App\Events\SocialAccountLinked;
 use App\Events\SocialLoginWelcome;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketCreated;
@@ -15,6 +16,7 @@ use App\Events\UserRegistered;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
+use App\Listeners\SendSocialAccountLinkedNotification;
 use App\Listeners\SendSocialLoginWelcomeNotification;
 use App\Listeners\SendStatusUpdateNotification;
 use App\Listeners\SendSupportContactEmail;
@@ -69,6 +71,10 @@ class EventServiceProvider extends ServiceProvider
 
         SocialLoginWelcome::class         => [
             SendSocialLoginWelcomeNotification::class,
+        ],
+
+        SocialAccountLinked::class        => [
+            SendSocialAccountLinkedNotification::class,
         ],
 
         SupportTicketCreated::class       => [
@@ -136,6 +142,7 @@ class EventServiceProvider extends ServiceProvider
             PasswordResetRequested::class,
             EmailVerificationRequested::class,
             SocialLoginWelcome::class,
+            SocialAccountLinked::class,
             SupportTicketCreated::class,
             SupportTicketResponded::class,
         ];
@@ -246,6 +253,15 @@ class EventServiceProvider extends ServiceProvider
                     'user_id'   => $event->user->id,
                     'email'     => $event->user->email,
                     'tenant_id' => $event->tenant?->id,
+                    'provider'  => $event->provider,
+                ];
+                break;
+
+            case SocialAccountLinked::class:
+                $data = [
+                    'user_id'   => $event->user->id,
+                    'email'     => $event->user->email,
+                    'tenant_id' => $event->user->tenant_id,
                     'provider'  => $event->provider,
                 ];
                 break;

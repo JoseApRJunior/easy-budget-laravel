@@ -209,6 +209,7 @@ class CustomVerifyEmailController extends Controller
      * - Verifica se token existe e não está expirado
      * - Valida formato do token (64 caracteres)
      * - Sanitiza entrada para prevenir ataques
+     * - Usa repository para busca case-insensitive
      * - Logging detalhado para auditoria de segurança
      *
      * @param string $token Token de confirmação a ser validado
@@ -230,12 +231,23 @@ class CustomVerifyEmailController extends Controller
             return null;
         }
 
-        // 2. Buscar token válido no banco de dados
-        $confirmationToken = UserConfirmationToken::where( 'token', $sanitizedToken )
-            ->where( 'expires_at', '>', now() )
-            ->first();
+        // 2. Buscar token válido no banco de dados usando repository (case-insensitive)
+        $confirmationToken = $this->userConfirmationTokenRepository->findByToken( $sanitizedToken );
 
-        // 3. Logging detalhado para auditoria
+        // 3. Verificar se token não expirou
+        if ( $confirmationToken && $confirmationToken->expires_at->isPast() ) {
+            $this->logSecurityEvent( 'TOKEN_EXPIRADO', $confirmationToken->user_id, $confirmationToken->tenant_id, [
+                'token_id'   => $confirmationToken->id,
+                'expires_at' => $confirmationToken->expires_at,
+                'ip'         => $request->ip(),
+            ] );
+
+            // Remover token expirado
+            $this->userConfirmationTokenRepository->delete( $confirmationToken->id );
+            $confirmationToken = null;
+        }
+
+        // 4. Logging detalhado para auditoria
         if ( $confirmationToken ) {
             $this->logSecurityEvent( 'TOKEN_VALIDO_ENCONTRADO', $confirmationToken->user_id, $confirmationToken->tenant_id, [
                 'token_id'   => $confirmationToken->id,

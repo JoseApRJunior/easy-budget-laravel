@@ -66,9 +66,30 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 return $this->success( $existingUser, 'Usuário autenticado com sucesso via ' . ucfirst( $provider ) );
             }
 
-            // Verifica se e-mail existe e não está em uso por outro usuário
+            // Verifica se e-mail existe e pode ser vinculado
             if ( !empty( $userData[ 'email' ] ) && $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
-                return $this->error( 'E-mail já cadastrado', 'Este e-mail já está sendo utilizado por outra conta.' );
+                $existingUser = $this->findUserByEmail( $userData[ 'email' ] );
+
+                if ( $existingUser ) {
+                    // Vincular conta social ao usuário existente
+                    $linkResult = $this->linkSocialAccountToUser( $existingUser, $provider, $userData );
+
+                    if ( $linkResult->isSuccess() ) {
+                        // Disparar evento de confirmação de vinculação
+                        Event::dispatch( new \App\Events\SocialAccountLinked( $existingUser, $provider, $userData ) );
+
+                        Log::info( 'Conta social vinculada a usuário existente', [
+                            'provider'  => $provider,
+                            'user_id'   => $existingUser->id,
+                            'email'     => $existingUser->email,
+                            'social_id' => $userData[ 'id' ],
+                        ] );
+
+                        return $this->success( $existingUser, 'Conta vinculada com sucesso via ' . ucfirst( $provider ) );
+                    } else {
+                        return $linkResult;
+                    }
+                }
             }
 
             // Cria novo usuário
@@ -256,6 +277,17 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Encontra usuário por e-mail.
+     *
+     * @param string $email
+     * @return User|null
+     */
+    private function findUserByEmail( string $email ): ?User
+    {
+        return User::where( 'email', $email )->first();
     }
 
     /**
