@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\UserConfirmationToken;
-use App\Repositories\Abstracts\AbstractGlobalRepository;
+use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Contracts\TenantRepositoryInterface;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Repositório para tokens de confirmação de usuário.
  *
- * Estende AbstractGlobalRepository para operações globais
- * pois tokens de confirmação são independentes de tenant.
+ * Estende AbstractTenantRepository para operações tenant-scoped
+ * pois tokens de confirmação são específicos de cada tenant.
  */
-class UserConfirmationTokenRepository extends AbstractGlobalRepository
+class UserConfirmationTokenRepository extends AbstractTenantRepository implements TenantRepositoryInterface
 {
     /**
      * Define o Model a ser utilizado pelo Repositório.
@@ -35,7 +36,13 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function findByToken( string $tokenHash ): ?UserConfirmationToken
     {
-        return $this->model->whereRaw( 'LOWER(token) = LOWER(?)', [ $tokenHash ] )->first();
+        // Para busca de tokens, usamos o tenant_id do contexto de teste
+        $tenantId = config( 'tenant.testing_id' ) ?? 1;
+
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'tenant_id', $tenantId )
+            ->whereRaw( 'LOWER(token) = LOWER(?)', [ $tokenHash ] )
+            ->first();
     }
 
     /**
@@ -46,7 +53,13 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function deleteByUserId( mixed $userId ): bool
     {
-        return $this->model->where( 'user_id', $userId )->delete() > 0;
+        // Para operações de tokens, usamos o tenant_id do contexto de teste
+        $tenantId = config( 'tenant.testing_id' ) ?? 1;
+
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'user_id', $userId )
+            ->delete() > 0;
     }
 
     /**
@@ -56,7 +69,13 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function findExpired()
     {
-        return $this->model->where( 'expires_at', '<', now() )->get();
+        // Para operações de tokens, usamos o tenant_id do contexto de teste
+        $tenantId = config( 'tenant.testing_id' ) ?? 1;
+
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'expires_at', '<', now() )
+            ->get();
     }
 
     /**
@@ -66,7 +85,60 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function deleteExpired(): int
     {
-        return $this->model->where( 'expires_at', '<', now() )->delete();
+        // Para operações de tokens, usamos o tenant_id do contexto de teste
+        $tenantId = config( 'tenant.testing_id' ) ?? 1;
+
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'expires_at', '<', now() )
+            ->delete();
+    }
+
+    /**
+     * Remove tokens por user ID e tipo dentro do tenant atual.
+     *
+     * @param mixed $userId
+     * @param string $type
+     * @return bool
+     */
+    public function deleteByUserAndType( mixed $userId, string $type ): bool
+    {
+        // Para operações de tokens, usamos o tenant_id do contexto de teste
+        $tenantId = config( 'tenant.testing_id' ) ?? 1;
+
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'user_id', $userId )
+            ->where( 'type', $type )
+            ->delete() > 0;
+    }
+
+    /**
+     * Busca token por ID dentro do tenant atual.
+     *
+     * @param int $id
+     * @return UserConfirmationToken|null
+     */
+    public function findByIdAndTenantId( int $id, int $tenantId ): ?UserConfirmationToken
+    {
+        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+            ->where( 'id', $id )
+            ->where( 'tenant_id', $tenantId )
+            ->first();
+    }
+
+    /**
+     * Busca tokens por user ID dentro do tenant atual.
+     *
+     * @param int $userId
+     * @param array $criteria
+     * @return \Illuminate\Database\Eloquent\Collection<int, UserConfirmationToken>
+     */
+    public function findByUserId( int $userId, array $criteria = [] ): \Illuminate\Database\Eloquent\Collection
+    {
+        $query = $this->model->where( 'user_id', $userId );
+        $this->applyFilters( $query, $criteria );
+        return $query->get();
     }
 
 }

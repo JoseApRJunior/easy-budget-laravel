@@ -22,6 +22,7 @@ class SocialAccountLinked
     public User   $user;
     public string $provider;
     public array  $socialData;
+    public        $token;
 
     /**
      * Cria uma nova instância do evento.
@@ -29,12 +30,14 @@ class SocialAccountLinked
      * @param User $user Usuário que teve a conta vinculada
      * @param string $provider Provedor social (google, facebook, etc.)
      * @param array $socialData Dados do provedor social
+     * @param mixed $token Token de confirmação para vinculação
      */
-    public function __construct( User $user, string $provider, array $socialData )
+    public function __construct( User $user, string $provider, array $socialData, $token = null )
     {
         $this->user       = $user;
         $this->provider   = $provider;
         $this->socialData = $socialData;
+        $this->token      = $token;
     }
 
 }

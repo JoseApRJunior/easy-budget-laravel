@@ -6,6 +6,7 @@ namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
 use App\Events\EmailVerificationRequested;
+use App\Events\SocialAccountLinked;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
 use App\Repositories\UserConfirmationTokenRepository;
@@ -48,6 +49,16 @@ class EmailVerificationService extends AbstractBaseService
     ) {
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
         $this->userRepository                  = $userRepository;
+    }
+
+    /**
+     * Retorna o UserRepository para operações específicas.
+     *
+     * @return UserRepository
+     */
+    public function getUserRepository(): UserRepository
+    {
+        return $this->userRepository;
     }
 
     /**
@@ -236,7 +247,7 @@ class EmailVerificationService extends AbstractBaseService
             if ( !$confirmationToken ) {
                 return ServiceResult::error(
                     OperationStatus::NOT_FOUND,
-                    'Token de verificação não encontrado.',
+                    'Link de confirmação inválido ou expirado. Tente fazer login novamente.',
                 );
             }
 
@@ -253,7 +264,7 @@ class EmailVerificationService extends AbstractBaseService
 
                 return ServiceResult::error(
                     OperationStatus::CONFLICT,
-                    'Token de verificação expirado. Solicite um novo.',
+                    'Link de confirmação expirado. Solicite uma nova vinculação de conta.',
                 );
             }
 
@@ -262,7 +273,7 @@ class EmailVerificationService extends AbstractBaseService
             if ( !$user ) {
                 return ServiceResult::error(
                     OperationStatus::NOT_FOUND,
-                    'Usuário associado ao token não encontrado.',
+                    'Conta não encontrada. Entre em contato com o suporte.',
                 );
             }
 
@@ -402,6 +413,120 @@ class EmailVerificationService extends AbstractBaseService
             'created_at',
             'updated_at',
         ];
+    }
+
+    /**
+     * Envia confirmação de vinculação de conta social.
+     *
+     * Este método cria um token de confirmação para vinculação de conta social
+     * e dispara o evento para envio do e-mail de confirmação.
+     *
+     * @param User $user Usuário existente que será vinculado
+     * @param string $provider Provider social (google, facebook, etc.)
+     * @param array $userData Dados do usuário do provider social
+     * @return ServiceResult Resultado da operação
+     */
+    public function sendSocialLinkingConfirmation(
+        User $user,
+        string $provider,
+        array $userData,
+    ): ServiceResult {
+        try {
+            // 1. Remover tokens antigos do usuário automaticamente
+            Log::info( 'Removendo tokens antigos do usuário para vinculação social', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email'     => $user->email,
+                'provider'  => $provider,
+            ] );
+
+            $deletedCount = $this->userConfirmationTokenRepository->deleteByUserAndType( $user->id, 'social_linking' );
+            if ( $deletedCount > 0 ) {
+                Log::info( 'Tokens antigos de vinculação removidos', [
+                    'user_id'        => $user->id,
+                    'tokens_deleted' => $deletedCount,
+                ] );
+            }
+
+            // 2. Criar novo token com expiração de 30 minutos
+            $token     = $this->generateSecureToken( 64 );
+            $expiresAt = now()->addMinutes( 30 );
+
+            Log::info( 'Criando novo token de vinculação social', [
+                'user_id'      => $user->id,
+                'tenant_id'    => $user->tenant_id,
+                'provider'     => $provider,
+                'expires_at'   => $expiresAt,
+                'token_length' => strlen( $token ),
+            ] );
+
+            $confirmationToken = new UserConfirmationToken( [
+                'user_id'    => $user->id,
+                'tenant_id'  => $user->tenant_id,
+                'token'      => $token,
+                'expires_at' => $expiresAt,
+                'type'       => 'social_linking',
+                'metadata'   => json_encode( [
+                    'provider'      => $provider,
+                    'social_id'     => $userData[ 'id' ],
+                    'social_name'   => $userData[ 'name' ],
+                    'social_email'  => $userData[ 'email' ],
+                    'social_avatar' => $userData[ 'avatar' ] ?? null,
+                    'user_data'     => $userData,
+                ] ),
+            ] );
+
+            $savedToken = $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
+
+            Log::info( 'Token de vinculação social criado', [
+                'user_id'    => $user->id,
+                'tenant_id'  => $user->tenant_id,
+                'token_id'   => $savedToken->id,
+                'provider'   => $provider,
+                'expires_at' => $expiresAt,
+            ] );
+
+            // 3. Disparar evento para envio do e-mail de confirmação
+            Event::dispatch( new SocialAccountLinked(
+                $user,
+                $provider,
+                $userData,
+                $savedToken,
+            ) );
+
+            Log::info( 'Confirmação de vinculação social enviada', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email'     => $user->email,
+                'provider'  => $provider,
+                'token_id'  => $savedToken->id,
+            ] );
+
+            return ServiceResult::success(
+                [
+                    'token' => $savedToken,
+                    'user'  => $user,
+                ],
+                'Confirmação de vinculação enviada com sucesso.',
+            );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao enviar confirmação de vinculação social', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email'     => $user->email,
+                'provider'  => $provider,
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(),
+            ] );
+
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro interno ao enviar confirmação de vinculação. Tente novamente.',
+                null,
+                $e,
+            );
+        }
     }
 
 }

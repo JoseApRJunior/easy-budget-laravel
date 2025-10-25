@@ -68,6 +68,7 @@ Route::group( [], function () {
 Route::prefix( 'auth' )->name( 'auth.' )->group( function () {
     Route::get( '/google', [ GoogleController::class, 'redirect' ] )->name( 'google' );
     Route::get( '/google/callback', [ GoogleController::class, 'callback' ] )->name( 'google.callback' );
+    Route::get( '/social/confirm-linking/{token}', [ GoogleController::class, 'confirmLinking' ] )->name( 'social.confirm-linking' );
 } );
 
 Route::middleware( 'auth' )->group( function () {

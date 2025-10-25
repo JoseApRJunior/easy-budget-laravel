@@ -19,6 +19,7 @@ use Illuminate\Mail\Mailables\Envelope;
 class SocialAccountLinkedMail extends BaseEmail
 {
     public string $provider;
+    public        $token;
 
     /**
      * Cria uma nova instância da mailable.
@@ -26,11 +27,13 @@ class SocialAccountLinkedMail extends BaseEmail
      * @param User $user Usuário que teve a conta vinculada
      * @param Tenant|null $tenant Tenant do usuário
      * @param string $provider Provedor social vinculado
+     * @param mixed $token Token de confirmação para vinculação
      */
-    public function __construct( User $user, ?Tenant $tenant = null, string $provider = 'google' )
+    public function __construct( User $user, ?Tenant $tenant = null, string $provider = 'google', $token = null )
     {
         parent::__construct( $user, $tenant );
         $this->provider = $provider;
+        $this->token    = $token;
     }
 
     /**
@@ -52,6 +55,7 @@ class SocialAccountLinkedMail extends BaseEmail
             view: 'emails.users.social-account-linked',
             with: array_merge( $this->getUserBasicData(), [
                 'provider' => $this->provider,
+                'token'    => $this->token,
             ] ),
         );
     }
@@ -62,6 +66,16 @@ class SocialAccountLinkedMail extends BaseEmail
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Obtém o usuário da mailable.
+     *
+     * @return User
+     */
+    public function getUser(): User
+    {
+        return $this->user;
     }
 
 }

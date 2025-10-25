@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Auth;
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Repositories\UserRepository;
+use App\Services\Application\EmailVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,13 +24,19 @@ class GoogleController extends Controller
 {
     private OAuthClientInterface          $oauthClient;
     private SocialAuthenticationInterface $socialAuthService;
+    private EmailVerificationService      $emailVerificationService;
+    private UserRepository                $userRepository;
 
     public function __construct(
         OAuthClientInterface $oauthClient,
         SocialAuthenticationInterface $socialAuthService,
+        EmailVerificationService $emailVerificationService,
+        UserRepository $userRepository,
     ) {
-        $this->oauthClient       = $oauthClient;
-        $this->socialAuthService = $socialAuthService;
+        $this->oauthClient              = $oauthClient;
+        $this->socialAuthService        = $socialAuthService;
+        $this->emailVerificationService = $emailVerificationService;
+        $this->userRepository           = $userRepository;
     }
 
     /**
@@ -218,8 +226,8 @@ class GoogleController extends Controller
                 return redirect()->back()->with( 'error', 'Nenhuma conta Google vinculada para desvincular.' );
             }
 
-            // Desvincula a conta Google
-            $user->update( [
+            // Desvincula a conta Google usando o repository
+            $this->userRepository->update( $user->id, [
                 'google_id'   => null,
                 'avatar'      => null,
                 'google_data' => null,
@@ -241,6 +249,94 @@ class GoogleController extends Controller
             ] );
 
             return redirect()->back()->with( 'error', 'Erro ao desvincular conta Google. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Confirma a vinculação de conta social através de token
+     *
+     * @param string $token Token de confirmação
+     * @return RedirectResponse
+     */
+    public function confirmLinking( string $token ): RedirectResponse
+    {
+        try {
+            // Valida o token usando EmailVerificationService
+            $tokenResult = $this->emailVerificationService->findValidToken( $token );
+
+            if ( !$tokenResult->isSuccess() ) {
+                Log::warning( 'Tentativa de confirmação de vinculação com token inválido', [
+                    'token' => substr( $token, 0, 10 ) . '...',
+                    'error' => $tokenResult->getMessage(),
+                    'ip'    => request()->ip(),
+                ] );
+
+                return redirect()->route( 'home' )->with( 'error', $tokenResult->getMessage() );
+            }
+
+            $tokenData         = $tokenResult->getData();
+            $user              = $tokenData[ 'user' ];
+            $confirmationToken = $tokenData[ 'token' ];
+
+            // Verifica se o token é do tipo social_linking
+            if ( $confirmationToken->type !== 'social_linking' ) {
+                Log::warning( 'Token usado para confirmação não é do tipo social_linking', [
+                    'token_id'   => $confirmationToken->id,
+                    'token_type' => $confirmationToken->type,
+                    'user_id'    => $user->id,
+                    'ip'         => request()->ip(),
+                ] );
+
+                return redirect()->route( 'home' )->with( 'error', 'Link de confirmação inválido. Solicite uma nova vinculação de conta.' );
+            }
+
+            // Decodifica os metadados do token
+            $metadata = json_decode( $confirmationToken->metadata, true );
+            if ( !$metadata || !isset( $metadata[ 'provider' ], $metadata[ 'social_id' ] ) ) {
+                Log::error( 'Metadados do token de vinculação incompletos', [
+                    'token_id' => $confirmationToken->id,
+                    'metadata' => $metadata,
+                    'user_id'  => $user->id,
+                    'ip'       => request()->ip(),
+                ] );
+
+                return redirect()->route( 'home' )->with( 'error', 'Informações de vinculação incompletas. Tente fazer login novamente com sua conta Google.' );
+            }
+
+            // Vincula a conta social ao usuário
+            $provider = $metadata[ 'provider' ];
+            $socialId = $metadata[ 'social_id' ];
+
+            // Atualiza o usuário com os dados do provider social
+            $user->update( [
+                'google_id'   => $provider === 'google' ? $socialId : $user->google_id,
+                'avatar'      => $metadata[ 'social_avatar' ] ?? $user->avatar,
+                'google_data' => json_encode( $metadata ),
+            ] );
+
+            // Remove o token após uso bem-sucedido
+            $this->emailVerificationService->removeToken( $confirmationToken );
+
+            Log::info( 'Vinculação de conta social confirmada com sucesso', [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'provider'  => $provider,
+                'social_id' => $socialId,
+                'ip'        => request()->ip(),
+            ] );
+
+            return redirect()->route( 'provider.dashboard' )->with( 'success', 'Conta ' . ucfirst( $provider ) . ' vinculada com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao confirmar vinculação de conta social', [
+                'token' => substr( $token, 0, 10 ) . '...',
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+                'ip'    => request()->ip(),
+            ] );
+
+            return redirect()->route( 'home' )->with( 'error', 'Erro ao confirmar vinculação da conta. Tente fazer login novamente com sua conta Google.' );
         }
     }
 
