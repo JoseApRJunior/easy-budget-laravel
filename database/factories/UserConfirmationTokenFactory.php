@@ -21,7 +21,7 @@ class UserConfirmationTokenFactory extends Factory
     }
 
     /**
-     * Gera um token no formato base64url (43-44 caracteres).
+     * Gera um token no formato base64url (32 bytes = 43 caracteres, formato seguro para URLs).
      */
     private function generateBase64UrlToken(): string
     {
@@ -34,7 +34,7 @@ class UserConfirmationTokenFactory extends Factory
         // Substitui caracteres específicos para formato base64url
         $base64url = strtr( $base64, '+/', '-_' );
 
-        // Remove padding se necessário para ficar entre 43-44 caracteres
+        // Remove padding se necessário para ficar exatamente 43 caracteres
         return rtrim( $base64url, '=' );
     }
 

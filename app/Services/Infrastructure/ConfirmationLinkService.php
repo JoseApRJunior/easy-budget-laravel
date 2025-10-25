@@ -26,13 +26,13 @@ class ConfirmationLinkService
      * Constrói URL de confirmação segura.
      *
      * Estratégia de segurança implementada:
-     * 1. Validação rigorosa do token (formato e comprimento)
+     * 1. Validação rigorosa do token (formato base64url)
      * 2. Sanitização completa para prevenir ataques
      * 3. Uso de urlencode para caracteres especiais
      * 4. Logging detalhado para auditoria
      * 5. Fallback seguro para cenários inválidos
      *
-     * @param string|null $token Token de confirmação (64 caracteres)
+     * @param string|null $token Token de confirmação (43 caracteres em base64url)
      * @param string $route Rota para confirmação (padrão: /confirm-account)
      * @param string $fallbackRoute Rota de fallback para casos inválidos (padrão: /login)
      * @return string URL completa e funcional ou fallback seguro
@@ -52,12 +52,11 @@ class ConfirmationLinkService
             return $this->buildBaseUrl() . '/email/verify';
         }
 
-        // Caso 2: Validação rigorosa do token
+        // Caso 2: Validação rigorosa do token usando formato base64url
         if ( !validateAndSanitizeToken( $token, 'base64url' ) ) {
             Log::warning( 'Token de confirmação inválido detectado', [
                 'token_length'    => strlen( $token ),
-                'expected_length' => 43,
-                'token_pattern'   => 'base64url',
+                'expected_format' => 'base64url',
                 'action'          => 'redirect_to_fallback',
                 'fallback_route'  => $fallbackRoute
             ] );

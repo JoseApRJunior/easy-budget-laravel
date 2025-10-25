@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
  * seguindo a arquitetura Controller → Service → Repository → Model estabelecida.
  *
  * Funcionalidades principais:
- * - Criação de tokens de confirmação com expiração de 30 minutos
+ * - Criação de tokens de confirmação em formato base64url com expiração de 30 minutos
  * - Remoção automática de tokens antigos do usuário
  * - Integração com sistema Laravel built-in de verificação
  * - Tratamento robusto de erros com logging detalhado
@@ -55,7 +55,7 @@ class EmailVerificationService extends AbstractBaseService
      *
      * Este método implementa toda a lógica de criação de tokens:
      * 1. Remove tokens antigos do usuário automaticamente
-     * 2. Cria novo token com expiração de 30 minutos
+     * 2. Cria novo token em formato base64url com expiração de 30 minutos
      * 3. Salva token no banco de dados
      * 4. Dispara evento para envio de e-mail de verificação
      * 5. Retorna resultado usando ServiceResult
@@ -107,6 +107,25 @@ class EmailVerificationService extends AbstractBaseService
                 'tenant_id'  => $user->tenant_id,
                 'token_id'   => $savedToken->id,
                 'expires_at' => $expiresAt
+            ] );
+
+            // 3. Disparar evento para envio de e-mail de verificação
+            Log::info( 'Disparando evento EmailVerificationRequested', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email'     => $user->email,
+            ] );
+
+            Event::dispatch( new EmailVerificationRequested(
+                $user,
+                $user->tenant,
+                $token,
+            ) );
+
+            Log::info( 'Evento EmailVerificationRequested disparado com sucesso', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email'     => $user->email,
             ] );
 
             return ServiceResult::success( [

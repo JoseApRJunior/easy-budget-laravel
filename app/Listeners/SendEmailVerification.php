@@ -136,15 +136,7 @@ class SendEmailVerification implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de verificação' );
             }
 
-            // Validação rigorosa do token de verificação
-            if ( !$event->verificationToken ) {
-                throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado' );
-            }
-
-            if ( strlen( $event->verificationToken ) !== 43 ) {
-                throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido' );
-            }
-
+            // Validação rigorosa do token de verificação usando formato base64url
             if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de verificação com formato inválido' );
             }
@@ -219,24 +211,12 @@ class SendEmailVerification implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->verificationToken ) !== 43 ) {
-            Log::error( 'Token de verificação com comprimento inválido', [
-                'token_length'    => strlen( $event->verificationToken ),
-                'expected_length' => 64,
-                'user_id'         => $event->user->id,
-                'tenant_id'       => $event->tenant?->id,
-            ] );
-            throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
+        // Validação de formato do token usando base64url
         if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
             Log::error( 'Token de verificação com formato inválido', [
                 'token_length'    => strlen( $event->verificationToken ),
                 'token_sample'    => substr( $event->verificationToken, 0, 10 ) . '...',
-                'expected_length' => 43,
-                'expected_format' => 'hexadecimal_minúsculo',
+                'expected_format' => 'base64url',
                 'user_id'         => $event->user->id,
                 'tenant_id'       => $event->tenant?->id,
             ] );

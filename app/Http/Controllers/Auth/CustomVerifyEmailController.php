@@ -229,7 +229,7 @@ class CustomVerifyEmailController extends Controller
      *
      * Método otimizado que busca tokens válidos com validações de segurança:
      * - Verifica se token existe e não está expirado
-     * - Valida formato do token (64 caracteres)
+     * - Valida formato do token (base64url, 43 caracteres)
      * - Sanitiza entrada para prevenir ataques
      * - Usa repository para busca case-insensitive
      * - Logging detalhado para auditoria de segurança

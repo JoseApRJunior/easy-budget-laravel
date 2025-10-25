@@ -12,13 +12,15 @@
  * O comprimento final do token varia conforme o formato:
  * - 'hex': 2 * $length caracteres
  * - 'base64': ceil(4 * $length / 3) caracteres (aproximado, devido ao padding)
- * - 'base64url': semelhante ao base64, mas seguro para URLs (sem +, /, =)
+ * - 'base64url': formato seguro para URLs (sem +, /, =), usado para tokens de e-mail
  * - 'alphanumeric': apenas letras e números, comprimento = $length
+ *
+ * Para tokens de verificação de e-mail e reset de senha, use 'base64url' com 32 bytes (43 caracteres).
  *
  * @param int $length Número de bytes aleatórios a gerar (padrão: 32).
  *                    Deve ser um inteiro positivo e não exceder 128 para evitar uso excessivo de memória.
  * @param string $format Formato do token ('hex', 'base64', 'base64url' ou 'alphanumeric').
- *                       Padrão: 'hex'.
+ *                       Padrão: 'hex'. Recomendado: 'base64url' para e-mails.
  * @return string Token seguro no formato especificado.
  * @throws InvalidArgumentException Se $length for inválido (não positivo ou muito grande) ou $format for inválido.
  * @throws Exception Se a geração de bytes aleatórios falhar (ex.: entropia insuficiente).
@@ -70,8 +72,12 @@ function generateAlphanumericToken( int $length ): string
 /**
  * Valida e sanitiza um token de acordo com o formato esperado.
  *
+ * Utilizado principalmente para validação de tokens de verificação de e-mail e reset de senha,
+ * que são gerados no formato base64url para compatibilidade com URLs.
+ *
  * @param string $token  O token recebido (ex.: via URL).
  * @param string $format Formato esperado: 'hex', 'base64', 'base64url' ou 'alphanumeric'.
+ *                       Padrão: 'hex'. Para tokens de e-mail, use 'base64url'.
  * @return string|null Token validado e normalizado, ou null se inválido.
  */
 function validateAndSanitizeToken( string $token, string $format = 'hex' ): ?string
@@ -87,8 +93,8 @@ function validateAndSanitizeToken( string $token, string $format = 'hex' ): ?str
         // 32 bytes em base64 → 43 ou 44 caracteres (com padding "=")
         'base64'       => '/^[A-Za-z0-9+\/]{42,43}=*$/',
 
-        // 32 bytes em base64url → 43 caracteres, sem + / =
-        'base64url'    => '/^[A-Za-z0-9\-_]{43,44}$/',
+        // 32 bytes em base64url → 43 caracteres, sem + / = (formato padrão para e-mails)
+        'base64url'    => '/^[A-Za-z0-9\-_]{43}$/',
 
         // Token alfanumérico genérico de 64 caracteres
         'alphanumeric' => '/^[a-zA-Z0-9]{64}$/',

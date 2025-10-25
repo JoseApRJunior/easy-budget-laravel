@@ -147,16 +147,8 @@ class SendPasswordResetNotification implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de redefinição de senha' );
             }
 
-            // Validação rigorosa do token de redefinição
-            if ( !$event->resetToken ) {
-                throw new \InvalidArgumentException( 'Token de redefinição obrigatório não informado' );
-            }
-
-            if ( strlen( $event->resetToken ) !== 64 ) {
-                throw new \InvalidArgumentException( 'Token de redefinição com comprimento inválido' );
-            }
-
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->resetToken ) ) {
+            // Validação rigorosa do token de redefinição usando formato base64url
+            if ( !validateAndSanitizeToken( $event->resetToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de redefinição com formato inválido' );
             }
 
@@ -223,13 +215,8 @@ class SendPasswordResetNotification implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de redefinição obrigatório não informado' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->resetToken ) !== 64 ) {
-            throw new \InvalidArgumentException( 'Token de redefinição com comprimento inválido' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->resetToken ) ) {
+        // Validação de formato do token usando base64url (32 bytes = 43 caracteres)
+        if ( !validateAndSanitizeToken( $event->resetToken, 'base64url' ) ) {
             throw new \InvalidArgumentException( 'Token de redefinição com formato inválido' );
         }
 
@@ -441,14 +428,14 @@ class SendPasswordResetNotification implements ShouldQueue
     }
 
     /**
-     * Verifica se um token é válido usando o serviço centralizado.
+     * Verifica se um token é válido usando o formato base64url.
      *
      * @param string|null $token Token a ser verificado
      * @return bool True se válido, false caso contrário
      */
     protected function isValidConfirmationToken( ?string $token ): bool
     {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
+        return validateAndSanitizeToken( $token, 'base64url' ) !== false;
     }
 
 }

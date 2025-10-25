@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
+use function App\Support\generateSecureToken;
+
 class PasswordResetLinkController extends Controller
 {
     /**
@@ -40,7 +42,7 @@ class PasswordResetLinkController extends Controller
      *
      * Implementa fluxo completo de reset de senha com:
      * - Validação de e-mail
-     * - Geração de token de reset via Laravel Password broker
+     * - Geração de token de reset em formato base64url (32 bytes = 43 caracteres)
      * - Disparo de evento personalizado PasswordResetRequested
      * - Integração com sistema de e-mail avançado (MailerService)
      * - Logging detalhado para auditoria
@@ -100,13 +102,14 @@ class PasswordResetLinkController extends Controller
                 'timestamp' => now()->toISOString()
             ] );
 
-            // 4. Gerar token de reset usando Laravel Password broker
-            $resetToken = Password::createToken( $user );
+            // 4. Gerar token de reset usando formato base64url (32 bytes = 43 caracteres)
+            $resetToken = generateSecureToken( 32, 'base64url' );
 
             Log::info( 'PasswordResetLinkController::store - PASSO 4: Token de reset gerado', [
                 'user_id'       => $user->id,
                 'email'         => $user->email,
                 'token_length'  => strlen( $resetToken ),
+                'token_format'  => 'base64url',
                 'token_preview' => substr( $resetToken, 0, 10 ) . '...',
                 'timestamp'     => now()->toISOString()
             ] );
