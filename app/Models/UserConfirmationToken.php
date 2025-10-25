@@ -4,14 +4,13 @@ namespace App\Models;
 
 use App\Models\Budget;
 use App\Models\Traits\TenantScoped;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserConfirmationToken extends Model
 {
-    use HasFactory, TenantScoped;
+    use TenantScoped;
 
     /**
      * Boot the model.
@@ -39,8 +38,6 @@ class UserConfirmationToken extends Model
         'tenant_id',
         'token',
         'expires_at',
-        'type',
-        'metadata',
     ];
 
     /**
@@ -53,8 +50,6 @@ class UserConfirmationToken extends Model
         'tenant_id'  => 'integer',
         'token'      => 'string',
         'expires_at' => 'datetime',
-        'type'       => 'string',
-        'metadata'   => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -69,8 +64,6 @@ class UserConfirmationToken extends Model
             'tenant_id'  => 'required|integer|exists:tenants,id',
             'token'      => 'required|string|size:64|unique:user_confirmation_tokens,token',
             'expires_at' => 'required|date|after:now',
-            'type'       => 'nullable|string|in:email_verification,social_linking',
-            'metadata'   => 'nullable|array',
         ];
     }
 

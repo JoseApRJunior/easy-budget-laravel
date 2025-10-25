@@ -99,7 +99,6 @@ class SendSocialAccountLinkedNotification implements ShouldQueue
             user: $event->user,
             tenant: $event->user->tenant,
             provider: $event->provider,
-            token: $event->token,
         );
 
         // Usa Laravel Mail facade diretamente para processamento assíncrono

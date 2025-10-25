@@ -33,7 +33,7 @@ class UserRepository extends AbstractTenantRepository
      */
     public function findByEmail( string $email ): ?User
     {
-        return $this->model->withoutGlobalScope( \App\Models\Traits\TenantScope::class)->where( 'email', $email )->first();
+        return $this->model->withoutTenant()->where( 'email', $email )->first();
     }
 
     /**
