@@ -60,8 +60,8 @@ class EmailVerificationIntegrationTest extends TestCase
         // Verificar que token de confirmação foi criado
         $token = UserConfirmationToken::where( 'user_id', $user->id )->first();
         self::assertNotNull( $token );
-        self::assertEquals( 'email_verification', $token->type );
-        self::assertEquals( 64, strlen( $token->token ) );
+        self::assertEquals( \App\Enums\TokenType::EMAIL_VERIFICATION, $token->type );
+        self::assertEquals( 43, strlen( $token->token ) ); // base64url format: 32 bytes = 43 caracteres
 
         // Verificar que eventos foram disparados
         Event::assertDispatched( UserRegistered::class, function ( $event ) use ( $user ) {
@@ -117,7 +117,7 @@ class EmailVerificationIntegrationTest extends TestCase
 
         // Assert
         $response->assertSessionHasErrors( [ 'email' ] );
-        self::assertStringContains( 'já está sendo utilizado', session( 'errors' )->first( 'email' ) );
+        self::assertStringContainsString( 'já está sendo utilizado', session( 'errors' )->first( 'email' ) );
     }
 
     /**
@@ -150,7 +150,7 @@ class EmailVerificationIntegrationTest extends TestCase
         // Assert
         $response->assertRedirect( 'login' );
         $response->assertSessionHas( 'error' );
-        self::assertStringContains( 'Erro de validação de segurança', session( 'error' ) );
+        self::assertStringContainsString( 'Erro de validação de segurança', session( 'error' ) );
     }
 
     /**

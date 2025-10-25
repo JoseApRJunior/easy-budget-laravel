@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\EmailVerificationRequested;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +50,7 @@ class SendEmailVerification implements ShouldQueue
      * Serviço para construção segura de links de confirmação.
      * Injetado automaticamente pelo Laravel.
      */
-    protected ConfirmationLinkService $confirmationLinkService;
+    protected LinkService $linkService;
 
     /**
      * Métricas de performance do processamento.
@@ -61,14 +61,14 @@ class SendEmailVerification implements ShouldQueue
      * Cria uma nova instância do listener.
      *
      * @param MailerService $mailerService Serviço de e-mail injetado
-     * @param ConfirmationLinkService $confirmationLinkService Serviço de links de confirmação injetado
+     * @param LinkService $linkService Serviço de links de confirmação injetado
      */
     public function __construct(
         MailerService $mailerService,
-        ConfirmationLinkService $confirmationLinkService,
+        LinkService $linkService,
     ) {
-        $this->mailerService           = $mailerService;
-        $this->confirmationLinkService = $confirmationLinkService;
+        $this->mailerService = $mailerService;
+        $this->linkService   = $linkService;
         $this->initializePerformanceMetrics();
     }
 
@@ -153,7 +153,7 @@ class SendEmailVerification implements ShouldQueue
             }
 
             // Gera URL de verificação segura usando serviço centralizado
-            $confirmationLink = $this->confirmationLinkService->buildConfirmationLinkByContext( $event->verificationToken, 'verification' );
+            $confirmationLink = $this->linkService->buildConfirmationLinkByContext( $event->verificationToken, 'verification' );
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendEmailVerificationMail(
@@ -405,7 +405,7 @@ class SendEmailVerification implements ShouldQueue
         string $route = '/confirm-account',
         string $fallbackRoute = '/login',
     ): string {
-        return $this->confirmationLinkService->buildConfirmationLink( $token, $route, $fallbackRoute );
+        return $this->linkService->buildConfirmationLink( $token, $route, $fallbackRoute );
     }
 
     /**
@@ -417,7 +417,7 @@ class SendEmailVerification implements ShouldQueue
      */
     protected function buildVerificationConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'verification' );
+        return $this->linkService->buildConfirmationLinkByContext( $token, 'verification' );
     }
 
 }

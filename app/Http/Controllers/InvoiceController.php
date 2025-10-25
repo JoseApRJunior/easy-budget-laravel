@@ -338,7 +338,7 @@ class InvoiceController extends Controller
         try {
             $request->validate( [
                 'invoice_code'      => 'required|string',
-                'token'             => 'required|string|size:64',
+                'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
                 'invoice_status_id' => 'required|integer|exists:invoice_statuses,id'
             ] );
 

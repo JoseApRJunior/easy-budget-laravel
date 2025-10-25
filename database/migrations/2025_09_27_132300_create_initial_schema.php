@@ -264,8 +264,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'token', 64 )->unique();
+            $table->string( 'token', 43 )->unique(); // base64url format: 32 bytes = 43 caracteres
             $table->dateTime( 'expires_at' );
+            $table->string( 'type', 50 )->default( 'email_verification' ); // Tipo do token: email_verification, password_reset
             $table->timestamps();
         } );
 
@@ -296,7 +297,25 @@ return new class extends Migration
             $table->text( 'payment_terms' )->nullable();
             $table->string( 'attachment', 255 )->nullable();
             $table->longText( 'history' )->nullable();
-            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique();
+            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique(); // SHA256 hash, not a confirmation token
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
+            $table->timestamps();
+        } );
+
+        Schema::create( 'budget_shares', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'budget_id' )->constrained( 'budgets' )->cascadeOnDelete();
+            $table->string( 'share_token', 43 )->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->string( 'recipient_email', 255 )->nullable();
+            $table->string( 'recipient_name', 255 )->nullable();
+            $table->text( 'message' )->nullable();
+            $table->json( 'permissions' )->nullable();
+            $table->timestamp( 'expires_at' )->nullable();
+            $table->boolean( 'is_active' )->default( true );
+            $table->integer( 'access_count' )->default( 0 );
+            $table->timestamp( 'last_accessed_at' )->nullable();
             $table->timestamps();
         } );
 
@@ -306,12 +325,15 @@ return new class extends Migration
             $table->foreignId( 'budget_id' )->constrained( 'budgets' )->restrictOnDelete();
             $table->foreignId( 'category_id' )->constrained( 'categories' )->restrictOnDelete();
             $table->foreignId( 'service_statuses_id' )->constrained( 'service_statuses' )->restrictOnDelete();
+            $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->text( 'description' )->nullable();
             $table->decimal( 'discount', 10, 2 )->default( 0 );
             $table->decimal( 'total', 10, 2 )->default( 0 );
             $table->date( 'due_date' )->nullable();
             $table->string( 'pdf_verification_hash', 64 )->nullable();
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
             $table->timestamps();
         } );
 
@@ -348,6 +370,8 @@ return new class extends Migration
             $table->string( 'payment_id', 255 )->nullable();
             $table->decimal( 'transaction_amount', 10, 2 )->nullable();
             $table->dateTime( 'transaction_date' )->nullable();
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
             $table->text( 'notes' )->nullable();
             $table->timestamps();
         } );
@@ -718,6 +742,7 @@ return new class extends Migration
         Schema::dropIfExists( 'invoices' );
         Schema::dropIfExists( 'service_items' );
         Schema::dropIfExists( 'services' );
+        Schema::dropIfExists( 'budget_shares' );
         Schema::dropIfExists( 'budgets' );
         Schema::dropIfExists( 'schedules' );
         Schema::dropIfExists( 'user_confirmation_tokens' );

@@ -51,6 +51,8 @@ class Invoice extends Model
         'payment_id',
         'transaction_amount',
         'transaction_date',
+        'public_token',
+        'public_expires_at',
         'notes',
     ];
 
@@ -74,6 +76,8 @@ class Invoice extends Model
         'payment_id'                 => 'string',
         'transaction_amount'         => 'decimal:2',
         'public_hash'                => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
         'discount'                   => 'decimal:2',
         'notes'                      => 'string',
         'created_at'                 => 'immutable_datetime',
@@ -100,6 +104,8 @@ class Invoice extends Model
             'payment_id'                 => 'nullable|string|max:255',
             'transaction_amount'         => 'nullable|numeric|min:0|max:999999.99',
             'transaction_date'           => 'nullable|date',
+            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at'          => 'nullable|date',
             'notes'                      => 'nullable|string|max:65535',
         ];
     }

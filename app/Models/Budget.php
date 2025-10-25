@@ -53,6 +53,8 @@ class Budget extends Model
         'attachment',
         'history',
         'pdf_verification_hash',
+        'public_token',
+        'public_expires_at',
     ];
 
     /**
@@ -74,6 +76,8 @@ class Budget extends Model
         'attachment'                 => 'string',
         'history'                    => 'string',
         'pdf_verification_hash'      => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'datetime',
     ];
@@ -105,7 +109,7 @@ class Budget extends Model
             'payment_terms'              => 'nullable|string|max:65535',
             'attachment'                 => 'nullable|string|max:255',
             'history'                    => 'nullable|string|max:65535',
-            'pdf_verification_hash'      => 'nullable|string|max:64|unique:budgets,pdf_verification_hash',
+            'pdf_verification_hash'      => 'nullable|string|max:64|unique:budgets,pdf_verification_hash', // SHA256 hash, not a confirmation token
         ];
     }
 

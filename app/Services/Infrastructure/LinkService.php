@@ -7,40 +7,46 @@ namespace App\Services\Infrastructure;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Serviço dedicado para construção segura de links de confirmação.
+ * Serviço híbrido para construção segura de links de confirmação e validação.
  *
- * Centraliza toda a lógica de construção de URLs de confirmação,
- * eliminando duplicação entre componentes e garantindo consistência
- * e segurança em todas as implementações.
+ * Centraliza toda a lógica de construção de URLs para diferentes contextos,
+ * eliminando duplicação entre componentes e garantindo consistência,
+ * segurança e flexibilidade em todas as implementações.
  *
  * Funcionalidades:
- * - Validação rigorosa de tokens
+ * - Validação rigorosa de tokens com diferentes tipos
  * - Sanitização segura contra ataques
  * - Logging detalhado para auditoria
  * - Tratamento robusto de casos inválidos
- * - Configuração flexível de rotas
+ * - Configuração flexível de rotas e contextos
+ * - Suporte a múltiplos tipos de token (email, password, etc.)
  */
-class ConfirmationLinkService
+class LinkService
 {
     /**
-     * Constrói URL de confirmação segura.
+     * Constrói URL segura para diferentes contextos (híbrido).
      *
      * Estratégia de segurança implementada:
-     * 1. Validação rigorosa do token (formato base64url)
+     * 1. Validação rigorosa do token com diferentes formatos
      * 2. Sanitização completa para prevenir ataques
      * 3. Uso de urlencode para caracteres especiais
      * 4. Logging detalhado para auditoria
      * 5. Fallback seguro para cenários inválidos
+     * 6. Suporte a múltiplos tipos de token
      *
-     * @param string|null $token Token de confirmação (43 caracteres em base64url)
+     * @param string|null $token Token de confirmação
      * @param string $route Rota para confirmação (padrão: /confirm-account)
      * @param string $fallbackRoute Rota de fallback para casos inválidos (padrão: /login)
+     * @param string $tokenType Tipo do token para validação específica (padrão: base64url)
+     * @param bool $validateToken Se deve validar o token (padrão: true)
      * @return string URL completa e funcional ou fallback seguro
      */
-    public function buildConfirmationLink(
+    public function buildLink(
         ?string $token,
         string $route = '/confirm-account',
         string $fallbackRoute = '/login',
+        string $tokenType = 'base64url',
+        bool $validateToken = true,
     ): string {
         // Caso 1: Token vazio - redirecionar para página de verificação
         if ( empty( $token ) ) {
@@ -52,11 +58,11 @@ class ConfirmationLinkService
             return $this->buildBaseUrl() . '/email/verify';
         }
 
-        // Caso 2: Validação rigorosa do token usando formato base64url
-        if ( !validateAndSanitizeToken( $token, 'base64url' ) ) {
-            Log::warning( 'Token de confirmação inválido detectado', [
+        // Caso 2: Validação rigorosa do token (se habilitada)
+        if ( $validateToken && !validateAndSanitizeToken( $token, $tokenType ) ) {
+            Log::warning( 'Token inválido detectado', [
                 'token_length'    => strlen( $token ),
-                'expected_format' => 'base64url',
+                'expected_format' => $tokenType,
                 'action'          => 'redirect_to_fallback',
                 'fallback_route'  => $fallbackRoute
             ] );
@@ -64,8 +70,8 @@ class ConfirmationLinkService
         }
 
         // Caso 3: Token válido - construir URL segura
-        $sanitizedToken = validateAndSanitizeToken( $token, 'base64url' );
-        if ( !$sanitizedToken ) {
+        $sanitizedToken = $validateToken ? validateAndSanitizeToken( $token, $tokenType ) : $token;
+        if ( $validateToken && !$sanitizedToken ) {
             Log::warning( 'Token inválido após sanitização', [
                 'token_length'   => strlen( $token ),
                 'action'         => 'redirect_to_fallback',
@@ -125,7 +131,7 @@ class ConfirmationLinkService
             'token_length'   => strlen( $token ?? '' ),
         ] );
 
-        return $this->buildConfirmationLink( $token, '/confirm-account', $fallbackRoute );
+        return $this->buildLink( $token, '/confirm-account', $fallbackRoute );
     }
 
     /**
@@ -141,15 +147,56 @@ class ConfirmationLinkService
     }
 
     /**
-     * Constrói URL de confirmação para e-mails de verificação.
+     * Constrói URL de confirmação híbrida para verificação com parâmetros customizáveis.
      *
-     * @deprecated Use buildConfirmationLinkByContext() com contexto 'verification'
+     * Método híbrido que permite configuração completa dos parâmetros de criação e validação
+     * de links de verificação, usado por classes externas para diferentes contextos.
+     *
      * @param string|null $token Token de confirmação
-     * @return string URL de confirmação
+     * @param string $route Rota específica para verificação (padrão: /confirm-account)
+     * @param string $fallbackRoute Rota de fallback (padrão: /email/verify)
+     * @param string $tokenType Tipo do token para validação (padrão: base64url)
+     * @param bool $validateToken Se deve validar o token (padrão: true)
+     * @param array $additionalParams Parâmetros adicionais para a URL
+     * @return string URL de confirmação completa
      */
-    public function buildVerificationConfirmationLink( ?string $token ): string
-    {
-        return $this->buildConfirmationLinkByContext( $token, 'verification' );
+    public function buildVerificationConfirmationLink(
+        ?string $token,
+        string $route = '/confirm-account',
+        string $fallbackRoute = '/email/verify',
+        string $tokenType = 'base64url',
+        bool $validateToken = true,
+        array $additionalParams = [],
+    ): string {
+        // Construir parâmetros da query string
+        $queryParams = [ 'token' => $token ];
+
+        if ( !empty( $additionalParams ) ) {
+            $queryParams = array_merge( $queryParams, $additionalParams );
+        }
+
+        // Converter parâmetros para query string
+        $queryString = http_build_query( $queryParams );
+
+        Log::info( 'Construindo URL de verificação híbrida', [
+            'route'             => $route,
+            'fallback_route'    => $fallbackRoute,
+            'token_type'        => $tokenType,
+            'validate_token'    => $validateToken,
+            'additional_params' => $additionalParams,
+            'query_string'      => $queryString,
+        ] );
+
+        // Usar o método buildLink com os parâmetros específicos
+        $url = $this->buildLink( $token, $route, $fallbackRoute, $tokenType, $validateToken );
+
+        // Adicionar parâmetros adicionais se a URL foi construída com sucesso
+        if ( $token && $validateToken && strpos( $url, 'token=' ) !== false ) {
+            $baseUrl = $this->buildBaseUrl() . $route;
+            $url     = $baseUrl . '?' . $queryString;
+        }
+
+        return $url;
     }
 
 }

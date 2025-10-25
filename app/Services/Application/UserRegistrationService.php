@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
+use App\Enums\TokenType;
 use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\CommonData;
@@ -58,9 +59,10 @@ use Illuminate\Support\Str;
  */
 class UserRegistrationService extends AbstractBaseService
 {
+    protected UserConfirmationTokenService    $userConfirmationTokenService;
+    protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
     protected UserRepository                  $userRepository;
     protected TenantRepository                $tenantRepository;
-    protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
     protected CommonDataRepository            $commonDataRepository;
     protected ProviderRepository              $providerRepository;
     protected PlanRepository                  $planRepository;
@@ -70,6 +72,7 @@ class UserRegistrationService extends AbstractBaseService
     public function __construct(
         UserRepository $userRepository,
         TenantRepository $tenantRepository,
+        UserConfirmationTokenService $userConfirmationTokenService,
         UserConfirmationTokenRepository $userConfirmationTokenRepository,
         CommonDataRepository $commonDataRepository,
         ProviderRepository $providerRepository,
@@ -79,6 +82,7 @@ class UserRegistrationService extends AbstractBaseService
     ) {
         $this->userRepository                  = $userRepository;
         $this->tenantRepository                = $tenantRepository;
+        $this->userConfirmationTokenService    = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
         $this->commonDataRepository            = $commonDataRepository;
         $this->providerRepository              = $providerRepository;
@@ -198,9 +202,11 @@ class UserRegistrationService extends AbstractBaseService
 
             DB::commit();
 
-            // 9. Criar token de verificação de e-mail usando EmailVerificationService
+            // 9. Criar token de verificação de e-mail usando UserConfirmationTokenService
             Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
-            $tokenResult = $this->createConfirmationToken( $user );
+            $token       = generateSecureTokenUrl();
+            $expiresAt   = now()->addMinutes( 30 );
+            $tokenResult = $this->userConfirmationTokenService->createToken( $user, $token, TokenType::EMAIL_VERIFICATION, $expiresAt );
             if ( !$tokenResult->isSuccess() ) {
                 Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
                     'user_id' => $user->id,
@@ -215,7 +221,7 @@ class UserRegistrationService extends AbstractBaseService
             Event::dispatch( new UserRegistered(
                 $user,
                 $tenant,
-                $tokenResult->getData()[ 'token' ],
+                $token,
             ) );
 
             Log::info( 'Registro concluído com sucesso', [
@@ -276,17 +282,17 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             // Criar token de redefinição em formato base64url
-            $token     = generateSecureToken( 32, 'base64url' );
+            $token     = generateSecureTokenUrl();
             $expiresAt = now()->addMinutes( (int) config( 'auth.passwords.users.expire', 60 ) );
 
-            $resetToken = new UserConfirmationToken( [
+            $confirmationToken = new UserConfirmationToken( [
                 'user_id'    => $user->id,
                 'token'      => $token,
                 'expires_at' => $expiresAt,
                 'type'       => 'password_reset',
             ] );
 
-            $this->userConfirmationTokenRepository->create( $resetToken->toArray() );
+            $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
 
             // Buscar tenant do usuário
             $tenant = null;
@@ -614,26 +620,6 @@ class UserRegistrationService extends AbstractBaseService
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao criar usuário: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Cria token de confirmação para o usuário usando EmailVerificationService.
-     *
-     * @param User $user Usuário
-     * @return ServiceResult Resultado da operação
-     */
-    private function createConfirmationToken( User $user ): ServiceResult
-    {
-        try {
-            // Usar EmailVerificationService para criar token e enviar e-mail
-            return $this->emailVerificationService->createConfirmationToken( $user );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar token de confirmação: ' . $e->getMessage()
             );
         }
     }

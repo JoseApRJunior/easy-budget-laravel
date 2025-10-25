@@ -6,7 +6,7 @@ use App\Mail\Concerns\BaseEmail;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 
 /**
  * Classe base abstrata para e-mails que envolvem tokens de confirmação.
@@ -34,9 +34,9 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         ?Tenant $tenant = null,
         ?string $confirmationLink = null,
         ?string $verificationToken = null,
-        ?ConfirmationLinkService $confirmationLinkService = null,
+        ?LinkService $linkService = null,
     ) {
-        parent::__construct( $user, $tenant, $confirmationLinkService );
+        parent::__construct( $user, $tenant, $linkService );
 
         $this->confirmationLink  = $confirmationLink;
         $this->verificationToken = $verificationToken;
@@ -77,7 +77,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         // 1. Usar token fornecido diretamente (prioridade máxima)
         if ( !empty( $this->verificationToken ) ) {
             try {
-                $confirmationLink = $this->confirmationLinkService->buildConfirmationLink(
+                $confirmationLink = $this->linkService->buildConfirmationLink(
                     $this->verificationToken,
                     '/confirm-account',
                     '/email/verify',
@@ -101,7 +101,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
 
         if ( $token ) {
             try {
-                $confirmationLink = $this->confirmationLinkService->buildConfirmationLink(
+                $confirmationLink = $this->linkService->buildConfirmationLink(
                     $token->token,
                     '/confirm-account',
                     '/email/verify',

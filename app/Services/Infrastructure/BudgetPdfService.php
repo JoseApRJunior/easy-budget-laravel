@@ -234,7 +234,6 @@ class BudgetPdfService
         // Criar token público se não existir
         if ( !$budget->public_token ) {
             $budget->update( [
-                'public_token'      => str_random( 64 ),
                 'public_expires_at' => now()->addDays( 30 ),
             ] );
         }

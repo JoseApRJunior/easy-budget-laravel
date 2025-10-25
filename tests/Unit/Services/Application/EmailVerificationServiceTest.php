@@ -10,10 +10,12 @@ use App\Models\UserConfirmationToken;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\Application\EmailVerificationService;
+use App\Services\Application\UserConfirmationTokenService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Mockery;
 use Tests\TestCase;
 
 class EmailVerificationServiceTest extends TestCase
@@ -57,8 +59,8 @@ class EmailVerificationServiceTest extends TestCase
         self::assertNotNull( $token );
         self::assertEquals( $user->id, $token->user_id );
         self::assertEquals( $user->tenant_id, $token->tenant_id );
-        self::assertEquals( 64, strlen( $token->token ) );
-        self::assertEquals( 'email_verification', $token->type );
+        self::assertEquals( 43, strlen( $token->token ) ); // base64url format: 32 bytes = 43 caracteres
+        self::assertEquals( \App\Enums\TokenType::EMAIL_VERIFICATION, $token->type );
 
         // Verificar se evento foi disparado
         Event::assertDispatched( \App\Events\EmailVerificationRequested::class, function ( $event ) use ( $user ) {
@@ -126,7 +128,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::CONFLICT, $result->getStatus() );
-        self::assertStringContains( 'já foi verificado', $result->getMessage() );
+        self::assertStringContainsString( 'já foi verificado', $result->getMessage() );
     }
 
     public function test_resend_confirmation_email_for_inactive_user(): void
@@ -143,7 +145,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::CONFLICT, $result->getStatus() );
-        self::assertStringContains( 'inativo', $result->getMessage() );
+        self::assertStringContainsString( 'inativo', $result->getMessage() );
     }
 
     public function test_find_valid_token_success(): void
@@ -175,7 +177,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::NOT_FOUND, $result->getStatus() );
-        self::assertStringContains( 'não encontrado', $result->getMessage() );
+        self::assertStringContainsString( 'não encontrado', $result->getMessage() );
     }
 
     public function test_find_valid_token_expired(): void
@@ -194,7 +196,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::CONFLICT, $result->getStatus() );
-        self::assertStringContains( 'expirado', $result->getMessage() );
+        self::assertStringContainsString( 'expirado', $result->getMessage() );
 
         // Verificar que token foi removido
         self::assertNull( UserConfirmationToken::find( $token->id ) );
@@ -203,10 +205,15 @@ class EmailVerificationServiceTest extends TestCase
     public function test_find_valid_token_user_not_found(): void
     {
         // Arrange
+        $user  = User::factory()->create();
         $token = UserConfirmationToken::factory()->create( [
-            'user_id'    => 99999, // ID que não existe
+            'user_id'    => $user->id,
+            'tenant_id'  => $user->tenant_id,
             'expires_at' => now()->addMinutes( 30 ),
         ] );
+
+        // Remover usuário para simular cenário de usuário não encontrado
+        $user->delete();
 
         // Act
         $result = $this->emailVerificationService->findValidToken( $token->token );
@@ -214,7 +221,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::NOT_FOUND, $result->getStatus() );
-        self::assertStringContains( 'não encontrado', $result->getMessage() );
+        self::assertStringContainsString( 'não encontrado', $result->getMessage() );
     }
 
     public function test_remove_token_success(): void
@@ -257,10 +264,16 @@ class EmailVerificationServiceTest extends TestCase
         // Arrange
         $user = User::factory()->create();
 
-        // Mock repository para lançar exceção
-        $this->mock( UserConfirmationTokenRepository::class, function ( $mock ) {
-            $mock->shouldReceive( 'deleteByUserId' )->andThrow( new Exception( 'Database error' ) );
-        } );
+        // Mock UserConfirmationTokenService para retornar erro
+        $mockService = Mockery::mock( UserConfirmationTokenService::class);
+        $mockService->shouldReceive( 'createToken' )->andReturn(
+            ServiceResult::error( OperationStatus::ERROR, 'Erro interno ao criar token de confirmação. Tente novamente.' ),
+        );
+
+        app()->instance( UserConfirmationTokenService::class, $mockService );
+
+        // Recriar o serviço para usar o mock
+        $this->emailVerificationService = app( EmailVerificationService::class);
 
         // Act
         $result = $this->emailVerificationService->createConfirmationToken( $user );
@@ -268,15 +281,19 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        self::assertStringContains( 'Erro interno', $result->getMessage() );
+        self::assertStringContainsString( 'Erro interno', $result->getMessage() );
     }
 
     public function test_find_valid_token_exception_handling(): void
     {
         // Arrange
-        $this->mock( UserConfirmationTokenRepository::class, function ( $mock ) {
-            $mock->shouldReceive( 'findByToken' )->andThrow( new Exception( 'Database error' ) );
-        } );
+        $mockRepository = Mockery::mock( UserConfirmationTokenRepository::class);
+        $mockRepository->shouldReceive( 'findByToken' )->andThrow( new Exception( 'Database error' ) );
+
+        app()->instance( UserConfirmationTokenRepository::class, $mockRepository );
+
+        // Recriar o serviço para usar o mock
+        $this->emailVerificationService = app( EmailVerificationService::class);
 
         // Act
         $result = $this->emailVerificationService->findValidToken( 'valid-token' );
@@ -284,7 +301,7 @@ class EmailVerificationServiceTest extends TestCase
         // Assert
         self::assertFalse( $result->isSuccess() );
         self::assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        self::assertStringContains( 'Erro interno', $result->getMessage() );
+        self::assertStringContainsString( 'Erro interno', $result->getMessage() );
     }
 
 }

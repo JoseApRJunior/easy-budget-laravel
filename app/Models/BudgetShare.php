@@ -53,6 +53,7 @@ class BudgetShare extends Model
     protected $casts = [
         'tenant_id'        => 'integer',
         'budget_id'        => 'integer',
+        'share_token'      => 'string',
         'permissions'      => 'array',
         'expires_at'       => 'datetime',
         'is_active'        => 'boolean',
@@ -70,7 +71,7 @@ class BudgetShare extends Model
         return [
             'tenant_id'       => 'required|integer|exists:tenants,id',
             'budget_id'       => 'required|integer|exists:budgets,id',
-            'share_token'     => 'required|string|max:64|unique:budget_shares,share_token',
+            'share_token'     => 'required|string|size:43|unique:budget_shares,share_token', // base64url format: 32 bytes = 43 caracteres
             'recipient_email' => 'nullable|email|max:255',
             'recipient_name'  => 'nullable|string|max:255',
             'message'         => 'nullable|string|max:1000',

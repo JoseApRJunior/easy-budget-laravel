@@ -12,12 +12,12 @@ use App\Models\BudgetTemplate;
 use App\Models\UserConfirmationToken;
 use App\Services\BudgetPdfService;
 use App\Services\BudgetTemplateService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
 
 class BudgetController extends Controller
 {
@@ -76,7 +76,7 @@ class BudgetController extends Controller
         try {
             $request->validate( [
                 'budget_code'      => 'required|string',
-                'token'            => 'required|string|size:64',
+                'token'            => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
                 'budget_status_id' => 'required|integer|exists:budget_statuses,id'
             ] );
 

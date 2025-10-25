@@ -50,6 +50,8 @@ class Service extends Model
         'code',
         'description',
         'pdf_verification_hash',
+        'public_token',
+        'public_expires_at',
         'discount',
         'total',
         'due_date',
@@ -82,6 +84,8 @@ class Service extends Model
         'total'                      => 'decimal:2',
         'due_date'                   => 'date',
         'pdf_verification_hash'      => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'datetime',
     ];
@@ -102,7 +106,9 @@ class Service extends Model
             'discount'                   => 'required|numeric|min:0|max:999999.99',
             'total'                      => 'required|numeric|min:0|max:999999.99',
             'due_date'                   => 'nullable|date',
-            'pdf_verification_hash'      => 'nullable|string|max:64',
+            'pdf_verification_hash'      => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
+            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at'          => 'nullable|date',
         ];
     }
 

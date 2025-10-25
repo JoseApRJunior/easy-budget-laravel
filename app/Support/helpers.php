@@ -5,6 +5,17 @@
  */
 
 /**
+ * Gera um token seguro no formato base64url, ideal para uso em URLs.
+ *
+ * @return string Token seguro com 32 bytes em formato base64url (43 caracteres).
+ * @throws Exception Se a geração de bytes aleatórios falhar.
+ */
+function generateSecureTokenUrl(): string
+{
+    return generateSecureToken( 32, 'base64url' );
+}
+
+/**
  * Gera um token seguro usando padrão criptograficamente seguro.
  *
  * Utiliza random_bytes() para gerar bytes aleatórios e converte para o formato

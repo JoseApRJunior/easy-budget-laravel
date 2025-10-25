@@ -14,8 +14,8 @@ use App\Models\UserConfirmationToken;
 use App\Services\ServiceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 /**
  * Controller para gestão de serviços - Interface Web
@@ -73,7 +73,7 @@ class ServiceController extends Controller
         try {
             $request->validate( [
                 'service_code'      => 'required|string',
-                'token'             => 'required|string|size:64',
+                'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
                 'service_status_id' => 'required|integer|exists:service_statuses,id'
             ] );
 

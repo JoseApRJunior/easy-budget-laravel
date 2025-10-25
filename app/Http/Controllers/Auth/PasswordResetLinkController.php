@@ -103,7 +103,7 @@ class PasswordResetLinkController extends Controller
             ] );
 
             // 4. Gerar token de reset usando formato base64url (32 bytes = 43 caracteres)
-            $resetToken = generateSecureToken( 32, 'base64url' );
+            $resetToken = generateSecureTokenUrl();
 
             Log::info( 'PasswordResetLinkController::store - PASSO 4: Token de reset gerado', [
                 'user_id'       => $user->id,
