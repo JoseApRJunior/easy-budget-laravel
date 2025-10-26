@@ -74,15 +74,8 @@ class EmailVerificationService extends AbstractBaseService
                 'email'     => $user->email,
             ] );
 
-            // Delegar criação completa para UserConfirmationTokenService
-            // Este método agora gera o token, calcula expiração e persiste no banco
-            $tokenResult = $this->userConfirmationTokenService->createTokenWithGeneration(
-                $user,
-                TokenType::EMAIL_VERIFICATION,
-                30, // 30 minutos de expiração
-                32, // 32 bytes de comprimento
-                'base64url' // formato seguro para URLs
-            );
+            // Usar método de conveniência para criar token de verificação de e-mail
+            $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken( $user );
 
             if ( !$tokenResult->isSuccess() ) {
                 return $tokenResult;

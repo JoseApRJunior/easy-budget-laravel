@@ -266,7 +266,7 @@ class EmailVerificationServiceTest extends TestCase
 
         // Mock UserConfirmationTokenService para retornar erro
         $mockService = Mockery::mock( UserConfirmationTokenService::class);
-        $mockService->shouldReceive( 'createToken' )->andReturn(
+        $mockService->shouldReceive( 'createEmailVerificationToken' )->andReturn(
             ServiceResult::error( OperationStatus::ERROR, 'Erro interno ao criar token de confirmação. Tente novamente.' ),
         );
 
