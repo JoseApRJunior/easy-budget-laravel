@@ -159,9 +159,9 @@
 
         <div class="col-md-6">
           <strong>Status Atual:</strong><br>
-          <span class="badge bg-{{ $invoice->invoiceStatus->color ?? 'secondary' }} status-badge fs-5 mb-3">
-            <i class="bi bi-{{ $invoice->invoiceStatus->icon ?? 'circle' }} me-2"></i>
-            {{ $invoice->invoiceStatus->name }}
+          <span class="badge bg-{{ $invoiceStatus->getColor() ?? 'secondary' }} status-badge fs-5 mb-3">
+            <i class="bi bi-{{ $invoiceStatus->getIcon() ?? 'circle' }} me-2"></i>
+            {{ $invoiceStatus->getName() }}
           </span><br><br>
 
           @if( $invoice->transaction_date )

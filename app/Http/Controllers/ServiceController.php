@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\ServiceStatusEnum;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceRequest;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Service;
-use App\Models\ServiceStatus;
 use App\Models\UserConfirmationToken;
 use App\Services\ServiceService;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +74,7 @@ class ServiceController extends Controller
             $request->validate( [
                 'service_code'      => 'required|string',
                 'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
-                'service_status_id' => 'required|integer|exists:service_statuses,id'
+                'service_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, ServiceStatusEnum::cases() ) ) ]
             ] );
 
             // Find the service by code and token
@@ -96,8 +96,8 @@ class ServiceController extends Controller
             }
 
             // Validate that the selected status is allowed
-            $selectedStatus = ServiceStatus::find( $request->service_status_id );
-            if ( !$selectedStatus || !in_array( $selectedStatus->slug, [ 'aprovado', 'rejeitado', 'cancelado' ] ) ) {
+            $allowedStatuses = [ ServiceStatusEnum::APPROVED->value, ServiceStatusEnum::REJECTED->value, ServiceStatusEnum::CANCELLED->value ];
+            if ( !in_array( $request->service_status_id, $allowedStatuses ) ) {
                 Log::warning( 'Invalid service status selected', [
                     'service_code' => $request->service_code,
                     'status_id'    => $request->service_status_id,
@@ -113,11 +113,13 @@ class ServiceController extends Controller
             ] );
 
             // Log the action
+            $newStatusEnum = ServiceStatusEnum::tryFrom( $request->service_status_id );
+            $oldStatusEnum = $service->serviceStatus; // Uses the accessor to get the enum
             Log::info( 'Service status updated via public link', [
                 'service_id'   => $service->id,
                 'service_code' => $service->code,
-                'old_status'   => $service->serviceStatus->name,
-                'new_status'   => $selectedStatus->name,
+                'old_status'   => $oldStatusEnum?->getName() ?? 'Unknown',
+                'new_status'   => $newStatusEnum?->getName() ?? 'Unknown',
                 'ip'           => request()->ip()
             ] );
 

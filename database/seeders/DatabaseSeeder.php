@@ -29,25 +29,22 @@ class DatabaseSeeder extends Seeder
             AreasOfActivitySeeder::class,
             ProfessionSeeder::class,
             CategorySeeder::class,
-            BudgetStatusSeeder::class,
-            ServiceStatusSeeder::class,
-            InvoiceStatusSeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
         ] );
 
         // 2. Criar tenant público com dados completos
-        $this->command->info('🌐 Criando tenant público...');
-        $this->call([
+        $this->command->info( '🌐 Criando tenant público...' );
+        $this->call( [
             PublicTenantSeeder::class,
-        ]);
+        ] );
 
         // 3. Criar tenant admin com dados completos
-        $this->command->info('👑 Criando tenant admin...');
-        $this->call([
+        $this->command->info( '👑 Criando tenant admin...' );
+        $this->call( [
             AdminTenantSeeder::class,
-        ]);
+        ] );
 
         // 4. Criar provedores de teste (opcional - apenas em desenvolvimento)
         if ( app()->environment( [ 'local', 'testing' ] ) ) {

@@ -138,9 +138,9 @@
                                                         <select name="service_status_id" id="service_status_id"
                                                             class="form-select" required>
                                                             <option value="">Selecione o status...</option>
-                                                            @foreach( \App\Models\ServiceStatus::whereIn( 'slug', [ 'aprovado', 'rejeitado', 'cancelado' ] )->get() as $status )
-                                                                <option value="{{ $status->id }}" {{ old( 'service_status_id' ) == $status->id ? 'selected' : '' }}>
-                                                                    {{ $status->name }}
+                                                            @foreach( [ \App\Enums\ServiceStatusEnum::APPROVED, \App\Enums\ServiceStatusEnum::REJECTED, \App\Enums\ServiceStatusEnum::CANCELLED ] as $status )
+                                                                <option value="{{ $status->value }}" {{ old( 'service_status_id' ) == $status->value ? 'selected' : '' }}>
+                                                                    {{ $status->getName() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>

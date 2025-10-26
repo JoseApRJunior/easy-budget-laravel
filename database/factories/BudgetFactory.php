@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\BudgetStatusEnum;
 use App\Models\Budget;
-use App\Models\BudgetStatus;
 use App\Models\Customer;
 use App\Models\Tenant;
 use App\Models\User;
@@ -26,53 +26,42 @@ class BudgetFactory extends Factory
      */
     public function definition(): array
     {
-        return [ 
-            'code'  => $this->faker->unique()->regexify( 'BUD-[A-Z0-9]{6}' ),
-            'total' => $this->faker->randomFloat( 2, 100, 10000 ),
+        return [
+            'code'               => $this->faker->unique()->regexify( 'BUD-[A-Z0-9]{6}' ),
+            'total'              => $this->faker->randomFloat( 2, 100, 10000 ),
+            'discount'           => $this->faker->randomFloat( 2, 0, 100 ),
+            'budget_statuses_id' => BudgetStatusEnum::DRAFT->value,
+            'customer_id'        => Customer::factory(),
         ];
     }
 
     /**
-     * Estado para associar Budget a um tenant específico.
-     * Gera código único per-tenant usando Str::uuid() + tenant_id.
-     * Use como primeiro state para garantir tenant_id disponível.
-     *
-     * @return static
+     * State para associar o orçamento a um tenant específico.
      */
-    public function forTenant(): static
+    public function forTenant( Tenant $tenant ): static
     {
-        return $this->state( fn( array $attributes ) => [ 
-            'tenant_id' => $attributes[ 'tenant_id' ] ?? Tenant::factory()->create()->id,
-            'code'      => fn( array $attributes ) =>
-                Str::uuid()->toString() . '_' . ( $attributes[ 'tenant_id' ] ?? Tenant::first()->id ),
+        return $this->state( fn( array $attributes ) => [
+            'tenant_id' => $tenant->id,
         ] );
     }
 
     /**
-     * Estado para associar Budget a um customer (User).
-     * Cria customer via factory se não fornecido.
-     *
-     * @return static
+     * State para associar o orçamento a um cliente específico.
      */
-    public function forCustomer(): static
+    public function forCustomer( Customer $customer ): static
     {
-        return $this->state( fn( array $attributes ) => [ 
-            'customer_id' => $attributes[ 'customer_id' ] ?? \App\Models\Customer::factory()->create()->id,
+        return $this->state( fn( array $attributes ) => [
+            'customer_id' => $customer->id,
         ] );
     }
 
     /**
-     * Estado para associar Budget a um status específico.
-     * Use BudgetStatus::factory()->pending() para status 'pending'.
-     * Cria status via factory se não fornecido.
-     *
-     * @return static
+     * State para definir um status específico do orçamento.
      */
-    public function withStatus(): static
+    public function withStatus( BudgetStatusEnum $status ): static
     {
-        return $this->state( fn( array $attributes ) => [ 
-            'budget_statuses_id' => $attributes[ 'budget_statuses_id' ] ??
-                BudgetStatus::factory()->pending()->create()->id,
+        return $this->state( fn( array $attributes ) => [
+            'budget_statuses_id' => $status->value,
         ] );
     }
 

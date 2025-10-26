@@ -7,12 +7,10 @@ namespace Tests\Feature;
 use App\Models\Activity;
 use App\Models\Address;
 use App\Models\AlertSetting;
-use App\Models\BudgetStatus;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\Customer;
 use App\Models\Invoice;
-use App\Models\InvoiceStatus;
 use App\Models\Notification;
 use App\Models\PaymentMercadoPagoInvoice;
 use App\Models\Provider;
@@ -48,12 +46,13 @@ class BusinessRulesValidationTest extends TestCase
         $this->testCustomerBusinessRules();
         $this->testProviderBusinessRules();
         $this->testAddressBusinessRules();
+
+        // Nota: Testes de BudgetStatus e InvoiceStatus removidos
+        // pois foram migrados para enums e não precisam mais de businessRules
         $this->testCommonDataBusinessRules();
         $this->testContactBusinessRules();
         $this->testNotificationBusinessRules();
         $this->testActivityBusinessRules();
-        $this->testBudgetStatusBusinessRules();
-        $this->testInvoiceStatusBusinessRules();
         $this->testPaymentMercadoPagoInvoiceBusinessRules();
         $this->testAlertSettingBusinessRules();
 
@@ -430,90 +429,6 @@ class BusinessRulesValidationTest extends TestCase
         }
 
         echo "✅ Activity: {$this->getModelTestCount( 'Activity' )} testes executados\n\n";
-    }
-
-    /**
-     * Testes para BudgetStatus (7 regras + cores hexadecimais)
-     */
-    private function testBudgetStatusBusinessRules(): void
-    {
-        echo "📋 Testando BudgetStatus BusinessRules (7 regras + cores hex)...\n";
-
-        $rules = BudgetStatus::businessRules();
-        $this->assertCount( 7, $rules, 'BudgetStatus deve ter 7 regras de validação' );
-
-        // Cenário de sucesso
-        $validData = [
-            'slug'        => 'em-analise',
-            'name'        => 'Em Análise',
-            'description' => 'Orçamento em análise',
-            'color'       => '#FF5733',
-            'icon'        => 'fa-search',
-            'order_index' => 1,
-            'is_active'   => true,
-        ];
-
-        $validator = Validator::make( $validData, $rules );
-        $this->assertTrue( $validator->passes(), 'Dados válidos devem passar na validação' );
-        $this->recordTest( 'BudgetStatus - Cenário de Sucesso', true, 'Dados válidos aceitos' );
-
-        // Cenários de falha
-        $invalidDataScenarios = [
-            'cor hex inválida'      => array_merge( $validData, [ 'color' => 'azul' ] ),
-            'cor hex sem #'         => array_merge( $validData, [ 'color' => 'FF5733' ] ),
-            'slug duplicado'        => array_merge( $validData, [ 'slug' => '' ] ),
-            'name obrigatório'      => array_merge( $validData, [ 'name' => '' ] ),
-            'is_active obrigatório' => array_merge( $validData, [ 'is_active' => null ] ),
-        ];
-
-        foreach ( $invalidDataScenarios as $scenario => $data ) {
-            $validator = Validator::make( $data, $rules );
-            $this->assertFalse( $validator->passes(), "Cenário '$scenario' deve falhar" );
-            $this->recordTest( "BudgetStatus - $scenario", true, 'Dados inválidos rejeitados' );
-        }
-
-        echo "✅ BudgetStatus: {$this->getModelTestCount( 'BudgetStatus' )} testes executados\n\n";
-    }
-
-    /**
-     * Testes para InvoiceStatus (7 regras + cores hexadecimais)
-     */
-    private function testInvoiceStatusBusinessRules(): void
-    {
-        echo "📋 Testando InvoiceStatus BusinessRules (7 regras + cores hex)...\n";
-
-        $rules = InvoiceStatus::businessRules();
-        $this->assertCount( 7, $rules, 'InvoiceStatus deve ter 7 regras de validação' );
-
-        // Cenário de sucesso
-        $validData = [
-            'name'        => 'Paga',
-            'slug'        => 'paga',
-            'description' => 'Fatura paga',
-            'color'       => '#28A745',
-            'icon'        => 'fa-check',
-            'order_index' => 1,
-            'is_active'   => true,
-        ];
-
-        $validator = Validator::make( $validData, $rules );
-        $this->assertTrue( $validator->passes(), 'Dados válidos devem passar na validação' );
-        $this->recordTest( 'InvoiceStatus - Cenário de Sucesso', true, 'Dados válidos aceitos' );
-
-        // Cenários de falha
-        $invalidDataScenarios = [
-            'cor hex inválida' => array_merge( $validData, [ 'color' => 'verde' ] ),
-            'name obrigatório' => array_merge( $validData, [ 'name' => '' ] ),
-            'slug obrigatório' => array_merge( $validData, [ 'slug' => '' ] ),
-        ];
-
-        foreach ( $invalidDataScenarios as $scenario => $data ) {
-            $validator = Validator::make( $data, $rules );
-            $this->assertFalse( $validator->passes(), "Cenário '$scenario' deve falhar" );
-            $this->recordTest( "InvoiceStatus - $scenario", true, 'Dados inválidos rejeitados' );
-        }
-
-        echo "✅ InvoiceStatus: {$this->getModelTestCount( 'InvoiceStatus' )} testes executados\n\n";
     }
 
     /**

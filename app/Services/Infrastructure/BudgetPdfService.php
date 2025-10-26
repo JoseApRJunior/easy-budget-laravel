@@ -162,9 +162,9 @@ class BudgetPdfService
      */
     private function getWatermark( Budget $budget ): ?string
     {
-        $statusSlug = $budget->budgetStatus->slug ?? '';
+        $statusSlug = $budget->budgetStatus->value ?? '';
 
-        if ( $statusSlug === 'rascunho' ) {
+        if ( $statusSlug === 'draft' ) {
             return 'RASCUNHO';
         }
 

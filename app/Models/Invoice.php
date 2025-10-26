@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatusEnum;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Model;
@@ -65,7 +66,7 @@ class Invoice extends Model
         'tenant_id'                  => 'integer',
         'service_id'                 => 'integer',
         'customer_id'                => 'integer',
-        'invoice_statuses_id'        => 'integer',
+        'invoice_statuses_id'        => InvoiceStatusEnum::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'subtotal'                   => 'decimal:2',
@@ -93,7 +94,7 @@ class Invoice extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'service_id'                 => 'required|integer|exists:services,id',
             'customer_id'                => 'required|integer|exists:customers,id',
-            'invoice_statuses_id'        => 'required|integer|exists:invoice_statuses,id',
+            'invoice_statuses_id'        => 'required|string|in:' . implode( ',', array_column( InvoiceStatusEnum::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:invoices,code',
             'subtotal'                   => 'required|numeric|min:0|max:999999.99',
@@ -127,11 +128,11 @@ class Invoice extends Model
     }
 
     /**
-     * Get the invoice status that owns the Invoice.
+     * Get the invoice status enum.
      */
-    public function invoiceStatus()
+    public function getInvoiceStatusAttribute(): ?InvoiceStatusEnum
     {
-        return $this->belongsTo( InvoiceStatus::class, 'invoice_statuses_id' );
+        return InvoiceStatusEnum::tryFrom( $this->invoice_statuses_id );
     }
 
     /**

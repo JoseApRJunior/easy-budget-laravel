@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ServiceStatusEnum;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\ServiceItem;
-use App\Models\ServiceStatus;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
@@ -76,7 +76,7 @@ class Service extends Model
         'tenant_id'                  => 'integer',
         'budget_id'                  => 'integer',
         'category_id'                => 'integer',
-        'service_statuses_id'        => 'integer',
+        'service_statuses_id'        => ServiceStatusEnum::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'description'                => 'string',
@@ -99,7 +99,7 @@ class Service extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'budget_id'                  => 'required|integer|exists:budgets,id',
             'category_id'                => 'required|integer|exists:categories,id',
-            'service_statuses_id'        => 'required|integer|exists:service_statuses,id',
+            'service_statuses_id'        => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:services,code',
             'description'                => 'nullable|string',
@@ -145,14 +145,6 @@ class Service extends Model
     }
 
     /**
-     * Get the service status that owns the Service.
-     */
-    public function serviceStatus()
-    {
-        return $this->belongsTo( ServiceStatus::class, 'service_statuses_id' );
-    }
-
-    /**
      * Get the user confirmation token for the Service.
      */
     public function userConfirmationToken()
@@ -161,11 +153,11 @@ class Service extends Model
     }
 
     /**
-     * Alias para serviceStatus() para compatibilidade.
+     * Get the service status enum.
      */
-    public function status()
+    public function getServiceStatusAttribute(): ?ServiceStatusEnum
     {
-        return $this->serviceStatus();
+        return ServiceStatusEnum::tryFrom( $this->service_statuses_id );
     }
 
     /**

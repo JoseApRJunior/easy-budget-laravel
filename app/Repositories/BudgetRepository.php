@@ -121,12 +121,14 @@ class BudgetRepository extends AbstractTenantRepository
     /**
      * Lista orçamentos com filtros avançados dentro do tenant atual.
      *
+     * @param int $tenantId ID do tenant
      * @param array<string, mixed> $filters Filtros a aplicar
      * @return \Illuminate\Database\Eloquent\Builder Query builder com filtros aplicados
      */
-    public function getFilteredBudgets( array $filters = [] ): \Illuminate\Database\Eloquent\Builder
+    public function getFilteredBudgets( int $tenantId, array $filters = [] ): \Illuminate\Database\Eloquent\Builder
     {
-        $query = $this->model->with( [ 'customer:id,name', 'category:id,name,color', 'user:id,name' ] );
+        $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->with( [ 'customer:id,name', 'category:id,name,color', 'user:id,name' ] );
 
         // Usa o método applyFilters do trait para aplicar filtros
         $this->applyFilters( $query, $filters );
@@ -243,46 +245,205 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca orçamentos por código.
+     * Lista orçamentos com paginação customizada.
+     */
+    public function getPaginatedBudgets( int $tenantId, array $filters = [], int $perPage = 15 ): LengthAwarePaginator
+    {
+        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
+
+        // Aplica filtros usando o método applyFilters do trait
+        $this->applyFilters( $query, $filters );
+
+        // Mapeia campos do banco para os filtros esperados
+        $fieldMapping = [
+            'budget_statuses_id' => 'budget_statuses_id',
+            'status'             => 'budget_statuses_id',
+            'customer_id'        => 'customer_id',
+            'code'               => 'code',
+            'total'              => 'total',
+            'created_at'         => 'created_at',
+            'date_from'          => 'created_at',
+            'date_to'            => 'created_at',
+        ];
+
+        foreach ( $filters as $key => $value ) {
+            if ( isset( $fieldMapping[ $key ] ) ) {
+                $field = $fieldMapping[ $key ];
+
+                if ( $key === 'date_from' ) {
+                    $query->where( $field, '>=', $value );
+                } elseif ( $key === 'date_to' ) {
+                    $query->where( $field, '<=', $value );
+                } elseif ( $key === 'status' ) {
+                    if ( is_array( $value ) ) {
+                        $query->whereIn( $field, $value );
+                    } else {
+                        $query->where( $field, $value );
+                    }
+                } else {
+                    $query->where( $field, $value );
+                }
+            }
+        }
+
+        return $query->paginate( $perPage, [
+            'id', 'code', 'description', 'budget_statuses_id', 'total', 'created_at',
+            'customer_id', 'tenant_id'
+        ] );
+    }
+
+    /**
+     * Aplica filtro de tenant em uma query.
+     *
+     * @param Builder $query Query builder
+     * @param int $tenantId ID do tenant
+     * @return Builder Query com filtro de tenant aplicado
+     */
+    protected function applyTenantFilter( Builder $query, int $tenantId ): Builder
+    {
+        return $query->where( 'tenant_id', $tenantId );
+    }
+
+    /**
+     * Busca orçamento por código dentro do tenant.
+     *
+     * @param string $code Código do orçamento
+     * @param int $tenantId ID do tenant
+     * @return Budget|null Orçamento encontrado
      */
     public function findByCode( string $code, int $tenantId ): ?Budget
     {
         return $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->with( [ 'customer', 'category', 'items' ] )
             ->where( 'code', $code )
             ->first();
     }
 
     /**
-     * Lista orçamentos com paginação customizada.
+     * Conta orçamentos por filtros dentro do tenant.
+     *
+     * @param array $filters Filtros a aplicar
+     * @return int Número de orçamentos
      */
-    public function getPaginatedBudgets( int $tenantId, array $filters = [], int $perPage = 15 ): LengthAwarePaginator
+    public function countByTenant( array $filters = [] ): int
     {
-        $query = $this->getFilteredBudgets( $tenantId, $filters );
+        $query = $this->model::query();
 
-        return $query->paginate( $perPage, [
-            'id', 'code', 'title', 'status', 'total', 'created_at',
-            'customer_id', 'category_id', 'user_id'
-        ] );
+        // Aplica filtros usando o método applyFilters do trait
+        $this->applyFilters( $query, $filters );
+
+        return $query->count();
     }
 
     /**
-     * Estatísticas de conversão de orçamentos.
+     * Busca todos os orçamentos do tenant com filtros.
+     *
+     * @param array $filters Filtros a aplicar
+     * @param array|null $orderBy Ordenação
+     * @param int|null $limit Limite de registros
+     * @param int|null $offset Offset para paginação
+     * @return Collection
      */
-    public function getConversionStats( int $tenantId, string $period = '30 days' ): array
+    public function getAllByTenant( array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): Collection
     {
-        $startDate = now()->sub( $period );
+        $query = $this->model::query();
 
+        // Aplica filtros usando o método applyFilters do trait
+        $this->applyFilters( $query, $filters );
+
+        // Aplica ordenação
+        if ( $orderBy ) {
+            foreach ( $orderBy as $field => $direction ) {
+                $query->orderBy( $field, $direction );
+            }
+        }
+
+        // Aplica limite e offset
+        if ( $offset ) {
+            $query->offset( $offset );
+        }
+
+        if ( $limit ) {
+            $query->limit( $limit );
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Atualiza um orçamento.
+     *
+     * @param int $budgetId ID do orçamento
+     * @param array $data Dados para atualização
+     * @return Budget|null Orçamento atualizado
+     */
+    public function update( int $budgetId, array $data ): ?Budget
+    {
+        $budget = $this->find( $budgetId );
+
+        if ( $budget ) {
+            $budget->update( $data );
+            return $budget->fresh();
+        }
+
+        return null;
+    }
+
+    /**
+     * Remove um orçamento.
+     *
+     * @param int $budgetId ID do orçamento
+     * @return bool Sucesso da operação
+     */
+    public function delete( int $budgetId ): bool
+    {
+        $budget = $this->find( $budgetId );
+
+        if ( $budget ) {
+            return $budget->delete();
+        }
+
+        return false;
+    }
+
+    /**
+     * Busca um orçamento por ID.
+     *
+     * @param int $budgetId ID do orçamento
+     * @return Budget|null Orçamento encontrado
+     */
+    public function find( int $budgetId ): ?Budget
+    {
+        return $this->model->find( $budgetId );
+    }
+
+    /**
+     * Cria um novo orçamento.
+     *
+     * @param array $data Dados do orçamento
+     * @return Budget Orçamento criado
+     */
+    public function create( array $data ): Budget
+    {
+        return $this->model->create( $data );
+    }
+
+    /**
+     * Obtém estatísticas de conversão de orçamentos.
+     *
+     * @param int $tenantId ID do tenant
+     * @return array Estatísticas
+     */
+    public function getConversionStats( int $tenantId ): array
+    {
         $stats = $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->select( [
-                DB::raw( 'COUNT(*) as total' ),
-                DB::raw( 'SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved' ),
-                DB::raw( 'SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed' ),
-                DB::raw( 'SUM(CASE WHEN status = "rejected" THEN 1 ELSE 0 END) as rejected' ),
-                DB::raw( 'AVG(total) as avg_value' ),
-                DB::raw( 'SUM(total) as total_value' )
-            ] )
-            ->where( 'created_at', '>=', $startDate )
+            ->selectRaw( '
+                COUNT(*) as total,
+                SUM(CASE WHEN budget_statuses_id = "approved" THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN budget_statuses_id = "completed" THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN budget_statuses_id = "rejected" THEN 1 ELSE 0 END) as rejected,
+                AVG(total) as avg_value,
+                SUM(total) as total_value
+            ' )
             ->first();
 
         $conversionRate = $stats->total > 0 ? ( $stats->approved / $stats->total ) * 100 : 0;
@@ -297,7 +458,6 @@ class BudgetRepository extends AbstractTenantRepository
             'completion_rate'   => round( $completionRate, 2 ),
             'average_value'     => $stats->avg_value,
             'total_value'       => $stats->total_value,
-            'period'            => $period
         ];
     }
 

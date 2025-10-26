@@ -128,8 +128,8 @@
               </span>
             </div>
 
-            <!-- Action Buttons for PENDING status -->
-            @if( $budget->budgetStatus->slug === 'PENDING' )
+            <!-- Action Buttons for SENT status -->
+            @if( $budget->budgetStatus->slug === 'sent' )
               <div class="d-grid gap-2 mt-4">
                 <form action="{{ route( 'budgets.public.choose-status.store' ) }}" method="POST">
                   @csrf
@@ -141,8 +141,8 @@
                     <select name="budget_status_id" class="form-select" required>
                       <option value="">Selecione uma opção...</option>
                       @foreach( $availableStatuses as $status )
-                        <option value="{{ $status->id }}">
-                          {{ $status->name }}
+                        <option value="{{ $status->value }}">
+                          {{ $status->getName() }}
                         </option>
                       @endforeach
                     </select>

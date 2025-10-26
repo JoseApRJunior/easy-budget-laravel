@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\BudgetStatusEnum;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\User;
@@ -106,7 +107,7 @@ class BudgetTemplate extends Model
      */
     public static function createRules(): array
     {
-        $rules         = self::businessRules();
+        $rules           = self::businessRules();
         $rules[ 'slug' ] = 'required|string|max:100|alpha_dash|unique:budget_templates,slug';
 
         return $rules;
@@ -117,7 +118,7 @@ class BudgetTemplate extends Model
      */
     public static function updateRules( int $templateId ): array
     {
-        $rules         = self::businessRules();
+        $rules           = self::businessRules();
         $rules[ 'slug' ] = 'required|string|max:100|alpha_dash|unique:budget_templates,slug,' . $templateId;
 
         return $rules;
@@ -224,7 +225,7 @@ class BudgetTemplate extends Model
         // Dados base do orçamento
         $budgetData = array_merge( [
             'customer_id'        => $overrides[ 'customer_id' ] ?? null,
-            'budget_statuses_id' => BudgetStatus::where( 'slug', 'rascunho' )->first()->id,
+            'budget_statuses_id' => BudgetStatusEnum::DRAFT->value,
             'description'        => $this->description,
             'valid_until'        => now()->addDays( 30 ), // padrão 30 dias
         ], $overrides );
