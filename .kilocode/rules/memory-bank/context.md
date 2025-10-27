@@ -250,6 +250,44 @@ CRITICAL_ROUTES_REQUIRING_PLAN = [
 -  **Uso de eventos para desacoplamento** entre lógica e envio
 -  **Validações de segurança implementadas** em todas as camadas
 
+### **✅ Refatoração do Sistema de Login para Suporte Híbrido (Implementado)**
+
+**Problema Resolvido:** O sistema bloqueava login por senha para usuários com Google OAuth, forçando uso exclusivo do Google.
+
+#### **🏗️ Solução Implementada: Suporte Híbrido**
+
+Refatoração do LoginRequest para permitir login com senha ou Google, melhorando a flexibilidade:
+
+##### **1. LoginRequest Aprimorado**
+
+```php
+// app/Http/Requests/Auth/LoginRequest.php
+- Verificação inteligente de usuários Google OAuth:
+  * Se usuário tem google_id e password definida: permite login por senha
+  * Se usuário tem google_id mas sem password: sugere definir senha ou usar Google
+  * Se usuário não tem google_id: login por senha padrão
+
+- Mensagem de erro atualizada para orientar usuário:
+  "Esta conta usa login social (Google) e não possui senha definida. Use o botão 'Login com Google' ou defina uma senha em suas configurações."
+
+- Logging detalhado para tentativas de login
+```
+
+##### **2. Integração com Sistema Existente**
+
+-  **Compatibilidade total** com ProviderController::change_password para definir senha
+-  **Mensagens adaptadas** para usuários Google (ex: "Senha definida com sucesso!")
+-  **Segurança mantida** com validações e rate limiting
+-  **Auditoria preservada** com logs de tentativas
+
+#### **✨ Benefícios da Solução**
+
+-  **Flexibilidade aumentada:** Usuários podem escolher método de login preferido
+-  **Melhor UX:** Mensagens claras e orientações para ações
+-  **Segurança robusta:** Validações em múltiplas camadas
+-  **Compatibilidade:** Funciona com sistema de mudança de senha existente
+-  **Manutenibilidade:** Código mais claro e fácil de entender
+
 ### **✅ Sistema de Padrões Arquiteturais Completo**
 
 **Implementado sistema completo de padrões com 5 camadas:**

@@ -8,23 +8,51 @@ use App\Enums\OperationStatus;
 use App\Models\Activity;
 use App\Models\AreaOfActivity;
 use App\Models\Budget;
+use App\Models\CommonData;
+use App\Models\Customer;
+use App\Models\Plan;
+use App\Models\PlanSubscription;
 use App\Models\Profession;
 use App\Models\Provider;
+use App\Models\Role;
+use App\Models\Service;
+use App\Models\Tenant;
 use App\Models\User;
+use App\Repositories\CommonDataRepository;
+use App\Repositories\PlanRepository;
+use App\Repositories\ProviderRepository;
+use App\Repositories\RoleRepository;
+use App\Repositories\TenantRepository;
+use App\Repositories\UserRepository;
 use App\Services\Domain\ActivityService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Support\ServiceResult;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+// Constants for magic strings to improve maintainability
+const ROLE_PROVIDER              = 'provider';
+const PLAN_SLUG_TRIAL            = 'trial';
+const SUBSCRIPTION_STATUS_ACTIVE = 'active';
+const PAYMENT_METHOD_TRIAL       = 'trial';
+const TRIAL_DAYS                 = 7;
 
 class ProviderManagementService
 {
     public function __construct(
         private FinancialSummary $financialSummary,
         private ActivityService $activityService,
+        private CommonDataRepository $commonDataRepository,
+        private ProviderRepository $providerRepository,
+        private PlanRepository $planRepository,
+        private RoleRepository $roleRepository,
+        private TenantRepository $tenantRepository,
+        private UserRepository $userRepository,
     ) {}
 
     /**
@@ -323,7 +351,7 @@ class ProviderManagementService
     public function getServiceReports( int $tenantId ): array
     {
         // Buscar serviços do mês atual
-        $services = \App\Models\Service::where( 'tenant_id', $tenantId )
+        $services = Service::where( 'tenant_id', $tenantId )
             ->with( [ 'budget.customer', 'items' ] )
             ->whereMonth( 'created_at', now()->month )
             ->whereYear( 'created_at', now()->year )
@@ -353,7 +381,7 @@ class ProviderManagementService
     public function getCustomerReports( int $tenantId ): array
     {
         // Buscar clientes ativos
-        $customers = \App\Models\Customer::where( 'tenant_id', $tenantId )
+        $customers = Customer::where( 'tenant_id', $tenantId )
             ->with( [ 'budgets', 'services' ] )
             ->latest()
             ->limit( 50 )
@@ -379,6 +407,247 @@ class ProviderManagementService
             'customer_stats' => $customerStats,
             'period'         => now()->format( 'F Y' ),
         ];
+    }
+
+    /**
+     * Create complete registration from user data.
+     *
+     * This method handles the complete registration flow:
+     * 1. Create Tenant
+     * 2. Create User
+     * 3. Create Provider with all related data
+     *
+     * @param array $userData User registration data
+     * @return ServiceResult Result of the operation with user, tenant, provider, plan, and subscription
+     */
+    public function createProviderFromRegistration( array $userData ): ServiceResult
+    {
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Create Tenant
+            $tenantResult = $this->createTenant( $userData );
+            if ( !$tenantResult->isSuccess() ) {
+                DB::rollBack();
+                return $tenantResult;
+            }
+            $tenant = $tenantResult->getData();
+
+            // Step 2: Create User
+            $userResult = $this->createUser( $userData, $tenant );
+            if ( !$userResult->isSuccess() ) {
+                DB::rollBack();
+                return $userResult;
+            }
+            $user = $userResult->getData();
+
+            // Step 3: Create Provider with all related data
+            $providerResult = $this->createProviderWithRelatedData( $userData, $user, $tenant );
+            if ( !$providerResult->isSuccess() ) {
+                DB::rollBack();
+                return $providerResult;
+            }
+
+            $providerData = $providerResult->getData();
+
+            DB::commit();
+
+            return ServiceResult::success( [
+                'user'         => $user,
+                'tenant'       => $tenant,
+                'provider'     => $providerData[ 'provider' ],
+                'plan'         => $providerData[ 'plan' ],
+                'subscription' => $providerData[ 'subscription' ],
+            ], 'Registro completo realizado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            DB::rollBack();
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar provider: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Create provider with all related data (CommonData, Role, Plan, Subscription).
+     *
+     * @param array $userData User registration data
+     * @param User $user The created user
+     * @param Tenant $tenant The created tenant
+     * @return ServiceResult Result of the operation
+     */
+    private function createProviderWithRelatedData( array $userData, User $user, Tenant $tenant ): ServiceResult
+    {
+        try {
+            // Create CommonData
+            $commonData = new CommonData( [
+                'tenant_id'    => $tenant->id,
+                'first_name'   => $userData[ 'first_name' ],
+                'last_name'    => $userData[ 'last_name' ],
+                'cpf'          => null,
+                'cnpj'         => null,
+                'company_name' => null,
+                'description'  => null,
+            ] );
+
+            $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
+
+            // Create Provider
+            $provider = new Provider( [
+                'tenant_id'      => $tenant->id,
+                'user_id'        => $user->id,
+                'common_data_id' => $savedCommonData->id,
+                'contact_id'     => null,
+                'address_id'     => null,
+                'terms_accepted' => $userData[ 'terms_accepted' ],
+            ] );
+
+            $savedProvider = $this->providerRepository->create( $provider->toArray() );
+
+            // Assign Provider Role
+            $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
+
+            if ( !$providerRole ) {
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Role provider não encontrado no banco de dados',
+                );
+            }
+
+            $user->roles()->attach( $providerRole->id, [
+                'tenant_id'  => $tenant->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ] );
+
+            // Find Trial Plan
+            $plan = Plan::where( 'slug', PLAN_SLUG_TRIAL )->first();
+
+            if ( !$plan ) {
+                $plan = Plan::where( 'status', true )->where( 'price', 0.00 )->first();
+            }
+
+            if ( !$plan ) {
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Plano trial não encontrado. Entre em contato com nosso suporte para ativar seu acesso gratuito.',
+                );
+            }
+
+            // Create Plan Subscription
+            $planSubscription = new PlanSubscription( [
+                'tenant_id'          => $tenant->id,
+                'plan_id'            => $plan->id,
+                'user_id'            => $user->id,
+                'provider_id'        => $savedProvider->id,
+                'status'             => SUBSCRIPTION_STATUS_ACTIVE,
+                'transaction_amount' => $plan->price ?? 0.00,
+                'start_date'         => now(),
+                'end_date'           => now()->addDays( TRIAL_DAYS ),
+                'transaction_date'   => now(),
+                'payment_method'     => PAYMENT_METHOD_TRIAL,
+                'payment_id'         => 'TRIAL_' . uniqid(),
+                'public_hash'        => 'TRIAL_HASH_' . uniqid(),
+            ] );
+
+            $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );
+
+            return ServiceResult::success( [
+                'provider'     => $savedProvider,
+                'role'         => $providerRole,
+                'plan'         => $plan,
+                'subscription' => $savedSubscription,
+            ], 'Provider criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar provider: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Cria um tenant único para o usuário durante o registro.
+     *
+     * @param array $userData Dados do usuário
+     * @return ServiceResult Resultado da operação
+     */
+    private function createTenant( array $userData ): ServiceResult
+    {
+        try {
+            $tenantName = $this->generateUniqueTenantName( $userData[ 'first_name' ], $userData[ 'last_name' ] );
+
+            $tenant = new Tenant( [
+                'name'      => $tenantName,
+                'is_active' => true,
+            ] );
+
+            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
+
+            return ServiceResult::success( $savedTenant, 'Tenant criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar tenant: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Cria um usuário no sistema durante o registro.
+     *
+     * @param array $userData Dados do usuário
+     * @param Tenant $tenant Tenant do usuário
+     * @return ServiceResult Resultado da operação
+     */
+    private function createUser( array $userData, Tenant $tenant ): ServiceResult
+    {
+        try {
+            // Handle password: let the model cast handle hashing for regular registration
+            // For social registration, password is null
+            $password            = isset( $userData[ 'password' ] ) && $userData[ 'password' ] !== null
+                ? $userData[ 'password' ]  // Plain password, model will hash it
+                : null;
+            $userDataForCreation = [
+                'tenant_id' => $tenant->id,
+                'email'     => $userData[ 'email' ],
+                'password'  => $password,
+                'is_active' => true,
+            ];
+            $savedUser           = $this->userRepository->create( $userDataForCreation );
+
+            return ServiceResult::success( $savedUser, 'Usuário criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar usuário: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Gera um nome único para o tenant baseado no nome do usuário.
+     *
+     * @param string $firstName Primeiro nome
+     * @param string $lastName Sobrenome
+     * @return string Nome único para o tenant
+     */
+    private function generateUniqueTenantName( string $firstName, string $lastName ): string
+    {
+        $baseName   = Str::slug( $firstName . '-' . $lastName );
+        $tenantName = $baseName;
+        $counter    = 1;
+
+        while ( $this->tenantRepository->findByName( $tenantName ) ) {
+            $tenantName = $baseName . '-' . $counter;
+            $counter++;
+        }
+
+        return $tenantName;
     }
 
 }

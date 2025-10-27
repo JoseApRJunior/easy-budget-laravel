@@ -150,7 +150,9 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             ];
 
             // Usa o UserRegistrationService para criar usuário seguindo padrão completo
-            $registrationResult = $this->userRegistrationService->registerUser( $registrationData );
+            // Indica que é um registro social para evitar disparo de evento de verificação de e-mail
+            // (Google já verifica o e-mail, então não precisamos de token de confirmação)
+            $registrationResult = $this->userRegistrationService->registerUser( $registrationData, true );
 
             if ( !$registrationResult->isSuccess() ) {
                 return $registrationResult;

@@ -5,40 +5,21 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-use App\Enums\TokenType;
 use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
-use App\Models\CommonData;
-use App\Models\Plan;
-use App\Models\PlanSubscription;
-use App\Models\Provider;
-use App\Models\Role;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
-use App\Repositories\CommonDataRepository;
-use App\Repositories\PlanRepository;
-use App\Repositories\ProviderRepository;
-use App\Repositories\RoleRepository;
-use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\Application\EmailVerificationService;
+use App\Services\Application\ProviderManagementService;
+use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-
-// Constants for magic strings to improve maintainability
-const ROLE_PROVIDER              = 'provider';
-const PLAN_SLUG_TRIAL            = 'trial';
-const SUBSCRIPTION_STATUS_ACTIVE = 'active';
-const PAYMENT_METHOD_TRIAL       = 'trial';
-const TRIAL_DAYS                 = 7;
 
 /**
  * Serviço completo para registro de usuários no sistema Easy Budget.
@@ -69,32 +50,20 @@ class UserRegistrationService extends AbstractBaseService
     protected UserConfirmationTokenService    $userConfirmationTokenService;
     protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
     protected UserRepository                  $userRepository;
-    protected TenantRepository                $tenantRepository;
-    protected CommonDataRepository            $commonDataRepository;
-    protected ProviderRepository              $providerRepository;
-    protected PlanRepository                  $planRepository;
-    protected RoleRepository                  $roleRepository;
+    protected ProviderManagementService       $providerManagementService;
     protected EmailVerificationService        $emailVerificationService;
 
     public function __construct(
         UserRepository $userRepository,
-        TenantRepository $tenantRepository,
         UserConfirmationTokenService $userConfirmationTokenService,
         UserConfirmationTokenRepository $userConfirmationTokenRepository,
-        CommonDataRepository $commonDataRepository,
-        ProviderRepository $providerRepository,
-        PlanRepository $planRepository,
-        RoleRepository $roleRepository,
+        ProviderManagementService $providerManagementService,
         EmailVerificationService $emailVerificationService,
     ) {
         $this->userRepository                  = $userRepository;
-        $this->tenantRepository                = $tenantRepository;
         $this->userConfirmationTokenService    = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
-        $this->commonDataRepository            = $commonDataRepository;
-        $this->providerRepository              = $providerRepository;
-        $this->planRepository                  = $planRepository;
-        $this->roleRepository                  = $roleRepository;
+        $this->providerManagementService       = $providerManagementService;
         $this->emailVerificationService        = $emailVerificationService;
     }
 
@@ -111,16 +80,17 @@ class UserRegistrationService extends AbstractBaseService
      * - Integração com planos e assinaturas
      * - Associação automática de role 'provider'
      * - Login automático do usuário
-     * - Envio de e-mail usando eventos
+     * - Envio de e-mail usando eventos (apenas para registros normais)
      * - Tratamento completo de erros
      *
      * NOTA: A validação de dados é responsabilidade do Controller/FormRequest.
      * Este método assume que os dados já foram validados.
      *
      * @param array $userData Dados do usuário (first_name, last_name, email, password, phone, terms_accepted)
+     * @param bool $isSocialRegistration Se é um registro via rede social (default: false)
      * @return ServiceResult Resultado da operação
      */
-    public function registerUser( array $userData ): ServiceResult
+    public function registerUser( array $userData, bool $isSocialRegistration = false ): ServiceResult
     {
         try {
             DB::beginTransaction();
@@ -131,56 +101,51 @@ class UserRegistrationService extends AbstractBaseService
                 return $validationResult;
             }
 
-            // Executar passos de registro em sequência
-            $steps = [
-                'createTenant'           => fn() => $this->createTenant( $userData ),
-                'findTrialPlan'          => fn() => $this->findTrialPlan(),
-                'createUser'             => fn( $tenant ) => $this->createUser( $userData, $tenant ),
-                'createCommonData'       => fn( $tenant ) => $this->createCommonData( $userData, $tenant ),
-                'createProvider'         => fn( $user, $commonData, $tenant ) => $this->createProvider( $user, $commonData, $tenant, $userData[ 'terms_accepted' ] ),
-                'assignProviderRole'     => fn( $user, $tenant ) => $this->assignProviderRole( $user, $tenant ),
-                'createPlanSubscription' => fn( $tenant, $plan, $user, $provider ) => $this->createPlanSubscription( $tenant, $plan, $user, $provider ),
-            ];
+            // Delegar toda a lógica de criação para ProviderManagementService
+            $this->logStep( 'Delegando criação completa para ProviderManagementService' );
+            $registrationResult = $this->providerManagementService->createProviderFromRegistration( $userData );
 
-            $results = [];
-            foreach ( $steps as $stepName => $step ) {
-                $this->logStep( "Executando passo: {$stepName}" );
-                $result = $step();
-                if ( !$result->isSuccess() ) {
-                    DB::rollBack();
-                    return $result;
-                }
-                $results[ $stepName ] = $result->getData();
-                $this->logStep( "Passo {$stepName} concluído com sucesso" );
+            if ( !$registrationResult->isSuccess() ) {
+                DB::rollBack();
+                return $registrationResult;
             }
+
+            $results = $registrationResult->getData();
 
             DB::commit();
 
-            // Processar token de verificação e evento
-            $tokenResult = $this->processEmailVerification( $results[ 'createUser' ] );
-            $token       = $tokenResult ? $tokenResult->getData()[ 'token' ] : null;
+            // Processar token de verificação e evento apenas para registros normais
+            // Para registros sociais (Google), o e-mail já é verificado pelo provedor
+            if ( !$isSocialRegistration ) {
+                $tokenResult = $this->processEmailVerification( $results[ 'user' ] );
+                $token       = $tokenResult ? $tokenResult->getData()[ 'token' ] : null;
 
-            Event::dispatch( new UserRegistered(
-                $results[ 'createUser' ],
-                $results[ 'createTenant' ],
-                $token,
-            ) );
+                Event::dispatch( new UserRegistered(
+                    $results[ 'user' ],
+                    $results[ 'tenant' ],
+                    $token,
+                ) );
+            } else {
+                // Para registros sociais, não precisamos de token nem evento de verificação
+                $token = null;
+                $this->logStep( 'Registro social - pulando verificação de e-mail (Google já verifica)' );
+            }
 
             $this->logStep( 'Registro concluído com sucesso', [
-                'user_id'         => $results[ 'createUser' ]->id,
-                'email'           => $results[ 'createUser' ]->email,
-                'tenant_id'       => $results[ 'createTenant' ]->id,
-                'plan_id'         => $results[ 'findTrialPlan' ]->id,
-                'provider_id'     => $results[ 'createProvider' ]->id,
-                'subscription_id' => $results[ 'createPlanSubscription' ]->id,
+                'user_id'         => $results[ 'user' ]->id,
+                'email'           => $results[ 'user' ]->email,
+                'tenant_id'       => $results[ 'tenant' ]->id,
+                'plan_id'         => $results[ 'plan' ]->id,
+                'provider_id'     => $results[ 'provider' ]->id,
+                'subscription_id' => $results[ 'subscription' ]->id,
             ] );
 
             return ServiceResult::success( [
-                'user'           => $results[ 'createUser' ],
-                'tenant'         => $results[ 'createTenant' ],
-                'provider'       => $results[ 'createProvider' ],
-                'plan'           => $results[ 'findTrialPlan' ],
-                'subscription'   => $results[ 'createPlanSubscription' ],
+                'user'           => $results[ 'user' ],
+                'tenant'         => $results[ 'tenant' ],
+                'provider'       => $results[ 'provider' ],
+                'plan'           => $results[ 'plan' ],
+                'subscription'   => $results[ 'subscription' ],
                 'auto_logged_in' => true,
                 'message'        => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
             ], 'Usuário registrado com sucesso.' );
@@ -321,303 +286,6 @@ class UserRegistrationService extends AbstractBaseService
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao processar solicitação de redefinição de senha.',
-            );
-        }
-    }
-
-    /**
-     * Busca um plano trial disponível ou cria um plano trial automaticamente.
-     *
-     * @return ServiceResult Resultado da operação
-     */
-    private function findTrialPlan(): ServiceResult
-    {
-        try {
-            // Primeiro tentar buscar um plano específico de trial
-            $plan = Plan::where( 'slug', PLAN_SLUG_TRIAL )->first();
-
-            if ( !$plan ) {
-                // Se não encontrou plano trial, buscar plano gratuito
-                $plan = Plan::where( 'status', true )->where( 'price', 0.00 )->first();
-            }
-
-            if ( !$plan ) {
-                return ServiceResult::error(
-                    OperationStatus::ERROR,
-                    'Plano trial não encontrado. Entre em contato com nosso suporte para ativar seu acesso gratuito.',
-                );
-            }
-
-            return ServiceResult::success( $plan, 'Plano trial encontrado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao buscar/criar plano trial: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Cria CommonData com dados pessoais do usuário.
-     *
-     * @param array $userData Dados do usuário
-     * @param Tenant $tenant Tenant do usuário
-     * @return ServiceResult Resultado da operação
-     */
-    private function createCommonData( array $userData, Tenant $tenant ): ServiceResult
-    {
-        try {
-            $commonData = new CommonData( [
-                'tenant_id'    => $tenant->id,
-                'first_name'   => $userData[ 'first_name' ],
-                'last_name'    => $userData[ 'last_name' ],
-                'cpf'          => null, // Pode ser adicionado posteriormente
-                'cnpj'         => null, // Pode ser adicionado posteriormente
-                'company_name' => null, // Pode ser adicionado posteriormente
-                'description'  => null, // Pode ser adicionado posteriormente
-            ] );
-
-            $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
-
-            return ServiceResult::success( $savedCommonData, 'CommonData criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar CommonData: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Cria Provider vinculado ao usuário.
-     *
-     * @param User $user Usuário
-     * @param CommonData $commonData Dados comuns
-     * @param Tenant $tenant Tenant
-     * @param bool $termsAccepted Termos aceitos
-     * @return ServiceResult Resultado da operação
-     */
-    private function createProvider( User $user, CommonData $commonData, Tenant $tenant, bool $termsAccepted ): ServiceResult
-    {
-        try {
-            $provider = new Provider( [
-                'tenant_id'      => $tenant->id,
-                'user_id'        => $user->id,
-                'common_data_id' => $commonData->id,
-                'contact_id'     => null, // Pode ser adicionado posteriormente
-                'address_id'     => null, // Pode ser adicionado posteriormente
-                'terms_accepted' => $termsAccepted,
-            ] );
-
-            $savedProvider = $this->providerRepository->create( $provider->toArray() );
-
-            return ServiceResult::success( $savedProvider, 'Provider criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar Provider: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Associa role 'provider' ao usuário.
-     *
-     * @param User $user Usuário
-     * @param Tenant $tenant Tenant
-     * @return ServiceResult Resultado da operação
-     */
-    private function assignProviderRole( User $user, Tenant $tenant ): ServiceResult
-    {
-        try {
-            $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
-
-            if ( !$providerRole ) {
-                return ServiceResult::error(
-                    OperationStatus::ERROR,
-                    'Role provider não encontrado no banco de dados',
-                );
-            }
-
-            // Criar a relação user_roles
-            $user->roles()->attach( $providerRole->id, [
-                'tenant_id'  => $tenant->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ] );
-
-            return ServiceResult::success( null, 'Role provider associado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao associar role provider: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Cria assinatura do plano para o usuário.
-     *
-     * @param Tenant $tenant Tenant
-     * @param Plan $plan Plano
-     * @param User $user Usuário
-     * @param Provider $provider Provider
-     * @return ServiceResult Resultado da operação
-     */
-    private function createPlanSubscription( Tenant $tenant, Plan $plan, User $user, Provider $provider ): ServiceResult
-    {
-        try {
-            $planSubscription = new PlanSubscription( [
-                'tenant_id'          => $tenant->id,
-                'plan_id'            => $plan->id,
-                'user_id'            => $user->id,
-                'provider_id'        => $provider->id,
-                'status'             => SUBSCRIPTION_STATUS_ACTIVE,
-                'transaction_amount' => $plan->price ?? 0.00,
-                'start_date'         => now(),
-                'end_date'           => now()->addDays( TRIAL_DAYS ), // Trial de 7 dias
-                'transaction_date'   => now(),
-                'payment_method'     => PAYMENT_METHOD_TRIAL,
-                'payment_id'         => 'TEST_' . uniqid(),
-                'public_hash'        => 'TEST_HASH_' . uniqid(),
-
-            ] );
-
-            $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );
-
-            return ServiceResult::success( $savedSubscription, 'Assinatura criada com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar assinatura: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Gera um nome único para o tenant usando dados disponíveis do usuário.
-     *
-     * Estratégia de geração:
-     * 1. Primeiro tenta usar "first_name last_name" (ex: "João Silva")
-     * 2. Se houver duplicata, tenta usar a parte do email antes do @ (ex: "joao.silva")
-     * 3. Se ainda houver duplicata, adiciona um número sequencial
-     * 4. Usa slug para garantir que seja URL-safe
-     *
-     * @param array $userData Dados do usuário (first_name, last_name, email)
-     * @return string Nome único para o tenant
-     */
-    private function generateUniqueTenantName( array $userData ): string
-    {
-        // Estratégia 1: Nome completo
-        $baseName   = trim( $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ] );
-        $tenantName = Str::slug( $baseName );
-
-        // Verificar se já existe
-        if ( !$this->tenantRepository->existsByName( $tenantName ) ) {
-            Log::info( 'Nome único de tenant gerado - Estratégia 1 (nome completo)', [
-                'tenant_name' => $tenantName,
-                'user_name'   => $baseName
-            ] );
-            return $tenantName;
-        }
-
-        // Estratégia 2: Parte do email
-        $emailPrefix = explode( '@', $userData[ 'email' ] )[ 0 ];
-        $tenantName  = Str::slug( $emailPrefix );
-
-        // Verificar se já existe
-        if ( !$this->tenantRepository->existsByName( $tenantName ) ) {
-            Log::info( 'Nome único de tenant gerado - Estratégia 2 (email)', [
-                'tenant_name'  => $tenantName,
-                'email_prefix' => $emailPrefix
-            ] );
-            return $tenantName;
-        }
-
-        // Estratégia 3: Nome completo + número sequencial
-        $counter      = 1;
-        $originalName = Str::slug( $baseName );
-
-        do {
-            $tenantName = $originalName . '-' . $counter;
-            $counter++;
-        } while ( $this->tenantRepository->existsByName( $tenantName ) && $counter < 1000 );
-
-        Log::info( 'Nome único de tenant gerado - Estratégia 3 (com contador)', [
-            'tenant_name' => $tenantName,
-            'counter'     => $counter - 1,
-            'user_name'   => $baseName
-        ] );
-
-        return $tenantName;
-    }
-
-    /**
-     * Cria um novo tenant para o usuário.
-     *
-     * @param array $userData Dados do usuário
-     * @return ServiceResult Resultado da operação
-     */
-    private function createTenant( array $userData ): ServiceResult
-    {
-        try {
-            // Gerar nome único usando lógica inteligente
-            $tenantName = $this->generateUniqueTenantName( $userData );
-
-            $tenant = new Tenant( [
-                'name'      => $tenantName,
-                'is_active' => true,
-            ] );
-
-            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
-
-            Log::info( 'Tenant criado com nome único gerado', [
-                'tenant_id'   => $savedTenant->id,
-                'tenant_name' => $tenantName,
-                'user_name'   => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ],
-                'user_email'  => $userData[ 'email' ]
-            ] );
-
-            return ServiceResult::success( $savedTenant, 'Tenant criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar tenant: ' . $e->getMessage()
-            );
-        }
-    }
-
-    /**
-     * Cria um novo usuário.
-     *
-     * @param array $userData Dados do usuário
-     * @param Tenant $tenant Tenant do usuário
-     * @return ServiceResult Resultado da operação
-     */
-    private function createUser( array $userData, Tenant $tenant ): ServiceResult
-    {
-        try {
-            // Criar usuário usando o modelo diretamente para evitar conflitos com o global scope
-            $user = User::withoutTenant()->create( [
-                'tenant_id' => $tenant->id,
-                'name'      => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ], // ✅ Nome completo do usuário
-                'email'     => $userData[ 'email' ],
-                'password'  => $userData[ 'password' ] ? Hash::make( $userData[ 'password' ] ) : null,
-                'is_active' => false,
-            ] );
-
-            return ServiceResult::success( $user, 'Usuário criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar usuário: ' . $e->getMessage()
             );
         }
     }

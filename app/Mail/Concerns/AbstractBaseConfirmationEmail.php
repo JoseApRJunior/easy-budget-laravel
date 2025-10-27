@@ -144,4 +144,5 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         ] );
     }
 
+    //TODO app\Mail\Concerns\AbstractBaseConfirmationEmail.php:141-144  return array_merge( $this->getUserBasicData(), ['confirmationLink' => $this->confirmationLink ?? $this->generateConfirmationLink(),'tenant_name'      => $this->tenant?->name ?? 'Easy Budget',] ); //aqui ele pede para gerar um link, mais na realidade, o link ja vem pronto, tem muita coisa obsoleta nesta classe ou logica sendo usada varias vezes pq ja foi implentada app\Listeners\SendWelcomeEmail.php:145-145, ver se precisa mesmo de $this->generateConfirmationLink()
 }

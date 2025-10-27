@@ -172,6 +172,47 @@ class UserRegistrationServiceTest extends TestCase
     }
 
     /**
+     * Testa registro social - evento UserRegistered NÃO deve ser disparado.
+     */
+    public function test_social_registration_does_not_dispatch_user_registered_event(): void
+    {
+        // Arrange
+        Event::fake();
+        $userData = $this->getValidUserData();
+
+        // Criar plano trial
+        $plan = Plan::factory()->create( [
+            'name'   => 'Trial',
+            'slug'   => 'trial',
+            'price'  => 0.00,
+            'status' => true,
+        ] );
+
+        // Criar role provider
+        $providerRole = Role::factory()->create( [ 'name' => 'provider' ] );
+
+        // Act
+        $result = $this->service->registerUser( $userData, true ); // isSocialRegistration = true
+
+        // Assert
+        $this->assertTrue( $result->isSuccess() );
+
+        $data   = $result->getData();
+        $user   = $data[ 'user' ];
+        $tenant = $data[ 'tenant' ];
+
+        // Verificar se usuário foi criado
+        $this->assertInstanceOf( User::class, $user );
+        $this->assertEquals( $userData[ 'email' ], $user->email );
+
+        // Verificar se tenant foi criado
+        $this->assertInstanceOf( Tenant::class, $tenant );
+
+        // Verificar que evento UserRegistered NÃO foi disparado para registro social
+        Event::assertNotDispatched( UserRegistered::class);
+    }
+
+    /**
      * Testa registro com dados obrigatórios ausentes.
      */
     public function test_registration_with_missing_required_data(): void

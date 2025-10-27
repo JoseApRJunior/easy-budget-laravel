@@ -142,14 +142,14 @@ class SendWelcomeEmail implements ShouldQueue
             }
 
             // Gera URL de confirmação segura usando serviço centralizado
-            // $confirmationLink = $this->linkService->buildConfirmationLinkByContext( $event->verificationToken, 'welcome' );
+            $confirmationLink = $this->linkService->buildConfirmationLinkByContext( $event->verificationToken, 'welcome' );
             // teste apos registro com google so recebe email de boas vindas
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendWelcomeEmail(
                 $event->user,
                 $event->tenant,
-                // $confirmationLink,
+                $confirmationLink,
             );
 
         } catch ( Throwable $e ) {
