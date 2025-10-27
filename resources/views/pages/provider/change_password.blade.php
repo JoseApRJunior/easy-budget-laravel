@@ -60,18 +60,20 @@
                             @csrf
 
                             @if( !( $isGoogleUser ?? false ) )
-                                <div class="form-floating password-container mb-3">
-                                    <input type="password"
-                                        class="form-control @error( 'current_password' ) is-invalid @enderror"
-                                        id="current_password" name="current_password" required
-                                        aria-describedby="current_password_help" />
-                                    <label for="current_password" class="form-label">
-                                        Senha atual
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label fw-semibold">
+                                        Senha atual <span class="text-danger">*</span>
                                     </label>
-                                    <button type="button" class="password-toggle" data-input="current_password"
-                                        aria-label="Mostrar/ocultar senha atual">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
+                                    <div class="input-group">
+                                        <input type="password"
+                                            class="form-control form-control-user @error( 'current_password' ) is-invalid @enderror"
+                                            id="current_password" name="current_password" required
+                                            aria-describedby="current_password_help" />
+                                        <span class="input-group-text" style="cursor: pointer;"
+                                            onclick="togglePasswordVisibility('current_password', 'currentPasswordIcon')">
+                                            <i class="bi bi-eye" id="currentPasswordIcon"></i>
+                                        </span>
+                                    </div>
                                     @error( 'current_password' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -87,17 +89,20 @@
                                 </div>
                             @endif
 
-                            <div class="form-floating password-container mb-3">
-                                <input type="password" class="form-control @error( 'password' ) is-invalid @enderror"
-                                    id="password" name="password" required
-                                    aria-describedby="password_help password-strength" />
-                                <label for="password" class="form-label">
-                                    Nova Senha
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">
+                                    Nova Senha <span class="text-danger">*</span>
                                 </label>
-                                <button type="button" class="password-toggle" data-input="password"
-                                    aria-label="Mostrar/ocultar nova senha">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                                <div class="input-group">
+                                    <input type="password"
+                                        class="form-control form-control-user @error( 'password' ) is-invalid @enderror"
+                                        id="password" name="password" required
+                                        aria-describedby="password_help password-strength" />
+                                    <span class="input-group-text" style="cursor: pointer;"
+                                        onclick="togglePasswordVisibility('password', 'passwordIcon')">
+                                        <i class="bi bi-eye" id="passwordIcon"></i>
+                                    </span>
+                                </div>
                                 @error( 'password' )
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -115,18 +120,36 @@
                                 </div>
                             </div>
 
-                            <div class="form-floating password-container">
-                                <input type="password" class="form-control" id="password_confirmation"
-                                    name="password_confirmation" required aria-describedby="password_confirmation_help" />
-                                <label for="password_confirmation" class="form-label">
-                                    Confirmar Nova Senha
+                            <div class="mb-3">
+                                <label for="password_confirmation" class="form-label fw-semibold">
+                                    Confirmar Nova Senha <span class="text-danger">*</span>
                                 </label>
-                                <button type="button" class="password-toggle" data-input="password_confirmation"
-                                    aria-label="Mostrar/ocultar confirmação de senha">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <div id="password_confirmation_help" class="form-text">
-                                    Digite novamente a nova senha para confirmar que está correta.
+                                <div class="input-group">
+                                    <input type="password"
+                                        class="form-control form-control-user @error( 'password_confirmation' ) is-invalid @enderror"
+                                        id="password_confirmation" name="password_confirmation"
+                                        placeholder="Confirme sua senha" required>
+                                    <span class="input-group-text" style="cursor: pointer;"
+                                        onclick="togglePasswordVisibility('password_confirmation', 'passwordConfirmIcon')">
+                                        <i class="bi bi-eye" id="passwordConfirmIcon"></i>
+                                    </span>
+                                </div>
+                                @error( 'password_confirmation' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+
+                                {{-- Indicador de comparação de senha --}}
+                                <div class="password-match-feedback mt-2" style="display: none;">
+                                    <small class="text-muted">
+                                        <i class="bi bi-check-circle text-success me-1"></i>
+                                        Senhas coincidem
+                                    </small>
+                                </div>
+                                <div class="password-mismatch-feedback mt-2" style="display: none;">
+                                    <small class="text-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        As senhas não coincidem
+                                    </small>
                                 </div>
                             </div>
 
@@ -145,32 +168,33 @@
                 </div>
             </div>
         </div>
-    </div>
-@endsection
-
-@push( 'scripts' )
+</div> @endsection @push( 'scripts' )
     <script>
         document.addEventListener( 'DOMContentLoaded', function () {
-            const passwordToggles = document.querySelectorAll( '.password-toggle' );
+            // Função unificada para toggle de visibilidade de senha
+            window.togglePasswordVisibility = function ( inputId, iconId ) {
+                const input = document.getElementById( inputId );
+                const icon = document.getElementById( iconId );
 
-            // Toggle visibility de senha
-            passwordToggles.forEach( function ( toggle ) {
-                toggle.addEventListener( 'click', function () {
-                    const inputId = this.dataset.input;
-                    const input = document.getElementById( inputId );
-                    const icon = this.querySelector( 'i' );
+                if ( input.type === 'password' ) {
+                    input.type = 'text';
+                    icon.classList.remove( 'bi-eye' );
+                    icon.classList.add( 'bi-eye-slash' );
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove( 'bi-eye-slash' );
+                    icon.classList.add( 'bi-eye' );
+                }
+            };
 
-                    if ( input.type === 'password' ) {
-                        input.type = 'text';
-                        icon.classList.remove( 'bi-eye' );
-                        icon.classList.add( 'bi-eye-slash' );
-                    } else {
-                        input.type = 'password';
-                        icon.classList.remove( 'bi-eye-slash' );
-                        icon.classList.add( 'bi-eye' );
-                    }
-                } );
-            } );
+            // Critérios de validação
+            const criteria = {
+                length: { regex: /.{8,}/, weight: 20 },
+                lowercase: { regex: /[a-z]/, weight: 20 },
+                uppercase: { regex: /[A-Z]/, weight: 20 },
+                number: { regex: /[0-9]/, weight: 20 },
+                special: { regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, weight: 20 }
+            };
 
             // Validação de força de senha
             const passwordInput = document.getElementById( 'password' );
@@ -208,117 +232,80 @@
                 let percentage = ( score / 6 ) * 100;
                 let strength, className, textClass;
 
-                if ( percentage < 40 ) {
-                    strength = 'Muito Fraca';
-                    className = 'bg-danger';
-                    textClass = 'danger';
-                } else if ( percentage < 60 ) {
-                    strength = 'Fraca';
-                    className = 'bg-warning';
-                    textClass = 'warning';
-                } else if ( percentage < 80 ) {
-                    strength = 'Boa';
-                    className = 'bg-info';
-                    textClass = 'info';
-                } else {
+                if ( percentage < 40 ) { strength = 'Muito Fraca'; className = 'bg-danger'; textClass = 'danger'; } else if (
+                    percentage < 60 ) { strength = 'Fraca'; className = 'bg-warning'; textClass = 'warning'; } else if ( percentage
+                        < 80 ) { strength = 'Boa'; className = 'bg-info'; textClass = 'info'; } else {
                     strength = 'Muito Forte';
-                    className = 'bg-success';
-                    textClass = 'success';
-                }
-
-                return {
-                    percentage: percentage,
-                    class: className,
-                    text: strength,
-                    textClass: textClass
+                    className = 'bg-success'; textClass = 'success';
+                } return {
+                    percentage: percentage, class: className, text:
+                        strength, textClass: textClass
                 };
             }
 
-            // Validação de confirmação de senha
-            const passwordConfirmationInput = document.getElementById( 'password_confirmation' );
-            const passwordConfirmationContainer = passwordConfirmationInput.closest( '.form-floating' );
+            // Validação de comparação de senhas
+            const passwordConfirmInput = document.getElementById( 'password_confirmation' );
+            const passwordMatchFeedback = document.querySelector( '.password-match-feedback' );
+            const passwordMismatchFeedback = document.querySelector( '.password-mismatch-feedback' );
 
-            passwordConfirmationInput.addEventListener( 'input', function () {
-                const password = document.getElementById( 'password' ).value;
-                const confirmation = this.value;
+            function updatePasswordMatch() {
+                const password = passwordInput.value;
+                const passwordConfirm = passwordConfirmInput.value;
 
-                // Remove classes de validação anteriores
-                passwordConfirmationContainer.classList.remove( 'was-validated' );
+                // Esconder ambos os feedbacks inicialmente
+                passwordMatchFeedback.style.display = 'none';
+                passwordMismatchFeedback.style.display = 'none';
 
-                if ( confirmation.length === 0 ) {
+                if ( passwordConfirm.length === 0 ) {
                     return;
                 }
 
-                if ( password === confirmation ) {
-                    this.classList.remove( 'is-invalid' );
-                    this.classList.add( 'is-valid' );
-                    passwordConfirmationContainer.classList.add( 'was-validated' );
+                if ( password === passwordConfirm ) {
+                    passwordMatchFeedback.style.display = 'block';
+                    passwordMismatchFeedback.style.display = 'none';
+                    passwordConfirmInput.classList.remove( 'is-invalid' );
+                    passwordConfirmInput.classList.add( 'is-valid' );
                 } else {
-                    this.classList.remove( 'is-valid' );
-                    this.classList.add( 'is-invalid' );
-                    passwordConfirmationContainer.classList.add( 'was-validated' );
+                    passwordMatchFeedback.style.display = 'none';
+                    passwordMismatchFeedback.style.display = 'block';
+                    passwordConfirmInput.classList.remove( 'is-valid' );
+                    passwordConfirmInput.classList.add( 'is-invalid' );
                 }
-            } );
+            }
 
-            // Validação também quando a senha principal muda
-            passwordInput.addEventListener( 'input', function () {
-                const password = this.value;
-                const confirmation = passwordConfirmationInput.value;
+            passwordInput.addEventListener( 'input', updatePasswordMatch );
+            passwordConfirmInput.addEventListener( 'input', updatePasswordMatch );
 
-                if ( confirmation.length > 0 ) {
-                    if ( password === confirmation ) {
-                        passwordConfirmationInput.classList.remove( 'is-invalid' );
-                        passwordConfirmationInput.classList.add( 'is-valid' );
-                    } else {
-                        passwordConfirmationInput.classList.remove( 'is-valid' );
-                        passwordConfirmationInput.classList.add( 'is-invalid' );
-                    }
-                }
-            } );
-
-            // Validação no submit do formulário
+            // Validação de formulário aprimorada
             const form = document.getElementById( 'changePasswordForm' );
             const isGoogleUser = {{ $isGoogleUser ?? false ? 'true' : 'false' }};
 
             form.addEventListener( 'submit', function ( e ) {
                 const password = passwordInput.value;
-                const confirmation = passwordConfirmationInput.value;
+                const passwordConfirm = passwordConfirmInput.value;
 
                 // Verificar se as senhas coincidem
-                if ( password !== confirmation ) {
+                if ( password !== passwordConfirm ) {
                     e.preventDefault();
-                    passwordConfirmationInput.classList.add( 'is-invalid' );
-                    passwordConfirmationInput.focus();
-
-                    // Adicionar mensagem de erro se não existir
-                    let feedback = passwordConfirmationInput.parentNode.querySelector( '.invalid-feedback' );
-                    if ( !feedback ) {
-                        feedback = document.createElement( 'div' );
-                        feedback.className = 'invalid-feedback';
-                        passwordConfirmationInput.parentNode.appendChild( feedback );
-                    }
-                    feedback.textContent = 'As senhas não coincidem.';
-
-                    return false;
+                    passwordMismatchFeedback.style.display = 'block';
+                    passwordConfirmInput.classList.add( 'is-invalid' );
+                    passwordConfirmInput.focus();
+                    return;
                 }
 
                 // Só verificar força da senha se não for usuário Google OAuth
                 if ( !isGoogleUser ) {
-                    const strength = calculatePasswordStrength( password );
-                    if ( strength.percentage < 60 ) {
-                        e.preventDefault();
-                        passwordInput.classList.add( 'is-invalid' );
-                        passwordInput.focus();
-
-                        let feedback = passwordInput.parentNode.querySelector( '.invalid-feedback' );
-                        if ( !feedback ) {
-                            feedback = document.createElement( 'div' );
-                            feedback.className = 'invalid-feedback';
-                            passwordInput.parentNode.appendChild( feedback );
+                    let allCriteriaMet = true;
+                    Object.keys( criteria ).forEach( key => {
+                        if ( !criteria[key].regex.test( password ) ) {
+                            allCriteriaMet = false;
                         }
-                        feedback.textContent = 'A senha deve ser pelo menos "Boa" para ser aceita.';
+                    } );
 
-                        return false;
+                    if ( !allCriteriaMet ) {
+                        e.preventDefault();
+                        alert( 'A senha deve atender todos os critérios de segurança.' );
+                        return;
                     }
                 }
             } );
