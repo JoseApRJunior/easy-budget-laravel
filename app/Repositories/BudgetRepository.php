@@ -47,7 +47,7 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function countByStatus( string $status ): int
     {
-        return $this->countByTenant( [ 'status' => $status ] );
+        return $this->countByTenant( [ 'budget_statuses_id' => $status ] );
     }
 
     /**
@@ -459,6 +459,119 @@ class BudgetRepository extends AbstractTenantRepository
             'average_value'     => $stats->avg_value,
             'total_value'       => $stats->total_value,
         ];
+    }
+
+    /**
+     * Busca orçamento com todos os dados do cliente por código.
+     *
+     * @param string $code Código do orçamento
+     * @param int $tenantId ID do tenant
+     * @return Budget|null Orçamento com dados do cliente
+     */
+    public function getBudgetFullByCode( string $code, int $tenantId ): ?Budget
+    {
+        return $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->with( [
+                'customer:id,name,email,phone,document',
+                'budgetStatus:id,name,color,icon,slug',
+                'user:id,name,email'
+            ] )
+            ->where( 'code', $code )
+            ->first();
+    }
+
+    /**
+     * Busca orçamento com dados completos do cliente por ID.
+     *
+     * @param int $budgetId ID do orçamento
+     * @param int $tenantId ID do tenant
+     * @return Budget|null Orçamento com dados completos
+     */
+    public function getBudgetByIdWithCustomerDatas( int $budgetId, int $tenantId ): ?Budget
+    {
+        return $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->with( [
+                'customer:id,name,email,phone,document',
+                'budgetStatus:id,name,color,icon,slug',
+                'user:id,name,email'
+            ] )
+            ->where( 'id', $budgetId )
+            ->first();
+    }
+
+    /**
+     * Verifica relacionamentos antes de deletar um orçamento.
+     *
+     * @param int $budgetId ID do orçamento
+     * @param int $tenantId ID do tenant
+     * @param array $ignoreTables Tabelas a ignorar na verificação
+     * @return array Resultado da verificação
+     */
+    public function checkRelationships( int $budgetId, int $tenantId, array $ignoreTables = [] ): array
+    {
+        $budget = $this->find( $budgetId );
+        if ( !$budget ) {
+            return [
+                'status'  => 'error',
+                'message' => 'Orçamento não encontrado.',
+                'data'    => [
+                    'hasRelationships'   => false,
+                    'tables'             => '',
+                    'countRelationships' => 0,
+                    'records'            => [],
+                ],
+            ];
+        }
+
+        // Verificar relacionamentos com services
+        $servicesCount = $budget->services()->count();
+
+        if ( $servicesCount > 0 ) {
+            return [
+                'status'  => 'success',
+                'message' => 'Relacionamentos encontrados.',
+                'data'    => [
+                    'hasRelationships'   => true,
+                    'tables'             => 'serviços',
+                    'countRelationships' => $servicesCount,
+                    'records'            => [],
+                ],
+            ];
+        }
+
+        return [
+            'status'  => 'error',
+            'message' => 'Nenhum relacionamento encontrado.',
+            'data'    => [
+                'hasRelationships'   => false,
+                'tables'             => '',
+                'countRelationships' => 0,
+                'records'            => [],
+            ],
+        ];
+    }
+
+    /**
+     * Gera próximo código de orçamento para o tenant.
+     *
+     * @param int $tenantId ID do tenant
+     * @return string Próximo código disponível
+     */
+    public function generateNextCode( int $tenantId ): string
+    {
+        $lastBudget = $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->orderBy( 'code', 'desc' )
+            ->first();
+
+        if ( !$lastBudget ) {
+            return 'ORC-' . date( 'Ymd' ) . '0001';
+        }
+
+        // Extrair número do último código
+        $lastNumber = (int) substr( $lastBudget->code, -4 );
+        $nextNumber = $lastNumber + 1;
+
+        return 'ORC-' . date( 'Ymd' ) . str_pad( (string) $nextNumber, 4, '0', STR_PAD_LEFT );
     }
 
 }

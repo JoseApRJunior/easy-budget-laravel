@@ -183,6 +183,14 @@ class Budget extends Model
         return BudgetStatusEnum::tryFrom( $this->budget_statuses_id );
     }
 
+    /**
+     * Get the budget status enum for backward compatibility with views.
+     */
+    public function budgetStatus(): ?BudgetStatusEnum
+    {
+        return $this->budget_status;
+    }
+
     public function userConfirmationToken()
     {
         return $this->belongsTo( UserConfirmationToken::class);

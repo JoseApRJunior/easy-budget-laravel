@@ -13,46 +13,58 @@ enum BudgetStatusEnum: string
     case REVISED   = 'revised';
     case CANCELLED = 'cancelled';
 
+    // Propriedades públicas para compatibilidade com views
+    public const NAMES = [
+        'draft'     => 'Rascunho',
+        'sent'      => 'Enviado',
+        'approved'  => 'Aprovado',
+        'completed' => 'Concluído',
+        'rejected'  => 'Rejeitado',
+        'expired'   => 'Expirado',
+        'revised'   => 'Revisado',
+        'cancelled' => 'Cancelado',
+    ];
+
+    public const COLORS = [
+        'draft'     => '#9CA3AF',
+        'sent'      => '#3B82F6',
+        'approved'  => '#10B981',
+        'completed' => '#059669',
+        'rejected'  => '#EF4444',
+        'expired'   => '#F59E0B',
+        'revised'   => '#8B5CF6',
+        'cancelled' => '#6B7280',
+    ];
+
+    public const ICONS = [
+        'draft'     => 'mdi-file-document-edit',
+        'sent'      => 'mdi-send',
+        'approved'  => 'mdi-check-circle',
+        'completed' => 'mdi-check-circle-outline',
+        'rejected'  => 'mdi-close-circle',
+        'expired'   => 'mdi-timer-off',
+        'revised'   => 'mdi-file-compare',
+        'cancelled' => 'mdi-cancel',
+    ];
+
     public function getName(): string
     {
-        return match ( $this ) {
-            self::DRAFT     => 'Rascunho',
-            self::SENT      => 'Enviado',
-            self::APPROVED  => 'Aprovado',
-            self::COMPLETED => 'Concluído',
-            self::REJECTED  => 'Rejeitado',
-            self::EXPIRED   => 'Expirado',
-            self::REVISED   => 'Revisado',
-            self::CANCELLED => 'Cancelado',
-        };
+        return self::NAMES[ $this->value ];
     }
 
     public function getColor(): string
     {
-        return match ( $this ) {
-            self::DRAFT     => '#9CA3AF',
-            self::SENT      => '#3B82F6',
-            self::APPROVED  => '#10B981',
-            self::COMPLETED => '#059669',
-            self::REJECTED  => '#EF4444',
-            self::EXPIRED   => '#F59E0B',
-            self::REVISED   => '#8B5CF6',
-            self::CANCELLED => '#6B7280',
-        };
+        return self::COLORS[ $this->value ];
     }
 
     public function getIcon(): string
     {
-        return match ( $this ) {
-            self::DRAFT     => 'mdi-file-document-edit',
-            self::SENT      => 'mdi-send',
-            self::APPROVED  => 'mdi-check-circle',
-            self::COMPLETED => 'mdi-check-circle-outline',
-            self::REJECTED  => 'mdi-close-circle',
-            self::EXPIRED   => 'mdi-timer-off',
-            self::REVISED   => 'mdi-file-compare',
-            self::CANCELLED => 'mdi-cancel',
-        };
+        return self::ICONS[ $this->value ];
+    }
+
+    public function getSlug(): string
+    {
+        return $this->value;
     }
 
     public function getOrderIndex(): int

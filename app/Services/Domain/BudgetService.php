@@ -191,6 +191,187 @@ class BudgetService extends AbstractBaseService
     }
 
     /**
+     * Manipula mudança de status do orçamento com validações e lógica de negócio.
+     *
+     * @param int $budgetId ID do orçamento
+     * @param string $currentStatusSlug Status atual do orçamento
+     * @param string $action Ação a ser executada (approve, reject, revise, etc.)
+     * @param int $tenantId ID do tenant
+     * @param string|null $comment Comentário da alteração
+     * @param bool $emailNotification Se deve enviar notificação por e-mail
+     * @return ServiceResult
+     */
+    public function handleStatusChange(
+        int $budgetId,
+        string $currentStatusSlug,
+        string $action,
+        int $tenantId,
+        ?string $comment = null,
+        bool $emailNotification = false,
+    ): ServiceResult {
+        try {
+            // Busca o orçamento
+            $budget = $this->repository->find( $budgetId );
+
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
+            }
+
+            // Verifica se pertence ao tenant correto
+            if ( $budget->tenant_id !== $tenantId ) {
+                return ServiceResult::forbidden( 'Acesso negado a este orçamento.' );
+            }
+
+            // Verifica se o orçamento tem serviços associados (exceto para ações específicas)
+            $services                 = $budget->services;
+            $actionsRequiringServices = [ 'approve', 'reject', 'revise' ];
+
+            if ( in_array( $action, $actionsRequiringServices ) && $services->isEmpty() ) {
+                return ServiceResult::error(
+                    'Não é possível alterar o status do orçamento sem serviços associados.',
+                );
+            }
+
+            // Determina o novo status baseado na ação
+            $newStatusSlug = $this->determineNewStatusFromAction( $currentStatusSlug, $action );
+
+            if ( !$newStatusSlug ) {
+                return ServiceResult::error( 'Ação inválida para o status atual do orçamento.' );
+            }
+
+            // Valida se a transição é permitida
+            if ( !$this->isValidStatusTransition( $currentStatusSlug, $newStatusSlug ) ) {
+                return ServiceResult::error(
+                    "Transição de status não permitida: {$currentStatusSlug} -> {$newStatusSlug}",
+                );
+            }
+
+            // Executa a mudança de status
+            $result = $this->changeStatus( $budgetId, $newStatusSlug, $comment, $tenantId );
+
+            if ( !$result->isSuccess() ) {
+                return $result;
+            }
+
+            // TODO: Implementar envio de notificações por e-mail se necessário
+            if ( $emailNotification ) {
+                // $this->sendStatusChangeNotification( $budget, $newStatusSlug, $comment );
+            }
+
+            return ServiceResult::success(
+                $result->getData(),
+                'Status do orçamento alterado com sucesso.',
+            );
+
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao processar mudança de status: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Gera PDF do orçamento com verificação de hash.
+     *
+     * @param string $code Código do orçamento
+     * @param int $tenantId ID do tenant
+     * @param string|null $verificationHash Hash de verificação (opcional)
+     * @return ServiceResult
+     */
+    public function printPDF( string $code, int $tenantId, ?string $verificationHash = null ): ServiceResult
+    {
+        try {
+            // Busca o orçamento completo com dados relacionados
+            $budget = $this->repository->getBudgetFullByCode( $code, $tenantId );
+
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
+            }
+
+            // Verifica hash de verificação se fornecido
+            if ( $verificationHash && $budget->pdf_verification_hash !== $verificationHash ) {
+                return ServiceResult::forbidden( 'Hash de verificação inválido.' );
+            }
+
+            // Verifica se o orçamento pode ser visualizado (status apropriado)
+            $viewableStatuses = [ 'sent', 'approved', 'completed' ];
+            if ( !in_array( $budget->budget_statuses_id, $viewableStatuses ) ) {
+                return ServiceResult::error(
+                    'Orçamento não pode ser visualizado no status atual.',
+                );
+            }
+
+            // TODO: Implementar geração do PDF usando PdfService
+            // $pdfContent = $this->pdfService->generateBudgetPDF( $budget );
+
+            // Por enquanto, retorna dados para geração do PDF
+            $pdfData = [
+                'budget'            => $budget,
+                'customer'          => $budget->customer,
+                'services'          => $budget->services,
+                'total'             => $budget->total,
+                'code'              => $budget->code,
+                'created_at'        => $budget->created_at,
+                'verification_hash' => $budget->pdf_verification_hash
+            ];
+
+            return ServiceResult::success(
+                $pdfData,
+                'Dados do orçamento preparados para geração de PDF.',
+            );
+
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao gerar PDF: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Determina o novo status baseado na ação do usuário.
+     */
+    private function determineNewStatusFromAction( string $currentStatus, string $action ): ?string
+    {
+        return match ( $action ) {
+            'approve'  => match ( $currentStatus ) {
+                    'sent'  => 'approved',
+                    default => null,
+                },
+            'reject'   => match ( $currentStatus ) {
+                    'sent'  => 'rejected',
+                    default => null,
+                },
+            'revise'   => match ( $currentStatus ) {
+                    'sent'  => 'revised',
+                    default => null,
+                },
+            'cancel'   => match ( $currentStatus ) {
+                    'draft', 'sent', 'approved' => 'cancelled',
+                    default                     => null,
+                },
+            'complete' => match ( $currentStatus ) {
+                    'approved' => 'completed',
+                    default    => null,
+                },
+            'expire'   => match ( $currentStatus ) {
+                    'sent', 'approved' => 'expired',
+                    default            => null,
+                },
+            'reset'    => match ( $currentStatus ) {
+                    'cancelled', 'rejected', 'expired' => 'draft',
+                    default                            => null,
+                },
+            default    => null,
+        };
+    }
+
+    /**
+     * Valida se a transição de status é permitida.
+     */
+    private function isValidStatusTransition( string $currentStatus, string $newStatus ): bool
+    {
+        $allowedTransitions = BudgetStatusEnum::getAllowedTransitions( $currentStatus );
+
+        return in_array( $newStatus, $allowedTransitions );
+    }
+
+    /**
      * Duplica um orçamento existente.
      *
      * @param int $budgetId ID do orçamento original
