@@ -78,50 +78,13 @@
                                 <i class="bi bi-share me-2"></i>Redes Sociais
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label for="social_facebook" class="form-label">Facebook</label>
-                                    <input type="url" class="form-control @error( 'social_facebook' ) is-invalid @enderror"
-                                        id="social_facebook" name="social_facebook"
-                                        value="{{ old( 'social_facebook', $settings[ 'social_links' ][ 'facebook' ] ?? '' ) }}"
-                                        placeholder="https://facebook.com/seuperfil">
-                                    @error( 'social_facebook' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-12">
-                                    <label for="social_twitter" class="form-label">Twitter</label>
-                                    <input type="url" class="form-control @error( 'social_twitter' ) is-invalid @enderror"
-                                        id="social_twitter" name="social_twitter"
-                                        value="{{ old( 'social_twitter', $settings[ 'social_links' ][ 'twitter' ] ?? '' ) }}"
-                                        placeholder="https://twitter.com/seuperfil">
-                                    @error( 'social_twitter' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-12">
-                                    <label for="social_linkedin" class="form-label">LinkedIn</label>
-                                    <input type="url" class="form-control @error( 'social_linkedin' ) is-invalid @enderror"
-                                        id="social_linkedin" name="social_linkedin"
-                                        value="{{ old( 'social_linkedin', $settings[ 'social_links' ][ 'linkedin' ] ?? '' ) }}"
-                                        placeholder="https://linkedin.com/in/seuperfil">
-                                    @error( 'social_linkedin' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-12">
-                                    <label for="social_instagram" class="form-label">Instagram</label>
-                                    <input type="url" class="form-control @error( 'social_instagram' ) is-invalid @enderror"
-                                        id="social_instagram" name="social_instagram"
-                                        value="{{ old( 'social_instagram', $settings[ 'social_links' ][ 'instagram' ] ?? '' ) }}"
-                                        placeholder="https://instagram.com/seuperfil">
-                                    @error( 'social_instagram' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                        <div class="card-body" style="height: 300px;"> <!-- altura total do card -->
+                            <div class="row g-3 h-100">
+                                <div class="col-12 d-flex flex-column h-100">
+                                    <label for="extra_links" class="form-label">Links adicionais</label>
+                                    <textarea class="form-control flex-grow-1" id="extra_links" name="extra_links"
+                                        style="height: 80%;"
+                                        placeholder="Cole aqui links de redes sociais, site ou outras informações">{{ old( 'extra_links', $user->extra_links ?? '' ) }}</textarea>
                                 </div>
                             </div>
                         </div>

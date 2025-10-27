@@ -126,6 +126,7 @@ return new class extends Migration
             $table->boolean( 'is_active' )->default( true );
             $table->string( 'logo', 255 )->nullable();
             $table->timestamp( 'email_verified_at' )->nullable();
+            $table->text( 'extra_links' )->nullable(); // campo para links adicionais
             $table->rememberToken();
             $table->timestamps();
 

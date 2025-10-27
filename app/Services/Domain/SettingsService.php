@@ -163,12 +163,13 @@ class SettingsService extends AbstractBaseService
         $user = User::find( $user->id );
 
         // Atualiza dados básicos do usuário se fornecidos
-        if ( isset( $data[ 'full_name' ] ) || isset( $data[ 'email' ] ) || isset( $data[ 'phone' ] ) || isset( $data[ 'birth_date' ] ) ) {
+        if ( isset( $data[ 'full_name' ] ) || isset( $data[ 'email' ] ) || isset( $data[ 'phone' ] ) || isset( $data[ 'birth_date' ] ) || isset( $data[ 'extra_links' ] ) ) {
             $user->update( [
-                'name'       => $data[ 'full_name' ] ?? $user->name,
-                'email'      => $data[ 'email' ] ?? $user->email,
-                'phone'      => $data[ 'phone' ] ?? $user->phone,
-                'birth_date' => $data[ 'birth_date' ] ?? $user->birth_date,
+                'name'        => $data[ 'full_name' ] ?? $user->name,
+                'email'       => $data[ 'email' ] ?? $user->email,
+                'phone'       => $data[ 'phone' ] ?? $user->phone,
+                'birth_date'  => $data[ 'birth_date' ] ?? $user->birth_date,
+                'extra_links' => $data[ 'extra_links' ] ?? $user->extra_links,
             ] );
         }
 

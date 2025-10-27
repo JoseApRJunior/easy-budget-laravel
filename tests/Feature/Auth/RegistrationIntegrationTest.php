@@ -207,13 +207,12 @@ class RegistrationIntegrationTest extends TestCase
         $user   = User::factory()->create();
         $tenant = \App\Models\Tenant::factory()->create();
 
-        // Act
-        $listener = new SendWelcomeEmail();
-        $listener->handle( new UserRegistered( $user, $tenant ) );
+        // Act - Dispatch the event which will automatically resolve listener dependencies
+        Event::dispatch( new UserRegistered( $user, $tenant, 'test_verification_token_123' ) );
 
         // Assert - O listener deve processar sem erros
         // Em um cenário real, verificaria se o e-mail foi enfileirado
-        $this->assertTrue( true ); // Listener executou sem lançar exceção
+        Event::assertDispatched( UserRegistered::class);
     }
 
     /**

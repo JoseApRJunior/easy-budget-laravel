@@ -113,6 +113,10 @@ class UserService extends AbstractBaseService
                 $updateData[ 'avatar' ] = $data[ 'avatar' ];
             }
 
+            if ( isset( $data[ 'extra_links' ] ) ) {
+                $updateData[ 'extra_links' ] = $data[ 'extra_links' ];
+            }
+
             // Atualizar usuário se houver dados
             if ( !empty( $updateData ) ) {
                 $this->repository->update( $user->id, $updateData );

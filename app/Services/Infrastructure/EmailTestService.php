@@ -183,17 +183,13 @@ class EmailTestService
             $user = $this->getOrCreateTestUser( $options );
 
             // Dados de teste
-            $verificationToken = 'test_verification_token_' . time();
-            $verificationUrl   = $options[ 'verification_url' ] ?? config( 'app.url' ) . '/confirm-account?token=' . $verificationToken;
+            $verificationUrl = $options[ 'verification_url' ] ?? config( 'app.url' ) . '/confirm-account?token=test_' . time();
 
             // Criar mailable para teste
             $mailable = new EmailVerificationMail(
                 $user,
-                $verificationToken,
-                $verificationUrl,
                 $user->tenant,
-                [ 'company_name' => $user->tenant?->name ?? 'Easy Budget' ],
-                'pt-BR',
+                $verificationUrl,
             );
 
             // Validar estrutura do e-mail
@@ -208,11 +204,11 @@ class EmailTestService
             Mail::to( $recipientEmail )->send( $mailable );
 
             return ServiceResult::success( [
-                'test_type'          => 'verification',
-                'recipient'          => $recipientEmail,
-                'user_id'            => $user->id,
-                'verification_token' => $verificationToken,
-                'sent_at'            => now()->toDateTimeString(),
+                'test_type'        => 'verification',
+                'recipient'        => $recipientEmail,
+                'user_id'          => $user->id,
+                'verification_url' => $verificationUrl,
+                'sent_at'          => now()->toDateTimeString(),
             ], 'E-mail de verificação enviado com sucesso' );
 
         } catch ( Exception $e ) {
@@ -395,17 +391,13 @@ class EmailTestService
             $user = $this->getOrCreateTestUser( $options );
 
             // Dados de teste
-            $verificationToken = 'test_queue_token_' . time();
-            $verificationUrl   = config( 'app.url' ) . '/confirm-account?token=' . $verificationToken;
+            $verificationUrl = config( 'app.url' ) . '/confirm-account?token=test_queue_' . time();
 
             // Criar mailable para teste
             $mailable = new EmailVerificationMail(
                 $user,
-                $verificationToken,
-                $verificationUrl,
                 $user->tenant,
-                [ 'company_name' => $user->tenant?->name ?? 'Easy Budget' ],
-                'pt-BR',
+                $verificationUrl,
             );
 
             // Enfileirar e-mail
@@ -417,12 +409,12 @@ class EmailTestService
             $queueStats = app( QueueService::class)->getAdvancedQueueStats();
 
             return ServiceResult::success( [
-                'test_type'          => 'queue_integration',
-                'recipient'          => $recipientEmail,
-                'user_id'            => $user->id,
-                'verification_token' => $verificationToken,
-                'queued_at'          => now()->toDateTimeString(),
-                'queue_stats'        => $queueStats,
+                'test_type'        => 'queue_integration',
+                'recipient'        => $recipientEmail,
+                'user_id'          => $user->id,
+                'verification_url' => $verificationUrl,
+                'queued_at'        => now()->toDateTimeString(),
+                'queue_stats'      => $queueStats,
             ], 'E-mail enfileirado com sucesso para teste de integração' );
 
         } catch ( Exception $e ) {

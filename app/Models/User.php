@@ -47,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'logo',
         'remember_token',
         'email_verified_at',
+        'extra_links',
     ];
 
     protected $hidden = [
@@ -67,6 +68,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active'         => 'boolean',
         'remember_token'    => 'string',
         'email_verified_at' => 'datetime',
+        'extra_links'       => 'string',
         'created_at'        => 'immutable_datetime',
         'updated_at'        => 'datetime',
     ];
@@ -79,14 +81,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public static function businessRules(): array
     {
         return [
-            'tenant_id' => 'required|integer|exists:tenants,id',
-            'name'      => 'nullable|string|max:150',
-            'email'     => 'required|email|max:100|unique:users,email',
-            'password'  => 'nullable|string|min:8|max:255|confirmed',
-            'google_id' => 'nullable|string|max:255',
-            'avatar'    => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'logo'      => 'nullable|string|max:255',
+            'tenant_id'   => 'required|integer|exists:tenants,id',
+            'name'        => 'nullable|string|max:150',
+            'email'       => 'required|email|max:100|unique:users,email',
+            'password'    => 'nullable|string|min:8|max:255|confirmed',
+            'google_id'   => 'nullable|string|max:255',
+            'avatar'      => 'nullable|string|max:255',
+            'is_active'   => 'boolean',
+            'logo'        => 'nullable|string|max:255',
+            'extra_links' => 'nullable|string|max:1000',
         ];
     }
 

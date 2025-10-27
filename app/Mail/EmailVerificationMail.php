@@ -26,15 +26,13 @@ class EmailVerificationMail extends AbstractBaseConfirmationEmail
      * @param User $user Usuário que receberá o e-mail
      * @param Tenant|null $tenant Tenant do usuário (opcional)
      * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
-     * @param LinkService|null $linkService Serviço de construção de links
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
         ?string $confirmationLink = null,
-        ?LinkService $linkService = null,
     ) {
-        parent::__construct( $user, $tenant, $confirmationLink, null, $linkService );
+        parent::__construct( $user, $tenant, $confirmationLink );
     }
 
     /**

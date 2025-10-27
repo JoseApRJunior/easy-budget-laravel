@@ -44,11 +44,8 @@ class MailTestController extends Controller
             $mailerService = app( MailerService::class);
             $result        = $mailerService->sendEmailVerificationMail(
                 $user,
-                $verificationToken,
                 $tenant,
-                [ 'company_name' => $tenant?->name ?? 'Easy Budget' ],
                 $verificationUrl,
-                'pt-BR',
             );
 
             if ( $result->isSuccess() ) {
