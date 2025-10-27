@@ -47,74 +47,17 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
     public function authenticateWithSocialProvider( string $provider, array $userData ): ServiceResult
     {
         try {
-            // Busca usuário existente por ID social
             $existingUser = $this->findUserBySocialId( $provider, $userData[ 'id' ] );
 
             if ( $existingUser ) {
-                // Atualiza dados do usuário existente
-                $updateResult = $this->syncSocialProfileData( $existingUser, $userData );
-
-                if ( !$updateResult->isSuccess() ) {
-                    return $updateResult;
-                }
-
-                Log::info( 'Usuário autenticado via provedor social', [
-                    'provider' => $provider,
-                    'user_id'  => $existingUser->id,
-                    'email'    => $existingUser->email,
-                ] );
-
-                return $this->success( $existingUser, 'Usuário autenticado com sucesso via ' . ucfirst( $provider ) );
+                return $this->handleExistingUser( $existingUser, $provider, $userData );
             }
 
-            // Verifica se e-mail existe e pode ser vinculado
             if ( !empty( $userData[ 'email' ] ) && $this->isSocialEmailInUse( $userData[ 'email' ] ) ) {
-                $existingUser = $this->findUserByEmail( $userData[ 'email' ] );
-
-                if ( $existingUser ) {
-                    // Vincular conta social ao usuário existente
-                    $linkResult = $this->linkSocialAccountToUser( $existingUser, $provider, $userData );
-
-                    if ( $linkResult->isSuccess() ) {
-                        // Disparar evento de confirmação de vinculação
-                        Event::dispatch( new SocialAccountLinked( $existingUser, $provider, $userData ) );
-
-                        Log::info( 'Conta social vinculada a usuário existente', [
-                            'provider'  => $provider,
-                            'user_id'   => $existingUser->id,
-                            'email'     => $existingUser->email,
-                            'social_id' => $userData[ 'id' ],
-                        ] );
-
-                        return $this->success( $existingUser, 'Conta vinculada com sucesso via ' . ucfirst( $provider ) );
-                    } else {
-                        return $linkResult;
-                    }
-                }
+                return $this->handleEmailInUse( $userData, $provider );
             }
 
-            // Cria novo usuário
-            $createResult = $this->createUserFromSocialData( $provider, $userData );
-
-            if ( !$createResult->isSuccess() ) {
-                return $createResult;
-            }
-
-            Log::info( 'Novo usuário criado via provedor social', [
-                'provider' => $provider,
-                'user_id'  => $createResult->getData()->id,
-                'email'    => $createResult->getData()->email,
-            ] );
-
-            // Para usuários criados via Google OAuth, não disparamos eventos de e-mail
-            // pois o Google já verifica o e-mail e não requer confirmação adicional
-            Log::info( 'Usuário criado via Google OAuth - e-mail já verificado automaticamente', [
-                'user_id'  => $createResult->getData()->id,
-                'email'    => $createResult->getData()->email,
-                'provider' => $provider,
-            ] );
-
-            return $this->success( $createResult->getData(), 'Conta criada com sucesso via ' . ucfirst( $provider ) );
+            return $this->createNewSocialUser( $provider, $userData );
 
         } catch ( \Exception $e ) {
             Log::error( 'Erro na autenticação social', [
@@ -127,31 +70,76 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
         }
     }
 
+    private function handleExistingUser( User $user, string $provider, array $userData ): ServiceResult
+    {
+        $updateResult = $this->syncSocialProfileData( $user, $userData );
+
+        if ( !$updateResult->isSuccess() ) {
+            return $updateResult;
+        }
+
+        Log::info( 'Usuário autenticado via provedor social', [
+            'provider' => $provider,
+            'user_id'  => $user->id,
+            'email'    => $user->email,
+        ] );
+
+        return $this->success( $user, 'Usuário autenticado com sucesso via ' . ucfirst( $provider ) );
+    }
+
+    private function handleEmailInUse( array $userData, string $provider ): ServiceResult
+    {
+        $existingUser = $this->findUserByEmail( $userData[ 'email' ] );
+
+        if ( !$existingUser ) {
+            return $this->createNewSocialUser( $provider, $userData );
+        }
+
+        $linkResult = $this->linkSocialAccountToUser( $existingUser, $provider, $userData );
+
+        if ( $linkResult->isSuccess() ) {
+            Event::dispatch( new SocialAccountLinked( $existingUser, $provider, $userData ) );
+
+            Log::info( 'Conta social vinculada a usuário existente', [
+                'provider'  => $provider,
+                'user_id'   => $existingUser->id,
+                'email'     => $existingUser->email,
+                'social_id' => $userData[ 'id' ],
+            ] );
+
+            return $this->success( $existingUser, 'Conta vinculada com sucesso via ' . ucfirst( $provider ) );
+        }
+
+        return $linkResult;
+    }
+
+    private function createNewSocialUser( string $provider, array $userData ): ServiceResult
+    {
+        $createResult = $this->createUserFromSocialData( $provider, $userData );
+
+        if ( !$createResult->isSuccess() ) {
+            return $createResult;
+        }
+
+        $user = $createResult->getData();
+
+        Log::info( 'Novo usuário criado via provedor social', [
+            'provider'     => $provider,
+            'user_id'      => $user->id,
+            'email'        => $user->email,
+            'social_login' => true,
+        ] );
+
+        return $this->success( $user, 'Conta criada com sucesso via ' . ucfirst( $provider ) );
+    }
+
     /**
      * {@inheritdoc}
      */
     public function createUserFromSocialData( string $provider, array $userData ): ServiceResult
     {
         try {
-            // Converte dados do Google para formato esperado pelo UserRegistrationService
-            // Gera dados válidos para campos obrigatórios do UserRegistrationService
-            $nameParts = explode( ' ', $userData[ 'name' ] );
-            $firstName = $nameParts[ 0 ] ?? $userData[ 'name' ];
-            $lastName  = $nameParts[ 1 ] ?? 'Usuário'; // Fallback se não houver sobrenome
-
-            $registrationData = [
-                'first_name'     => $firstName,
-                'last_name'      => $lastName,
-                'name'           => $userData[ 'name' ], // ✅ Nome completo do Google para o campo name do usuário
-                'email'          => $userData[ 'email' ],
-                'password'       => null, // ✅ Sem senha para usuários sociais
-                'phone'          => '+5511999999999', // Telefone padrão para login social
-                'terms_accepted' => true, // Aceito automaticamente para login social
-            ];
-
-            // Usa o UserRegistrationService para criar usuário seguindo padrão completo
-            // Indica que é um registro social para evitar disparo de evento de verificação de e-mail
-            // (Google já verifica o e-mail, então não precisamos de token de confirmação)
+            $registrationData   = $this->prepareRegistrationData( $userData );
             $registrationResult = $this->userRegistrationService->registerUser( $registrationData, true );
 
             if ( !$registrationResult->isSuccess() ) {
@@ -161,33 +149,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             $registrationData = $registrationResult->getData();
             $user             = $registrationData[ 'user' ];
 
-            // Atualiza campos específicos do Google após criação
-            $user->update( [
-                'name'              => $userData[ 'name' ], // ✅ Define nome diretamente para evitar problemas com accessor
-                'google_id'         => $provider === 'google' ? $userData[ 'id' ] : null,
-                'avatar'            => $userData[ 'avatar' ] ?? null,
-                'email_verified_at' => now(), // ✅ E-mail verificado automaticamente (Google já verifica)
-                'is_active'         => true,  // ✅ Usuário ativo automaticamente (login social fluido)
-            ] );
-
-            Log::info( 'Senha removida para usuário social', [
-                'provider' => $provider,
-                'user_id'  => $user->id,
-                'email'    => $user->email,
-            ] );
-
-            Log::info( 'Usuário criado via autenticação social usando UserRegistrationService', [
-                'provider'  => $provider,
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'google_id' => $userData[ 'id' ],
-            ] );
-
-            // Dispara evento de boas-vindas para login social
-            $tenant = $user->tenant; // Obtém o tenant do usuário
-            Event::dispatch( new SocialLoginWelcome( $user, $tenant, $provider ) );
-
-            return $this->success( $user, 'Usuário criado com sucesso via ' . ucfirst( $provider ) );
+            return $this->finalizeSocialUserCreation( $user, $provider, $userData );
 
         } catch ( \Exception $e ) {
             Log::error( 'Erro ao criar usuário a partir de dados sociais usando UserRegistrationService', [
@@ -198,6 +160,58 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
 
             return $this->error( 'Erro ao criar conta', 'Não foi possível criar a conta. Tente novamente.' );
         }
+    }
+
+    /**
+     * Prepara dados de registro a partir dos dados sociais.
+     */
+    private function prepareRegistrationData( array $userData ): array
+    {
+        $nameParts = explode( ' ', $userData[ 'name' ] );
+        return [
+            'first_name'     => $nameParts[ 0 ] ?? $userData[ 'name' ],
+            'last_name'      => $nameParts[ 1 ] ?? 'Usuário',
+            'name'           => $userData[ 'name' ],
+            'email'          => $userData[ 'email' ],
+            'password'       => null,
+            'phone'          => '+5511999999999',
+            'terms_accepted' => true,
+        ];
+    }
+
+    /**
+     * Finaliza a criação do usuário social.
+     */
+    private function finalizeSocialUserCreation( User $user, string $provider, array $userData ): ServiceResult
+    {
+        $user->update( [
+            'name'              => $userData[ 'name' ],
+            'google_id'         => $provider === 'google' ? $userData[ 'id' ] : null,
+            'avatar'            => $userData[ 'avatar' ] ?? null,
+            'email_verified_at' => now(),
+            'is_active'         => true,
+        ] );
+
+        Log::info( 'Usuário criado via autenticação social', [
+            'provider'     => $provider,
+            'user_id'      => $user->id,
+            'email'        => $user->email,
+            'google_id'    => $userData[ 'id' ],
+            'social_login' => true,
+        ] );
+
+        $this->dispatchWelcomeEvent( $user, $provider );
+
+        return $this->success( $user, 'Usuário criado com sucesso via ' . ucfirst( $provider ) );
+    }
+
+    /**
+     * Dispara evento de boas-vindas para login social.
+     */
+    private function dispatchWelcomeEvent( User $user, string $provider ): void
+    {
+        $tenant = $user->tenant;
+        Event::dispatch( new SocialLoginWelcome( $user, $tenant, $provider ) );
     }
 
     /**
