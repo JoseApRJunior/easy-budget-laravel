@@ -33,6 +33,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+// Constants for magic strings to improve maintainability
+const ROLE_PROVIDER              = 'provider';
+const PLAN_SLUG_TRIAL            = 'trial';
+const SUBSCRIPTION_STATUS_ACTIVE = 'active';
+const PAYMENT_METHOD_TRIAL       = 'trial';
+const TRIAL_DAYS                 = 7;
+
 /**
  * Serviço completo para registro de usuários no sistema Easy Budget.
  *
@@ -118,128 +125,62 @@ class UserRegistrationService extends AbstractBaseService
         try {
             DB::beginTransaction();
 
-            // 1. Validação básica dos dados obrigatórios
-            if (
-                empty( $userData[ 'first_name' ] ) || empty( $userData[ 'last_name' ] ) ||
-                empty( $userData[ 'email' ] ) ||
-                ( empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) || // Permite null para social login
-                empty( $userData[ 'phone' ] ) || empty( $userData[ 'terms_accepted' ] )
-            ) {
-                return ServiceResult::error(
-                    OperationStatus::INVALID_DATA,
-                    'Dados obrigatórios ausentes para registro de usuário.',
-                );
+            // Validação básica dos dados obrigatórios
+            $validationResult = $this->validateUserData( $userData );
+            if ( !$validationResult->isSuccess() ) {
+                return $validationResult;
             }
 
-            // 2. Criar tenant
-            Log::info( 'Criando tenant...', [ 'name' => $userData[ 'first_name' ] . ' ' . $userData[ 'last_name' ] ] );
-            $tenantResult = $this->createTenant( $userData );
-            if ( !$tenantResult->isSuccess() ) {
-                DB::rollBack();
-                return $tenantResult;
-            }
-            $tenant = $tenantResult->getData();
-            Log::info( 'Tenant criado com sucesso', [ 'tenant_id' => $tenant->id ] );
+            // Executar passos de registro em sequência
+            $steps = [
+                'createTenant'           => fn() => $this->createTenant( $userData ),
+                'findTrialPlan'          => fn() => $this->findTrialPlan(),
+                'createUser'             => fn( $tenant ) => $this->createUser( $userData, $tenant ),
+                'createCommonData'       => fn( $tenant ) => $this->createCommonData( $userData, $tenant ),
+                'createProvider'         => fn( $user, $commonData, $tenant ) => $this->createProvider( $user, $commonData, $tenant, $userData[ 'terms_accepted' ] ),
+                'assignProviderRole'     => fn( $user, $tenant ) => $this->assignProviderRole( $user, $tenant ),
+                'createPlanSubscription' => fn( $tenant, $plan, $user, $provider ) => $this->createPlanSubscription( $tenant, $plan, $user, $provider ),
+            ];
 
-            // 3. Buscar ou criar plano trial
-            Log::info( 'Buscando plano trial disponível...' );
-            $planResult = $this->findTrialPlan();
-            if ( !$planResult->isSuccess() ) {
-                DB::rollBack();
-                return $planResult;
+            $results = [];
+            foreach ( $steps as $stepName => $step ) {
+                $this->logStep( "Executando passo: {$stepName}" );
+                $result = $step();
+                if ( !$result->isSuccess() ) {
+                    DB::rollBack();
+                    return $result;
+                }
+                $results[ $stepName ] = $result->getData();
+                $this->logStep( "Passo {$stepName} concluído com sucesso" );
             }
-            $plan = $planResult->getData();
-            Log::info( 'Plano trial encontrado com sucesso', [ 'plan_id' => $plan->id, 'plan_name' => $plan->name ] );
-
-            // 4. Criar usuário
-            Log::info( 'Criando usuário...' );
-            $userResult = $this->createUser( $userData, $tenant );
-            if ( !$userResult->isSuccess() ) {
-                DB::rollBack();
-                return $userResult;
-            }
-            $user = $userResult->getData();
-            Log::info( 'Usuário criado', [ 'user_id' => $user->id ] );
-
-            // 5. Criar CommonData
-            Log::info( 'Criando dados comuns...' );
-            $commonDataResult = $this->createCommonData( $userData, $tenant );
-            if ( !$commonDataResult->isSuccess() ) {
-                DB::rollBack();
-                return $commonDataResult;
-            }
-            $commonData = $commonDataResult->getData();
-            Log::info( 'Dados comuns criados', [ 'common_data_id' => $commonData->id ] );
-
-            // 6. Criar Provider
-            Log::info( 'Criando provider...' );
-            $providerResult = $this->createProvider( $user, $commonData, $tenant, $userData[ 'terms_accepted' ] );
-            if ( !$providerResult->isSuccess() ) {
-                DB::rollBack();
-                return $providerResult;
-            }
-            $provider = $providerResult->getData();
-            Log::info( 'Provider criado', [ 'provider_id' => $provider->id ] );
-
-            // 7. Associar role 'provider' ao usuário
-            Log::info( 'Associando role provider...' );
-            $roleResult = $this->assignProviderRole( $user, $tenant );
-            if ( !$roleResult->isSuccess() ) {
-                DB::rollBack();
-                return $roleResult;
-            }
-            Log::info( 'Role provider associado com sucesso' );
-
-            // 8. Criar assinatura do plano
-            Log::info( 'Criando assinatura do plano...' );
-            $subscriptionResult = $this->createPlanSubscription( $tenant, $plan, $user, $provider );
-            if ( !$subscriptionResult->isSuccess() ) {
-                DB::rollBack();
-                return $subscriptionResult;
-            }
-            $subscription = $subscriptionResult->getData();
-            Log::info( 'Assinatura do plano criada', [ 'subscription_id' => $subscription->id ] );
 
             DB::commit();
 
-            // 9. Criar token de verificação de e-mail usando UserConfirmationTokenService
-            Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
-            $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken( $user );
+            // Processar token de verificação e evento
+            $tokenResult = $this->processEmailVerification( $results[ 'createUser' ] );
+            $token       = $tokenResult ? $tokenResult->getData()[ 'token' ] : null;
 
-            if ( !$tokenResult->isSuccess() ) {
-                Log::warning( 'Falha ao criar token de verificação, mas usuário foi registrado', [
-                    'user_id' => $user->id,
-                    'error'   => $tokenResult->getMessage(),
-                ] );
-                // Não falhar o registro por causa do token, apenas logar o problema
-                $token = null; // Token será null se falhou
-            } else {
-                Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
-                $token = $tokenResult->getData()[ 'token' ]; // Extrair token do resultado
-            }
-
-            // 10. Disparar evento para envio de e-mail de boas-vindas com dados do token
             Event::dispatch( new UserRegistered(
-                $user,
-                $tenant,
+                $results[ 'createUser' ],
+                $results[ 'createTenant' ],
                 $token,
             ) );
 
-            Log::info( 'Registro concluído com sucesso', [
-                'user_id'         => $user->id,
-                'email'           => $user->email,
-                'tenant_id'       => $tenant->id,
-                'plan_id'         => $plan->id,
-                'provider_id'     => $provider->id,
-                'subscription_id' => $subscription->id,
+            $this->logStep( 'Registro concluído com sucesso', [
+                'user_id'         => $results[ 'createUser' ]->id,
+                'email'           => $results[ 'createUser' ]->email,
+                'tenant_id'       => $results[ 'createTenant' ]->id,
+                'plan_id'         => $results[ 'findTrialPlan' ]->id,
+                'provider_id'     => $results[ 'createProvider' ]->id,
+                'subscription_id' => $results[ 'createPlanSubscription' ]->id,
             ] );
 
             return ServiceResult::success( [
-                'user'           => $user,
-                'tenant'         => $tenant,
-                'provider'       => $provider,
-                'plan'           => $plan,
-                'subscription'   => $subscription,
+                'user'           => $results[ 'createUser' ],
+                'tenant'         => $results[ 'createTenant' ],
+                'provider'       => $results[ 'createProvider' ],
+                'plan'           => $results[ 'findTrialPlan' ],
+                'subscription'   => $results[ 'createPlanSubscription' ],
                 'auto_logged_in' => true,
                 'message'        => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
             ], 'Usuário registrado com sucesso.' );
@@ -258,6 +199,62 @@ class UserRegistrationService extends AbstractBaseService
                 'Erro interno do servidor. Tente novamente em alguns minutos.',
             );
         }
+    }
+
+    /**
+     * Valida dados obrigatórios para registro de usuário.
+     *
+     * @param array $userData Dados do usuário
+     * @return ServiceResult Resultado da validação
+     */
+    private function validateUserData( array $userData ): ServiceResult
+    {
+        if (
+            empty( $userData[ 'first_name' ] ) || empty( $userData[ 'last_name' ] ) ||
+            empty( $userData[ 'email' ] ) ||
+            ( empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) ||
+            empty( $userData[ 'phone' ] ) || empty( $userData[ 'terms_accepted' ] )
+        ) {
+            return ServiceResult::error(
+                OperationStatus::INVALID_DATA,
+                'Dados obrigatórios ausentes para registro de usuário.',
+            );
+        }
+        return ServiceResult::success( null, 'Dados válidos.' );
+    }
+
+    /**
+     * Registra um log para um passo específico.
+     *
+     * @param string $message Mensagem do log
+     * @param array $context Contexto adicional
+     */
+    private function logStep( string $message, array $context = [] ): void
+    {
+        Log::info( $message, $context );
+    }
+
+    /**
+     * Processa a criação do token de verificação de e-mail.
+     *
+     * @param User $user Usuário
+     * @return ServiceResult|null Resultado do processamento
+     */
+    private function processEmailVerification( User $user ): ?ServiceResult
+    {
+        $this->logStep( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
+        $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken( $user );
+
+        if ( !$tokenResult->isSuccess() ) {
+            $this->logStep( 'Falha ao criar token de verificação, mas usuário foi registrado', [
+                'user_id' => $user->id,
+                'error'   => $tokenResult->getMessage(),
+            ] );
+            return null;
+        }
+
+        $this->logStep( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+        return $tokenResult;
     }
 
     /**
@@ -337,7 +334,7 @@ class UserRegistrationService extends AbstractBaseService
     {
         try {
             // Primeiro tentar buscar um plano específico de trial
-            $plan = Plan::where( 'slug', 'trial' )->first();
+            $plan = Plan::where( 'slug', PLAN_SLUG_TRIAL )->first();
 
             if ( !$plan ) {
                 // Se não encontrou plano trial, buscar plano gratuito
@@ -436,7 +433,7 @@ class UserRegistrationService extends AbstractBaseService
     private function assignProviderRole( User $user, Tenant $tenant ): ServiceResult
     {
         try {
-            $providerRole = Role::where( 'name', 'provider' )->first();
+            $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
 
             if ( !$providerRole ) {
                 return ServiceResult::error(
@@ -479,12 +476,12 @@ class UserRegistrationService extends AbstractBaseService
                 'plan_id'            => $plan->id,
                 'user_id'            => $user->id,
                 'provider_id'        => $provider->id,
-                'status'             => 'active',
+                'status'             => SUBSCRIPTION_STATUS_ACTIVE,
                 'transaction_amount' => $plan->price ?? 0.00,
                 'start_date'         => now(),
-                'end_date'           => now()->addDays( 7 ), // Trial de 7 dias
+                'end_date'           => now()->addDays( TRIAL_DAYS ), // Trial de 7 dias
                 'transaction_date'   => now(),
-                'payment_method'     => 'trial',
+                'payment_method'     => PAYMENT_METHOD_TRIAL,
                 'payment_id'         => 'TEST_' . uniqid(),
                 'public_hash'        => 'TEST_HASH_' . uniqid(),
 

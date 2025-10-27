@@ -549,10 +549,10 @@ class MailerService
     public function sendWelcomeEmail(
         User $user,
         ?Tenant $tenant = null,
-        string $confirmationLink,
+        // string $confirmationLink,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink, app( LinkService::class) );
+            $mailable = new WelcomeUserMail( $user, $tenant, null, app( LinkService::class) );// teste cadastro google nao tem link confirmaçao
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );

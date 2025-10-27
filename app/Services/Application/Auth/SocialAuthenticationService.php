@@ -6,6 +6,7 @@ namespace App\Services\Application\Auth;
 
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
+use App\Events\SocialAccountLinked;
 use App\Events\SocialLoginWelcome;
 use App\Models\Tenant;
 use App\Models\User;
@@ -76,7 +77,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
 
                     if ( $linkResult->isSuccess() ) {
                         // Disparar evento de confirmação de vinculação
-                        Event::dispatch( new \App\Events\SocialAccountLinked( $existingUser, $provider, $userData ) );
+                        Event::dispatch( new SocialAccountLinked( $existingUser, $provider, $userData ) );
 
                         Log::info( 'Conta social vinculada a usuário existente', [
                             'provider'  => $provider,
@@ -167,7 +168,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'is_active'         => true,  // ✅ Usuário ativo automaticamente (login social fluido)
             ] );
 
-            \Illuminate\Support\Facades\Log::info( 'Senha removida para usuário social', [
+            Log::info( 'Senha removida para usuário social', [
                 'provider' => $provider,
                 'user_id'  => $user->id,
                 'email'    => $user->email,
