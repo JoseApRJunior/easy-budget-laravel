@@ -120,7 +120,7 @@ class ProviderBusinessController extends Controller
             }
 
             // Buscar dados atuais de CommonData
-            $commonDataData = $this->commonDataService->findById( $user->common_data_id );
+            $commonDataData = $this->commonDataService->findById( $user->provider()->commonData()->id );
             if ( !$commonDataData->isSuccess() ) {
                 return redirect( '/provider/business/edit' )
                     ->with( 'error', 'Dados comuns não encontrados' );
@@ -154,7 +154,7 @@ class ProviderBusinessController extends Controller
             // Verificar se o usuário tem contact_id antes de buscar
             if ( $user->provider()->contact()->id ) {
                 // Buscar dados atuais de Contact
-                $contactData = $this->contactService->findById( $user->contact_id );
+                $contactData = $this->contactService->findById( $user->provider()->contact()->id );
                 if ( !$contactData->isSuccess() ) {
                     return redirect( '/provider/business/edit' )
                         ->with( 'error', 'Contato não encontrado' );
@@ -189,7 +189,7 @@ class ProviderBusinessController extends Controller
             // Verificar se o usuário tem address_id antes de buscar
             if ( $user->provider()->address()->id ) {
                 // Buscar dados atuais de Address
-                $addressData = $this->addressService->findById( $user->address_id );
+                $addressData = $this->addressService->findById( $user->provider()->address()->id );
                 if ( !$addressData->isSuccess() ) {
                     return redirect( '/provider/business/edit' )
                         ->with( 'error', 'Endereço não encontrado' );
