@@ -39,7 +39,7 @@
                                            id="first_name" name="first_name"
                                            value="{{ old('first_name', $provider->commonData?->first_name ?? '') }}">
                                     @error('first_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                  t                      <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -57,7 +57,8 @@
                                     <label for="birth_date" class="form-label">Data de Nascimento</label>
                                     <input type="date" class="form-control @error('birth_date') is-invalid @enderror"
                                            id="birth_date" name="birth_date"
-                                           value="{{ old('birth_date', $provider->commonData?->birth_date ?? '') }}">
+                                           value="{{ old('birth_date', $provider->commonData?->birth_date ?? '') }}"
+                                           max="{{ \Carbon\Carbon::now()->subYears(18)->format('Y-m-d') }}">
                                     @error('birth_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -189,7 +190,7 @@
                                     <label for="email_business" class="form-label">Email Empresarial</label>
                                     <input type="email" class="form-control @error( 'email_business' ) is-invalid @enderror"
                                            id="email_business" name="email_business"
-                                           value="{{ old( 'email_business', $provider->contact->email_business ?? '' ) }}">
+                                           value="{{ old( 'email_business', $provider->contact?->email_business ?? '' ) }}">
                                     @error( 'email_business' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -199,7 +200,7 @@
                                     <label for="phone_business" class="form-label">Telefone Empresarial</label>
                                     <input type="tel" class="form-control @error( 'phone_business' ) is-invalid @enderror"
                                            id="phone_business" name="phone_business"
-                                           value="{{ old( 'phone_business', $provider->contact->phone_business ?? '' ) }}">
+                                           value="{{ old( 'phone_business', $provider->contact?->phone_business ?? '' ) }}">
                                     @error( 'phone_business' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -209,7 +210,7 @@
                                     <label for="website" class="form-label">Website</label>
                                     <input type="url" class="form-control @error( 'website' ) is-invalid @enderror"
                                            id="website" name="website"
-                                           value="{{ old( 'website', $provider->contact->website ?? '' ) }}">
+                                           value="{{ old( 'website', $provider->contact?->website ?? '' ) }}">
                                     @error( 'website' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -219,7 +220,7 @@
                                     <label for="cep" class="form-label">CEP</label>
                                     <input type="text" class="form-control @error( 'cep' ) is-invalid @enderror"
                                            id="cep" name="cep"
-                                           value="{{ old( 'cep', $provider->address->cep ?? '' ) }}" required>
+                                           value="{{ old( 'cep', $provider->address?->cep ?? '' ) }}" required>
                                     @error( 'cep' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -229,7 +230,7 @@
                                     <label for="address" class="form-label">Endereço</label>
                                     <input type="text" class="form-control @error( 'address' ) is-invalid @enderror"
                                            id="address" name="address"
-                                           value="{{ old( 'address', $provider->address->address ?? '' ) }}" required>
+                                           value="{{ old( 'address', $provider->address?->address ?? '' ) }}" required>
                                     @error( 'address' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -239,7 +240,7 @@
                                     <label for="address_number" class="form-label">Número</label>
                                     <input type="text" class="form-control @error( 'address_number' ) is-invalid @enderror"
                                            id="address_number" name="address_number"
-                                           value="{{ old( 'address_number', $provider->address->address_number ?? '' ) }}">
+                                           value="{{ old( 'address_number', $provider->address?->address_number ?? '' ) }}">
                                     @error( 'address_number' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -249,7 +250,7 @@
                                     <label for="neighborhood" class="form-label">Bairro</label>
                                     <input type="text" class="form-control @error( 'neighborhood' ) is-invalid @enderror"
                                            id="neighborhood" name="neighborhood"
-                                           value="{{ old( 'neighborhood', $provider->address->neighborhood ?? '' ) }}" required>
+                                           value="{{ old( 'neighborhood', $provider->address?->neighborhood ?? '' ) }}" required>
                                     @error( 'neighborhood' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -259,7 +260,7 @@
                                     <label for="city" class="form-label">Cidade</label>
                                     <input type="text" class="form-control @error( 'city' ) is-invalid @enderror"
                                            id="city" name="city"
-                                           value="{{ old( 'city', $provider->address->city ?? '' ) }}" required>
+                                           value="{{ old( 'city', $provider->address?->city ?? '' ) }}" required>
                                     @error( 'city' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -269,7 +270,7 @@
                                     <label for="state" class="form-label">Estado</label>
                                     <input type="text" class="form-control @error( 'state' ) is-invalid @enderror"
                                            id="state" name="state"
-                                           value="{{ old( 'state', $provider->address->state ?? '' ) }}" required>
+                                           value="{{ old( 'state', $provider->address?->state ?? '' ) }}" required>
                                     @error( 'state' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
