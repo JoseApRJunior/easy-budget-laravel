@@ -32,6 +32,11 @@ Route::group( [], function () {
     // Public pages
     Route::get( '/', [ HomeController::class, 'index' ] )->name( 'home' );
     Route::get( '/about', [ HomeController::class, 'about' ] )->name( 'about' );
+
+    // Temporary CSRF token route
+    Route::get( '/csrf-token', function () {
+        return response()->json( [ 'csrf_token' => csrf_token() ] );
+    } )->name( 'csrf-token' );
     Route::get( '/support', [ SupportController::class, 'index' ] )->name( 'support' );
     Route::post( '/support', [ SupportController::class, 'store' ] )->name( 'support.store' );
     Route::get( '/terms-of-service', [ HomeController::class, 'terms' ] )->name( 'terms' );
