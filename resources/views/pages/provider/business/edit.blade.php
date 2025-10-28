@@ -37,7 +37,7 @@
                                     <label for="first_name" class="form-label">Nome</label>
                                     <input type="text" class="form-control @error('first_name') is-invalid @enderror"
                                            id="first_name" name="first_name"
-                                           value="{{ old('first_name', $provider->commonData->first_name ?? '') }}">
+                                           value="{{ old('first_name', $provider->commonData?->first_name ?? '') }}">
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -47,7 +47,7 @@
                                     <label for="last_name" class="form-label">Sobrenome</label>
                                     <input type="text" class="form-control @error('last_name') is-invalid @enderror"
                                            id="last_name" name="last_name"
-                                           value="{{ old('last_name', $provider->commonData->last_name ?? '') }}">
+                                           value="{{ old('last_name', $provider->commonData?->last_name ?? '') }}">
                                     @error('last_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -57,7 +57,7 @@
                                     <label for="birth_date" class="form-label">Data de Nascimento</label>
                                     <input type="date" class="form-control @error('birth_date') is-invalid @enderror"
                                            id="birth_date" name="birth_date"
-                                           value="{{ old('birth_date', $provider->commonData->birth_date ?? '') }}">
+                                           value="{{ old('birth_date', $provider->commonData?->birth_date ?? '') }}">
                                     @error('birth_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -67,7 +67,7 @@
                                     <label for="email_personal" class="form-label">Email Pessoal</label>
                                     <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
                                            id="email_personal" name="email_personal"
-                                           value="{{ old('email_personal', $provider->contact->email ?? '') }}">
+                                           value="{{ old('email_personal', $provider->contact?->email ?? '') }}">
                                     @error('email_personal')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -77,7 +77,7 @@
                                     <label for="phone_personal" class="form-label">Telefone Pessoal</label>
                                     <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
                                            id="phone_personal" name="phone_personal"
-                                           value="{{ old('phone_personal', $provider->contact->phone ?? '') }}">
+                                           value="{{ old('phone_personal', $provider->contact?->phone ?? '') }}">
                                     @error('phone_personal')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -101,7 +101,7 @@
                                     <label for="company_name" class="form-label">Nome da Empresa</label>
                                     <input type="text" class="form-control @error( 'company_name' ) is-invalid @enderror"
                                            id="company_name" name="company_name"
-                                           value="{{ old( 'company_name', $provider->commonData->company_name ?? '' ) }}">
+                                           value="{{ old( 'company_name', $provider->commonData?->company_name ?? '' ) }}">
                                     @error( 'company_name' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -111,7 +111,7 @@
                                     <label for="cnpj" class="form-label">CNPJ</label>
                                     <input type="text" class="form-control @error( 'cnpj' ) is-invalid @enderror"
                                            id="cnpj" name="cnpj"
-                                           value="{{ old( 'cnpj', $provider->commonData->cnpj ?? '' ) }}">
+                                           value="{{ old( 'cnpj', $provider->commonData?->cnpj ?? '' ) }}">
                                     @error( 'cnpj' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -121,7 +121,7 @@
                                     <label for="cpf" class="form-label">CPF</label>
                                     <input type="text" class="form-control @error( 'cpf' ) is-invalid @enderror"
                                            id="cpf" name="cpf"
-                                           value="{{ old( 'cpf', $provider->commonData->cpf ?? '' ) }}">
+                                           value="{{ old( 'cpf', $provider->commonData?->cpf ?? '' ) }}">
                                     @error( 'cpf' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -134,7 +134,7 @@
                                         <option value="">Selecione uma área</option>
                                         @foreach ( $areas_of_activity as $area )
                                             <option value="{{ $area->id }}"
-                                                {{ old( 'area_of_activity_id', $provider->commonData->area_of_activity_id ?? '' ) == $area->id ? 'selected' : '' }}>
+                                                {{ old( 'area_of_activity_id', $provider->commonData?->area_of_activity_id ?? '' ) == $area->id ? 'selected' : '' }}>
                                                 {{ $area->name }}
                                             </option>
                                         @endforeach
@@ -151,7 +151,7 @@
                                         <option value="">Selecione uma profissão</option>
                                         @foreach ( $professions as $prof )
                                             <option value="{{ $prof->id }}"
-                                                {{ old( 'profession_id', $provider->commonData->profession_id ?? '' ) == $prof->id ? 'selected' : '' }}>
+                                                {{ old( 'profession_id', $provider->commonData?->profession_id ?? '' ) == $prof->id ? 'selected' : '' }}>
                                                 {{ $prof->name }}
                                             </option>
                                         @endforeach
@@ -165,7 +165,7 @@
                                     <label for="description" class="form-label">Descrição Profissional</label>
                                     <textarea class="form-control @error( 'description' ) is-invalid @enderror"
                                               id="description" name="description" rows="4" maxlength="250"
-                                              placeholder="Descreva sua experiência profissional...">{{ old( 'description', $provider->description ?? '' ) }}</textarea>
+                                              placeholder="Descreva sua experiência profissional...">{{ old( 'description', $provider->commonData?->description ?? '' ) }}</textarea>
                                     @error( 'description' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -234,8 +234,8 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin' ] )->g
 } );
 
 // Settings routes group
-// Routes for user settings with auth and verified middlewares
-Route::prefix( 'settings' )->name( 'settings.' )->middleware( [ 'auth', 'verified' ] )->group( function () {
+// Routes for user settings with auth, verified and provider middlewares
+Route::prefix( 'settings' )->name( 'settings.' )->middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
     Route::get( '/', [ SettingsController::class, 'index' ] )->name( 'index' );
     Route::post( '/general', [ SettingsController::class, 'updateGeneral' ] )->name( 'general.update' );
     Route::post( '/profile', [ SettingsController::class, 'updateProfile' ] )->name( 'profile.update' );

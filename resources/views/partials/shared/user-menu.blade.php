@@ -16,8 +16,8 @@
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
         data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="{{ auth()->user()->avatar ?: asset( 'assets/img/img_not_found.png' ) }}" alt="Avatar"
-            class="rounded-circle me-2" width="32" height="32">
+        <img src="{{ auth()->user()->avatar ? asset( 'storage/' . auth()->user()->avatar ) : asset( 'img/default_avatar.png' ) }}"
+            alt="Avatar" class="rounded-circle me-2" width="32" height="32">
         {{ Str::before( auth()->user()->name, ' ' ) ?: auth()->user()->name ?? auth()->user()->email }}
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">

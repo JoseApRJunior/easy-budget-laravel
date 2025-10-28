@@ -34,8 +34,8 @@ class ProviderBusinessUpdateRequest extends FormRequest
 
             // Dados empresariais
             'company_name'        => [ 'nullable', 'string', 'max:255' ],
-            'cnpj'                => [ 'nullable', 'string', 'size:14' ],
-            'cpf'                 => [ 'nullable', 'string', 'size:11' ],
+            'cnpj'                => [ 'nullable', 'string', 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/' ],
+            'cpf'                 => [ 'nullable', 'string', 'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/' ],
             'area_of_activity_id' => [ 'nullable', 'integer', 'exists:areas_of_activity,id' ],
             'profession_id'       => [ 'nullable', 'integer', 'exists:professions,id' ],
             'description'         => [ 'nullable', 'string', 'max:250' ],

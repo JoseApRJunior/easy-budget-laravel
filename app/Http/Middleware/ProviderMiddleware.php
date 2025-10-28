@@ -85,7 +85,7 @@ class ProviderMiddleware
         }
 
         // Check if trial is expired
-        if ( method_exists( $user, 'isTrialExpired' ) && $user->isTrialExpired() ) {
+        if ( $user->isTrialExpired() ) {
             $currentRoute = $request->route()->getName();
 
             // Se está tentando acessar rota permitida com trial expirado, permitir com aviso

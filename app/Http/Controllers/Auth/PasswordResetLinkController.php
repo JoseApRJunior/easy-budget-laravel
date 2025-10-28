@@ -53,6 +53,13 @@ class PasswordResetLinkController extends Controller
     public function store( Request $request ): RedirectResponse
     {
         try {
+            Log::info( 'PasswordResetLinkController::store - Iniciando processo de reset de senha', [
+                'email'      => $request->email,
+                'ip'         => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp'  => now()->toISOString()
+            ] );
+
             // 1. Validação do e-mail
             $request->validate( [
                 'email' => [ 'required', 'email' ],

@@ -270,7 +270,7 @@ class PasswordResetIntegrationTest extends TestCase
         // Assert: Verificar logs de geração de token
         Log::shouldHaveReceived( 'info' )
             ->withArgs( function ( $message, $context ) {
-                return str_contains( $message, 'Token de reset gerado com sucesso' )
+                return str_contains( $message, 'PASSO 4: Token de reset gerado' )
                     && isset( $context[ 'token_length' ] )
                     && $context[ 'token_length' ] === 43; // base64url format: 32 bytes = 43 caracteres
             } );

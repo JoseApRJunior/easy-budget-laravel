@@ -12,6 +12,7 @@ use App\Models\BudgetTemplate;
 use App\Models\UserConfirmationToken;
 use App\Services\BudgetPdfService;
 use App\Services\BudgetTemplateService;
+use App\Services\Domain\BudgetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,15 @@ use Illuminate\View\View;
 
 class BudgetController extends Controller
 {
+    public function index( Request $request ): View
+    {
+        $user    = Auth::user();
+        $budgets = app( BudgetService::class)->getBudgetsForProvider( $user->id, $request->all() );
+        return view( 'pages.budget.index', [
+            'budgets' => $budgets
+        ] );
+    }
+
     /**
      * Display the budget status selection page for public access.
      */
