@@ -139,6 +139,10 @@ class ProviderBusinessUpdateTest
         // Add session cookie if available
         if ($this->sessionCookie) {
             curl_setopt($ch, CURLOPT_COOKIE, $this->sessionCookie);
+        } else {
+            // For testing without authentication, we need to disable CSRF protection
+            // This is just for development testing - in production, authentication is required
+            echo "⚠️  No session cookie provided - this will likely fail due to CSRF protection\n";
         }
 
         $response = curl_exec($ch);
@@ -252,8 +256,16 @@ class ProviderBusinessUpdateTest
         elseif (preg_match('/name="_token" value="([^"]+)"/', $html, $matches)) {
             $this->csrfToken = $matches[1];
             echo "✅ CSRF token extracted from hidden input: " . substr($this->csrfToken, 0, 20) . "...\n";
+        }
+        // Try to find CSRF token in session (from debug bar data)
+        elseif (preg_match('/"_token"\s*=>\s*"([^"]+)"/', $html, $matches)) {
+            $this->csrfToken = $matches[1];
+            echo "✅ CSRF token extracted from session data: " . substr($this->csrfToken, 0, 20) . "...\n";
         } else {
             echo "⚠️  CSRF token not found in response\n";
+            // For testing purposes, let's try a common Laravel token format
+            $this->csrfToken = 'test-csrf-token-' . time();
+            echo "🔧 Using test CSRF token for development: " . substr($this->csrfToken, 0, 20) . "...\n";
         }
     }
 
@@ -276,7 +288,15 @@ class ProviderBusinessUpdateTest
         echo "Example:\n";
         echo "\$this->sessionCookie = 'laravel_session=your_session_value_here';\n\n";
 
-        echo "Alternatively, you can modify the script to handle login programmatically.\n";
+        echo "Alternatively, you can modify the script to handle login programmatically.\n\n";
+
+        echo "=== For Development Testing ===\n";
+        echo "If you want to bypass authentication for testing purposes, you can:\n";
+        echo "1. Temporarily disable CSRF middleware in routes/web.php\n";
+        echo "2. Or create a test route without authentication\n";
+        echo "3. Or use Laravel's testing framework instead of this script\n\n";
+
+        echo "⚠️  WARNING: Disabling CSRF protection should NEVER be done in production!\n";
     }
 
     /**
