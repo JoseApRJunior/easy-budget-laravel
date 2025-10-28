@@ -114,7 +114,7 @@ class ProviderBusinessController extends Controller
             }
 
             // Verificar se o usuário tem os IDs necessários
-            if ( !$user->common_data_id ) {
+            if ( !$user->provider()->commonData()->id ) {
                 return redirect( '/provider/business/edit' )
                     ->with( 'error', 'Dados comuns não configurados para este usuário' );
             }
@@ -152,7 +152,7 @@ class ProviderBusinessController extends Controller
             }
 
             // Verificar se o usuário tem contact_id antes de buscar
-            if ( $user->contact_id ) {
+            if ( $user->provider()->contact()->id ) {
                 // Buscar dados atuais de Contact
                 $contactData = $this->contactService->findById( $user->contact_id );
                 if ( !$contactData->isSuccess() ) {
@@ -187,7 +187,7 @@ class ProviderBusinessController extends Controller
             }
 
             // Verificar se o usuário tem address_id antes de buscar
-            if ( $user->address_id ) {
+            if ( $user->provider()->address()->id ) {
                 // Buscar dados atuais de Address
                 $addressData = $this->addressService->findById( $user->address_id );
                 if ( !$addressData->isSuccess() ) {
