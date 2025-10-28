@@ -132,9 +132,23 @@ class ProviderBusinessController extends Controller
             $validated[ 'area_of_activity_id' ] = (int) $validated[ 'area_of_activity_id' ];
             $validated[ 'profession_id' ]       = (int) $validated[ 'profession_id' ];
 
+            // Preparar dados para CommonData (incluindo campos pessoais)
+            $commonDataFields = [
+                'first_name',
+                'last_name',
+                'birth_date',
+                'company_name',
+                'cnpj',
+                'cpf',
+                'area_of_activity_id',
+                'profession_id',
+                'description'
+            ];
+            $commonDataUpdate = array_intersect_key( $validated, array_flip( $commonDataFields ) );
+
             // Atualizar CommonData
-            if ( !empty( array_diff_assoc( $commonDataModel->toArray(), $validated ) ) ) {
-                $this->commonDataService->update( $commonDataModel->id, $validated );
+            if ( !empty( array_diff_assoc( $commonDataModel->toArray(), $commonDataUpdate ) ) ) {
+                $this->commonDataService->update( $commonDataModel->id, $commonDataUpdate );
             }
 
             // Verificar se o usuário tem contact_id antes de buscar
@@ -148,9 +162,27 @@ class ProviderBusinessController extends Controller
 
                 $contactModel = $contactData->getData();
 
+                // Preparar dados para Contact (incluindo campos pessoais)
+                $contactFields = [
+                    'email_personal' => 'email',
+                    'phone_personal' => 'phone',
+                    'email_business',
+                    'phone_business',
+                    'website'
+                ];
+                $contactUpdate = [];
+                foreach ( $contactFields as $formField => $dbField ) {
+                    if ( is_numeric( $formField ) ) {
+                        $formField = $dbField; // Para campos sem mapeamento
+                    }
+                    if ( isset( $validated[ $formField ] ) ) {
+                        $contactUpdate[ $dbField ] = $validated[ $formField ];
+                    }
+                }
+
                 // Atualizar Contact
-                if ( !empty( array_diff_assoc( $contactModel->toArray(), $validated ) ) ) {
-                    $this->contactService->update( $contactModel->id, $validated );
+                if ( !empty( array_diff_assoc( $contactModel->toArray(), $contactUpdate ) ) ) {
+                    $this->contactService->update( $contactModel->id, $contactUpdate );
                 }
             }
 

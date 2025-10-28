@@ -25,6 +25,13 @@ class ProviderBusinessUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Dados pessoais
+            'first_name'          => [ 'required', 'string', 'max:100' ],
+            'last_name'           => [ 'required', 'string', 'max:100' ],
+            'birth_date'          => [ 'nullable', 'date', 'before:today' ],
+            'email_personal'      => [ 'nullable', 'email', 'max:255' ],
+            'phone_personal'      => [ 'nullable', 'string', 'max:20' ],
+
             // Dados empresariais
             'company_name'        => [ 'nullable', 'string', 'max:255' ],
             'cnpj'                => [ 'nullable', 'string', 'size:14' ],
@@ -59,6 +66,18 @@ class ProviderBusinessUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'first_name.required'         => 'O nome é obrigatório.',
+            'first_name.string'           => 'O nome deve ser um texto.',
+            'first_name.max'              => 'O nome não pode ter mais de 100 caracteres.',
+            'last_name.required'          => 'O sobrenome é obrigatório.',
+            'last_name.string'            => 'O sobrenome deve ser um texto.',
+            'last_name.max'               => 'O sobrenome não pode ter mais de 100 caracteres.',
+            'birth_date.date'             => 'A data de nascimento deve ser uma data válida.',
+            'birth_date.before'           => 'A data de nascimento deve ser anterior a hoje.',
+            'email_personal.email'        => 'O e-mail pessoal deve ter um formato válido.',
+            'email_personal.max'          => 'O e-mail pessoal não pode ter mais de 255 caracteres.',
+            'phone_personal.string'       => 'O telefone pessoal deve ser um texto.',
+            'phone_personal.max'          => 'O telefone pessoal não pode ter mais de 20 caracteres.',
             'company_name.string'         => 'O nome da empresa deve ser um texto.',
             'company_name.max'            => 'O nome da empresa não pode ter mais de 255 caracteres.',
             'cnpj.size'                   => 'O CNPJ deve ter 14 dígitos.',

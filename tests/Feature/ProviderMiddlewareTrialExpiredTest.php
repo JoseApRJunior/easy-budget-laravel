@@ -32,10 +32,11 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
 
         // Criar usuário
         $this->user = User::create( [
-            'tenant_id' => $this->tenant->id,
-            'email'     => 'provider@test.com',
-            'password'  => bcrypt( 'password' ),
-            'is_active' => true,
+            'tenant_id'         => $this->tenant->id,
+            'email'             => 'provider@test.com',
+            'password'          => bcrypt( 'password' ),
+            'is_active'         => true,
+            'email_verified_at' => now(),
         ] );
 
         // Criar role provider
@@ -134,7 +135,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
 
         $this->actingAs( $this->user )
             ->get( route( 'provider.customers.index' ) )
-            ->assertRedirect( route( 'plans.index' ) )
+            ->assertRedirect( route( 'provider.plans.index' ) )
             ->assertSessionHas( 'warning' );
     }
 
@@ -156,7 +157,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
 
         $this->actingAs( $this->user )
             ->get( route( 'provider.budgets.index' ) )
-            ->assertRedirect( route( 'plans.index' ) )
+            ->assertRedirect( route( 'provider.plans.index' ) )
             ->assertSessionHas( 'warning' );
     }
 
@@ -178,7 +179,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
 
         $this->actingAs( $this->user )
             ->get( route( 'provider.invoices.index' ) )
-            ->assertRedirect( route( 'plans.index' ) )
+            ->assertRedirect( route( 'provider.plans.index' ) )
             ->assertSessionHas( 'warning' );
     }
 
@@ -199,7 +200,7 @@ class ProviderMiddlewareTrialExpiredTest extends TestCase
         ] );
 
         $this->actingAs( $this->user )
-            ->get( route( 'plans.index' ) )
+            ->get( route( 'provider.plans.index' ) )
             ->assertStatus( 200 );
     }
 

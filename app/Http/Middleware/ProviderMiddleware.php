@@ -85,7 +85,7 @@ class ProviderMiddleware
         }
 
         // Check if trial is expired
-        if ( $user->isTrialExpired() ) {
+        if ( method_exists( $user, 'isTrialExpired' ) && $user->isTrialExpired() ) {
             $currentRoute = $request->route()->getName();
 
             // Se está tentando acessar rota permitida com trial expirado, permitir com aviso
@@ -103,7 +103,7 @@ class ProviderMiddleware
                     'ip'              => $request->ip()
                 ] );
 
-                return redirect()->route( 'plans.index' )
+                return redirect()->route( 'provider.plans.index' )
                     ->with( 'warning', 'Seu período de trial expirou. Escolha um plano para continuar usando o sistema.' );
             }
 

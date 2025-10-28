@@ -23,6 +23,8 @@
     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
 
         {{-- Links comuns para todos os usuários --}}
+        <li><a class="dropdown-item" href="{{ route( 'provider.plans.index' ) }}">
+                <i class="bi bi-clipboard-check me-2"></i>Planos</a></li>
         <li><a class="dropdown-item" href="{{ route( 'settings.index' ) }}">
                 <i class="bi bi-gear me-2"></i>Configurações</a></li>
         {{-- Acesso administrativo - apenas para admins --}}

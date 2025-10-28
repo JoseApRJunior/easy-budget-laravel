@@ -23,6 +23,70 @@
             @method( 'PATCH' )
 
             <div class="row g-4">
+                <!-- Dados Pessoais -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-person me-2"></i>Dados Pessoais
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="first_name" class="form-label">Nome</label>
+                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror"
+                                           id="first_name" name="first_name"
+                                           value="{{ old('first_name', $provider->commonData->first_name ?? '') }}">
+                                    @error('first_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="last_name" class="form-label">Sobrenome</label>
+                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror"
+                                           id="last_name" name="last_name"
+                                           value="{{ old('last_name', $provider->commonData->last_name ?? '') }}">
+                                    @error('last_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="birth_date" class="form-label">Data de Nascimento</label>
+                                    <input type="date" class="form-control @error('birth_date') is-invalid @enderror"
+                                           id="birth_date" name="birth_date"
+                                           value="{{ old('birth_date', $provider->commonData->birth_date ?? '') }}">
+                                    @error('birth_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="email_personal" class="form-label">Email Pessoal</label>
+                                    <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
+                                           id="email_personal" name="email_personal"
+                                           value="{{ old('email_personal', $provider->contact->email ?? '') }}">
+                                    @error('email_personal')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="phone_personal" class="form-label">Telefone Pessoal</label>
+                                    <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
+                                           id="phone_personal" name="phone_personal"
+                                           value="{{ old('phone_personal', $provider->contact->phone ?? '') }}">
+                                    @error('phone_personal')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Dados Profissionais -->
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm h-100">
@@ -289,6 +353,8 @@
             $( '#cnpj' ).mask( '00.000.000/0000-00' );
             $( '#cpf' ).mask( '000.000.000-00' );
             $( '#cep' ).mask( '00000-000' );
+            $( '#phone_personal' ).mask( '(00) 00000-0000' );
+            $( '#birth_date' ).mask( '00/00/0000' );
         } );
 
         document.getElementById( 'logo' )?.addEventListener( 'change', function ( e ) {

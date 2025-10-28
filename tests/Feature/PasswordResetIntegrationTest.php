@@ -220,16 +220,9 @@ class PasswordResetIntegrationTest extends TestCase
             'email' => $user->email,
         ] );
 
-        // Debug: Verificar se a requisição foi bem-sucedida
-        $response->assertStatus( 302 ); // Redirecionamento esperado
-
-        // Debug: Verificar se há erros na sessão
-        if ( $response->hasSession() ) {
-            $sessionErrors = session()->get( 'errors' );
-            if ( $sessionErrors ) {
-                dump( 'Session errors:', $sessionErrors->toArray() );
-            }
-        }
+        // Assert: Deve retornar redirecionamento de sucesso
+        $response->assertRedirect();
+        $response->assertSessionHas( 'status' );
 
         // Assert: Capturar token do evento disparado
         Event::assertDispatched( PasswordResetRequested::class, function ( $event ) {
