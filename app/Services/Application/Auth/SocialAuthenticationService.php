@@ -168,9 +168,15 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
     private function prepareRegistrationData( array $userData ): array
     {
         $nameParts = explode( ' ', $userData[ 'name' ] );
+        $firstName = $nameParts[ 0 ] ?? $userData[ 'name' ];
+
+        // Captura todas as palavras restantes como sobrenome
+        $lastNameParts = array_slice( $nameParts, 1 );
+        $lastName      = implode( ' ', $lastNameParts ) ?: 'Usuário';
+
         return [
-            'first_name'     => $nameParts[ 0 ] ?? $userData[ 'name' ],
-            'last_name'      => $nameParts[ 1 ] ?? 'Usuário',
+            'first_name'     => $firstName,
+            'last_name'      => $lastName,
             'name'           => $userData[ 'name' ],
             'email'          => $userData[ 'email' ],
             'password'       => null,
@@ -188,6 +194,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             'name'              => $userData[ 'name' ],
             'google_id'         => $provider === 'google' ? $userData[ 'id' ] : null,
             'avatar'            => $userData[ 'avatar' ] ?? null,
+            'google_data'       => $userData,
             'email_verified_at' => now(),
             'is_active'         => true,
         ] );
@@ -264,10 +271,11 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
     {
         try {
             $user->update( [
-                'name'              => $socialData[ 'name' ] ?? $user->name, // ✅ Atualiza nome diretamente
+                'name'              => $socialData[ 'name' ] ?? $user->name,
                 'avatar'            => $socialData[ 'avatar' ] ?? $user->avatar,
-                'email_verified_at' => now(), // ✅ E-mail verificado automaticamente (Google já verifica)
-                'is_active'         => true,  // ✅ Garante que usuário fique ativo (login social fluido)
+                'google_data'       => $socialData,
+                'email_verified_at' => now(),
+                'is_active'         => true,
             ] );
 
             return $this->success( $user, 'Dados sincronizados com sucesso' );

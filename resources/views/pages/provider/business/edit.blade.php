@@ -345,19 +345,37 @@
 @endsection
 
 @push( 'scripts' )
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script src="{{ asset( 'assets/js/modules/masks/index.js' ) }}" type="module"></script>
+    <!-- Máscaras e validações -->
+    <script>
+        // Aguardar o carregamento completo do DOM e das dependências
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se jQuery e jQuery Mask estão disponíveis
+            function initializeMasks() {
+                // Máscaras usando jQuery Mask Plugin (carregado via CDN)
+                if (typeof $ !== 'undefined' && $.fn.mask) {
+                    $('#cnpj').mask('00.000.000/0000-00');
+                    $('#cpf').mask('000.000.000-00');
+                    $('#cep').mask('00000-000');
+                    $('#phone_personal').mask('(00) 00000-0000');
+                    $('#phone_business').mask('(00) 00000-0000');
+                    $('#birth_date').mask('00/00/0000');
+                }
+            }
+
+            // Tentar inicializar imediatamente
+            initializeMasks();
+
+            // Tentar novamente após um pequeno delay para garantir carregamento
+            setTimeout(initializeMasks, 100);
+        });
+    </script>
+
+    <!-- Scripts de funcionalidades específicas -->
     <script src="{{ asset( 'assets/js/modules/cep-service.js' ) }}" type="module"></script>
     <script src="{{ asset( 'assets/js/modules/image-preview.js' ) }}" type="module"></script>
-    <script>
-        $( document ).ready( function () {
-            $( '#cnpj' ).mask( '00.000.000/0000-00' );
-            $( '#cpf' ).mask( '000.000.000-00' );
-            $( '#cep' ).mask( '00000-000' );
-            $( '#phone_personal' ).mask( '(00) 00000-0000' );
-            $( '#birth_date' ).mask( '00/00/0000' );
-        } );
 
+    <script>
+        // Preview da logo da empresa
         document.getElementById( 'logo' )?.addEventListener( 'change', function ( e ) {
             const file = e.target.files[0];
             const maxSize = 5242880; // 5MB
@@ -376,5 +394,28 @@
                 reader.readAsDataURL( file );
             }
         } );
+
+        // Buscar CEP automático
+        document.addEventListener('DOMContentLoaded', function() {
+            const cepInput = document.getElementById('cep');
+            if (cepInput) {
+                cepInput.addEventListener('blur', function() {
+                    const cep = this.value.replace(/\D/g, '');
+                    if (cep.length === 8) {
+                        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (!data.erro) {
+                                    document.getElementById('address').value = data.logradouro;
+                                    document.getElementById('neighborhood').value = data.bairro;
+                                    document.getElementById('city').value = data.localidade;
+                                    document.getElementById('state').value = data.uf;
+                                }
+                            })
+                            .catch(error => console.log('Erro ao buscar CEP:', error));
+                    }
+                });
+            }
+        });
     </script>
 @endpush

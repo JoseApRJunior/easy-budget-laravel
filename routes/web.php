@@ -1,7 +1,6 @@
 <?php
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
 use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
