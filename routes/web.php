@@ -200,9 +200,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Business
     Route::prefix( 'business' )->name( 'business.' )->group( function () {
         Route::get( '/edit', [ ProviderBusinessController::class, 'edit' ] )->name( 'edit' );
-        // Temporarily disabled CSRF for testing
-        // Route::patch( '/', [ ProviderBusinessController::class, 'update' ] )->name( 'update' );
-        Route::patch( '/', [ ProviderBusinessController::class, 'update' ] )->name( 'update' )->withoutMiddleware( [ 'csrf' ] );
+        Route::put( '/', [ ProviderBusinessController::class, 'update' ] )->name( 'update' )->withoutMiddleware( 'provider' );
     } );
 
     // Legacy routes (for backward compatibility)
@@ -335,6 +333,7 @@ Route::group( [], function () {
 // Redirects for legacy routes to maintain compatibility
 Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
     Route::redirect( '/provider/update', '/provider/business/edit' )->name( 'provider.update.redirect' );
+    Route::put( '/provider/business', [ ProviderBusinessController::class, 'update' ] )->name( 'provider.business.update' );
 
 } );
 

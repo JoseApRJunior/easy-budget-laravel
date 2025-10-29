@@ -13,6 +13,7 @@ use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,7 +21,7 @@ use Illuminate\Support\Carbon;
 
 class Provider extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * The table associated with the model.

@@ -20,7 +20,7 @@
 
         <form action="{{ route( 'provider.business.update' ) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            @method( 'PATCH' )
+            @method( 'PUT' )
 
             <div class="row g-4">
                 <!-- Dados Pessoais -->
@@ -39,7 +39,7 @@
                                            id="first_name" name="first_name"
                                            value="{{ old('first_name', $provider->commonData?->first_name ?? '') }}">
                                     @error('first_name')
-                  t                      <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 

@@ -73,6 +73,15 @@ class ProviderBusinessController extends Controller
         $validated = $request->validated();
         $user      = Auth::user();
 
+        // Carregar relacionamento provider para evitar N+1 queries
+        $user->load( 'provider' );
+
+        // Verificar se provider existe e tem common_data_id configurado
+        if ( !$user->provider || !$user->provider->common_data_id ) {
+            return redirect( '/provider/business/edit' )
+                ->with( 'error', 'Dados comuns não configurados para este usuário' );
+        }
+
         try {
             // Mapear cnpj e cpf para document se necessário
             if ( !empty( $validated[ 'cnpj' ] ) ) {
@@ -90,125 +99,57 @@ class ProviderBusinessController extends Controller
                 }
             }
 
-            // Buscar dados atuais do usuário
-            $userData = $this->userService->findById( $user->id );
-            if ( !$userData->isSuccess() ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', 'Usuário não encontrado' );
-            }
-
-            $userModel    = $userData->getData();
-            $originalData = $userModel->toArray();
-
-            // Gerenciar arquivo de logo usando Storage
-            if ( isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] && $originalData[ 'logo' ] !== null && $logoResult[ 'paths' ][ 'original' ] !== $originalData[ 'logo' ] ) {
-                if ( file_exists( public_path( $originalData[ 'logo' ] ) ) ) {
-                    unlink( public_path( $originalData[ 'logo' ] ) );
+            // Atualizar logo do usuário se fornecido
+            if ( isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] ) {
+                // Remover logo antigo se existir
+                if ( $user->logo && file_exists( public_path( $user->logo ) ) ) {
+                    unlink( public_path( $user->logo ) );
                 }
+                $user->update( [ 'logo' => $logoResult[ 'paths' ][ 'original' ] ] );
             }
-            $validated[ 'logo' ] = isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] ? $logoResult[ 'paths' ][ 'original' ] : $originalData[ 'logo' ];
-
-            // Atualizar dados do usuário (logo)
-            if ( !empty( array_diff_assoc( $userModel->toArray(), [ 'logo' => $validated[ 'logo' ] ] ) ) ) {
-                $this->userService->update( $user->id, [ 'logo' => $validated[ 'logo' ] ] );
-            }
-
-            // Verificar se o usuário tem os IDs necessários
-            if ( !$user->provider()->commonData()->id ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', 'Dados comuns não configurados para este usuário' );
-            }
-
-            // Buscar dados atuais de CommonData
-            $commonDataData = $this->commonDataService->findById( $user->provider()->commonData()->id );
-            if ( !$commonDataData->isSuccess() ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', 'Dados comuns não encontrados' );
-            }
-
-            $commonDataModel = $commonDataData->getData();
-
-            // Converter IDs para inteiros
-            $validated[ 'area_of_activity_id' ] = (int) $validated[ 'area_of_activity_id' ];
-            $validated[ 'profession_id' ]       = (int) $validated[ 'profession_id' ];
-
-            // Preparar dados para CommonData (incluindo campos pessoais)
-            $commonDataFields = [
-                'first_name',
-                'last_name',
-                'birth_date',
-                'company_name',
-                'cnpj',
-                'cpf',
-                'area_of_activity_id',
-                'profession_id',
-                'description'
-            ];
-            $commonDataUpdate = array_intersect_key( $validated, array_flip( $commonDataFields ) );
 
             // Atualizar CommonData
-            if ( !empty( array_diff_assoc( $commonDataModel->toArray(), $commonDataUpdate ) ) ) {
-                $this->commonDataService->update( $commonDataModel->id, $commonDataUpdate );
+            if ( $user->provider && $user->provider->commonData ) {
+                $commonDataUpdate = array_filter( [
+                    'first_name'          => $validated[ 'first_name' ] ?? null,
+                    'last_name'           => $validated[ 'last_name' ] ?? null,
+                    'birth_date'          => $validated[ 'birth_date' ] ?? null,
+                    'company_name'        => $validated[ 'company_name' ] ?? null,
+                    'cnpj'                => $validated[ 'cnpj' ] ?? null,
+                    'cpf'                 => $validated[ 'cpf' ] ?? null,
+                    'area_of_activity_id' => $validated[ 'area_of_activity_id' ] ?? null,
+                    'profession_id'       => $validated[ 'profession_id' ] ?? null,
+                    'description'         => $validated[ 'description' ] ?? null,
+                ], fn( $value ) => $value !== null );
+
+                $user->provider->commonData->update( $commonDataUpdate );
             }
 
-            // Verificar se o usuário tem contact_id antes de buscar
-            if ( $user->provider()->contact()->id ) {
-                // Buscar dados atuais de Contact
-                $contactData = $this->contactService->findById( $user->provider()->contact()->id );
-                if ( !$contactData->isSuccess() ) {
-                    return redirect( '/provider/business/edit' )
-                        ->with( 'error', 'Contato não encontrado' );
-                }
+            // Atualizar Contact
+            if ( $user->provider && $user->provider->contact ) {
+                $contactUpdate = array_filter( [
+                    'email'          => $validated[ 'email_personal' ] ?? null,
+                    'phone'          => $validated[ 'phone_personal' ] ?? null,
+                    'email_business' => $validated[ 'email_business' ] ?? null,
+                    'phone_business' => $validated[ 'phone_business' ] ?? null,
+                    'website'        => $validated[ 'website' ] ?? null,
+                ], fn( $value ) => $value !== null );
 
-                $contactModel = $contactData->getData();
-
-                // Preparar dados para Contact (incluindo campos pessoais)
-                $contactFields = [
-                    'email_personal' => 'email',
-                    'phone_personal' => 'phone',
-                    'email_business',
-                    'phone_business',
-                    'website'
-                ];
-                $contactUpdate = [];
-                foreach ( $contactFields as $formField => $dbField ) {
-                    if ( is_numeric( $formField ) ) {
-                        $formField = $dbField; // Para campos sem mapeamento
-                    }
-                    if ( isset( $validated[ $formField ] ) ) {
-                        $contactUpdate[ $dbField ] = $validated[ $formField ];
-                    }
-                }
-
-                // Atualizar Contact
-                if ( !empty( array_diff_assoc( $contactModel->toArray(), $contactUpdate ) ) ) {
-                    $this->contactService->update( $contactModel->id, $contactUpdate );
-                }
+                $user->provider->contact->update( $contactUpdate );
             }
 
-            // Verificar se o usuário tem address_id antes de buscar
-            if ( $user->provider()->address()->id ) {
-                // Buscar dados atuais de Address
-                $addressData = $this->addressService->findById( $user->provider()->address()->id );
-                if ( !$addressData->isSuccess() ) {
-                    return redirect( '/provider/business/edit' )
-                        ->with( 'error', 'Endereço não encontrado' );
-                }
+            // Atualizar Address
+            if ( $user->provider && $user->provider->address ) {
+                $addressUpdate = array_filter( [
+                    'address'        => $validated[ 'address' ] ?? null,
+                    'address_number' => $validated[ 'address_number' ] ?? null,
+                    'neighborhood'   => $validated[ 'neighborhood' ] ?? null,
+                    'city'           => $validated[ 'city' ] ?? null,
+                    'state'          => $validated[ 'state' ] ?? null,
+                    'cep'            => $validated[ 'cep' ] ?? null,
+                ], fn( $value ) => $value !== null );
 
-                $addressModel = $addressData->getData();
-
-                // Atualizar Address
-                if ( !empty( array_diff_assoc( $addressModel->toArray(), $validated ) ) ) {
-                    $this->addressService->update( $addressModel->id, $validated );
-                }
-            }
-
-            // Atualizar Provider
-            $updateResponse = $this->providerService->updateProvider( $validated );
-
-            if ( !$updateResponse->isSuccess() ) {
-                return redirect( '/provider/business/edit' )
-                    ->with( 'error', $updateResponse->getMessage() );
+                $user->provider->address->update( $addressUpdate );
             }
 
             // Limpar sessões relacionadas
