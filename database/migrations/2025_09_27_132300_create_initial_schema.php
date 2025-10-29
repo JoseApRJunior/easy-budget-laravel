@@ -168,8 +168,8 @@ return new class extends Migration
         Schema::create( 'contacts', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'email', 255 )->unique();
-            $table->string( 'phone', 20 )->nullable();
+            $table->string( 'email_personal', 255 )->unique();
+            $table->string( 'phone_personal', 20 )->nullable();
             $table->string( 'email_business', 255 )->nullable()->unique();
             $table->string( 'phone_business', 20 )->nullable();
             $table->string( 'website', 255 )->nullable();

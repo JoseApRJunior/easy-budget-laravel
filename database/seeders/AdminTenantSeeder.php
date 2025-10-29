@@ -110,13 +110,13 @@ class AdminTenantSeeder extends Seeder
         // 2. Criar contato da empresa admin
         $contact = Contact::firstOrCreate(
             [
-                'tenant_id' => $tenant->id,
-                'email'     => 'admin@easybudget.net.br',
+                'tenant_id'      => $tenant->id,
+                'email_personal' => 'admin@easybudget.net.br',
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'email'          => 'admin@easybudget.net.br',
-                'phone'          => '(11) 3000-1000',
+                'email_personal' => 'admin@easybudget.net.br',
+                'phone_personal' => '(11) 3000-1000',
                 'email_business' => 'admin@easybudget.net.br',
                 'phone_business' => '(11) 3000-1001',
                 'website'        => 'https://admin.easybudget.com.br',

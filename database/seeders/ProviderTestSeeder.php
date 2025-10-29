@@ -30,7 +30,7 @@ class ProviderTestSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('🏢 Criando provedores de teste...');
+        $this->command->info( '🏢 Criando provedores de teste...' );
 
         // Criar primeiro provider com sua cadeia completa independente
         $this->createProviderWithFullChain(
@@ -76,7 +76,7 @@ class ProviderTestSeeder extends Seeder
             'Empresa de demonstração para testes',
         );
 
-        $this->command->info('✅ Provedores de teste criados com sucesso!');
+        $this->command->info( '✅ Provedores de teste criados com sucesso!' );
     }
 
     private function createProviderWithFullChain(
@@ -92,8 +92,8 @@ class ProviderTestSeeder extends Seeder
         string $city,
         string $state,
         string $cep,
-        string $contactEmail,
-        string $phone,
+        string $emailPersonal,
+        string $phonePersonal,
         string $emailBusiness,
         string $phoneBusiness,
         string $website,
@@ -140,13 +140,13 @@ class ProviderTestSeeder extends Seeder
         // 4. Criar contato exclusivo para este provider
         $contact = Contact::firstOrCreate(
             [
-                'tenant_id' => $tenant->id,
-                'email'     => $contactEmail,
+                'tenant_id'      => $tenant->id,
+                'email_personal' => $emailPersonal,
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'email'          => $contactEmail,
-                'phone'          => $phone,
+                'email_personal' => $emailPersonal,
+                'phone_personal' => $phonePersonal,
                 'email_business' => $emailBusiness,
                 'phone_business' => $phoneBusiness,
                 'website'        => $website,
@@ -263,7 +263,7 @@ class ProviderTestSeeder extends Seeder
         // 11. Criar configurações do usuário para este provider
         $this->createUserSettingsForProvider( $tenant, $user );
 
-        $this->command->info("✅ Provider '{$companyName}' criado com sucesso!");
+        $this->command->info( "✅ Provider '{$companyName}' criado com sucesso!" );
     }
 
     private function createCustomerForProvider( Tenant $tenant, Provider $provider, Address $address, Contact $contact ): void
@@ -288,16 +288,16 @@ class ProviderTestSeeder extends Seeder
         );
 
         // Criar contato específico para o customer (email único por empresa)
-        $customerEmail   = 'cliente' . $tenant->id . '@teste.net.br';
+        $emailPersonal   = 'cliente' . $tenant->id . '@teste.net.br';
         $customerContact = Contact::firstOrCreate(
             [
-                'tenant_id' => $tenant->id,
-                'email'     => $customerEmail,
+                'tenant_id'      => $tenant->id,
+                'email_personal' => $emailPersonal,
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'email'          => $customerEmail,
-                'phone'          => '(11) 7777-7777',
+                'email_personal' => $emailPersonal,
+                'phone_personal' => '(11) 7777-7777',
                 'email_business' => null,
                 'phone_business' => null,
                 'website'        => null,
@@ -336,7 +336,7 @@ class ProviderTestSeeder extends Seeder
             ],
         );
 
-        $this->command->info("   📋 Cliente de teste criado: {$customerEmail}");
+        $this->command->info( "   📋 Cliente de teste criado: {$emailPersonal}" );
     }
 
     private function createSystemSettingsForProvider( Tenant $tenant, Provider $provider, CommonData $commonData, Address $address, Contact $contact ): void
@@ -388,7 +388,7 @@ class ProviderTestSeeder extends Seeder
             ],
         );
 
-        $this->command->info("   ⚙️  Configurações do sistema criadas para: {$commonData->company_name}");
+        $this->command->info( "   ⚙️  Configurações do sistema criadas para: {$commonData->company_name}" );
     }
 
     private function createUserSettingsForProvider( Tenant $tenant, User $user ): void
@@ -430,6 +430,7 @@ class ProviderTestSeeder extends Seeder
             ],
         );
 
-        $this->command->info("   👤 Configurações do usuário criadas para: {$user->email}");
+        $this->command->info( "   👤 Configurações do usuário criadas para: {$user->email}" );
     }
+
 }

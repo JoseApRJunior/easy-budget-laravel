@@ -39,8 +39,8 @@ class Contact extends Model
      */
     protected $fillable = [
         'tenant_id',
-        'email',
-        'phone',
+        'email_personal',
+        'phone_personal',
         'email_business',
         'phone_business',
         'website',
@@ -53,8 +53,8 @@ class Contact extends Model
      */
     protected $casts = [
         'tenant_id'      => 'integer',
-        'email'          => 'string',
-        'phone'          => 'string',
+        'email_personal' => 'string',
+        'phone_personal' => 'string',
         'email_business' => 'string',
         'phone_business' => 'string',
         'website'        => 'string',
@@ -69,8 +69,8 @@ class Contact extends Model
     {
         return [
             'tenant_id'      => 'required|integer|exists:tenants,id',
-            'email'          => 'required|email|max:255|unique:contacts,email',
-            'phone'          => 'nullable|string|max:20',
+            'email_personal' => 'required|email|max:255|unique:contacts,email_personal',
+            'phone_personal' => 'nullable|string|max:20',
             'email_business' => 'nullable|email|max:255|unique:contacts,email_business',
             'phone_business' => 'nullable|string|max:20',
             'website'        => 'nullable|url|max:255',

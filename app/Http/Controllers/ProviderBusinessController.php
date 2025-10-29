@@ -115,8 +115,8 @@ class ProviderBusinessController extends Controller
                     'last_name'           => $validated[ 'last_name' ] ?? null,
                     'birth_date'          => $validated[ 'birth_date' ] ?? null,
                     'company_name'        => $validated[ 'company_name' ] ?? null,
-                    'cnpj'                => $validated[ 'cnpj' ] ?? null,
-                    'cpf'                 => $validated[ 'cpf' ] ?? null,
+                    'cnpj'                => $this->cleanDocumentNumber( $validated[ 'cnpj' ] ?? $user->provider->commonData->cnpj ),
+                    'cpf'                 => $this->cleanDocumentNumber( $validated[ 'cpf' ] ?? $user->provider->commonData->cpf ),
                     'area_of_activity_id' => $validated[ 'area_of_activity_id' ] ?? null,
                     'profession_id'       => $validated[ 'profession_id' ] ?? null,
                     'description'         => $validated[ 'description' ] ?? null,
@@ -163,6 +163,27 @@ class ProviderBusinessController extends Controller
             return redirect( '/provider/business/edit' )
                 ->with( 'error', 'Erro ao atualizar dados empresariais: ' . $e->getMessage() );
         }
+    }
+
+    /**
+     * Clean document number (CNPJ/CPF) by removing formatting.
+     */
+    private function cleanDocumentNumber( ?string $documentNumber ): ?string
+    {
+        if ( empty( $documentNumber ) ) {
+            return null;
+        }
+
+        // Remove all non-digit characters (points, hyphens, slashes)
+        $cleaned = preg_replace( '/[^0-9]/', '', $documentNumber );
+
+        // Ensure it's exactly the expected length
+        if ( strlen( $cleaned ) === 14 || strlen( $cleaned ) === 11 ) {
+            return $cleaned;
+        }
+
+        // Return null if invalid length
+        return null;
     }
 
 }

@@ -345,55 +345,27 @@
 @endsection
 
 @push( 'scripts' )
-    <!-- Máscaras e validações -->
-    <script>
-        // Aguardar o carregamento completo do DOM e das dependências
-        document.addEventListener('DOMContentLoaded', function() {
-            // Verificar se jQuery e jQuery Mask estão disponíveis
-            function initializeMasks() {
-                // Máscaras usando jQuery Mask Plugin (carregado via CDN)
-                if (typeof $ !== 'undefined' && $.fn.mask) {
-                    $('#cnpj').mask('00.000.000/0000-00');
-                    $('#cpf').mask('000.000.000-00');
-                    $('#cep').mask('00000-000');
-                    $('#phone_personal').mask('(00) 00000-0000');
-                    $('#phone_business').mask('(00) 00000-0000');
-                    $('#birth_date').mask('00/00/0000');
-                }
-            }
-
-            // Tentar inicializar imediatamente
-            initializeMasks();
-
-            // Tentar novamente após um pequeno delay para garantir carregamento
-            setTimeout(initializeMasks, 100);
-        });
-    </script>
-
     <!-- Scripts de funcionalidades específicas -->
-    <script src="{{ asset( 'assets/js/modules/cep-service.js' ) }}" type="module"></script>
-    <script src="{{ asset( 'assets/js/modules/image-preview.js' ) }}" type="module"></script>
-
     <script>
         // Preview da logo da empresa
-        document.getElementById( 'logo' )?.addEventListener( 'change', function ( e ) {
+        document.getElementById('logo')?.addEventListener('change', function(e) {
             const file = e.target.files[0];
             const maxSize = 5242880; // 5MB
 
-            if ( file ) {
-                if ( file.size > maxSize ) {
-                    alert( 'O arquivo é muito grande. O tamanho máximo permitido é 5MB.' );
+            if (file) {
+                if (file.size > maxSize) {
+                    alert('O arquivo é muito grande. O tamanho máximo permitido é 5MB.');
                     this.value = '';
                     return;
                 }
 
                 const reader = new FileReader();
-                reader.onload = function ( e ) {
-                    document.getElementById( 'logo-preview' ).src = e.target.result;
-                }
-                reader.readAsDataURL( file );
+                reader.onload = function(e) {
+                    document.getElementById('logo-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
-        } );
+        });
 
         // Buscar CEP automático
         document.addEventListener('DOMContentLoaded', function() {
@@ -406,10 +378,10 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (!data.erro) {
-                                    document.getElementById('address').value = data.logradouro;
-                                    document.getElementById('neighborhood').value = data.bairro;
-                                    document.getElementById('city').value = data.localidade;
-                                    document.getElementById('state').value = data.uf;
+                                    document.getElementById('address').value = data.logradouro || '';
+                                    document.getElementById('neighborhood').value = data.bairro || '';
+                                    document.getElementById('city').value = data.localidade || '';
+                                    document.getElementById('state').value = data.uf || '';
                                 }
                             })
                             .catch(error => console.log('Erro ao buscar CEP:', error));

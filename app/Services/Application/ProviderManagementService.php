@@ -142,8 +142,8 @@ class ProviderManagementService
             if ( $provider->commonData ) {
                 $commonDataUpdate = [
                     'company_name'        => $data[ 'company_name' ] ?? $provider->commonData->company_name,
-                    'cnpj'                => $data[ 'cnpj' ] ?? $provider->commonData->cnpj,
-                    'cpf'                 => $data[ 'cpf' ] ?? $provider->commonData->cpf,
+                    'cnpj'                => $this->cleanDocumentNumber( $data[ 'cnpj' ] ?? $provider->commonData->cnpj ),
+                    'cpf'                 => $this->cleanDocumentNumber( $data[ 'cpf' ] ?? $provider->commonData->cpf ),
                     'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? $provider->commonData->area_of_activity_id,
                     'profession_id'       => $data[ 'profession_id' ] ?? $provider->commonData->profession_id,
                     'description'         => $data[ 'description' ] ?? $provider->commonData->description,
@@ -232,6 +232,27 @@ class ProviderManagementService
                 'is_google_user' => $isGoogleUser,
             ],
         );
+    }
+
+    /**
+     * Clean document number (CNPJ/CPF) by removing formatting.
+     */
+    private function cleanDocumentNumber( ?string $documentNumber ): ?string
+    {
+        if ( empty( $documentNumber ) ) {
+            return null;
+        }
+
+        // Remove all non-digit characters (points, hyphens, slashes)
+        $cleaned = preg_replace( '/[^0-9]/', '', $documentNumber );
+
+        // Ensure it's exactly the expected length
+        if ( strlen( $cleaned ) === 14 || strlen( $cleaned ) === 11 ) {
+            return $cleaned;
+        }
+
+        // Return null if invalid length
+        return null;
     }
 
     /**
