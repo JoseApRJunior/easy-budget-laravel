@@ -1,4 +1,4 @@
-@extends( 'layout.app' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-4">
@@ -42,7 +42,8 @@
                             <div class="col-md-6 text-md-end">
                                 <h6 class="text-uppercase text-muted small">De</h6>
                                 <p class="mb-1">
-                                    <strong>{{ $invoice->provider_company_name ?? $invoice->provider_name }}</strong></p>
+                                    <strong>{{ $invoice->provider_company_name ?? $invoice->provider_name }}</strong>
+                                </p>
                                 <p class="mb-1">{{ $invoice->provider_email }}</p>
                                 <p class="mb-0">{{ $invoice->provider_phone }}</p>
                             </div>

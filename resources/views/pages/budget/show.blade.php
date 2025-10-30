@@ -3,7 +3,7 @@
     use App\Helpers\StatusHelper;
 @endphp
 
-@extends( 'layout.app' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-1">
@@ -158,8 +158,8 @@
                             <div class="progress-bar bg-{{ StatusHelper::status_color_class( $budget->status->color ) }}"
                                 role="progressbar"
                                 style="width: {{ StatusHelper::status_progress( $budget->status->slug ) }}%;"
-                                aria-valuenow="{{ StatusHelper::status_progress( $budget->status->slug ) }}" aria-valuemin="0"
-                                aria-valuemax="100" title="{{ $budget->status->name }}"></div>
+                                aria-valuenow="{{ StatusHelper::status_progress( $budget->status->slug ) }}"
+                                aria-valuemin="0" aria-valuemax="100" title="{{ $budget->status->name }}"></div>
                         </div>
                     </div>
                 </div>

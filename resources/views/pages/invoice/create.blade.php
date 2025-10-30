@@ -1,4 +1,4 @@
-@extends( 'layout.app' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container-fluid py-1">
@@ -10,7 +10,8 @@
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route( 'provider.services.index' ) }}">Serviços</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.services.show', $invoice->service_code ) }}">#{{
+                    <li class="breadcrumb-item"><a
+                            href="{{ route( 'provider.services.show', $invoice->service_code ) }}">#{{
         $invoice->service_code }}</a></li>
                     <li class="breadcrumb-item active">Gerar Fatura</li>
                 </ol>
@@ -67,7 +68,8 @@
                                     <td class="text-center">{{ $item->quantity }}</td>
                                     <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
                                     <td class="text-end">R$
-                                        {{ number_format( $item->unit_value * $item->quantity, 2, ',', '.' ) }}</td>
+                                        {{ number_format( $item->unit_value * $item->quantity, 2, ',', '.' ) }}
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

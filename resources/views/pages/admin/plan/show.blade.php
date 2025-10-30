@@ -1,4 +1,4 @@
-@extends( 'layout.app' )
+@extends( 'layouts.app' )
 
 @section( 'content' )
     <div class="container mt-5">
@@ -129,8 +129,8 @@
                             @if ( in_array( $payment->status, $pending_statuses ) )
                                 <p class="text-muted small">O pagamento desta assinatura ainda não foi concluído. Você pode
                                     cancelá-lo para permitir que o usuário tente novamente.</p>
-                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/cancel' ) }}" method="POST"
-                                    class="d-grid" id="cancelForm">
+                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/cancel' ) }}"
+                                    method="POST" class="d-grid" id="cancelForm">
                                     @csrf
                                     <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                                         data-bs-target="#cancelModal">
@@ -140,8 +140,8 @@
                             @elseif ( $payment->status == 'approved' )
                                 <p class="text-muted small">Este pagamento foi aprovado. Você pode estornar o valor para o cliente,
                                     o que também cancelará a assinatura.</p>
-                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/refund' ) }}" method="POST"
-                                    class="d-grid" id="refundForm">
+                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/refund' ) }}"
+                                    method="POST" class="d-grid" id="refundForm">
                                     @csrf
                                     <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                         data-bs-target="#refundModal">

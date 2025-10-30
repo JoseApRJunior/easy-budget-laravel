@@ -1,4 +1,4 @@
-@extends( 'layout.pdf_base' )
+@extends( 'layouts.pdf_base' )
 
 @section( 'content' )
     <div class="container p-4 print-content">
