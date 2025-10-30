@@ -185,7 +185,7 @@ $registrationData = [
     'first_name' => $firstName,
     'last_name' => $lastName, // ← Sempre preenchido
     'password' => 'TempPass123!@#', // ← Senha válida
-    'phone' => '+5511999999999', // ← Telefone padrão
+    'phone' => '(43) 99999-9999', // ← Telefone padrão
     'terms_accepted' => true, // ← Automático para social
 ];
 ```
@@ -242,7 +242,7 @@ $registrationData = [
     'last_name' => 'Silva', // Fallback: 'Usuário' se não houver sobrenome
     'email' => 'joao.silva@gmail.com',
     'password' => 'TempPass123!@#', // Senha temporária (válida)
-    'phone' => '+5511999999999', // Telefone padrão para login social
+    'phone' => '(43) 99999-9999', // Telefone padrão para login social
     'terms_accepted' => true, // Automático para login social
 ];
 ```

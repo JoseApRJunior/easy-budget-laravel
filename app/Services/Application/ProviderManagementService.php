@@ -219,7 +219,8 @@ class ProviderManagementService
         // Log activity
         $activityType    = $isGoogleUser ? 'password_set' : 'password_changed';
         $activityMessage = $isGoogleUser ? 'Primeira senha definida com sucesso!' : 'Senha atualizada com sucesso!';
-
+//TODO  App\Services\Domain\ActivityService::logActivity(): Argument #1 ($action) must be of type string, int given, called in C:\xampp\htdocs\easy-budget-laravel\app\Services\Application\ProviderManagementService.php on line 223
+//TODO  analisar antiga logica de logs, se vamos migrar
         $this->activityService->logActivity(
             $user->tenant_id,
             $user->id,

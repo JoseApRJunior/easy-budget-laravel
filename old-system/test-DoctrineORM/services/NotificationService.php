@@ -18,49 +18,49 @@ class NotificationService
     public function __construct()
     {
         $this->config = [
-            'smtp_host' => 'smtp.gmail.com',
-            'smtp_port' => 587,
+            'smtp_host'     => 'smtp.gmail.com',
+            'smtp_port'     => 587,
             'smtp_username' => 'noreply@easy-budget.com',
             'smtp_password' => 'app_password_here',
-            'from_email' => 'noreply@easy-budget.com',
-            'from_name' => 'Easy Budget Monitor',
-            'admin_emails' => ['admin@easy-budget.com'],
-            'sms_api_key' => 'sms_api_key_here'
+            'from_email'    => 'noreply@easy-budget.com',
+            'from_name'     => 'Easy Budget Monitor',
+            'admin_emails'  => [ 'admin@easy-budget.com' ],
+            'sms_api_key'   => 'sms_api_key_here'
         ];
     }
 
     /**
      * Envia notificação de alerta por email
      */
-    public function sendAlertEmail(string $middleware, string $severity, string $message): bool
+    public function sendAlertEmail( string $middleware, string $severity, string $message ): bool
     {
-        $mail = new PHPMailer(true);
+        $mail = new PHPMailer( true );
 
         try {
             // Configuração SMTP
             $mail->isSMTP();
-            $mail->Host = $this->config['smtp_host'];
-            $mail->SMTPAuth = true;
-            $mail->Username = $this->config['smtp_username'];
-            $mail->Password = $this->config['smtp_password'];
+            $mail->Host       = $this->config[ 'smtp_host' ];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $this->config[ 'smtp_username' ];
+            $mail->Password   = $this->config[ 'smtp_password' ];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = $this->config['smtp_port'];
+            $mail->Port       = $this->config[ 'smtp_port' ];
 
             // Remetente e destinatários
-            $mail->setFrom($this->config['from_email'], $this->config['from_name']);
-            foreach ($this->config['admin_emails'] as $email) {
-                $mail->addAddress($email);
+            $mail->setFrom( $this->config[ 'from_email' ], $this->config[ 'from_name' ] );
+            foreach ( $this->config[ 'admin_emails' ] as $email ) {
+                $mail->addAddress( $email );
             }
 
             // Conteúdo
-            $mail->isHTML(true);
+            $mail->isHTML( true );
             $mail->Subject = "[Easy-Budget] Alerta {$severity} - {$middleware}";
-            $mail->Body = $this->getEmailTemplate($middleware, $severity, $message);
+            $mail->Body    = $this->getEmailTemplate( $middleware, $severity, $message );
 
             $mail->send();
             return true;
-        } catch (\Exception $e) {
-            error_log("Email notification failed: " . $e->getMessage());
+        } catch ( \Exception $e ) {
+            error_log( "Email notification failed: " . $e->getMessage() );
             return false;
         }
     }
@@ -68,37 +68,37 @@ class NotificationService
     /**
      * Envia notificação SMS
      */
-    public function sendAlertSMS(string $middleware, string $severity, string $message): bool
+    public function sendAlertSMS( string $middleware, string $severity, string $message ): bool
     {
         $smsMessage = "[Easy-Budget] {$severity}: {$middleware} - {$message}";
-        
+
         // Implementação com API de SMS (exemplo Twilio/Nexmo)
         $data = [
-            'to' => '+5511999999999',
+            'to'      => '43999999999',
             'message' => $smsMessage,
-            'api_key' => $this->config['sms_api_key']
+            'api_key' => $this->config[ 'sms_api_key' ]
         ];
 
         // Simular envio (implementar API real conforme provedor)
-        error_log("SMS Alert: " . $smsMessage);
+        error_log( "SMS Alert: " . $smsMessage );
         return true;
     }
 
     /**
      * Template HTML para emails de alerta
      */
-    private function getEmailTemplate(string $middleware, string $severity, string $message): string
+    private function getEmailTemplate( string $middleware, string $severity, string $message ): string
     {
-        $color = match($severity) {
+        $color = match ( $severity ) {
             'CRITICAL' => '#dc3545',
-            'WARNING' => '#ffc107',
-            default => '#17a2b8'
+            'WARNING'  => '#ffc107',
+            default    => '#17a2b8'
         };
 
-        $icon = match($severity) {
+        $icon = match ( $severity ) {
             'CRITICAL' => '🚨',
-            'WARNING' => '⚠️',
-            default => 'ℹ️'
+            'WARNING'  => '⚠️',
+            default    => 'ℹ️'
         };
 
         return "
@@ -115,11 +115,11 @@ class NotificationService
                         {$message}
                     </div>
                     <div style='margin: 20px 0; font-size: 14px; color: #666;'>
-                        <strong>Data/Hora:</strong> " . date('d/m/Y H:i:s') . "<br>
+                        <strong>Data/Hora:</strong> " . date( 'd/m/Y H:i:s' ) . "<br>
                         <strong>Sistema:</strong> Easy Budget Monitoring
                     </div>
                     <div style='text-align: center; margin-top: 30px;'>
-                        <a href='http://localhost/easy-budget/admin/monitoring' 
+                        <a href='http://localhost/easy-budget/admin/monitoring'
                            style='background: {$color}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;'>
                             Ver Dashboard
                         </a>
@@ -136,10 +136,10 @@ class NotificationService
     /**
      * Configura destinatários de notificação
      */
-    public function setNotificationRecipients(array $emails, array $phones = []): void
+    public function setNotificationRecipients( array $emails, array $phones = [] ): void
     {
-        $this->config['admin_emails'] = $emails;
-        $this->config['admin_phones'] = $phones;
+        $this->config[ 'admin_emails' ] = $emails;
+        $this->config[ 'admin_phones' ] = $phones;
     }
 
     /**
@@ -147,6 +147,7 @@ class NotificationService
      */
     public function testEmailConfiguration(): bool
     {
-        return $this->sendAlertEmail('TestMiddleware', 'INFO', 'Teste de configuração de email');
+        return $this->sendAlertEmail( 'TestMiddleware', 'INFO', 'Teste de configuração de email' );
     }
+
 }

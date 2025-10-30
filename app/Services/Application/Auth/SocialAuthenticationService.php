@@ -180,7 +180,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
             'name'           => $userData[ 'name' ],
             'email'          => $userData[ 'email' ],
             'password'       => null,
-            'phone'          => '+5511999999999',
+            'phone_personal' => null,
             'terms_accepted' => true,
         ];
     }
