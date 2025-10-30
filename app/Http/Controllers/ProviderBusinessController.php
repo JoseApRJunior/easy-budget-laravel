@@ -113,7 +113,7 @@ class ProviderBusinessController extends Controller
                 $commonDataUpdate = array_filter( [
                     'first_name'          => $validated[ 'first_name' ] ?? null,
                     'last_name'           => $validated[ 'last_name' ] ?? null,
-                    'birth_date'          => $validated[ 'birth_date' ] ?? null,
+                    'birth_date'          => !empty( $validated[ 'birth_date' ] ) ? \Carbon\Carbon::createFromFormat( 'd/m/Y', $validated[ 'birth_date' ] )->format( 'Y-m-d' ) : null,
                     'company_name'        => $validated[ 'company_name' ] ?? null,
                     'cnpj'                => $this->cleanDocumentNumber( $validated[ 'cnpj' ] ?? $user->provider->commonData->cnpj ),
                     'cpf'                 => $this->cleanDocumentNumber( $validated[ 'cpf' ] ?? $user->provider->commonData->cpf ),
@@ -128,8 +128,8 @@ class ProviderBusinessController extends Controller
             // Atualizar Contact
             if ( $user->provider && $user->provider->contact ) {
                 $contactUpdate = array_filter( [
-                    'email'          => $validated[ 'email_personal' ] ?? null,
-                    'phone'          => $validated[ 'phone_personal' ] ?? null,
+                    'email_personal' => $validated[ 'email_personal' ] ?? null,
+                    'phone_personal' => $validated[ 'phone_personal' ] ?? null,
                     'email_business' => $validated[ 'email_business' ] ?? null,
                     'phone_business' => $validated[ 'phone_business' ] ?? null,
                     'website'        => $validated[ 'website' ] ?? null,

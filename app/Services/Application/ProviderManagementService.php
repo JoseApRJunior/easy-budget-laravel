@@ -514,13 +514,34 @@ class ProviderManagementService
 
             $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
 
+            // Create Contact
+            $contact = \App\Models\Contact::create( [
+                'tenant_id'      => $tenant->id,
+                'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
+                'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
+                'email_business' => null,
+                'phone_business' => null,
+                'website'        => null,
+            ] );
+
+            // Create Address
+            $address = \App\Models\Address::create( [
+                'tenant_id'      => $tenant->id,
+                'address'        => null,
+                'address_number' => null,
+                'neighborhood'   => null,
+                'city'           => null,
+                'state'          => null,
+                'cep'            => null,
+            ] );
+
             // Create Provider
             $provider = new Provider( [
                 'tenant_id'      => $tenant->id,
                 'user_id'        => $user->id,
                 'common_data_id' => $savedCommonData->id,
-                'contact_id'     => null,
-                'address_id'     => null,
+                'contact_id'     => $contact->id,
+                'address_id'     => $address->id,
                 'terms_accepted' => $userData[ 'terms_accepted' ],
             ] );
 

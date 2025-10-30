@@ -229,7 +229,7 @@ class MailerService
         string $resetToken,
     ): ServiceResult {
         try {
-            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], false );
+            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], true );
             $subject   = 'Redefinição de senha - Easy Budget';
 
             $templateData = [

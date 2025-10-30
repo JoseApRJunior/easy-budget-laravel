@@ -47,6 +47,19 @@ class Contact extends Model
     ];
 
     /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'email_personal' => null,
+        'phone_personal' => null,
+        'email_business' => null,
+        'phone_business' => null,
+        'website'        => null,
+    ];
+
+    /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
@@ -69,7 +82,7 @@ class Contact extends Model
     {
         return [
             'tenant_id'      => 'required|integer|exists:tenants,id',
-            'email_personal' => 'required|email|max:255|unique:contacts,email_personal',
+            'email_personal' => 'nullable|email|max:255|unique:contacts,email_personal',
             'phone_personal' => 'nullable|string|max:20',
             'email_business' => 'nullable|email|max:255|unique:contacts,email_business',
             'phone_business' => 'nullable|string|max:20',

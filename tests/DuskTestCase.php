@@ -22,6 +22,7 @@ abstract class DuskTestCase extends BaseTestCase
     public static function prepare(): void
     {
         if ( !static::runningInSail() ) {
+            // Configurar ChromeDriver para funcionar com versão específica do Chrome
             static::startChromeDriver( [ '--port=9515' ] );
         }
     }

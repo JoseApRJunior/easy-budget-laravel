@@ -156,19 +156,19 @@ return new class extends Migration
         Schema::create( 'addresses', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'address', 255 );
+            $table->string( 'address', 255 )->nullable();
             $table->string( 'address_number', 20 )->nullable();
-            $table->string( 'neighborhood', 100 );
-            $table->string( 'city', 100 );
-            $table->string( 'state', 2 );
-            $table->string( 'cep', 9 );
+            $table->string( 'neighborhood', 100 )->nullable();
+            $table->string( 'city', 100 )->nullable();
+            $table->string( 'state', 2 )->nullable();
+            $table->string( 'cep', 9 )->nullable();
             $table->timestamps();
         } );
 
         Schema::create( 'contacts', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'email_personal', 255 )->unique();
+            $table->string( 'email_personal', 255 )->nullable()->unique();
             $table->string( 'phone_personal', 20 )->nullable();
             $table->string( 'email_business', 255 )->nullable()->unique();
             $table->string( 'phone_business', 20 )->nullable();

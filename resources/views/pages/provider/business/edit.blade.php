@@ -18,7 +18,7 @@
             </nav>
         </div>
 
-        <form action="{{ route( 'provider.business.update' ) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route( 'provider.business.update' ) }}" method="POST" enctype="multipart/form-data" id="businessForm">
             @csrf
             @method( 'PUT' )
 
@@ -36,7 +36,7 @@
                                 <div class="col-12">
                                     <label for="first_name" class="form-label">Nome</label>
                                     <input type="text" class="form-control @error('first_name') is-invalid @enderror"
-                                           id="first_name" name="first_name"
+                                           id="first_name" name="first_name" dusk="first_name"
                                            value="{{ old('first_name', $provider->commonData?->first_name ?? '') }}">
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -55,10 +55,11 @@
 
                                 <div class="col-12">
                                     <label for="birth_date" class="form-label">Data de Nascimento</label>
-                                    <input type="date" class="form-control @error('birth_date') is-invalid @enderror"
+                                    <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
                                            id="birth_date" name="birth_date"
-                                           value="{{ old('birth_date', $provider->commonData?->birth_date ?? '') }}"
-                                           max="{{ \Carbon\Carbon::now()->subYears(18)->format('Y-m-d') }}">
+                                           value="{{ old('birth_date', $provider->commonData?->birth_date ? \Carbon\Carbon::parse($provider->commonData->birth_date)->format('d/m/Y') : '') }}"
+                                           placeholder="DD/MM/AAAA">
+                                    <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
                                     @error('birth_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -68,7 +69,7 @@
                                     <label for="email_personal" class="form-label">Email Pessoal</label>
                                     <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
                                            id="email_personal" name="email_personal"
-                                           value="{{ old('email_personal', $provider->contact?->email ?? '') }}">
+                                           value="{{ old('email_personal', $provider->contact?->email_personal ?? $provider->contact?->email ?? '') }}">
                                     @error('email_personal')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -78,7 +79,7 @@
                                     <label for="phone_personal" class="form-label">Telefone Pessoal</label>
                                     <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
                                            id="phone_personal" name="phone_personal"
-                                           value="{{ old('phone_personal', $provider->contact?->phone ?? '') }}">
+                                           value="{{ old('phone_personal', $provider->contact?->phone_personal ?? $provider->contact?->phone ?? '') }}">
                                     @error('phone_personal')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -347,6 +348,105 @@
 @push( 'scripts' )
     <!-- Scripts de funcionalidades específicas -->
     <script>
+        // ========================================
+        // VALIDAÇÃO EM TEMPO REAL
+        // ========================================
+
+        /**
+         * Valida campos obrigatórios
+         */
+        function validateRequiredField(input, fieldName) {
+            const value = input.value.trim();
+
+            if (!value) {
+                input.classList.add('is-invalid');
+                let errorDiv = input.nextElementSibling;
+                if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    input.parentNode.insertBefore(errorDiv, input.nextSibling);
+                }
+                errorDiv.textContent = `O ${fieldName} é obrigatório.`;
+            } else {
+                input.classList.remove('is-invalid');
+                const errorDiv = input.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.textContent = '';
+                }
+            }
+        }
+
+        /**
+         * Valida formato da data (DD/MM/YYYY)
+         */
+        function isValidDateFormat(value) {
+            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            return dateRegex.test(value);
+        }
+
+        /**
+         * Valida se a data é válida, anterior a hoje e pessoa tem pelo menos 18 anos
+         */
+        function isValidBirthDate(value) {
+            if (!isValidDateFormat(value)) return false;
+
+            const parts = value.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-based
+            const year = parseInt(parts[2], 10);
+
+            const birthDate = new Date(year, month, day);
+            const today = new Date();
+
+            // Verificar se a data é válida
+            if (birthDate.getDate() !== day || birthDate.getMonth() !== month || birthDate.getFullYear() !== year) {
+                return false;
+            }
+
+            // Verificar se é anterior a hoje
+            if (birthDate >= today) {
+                return false;
+            }
+
+            // Verificar se a pessoa tem pelo menos 18 anos
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+
+            // Ajustar idade se ainda não fez aniversário este ano
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+
+            return age >= 18;
+        }
+
+        /**
+         * Mostra erro de validação
+         */
+        function showBirthDateError(input, message) {
+            input.classList.add('is-invalid');
+            const errorDiv = document.getElementById('birth_date_js_error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        /**
+         * Remove erro de validação
+         */
+        function clearBirthDateError(input) {
+            input.classList.remove('is-invalid');
+            const errorDiv = document.getElementById('birth_date_js_error');
+            if (errorDiv) {
+                errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
+            }
+        }
+
+
+        // ========================================
+        // OUTRAS FUNCIONALIDADES
+        // ========================================
+
         // Preview da logo da empresa
         document.getElementById('logo')?.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -369,22 +469,116 @@
 
         // Buscar CEP automático
         document.addEventListener('DOMContentLoaded', function() {
+            // Formatar valores já carregados
+            const cnpjInput = document.getElementById('cnpj');
+            const cpfInput = document.getElementById('cpf');
+            
+            if (cnpjInput && cnpjInput.value) {
+                cnpjInput.value = formatCNPJ(cnpjInput.value);
+            }
+            if (cpfInput && cpfInput.value) {
+                cpfInput.value = formatCPF(cpfInput.value);
+            }
+            // Validação no submit
+            const form = document.getElementById('businessForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const birthDateInput = document.getElementById('birth_date');
+                    const value = birthDateInput.value.trim();
+                    
+                    if (value && !isValidBirthDate(value)) {
+                        e.preventDefault();
+                        if (!isValidDateFormat(value)) {
+                            showBirthDateError(birthDateInput, 'Formato inválido. Use DD/MM/YYYY');
+                        } else {
+                            const parts = value.split('/');
+                            const day = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10) - 1;
+                            const year = parseInt(parts[2], 10);
+                            const birthDate = new Date(year, month, day);
+                            const today = new Date();
+                            
+                            if (birthDate >= today) {
+                                showBirthDateError(birthDateInput, 'Data não pode ser futura');
+                            } else {
+                                showBirthDateError(birthDateInput, 'É necessário ter pelo menos 18 anos');
+                            }
+                        }
+                        birthDateInput.focus();
+                        return false;
+                    }
+                });
+            }
+            // Aguardar um pouco para garantir que todos os elementos estão carregados
+            setTimeout(function() {
+                // Inicializar validação de campos obrigatórios
+                const birthDateInput = document.getElementById('birth_date');
+                if (birthDateInput) {
+                    birthDateInput.addEventListener('blur', function() {
+                        const value = this.value.trim();
+                        if (value && !isValidBirthDate(value)) {
+                            if (!isValidDateFormat(value)) {
+                                showBirthDateError(this, 'Formato inválido. Use DD/MM/YYYY');
+                            } else {
+                                // Verificar se é data futura ou menor de 18 anos
+                                const parts = value.split('/');
+                                const day = parseInt(parts[0], 10);
+                                const month = parseInt(parts[1], 10) - 1;
+                                const year = parseInt(parts[2], 10);
+                                const birthDate = new Date(year, month, day);
+                                const today = new Date();
+
+                                if (birthDate >= today) {
+                                    showBirthDateError(this, 'Data não pode ser futura');
+                                } else {
+                                    showBirthDateError(this, 'É necessário ter pelo menos 18 anos');
+                                }
+                            }
+                        } else {
+                            clearBirthDateError(this);
+                        }
+                    });
+
+                    // Limpar erro quando começar a digitar novamente
+                    birthDateInput.addEventListener('input', function() {
+                        if (this.classList.contains('is-invalid')) {
+                            clearBirthDateError(this);
+                        }
+                    });
+                }
+
+                // Validação de campos obrigatórios
+                const firstName = document.getElementById('first_name');
+                const lastName = document.getElementById('last_name');
+
+                if (firstName) {
+                    firstName.addEventListener('blur', () => validateRequiredField(firstName, 'nome'));
+                }
+
+                if (lastName) {
+                    lastName.addEventListener('blur', () => validateRequiredField(lastName, 'sobrenome'));
+                }
+            }, 100);
+
             const cepInput = document.getElementById('cep');
             if (cepInput) {
                 cepInput.addEventListener('blur', function() {
                     const cep = this.value.replace(/\D/g, '');
                     if (cep.length === 8) {
-                        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                            .then(response => response.json())
-                            .then(data => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', `https://viacep.com.br/ws/${cep}/json/`, true);
+                        xhr.onload = function() {
+                            if (xhr.status === 200) {
+                                const data = JSON.parse(xhr.responseText);
                                 if (!data.erro) {
                                     document.getElementById('address').value = data.logradouro || '';
                                     document.getElementById('neighborhood').value = data.bairro || '';
                                     document.getElementById('city').value = data.localidade || '';
                                     document.getElementById('state').value = data.uf || '';
                                 }
-                            })
-                            .catch(error => console.log('Erro ao buscar CEP:', error));
+                            }
+                        };
+                        xhr.send();
                     }
                 });
             }
