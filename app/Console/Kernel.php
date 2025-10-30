@@ -10,6 +10,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\ClearLogs::class,
         \App\Console\Commands\LogSizeMonitor::class,
+        \App\Console\Commands\LimparCachesEFecharServicos::class,
     ];
 
     protected function schedule( Schedule $schedule )

@@ -71,8 +71,11 @@ class LoginRequest extends FormRequest
         if ( !Auth::attempt( $this->only( 'email', 'password' ), $this->boolean( 'remember' ) ) ) {
             RateLimiter::hit( $this->throttleKey() );
 
+            // Forçar locale pt-BR para garantir tradução correta
+            app()->setLocale( 'pt-BR' );
+
             throw ValidationException::withMessages( [
-                'email' => trans( 'auth.failed' ),
+                'email' => __( 'auth.failed' ),
             ] );
         }
 

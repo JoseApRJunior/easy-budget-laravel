@@ -109,7 +109,7 @@ class PasswordResetLinkController extends Controller
                 'timestamp' => now()->toISOString()
             ] );
 
-            // 4. Gerar token de reset usando formato base64url (32 bytes = 43 caracteres)
+            // 4. Criar token na tabela user_confirmation_tokens (sistema legado)
             $resetToken = generateSecureTokenUrl();
 
             Log::info( 'PasswordResetLinkController::store - PASSO 4: Token de reset gerado', [
@@ -143,12 +143,56 @@ class PasswordResetLinkController extends Controller
                     ->withErrors( [ 'email' => 'Erro ao processar solicitação. Tente novamente mais tarde.' ] );
             }
 
-            // 6. Disparar evento personalizado PasswordResetRequested
+            // 6. Criar token na tabela user_confirmation_tokens (sistema legado)
             try {
-                Log::info( 'PasswordResetLinkController::store - PASSO 6: Disparando evento PasswordResetRequested', [
+                Log::info( 'PasswordResetLinkController::store - PASSO 6: Criando token na tabela user_confirmation_tokens', [
                     'user_id'   => $user->id,
                     'email'     => $user->email,
                     'tenant_id' => $tenant->id,
+                    'timestamp' => now()->toISOString()
+                ] );
+
+                $confirmationToken = \App\Models\UserConfirmationToken::create( [
+                    'user_id'    => $user->id,
+                    'tenant_id'  => $tenant->id,
+                    'token'      => $resetToken,
+                    'expires_at' => now()->addMinutes( 15 ), // 15 minutos para reset de senha
+                    'type'       => \App\Enums\TokenType::PASSWORD_RESET,
+                ] );
+
+                Log::info( 'PasswordResetLinkController::store - Token criado com sucesso na tabela user_confirmation_tokens', [
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'tenant_id'  => $tenant->id,
+                    'token_id'   => $confirmationToken->id,
+                    'token_type' => $confirmationToken->type->value,
+                    'expires_at' => $confirmationToken->expires_at->toISOString(),
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+            } catch ( \Throwable $e ) {
+                Log::error( 'PasswordResetLinkController::store - Erro ao criar token na tabela user_confirmation_tokens', [
+                    'user_id'    => $user->id,
+                    'email'      => $user->email,
+                    'tenant_id'  => $tenant->id,
+                    'error'      => $e->getMessage(),
+                    'error_type' => get_class( $e ),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                    'timestamp'  => now()->toISOString()
+                ] );
+
+                return back()->withInput( $request->only( 'email' ) )
+                    ->withErrors( [ 'email' => 'Erro ao processar solicitação. Tente novamente mais tarde.' ] );
+            }
+
+            // 7. Disparar evento personalizado PasswordResetRequested
+            try {
+                Log::info( 'PasswordResetLinkController::store - PASSO 7: Disparando evento PasswordResetRequested', [
+                    'user_id'   => $user->id,
+                    'email'     => $user->email,
+                    'tenant_id' => $tenant->id,
+                    'token_id'  => $confirmationToken->id,
                     'timestamp' => now()->toISOString()
                 ] );
 
@@ -158,6 +202,7 @@ class PasswordResetLinkController extends Controller
                     'user_id'    => $user->id,
                     'email'      => $user->email,
                     'tenant_id'  => $tenant->id,
+                    'token_id'   => $confirmationToken->id,
                     'event_type' => 'password_reset_requested',
                     'timestamp'  => now()->toISOString()
                 ] );
@@ -167,6 +212,7 @@ class PasswordResetLinkController extends Controller
                     'user_id'    => $user->id,
                     'email'      => $user->email,
                     'tenant_id'  => $tenant->id,
+                    'token_id'   => $confirmationToken->id,
                     'error'      => $e->getMessage(),
                     'error_type' => get_class( $e ),
                     'error_file' => $e->getFile(),

@@ -79,26 +79,63 @@ class NewPasswordController extends Controller
                 'password' => [ 'required', 'confirmed', Rules\Password::defaults() ],
             ] );
 
-            // Here we will attempt to reset the user's password. If it is successful we
-            // will update the password on an actual user model and persist it to the
-            // database. Otherwise we will parse the error and return the response.
-            $status = Password::reset(
-                $request->only( 'email', 'password', 'password_confirmation', 'token' ),
-                function ( User $user ) use ( $request ) {
-                    Log::info( 'NewPasswordController: Reset de senha realizado com sucesso', [
-                        'user_id'   => $user->id,
-                        'email'     => $user->email,
-                        'timestamp' => now()->toISOString()
-                    ] );
+            // Usar sistema legado: buscar token na tabela user_confirmation_tokens
+            Log::info( 'NewPasswordController: Iniciando validação usando sistema legado', [
+                'email'     => $request->email,
+                'token'     => substr( $request->token ?? '', 0, 10 ) . '...',
+                'timestamp' => now()->toISOString()
+            ] );
 
-                    $user->forceFill( [
-                        'password'       => Hash::make( $request->password ),
-                        'remember_token' => Str::random( 60 ),
-                    ] )->save();
+            // Buscar token na tabela user_confirmation_tokens
+            $confirmationToken = \App\Models\UserConfirmationToken::where( 'token', $request->token )
+                ->where( 'type', \App\Enums\TokenType::PASSWORD_RESET )
+                ->where( 'expires_at', '>', now() )
+                ->first();
 
-                    event( new PasswordReset( $user ) );
-                }
-            );
+            if ( !$confirmationToken ) {
+                Log::warning( 'NewPasswordController: Token inválido ou expirado', [
+                    'email'     => $request->email,
+                    'token'     => substr( $request->token ?? '', 0, 10 ) . '...',
+                    'timestamp' => now()->toISOString()
+                ] );
+
+                return back()->withInput( $request->only( 'email' ) )
+                    ->withErrors( [ 'email' => __( 'passwords.token' ) ] );
+            }
+
+            // Verificar se o e-mail corresponde
+            if ( $confirmationToken->user->email !== $request->email ) {
+                Log::warning( 'NewPasswordController: E-mail não corresponde ao token', [
+                    'email'       => $request->email,
+                    'token_email' => $confirmationToken->user->email,
+                    'token_id'    => $confirmationToken->id,
+                    'timestamp'   => now()->toISOString()
+                ] );
+
+                return back()->withInput( $request->only( 'email' ) )
+                    ->withErrors( [ 'email' => __( 'passwords.token' ) ] );
+            }
+
+            // Atualizar senha do usuário
+            $user = $confirmationToken->user;
+            $user->forceFill( [
+                'password'       => Hash::make( $request->password ),
+                'remember_token' => Str::random( 60 ),
+            ] )->save();
+
+            // Remover token usado
+            $confirmationToken->delete();
+
+            Log::info( 'NewPasswordController: Reset de senha realizado com sucesso usando sistema legado', [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'token_id'  => $confirmationToken->id,
+                'timestamp' => now()->toISOString()
+            ] );
+
+            event( new PasswordReset( $user ) );
+
+            $status = Password::PASSWORD_RESET;
 
             Log::info( 'NewPasswordController: Status do reset de senha', [
                 'email'       => $request->email,
