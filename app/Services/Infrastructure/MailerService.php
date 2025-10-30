@@ -711,21 +711,17 @@ class MailerService
      * @param User $user Usuário que receberá o e-mail
      * @param string $token Token de redefinição de senha
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendPasswordResetNotification(
         User $user,
         string $token,
         ?Tenant $tenant = null,
-        ?array $company = null,
     ): ServiceResult {
         try {
             $mailable = new PasswordResetNotification(
                 $user,
                 $token,
-                $tenant,
-                $company,
             );
 
             Mail::to( $user->email )->send( $mailable );

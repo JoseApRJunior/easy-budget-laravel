@@ -102,12 +102,19 @@ Organized with dual architecture (Tenant vs Global):
 
 #### **Services/** - Business Logic Layer
 Organized by architectural layers:
-- `Application/` - Application-specific services
+- `Application/` - Application-specific services (15 services)
+  - Auth/, BudgetCalculationService, EmailVerificationService, etc.
 - `Core/` - Core business services with abstracts
-- `Domain/` - Domain-specific business logic
-- `Infrastructure/` - Infrastructure services (email, localization)
+  - `Abstracts/AbstractBaseService.php` - Base service implementation
+  - `Contracts/` - Service interfaces (5 interfaces)
+  - `Traits/ServiceValidationHelpers.php` - Validation utilities
+- `Domain/` - Domain-specific business logic (15 services)
+  - ActivityService, BudgetService, CustomerService, etc.
+- `Infrastructure/` - Infrastructure services (20+ services)
+  - OAuth/, Email services, Payment services, PDF generation
 - `Shared/` - Shared service utilities
-- `ChartService.php`, `MetricsService.php` - Analytics services
+  - CacheService, NotificationService
+- Root level: `ChartService.php`, `MetricsService.php` - Analytics services
 
 #### **Support/** - Support Utilities
 - `helpers.php` - Global helper functions

@@ -16,6 +16,14 @@ namespace App\Services\Application;
 
 This ensures type safety and prevents implicit type conversions that could lead to bugs.
 
+### Current Project Status (Updated 2025)
+**Laravel Version**: 12.x with PHP 8.2+
+**Asset Management**: Migrated to Vite 5.0 with Hot Module Replacement
+**Frontend Stack**: Tailwind CSS 3.1, Alpine.js 3.15, Bootstrap Icons 1.13
+**Multi-tenant**: Stancl/Tenancy 3.7 with complete data isolation
+**Payment Integration**: Mercado Pago DX PHP 3.0
+**Testing**: PHPUnit 11.5.3, Laravel Dusk 8.3, PHPStan 2.1
+
 ### Namespace Organization
 **Pattern observed in all files**
 
@@ -589,7 +597,10 @@ For listings with filters and AJAX:
 {{-- 4. Push scripts --}}
 @push('scripts')
 <script>
-    // Component-specific JavaScript
+    // Component-specific JavaScript with modern ES6+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialization code
+    });
 </script>
 @endpush
 
@@ -619,6 +630,57 @@ For listings with filters and AJAX:
 <span class="badge bg-{{ $status->color }}">
     {{ $status->label }}
 </span>
+```
+
+### Modern JavaScript Integration
+**Pattern: Vanilla JavaScript with Alpine.js components**
+
+```javascript
+// Form validation with modern JavaScript
+function validateRequiredField(input, fieldName) {
+    const value = input.value.trim();
+    
+    if (!value) {
+        input.classList.add('is-invalid');
+        showError(input, `O ${fieldName} é obrigatório.`);
+    } else {
+        input.classList.remove('is-invalid');
+        clearError(input);
+    }
+}
+
+// Date validation with comprehensive checks
+function isValidBirthDate(value) {
+    if (!isValidDateFormat(value)) return false;
+    
+    const parts = value.split('/');
+    const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    const today = new Date();
+    
+    // Age validation (18+ years)
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age >= 18 && birthDate < today;
+}
+
+// File upload with preview
+document.getElementById('logo')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const maxSize = 5242880; // 5MB
+    
+    if (file && file.size <= maxSize) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('logo-preview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
 ```
 
 ## Testing Patterns
