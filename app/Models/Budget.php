@@ -42,7 +42,7 @@ class Budget extends Model
     protected $fillable = [
         'tenant_id',
         'customer_id',
-        'budget_statuses_id',
+        'budget_status',
         'user_confirmation_token_id',
         'code',
         'due_date',
@@ -65,7 +65,7 @@ class Budget extends Model
     protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
-        'budget_statuses_id'         => BudgetStatusEnum::class,
+        'budget_status'              => \App\Enums\BudgetStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'discount'                   => 'decimal:2',
@@ -99,7 +99,7 @@ class Budget extends Model
         return [
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'customer_id'                => 'required|integer|exists:customers,id',
-            'budget_statuses_id'         => 'required|string|in:' . implode( ',', array_column( BudgetStatusEnum::cases(), 'value' ) ),
+            'budget_status'              => 'required|string|in:' . implode( ',', array_column( \App\Enums\BudgetStatus::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:budgets,code',
             'due_date'                   => 'nullable|date|after:today',
@@ -180,7 +180,7 @@ class Budget extends Model
      */
     public function getBudgetStatusAttribute(): ?BudgetStatusEnum
     {
-        return BudgetStatusEnum::tryFrom( $this->budget_statuses_id );
+        return \App\Enums\BudgetStatus::tryFrom( $this->budget_status );
     }
 
     /**
@@ -266,8 +266,8 @@ class Budget extends Model
     public function scopeActive( $query )
     {
         $activeStatuses = array_filter(
-            array_column( BudgetStatusEnum::cases(), 'value' ),
-            fn( $status ) => BudgetStatusEnum::tryFrom( $status )?->isActive() ?? false
+            array_column( \App\Enums\BudgetStatus::cases(), 'value' ),
+            fn( $status ) => \App\Enums\BudgetStatus::tryFrom( $status )?->isActive() ?? false
         );
 
         return $query->whereIn( 'budget_statuses_id', $activeStatuses );
@@ -353,7 +353,7 @@ class Budget extends Model
      */
     public function canBeEdited(): bool
     {
-        return in_array( $this->budget_status?->value, [ BudgetStatusEnum::DRAFT->value, BudgetStatusEnum::REJECTED->value ] );
+        return in_array( $this->budget_status?->value, [ \App\Enums\BudgetStatus::DRAFT->value, \App\Enums\BudgetStatus::REJECTED->value ] );
     }
 
     /**
@@ -369,7 +369,7 @@ class Budget extends Model
      */
     public function canBeApproved(): bool
     {
-        return $this->budget_status === BudgetStatusEnum::SENT && $this->isValid();
+        return $this->budget_status === \App\Enums\BudgetStatus::PENDING && $this->isValid();
     }
 
     /**
@@ -377,7 +377,7 @@ class Budget extends Model
      */
     public function canBeRejected(): bool
     {
-        return $this->budget_status === BudgetStatusEnum::SENT;
+        return $this->budget_status === \App\Enums\BudgetStatus::PENDING;
     }
 
     /**
@@ -544,7 +544,7 @@ class Budget extends Model
     {
         $newBudget                     = $this->replicate();
         $newBudget->code               = $this->generateDuplicateCode();
-        $newBudget->budget_statuses_id = BudgetStatusEnum::DRAFT->value;
+        $newBudget->budget_status      = \App\Enums\BudgetStatus::DRAFT->value;
         $newBudget->current_version_id = null;
         $newBudget->save();
 

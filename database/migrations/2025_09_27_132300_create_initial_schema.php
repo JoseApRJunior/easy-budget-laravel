@@ -57,18 +57,6 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        Schema::create( 'budget_statuses', function ( Blueprint $table ) {
-            $table->id();
-            $table->string( 'slug', 50 )->unique();
-            $table->string( 'name', 100 )->unique();
-            $table->string( 'description', 500 )->nullable();
-            $table->string( 'color', 7 )->nullable();
-            $table->string( 'icon', 50 )->nullable();
-            $table->integer( 'order_index' )->nullable();
-            $table->boolean( 'is_active' )->default( true );
-            $table->timestamps();
-        } );
-
         Schema::create( 'service_statuses', function ( Blueprint $table ) {
             $table->id();
             $table->string( 'slug', 20 )->unique();
@@ -288,7 +276,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->string( 'budget_statuses_id', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
+            $table->string( 'budget_status', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
             $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->date( 'due_date' )->nullable();
@@ -765,7 +753,6 @@ return new class extends Migration
         Schema::dropIfExists( 'plans' );
         Schema::dropIfExists( 'invoice_statuses' );
         Schema::dropIfExists( 'service_statuses' );
-        Schema::dropIfExists( 'budget_statuses' );
         Schema::dropIfExists( 'permissions' );
         Schema::dropIfExists( 'roles' );
         Schema::dropIfExists( 'professions' );
