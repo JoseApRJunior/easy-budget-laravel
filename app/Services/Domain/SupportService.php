@@ -28,9 +28,9 @@ class SupportService extends AbstractBaseService
      *
      * @param SupportRepository $supportRepository Repositório para operações de suporte
      */
-    public function __construct(SupportRepository $supportRepository)
+    public function __construct( SupportRepository $supportRepository )
     {
-        parent::__construct($supportRepository);
+        parent::__construct( $supportRepository );
     }
 
     /**
@@ -61,11 +61,27 @@ class SupportService extends AbstractBaseService
      */
     public function createSupportTicket( array $data ): ServiceResult
     {
+        Log::info( 'SupportService::createSupportTicket - Iniciando criação de ticket', [
+            'email'          => $data[ 'email' ] ?? 'N/A',
+            'subject'        => $data[ 'subject' ] ?? 'N/A',
+            'has_first_name' => !empty( $data[ 'first_name' ] ),
+            'has_last_name'  => !empty( $data[ 'last_name' ] ),
+            'message_length' => strlen( $data[ 'message' ] ?? '' ),
+        ] );
+
         // Validação dos dados
         $validationResult = $this->validateSupportData( $data );
         if ( !$validationResult->isSuccess() ) {
+            Log::warning( 'SupportService::createSupportTicket - Validação falhou', [
+                'email'             => $data[ 'email' ] ?? 'N/A',
+                'validation_errors' => $validationResult->getData(),
+            ] );
             return $validationResult;
         }
+
+        Log::info( 'SupportService::createSupportTicket - Validação passou, iniciando transação', [
+            'email' => $data[ 'email' ] ?? 'N/A',
+        ] );
 
         DB::beginTransaction();
 
@@ -73,10 +89,20 @@ class SupportService extends AbstractBaseService
             // Prepara os dados para salvamento
             $supportData = $this->prepareSupportData( $data );
 
+            Log::info( 'SupportService::createSupportTicket - Dados preparados', [
+                'email'     => $supportData[ 'email' ],
+                'tenant_id' => $supportData[ 'tenant_id' ],
+                'status'    => $supportData[ 'status' ],
+            ] );
+
             // Salva o ticket no banco de dados
             $support = $this->repository->create( $supportData );
 
             if ( !$support ) {
+                Log::error( 'SupportService::createSupportTicket - Falha ao salvar no banco', [
+                    'email'        => $supportData[ 'email' ],
+                    'support_data' => $supportData,
+                ] );
                 DB::rollBack();
                 return $this->error(
                     OperationStatus::ERROR,
@@ -84,30 +110,53 @@ class SupportService extends AbstractBaseService
                 );
             }
 
+            Log::info( 'SupportService::createSupportTicket - Ticket salvo com sucesso', [
+                'support_id' => $support->id,
+                'email'      => $support->email,
+                'tenant_id'  => $support->tenant_id,
+            ] );
+
+            // Obtém tenant efetivo para o evento
+            $effectiveTenant = $this->getEffectiveTenant();
+            Log::info( 'SupportService::createSupportTicket - Tenant efetivo obtido', [
+                'support_id'  => $support->id,
+                'tenant_id'   => $effectiveTenant?->id,
+                'tenant_name' => $effectiveTenant?->name,
+            ] );
+
             // Dispara evento para processamento assíncrono
-            \App\Events\SupportTicketCreated::dispatch($support, $data, $this->getEffectiveTenant());
+            \App\Events\SupportTicketCreated::dispatch( $support, $data, $effectiveTenant );
+
+            Log::info( 'SupportService::createSupportTicket - Evento disparado', [
+                'support_id'       => $support->id,
+                'event_class'      => 'App\\Events\\SupportTicketCreated',
+                'event_dispatched' => true,
+            ] );
 
             DB::commit();
 
-            Log::info( 'Ticket de suporte criado com sucesso e evento disparado', [
-                'support_id' => $support->id,
-                'email'      => $support->email,
-                'subject'    => $support->subject,
-                'tenant_id'  => $support->tenant_id,
-                'event_dispatched' => true
+            Log::info( 'SupportService::createSupportTicket - Transação confirmada com sucesso', [
+                'support_id'       => $support->id,
+                'email'            => $support->email,
+                'subject'          => $support->subject,
+                'tenant_id'        => $support->tenant_id,
+                'event_dispatched' => true,
             ] );
 
             return $this->success(
                 $support,
-                'Ticket de suporte criado com sucesso. Email será processado em breve.'
+                'Ticket de suporte criado com sucesso. Email será processado em breve.',
             );
 
         } catch ( Exception $e ) {
             DB::rollBack();
 
-            Log::error( 'Erro ao criar ticket de suporte', [
-                'error' => $e->getMessage(),
-                'data'  => $data
+            Log::error( 'SupportService::createSupportTicket - Erro na transação', [
+                'error'      => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'email'      => $data[ 'email' ] ?? 'N/A',
+                'data'       => $data,
             ] );
 
             return $this->error(
@@ -167,22 +216,22 @@ class SupportService extends AbstractBaseService
      * @param array $data Dados originais
      * @return array Dados preparados
      */
-    private function prepareSupportData(array $data): array
+    private function prepareSupportData( array $data ): array
     {
         return [
-            'first_name' => $data['first_name'] ?? null,
-            'last_name' => $data['last_name'] ?? null,
-            'email' => $data['email'],
-            'subject' => $data['subject'],
-            'message' => $data['message'],
-            'status' => Support::STATUS_ABERTO,
-            'tenant_id' => $this->getEffectiveTenantId(),
+            'first_name' => $data[ 'first_name' ] ?? null,
+            'last_name'  => $data[ 'last_name' ] ?? null,
+            'email'      => $data[ 'email' ],
+            'subject'    => $data[ 'subject' ],
+            'message'    => $data[ 'message' ],
+            'status'     => Support::STATUS_ABERTO,
+            'tenant_id'  => $this->getEffectiveTenantId(),
         ];
     }
 
     /**
      * Obtém o tenant_id efetivo para o ticket de suporte.
-     * 
+     *
      * Para usuários autenticados: usa o tenant do usuário
      * Para usuários não autenticados: usa o tenant público (ID 1)
      *
@@ -192,7 +241,7 @@ class SupportService extends AbstractBaseService
     {
         // Se usuário está autenticado, usa seu tenant
         $userTenantId = $this->tenantId();
-        if ($userTenantId) {
+        if ( $userTenantId ) {
             return $userTenantId;
         }
 
@@ -201,23 +250,29 @@ class SupportService extends AbstractBaseService
     }
 
     /**
-      * Obtém o tenant efetivo para o ticket de suporte.
-      * 
-      * Para usuários autenticados: retorna o tenant do usuário
-      * Para usuários não autenticados: retorna o tenant público
-      *
-      * @return \App\Models\Tenant|null Tenant efetivo
-      */
+     * Obtém o tenant efetivo para o ticket de suporte.
+     *
+     * Para usuários autenticados: retorna o tenant do usuário
+     * Para usuários não autenticados: retorna o tenant público
+     *
+     * @return \App\Models\Tenant|null Tenant efetivo
+     */
     private function getEffectiveTenant(): ?\App\Models\Tenant
     {
-        // Se usuário está autenticado, usa seu tenant
-        $userTenant = $this->authUser()?->tenant;
-        if ($userTenant) {
-            return $userTenant;
-        }
+        try {
+            // Se usuário está autenticado, usa seu tenant
+            $userTenant = $this->authUser()?->tenant;
+            if ( $userTenant ) {
+                return $userTenant;
+            }
 
-        // Para usuários não autenticados, busca o tenant público
-        return \App\Models\Tenant::find(1); // ID do tenant público
+            // Para usuários não autenticados, busca o tenant público
+            return \App\Models\Tenant::find( 1 ); // ID do tenant público
+        } catch ( Exception $e ) {
+            Log::warning( 'Erro ao obter tenant do usuário: ' . $e->getMessage() );
+            // Fallback para tenant público em caso de erro
+            return \App\Models\Tenant::find( 1 );
+        }
     }
 
     /**
@@ -226,7 +281,7 @@ class SupportService extends AbstractBaseService
      * @param string $status Status dos tickets
      * @return ServiceResult Resultado com os tickets
      */
-    public function getTicketsByStatus(string $status): ServiceResult
+    public function getTicketsByStatus( string $status ): ServiceResult
     {
         try {
             $tickets = $this->repository->findByStatus( $status );

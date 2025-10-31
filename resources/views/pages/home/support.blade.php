@@ -270,17 +270,26 @@
                             <div class="mb-4">
                                 <label for="message" class="form-label fw-semibold">
                                     <i class="bi bi-chat-text me-2"></i>Mensagem
+                                    <small class="text-muted">(Mínimo 10 caracteres)</small>
                                 </label>
                                 <textarea class="form-control @error( 'message' ) is-invalid @enderror" id="message"
                                     name="message" rows="5" placeholder="Descreva sua dúvida ou problema em detalhes..."
-                                    required>{{ old( 'message' ) }}</textarea>
+                                    maxlength="2000" required>{{ old( 'message' ) }}</textarea>
+
+                                <!-- Contador de caracteres -->
+                                <div class="form-text">
+                                    <small id="message-counter" class="text-muted">
+                                        <span id="current-chars">0</span>/2000 caracteres
+                                    </small>
+                                </div>
+
                                 @error( 'message' )
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-success btn-lg">
+                                <button type="submit" id="submit-btn" class="btn btn-success btn-lg" disabled>
                                     <i class="bi bi-send me-2"></i>
                                     Enviar Mensagem
                                 </button>
@@ -290,8 +299,60 @@
                 </div>
             </div>
         </div>
-    </div>
-    </div>
+    {{-- JavaScript para contador de caracteres --}}
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messageTextarea = document.getElementById('message');
+        const counterElement = document.getElementById('current-chars');
+        const counterContainer = document.getElementById('message-counter');
+        const submitBtn = document.getElementById('submit-btn');
+
+        function updateCounter() {
+            const currentLength = messageTextarea.value.length;
+            const maxLength = 2000;
+            const minLength = 10;
+
+            // Atualiza contador
+            counterElement.textContent = currentLength;
+
+            // Validação visual
+            if (currentLength < minLength && currentLength > 0) {
+                counterContainer.innerHTML = '<span class="text-warning">' + currentLength + '</span>/2000 caracteres (mínimo ' + minLength + ')';
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-secondary');
+            } else if (currentLength >= minLength) {
+                counterContainer.innerHTML = '<span class="text-success">' + currentLength + '</span>/2000 caracteres ✓';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-secondary');
+                submitBtn.classList.add('btn-success');
+            } else {
+                counterContainer.innerHTML = '<span id="current-chars">' + currentLength + '</span>/2000 caracteres';
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-secondary');
+            }
+
+            // Validação de limite máximo
+            if (currentLength >= maxLength) {
+                messageTextarea.value = messageTextarea.value.substring(0, maxLength);
+                updateCounter();
+            }
+        }
+
+        // Eventos
+        messageTextarea.addEventListener('input', updateCounter);
+        messageTextarea.addEventListener('keyup', updateCounter);
+        messageTextarea.addEventListener('paste', function() {
+            setTimeout(updateCounter, 0);
+        });
+
+        // Inicialização
+        updateCounter();
+    });
+    </script>
+    @endpush
 
     {{-- Informações de Contato Adicionais --}}
     <div class="card py-3 mt-5">
