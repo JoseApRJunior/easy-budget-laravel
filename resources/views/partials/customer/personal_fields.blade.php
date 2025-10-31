@@ -1,7 +1,7 @@
 <div class="mb-3">
     <label for="first_name" class="form-label">Nome</label>
-    <input type="text" class="form-control @error( 'first_name' ) is-invalid @enderror" id="first_name" name="first_name"
-        value="{{ old( 'first_name', $customer->first_name ?? '' ) }}" required>
+    <input type="text" class="form-control @error( 'first_name' ) is-invalid @enderror" id="first_name"
+        name="first_name" value="{{ old( 'first_name', $customer->first_name ?? '' ) }}" required>
     @error( 'first_name' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
@@ -45,8 +45,10 @@
 
 <div class="mb-3">
     <label for="birth_date" class="form-label">Data de Nascimento</label>
-    <input type="date" class="form-control @error( 'birth_date' ) is-invalid @enderror" id="birth_date" name="birth_date"
-        value="{{ old( 'birth_date', $customer->birth_date ? $customer->birth_date->format( 'Y-m-d' ) : '' ) }}" required>
+    <input type="date" class="form-control @error( 'birth_date' ) is-invalid @enderror" id="birth_date"
+        name="birth_date"
+        value="{{ old( 'birth_date', $customer->birth_date ? $customer->birth_date->format( 'Y-m-d' ) : '' ) }}"
+        required>
     @error( 'birth_date' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror

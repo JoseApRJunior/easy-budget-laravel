@@ -346,6 +346,8 @@
 @endsection
 
 @push( 'scripts' )
+    <!-- Scripts específicos da página -->
+
     <!-- Scripts de funcionalidades específicas -->
     <script>
         // ========================================
@@ -472,7 +474,7 @@
             // Formatar valores já carregados
             const cnpjInput = document.getElementById('cnpj');
             const cpfInput = document.getElementById('cpf');
-            
+
             if (cnpjInput && cnpjInput.value) {
                 cnpjInput.value = formatCNPJ(cnpjInput.value);
             }
@@ -485,7 +487,7 @@
                 form.addEventListener('submit', function(e) {
                     const birthDateInput = document.getElementById('birth_date');
                     const value = birthDateInput.value.trim();
-                    
+
                     if (value && !isValidBirthDate(value)) {
                         e.preventDefault();
                         if (!isValidDateFormat(value)) {
@@ -497,7 +499,7 @@
                             const year = parseInt(parts[2], 10);
                             const birthDate = new Date(year, month, day);
                             const today = new Date();
-                            
+
                             if (birthDate >= today) {
                                 showBirthDateError(birthDateInput, 'Data não pode ser futura');
                             } else {

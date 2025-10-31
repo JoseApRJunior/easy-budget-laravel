@@ -710,27 +710,30 @@ function initializeMasks() {
 // ========================================
 
 /**
- * Exportações para uso como módulo ES6
+ * Exportações para uso como módulo ES6 (comentadas para evitar conflitos)
  * @example
  * import { VanillaMask, validateCPF, formatCPF } from './vanilla-masks.js';
  *
  * // Ou importação completa
  * import * as Masks from './vanilla-masks.js';
  */
+/*
+// Exportações comentadas para evitar conflitos quando carregado como script regular
 export {
-   DEFAULT_MASK_CONFIG,
-   formatCEP,
-   formatCNPJ,
-   formatCPF,
-   formatDate,
-   formatPhone,
-   initializeMasks,
-   initializeMasksFromConfig,
-   removeNonDigits,
-   validateCNPJ,
-   validateCPF,
-   VanillaMask,
+    DEFAULT_MASK_CONFIG,
+    formatCEP,
+    formatCNPJ,
+    formatCPF,
+    formatDate,
+    formatPhone,
+    initializeMasks,
+    initializeMasksFromConfig,
+    removeNonDigits,
+    validateCNPJ,
+    validateCPF,
+    VanillaMask,
 };
+*/
 
 // ========================================
 // COMPATIBILIDADE LEGACY
