@@ -10,6 +10,9 @@ namespace App\Enums;
  * Este enum define todos os status disponíveis para os chamados
  * conforme especificado na estrutura da tabela supports.
  *
+ * Implementa StatusEnumInterface para garantir consistência
+ * com outros enums de status do sistema.
+ *
  * Funcionalidades disponíveis:
  * - Descrições detalhadas de cada status
  * - Cores e ícones para interface
@@ -18,6 +21,7 @@ namespace App\Enums;
  * - Metadados completos para cada status
  *
  * @package App\Enums
+ * @implements \App\Contracts\Interfaces\StatusEnumInterface
  *
  * @example Uso básico:
  * ```php
@@ -44,7 +48,7 @@ namespace App\Enums;
  * $supports = Support::whereIn('status', $activeSupports)->get();
  * ```
  */
-enum SupportStatus: string
+enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
     /** Chamado aberto, aguardando atendimento */
     case ABERTO = 'ABERTO';

@@ -8,7 +8,10 @@ namespace App\Enums;
  * Enum que representa os possíveis status de um orçamento
  *
  * Este enum define todos os status disponíveis para os orçamentos
- * conforme especificado na estrutura da tabela budgets e budget_statuses.
+ * conforme especificado na análise do sistema antigo.
+ *
+ * Implementa StatusEnumInterface para garantir consistência
+ * com outros enums de status do sistema.
  *
  * Funcionalidades disponíveis:
  * - Descrições detalhadas de cada status
@@ -16,14 +19,16 @@ namespace App\Enums;
  * - Controle de fluxo e transições válidas
  * - Verificação de status ativo/finalizado
  * - Metadados completos para cada status
+ * - Controle de edição/exclusão baseado no status
  *
  * @package App\Enums
+ * @implements \App\Contracts\Interfaces\StatusEnumInterface
  *
  * @example Uso básico:
  * ```php
  * $status = BudgetStatus::DRAFT;
- * echo $status->getDescription(); // "Orçamento em elaboração, permite modificações"
- * echo $status->getColor(); // "#6c757d"
+ * echo $status->getDescription(); // "Orçamento em rascunho"
+ * echo $status->getColor(); // "#6C757D"
  * ```
  *
  * @example Controle de fluxo:
@@ -44,25 +49,25 @@ namespace App\Enums;
  * $budgets = Budget::whereIn('status', $activeBudgets)->get();
  * ```
  */
-enum BudgetStatus: string
+enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
-    /** Orçamento em elaboração, permite modificações */
+    /** Orçamento em rascunho, ainda não enviado */
     case DRAFT = 'DRAFT';
 
-    /** Orçamento enviado para aprovação do cliente */
+    /** Orçamento enviado, aguardando aprovação */
     case PENDING = 'PENDING';
 
     /** Orçamento aprovado pelo cliente */
     case APPROVED = 'APPROVED';
-
-    /** Orçamento convertido em projeto/serviço */
-    case COMPLETED = 'COMPLETED';
 
     /** Orçamento rejeitado pelo cliente */
     case REJECTED = 'REJECTED';
 
     /** Orçamento cancelado */
     case CANCELLED = 'CANCELLED';
+
+    /** Orçamento concluído (todos serviços finalizados) */
+    case COMPLETED = 'COMPLETED';
 
     /** Orçamento expirado */
     case EXPIRED = 'EXPIRED';
@@ -75,12 +80,12 @@ enum BudgetStatus: string
     public function getDescription(): string
     {
         return match ( $this ) {
-            self::DRAFT     => 'Orçamento em elaboração, permite modificações',
-            self::PENDING   => 'Orçamento enviado para aprovação do cliente',
-            self::APPROVED  => 'Orçamento aprovado pelo cliente',
-            self::COMPLETED => 'Orçamento convertido em projeto/serviço',
-            self::REJECTED  => 'Orçamento rejeitado pelo cliente',
+            self::DRAFT     => 'Orçamento em rascunho',
+            self::PENDING   => 'Aguardando aprovação do cliente',
+            self::APPROVED  => 'Orçamento aprovado',
+            self::REJECTED  => 'Orçamento rejeitado',
             self::CANCELLED => 'Orçamento cancelado',
+            self::COMPLETED => 'Orçamento concluído',
             self::EXPIRED   => 'Orçamento expirado',
         };
     }
@@ -93,31 +98,31 @@ enum BudgetStatus: string
     public function getColor(): string
     {
         return match ( $this ) {
-            self::DRAFT     => '#6c757d', // Cinza
-            self::PENDING   => '#ffc107', // Amarelo
-            self::APPROVED  => '#28a745', // Verde
-            self::COMPLETED => '#28a745', // Verde
-            self::REJECTED  => '#dc3545', // Vermelho
-            self::CANCELLED => '#dc3545', // Vermelho
-            self::EXPIRED   => '#dc3545', // Vermelho
+            self::DRAFT     => '#6C757D', // Cinza
+            self::PENDING   => '#FFC107', // Amarelo
+            self::APPROVED  => '#28A745', // Verde
+            self::REJECTED  => '#DC3545', // Vermelho
+            self::CANCELLED => '#6C757D', // Cinza escuro
+            self::COMPLETED => '#007BFF', // Azul
+            self::EXPIRED   => '#FFA500', // Laranja
         };
     }
 
     /**
      * Retorna o ícone associado a cada status
      *
-     * @return string Nome do ícone para interface (Bootstrap Icons)
+     * @return string Nome do ícone para interface
      */
     public function getIcon(): string
     {
         return match ( $this ) {
-            self::DRAFT     => 'bi-pencil-square',
-            self::PENDING   => 'bi-clock',
-            self::APPROVED  => 'bi-check-circle',
-            self::COMPLETED => 'bi-check2-all',
-            self::REJECTED  => 'bi-x-circle',
-            self::CANCELLED => 'bi-slash-circle',
-            self::EXPIRED   => 'bi-calendar-x',
+            self::DRAFT     => 'edit',
+            self::PENDING   => 'clock',
+            self::APPROVED  => 'check-circle',
+            self::REJECTED  => 'times-circle',
+            self::CANCELLED => 'ban',
+            self::COMPLETED => 'check-double',
+            self::EXPIRED   => 'calendar-times',
         };
     }
 
@@ -129,8 +134,8 @@ enum BudgetStatus: string
     public function isActive(): bool
     {
         return match ( $this ) {
-            self::DRAFT, self::PENDING, self::APPROVED                      => true,
-            self::COMPLETED, self::REJECTED, self::CANCELLED, self::EXPIRED => false,
+            self::DRAFT, self::PENDING                                                      => true,
+            self::APPROVED, self::REJECTED, self::CANCELLED, self::COMPLETED, self::EXPIRED => false,
         };
     }
 
@@ -142,8 +147,34 @@ enum BudgetStatus: string
     public function isFinished(): bool
     {
         return match ( $this ) {
-            self::COMPLETED, self::REJECTED, self::CANCELLED, self::EXPIRED => true,
-            self::DRAFT, self::PENDING, self::APPROVED                      => false,
+            self::APPROVED, self::REJECTED, self::CANCELLED, self::COMPLETED, self::EXPIRED => true,
+            self::DRAFT, self::PENDING                                                      => false,
+        };
+    }
+
+    /**
+     * Verifica se o orçamento pode ser editado
+     *
+     * @return bool True se pode ser editado
+     */
+    public function canBeEdited(): bool
+    {
+        return match ( $this ) {
+            self::DRAFT                                                                                    => true,
+            self::PENDING, self::APPROVED, self::REJECTED, self::CANCELLED, self::COMPLETED, self::EXPIRED => false,
+        };
+    }
+
+    /**
+     * Verifica se o orçamento pode ser deletado
+     *
+     * @return bool True se pode ser deletado
+     */
+    public function canBeDeleted(): bool
+    {
+        return match ( $this ) {
+            self::DRAFT                                                                                    => true,
+            self::PENDING, self::APPROVED, self::REJECTED, self::CANCELLED, self::COMPLETED, self::EXPIRED => false,
         };
     }
 
@@ -158,9 +189,9 @@ enum BudgetStatus: string
             self::DRAFT,
             self::PENDING,
             self::APPROVED,
-            self::COMPLETED,
             self::REJECTED,
             self::CANCELLED,
+            self::COMPLETED,
             self::EXPIRED,
         ];
     }
@@ -175,7 +206,6 @@ enum BudgetStatus: string
         return [
             self::DRAFT,
             self::PENDING,
-            self::APPROVED,
         ];
     }
 
@@ -187,15 +217,16 @@ enum BudgetStatus: string
     public static function getFinished(): array
     {
         return [
-            self::COMPLETED,
+            self::APPROVED,
             self::REJECTED,
             self::CANCELLED,
+            self::COMPLETED,
             self::EXPIRED,
         ];
     }
 
     /**
-     * Retorna o próximo status lógico na sequência de aprovação
+     * Retorna o próximo status lógico na sequência
      *
      * @return BudgetStatus|null Próximo status ou null se for final
      */
@@ -237,10 +268,10 @@ enum BudgetStatus: string
             self::DRAFT->value     => [ self::PENDING->value, self::CANCELLED->value ],
             self::PENDING->value   => [ self::APPROVED->value, self::REJECTED->value, self::CANCELLED->value, self::EXPIRED->value ],
             self::APPROVED->value  => [ self::COMPLETED->value, self::CANCELLED->value ],
+            self::REJECTED->value  => [ self::DRAFT->value ], // Pode reabrir
+            self::CANCELLED->value => [ self::DRAFT->value ], // Pode reabrir
+            self::EXPIRED->value   => [ self::DRAFT->value ], // Pode reabrir
             self::COMPLETED->value => [], // Status final
-            self::REJECTED->value  => [], // Status final
-            self::CANCELLED->value => [], // Status final
-            self::EXPIRED->value   => [], // Status final
         ];
 
         return in_array( $targetStatus->value, $validTransitions[ $this->value ] ?? [] );
@@ -254,8 +285,8 @@ enum BudgetStatus: string
     public function getPriorityOrder(): int
     {
         return match ( $this ) {
-            self::DRAFT     => 1,
-            self::PENDING   => 2,
+            self::PENDING   => 1, // Maior prioridade - aguardando ação
+            self::DRAFT     => 2,
             self::APPROVED  => 3,
             self::COMPLETED => 4,
             self::REJECTED  => 5,
@@ -278,6 +309,8 @@ enum BudgetStatus: string
             'icon'           => $this->getIcon(),
             'is_active'      => $this->isActive(),
             'is_finished'    => $this->isFinished(),
+            'can_be_edited'  => $this->canBeEdited(),
+            'can_be_deleted' => $this->canBeDeleted(),
             'priority_order' => $this->getPriorityOrder(),
         ];
     }
@@ -355,10 +388,10 @@ enum BudgetStatus: string
             self::DRAFT->value     => [ self::PENDING->value, self::CANCELLED->value ],
             self::PENDING->value   => [ self::APPROVED->value, self::REJECTED->value, self::CANCELLED->value, self::EXPIRED->value ],
             self::APPROVED->value  => [ self::COMPLETED->value, self::CANCELLED->value ],
+            self::REJECTED->value  => [ self::DRAFT->value ], // Pode reabrir
+            self::CANCELLED->value => [ self::DRAFT->value ], // Pode reabrir
+            self::EXPIRED->value   => [ self::DRAFT->value ], // Pode reabrir
             self::COMPLETED->value => [], // Status final
-            self::REJECTED->value  => [], // Status final
-            self::CANCELLED->value => [], // Status final
-            self::EXPIRED->value   => [], // Status final
         ];
 
         return in_array( $toStatus->value, $validTransitions[ $fromStatus->value ] ?? [] );
@@ -375,6 +408,9 @@ enum BudgetStatus: string
         $total    = count( $statuses );
         $active   = 0;
         $finished = 0;
+        $approved = 0;
+        $rejected = 0;
+        $pending  = 0;
 
         foreach ( $statuses as $status ) {
             if ( $status->isActive() ) {
@@ -382,14 +418,27 @@ enum BudgetStatus: string
             } elseif ( $status->isFinished() ) {
                 $finished++;
             }
+
+            match ( $status ) {
+                self::APPROVED => $approved++,
+                self::REJECTED => $rejected++,
+                self::PENDING  => $pending++,
+                default        => null,
+            };
         }
 
         return [
             'total'               => $total,
             'active'              => $active,
             'finished'            => $finished,
+            'approved'            => $approved,
+            'rejected'            => $rejected,
+            'pending'             => $pending,
             'active_percentage'   => $total > 0 ? round( ( $active / $total ) * 100, 1 ) : 0,
             'finished_percentage' => $total > 0 ? round( ( $finished / $total ) * 100, 1 ) : 0,
+            'approved_percentage' => $total > 0 ? round( ( $approved / $total ) * 100, 1 ) : 0,
+            'rejected_percentage' => $total > 0 ? round( ( $rejected / $total ) * 100, 1 ) : 0,
+            'conversion_rate'     => $total > 0 ? round( ( $approved / $total ) * 100, 1 ) : 0,
         ];
     }
 

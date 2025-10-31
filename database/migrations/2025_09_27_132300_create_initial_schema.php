@@ -288,7 +288,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->string( 'budget_statuses_id', 20 ); // Changed from foreignId to string for enum compatibility
+            $table->string( 'budget_statuses_id', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
             $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->date( 'due_date' )->nullable();
