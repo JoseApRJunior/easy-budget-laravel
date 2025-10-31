@@ -322,10 +322,17 @@
                 const charCount = document.getElementById( 'char-count-value' );
 
                 if ( textarea && charCount ) {
-                    textarea.addEventListener( 'input', () => {
+                    // Inicializar contador com valor atual
+                    const updateCharCount = () => {
                         const charsLeft = textarea.maxLength - textarea.value.length;
                         charCount.textContent = charsLeft;
-                    } );
+                    };
+
+                    // Atualizar contador inicial
+                    updateCharCount();
+
+                    // Atualizar contador em tempo real
+                    textarea.addEventListener( 'input', updateCharCount );
                 }
             }, 100 );
 
