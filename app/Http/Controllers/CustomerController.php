@@ -74,6 +74,7 @@ class CustomerController extends Controller
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
             'customer_type'     => 'pessoa_fisica',
+            'customer'          => new Customer(), // Instância vazia para criação
         ] );
     }
 
@@ -84,8 +85,10 @@ class CustomerController extends Controller
     {
         $areasOfActivity = AreaOfActivity::active()->get();
 
-        return view( 'pages.customer.create-pessoa-juridica', [
+        return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
+            'customer_type'     => 'pessoa_juridica',
+            'customer'          => new Customer(), // Instância vazia para criação
         ] );
     }
 
