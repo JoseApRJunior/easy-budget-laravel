@@ -416,6 +416,9 @@ $budget->update(['pdf_verification_hash' => $hash]);
 -  [ ] Formulários responsivos
 -  [ ] Interface de aprovação para cliente
 -  [ ] JavaScript para interatividade
+-  [ ] **Integração Vanilla JavaScript** (após CustomerController)
+-  [ ] **Máscaras automáticas** para campos específicos
+-  [ ] **Validações frontend** para dados financeiros
 
 ### Events e Notifications
 

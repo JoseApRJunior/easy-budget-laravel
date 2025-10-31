@@ -371,6 +371,9 @@ AuditLog::create([
 -  [ ] Templates Blade para CRUD completo
 -  [ ] Formulários responsivos com validação
 -  [ ] Interface moderna com Bootstrap
+-  [ ] **Integração Vanilla JavaScript** para máscaras e validações
+-  [ ] **Auto-detecção automática** de campos por ID
+-  [ ] **Validações frontend** para CPF/CNPJ/Email
 
 ### Events e Notifications
 
