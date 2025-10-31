@@ -109,6 +109,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Customers
     Route::prefix( 'customers' )->name( 'customers.' )->group( function () {
         Route::get( '/', [ CustomerController::class, 'index' ] )->name( 'index' );
+        Route::get( '/create', [ CustomerController::class, 'create' ] )->name( 'create' );
         Route::get( '/create/pessoa-fisica', [ CustomerController::class, 'createPessoaFisica' ] )->name( 'create.pessoa-fisica' );
         Route::get( '/create/pessoa-juridica', [ CustomerController::class, 'createPessoaJuridica' ] )->name( 'create.pessoa-juridica' );
         Route::post( '/pessoa-fisica', [ CustomerController::class, 'storePessoaFisica' ] )->name( 'store.pessoa-fisica' );

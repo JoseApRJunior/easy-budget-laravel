@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class Customer extends Model
 {
@@ -35,6 +36,26 @@ class Customer extends Model
     {
         parent::boot();
         static::bootTenantScoped();
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'id';
+    }
+
+    /**
+     * Resolve route binding using tenant scope.
+     */
+    public function resolveRouteBinding( $value, $field = null )
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        return $this->where( $field, $value )
+            ->where( 'tenant_id', Auth::user()?->tenant_id )
+            ->first();
     }
 
     /**

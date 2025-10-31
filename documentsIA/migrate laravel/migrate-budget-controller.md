@@ -8,6 +8,8 @@ Este documento detalha o plano de migração do `BudgetController` do sistema le
 **Sistema Legado:** `old-system/app/controllers/BudgetController.php`
 **Sistema Novo:** Laravel 12 com arquitetura Controller → Services → Repositories → Models
 
+**Integração Vanilla JavaScript:** ⏳ **Pendente** - Receberá JavaScript apenas após CustomerController (Prioridade 2)
+
 ---
 
 ## 🔄 Mudanças Arquiteturais Principais
@@ -417,8 +419,10 @@ $budget->update(['pdf_verification_hash' => $hash]);
 -  [ ] Interface de aprovação para cliente
 -  [ ] JavaScript para interatividade
 -  [ ] **Integração Vanilla JavaScript** (após CustomerController)
--  [ ] **Máscaras automáticas** para campos específicos
+-  [ ] **Máscaras automáticas** para campos financeiros (valores, datas)
 -  [ ] **Validações frontend** para dados financeiros
+-  [ ] **Auto-detecção automática** de campos por ID
+-  [ ] **Performance 10-50x mais rápida** após integração
 
 ### Events e Notifications
 
@@ -459,8 +463,10 @@ Após implementação completa:
 ---
 
 **Status Atual:** 📝 Planejamento completo realizado
-**Próximo Passo:** Iniciar implementação da Fase 1 (Models e Migrations)
+**Próximo Passo:** Aguardar conclusão do CustomerController para integração Vanilla JavaScript
 
 **Responsável:** Equipe de Desenvolvimento
-**Data de Início:** A definir
-**Data de Conclusão Estimada:** 10 semanas
+**Data de Início:** Após CustomerController
+**Data de Conclusão Estimada:** 10 semanas (após CustomerController)
+
+**Integração Vanilla JavaScript:** ⏳ **Pendente** - Receberá JS apenas após CustomerController

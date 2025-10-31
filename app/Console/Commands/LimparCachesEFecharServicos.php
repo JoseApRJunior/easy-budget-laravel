@@ -39,7 +39,8 @@ class LimparCachesEFecharServicos extends Command
         $comandos = [
             'taskkill /F /IM php.exe',
             'taskkill /F /IM node.exe',
-            'taskkill /F /IM python.exe'
+            'taskkill /F /IM python.exe',
+            'taskkill /F /IM cmd.exe'
         ];
 
         foreach ( $comandos as $cmd ) {
