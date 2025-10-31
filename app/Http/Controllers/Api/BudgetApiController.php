@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Budget;
 use App\Models\BudgetActionHistory;
@@ -138,7 +138,7 @@ class BudgetApiController extends Controller
             $budget = Budget::create( [
                 'tenant_id'                  => $user->tenant_id,
                 'customer_id'                => $validated[ 'customer_id' ],
-                'budget_statuses_id'         => BudgetStatusEnum::DRAFT->value,
+                'budget_statuses_id'         => BudgetStatus::DRAFT->value,
                 'user_id'                    => $user->id,
                 'code'                       => $this->generateBudgetCode(),
                 'description'                => $validated[ 'description' ] ?? null,
@@ -497,7 +497,7 @@ class BudgetApiController extends Controller
 
         try {
             // Alterar status
-            $budget->budget_statuses_id = BudgetStatusEnum::SENT->value;
+            $budget->budget_statuses_id = BudgetStatus::PENDING->value;
             $budget->save();
 
             // Criar nova versão
@@ -540,7 +540,7 @@ class BudgetApiController extends Controller
         }
 
         try {
-            $budget->budget_statuses_id = BudgetStatusEnum::APPROVED->value;
+            $budget->budget_statuses_id = BudgetStatus::APPROVED->value;
             $budget->save();
 
             // Criar nova versão
@@ -587,7 +587,7 @@ class BudgetApiController extends Controller
         ] );
 
         try {
-            $budget->budget_statuses_id = BudgetStatusEnum::REJECTED->value;
+            $budget->budget_statuses_id = BudgetStatus::REJECTED->value;
             $budget->save();
 
             // Criar nova versão

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Traits;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Enums\InvoiceStatusEnum;
 use App\Enums\ServiceStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,16 +15,16 @@ use Illuminate\Support\Arr;
  * Trait HasEnums
  *
  * Fornece suporte para enums customizados em modelos Eloquent.
- * Agora usa os enums reais (BudgetStatusEnum, ServiceStatusEnum, InvoiceStatusEnum)
+ * Agora usa os enums reais (BudgetStatus, ServiceStatusEnum, InvoiceStatusEnum)
  * em vez de arrays estáticos, mantendo compatibilidade com código legado.
  */
 trait HasEnums
 {
     /**
-     * Status de Orçamento (Budget) - Agora usa BudgetStatusEnum real.
+     * Status de Orçamento (Budget) - Agora usa BudgetStatus real.
      * Mantido para compatibilidade com código que ainda usa as constantes.
      *
-     * @deprecated Use BudgetStatusEnum diretamente
+     * @deprecated Use BudgetStatus diretamente
      */
     protected const BUDGET_STATUS_ENUM = [
         self::BUDGET_DRAFT     => [
@@ -386,14 +386,14 @@ trait HasEnums
     }
 
     /**
-     * Obtém opções de status de orçamento usando BudgetStatusEnum real.
+     * Obtém opções de status de orçamento usando BudgetStatus real.
      *
      * @return array
      */
     private function getBudgetStatusOptions(): array
     {
         $options = [];
-        foreach ( BudgetStatusEnum::cases() as $status ) {
+        foreach ( BudgetStatus::cases() as $status ) {
             $options[ $status->value ] = [
                 'value'       => $status->value,
                 'slug'        => $status->name,
@@ -548,7 +548,7 @@ trait HasEnums
      *
      * Exemplo de uso correto em Budget (que tem budget_statuses_id referenciando BudgetStatus):
      * Budget::whereHas('status', fn($q) => $q->where('is_active', true))
-     *        ->orWhere('budget_statuses_id', BudgetStatusEnum::APPROVED->value);
+     *        ->orWhere('budget_statuses_id', BudgetStatus::APPROVED->value);
      *
      * Esta limitação evita erros de runtime por coluna inexistente e promove Clean Architecture
      * com responsabilidades bem definidas.

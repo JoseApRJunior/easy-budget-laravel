@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Budget;
 use App\Models\Customer;
 use App\Models\Tenant;
@@ -30,7 +30,7 @@ class BudgetFactory extends Factory
             'code'               => $this->faker->unique()->regexify( 'BUD-[A-Z0-9]{6}' ),
             'total'              => $this->faker->randomFloat( 2, 100, 10000 ),
             'discount'           => $this->faker->randomFloat( 2, 0, 100 ),
-            'budget_statuses_id' => BudgetStatusEnum::DRAFT->value,
+            'budget_statuses_id' => BudgetStatus::DRAFT->value,
             'customer_id'        => Customer::factory(),
         ];
     }
@@ -58,7 +58,7 @@ class BudgetFactory extends Factory
     /**
      * State para definir um status específico do orçamento.
      */
-    public function withStatus( BudgetStatusEnum $status ): static
+    public function withStatus( BudgetStatus $status ): static
     {
         return $this->state( fn( array $attributes ) => [
             'budget_statuses_id' => $status->value,

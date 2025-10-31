@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
  *
  * Implementa validação robusta para:
  * - budget_ids como array obrigatório com 1-100 IDs de orçamentos
- * - status válido baseado no enum BudgetStatusEnum
+ * - status válido baseado no enum BudgetStatus
  * - comment opcional com limite de 1000 caracteres
  * - notify_customers opcional como boolean
  */
@@ -50,7 +50,7 @@ class BudgetBulkUpdateStatusFormRequest extends FormRequest
             'status'           => [
                 'required',
                 'string',
-                Rule::in( array_column( BudgetStatusEnum::cases(), 'value' ) ),
+                Rule::in( array_column( BudgetStatus::cases(), 'value' ) ),
             ],
             'comment'          => [
                 'nullable',
@@ -131,7 +131,7 @@ class BudgetBulkUpdateStatusFormRequest extends FormRequest
 
         return [
             'budget_ids'       => $validated[ 'budget_ids' ],
-            'status'           => BudgetStatusEnum::from( $validated[ 'status' ] ),
+            'status'           => BudgetStatus::from( $validated[ 'status' ] ),
             'comment'          => $validated[ 'comment' ] ?? null,
             'notify_customers' => (bool) ( $validated[ 'notify_customers' ] ?? false ),
         ];

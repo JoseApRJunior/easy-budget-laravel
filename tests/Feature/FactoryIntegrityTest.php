@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Budget;
 use App\Models\Permission;
 use App\Models\Product;
@@ -62,8 +62,8 @@ class FactoryIntegrityTest extends TestCase
 
     public function test_budget_factory_creates_valid_model_with_relationships(): void
     {
-        // Use BudgetStatusEnum
-        $budgetStatus = BudgetStatusEnum::DRAFT;
+        // Use BudgetStatus
+        $budgetStatus = BudgetStatus::DRAFT;
 
         $budget = Budget::factory()->create( [ 'budget_statuses_id' => $budgetStatus->value ] );
 
@@ -85,7 +85,7 @@ class FactoryIntegrityTest extends TestCase
     public function test_budget_factory_enforces_code_uniqueness_per_tenant(): void
     {
         $tenant       = Tenant::factory()->create();
-        $budgetStatus = BudgetStatusEnum::DRAFT;
+        $budgetStatus = BudgetStatus::DRAFT;
         $user         = User::factory()->create( [ 'tenant_id' => $tenant->id ] );
         $code         = 'BUD-ABC123';
 

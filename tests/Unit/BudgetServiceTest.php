@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Budget;
 use App\Models\Customer;
 use App\Models\Tenant;
@@ -37,7 +37,7 @@ class BudgetServiceTest extends TestCase
         $this->customer      = Customer::factory()->create( [
             'tenant_id' => $this->tenant->id,
         ] );
-        $this->budgetStatus  = BudgetStatusEnum::DRAFT;
+        $this->budgetStatus  = BudgetStatus::DRAFT;
     }
 
     /** @test */
@@ -59,7 +59,7 @@ class BudgetServiceTest extends TestCase
     /** @test */
     public function it_can_filter_budgets_by_status()
     {
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         Budget::factory()->create( [
             'tenant_id'          => $this->tenant->id,
@@ -180,7 +180,7 @@ class BudgetServiceTest extends TestCase
     /** @test */
     public function it_can_change_budget_status()
     {
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         $budget = Budget::factory()->create( [
             'tenant_id'          => $this->tenant->id,
@@ -284,7 +284,7 @@ class BudgetServiceTest extends TestCase
         $this->assertEquals( 3, $data[ 'updated_count' ] );
         $this->assertEquals( 0, $data[ 'failed_count' ] );
 
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         foreach ( $budgetIds as $budgetId ) {
             $budget = Budget::find( $budgetId );
@@ -321,7 +321,7 @@ class BudgetServiceTest extends TestCase
     /** @test */
     public function it_can_get_budget_statistics()
     {
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         // Create budgets with different statuses
         Budget::factory()->count( 3 )->create( [

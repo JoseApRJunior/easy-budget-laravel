@@ -319,9 +319,9 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
      * Cria instância do enum a partir de string
      *
      * @param string $value Valor do status
-     * @return BudgetStatus|null Instância do enum ou null se inválido
+     * @return static|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?BudgetStatus
+    public static function fromString( string $value ): ?static
     {
         foreach ( self::cases() as $case ) {
             if ( $case->value === $value ) {

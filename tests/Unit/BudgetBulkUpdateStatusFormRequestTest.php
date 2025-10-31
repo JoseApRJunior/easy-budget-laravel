@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Http\Requests\BudgetBulkUpdateStatusFormRequest;
 use App\Models\Tenant;
 use App\Models\User;
@@ -335,7 +335,7 @@ class BudgetBulkUpdateStatusFormRequestTest extends TestCase
         $request = new BudgetBulkUpdateStatusFormRequest();
         $rules   = $request->rules();
 
-        $validStatuses = array_column( BudgetStatusEnum::cases(), 'value' );
+        $validStatuses = array_column( BudgetStatus::cases(), 'value' );
 
         foreach ( $validStatuses as $status ) {
             $validator = Validator::make( [

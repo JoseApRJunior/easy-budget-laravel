@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Budget;
 use App\Models\User;
 use App\Repositories\BudgetRepository;
@@ -71,7 +71,7 @@ class BudgetService extends AbstractBaseService
 
             // Define status padrão se não fornecido
             if ( !isset( $data[ 'budget_statuses_id' ] ) ) {
-                $data[ 'budget_statuses_id' ] = BudgetStatusEnum::DRAFT->value;
+                $data[ 'budget_statuses_id' ] = BudgetStatus::DRAFT->value;
             }
 
             // Valida status
@@ -366,7 +366,7 @@ class BudgetService extends AbstractBaseService
      */
     private function isValidStatusTransition( string $currentStatus, string $newStatus ): bool
     {
-        $allowedTransitions = BudgetStatusEnum::getAllowedTransitions( $currentStatus );
+        $allowedTransitions = BudgetStatus::getAllowedTransitions( $currentStatus );
 
         return in_array( $newStatus, $allowedTransitions );
     }
@@ -407,7 +407,7 @@ class BudgetService extends AbstractBaseService
 
             // Define novo título e status
             $duplicateData[ 'title' ]              = 'Cópia de: ' . $originalBudget->title;
-            $duplicateData[ 'budget_statuses_id' ] = BudgetStatusEnum::DRAFT->value;
+            $duplicateData[ 'budget_statuses_id' ] = BudgetStatus::DRAFT->value;
             $duplicateData[ 'tenant_id' ]          = $tenantId;
 
             // Gera novo código único
@@ -557,7 +557,7 @@ class BudgetService extends AbstractBaseService
      */
     private function isValidBudgetStatus( string $status ): bool
     {
-        return BudgetStatusEnum::tryFrom( $status ) !== null;
+        return BudgetStatus::tryFrom( $status ) !== null;
     }
 
     /**
@@ -585,7 +585,7 @@ class BudgetService extends AbstractBaseService
     {
         $breakdown = [];
 
-        foreach ( BudgetStatusEnum::cases() as $status ) {
+        foreach ( BudgetStatus::cases() as $status ) {
             $count                       = $this->repository->countByStatus( $status->value );
             $breakdown[ $status->value ] = $count;
         }

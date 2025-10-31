@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Customer;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
@@ -178,7 +178,7 @@ class Budget extends Model
     /**
      * Get the budget status enum.
      */
-    public function getBudgetStatusAttribute(): ?BudgetStatusEnum
+    public function getBudgetStatusAttribute(): ?BudgetStatus
     {
         return \App\Enums\BudgetStatus::tryFrom( $this->budget_status );
     }
@@ -186,7 +186,7 @@ class Budget extends Model
     /**
      * Get the budget status enum for backward compatibility with views.
      */
-    public function budgetStatus(): ?BudgetStatusEnum
+    public function budgetStatus(): ?BudgetStatus
     {
         return $this->budget_status;
     }
@@ -361,7 +361,7 @@ class Budget extends Model
      */
     public function canBeSent(): bool
     {
-        return $this->budget_status === BudgetStatusEnum::DRAFT && $this->isValid();
+        return $this->budget_status === BudgetStatus::DRAFT && $this->isValid();
     }
 
     /**
@@ -396,8 +396,8 @@ class Budget extends Model
 
         // Aplicar desconto global se houver
         if ( $this->global_discount_percentage > 0 ) {
-            $globalDiscount = $subtotal * ( $this->global_discount_percentage / 100 );
-            $discountTotal += $globalDiscount;
+            $globalDiscount  = $subtotal * ( $this->global_discount_percentage / 100 );
+            $discountTotal  += $globalDiscount;
         }
 
         $taxesTotal = $this->items->sum( function ( $item ) {

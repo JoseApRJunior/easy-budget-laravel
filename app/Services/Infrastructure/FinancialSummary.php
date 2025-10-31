@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Enums\OperationStatus;
 use App\Models\Budget;
 use App\Support\ServiceResult;
@@ -32,20 +32,20 @@ class FinancialSummary
     /**
      * Status de orçamentos considerados como receita (faturamento).
      */
-    private const REVENUE_STATUSES = [ BudgetStatusEnum::APPROVED->value, BudgetStatusEnum::COMPLETED->value ];
+    private const REVENUE_STATUSES = [ BudgetStatus::APPROVED->value, BudgetStatus::COMPLETED->value ];
 
     /**
      * Status de orçamentos pendentes para análise.
      */
-    private const PENDING_STATUSES = [ BudgetStatusEnum::DRAFT->value, BudgetStatusEnum::SENT->value ];
+    private const PENDING_STATUSES = [ BudgetStatus::DRAFT->value, BudgetStatus::PENDING->value ];
 
     /**
      * Status de orçamentos para projeção futura.
      */
     private const PROJECTION_STATUSES = [
-        BudgetStatusEnum::DRAFT->value,
-        BudgetStatusEnum::SENT->value,
-        BudgetStatusEnum::APPROVED->value
+        BudgetStatus::DRAFT->value,
+        BudgetStatus::PENDING->value,
+        BudgetStatus::APPROVED->value
     ];
 
     /**

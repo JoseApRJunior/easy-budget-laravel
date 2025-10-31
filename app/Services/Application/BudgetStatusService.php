@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Enums\OperationStatus;
 use App\Support\ServiceResult;
 
 /**
  * Serviço para gerenciamento de status de orçamentos usando enums.
  *
- * Esta classe gerencia operações relacionadas a BudgetStatusEnum,
+ * Esta classe gerencia operações relacionadas a BudgetStatus,
  * substituindo o modelo BudgetStatus por enums para melhor type safety
  * e performance. Como os status agora são enums, este serviço foca em
  * fornecer métodos utilitários para trabalhar com os status de forma type-safe.
@@ -26,7 +26,7 @@ class BudgetStatusService
      */
     public function getStatusBySlug( string $slug ): ServiceResult
     {
-        $status = BudgetStatusEnum::tryFrom( $slug );
+        $status = BudgetStatus::tryFrom( $slug );
 
         if ( !$status ) {
             return $this->error( 'Status não encontrado', [ 'slug' => $slug ] );
@@ -40,7 +40,7 @@ class BudgetStatusService
      */
     public function getActiveStatuses(): ServiceResult
     {
-        $statuses = array_filter( BudgetStatusEnum::cases(), fn( $status ) => $status->isActive() );
+        $statuses = array_filter( BudgetStatus::cases(), fn( $status ) => $status->isActive() );
 
         return $this->success( array_values( $statuses ), 'Status ativos recuperados com sucesso' );
     }
@@ -50,7 +50,7 @@ class BudgetStatusService
      */
     public function getOrderedStatuses( string $field = 'order_index', string $direction = 'asc' ): ServiceResult
     {
-        $statuses = BudgetStatusEnum::cases();
+        $statuses = BudgetStatus::cases();
 
         usort( $statuses, function ( $a, $b ) use ( $field, $direction ) {
             $valueA = $this->getFieldValue( $a, $field );
@@ -67,7 +67,7 @@ class BudgetStatusService
      */
     public function getStatusByName( string $name ): ServiceResult
     {
-        $status = array_filter( BudgetStatusEnum::cases(), fn( $status ) => $status->getName() === $name );
+        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getName() === $name );
 
         if ( empty( $status ) ) {
             return $this->error( 'Status não encontrado', [ 'name' => $name ] );
@@ -81,7 +81,7 @@ class BudgetStatusService
      */
     public function statusExists( string $slug ): ServiceResult
     {
-        $exists = BudgetStatusEnum::tryFrom( $slug ) !== null;
+        $exists = BudgetStatus::tryFrom( $slug ) !== null;
 
         return $this->success( $exists, $exists ? 'Status existe' : 'Status não existe' );
     }
@@ -91,7 +91,7 @@ class BudgetStatusService
      */
     public function countActiveStatuses(): ServiceResult
     {
-        $count = count( array_filter( BudgetStatusEnum::cases(), fn( $status ) => $status->isActive() ) );
+        $count = count( array_filter( BudgetStatus::cases(), fn( $status ) => $status->isActive() ) );
 
         return $this->success( $count, 'Contagem de status ativos realizada' );
     }
@@ -101,7 +101,7 @@ class BudgetStatusService
      */
     public function getStatusesByColor( string $color ): ServiceResult
     {
-        $statuses = array_filter( BudgetStatusEnum::cases(), fn( $status ) => $status->getColor() === $color );
+        $statuses = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getColor() === $color );
 
         return $this->success( array_values( $statuses ), 'Status por cor recuperados com sucesso' );
     }
@@ -111,7 +111,7 @@ class BudgetStatusService
      */
     public function getStatusesByOrderIndexRange( int $min, int $max ): ServiceResult
     {
-        $statuses = array_filter( BudgetStatusEnum::cases(), function ( $status ) use ( $min, $max ) {
+        $statuses = array_filter( BudgetStatus::cases(), function ( $status ) use ( $min, $max ) {
             return $status->getOrderIndex() >= $min && $status->getOrderIndex() <= $max;
         } );
 
@@ -123,7 +123,7 @@ class BudgetStatusService
      */
     public function getStatusById( int $id ): ServiceResult
     {
-        $status = array_filter( BudgetStatusEnum::cases(), fn( $status ) => $status->getOrderIndex() === $id );
+        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getOrderIndex() === $id );
 
         if ( empty( $status ) ) {
             return $this->error( 'Status não encontrado', [ 'id' => $id ] );
@@ -137,7 +137,7 @@ class BudgetStatusService
      */
     public function getAllStatuses(): ServiceResult
     {
-        $statuses = BudgetStatusEnum::cases();
+        $statuses = BudgetStatus::cases();
 
         return $this->success( $statuses, 'Todos os status recuperados com sucesso' );
     }
@@ -147,7 +147,7 @@ class BudgetStatusService
      */
     public function getStatusesByCriteria( array $criteria ): ServiceResult
     {
-        $statuses = array_filter( BudgetStatusEnum::cases(), function ( $status ) use ( $criteria ) {
+        $statuses = array_filter( BudgetStatus::cases(), function ( $status ) use ( $criteria ) {
             foreach ( $criteria as $field => $value ) {
                 if ( $this->getFieldValue( $status, $field ) !== $value ) {
                     return false;
@@ -164,7 +164,7 @@ class BudgetStatusService
      */
     public function getOneStatusByCriteria( array $criteria ): ServiceResult
     {
-        $statuses = array_filter( BudgetStatusEnum::cases(), function ( $status ) use ( $criteria ) {
+        $statuses = array_filter( BudgetStatus::cases(), function ( $status ) use ( $criteria ) {
             foreach ( $criteria as $field => $value ) {
                 if ( $this->getFieldValue( $status, $field ) !== $value ) {
                     return false;
@@ -185,7 +185,7 @@ class BudgetStatusService
      */
     public function countStatusesByCriteria( array $criteria ): ServiceResult
     {
-        $count = count( array_filter( BudgetStatusEnum::cases(), function ( $status ) use ( $criteria ) {
+        $count = count( array_filter( BudgetStatus::cases(), function ( $status ) use ( $criteria ) {
             foreach ( $criteria as $field => $value ) {
                 if ( $this->getFieldValue( $status, $field ) !== $value ) {
                     return false;
@@ -200,7 +200,7 @@ class BudgetStatusService
     /**
      * Obtém o valor de um campo específico do status
      */
-    private function getFieldValue( BudgetStatusEnum $status, string $field ): mixed
+    private function getFieldValue( BudgetStatus $status, string $field ): mixed
     {
         return match ( $field ) {
             'name'        => $status->getName(),
@@ -218,7 +218,7 @@ class BudgetStatusService
      */
     public function validateStatus( string $status ): ServiceResult
     {
-        $enumStatus = BudgetStatusEnum::tryFrom( $status );
+        $enumStatus = BudgetStatus::tryFrom( $status );
 
         if ( !$enumStatus ) {
             return $this->error( 'Status inválido', [ 'status' => $status ] );
@@ -232,7 +232,7 @@ class BudgetStatusService
      */
     public function getStatusInfo( string $slug ): ServiceResult
     {
-        $status = BudgetStatusEnum::tryFrom( $slug );
+        $status = BudgetStatus::tryFrom( $slug );
 
         if ( !$status ) {
             return $this->error( 'Status não encontrado', [ 'slug' => $slug ] );
@@ -255,13 +255,13 @@ class BudgetStatusService
      */
     public function getAllowedTransitions( string $currentStatus ): ServiceResult
     {
-        $status = BudgetStatusEnum::tryFrom( $currentStatus );
+        $status = BudgetStatus::tryFrom( $currentStatus );
 
         if ( !$status ) {
             return $this->error( 'Status atual inválido', [ 'status' => $currentStatus ] );
         }
 
-        $transitions = BudgetStatusEnum::getAllowedTransitions( $status->value );
+        $transitions = BudgetStatus::getAllowedTransitions( $status->value );
 
         return $this->success( $transitions, 'Transições permitidas recuperadas' );
     }
@@ -271,8 +271,8 @@ class BudgetStatusService
      */
     public function canTransitionTo( string $currentStatus, string $targetStatus ): ServiceResult
     {
-        $current = BudgetStatusEnum::tryFrom( $currentStatus );
-        $target  = BudgetStatusEnum::tryFrom( $targetStatus );
+        $current = BudgetStatus::tryFrom( $currentStatus );
+        $target  = BudgetStatus::tryFrom( $targetStatus );
 
         if ( !$current || !$target ) {
             return $this->error( 'Status inválido', [
@@ -281,7 +281,7 @@ class BudgetStatusService
             ] );
         }
 
-        $transitions   = BudgetStatusEnum::getAllowedTransitions( $current->value );
+        $transitions   = BudgetStatus::getAllowedTransitions( $current->value );
         $canTransition = in_array( $target->value, $transitions );
 
         return $this->success( $canTransition, $canTransition ? 'Transição permitida' : 'Transição não permitida' );

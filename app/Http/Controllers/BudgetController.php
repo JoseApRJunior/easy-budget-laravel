@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Budget;
 use App\Models\BudgetItemCategory;
@@ -56,7 +56,7 @@ class BudgetController extends Controller
             }
 
             // Get available status options (only approved and rejected for public)
-            $availableStatuses = collect( [ BudgetStatusEnum::APPROVED, BudgetStatusEnum::REJECTED ] )
+            $availableStatuses = collect( [ BudgetStatus::APPROVED, BudgetStatus::REJECTED ] )
                 ->sortBy( fn( $status ) => $status->getOrderIndex() )
                 ->values();
 
@@ -86,7 +86,7 @@ class BudgetController extends Controller
             $request->validate( [
                 'budget_code'      => 'required|string',
                 'token'            => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
-                'budget_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, BudgetStatusEnum::cases() ) ) ]
+                'budget_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, BudgetStatus::cases() ) ) ]
             ] );
 
             // Find the budget by code and token
@@ -108,7 +108,7 @@ class BudgetController extends Controller
             }
 
             // Validate that the selected status is allowed (only approved and rejected for public)
-            $allowedStatusValues = [ BudgetStatusEnum::APPROVED->value, BudgetStatusEnum::REJECTED->value ];
+            $allowedStatusValues = [ BudgetStatus::APPROVED->value, BudgetStatus::REJECTED->value ];
             if ( !in_array( $request->budget_status_id, $allowedStatusValues ) ) {
                 Log::warning( 'Invalid status selected', [
                     'budget_code' => $request->budget_code,
@@ -119,14 +119,14 @@ class BudgetController extends Controller
             }
 
             // Update budget status
-            $newStatusEnum = BudgetStatusEnum::from( $request->budget_status_id );
+            $newStatusEnum = BudgetStatus::from( $request->budget_status_id );
             $budget->update( [
                 'budget_statuses_id' => $request->budget_status_id,
                 'history'            => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
             ] );
 
             // Log the action
-            $oldStatusEnum = BudgetStatusEnum::from( $budget->budget_statuses_id );
+            $oldStatusEnum = BudgetStatus::from( $budget->budget_statuses_id );
             Log::info( 'Budget status updated via public link', [
                 'budget_id'   => $budget->id,
                 'budget_code' => $budget->code,

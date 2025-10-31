@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Budget;
 use App\Models\Customer;
 use App\Models\Tenant;
@@ -34,7 +34,7 @@ class BudgetControllerTest extends TestCase
         $this->customer     = Customer::factory()->create( [
             'tenant_id' => $this->tenant->id,
         ] );
-        $this->budgetStatus = BudgetStatusEnum::DRAFT;
+        $this->budgetStatus = BudgetStatus::DRAFT;
     }
 
     /** @test */
@@ -197,7 +197,7 @@ class BudgetControllerTest extends TestCase
     {
         $this->actingAs( $this->user );
 
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         $budget = Budget::factory()->create( [
             'tenant_id'          => $this->tenant->id,
@@ -299,7 +299,7 @@ class BudgetControllerTest extends TestCase
                 ]
             ] );
 
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         foreach ( $budgetIds as $budgetId ) {
             $this->assertDatabaseHas( 'budgets', [
@@ -381,7 +381,7 @@ class BudgetControllerTest extends TestCase
     {
         $this->actingAs( $this->user );
 
-        $approvedStatus = BudgetStatusEnum::APPROVED;
+        $approvedStatus = BudgetStatus::APPROVED;
 
         Budget::factory()->create( [
             'tenant_id'          => $this->tenant->id,

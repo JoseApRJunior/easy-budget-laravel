@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\User;
@@ -225,7 +225,7 @@ class BudgetTemplate extends Model
         // Dados base do orçamento
         $budgetData = array_merge( [
             'customer_id'        => $overrides[ 'customer_id' ] ?? null,
-            'budget_statuses_id' => BudgetStatusEnum::DRAFT->value,
+            'budget_statuses_id' => BudgetStatus::DRAFT->value,
             'description'        => $this->description,
             'valid_until'        => now()->addDays( 30 ), // padrão 30 dias
         ], $overrides );
@@ -408,10 +408,10 @@ class BudgetTemplate extends Model
                 'net_total'   => $netTotal,
             ];
 
-            $preview[ 'totals' ][ 'subtotal' ] += $total;
-            $preview[ 'totals' ][ 'discount_total' ] += $discountAmount;
-            $preview[ 'totals' ][ 'taxes_total' ] += $taxAmount;
-            $preview[ 'totals' ][ 'grand_total' ] += $netTotal;
+            $preview[ 'totals' ][ 'subtotal' ]        += $total;
+            $preview[ 'totals' ][ 'discount_total' ]  += $discountAmount;
+            $preview[ 'totals' ][ 'taxes_total' ]     += $taxAmount;
+            $preview[ 'totals' ][ 'grand_total' ]     += $netTotal;
         }
 
         return $preview;

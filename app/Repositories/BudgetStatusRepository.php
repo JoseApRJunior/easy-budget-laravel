@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Enums\BudgetStatusEnum;
+use App\Enums\BudgetStatus;
 use App\Repositories\Contracts\GlobalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,7 @@ use LogicException;
  * Repositório para gerenciamento de status de orçamentos usando enums.
  *
  * Esta classe implementa GlobalRepositoryInterface para fornecer operações
- * compatíveis com BudgetStatusEnum, que substitui o modelo BudgetStatus.
+ * compatíveis com BudgetStatus, que substitui o modelo BudgetStatus.
  * Como os status agora são enums, algumas operações não são aplicáveis.
  *
  * @package App\Repositories
@@ -26,11 +26,11 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      * Busca status de orçamento por slug.
      *
      * @param string $slug Slug único do status
-     * @return BudgetStatusEnum|null Status encontrado ou null se não existir
+     * @return BudgetStatus|null Status encontrado ou null se não existir
      */
-    public function findBySlug( string $slug ): ?BudgetStatusEnum
+    public function findBySlug( string $slug ): ?BudgetStatus
     {
-        return BudgetStatusEnum::tryFrom( $slug );
+        return BudgetStatus::tryFrom( $slug );
     }
 
     /**
@@ -38,13 +38,13 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      *
      * @param array|null $orderBy Ordenação personalizada (opcional)
      * @param int|null $limit Limite de registros (opcional)
-     * @return array<BudgetStatusEnum> Lista de status ativos
+     * @return array<BudgetStatus> Lista de status ativos
      */
     public function findActive( ?array $orderBy = null, ?int $limit = null ): array
     {
         $activeStatuses = array_filter(
-            BudgetStatusEnum::cases(),
-            fn( BudgetStatusEnum $status ) => $status->isActive()
+            BudgetStatus::cases(),
+            fn( BudgetStatus $status ) => $status->isActive()
         );
 
         // Ordena por order_index se não especificado
@@ -69,11 +69,11 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      * @param string $field Campo para ordenação
      * @param string $direction Direção da ordenação (asc/desc)
      * @param int|null $limit Limite de registros (opcional)
-     * @return array<BudgetStatusEnum> Lista ordenada de status
+     * @return array<BudgetStatus> Lista ordenada de status
      */
     public function findOrderedBy( string $field, string $direction = 'asc', ?int $limit = null ): array
     {
-        $allStatuses = BudgetStatusEnum::cases();
+        $allStatuses = BudgetStatus::cases();
 
         if ( $field === 'order_index' ) {
             if ( $direction === 'asc' ) {
@@ -100,11 +100,11 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      * Busca status por nome.
      *
      * @param string $name Nome do status
-     * @return BudgetStatusEnum|null Status encontrado ou null se não existir
+     * @return BudgetStatus|null Status encontrado ou null se não existir
      */
-    public function findByName( string $name ): ?BudgetStatusEnum
+    public function findByName( string $name ): ?BudgetStatus
     {
-        foreach ( BudgetStatusEnum::cases() as $status ) {
+        foreach ( BudgetStatus::cases() as $status ) {
             if ( $status->getName() === $name ) {
                 return $status;
             }
@@ -120,7 +120,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      */
     public function existsBySlug( string $slug ): bool
     {
-        return BudgetStatusEnum::tryFrom( $slug ) !== null;
+        return BudgetStatus::tryFrom( $slug ) !== null;
     }
 
     /**
@@ -131,8 +131,8 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
     public function countActive(): int
     {
         return count( array_filter(
-            BudgetStatusEnum::cases(),
-            fn( BudgetStatusEnum $status ) => $status->isActive()
+            BudgetStatus::cases(),
+            fn( BudgetStatus $status ) => $status->isActive()
         ) );
     }
 
@@ -140,13 +140,13 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      * Busca status por cor específica.
      *
      * @param string $color Cor do status
-     * @return array<BudgetStatusEnum> Lista de status com a cor especificada
+     * @return array<BudgetStatus> Lista de status com a cor especificada
      */
     public function findByColor( string $color ): array
     {
         return array_filter(
-            BudgetStatusEnum::cases(),
-            fn( BudgetStatusEnum $status ) => $status->getColor() === $color
+            BudgetStatus::cases(),
+            fn( BudgetStatus $status ) => $status->getColor() === $color
         );
     }
 
@@ -155,13 +155,13 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      *
      * @param int $minOrderIndex Mínimo order_index
      * @param int $maxOrderIndex Máximo order_index
-     * @return array<BudgetStatusEnum> Lista de status no range especificado
+     * @return array<BudgetStatus> Lista de status no range especificado
      */
     public function findByOrderIndexRange( int $minOrderIndex, int $maxOrderIndex ): array
     {
         return array_filter(
-            BudgetStatusEnum::cases(),
-            fn( BudgetStatusEnum $status ) =>
+            BudgetStatus::cases(),
+            fn( BudgetStatus $status ) =>
             $status->getOrderIndex() >= $minOrderIndex &&
             $status->getOrderIndex() <= $maxOrderIndex
         );
@@ -170,7 +170,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
     /**
      * Busca status por ID (mantido para compatibilidade)
      */
-    public function findById( int $id ): ?BudgetStatusEnum
+    public function findById( int $id ): ?BudgetStatus
     {
         // Mapeia IDs antigos para enum values (compatibilidade com código legado)
         $idMapping = [
@@ -185,7 +185,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
         ];
 
         $slug = $idMapping[ $id ] ?? null;
-        return $slug ? BudgetStatusEnum::tryFrom( $slug ) : null;
+        return $slug ? BudgetStatus::tryFrom( $slug ) : null;
     }
 
     /**
@@ -193,7 +193,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      */
     public function findAll(): array
     {
-        return BudgetStatusEnum::cases();
+        return BudgetStatus::cases();
     }
 
     /**
@@ -203,7 +203,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
     {
         $results = [];
 
-        foreach ( BudgetStatusEnum::cases() as $status ) {
+        foreach ( BudgetStatus::cases() as $status ) {
             $matches = true;
 
             foreach ( $criteria as $field => $value ) {
@@ -277,7 +277,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
     /**
      * Busca um status por critérios
      */
-    public function findOneBy( array $criteria ): ?BudgetStatusEnum
+    public function findOneBy( array $criteria ): ?BudgetStatus
     {
         $results = $this->findBy( $criteria, null, 1 );
         return $results[ 0 ] ?? null;
@@ -307,7 +307,7 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
      */
     public function getAll(): Collection
     {
-        $statuses = BudgetStatusEnum::cases();
+        $statuses = BudgetStatus::cases();
         $models   = collect();
 
         foreach ( $statuses as $status ) {
@@ -444,13 +444,13 @@ class BudgetStatusRepository implements GlobalRepositoryInterface
     /**
      * Converte enum para um objeto Model-like para compatibilidade
      */
-    private function enumToModel( BudgetStatusEnum $status ): Model
+    private function enumToModel( BudgetStatus $status ): Model
     {
         return new class ($status) extends Model
         {
-            public BudgetStatusEnum $enum;
+            public BudgetStatus $enum;
 
-            public function __construct( BudgetStatusEnum $enum )
+            public function __construct( BudgetStatus $enum )
             {
                 $this->enum = $enum;
             }

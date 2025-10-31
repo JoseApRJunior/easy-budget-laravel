@@ -2,23 +2,23 @@
 
 namespace App\Helpers;
 
-use App\Enums\BudgetStatusEnum;
-use App\Enums\InvoiceStatusEnum;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\BudgetStatus;
+use App\Enums\InvoiceStatus;
+use App\Enums\ServiceStatus;
 
 class StatusHelper
 {
     public static function status_badge( $status )
     {
-        if ( $status instanceof BudgetStatusEnum ) {
+        if ( $status instanceof BudgetStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
             $status_name  = $status->getName();
-        } elseif ( $status instanceof ServiceStatusEnum ) {
+        } elseif ( $status instanceof ServiceStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
             $status_name  = $status->getName();
-        } elseif ( $status instanceof InvoiceStatusEnum ) {
+        } elseif ( $status instanceof InvoiceStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
             $status_name  = $status->getName();
@@ -50,10 +50,10 @@ class StatusHelper
 
     public static function service_next_statuses( $currentStatus )
     {
-        if ( $currentStatus instanceof ServiceStatusEnum ) {
-            return ServiceStatusEnum::getAllowedTransitions( $currentStatus->value );
+        if ( $currentStatus instanceof ServiceStatus ) {
+            return ServiceStatus::getAllowedTransitions( $currentStatus->value );
         } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            return ServiceStatusEnum::getAllowedTransitions( $currentStatus[ 'slug' ] );
+            return ServiceStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
         }
 
         return [];
@@ -63,7 +63,7 @@ class StatusHelper
     {
         $options = [ '<option value="">Todos</option>' ];
 
-        foreach ( ServiceStatusEnum::cases() as $status ) {
+        foreach ( ServiceStatus::cases() as $status ) {
             $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
@@ -79,18 +79,18 @@ class StatusHelper
     public static function status_progress( $status )
     {
         if ( is_string( $status ) ) {
-            $status = BudgetStatusEnum::tryFrom( $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        if ( $status instanceof BudgetStatusEnum ) {
+        if ( $status instanceof BudgetStatus ) {
             return match ( $status ) {
-                BudgetStatusEnum::DRAFT     => 10,
-                BudgetStatusEnum::SENT      => 25,
-                BudgetStatusEnum::APPROVED  => 50,
-                BudgetStatusEnum::REJECTED  => 0,
-                BudgetStatusEnum::EXPIRED   => 0,
-                BudgetStatusEnum::REVISED   => 30,
-                BudgetStatusEnum::CANCELLED => 0,
+                BudgetStatus::DRAFT     => 10,
+                BudgetStatus::PENDING   => 25,
+                BudgetStatus::APPROVED  => 50,
+                BudgetStatus::REJECTED  => 0,
+                BudgetStatus::EXPIRED   => 0,
+                BudgetStatus::CANCELLED => 0,
+                BudgetStatus::COMPLETED => 100,
             };
         }
 
@@ -100,18 +100,18 @@ class StatusHelper
     public static function status_color_class( $status )
     {
         if ( is_string( $status ) ) {
-            $status = BudgetStatusEnum::tryFrom( $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        if ( $status instanceof BudgetStatusEnum ) {
+        if ( $status instanceof BudgetStatus ) {
             return match ( $status ) {
-                BudgetStatusEnum::DRAFT     => 'secondary',
-                BudgetStatusEnum::SENT      => 'primary',
-                BudgetStatusEnum::APPROVED  => 'success',
-                BudgetStatusEnum::REJECTED  => 'danger',
-                BudgetStatusEnum::EXPIRED   => 'warning',
-                BudgetStatusEnum::REVISED   => 'info',
-                BudgetStatusEnum::CANCELLED => 'dark',
+                BudgetStatus::DRAFT     => 'secondary',
+                BudgetStatus::PENDING   => 'primary',
+                BudgetStatus::APPROVED  => 'success',
+                BudgetStatus::REJECTED  => 'danger',
+                BudgetStatus::EXPIRED   => 'warning',
+                BudgetStatus::CANCELLED => 'dark',
+                BudgetStatus::COMPLETED => 'info',
             };
         }
 
@@ -120,10 +120,10 @@ class StatusHelper
 
     public static function budget_next_statuses( $currentStatus )
     {
-        if ( $currentStatus instanceof BudgetStatusEnum ) {
-            return BudgetStatusEnum::getAllowedTransitions( $currentStatus->value );
+        if ( $currentStatus instanceof BudgetStatus ) {
+            return BudgetStatus::getAllowedTransitions( $currentStatus->value );
         } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            return BudgetStatusEnum::getAllowedTransitions( $currentStatus[ 'slug' ] );
+            return BudgetStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
         }
 
         return [];
@@ -132,18 +132,18 @@ class StatusHelper
     public static function status_allows_edit( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = BudgetStatusEnum::tryFrom( $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        if ( $status instanceof BudgetStatusEnum ) {
+        if ( $status instanceof BudgetStatus ) {
             return match ( $status ) {
-                BudgetStatusEnum::DRAFT     => true,
-                BudgetStatusEnum::SENT      => true,
-                BudgetStatusEnum::REVISED   => true,
-                BudgetStatusEnum::APPROVED  => false,
-                BudgetStatusEnum::REJECTED  => false,
-                BudgetStatusEnum::EXPIRED   => false,
-                BudgetStatusEnum::CANCELLED => false,
+                BudgetStatus::DRAFT     => true,
+                BudgetStatus::PENDING   => true,
+                BudgetStatus::APPROVED  => false,
+                BudgetStatus::REJECTED  => false,
+                BudgetStatus::EXPIRED   => false,
+                BudgetStatus::CANCELLED => false,
+                BudgetStatus::COMPLETED => false,
             };
         }
 
@@ -153,11 +153,11 @@ class StatusHelper
     public static function is_final_status( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = BudgetStatusEnum::tryFrom( $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        if ( $status instanceof BudgetStatusEnum ) {
-            return in_array( $status->value, BudgetStatusEnum::getFinalStatuses() );
+        if ( $status instanceof BudgetStatus ) {
+            return in_array( $status->value, BudgetStatus::getFinalStatuses() );
         }
 
         return false;
@@ -167,7 +167,7 @@ class StatusHelper
     {
         $options = [ '<option value="">Todos</option>' ];
 
-        foreach ( BudgetStatusEnum::cases() as $status ) {
+        foreach ( BudgetStatus::cases() as $status ) {
             $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
@@ -183,11 +183,11 @@ class StatusHelper
     public static function is_active_status( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = BudgetStatusEnum::tryFrom( $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        if ( $status instanceof BudgetStatusEnum ) {
-            return !in_array( $status->value, BudgetStatusEnum::getInactiveStatuses() );
+        if ( $status instanceof BudgetStatus ) {
+            return !in_array( $status->value, BudgetStatus::getInactiveStatuses() );
         }
 
         return false;
@@ -197,7 +197,7 @@ class StatusHelper
     {
         $options = [ '<option value="">Todos</option>' ];
 
-        foreach ( InvoiceStatusEnum::cases() as $status ) {
+        foreach ( InvoiceStatus::cases() as $status ) {
             $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
@@ -222,8 +222,8 @@ class StatusHelper
         foreach ( $services as $service ) {
             // Verificar se é enum instance
             if (
-                $service[ 'status' ] instanceof ServiceStatusEnum &&
-                $service[ 'status' ] === ServiceStatusEnum::COMPLETED
+                $service[ 'status' ] instanceof ServiceStatus &&
+                $service[ 'status' ] === ServiceStatus::COMPLETED
             ) {
                 $completed_services++;
             }
