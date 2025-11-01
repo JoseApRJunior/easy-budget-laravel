@@ -77,11 +77,12 @@ class CustomerController extends Controller
             'customer_type' => $customerType,
             'data'          => $request->all(),
             'user_id'       => Auth::id(),
-            'tenant_id'     => Auth::user()?->tenant_id
+            'tenant_id'     => Auth::user()?->tenant_id,
+            'note'          => 'Preencha o campo CPF ou CNPJ.'
         ] );
 
         try {
-            $result = $this->customerService->createCustomer( $request->all(), $customerType );
+            $result = $this->customerService->createCustomer( $request->all() );
 
             if ( !$result->isSuccess() ) {
                 Log::error( 'Erro ao criar cliente', [

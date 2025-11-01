@@ -73,8 +73,8 @@ function generateAlphanumericToken( int $length ): string
     $token          = '';
 
     for ( $i = 0; $i < $length; $i++ ) {
-        $index = random_int( 0, $alphabetLength - 1 );
-        $token .= $alphabet[ $index ];
+        $index   = random_int( 0, $alphabetLength - 1 );
+        $token  .= $alphabet[ $index ];
     }
 
     return $token;
@@ -167,6 +167,29 @@ if ( !function_exists( 'time_diff' ) ) {
         } else {
             return 'agora mesmo';
         }
+    }
+}
+
+/**
+ * Limpa número do documento (CNPJ/CPF) removendo formatação
+ */
+if ( !function_exists( 'clean_document_number' ) ) {
+    function clean_document_number( ?string $documentNumber ): ?string
+    {
+        if ( empty( $documentNumber ) ) {
+            return null;
+        }
+
+        // Remove all non-digit characters (points, hyphens, slashes)
+        $cleaned = preg_replace( '/[^0-9]/', '', $documentNumber );
+
+        // Ensure it's exactly the expected length
+        if ( strlen( $cleaned ) === 14 || strlen( $cleaned ) === 11 ) {
+            return $cleaned;
+        }
+
+        // Return null if invalid length
+        return null;
     }
 }
 

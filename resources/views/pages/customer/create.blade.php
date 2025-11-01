@@ -17,8 +17,7 @@
             </nav>
         </div>
 
-        <form id="createForm" action="{{ route('provider.customers.store') }}" method="POST"
-            enctype="multipart/form-data">
+        <form id="createForm" action="{{ route( 'provider.customers.store' ) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="row g-4">
@@ -46,6 +45,12 @@
                             <h5 class="card-title mb-0">
                                 <i class="bi bi-briefcase me-2"></i>Dados Profissionais
                             </h5>
+                            <div class="alert alert-info py-2 mb-0">
+                                <small class="mb-0">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    <strong>Obrigatório:</strong> Preencha o campo CPF ou CNPJ.
+                                </small>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
@@ -80,7 +85,7 @@
                 <a href="{{ url( '/provider/customers' ) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>Cancelar
                 </a>
-                <button type="submit" class="btn btn-primary" id="createButton">
+                <button type="submit" class="btn btn-primary" id="createButton" disabled>
                     <i class="bi bi-check-circle me-2"></i>Criar Cliente
                 </button>
             </div>
@@ -301,6 +306,38 @@
                     // Atualizar contador em tempo real
                     textarea.addEventListener( 'input', updateCharCount );
                 }
+
+                // Validação de CPF/CNPJ obrigatório
+                const cpfInput = document.getElementById( 'cpf' );
+                const cnpjInput = document.getElementById( 'cnpj' );
+                const createButton = document.getElementById( 'createButton' );
+
+                function validateDocumentFields() {
+                    const hasCpf = cpfInput && cpfInput.value.trim().length > 0;
+                    const hasCnpj = cnpjInput && cnpjInput.value.trim().length > 0;
+
+                    if ( hasCpf || hasCnpj ) {
+                        createButton.disabled = false;
+                        createButton.textContent = 'Criar Cliente';
+                    } else {
+                        createButton.disabled = true;
+                        createButton.textContent = 'Preencha CPF ou CNPJ';
+                    }
+                }
+
+                // Adicionar listeners para validação em tempo real
+                if ( cpfInput ) {
+                    cpfInput.addEventListener( 'input', validateDocumentFields );
+                    cpfInput.addEventListener( 'blur', validateDocumentFields );
+                }
+
+                if ( cnpjInput ) {
+                    cnpjInput.addEventListener( 'input', validateDocumentFields );
+                    cnpjInput.addEventListener( 'blur', validateDocumentFields );
+                }
+
+                // Validação inicial
+                validateDocumentFields();
             }, 100 );
 
             const cepInput = document.getElementById( 'cep' );
