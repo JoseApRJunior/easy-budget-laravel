@@ -99,58 +99,8 @@ class ProviderBusinessController extends Controller
                 }
             }
 
-            // Atualizar logo do usuário se fornecido
-            if ( isset( $logoResult[ 'success' ] ) && $logoResult[ 'success' ] ) {
-                // Remover logo antigo se existir
-                if ( $user->logo && file_exists( public_path( $user->logo ) ) ) {
-                    unlink( public_path( $user->logo ) );
-                }
-                $user->update( [ 'logo' => $logoResult[ 'paths' ][ 'original' ] ] );
-            }
-
-            // Atualizar CommonData
-            if ( $user->provider && $user->provider->commonData ) {
-                $commonDataUpdate = array_filter( [
-                    'first_name'          => $validated[ 'first_name' ] ?? null,
-                    'last_name'           => $validated[ 'last_name' ] ?? null,
-                    'birth_date'          => !empty( $validated[ 'birth_date' ] ) ? \Carbon\Carbon::createFromFormat( 'd/m/Y', $validated[ 'birth_date' ] )->format( 'Y-m-d' ) : null,
-                    'company_name'        => $validated[ 'company_name' ] ?? null,
-                    'cnpj'                => $this->cleanDocumentNumber( $validated[ 'cnpj' ] ?? $user->provider->commonData->cnpj ),
-                    'cpf'                 => $this->cleanDocumentNumber( $validated[ 'cpf' ] ?? $user->provider->commonData->cpf ),
-                    'area_of_activity_id' => $validated[ 'area_of_activity_id' ] ?? null,
-                    'profession_id'       => $validated[ 'profession_id' ] ?? null,
-                    'description'         => $validated[ 'description' ] ?? null,
-                ], fn( $value ) => $value !== null );
-
-                $user->provider->commonData->update( $commonDataUpdate );
-            }
-
-            // Atualizar Contact
-            if ( $user->provider && $user->provider->contact ) {
-                $contactUpdate = array_filter( [
-                    'email_personal' => $validated[ 'email_personal' ] ?? null,
-                    'phone_personal' => $validated[ 'phone_personal' ] ?? null,
-                    'email_business' => $validated[ 'email_business' ] ?? null,
-                    'phone_business' => $validated[ 'phone_business' ] ?? null,
-                    'website'        => $validated[ 'website' ] ?? null,
-                ], fn( $value ) => $value !== null );
-
-                $user->provider->contact->update( $contactUpdate );
-            }
-
-            // Atualizar Address
-            if ( $user->provider && $user->provider->address ) {
-                $addressUpdate = array_filter( [
-                    'address'        => $validated[ 'address' ] ?? null,
-                    'address_number' => $validated[ 'address_number' ] ?? null,
-                    'neighborhood'   => $validated[ 'neighborhood' ] ?? null,
-                    'city'           => $validated[ 'city' ] ?? null,
-                    'state'          => $validated[ 'state' ] ?? null,
-                    'cep'            => $validated[ 'cep' ] ?? null,
-                ], fn( $value ) => $value !== null );
-
-                $user->provider->address->update( $addressUpdate );
-            }
+            // Usar o serviço para atualizar os dados empresariais
+            $result = $this->providerService->updateProviderBusinessData( $validated );
 
             // Limpar sessões relacionadas
             Session::forget( 'checkPlan' );

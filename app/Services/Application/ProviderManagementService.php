@@ -132,11 +132,17 @@ class ProviderManagementService
                 $data[ 'logo' ] = $logoPath;
             }
 
-            // Update User
-            $user->update( [
-                'email' => $data[ 'email' ] ?? $user->email,
-                'logo'  => $data[ 'logo' ] ?? $user->logo,
-            ] );
+            // Update User (email and logo only)
+            $userUpdate = [];
+            if ( isset( $data[ 'email' ] ) ) {
+                $userUpdate[ 'email' ] = $data[ 'email' ];
+            }
+            if ( isset( $data[ 'logo' ] ) ) {
+                $userUpdate[ 'logo' ] = $data[ 'logo' ];
+            }
+            if ( !empty( $userUpdate ) ) {
+                $this->userRepository->update( $user, $userUpdate );
+            }
 
             // Update CommonData if exists
             if ( $provider->commonData ) {
@@ -193,10 +199,10 @@ class ProviderManagementService
             $this->activityService->logActivity(
                 $user->tenant_id,
                 $user->id,
-                'provider_updated',
+                'provider_business_updated',
                 'provider',
                 $provider->id,
-                "Provider atualizado com sucesso!",
+                "Dados empresariais atualizados com sucesso!",
                 $data,
             );
         } );
@@ -212,14 +218,14 @@ class ProviderManagementService
         $user         = Auth::user();
         $isGoogleUser = is_null( $user->password );
 
-        $user->update( [
+        $this->userRepository->update( $user, [
             'password' => Hash::make( $newPassword )
         ] );
 
         // Log activity
         $activityType    = $isGoogleUser ? 'password_set' : 'password_changed';
         $activityMessage = $isGoogleUser ? 'Primeira senha definida com sucesso!' : 'Senha atualizada com sucesso!';
-//TODO  App\Services\Domain\ActivityService::logActivity(): Argument #1 ($action) must be of type string, int given, called in C:\xampp\htdocs\easy-budget-laravel\app\Services\Application\ProviderManagementService.php on line 223
+        //TODO  App\Services\Domain\ActivityService::logActivity(): Argument #1 ($action) must be of type string, int given, called in C:\xampp\htdocs\easy-budget-laravel\app\Services\Application\ProviderManagementService.php on line 223
 //TODO  analisar antiga logica de logs, se vamos migrar
         $this->activityService->logActivity(
             $user->tenant_id,
