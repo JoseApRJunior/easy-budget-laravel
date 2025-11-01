@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\Helpers\DateHelper;
+use App\Helpers\ValidationHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
@@ -12,6 +13,7 @@ use App\Models\Customer;
 use App\Repositories\CustomerRepository;
 use App\Services\Application\CustomerInteractionService;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -29,6 +31,7 @@ class CustomerService extends AbstractBaseService
     public function __construct(
         private CustomerRepository $customerRepository,
         private CustomerInteractionService $interactionService,
+        private EntityDataService $entityDataService,
     ) {}
 
     /**
@@ -50,54 +53,23 @@ class CustomerService extends AbstractBaseService
     public function createCustomer( array $data ): ServiceResult
     {
         try {
-            // Validação básica dos dados
             $validation = $this->validateCustomerData( $data );
             if ( !$validation->isSuccess() ) {
                 return $validation;
             }
 
-            // Criação com transação
-            $customer = DB::transaction( function () use ($data) {
-                // Criar CommonData
-                $commonData = CommonData::create( [
-                    'tenant_id'           => Auth::user()->tenant_id,
-                    'first_name'          => $data[ 'first_name' ] ?? null,
-                    'last_name'           => $data[ 'last_name' ] ?? null,
-                    'birth_date'          => DateHelper::parseBirthDate( $data[ 'birth_date' ] ?? null ),
-                    'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-                    'profession_id'       => $data[ 'profession_id' ] ?? null,
-                    'description'         => $data[ 'description' ] ?? null,
-                    'website'             => $data[ 'website' ] ?? null,
-                    'cnpj'                => clean_document_number( $data[ 'cnpj' ] ?? null ),
-                    'cpf'                 => clean_document_number( $data[ 'cpf' ] ?? null ),
-                ] );
+            $tenantId = auth()->user()->tenant_id;
 
-                // Criar Contact
-                $contact = Contact::create( [
-                    'tenant_id'      => Auth::user()->tenant_id,
-                    'email'          => $data[ 'email_personal' ] ?? null,
-                    'phone'          => $data[ 'phone_personal' ] ?? null,
-                    'email_business' => $data[ 'email_business' ] ?? null,
-                    'phone_business' => $data[ 'phone_business' ] ?? null,
-                ] );
+            $customer = DB::transaction( function () use ($data, $tenantId) {
+                // Usar EntityDataService para criar dados compartilhados
+                $entityData = $this->entityDataService->createCompleteEntityData( $data, $tenantId );
 
-                // Criar Address
-                $address = Address::create( [
-                    'tenant_id'      => Auth::user()->tenant_id,
-                    'cep'            => $data[ 'cep' ] ?? null,
-                    'address'        => $data[ 'address' ] ?? null,
-                    'address_number' => $data[ 'address_number' ] ?? null,
-                    'neighborhood'   => $data[ 'neighborhood' ] ?? null,
-                    'city'           => $data[ 'city' ] ?? null,
-                    'state'          => $data[ 'state' ] ?? null,
-                ] );
-
-                // Criar Customer
+                // Criar Customer com IDs gerados
                 $customer = Customer::create( [
-                    'tenant_id'      => Auth::user()->tenant_id,
-                    'common_data_id' => $commonData->id,
-                    'contact_id'     => $contact->id,
-                    'address_id'     => $address->id,
+                    'tenant_id'      => $tenantId,
+                    'common_data_id' => $entityData[ 'common_data' ]->id,
+                    'contact_id'     => $entityData[ 'contact' ]->id,
+                    'address_id'     => $entityData[ 'address' ]->id,
                     'status'         => 'active',
                 ] );
 
@@ -113,22 +85,24 @@ class CustomerService extends AbstractBaseService
     /**
      * Valida dados do cliente
      */
-    private function validateCustomerData( array $data ): ServiceResult
+    private function validateCustomerData( array $data, ?int $excludeCustomerId = null ): ServiceResult
     {
-        // Validações básicas
+        // Validar campos obrigatórios
         if ( empty( $data[ 'first_name' ] ) || empty( $data[ 'last_name' ] ) ) {
             return $this->error( 'Nome e sobrenome são obrigatórios' );
         }
 
-        if ( empty( $data[ 'email_personal' ] ) ) {
-            return $this->error( 'Email pessoal é obrigatório' );
+        // Validar email usando helper
+        if ( empty( $data[ 'email_personal' ] ) || !ValidationHelper::isValidEmail( $data[ 'email_personal' ] ) ) {
+            return $this->error( 'Email pessoal válido é obrigatório' );
         }
 
-        if ( empty( $data[ 'phone_personal' ] ) ) {
-            return $this->error( 'Telefone pessoal é obrigatório' );
+        // Validar telefone usando helper
+        if ( empty( $data[ 'phone_personal' ] ) || !ValidationHelper::isValidPhone( $data[ 'phone_personal' ] ) ) {
+            return $this->error( 'Telefone pessoal válido é obrigatório' );
         }
 
-        // Verificar se tem pelo menos um documento (CPF ou CNPJ)
+        // Verificar se tem pelo menos um documento
         $hasCpf  = !empty( $data[ 'cpf' ] );
         $hasCnpj = !empty( $data[ 'cnpj' ] );
 
@@ -136,18 +110,39 @@ class CustomerService extends AbstractBaseService
             return $this->error( 'CPF ou CNPJ é obrigatório' );
         }
 
-        // Validação específica por documento fornecido
-        if ( $hasCpf && strlen( preg_replace( '/\D/', '', $data[ 'cpf' ] ) ) !== 11 ) {
-            return $this->error( 'CPF deve ter 11 dígitos' );
+        // Validar CPF usando helper
+        if ( $hasCpf && !ValidationHelper::isValidCpf( $data[ 'cpf' ] ) ) {
+            return $this->error( 'CPF inválido' );
         }
 
-        if ( $hasCnpj && strlen( preg_replace( '/\D/', '', $data[ 'cnpj' ] ) ) !== 14 ) {
-            return $this->error( 'CNPJ deve ter 14 dígitos' );
+        // Validar CNPJ usando helper
+        if ( $hasCnpj && !ValidationHelper::isValidCnpj( $data[ 'cnpj' ] ) ) {
+            return $this->error( 'CNPJ inválido' );
         }
 
-        // Validações de endereço
-        if ( empty( $data[ 'cep' ] ) || empty( $data[ 'address' ] ) || empty( $data[ 'neighborhood' ] ) || empty( $data[ 'city' ] ) || empty( $data[ 'state' ] ) ) {
-            return $this->error( 'Endereço completo é obrigatório' );
+        // Validar CEP usando helper
+        if ( !empty( $data[ 'cep' ] ) && !ValidationHelper::isValidCep( $data[ 'cep' ] ) ) {
+            return $this->error( 'CEP inválido' );
+        }
+
+        // Validar data de nascimento se fornecida
+        if ( !empty( $data[ 'birth_date' ] ) ) {
+            if ( !ValidationHelper::isValidBirthDate( $data[ 'birth_date' ], 18 ) ) {
+                return $this->error( 'Data de nascimento inválida ou cliente menor de 18 anos' );
+            }
+        }
+
+        // Validar endereço completo
+        $requiredAddressFields = [ 'cep', 'address', 'neighborhood', 'city', 'state' ];
+        foreach ( $requiredAddressFields as $field ) {
+            if ( empty( $data[ $field ] ) ) {
+                return $this->error( 'Endereço completo é obrigatório' );
+            }
+        }
+
+        // Validar unicidade de email no tenant
+        if ( !$this->isEmailUniqueInTenant( $data[ 'email_personal' ], $excludeCustomerId ) ) {
+            return $this->error( 'Email já cadastrado para outro cliente' );
         }
 
         return $this->success();
@@ -180,12 +175,31 @@ class CustomerService extends AbstractBaseService
                 return $this->error( 'Cliente não encontrado' );
             }
 
-            $validation = $this->validateForTenant( $data, auth()->user()->tenant_id );
+            $validation = $this->validateCustomerData( $data, $customer->id );
             if ( !$validation->isSuccess() ) {
                 return $validation;
             }
 
-            $updated = $this->customerRepository->update( $customer, $data );
+            $updated = DB::transaction( function () use ($customer, $data) {
+                // Carregar relacionamentos
+                $customer->load( [ 'commonData', 'contact', 'address' ] );
+
+                // Usar EntityDataService para atualizar
+                $this->entityDataService->updateCompleteEntityData(
+                    $customer->commonData,
+                    $customer->contact,
+                    $customer->address,
+                    $data,
+                );
+
+                // Atualizar status do Customer se fornecido
+                if ( isset( $data[ 'status' ] ) ) {
+                    $customer->update( [ 'status' => $data[ 'status' ] ] );
+                }
+
+                return $customer->fresh( [ 'commonData', 'contact', 'address' ] );
+            } );
+
             return $this->success( $updated, 'Cliente atualizado com sucesso' );
         } catch ( \Exception $e ) {
             return $this->error( 'Erro ao atualizar cliente: ' . $e->getMessage() );
@@ -243,6 +257,127 @@ class CustomerService extends AbstractBaseService
             return $this->success( $interactions, 'Interações listadas com sucesso' );
         } catch ( \Exception $e ) {
             return $this->error( 'Erro ao listar interações: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Verifica se email é único no tenant.
+     */
+    private function isEmailUniqueInTenant( string $email, ?int $excludeCustomerId = null ): bool
+    {
+        $query = Contact::where( 'tenant_id', auth()->user()->tenant_id )
+            ->where( 'email', $email );
+
+        if ( $excludeCustomerId ) {
+            $query->whereHas( 'customer', function ( $q ) use ( $excludeCustomerId ) {
+                $q->where( 'id', '!=', $excludeCustomerId );
+            } );
+        }
+
+        return !$query->exists();
+    }
+
+    /**
+     * Busca clientes com filtros avançados.
+     */
+    public function searchCustomers( array $filters = [] ): ServiceResult
+    {
+        try {
+            $customers = $this->customerRepository->listByFilters( $filters );
+            return $this->success( $customers, 'Busca realizada com sucesso' );
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro na busca: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Verifica se cliente tem relacionamentos (budgets, invoices).
+     */
+    public function hasRelationships( int $customerId ): ServiceResult
+    {
+        try {
+            $customer = $this->customerRepository->findByIdAndTenantId(
+                $customerId,
+                auth()->user()->tenant_id,
+            );
+
+            if ( !$customer ) {
+                return $this->error( 'Cliente não encontrado' );
+            }
+
+            $budgetsCount  = $customer->budgets()->count();
+            $invoicesCount = $customer->invoices()->count();
+
+            $hasRelationships = ( $budgetsCount + $invoicesCount ) > 0;
+
+            return $this->success( [
+                'has_relationships' => $hasRelationships,
+                'budgets_count'     => $budgetsCount,
+                'invoices_count'    => $invoicesCount,
+            ] );
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro ao verificar relacionamentos: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Duplica cliente existente.
+     */
+    public function duplicateCustomer( int $customerId ): ServiceResult
+    {
+        try {
+            $original = $this->customerRepository->findByIdAndTenantId(
+                $customerId,
+                auth()->user()->tenant_id,
+            );
+
+            if ( !$original ) {
+                return $this->error( 'Cliente não encontrado' );
+            }
+
+            $original->load( [ 'commonData', 'contact', 'address' ] );
+
+            $tenantId = auth()->user()->tenant_id;
+
+            $duplicate = DB::transaction( function () use ($original, $tenantId) {
+                // Duplicar dados usando EntityDataService
+                $data = [
+                    'first_name'          => $original->commonData->first_name . ' (Cópia)',
+                    'last_name'           => $original->commonData->last_name,
+                    'birth_date'          => $original->commonData->birth_date?->format( 'd/m/Y' ),
+                    'cpf'                 => $original->commonData->cpf,
+                    'cnpj'                => $original->commonData->cnpj,
+                    'company_name'        => $original->commonData->company_name,
+                    'description'         => $original->commonData->description,
+                    'area_of_activity_id' => $original->commonData->area_of_activity_id,
+                    'profession_id'       => $original->commonData->profession_id,
+                    'email_personal'      => null, // Email deve ser único
+                    'phone_personal'      => $original->contact->phone_personal,
+                    'email_business'      => $original->contact->email_business,
+                    'phone_business'      => $original->contact->phone_business,
+                    'website'             => $original->contact->website,
+                    'cep'                 => $original->address->cep,
+                    'address'             => $original->address->address,
+                    'address_number'      => $original->address->address_number,
+                    'neighborhood'        => $original->address->neighborhood,
+                    'city'                => $original->address->city,
+                    'state'               => $original->address->state,
+                ];
+
+                $entityData = $this->entityDataService->createCompleteEntityData( $data, $tenantId );
+
+                return Customer::create( [
+                    'tenant_id'      => $tenantId,
+                    'common_data_id' => $entityData[ 'common_data' ]->id,
+                    'contact_id'     => $entityData[ 'contact' ]->id,
+                    'address_id'     => $entityData[ 'address' ]->id,
+                    'status'         => 'active',
+                ] )->load( [ 'commonData', 'contact', 'address' ] );
+            } );
+
+            return $this->success( $duplicate, 'Cliente duplicado com sucesso' );
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro ao duplicar cliente: ' . $e->getMessage() );
         }
     }
 

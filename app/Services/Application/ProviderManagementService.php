@@ -449,47 +449,24 @@ class ProviderManagementService
     private function createProviderWithRelatedData( array $userData, User $user, Tenant $tenant ): ServiceResult
     {
         try {
-            // Create CommonData
-            $commonData = new CommonData( [
-                'tenant_id'    => $tenant->id,
-                'first_name'   => $userData[ 'first_name' ],
-                'last_name'    => $userData[ 'last_name' ],
-                'cpf'          => null,
-                'cnpj'         => null,
-                'company_name' => null,
-                'description'  => null,
-            ] );
-
-            $savedCommonData = $this->commonDataRepository->create( $commonData->toArray() );
-
-            // Create Contact
-            $contact = \App\Models\Contact::create( [
-                'tenant_id'      => $tenant->id,
+            // Preparar dados para EntityDataService
+            $entityData = [
+                'first_name'     => $userData[ 'first_name' ],
+                'last_name'      => $userData[ 'last_name' ],
                 'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
                 'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
-                'email_business' => null,
-                'phone_business' => null,
-                'website'        => null,
-            ] );
+            ];
 
-            // Create Address
-            $address = \App\Models\Address::create( [
-                'tenant_id'      => $tenant->id,
-                'address'        => null,
-                'address_number' => null,
-                'neighborhood'   => null,
-                'city'           => null,
-                'state'          => null,
-                'cep'            => null,
-            ] );
+            // Usar EntityDataService para criar CommonData, Contact, Address
+            $createdEntities = $this->entityDataService->createCompleteEntityData( $entityData, $tenant->id );
 
-            // Create Provider
+            // Create Provider usando IDs das entidades criadas
             $provider = new Provider( [
                 'tenant_id'      => $tenant->id,
                 'user_id'        => $user->id,
-                'common_data_id' => $savedCommonData->id,
-                'contact_id'     => $contact->id,
-                'address_id'     => $address->id,
+                'common_data_id' => $createdEntities[ 'common_data' ]->id,
+                'contact_id'     => $createdEntities[ 'contact' ]->id,
+                'address_id'     => $createdEntities[ 'address' ]->id,
                 'terms_accepted' => $userData[ 'terms_accepted' ],
             ] );
 
