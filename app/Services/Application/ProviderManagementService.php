@@ -25,7 +25,10 @@ use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
 use App\Services\Domain\ActivityService;
+use App\Services\Domain\ProviderService;
+use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
+use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Http\UploadedFile;
@@ -47,6 +50,9 @@ class ProviderManagementService
     public function __construct(
         private FinancialSummary $financialSummary,
         private ActivityService $activityService,
+        private ProviderService $providerService,
+        private EntityDataService $entityDataService,
+        private FileUploadService $fileUploadService,
         private CommonDataRepository $commonDataRepository,
         private ProviderRepository $providerRepository,
         private PlanRepository $planRepository,
@@ -97,14 +103,14 @@ class ProviderManagementService
     public function getProviderForUpdate(): ServiceResult
     {
         $user     = Auth::user();
-        $provider = $user->provider;
+        $provider = $this->providerService->getByUserId( $user->id, $user->tenant_id );
 
         if ( !$provider ) {
             return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
         }
 
         return ServiceResult::success( [
-            'provider'          => $provider->load( [ 'user', 'commonData', 'contact', 'address' ] ),
+            'provider'          => $provider,
             'areas_of_activity' => AreaOfActivity::get(),
             'professions'       => Profession::get(),
         ] );
@@ -115,99 +121,74 @@ class ProviderManagementService
      */
     public function updateProvider( array $data ): ServiceResult
     {
-        $user     = Auth::user();
-        $provider = $user->provider;
+        try {
+            $user     = Auth::user();
+            $provider = $user->provider;
 
-        if ( !$provider ) {
-            return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
-        }
-
-        // Load relationships if not already loaded
-        $provider->load( [ 'commonData', 'contact', 'address' ] );
-
-        DB::transaction( function () use ($provider, $data, $user) {
-            // Handle logo upload
-            if ( isset( $data[ 'logo' ] ) && $data[ 'logo' ] instanceof UploadedFile ) {
-                $logoPath       = $this->handleLogoUpload( $data[ 'logo' ], $user->logo );
-                $data[ 'logo' ] = $logoPath;
+            if ( !$provider ) {
+                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
             }
 
-            // Update User (email and logo only)
-            $userUpdate = [];
-            if ( isset( $data[ 'email' ] ) ) {
-                $userUpdate[ 'email' ] = $data[ 'email' ];
-            }
-            if ( isset( $data[ 'logo' ] ) ) {
-                $userUpdate[ 'logo' ] = $data[ 'logo' ];
-            }
-            if ( !empty( $userUpdate ) ) {
-                $this->userRepository->update( $user, $userUpdate );
-            }
+            // Load relationships if not already loaded
+            $provider->load( [ 'commonData', 'contact', 'address' ] );
 
-            // Update CommonData if exists
-            if ( $provider->commonData ) {
-                $commonDataUpdate = [
-                    'company_name'        => $data[ 'company_name' ] ?? $provider->commonData->company_name,
-                    'cnpj'                => $this->cleanDocumentNumber( $data[ 'cnpj' ] ?? $provider->commonData->cnpj ),
-                    'cpf'                 => $this->cleanDocumentNumber( $data[ 'cpf' ] ?? $provider->commonData->cpf ),
-                    'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? $provider->commonData->area_of_activity_id,
-                    'profession_id'       => $data[ 'profession_id' ] ?? $provider->commonData->profession_id,
-                    'description'         => $data[ 'description' ] ?? $provider->commonData->description,
-                ];
-
-                // Only update if there are changes - compare only the fields being updated
-                $currentCommonData = $provider->commonData->only( array_keys( $commonDataUpdate ) );
-                if ( !empty( array_diff_assoc( $commonDataUpdate, $currentCommonData->toArray() ) ) ) {
-                    $provider->commonData->update( $commonDataUpdate );
+            // Transação garante rollback automático se qualquer operação falhar
+            DB::transaction( function () use ($provider, $data, $user) {
+                // Handle logo upload
+                if ( isset( $data[ 'logo' ] ) && $data[ 'logo' ] instanceof UploadedFile ) {
+                    $logoPath       = $this->fileUploadService->uploadProviderLogo( $data[ 'logo' ], $user->logo );
+                    $data[ 'logo' ] = $logoPath;
                 }
-            }
 
-            // Update Contact if exists
-            if ( $provider->contact ) {
-                $contactUpdate = [
-                    'email_business' => $data[ 'email_business' ] ?? $provider->contact->email_business,
-                    'phone_business' => $data[ 'phone_business' ] ?? $provider->contact->phone_business,
-                    'website'        => $data[ 'website' ] ?? $provider->contact->website,
-                ];
+                // Update User (email and logo only)
+                $userUpdate = array_filter( [
+                    'email' => $data[ 'email' ] ?? null,
+                    'logo'  => $data[ 'logo' ] ?? null,
+                ], fn( $value ) => $value !== null );
 
-                // Only update if there are changes - compare only the fields being updated
-                $currentContact = $provider->contact->only( array_keys( $contactUpdate ) );
-                if ( !empty( array_diff_assoc( $contactUpdate, $currentContact->toArray() ) ) ) {
-                    $provider->contact->update( $contactUpdate );
+                if ( !empty( $userUpdate ) ) {
+                    $this->userRepository->update( $user, $userUpdate );
+                    $user->fill( $userUpdate );
                 }
-            }
 
-            // Update Address if exists
-            if ( $provider->address ) {
-                $addressUpdate = [
-                    'address'        => $data[ 'address' ] ?? $provider->address->address,
-                    'address_number' => $data[ 'address_number' ] ?? $provider->address->address_number,
-                    'neighborhood'   => $data[ 'neighborhood' ] ?? $provider->address->neighborhood,
-                    'city'           => $data[ 'city' ] ?? $provider->address->city,
-                    'state'          => $data[ 'state' ] ?? $provider->address->state,
-                    'cep'            => $data[ 'cep' ] ?? $provider->address->cep,
-                ];
+                // Update CommonData, Contact, Address using EntityDataService
+                $entityData = $this->entityDataService->updateCompleteEntityData(
+                    $provider->commonData,
+                    $provider->contact,
+                    $provider->address,
+                    $data,
+                );
 
-                // Only update if there are changes - compare only the fields being updated
-                $currentAddress = $provider->address->only( array_keys( $addressUpdate ) );
-                if ( !empty( array_diff_assoc( $addressUpdate, $currentAddress->toArray() ) ) ) {
-                    $provider->address->update( $addressUpdate );
+                // Verificar se atualizou corretamente
+                if ( !$entityData[ 'common_data' ] || !$entityData[ 'contact' ] || !$entityData[ 'address' ] ) {
+                    throw new Exception( 'Erro ao atualizar dados da entidade' );
                 }
-            }
 
-            // Log activity
-            $this->activityService->logActivity(
-                $user->tenant_id,
-                $user->id,
-                'provider_business_updated',
-                'provider',
-                $provider->id,
-                "Dados empresariais atualizados com sucesso!",
-                $data,
+                // Atualizar relacionamentos do provider com dados atualizados
+                $provider->setRelation( 'commonData', $entityData[ 'common_data' ] );
+                $provider->setRelation( 'contact', $entityData[ 'contact' ] );
+                $provider->setRelation( 'address', $entityData[ 'address' ] );
+
+                // Log activity
+                // $this->activityService->logActivity(
+                //     $user->tenant_id,
+                //     $user->id,
+                //     'provider_business_updated',
+                //     'provider',
+                //     $provider->id,
+                //     'Dados empresariais atualizados com sucesso!',
+                //     $data
+                // );
+            } );
+
+            // Retornar provider com dados já atualizados
+            return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao atualizar provider: ' . $e->getMessage()
             );
-        } );
-
-        return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
+        }
     }
 
     /**
@@ -242,59 +223,19 @@ class ProviderManagementService
     }
 
     /**
-     * Clean document number (CNPJ/CPF) by removing formatting.
-     */
-    private function cleanDocumentNumber( ?string $documentNumber ): ?string
-    {
-        if ( empty( $documentNumber ) ) {
-            return null;
-        }
-
-        // Remove all non-digit characters (points, hyphens, slashes)
-        $cleaned = preg_replace( '/[^0-9]/', '', $documentNumber );
-
-        // Ensure it's exactly the expected length
-        if ( strlen( $cleaned ) === 14 || strlen( $cleaned ) === 11 ) {
-            return $cleaned;
-        }
-
-        // Return null if invalid length
-        return null;
-    }
-
-    /**
-     * Handle logo file upload.
-     */
-    private function handleLogoUpload( UploadedFile $file, ?string $currentLogo ): ?string
-    {
-        // Delete old logo if exists
-        if ( $currentLogo && Storage::disk( 'public' )->exists( $currentLogo ) ) {
-            Storage::disk( 'public' )->delete( $currentLogo );
-        }
-
-        // Store new logo
-        return $file->store( 'providers/logos', 'public' );
-    }
-
-    /**
      * Get provider by user ID.
      */
     public function getProviderByUserId( int $userId, int $tenantId ): ?Provider
     {
-        return Provider::where( 'user_id', $userId )
-            ->where( 'tenant_id', $tenantId )
-            ->with( [ 'user', 'commonData', 'contact', 'address' ] )
-            ->first();
+        return $this->providerService->getByUserId( $userId, $tenantId );
     }
 
     /**
      * Check if email exists for another user.
      */
-    public function isEmailAvailable( string $email, int $excludeUserId ): bool
+    public function isEmailAvailable( string $email, int $excludeUserId, int $tenantId ): bool
     {
-        return !User::where( 'email', $email )
-            ->where( 'id', '!=', $excludeUserId )
-            ->exists();
+        return $this->providerService->isEmailAvailable( $email, $excludeUserId, $tenantId );
     }
 
     /**
