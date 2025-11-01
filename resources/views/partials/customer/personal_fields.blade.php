@@ -17,19 +17,19 @@
 </div>
 
 <div class="mb-3">
-    <label for="email" class="form-label">Email</label>
-    <input type="email" class="form-control @error( 'email' ) is-invalid @enderror" id="email" name="email"
-        value="{{ old( 'email', $customer->contact->email ?? '' ) }}" required>
-    @error( 'email' )
+    <label for="email_personal" class="form-label">Email Pessoal</label>
+    <input type="email" class="form-control @error( 'email_personal' ) is-invalid @enderror" id="email_personal"
+        name="email_personal" value="{{ old( 'email_personal', $customer->contact->email ?? '' ) }}" required>
+    @error( 'email_personal' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
 
 <div class="mb-3">
-    <label for="phone" class="form-label">Celular</label>
-    <input type="tel" class="form-control @error( 'phone' ) is-invalid @enderror" id="phone" name="phone"
-        value="{{ old( 'phone', $customer->contact->phone ?? '' ) }}" required>
-    @error( 'phone' )
+    <label for="phone_personal" class="form-label">Telefone Pessoal</label>
+    <input type="tel" class="form-control @error( 'phone_personal' ) is-invalid @enderror" id="phone_personal" name="phone_personal"
+        value="{{ old( 'phone_personal', $customer->contact->phone ?? '' ) }}" required>
+    @error( 'phone_personal' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>

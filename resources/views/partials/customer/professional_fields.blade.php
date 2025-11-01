@@ -8,12 +8,20 @@
 </div>
 
 <div class="mb-3">
-    <label for="email_business" class="form-label">Email Comercial</label>
+    <label for="email_business" class="form-label">Email Empresarial</label>
     <input type="email" class="form-control @error( 'email_business' ) is-invalid @enderror" id="email_business"
-        name="email_business" value="{{ old( 'email_business', $customer->contact->email_business ?? '' ) }}" required>
+        name="email_business" value="{{ old( 'email_business', $customer->contact->email_business ?? '' ) }}">
     @error( 'email_business' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
+    <div class="mb-3">
+        <label for="phone_business" class="form-label">Telefone Empresarial</label>
+        <input type="tel" class="form-control @error( 'phone_business' ) is-invalid @enderror" id="phone_business"
+            name="phone_business" value="{{ old( 'phone_business', $customer->contact->phone_business ?? '' ) }}">
+        @error( 'phone_business' )
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
 </div>
 
 <div class="mb-3">
@@ -72,10 +80,37 @@
     <textarea class="form-control @error( 'description' ) is-invalid @enderror" id="description" name="description"
         rows="4" maxlength="250"
         placeholder="Descreva sua experiência profissional...">{{ old( 'description', $customer->commonData->description ?? '' ) }}</textarea>
+    <div class="d-flex justify-content-end mt-2">
+        <small class="text-muted">
+            <span id="char-count-value" class="fw-semibold">250</span> caracteres restantes
+        </small>
+    </div>
     @error( 'description' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
+<script>
+    // Inicializar contador de caracteres quando o DOM estiver pronto
+    document.addEventListener( 'DOMContentLoaded', function () {
+        const textarea = document.getElementById( 'description' );
+        const charCount = document.getElementById( 'char-count-value' );
+
+        if ( textarea && charCount ) {
+            // Função para atualizar contador
+            const updateCharCount = () => {
+                const charsLeft = textarea.maxLength - textarea.value.length;
+                charCount.textContent = charsLeft;
+            };
+
+            // Atualizar contador inicial
+            updateCharCount();
+
+            // Atualizar contador em tempo real
+            textarea.addEventListener( 'input', updateCharCount );
+        }
+    } );
+</script>
 
 <div class="mb-3">
     <label for="website" class="form-label">Website</label>

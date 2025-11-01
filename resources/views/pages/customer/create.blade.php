@@ -17,7 +17,7 @@
             </nav>
         </div>
 
-        <form id="createForm" action="{{ url( '/provider/customers/create' ) }}" method="POST"
+        <form id="createForm" action="{{ route('provider.customers.store') }}" method="POST"
             enctype="multipart/form-data">
             @csrf
 
@@ -73,39 +73,6 @@
                     </div>
                 </div>
 
-                <!--  Descrição -->
-                <div class="col-12 col-lg-12">
-                    <div class="card border-0 shadow-sm ">
-                        <div class="card-header bg-transparent border-0">
-                            <h5 class="card-title mb-0 ">
-                                <i class="bi bi-info-circle-fill me-2 "></i>
-                                <span>Informações Adicionais</span>
-                            </h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row align-items-start g-4">
-                                <!-- Coluna da Descrição -->
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="description" class="form-label fw-bold mb-3">
-                                            Descrição Profissional
-                                        </label>
-                                        <textarea class="form-control form-control-lg shadow-sm rounded-3" id="description"
-                                            name="description" rows="4" maxlength="250"
-                                            placeholder="Descreva sua experiência profissional..."
-                                            style="resize: none;"></textarea>
-                                        <div class="d-flex justify-content-end mt-2">
-                                            <small class="text-muted">
-                                                <span id="char-count-value" class="fw-semibold">250</span> caracteres
-                                                restantes
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Botões de Ação -->

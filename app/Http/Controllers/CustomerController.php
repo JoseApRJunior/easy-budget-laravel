@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\CustomerPessoaFisicaRequest;
-use App\Http\Requests\CustomerPessoaJuridicaRequest;
 use App\Models\AreaOfActivity;
 use App\Models\Customer;
 use App\Models\Profession;
@@ -16,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controller para gestão de clientes - Interface Web
@@ -54,18 +51,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Formulário de criação (redireciona baseado no tipo)
+     * Formulário de criação de cliente
      */
-    public function create(): RedirectResponse
-    {
-        // Redirecionar para pessoa física por padrão
-        return redirect()->route( 'provider.customers.create.pessoa-fisica' );
-    }
-
-    /**
-     * Formulário de criação - Pessoa Física
-     */
-    public function createPessoaFisica(): View
+    public function create(): View
     {
         $areasOfActivity = AreaOfActivity::active()->get();
         $professions     = Profession::active()->get();
@@ -73,69 +61,93 @@ class CustomerController extends Controller
         return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
-            'customer_type'     => 'pessoa_fisica',
             'customer'          => new Customer(), // Instância vazia para criação
         ] );
     }
 
     /**
-     * Formulário de criação - Pessoa Jurídica
+     * Criar cliente (Pessoa Física ou Jurídica)
      */
-    public function createPessoaJuridica(): View
+    public function store( Request $request ): RedirectResponse
     {
-        $areasOfActivity = AreaOfActivity::active()->get();
+        // Determinar tipo baseado nos dados enviados
+        $customerType = $this->determineCustomerType( $request );
 
-        return view( 'pages.customer.create', [
-            'areas_of_activity' => $areasOfActivity,
-            'customer_type'     => 'pessoa_juridica',
-            'customer'          => new Customer(), // Instância vazia para criação
+        Log::info( 'Iniciando criação de cliente', [
+            'customer_type' => $customerType,
+            'data'          => $request->all(),
+            'user_id'       => Auth::id(),
+            'tenant_id'     => Auth::user()?->tenant_id
         ] );
+
+        try {
+            $result = $this->customerService->createCustomer( $request->all(), $customerType );
+
+            if ( !$result->isSuccess() ) {
+                Log::error( 'Erro ao criar cliente', [
+                    'customer_type' => $customerType,
+                    'error'         => $result->getMessage(),
+                    'data'          => $request->all(),
+                    'user_id'       => Auth::id()
+                ] );
+
+                return redirect()
+                    ->route( 'provider.customers.create' )
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            Log::info( 'Cliente criado com sucesso', [
+                'customer_type' => $customerType,
+                'customer_id'   => $result->getData()->id,
+                'user_id'       => Auth::id()
+            ] );
+
+            $this->logOperation( 'customer_created', [
+                'customer_id' => $result->getData()->id,
+                'type'        => $customerType
+            ] );
+
+            return redirect()
+                ->route( 'provider.customers.show', $result->getData() )
+                ->with( 'success', $result->getMessage() );
+
+        } catch ( \Throwable $e ) {
+            Log::error( 'Exceção ao criar cliente', [
+                'customer_type' => $customerType,
+                'exception'     => $e->getMessage(),
+                'trace'         => $e->getTraceAsString(),
+                'data'          => $request->all(),
+                'user_id'       => Auth::id()
+            ] );
+
+            return redirect()
+                ->route( 'provider.customers.create' )
+                ->with( 'error', 'Erro interno do servidor. Tente novamente mais tarde.' );
+        }
     }
 
     /**
-     * Criar cliente - Pessoa Física
+     * Determinar tipo de cliente baseado nos dados enviados
      */
-    public function storePessoaFisica( CustomerPessoaFisicaRequest $request ): RedirectResponse
+    private function determineCustomerType( Request $request ): string
     {
-        $result = $this->customerService->createCustomer( $request->validated() );
-
-        if ( !$result->isSuccess() ) {
-            return redirect()
-                ->route( 'provider.customers.create.pessoa-fisica' )
-                ->with( 'error', $result->getMessage() );
+        // Se tem CNPJ, é pessoa jurídica
+        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 14 ) {
+            return 'pessoa_juridica';
         }
 
-        $this->logOperation( 'customer_created', [
-            'customer_id' => $result->getData()->id,
-            'type'        => 'pessoa_fisica'
-        ] );
-
-        return redirect()
-            ->route( 'provider.customers.show', $result->getData() )
-            ->with( 'success', $result->getMessage() );
-    }
-
-    /**
-     * Criar cliente - Pessoa Jurídica
-     */
-    public function storePessoaJuridica( CustomerPessoaJuridicaRequest $request ): RedirectResponse
-    {
-        $result = $this->customerService->createCustomer( $request->validated() );
-
-        if ( !$result->isSuccess() ) {
-            return redirect()
-                ->route( 'provider.customers.create.pessoa-juridica' )
-                ->with( 'error', $result->getMessage() );
+        // Se tem CPF, é pessoa física
+        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 11 ) {
+            return 'pessoa_fisica';
         }
 
-        $this->logOperation( 'customer_created', [
-            'customer_id' => $result->getData()->id,
-            'type'        => 'pessoa_juridica'
-        ] );
+        // Fallback: verificar se tem dados empresariais
+        if ( $request->filled( [ 'company_name', 'company_email' ] ) ) {
+            return 'pessoa_juridica';
+        }
 
-        return redirect()
-            ->route( 'provider.customers.show', $result->getData() )
-            ->with( 'success', $result->getMessage() );
+        // Default: pessoa física
+        return 'pessoa_fisica';
     }
 
     /**
