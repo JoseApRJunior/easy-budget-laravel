@@ -193,6 +193,96 @@ if ( !function_exists( 'clean_document_number' ) ) {
     }
 }
 
+/**
+ * Valida CPF
+ */
+if ( !function_exists( 'validate_cpf' ) ) {
+    function validate_cpf( ?string $cpf ): bool
+    {
+        return \App\Helpers\ValidationHelper::isValidCpf( $cpf );
+    }
+}
+
+/**
+ * Valida CNPJ
+ */
+if ( !function_exists( 'validate_cnpj' ) ) {
+    function validate_cnpj( ?string $cnpj ): bool
+    {
+        return \App\Helpers\ValidationHelper::isValidCnpj( $cnpj );
+    }
+}
+
+/**
+ * Valida CEP
+ */
+if ( !function_exists( 'validate_cep' ) ) {
+    function validate_cep( ?string $cep ): bool
+    {
+        return \App\Helpers\ValidationHelper::isValidCep( $cep );
+    }
+}
+
+/**
+ * Valida email
+ */
+if ( !function_exists( 'validate_email' ) ) {
+    function validate_email( ?string $email ): bool
+    {
+        return \App\Helpers\ValidationHelper::isValidEmail( $email );
+    }
+}
+
+/**
+ * Valida telefone
+ */
+if ( !function_exists( 'validate_phone' ) ) {
+    function validate_phone( ?string $phone ): bool
+    {
+        return \App\Helpers\ValidationHelper::isValidPhone( $phone );
+    }
+}
+
+/**
+ * Formata CPF
+ */
+if ( !function_exists( 'format_cpf' ) ) {
+    function format_cpf( ?string $cpf ): ?string
+    {
+        return \App\Helpers\ValidationHelper::formatCpf( $cpf );
+    }
+}
+
+/**
+ * Formata CNPJ
+ */
+if ( !function_exists( 'format_cnpj' ) ) {
+    function format_cnpj( ?string $cnpj ): ?string
+    {
+        return \App\Helpers\ValidationHelper::formatCnpj( $cnpj );
+    }
+}
+
+/**
+ * Formata telefone
+ */
+if ( !function_exists( 'format_phone' ) ) {
+    function format_phone( ?string $phone ): ?string
+    {
+        return \App\Helpers\ValidationHelper::formatPhone( $phone );
+    }
+}
+
+/**
+ * Formata CEP
+ */
+if ( !function_exists( 'format_cep' ) ) {
+    function format_cep( ?string $cep ): ?string
+    {
+        return \App\Helpers\ValidationHelper::formatCep( $cep );
+    }
+}
+
 // /**
 //  * Check current user's plan
 //  */
