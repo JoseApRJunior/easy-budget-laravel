@@ -148,7 +148,8 @@ class ProviderManagementService
 
                 if ( !empty( $userUpdate ) ) {
                     $this->userRepository->update( $user, $userUpdate );
-                    $user->fill( $userUpdate );
+                    // ✅ Recarregar dados do banco para atualizar Auth::user()
+                    $user = $this->userRepository->find( $user->id );
                 }
 
                 // Update CommonData, Contact, Address using EntityDataService

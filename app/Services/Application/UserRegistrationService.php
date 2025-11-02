@@ -9,6 +9,7 @@ use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
+use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\Application\EmailVerificationService;
@@ -52,6 +53,7 @@ class UserRegistrationService extends AbstractBaseService
     protected UserRepository                  $userRepository;
     protected ProviderManagementService       $providerManagementService;
     protected EmailVerificationService        $emailVerificationService;
+    protected TenantRepository                $tenantRepository;
 
     public function __construct(
         UserRepository $userRepository,
@@ -59,12 +61,14 @@ class UserRegistrationService extends AbstractBaseService
         UserConfirmationTokenRepository $userConfirmationTokenRepository,
         ProviderManagementService $providerManagementService,
         EmailVerificationService $emailVerificationService,
+        TenantRepository $tenantRepository,
     ) {
         $this->userRepository                  = $userRepository;
         $this->userConfirmationTokenService    = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
         $this->providerManagementService       = $providerManagementService;
         $this->emailVerificationService        = $emailVerificationService;
+        $this->tenantRepository                = $tenantRepository;
     }
 
     /**
@@ -141,13 +145,12 @@ class UserRegistrationService extends AbstractBaseService
             ] );
 
             return ServiceResult::success( [
-                'user'           => $results[ 'user' ],
-                'tenant'         => $results[ 'tenant' ],
-                'provider'       => $results[ 'provider' ],
-                'plan'           => $results[ 'plan' ],
-                'subscription'   => $results[ 'subscription' ],
-                'auto_logged_in' => true,
-                'message'        => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
+                'user'         => $results[ 'user' ],
+                'tenant'       => $results[ 'tenant' ],
+                'provider'     => $results[ 'provider' ],
+                'plan'         => $results[ 'plan' ],
+                'subscription' => $results[ 'subscription' ],
+                'message'      => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
             ], 'Usuário registrado com sucesso.' );
 
         } catch ( Exception $e ) {
@@ -174,11 +177,15 @@ class UserRegistrationService extends AbstractBaseService
      */
     private function validateUserData( array $userData ): ServiceResult
     {
+        // Para registros sociais, phone não é obrigatório
+        $isSocialRegistration = ( $userData[ 'password' ] === null && $userData[ 'phone' ] === null );
+
         if (
             empty( $userData[ 'first_name' ] ) || empty( $userData[ 'last_name' ] ) ||
             empty( $userData[ 'email' ] ) ||
-            ( empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) ||
-            empty( $userData[ 'phone' ] ) || empty( $userData[ 'terms_accepted' ] )
+            ( !$isSocialRegistration && empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) ||
+            ( !$isSocialRegistration && empty( $userData[ 'phone' ] ) ) || // Phone obrigatório apenas para registros normais
+            empty( $userData[ 'terms_accepted' ] )
         ) {
             return ServiceResult::error(
                 OperationStatus::INVALID_DATA,
