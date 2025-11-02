@@ -2,25 +2,40 @@
 
 namespace App\Helpers;
 
-use App\Enums\BudgetStatusEnum;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\BudgetStatus;
+use App\Enums\InvoiceStatus;
+use App\Enums\ServiceStatus;
 
 class StatusHelper
 {
     public static function status_badge( $status )
     {
-        if ( !is_array( $status ) || empty( $status ) ) {
+        if ( $status instanceof BudgetStatus ) {
+            $status_color = $status->getColor();
+            $status_icon  = $status->getIcon();
+            $status_name  = $status->getName();
+        } elseif ( $status instanceof ServiceStatus ) {
+            $status_color = $status->getColor();
+            $status_icon  = $status->getIcon();
+            $status_name  = $status->getName();
+        } elseif ( $status instanceof InvoiceStatus ) {
+            $status_color = $status->getColor();
+            $status_icon  = $status->getIcon();
+            $status_name  = $status->getName();
+        } elseif ( is_array( $status ) && !empty( $status ) ) {
+            // Fallback para arrays legados
+            $status_color       = $status[ 'status_color' ] ?? '#6c757d';
+            $status_icon        = $status[ 'status_icon' ] ?? 'bi-question-circle';
+            $status_name        = $status[ 'status_name' ] ?? 'N/A';
+            $status_description = $status[ 'status_description' ] ?? '';
+        } else {
             return '';
         }
 
-        $status_color       = $status[ 'status_color' ] ?? '#6c757d';
-        $status_icon        = $status[ 'status_icon' ] ?? 'bi-question-circle';
-        $status_name        = $status[ 'status_name' ] ?? 'N/A';
-        $status_description = $status[ 'status_description' ] ?? '';
-
-        $description_html = $status_description ?
-            sprintf( '<span class="d-none d-md-inline ms-1 small">(%s)</span>', e( $status_description ) ) :
-            '';
+        $description_html = '';
+        if ( isset( $status_description ) && $status_description ) {
+            $description_html = sprintf( '<span class="d-none d-md-inline ms-1 small">(%s)</span>', e( $status_description ) );
+        }
 
         return sprintf(
             '<span class="badge" style="background-color: %s">
@@ -35,38 +50,26 @@ class StatusHelper
 
     public static function service_next_statuses( $currentStatus )
     {
-        if ( !is_array( $currentStatus ) || empty( $currentStatus[ 'slug' ] ) ) {
-            return [];
+        if ( $currentStatus instanceof ServiceStatus ) {
+            return ServiceStatus::getAllowedTransitions( $currentStatus->value );
+        } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
+            return ServiceStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
         }
 
-        return ServiceStatusEnum::getAllowedTransitions( $currentStatus[ 'slug' ] );
+        return [];
     }
 
     public static function service_status_options( $selectedStatus = '' )
     {
-        $statuses = [
-            ''              => 'Todos',
-            'PENDING'       => 'Pendente',
-            'SCHEDULING'    => 'Agendamento',
-            'PREPARING'     => 'Em Preparação',
-            'IN_PROGRESS'   => 'Em Progresso',
-            'ON_HOLD'       => 'Em Espera',
-            'SCHEDULED'     => 'Agendado',
-            'COMPLETED'     => 'Concluído',
-            'PARTIAL'       => 'Concluído Parcial',
-            'CANCELLED'     => 'Cancelado',
-            'NOT_PERFORMED' => 'Não Realizado',
-            'EXPIRED'       => 'Expirado',
-        ];
+        $options = [ '<option value="">Todos</option>' ];
 
-        $options = [];
-        foreach ( $statuses as $value => $label ) {
-            $selected  = $selectedStatus === $value ? 'selected' : '';
+        foreach ( ServiceStatus::cases() as $status ) {
+            $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $value ),
+                e( $status->value ),
                 $selected,
-                e( $label ),
+                e( $status->getName() ),
             );
         }
 
@@ -76,70 +79,101 @@ class StatusHelper
     public static function status_progress( $status )
     {
         if ( is_string( $status ) ) {
-            $status = constant( BudgetStatusEnum::class . '::' . $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        return $status[ 'progress' ] ?? 0;
+        if ( $status instanceof BudgetStatus ) {
+            return match ( $status ) {
+                BudgetStatus::DRAFT     => 10,
+                BudgetStatus::PENDING   => 25,
+                BudgetStatus::APPROVED  => 50,
+                BudgetStatus::REJECTED  => 0,
+                BudgetStatus::EXPIRED   => 0,
+                BudgetStatus::CANCELLED => 0,
+                BudgetStatus::COMPLETED => 100,
+            };
+        }
+
+        return 0;
     }
 
     public static function status_color_class( $status )
     {
         if ( is_string( $status ) ) {
-            $status = constant( BudgetStatusEnum::class . '::' . $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        return $status[ 'color_class' ] ?? 'secondary';
+        if ( $status instanceof BudgetStatus ) {
+            return match ( $status ) {
+                BudgetStatus::DRAFT     => 'secondary',
+                BudgetStatus::PENDING   => 'primary',
+                BudgetStatus::APPROVED  => 'success',
+                BudgetStatus::REJECTED  => 'danger',
+                BudgetStatus::EXPIRED   => 'warning',
+                BudgetStatus::CANCELLED => 'dark',
+                BudgetStatus::COMPLETED => 'info',
+            };
+        }
+
+        return 'secondary';
     }
 
     public static function budget_next_statuses( $currentStatus )
     {
-        if ( !is_array( $currentStatus ) || empty( $currentStatus[ 'slug' ] ) ) {
-            return [];
+        if ( $currentStatus instanceof BudgetStatus ) {
+            return BudgetStatus::getAllowedTransitions( $currentStatus->value );
+        } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
+            return BudgetStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
         }
 
-        return BudgetStatusEnum::getAllowedTransitions( $currentStatus[ 'slug' ] );
+        return [];
     }
 
     public static function status_allows_edit( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = constant( BudgetStatusEnum::class . '::' . $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        return $status[ 'allow_edit' ] ?? false;
+        if ( $status instanceof BudgetStatus ) {
+            return match ( $status ) {
+                BudgetStatus::DRAFT     => true,
+                BudgetStatus::PENDING   => true,
+                BudgetStatus::APPROVED  => false,
+                BudgetStatus::REJECTED  => false,
+                BudgetStatus::EXPIRED   => false,
+                BudgetStatus::CANCELLED => false,
+                BudgetStatus::COMPLETED => false,
+            };
+        }
+
+        return false;
     }
 
     public static function is_final_status( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = constant( BudgetStatusEnum::class . '::' . $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        return in_array( $status[ 'slug' ], BudgetStatusEnum::getFinalStatuses() );
+        if ( $status instanceof BudgetStatus ) {
+            return in_array( $status->value, BudgetStatus::getFinalStatuses() );
+        }
+
+        return false;
     }
 
     public static function budget_status_options( $selectedStatus = '' )
     {
-        $statuses = [
-            ''                 => 'Todos',
-            'DRAFT'            => 'Rascunho',
-            'PENDING_APPROVAL' => 'Pendente Aprovação',
-            'APPROVED'         => 'Aprovado',
-            'REJECTED'         => 'Rejeitado',
-            'IN_PROGRESS'      => 'Em Andamento',
-            'COMPLETED'        => 'Concluído',
-            'CANCELLED'        => 'Cancelado',
-            'ON_HOLD'          => 'Em Espera',
-        ];
+        $options = [ '<option value="">Todos</option>' ];
 
-        $options = [];
-        foreach ( $statuses as $value => $label ) {
-            $selected  = $selectedStatus === $value ? 'selected' : '';
+        foreach ( BudgetStatus::cases() as $status ) {
+            $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $value ),
+                e( $status->value ),
                 $selected,
-                e( $label ),
+                e( $status->getName() ),
             );
         }
 
@@ -149,30 +183,27 @@ class StatusHelper
     public static function is_active_status( $status ): bool
     {
         if ( is_string( $status ) ) {
-            $status = constant( BudgetStatusEnum::class . '::' . $status );
+            $status = BudgetStatus::tryFrom( $status );
         }
 
-        return !in_array( $status[ 'slug' ], BudgetStatusEnum::getInactiveStatuses() );
+        if ( $status instanceof BudgetStatus ) {
+            return !in_array( $status->value, BudgetStatus::getInactiveStatuses() );
+        }
+
+        return false;
     }
 
     public static function invoice_status_options( $selectedStatus = '' )
     {
-        $statuses = [
-            ''          => 'Todos',
-            'pending'   => 'Pendente',
-            'paid'      => 'Paga',
-            'cancelled' => 'Cancelada',
-            'overdue'   => 'Vencida',
-        ];
+        $options = [ '<option value="">Todos</option>' ];
 
-        $options = [];
-        foreach ( $statuses as $value => $label ) {
-            $selected  = $selectedStatus === $value ? 'selected' : '';
+        foreach ( InvoiceStatus::cases() as $status ) {
+            $selected  = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $value ),
+                e( $status->value ),
                 $selected,
-                e( $label ),
+                e( $status->getName() ),
             );
         }
 
@@ -189,7 +220,19 @@ class StatusHelper
         $completed_services = 0;
 
         foreach ( $services as $service ) {
-            if ( $service[ 'status' ][ 'slug' ] === 'COMPLETED' ) {
+            // Verificar se é enum instance
+            if (
+                $service[ 'status' ] instanceof ServiceStatus &&
+                $service[ 'status' ] === ServiceStatus::COMPLETED
+            ) {
+                $completed_services++;
+            }
+            // Fallback para arrays legados
+            elseif (
+                is_array( $service[ 'status' ] ) &&
+                ( $service[ 'status' ][ 'slug' ] === 'completed' ||
+                    $service[ 'status' ][ 'slug' ] === 'COMPLETED' )
+            ) {
                 $completed_services++;
             }
         }

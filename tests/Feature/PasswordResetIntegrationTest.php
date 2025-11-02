@@ -80,7 +80,7 @@ class PasswordResetIntegrationTest extends TestCase
                 && $event->user->email === $user->email
                 && $event->tenant->id === $tenant->id
                 && !empty( $event->resetToken )
-                && strlen( $event->resetToken ) === 64;
+                && strlen( $event->resetToken ) === 43; // base64url format: 32 bytes = 43 caracteres
         } );
 
         // Assert: Logs devem conter informações de auditoria
@@ -114,6 +114,9 @@ class PasswordResetIntegrationTest extends TestCase
 
         // Assert: Deve retornar erro de validação
         $response->assertSessionHasErrors( 'email' );
+
+        // Assert: Evento não deve ter sido disparado
+        Event::assertNotDispatched( PasswordResetRequested::class);
 
         // Act: Tentar reset com e-mail inválido
         $response = $this->post( '/forgot-password', [
@@ -199,8 +202,8 @@ class PasswordResetIntegrationTest extends TestCase
      * Teste: Token de reset é gerado corretamente.
      *
      * Valida:
-     * - Token tem 64 caracteres
-     * - Token contém apenas caracteres hexadecimais
+     * - Token tem 43 caracteres (base64url)
+     * - Token contém apenas caracteres válidos para base64url
      * - Token é único por usuário
      */
     public function test_password_reset_token_generation(): void
@@ -213,17 +216,21 @@ class PasswordResetIntegrationTest extends TestCase
         ] );
 
         // Act: Solicitar reset de senha
-        $this->post( '/forgot-password', [
+        $response = $this->post( '/forgot-password', [
             'email' => $user->email,
         ] );
 
+        // Assert: Deve retornar redirecionamento de sucesso
+        $response->assertRedirect();
+        $response->assertSessionHas( 'status' );
+
         // Assert: Capturar token do evento disparado
         Event::assertDispatched( PasswordResetRequested::class, function ( $event ) {
-            // Validar comprimento do token
-            $this->assertEquals( 64, strlen( $event->resetToken ) );
+            // Validar comprimento do token (base64url: 32 bytes = 43 caracteres)
+            $this->assertEquals( 43, strlen( $event->resetToken ) );
 
-            // Validar formato (apenas hexadecimais)
-            $this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $event->resetToken );
+            // Validar formato (base64url: apenas caracteres seguros para URL)
+            $this->assertMatchesRegularExpression( '/^[A-Za-z0-9\-_]{43}$/', $event->resetToken );
 
             return true;
         } );
@@ -263,9 +270,9 @@ class PasswordResetIntegrationTest extends TestCase
         // Assert: Verificar logs de geração de token
         Log::shouldHaveReceived( 'info' )
             ->withArgs( function ( $message, $context ) {
-                return str_contains( $message, 'Token de reset gerado com sucesso' )
+                return str_contains( $message, 'PASSO 4: Token de reset gerado' )
                     && isset( $context[ 'token_length' ] )
-                    && $context[ 'token_length' ] === 64;
+                    && $context[ 'token_length' ] === 43; // base64url format: 32 bytes = 43 caracteres
             } );
 
         // Assert: Verificar logs de sucesso
@@ -388,7 +395,7 @@ class PasswordResetIntegrationTest extends TestCase
         // Act: Gerar token usando Password broker
         $token = Password::createToken( $user );
 
-        // Assert: Token deve ser válido
+        // Assert: Token deve ser válido (formato hexadecimal do Laravel Password broker: 32 bytes = 64 caracteres)
         $this->assertNotNull( $token );
         $this->assertEquals( 64, strlen( $token ) );
         $this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $token );

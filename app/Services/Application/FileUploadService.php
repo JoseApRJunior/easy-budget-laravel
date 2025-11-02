@@ -8,13 +8,21 @@ use App\Models\SystemSettings;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 /**
  * Serviço para upload e manipulação de arquivos
  */
 class FileUploadService
 {
+    private ImageManager $imageManager;
+
+    public function __construct()
+    {
+        $this->imageManager = new ImageManager( Driver::class);
+    }
+
     /**
      * Upload de avatar do usuário
      */
@@ -31,7 +39,7 @@ class FileUploadService
 
         try {
             // Upload do arquivo original
-            $originalPath      = $file->storeAs( "avatars/{$tenantId}", $filename, 'public' );
+            $originalPath        = $file->storeAs( "avatars/{$tenantId}", $filename, 'public' );
             $paths[ 'original' ] = $originalPath;
 
             // Cria thumbnails
@@ -70,7 +78,7 @@ class FileUploadService
 
         try {
             // Upload do arquivo original
-            $originalPath      = $file->storeAs( "logos/{$tenantId}", $filename, 'public' );
+            $originalPath        = $file->storeAs( "logos/{$tenantId}", $filename, 'public' );
             $paths[ 'original' ] = $originalPath;
 
             // Cria versões otimizadas
@@ -256,9 +264,9 @@ class FileUploadService
         $thumbPath    = storage_path( "app/public/avatars/{$tenantId}/thumb_{$size}_{$filename}" );
 
         // Cria thumbnail quadrado
-        $image = Image::make( $file->getPathname() );
-        $image->fit( $size, $size );
-        $image->save( $thumbPath, 90 ); // 90% qualidade
+        $image = $this->imageManager->read( $file->getPathname() );
+        $image->cover( $size, $size );
+        $image->toJpeg( quality: 90 )->save( $thumbPath ); // 90% qualidade
 
         return "avatars/{$tenantId}/thumb_{$size}_{$filename}";
     }
@@ -272,12 +280,9 @@ class FileUploadService
         $thumbPath    = storage_path( "app/public/logos/{$tenantId}/thumb_{$maxDimension}_{$filename}" );
 
         // Cria thumbnail mantendo proporção
-        $image = Image::make( $file->getPathname() );
-        $image->resize( $maxDimension, $maxDimension, function ( $constraint ) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        } );
-        $image->save( $thumbPath, 90 );
+        $image = $this->imageManager->read( $file->getPathname() );
+        $image->scale( $maxDimension, $maxDimension );
+        $image->toJpeg( quality: 90 )->save( $thumbPath );
 
         return "logos/{$tenantId}/thumb_{$maxDimension}_{$filename}";
     }
@@ -353,7 +358,7 @@ class FileUploadService
     public function optimizeImage( string $sourcePath, string $targetPath, array $options = [] ): bool
     {
         try {
-            $image = Image::make( Storage::disk( 'public' )->path( $sourcePath ) );
+            $image = $this->imageManager->read( Storage::disk( 'public' )->path( $sourcePath ) );
 
             // Define qualidade padrão
             $quality = $options[ 'quality' ] ?? 85;
@@ -363,18 +368,14 @@ class FileUploadService
                 if ( isset( $options[ 'width' ] ) && isset( $options[ 'height' ] ) ) {
                     $image->resize( $options[ 'width' ], $options[ 'height' ] );
                 } elseif ( isset( $options[ 'width' ] ) ) {
-                    $image->resize( $options[ 'width' ], null, function ( $constraint ) {
-                        $constraint->aspectRatio();
-                    } );
+                    $image->scale( width: $options[ 'width' ] );
                 } elseif ( isset( $options[ 'height' ] ) ) {
-                    $image->resize( null, $options[ 'height' ], function ( $constraint ) {
-                        $constraint->aspectRatio();
-                    } );
+                    $image->scale( height: $options[ 'height' ] );
                 }
             }
 
             // Salva imagem otimizada
-            $image->save( Storage::disk( 'public' )->path( $targetPath ), $quality );
+            $image->toJpeg( quality: $quality )->save( Storage::disk( 'public' )->path( $targetPath ) );
 
             return true;
 

@@ -7,7 +7,7 @@
 @section( 'breadcrumb' )
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route( 'dashboard' ) }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route( 'admin.dashboard' ) }}">Dashboard Admin</a></li>
             <li class="breadcrumb-item active">Email Preview</li>
         </ol>
     </nav>
@@ -818,12 +818,12 @@
 
             Object.entries( comparisonData.comparisons ).forEach( ( [locale, comparison] ) => {
                 html += `
-                                                        <div class="comparison-item">
-                                                            <div class="comparison-header">
-                                                                ${getLocaleName( locale )} ${getLocaleFlag( locale )}
-                                                            </div>
-                                                            <div class="preview-content">
-                                                    `;
+                                                            <div class="comparison-item">
+                                                                <div class="comparison-header">
+                                                                    ${getLocaleName( locale )} ${getLocaleFlag( locale )}
+                                                                </div>
+                                                                <div class="preview-content">
+                                                        `;
 
                 if ( comparison.status === 'success' ) {
                     html += comparison.preview.html;
@@ -832,9 +832,9 @@
                 }
 
                 html += `
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    `;
+                                                        `;
             } );
 
             html += `</div>`;
@@ -985,9 +985,9 @@
                 @foreach( $availableEmails as $key => $email )
                     '{{ $key }}': '{{ $email[ 'name' ] }}',
                 @endforeach
-                                                };
+                                                    };
         return names[emailType] || emailType;
-                                            }
+                                                }
 
         // Auto-refresh stats a cada 30 segundos
         setInterval( loadStats, 30000 );

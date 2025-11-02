@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-12">
             <h2 class="mb-4"><i class="bi bi-bell me-2"></i>Configurações de Notificação</h2>
-            
+
             <div class="row">
                 <div class="col-md-8">
                     <div class="card">
@@ -33,7 +33,7 @@
                                     <label class="form-label">Telefones para SMS (Alertas Críticos)</label>
                                     <div id="phoneInputs">
                                         <div class="input-group mb-2">
-                                            <input type="tel" class="form-control" name="phones[]" placeholder="+5511999999999">
+                                            <input type="tel" class="form-control" name="phones[]" placeholder="(43) 99999-9999">
                                             <button type="button" class="btn btn-outline-danger" onclick="removePhoneInput(this)">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -112,7 +112,7 @@ function addPhoneInput() {
     const div = document.createElement('div');
     div.className = 'input-group mb-2';
     div.innerHTML = `
-        <input type="tel" class="form-control" name="phones[]" placeholder="+5511999999999">
+        <input type="tel" class="form-control" name="phones[]" placeholder="(43) 99999-9999">
         <button type="button" class="btn btn-outline-danger" onclick="removePhoneInput(this)">
             <i class="bi bi-trash"></i>
         </button>
@@ -137,7 +137,7 @@ function testEmail() {
 document.getElementById('notificationForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
-    
+
     fetch('/admin/notifications/save', {
         method: 'POST',
         body: formData

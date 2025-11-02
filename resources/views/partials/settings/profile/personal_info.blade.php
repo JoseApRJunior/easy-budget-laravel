@@ -14,7 +14,13 @@
 <div class="col-md-6">
     <div class="mb-3">
         <label class="small text-muted">E-mail</label>
-        <p class="mb-0">{{ auth()->user()->email }}</p>
+        <p class="mb-0">
+            @if( auth()->user()->provider && auth()->user()->provider->contact )
+                {{ auth()->user()->provider->contact->email_personal ?? 'Não informado' }}
+            @else
+                Não informado
+            @endif
+        </p>
     </div>
 </div>
 <div class="col-md-6">
@@ -34,7 +40,7 @@
         <label class="small text-muted">Telefone</label>
         <p class="mb-0">
             @if( auth()->user()->provider && auth()->user()->provider->contact )
-                {{ auth()->user()->provider->contact->phone ?? 'Não informado' }}
+                {{ auth()->user()->provider->contact->phone_personal ?? 'Não informado' }}
             @else
                 Não informado
             @endif

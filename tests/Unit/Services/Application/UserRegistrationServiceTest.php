@@ -14,19 +14,17 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
-use App\Repositories\CommonDataRepository;
-use App\Repositories\PlanRepository;
 use App\Repositories\ProviderRepository;
-use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
+use App\Services\Application\EmailVerificationService;
+use App\Services\Application\ProviderManagementService;
+use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Application\UserRegistrationService;
-use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -43,33 +41,27 @@ class UserRegistrationServiceTest extends TestCase
 
     private UserRegistrationService         $service;
     private UserRepository                  $userRepository;
-    private TenantRepository                $tenantRepository;
+    private UserConfirmationTokenService    $userConfirmationTokenService;
     private UserConfirmationTokenRepository $userConfirmationTokenRepository;
-    private CommonDataRepository            $commonDataRepository;
-    private ProviderRepository              $providerRepository;
-    private PlanRepository                  $planRepository;
-    private RoleRepository                  $roleRepository;
+    private ProviderManagementService       $providerManagementService;
+    private EmailVerificationService        $emailVerificationService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->userRepository                  = $this->app->make( UserRepository::class);
-        $this->tenantRepository                = $this->app->make( TenantRepository::class);
+        $this->userConfirmationTokenService    = $this->app->make( UserConfirmationTokenService::class);
         $this->userConfirmationTokenRepository = $this->app->make( UserConfirmationTokenRepository::class);
-        $this->commonDataRepository            = $this->app->make( CommonDataRepository::class);
-        $this->providerRepository              = $this->app->make( ProviderRepository::class);
-        $this->planRepository                  = $this->app->make( PlanRepository::class);
-        $this->roleRepository                  = $this->app->make( RoleRepository::class);
+        $this->providerManagementService       = $this->app->make( ProviderManagementService::class);
+        $this->emailVerificationService        = $this->app->make( EmailVerificationService::class);
 
         $this->service = new UserRegistrationService(
             $this->userRepository,
-            $this->tenantRepository,
+            $this->userConfirmationTokenService,
             $this->userConfirmationTokenRepository,
-            $this->commonDataRepository,
-            $this->providerRepository,
-            $this->planRepository,
-            $this->roleRepository,
+            $this->providerManagementService,
+            $this->emailVerificationService,
         );
     }
 
@@ -163,6 +155,47 @@ class UserRegistrationServiceTest extends TestCase
     }
 
     /**
+     * Testa registro social - evento UserRegistered NÃO deve ser disparado.
+     */
+    public function test_social_registration_does_not_dispatch_user_registered_event(): void
+    {
+        // Arrange
+        Event::fake();
+        $userData = $this->getValidUserData();
+
+        // Criar plano trial
+        $plan = Plan::factory()->create( [
+            'name'   => 'Trial',
+            'slug'   => 'trial',
+            'price'  => 0.00,
+            'status' => true,
+        ] );
+
+        // Criar role provider
+        $providerRole = Role::factory()->create( [ 'name' => 'provider' ] );
+
+        // Act
+        $result = $this->service->registerUser( $userData, true ); // isSocialRegistration = true
+
+        // Assert
+        $this->assertTrue( $result->isSuccess() );
+
+        $data   = $result->getData();
+        $user   = $data[ 'user' ];
+        $tenant = $data[ 'tenant' ];
+
+        // Verificar se usuário foi criado
+        $this->assertInstanceOf( User::class, $user );
+        $this->assertEquals( $userData[ 'email' ], $user->email );
+
+        // Verificar se tenant foi criado
+        $this->assertInstanceOf( Tenant::class, $tenant );
+
+        // Verificar que evento UserRegistered NÃO foi disparado para registro social
+        Event::assertNotDispatched( UserRegistered::class);
+    }
+
+    /**
      * Testa registro com dados obrigatórios ausentes.
      */
     public function test_registration_with_missing_required_data(): void
@@ -179,7 +212,7 @@ class UserRegistrationServiceTest extends TestCase
         // Assert
         $this->assertFalse( $result->isSuccess() );
         $this->assertEquals( OperationStatus::INVALID_DATA, $result->getStatus() );
-        $this->assertStringContains( 'Dados obrigatórios ausentes', $result->getMessage() );
+        $this->assertStringContainsString( 'Dados obrigatórios ausentes', $result->getMessage() );
     }
 
     /**
@@ -209,7 +242,7 @@ class UserRegistrationServiceTest extends TestCase
         $tenantName3 = $this->invokePrivateMethod( $this->service, 'generateUniqueTenantName', [ $userData ] );
         $this->assertNotEquals( $tenantName1, $tenantName3 );
         $this->assertNotEquals( $tenantName2, $tenantName3 );
-        $this->assertStringContains( '-', $tenantName3 ); // Deve conter contador
+        $this->assertStringContainsString( '-', $tenantName3 ); // Deve conter contador
     }
 
     /**
@@ -273,7 +306,7 @@ class UserRegistrationServiceTest extends TestCase
         // Assert
         $this->assertFalse( $result->isSuccess() );
         $this->assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        $this->assertStringContains( 'Plano trial não encontrado', $result->getMessage() );
+        $this->assertStringContainsString( 'Plano trial não encontrado', $result->getMessage() );
     }
 
     /**
@@ -354,7 +387,7 @@ class UserRegistrationServiceTest extends TestCase
         // Assert
         $this->assertFalse( $result->isSuccess() );
         $this->assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        $this->assertStringContains( 'Role provider não encontrado', $result->getMessage() );
+        $this->assertStringContainsString( 'Role provider não encontrado', $result->getMessage() );
     }
 
     /**
@@ -401,7 +434,7 @@ class UserRegistrationServiceTest extends TestCase
 
         // Assert
         $this->assertFalse( $result->isSuccess() );
-        $this->assertStringContains( 'Erro ao criar usuário', $result->getMessage() );
+        $this->assertStringContainsString( 'Erro ao criar usuário', $result->getMessage() );
     }
 
     /**
@@ -421,7 +454,7 @@ class UserRegistrationServiceTest extends TestCase
 
         // Assert
         $this->assertFalse( $result->isSuccess() );
-        $this->assertStringContains( 'Erro ao criar tenant', $result->getMessage() );
+        $this->assertStringContainsString( 'Erro ao criar tenant', $result->getMessage() );
     }
 
     /**
@@ -446,7 +479,7 @@ class UserRegistrationServiceTest extends TestCase
 
         // Assert
         $this->assertFalse( $result->isSuccess() );
-        $this->assertStringContains( 'Erro ao criar usuário', $result->getMessage() );
+        $this->assertStringContainsString( 'Erro ao criar usuário', $result->getMessage() );
     }
 
     /**
@@ -472,7 +505,7 @@ class UserRegistrationServiceTest extends TestCase
         // Assert
         $this->assertFalse( $result->isSuccess() );
         $this->assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        $this->assertStringContains( 'Erro interno do servidor', $result->getMessage() );
+        $this->assertStringContainsString( 'Erro interno do servidor', $result->getMessage() );
 
         // Verificar que nenhum dado foi persistido
         $this->assertDatabaseMissing( 'tenants', [ 'name' => 'joao-silva' ] );
@@ -494,7 +527,7 @@ class UserRegistrationServiceTest extends TestCase
 
         // Assert
         $this->assertTrue( $result->isSuccess() );
-        $this->assertStringContains( 'instruções de redefinição', $result->getMessage() );
+        $this->assertStringContainsString( 'instruções de redefinição', $result->getMessage() );
 
         // Verificar se token foi criado
         $this->assertDatabaseHas( 'user_confirmation_tokens', [
@@ -519,7 +552,7 @@ class UserRegistrationServiceTest extends TestCase
 
         // Assert
         $this->assertTrue( $result->isSuccess() ); // Não revela se email existe por segurança
-        $this->assertStringContains( 'Se o e-mail existir', $result->getMessage() );
+        $this->assertStringContainsString( 'Se o e-mail existir', $result->getMessage() );
 
         // Verificar que nenhum token foi criado
         $this->assertDatabaseMissing( 'user_confirmation_tokens', [
@@ -545,7 +578,7 @@ class UserRegistrationServiceTest extends TestCase
         // Assert
         $this->assertFalse( $result->isSuccess() );
         $this->assertEquals( OperationStatus::ERROR, $result->getStatus() );
-        $this->assertStringContains( 'Erro ao processar solicitação', $result->getMessage() );
+        $this->assertStringContainsString( 'Erro ao processar solicitação', $result->getMessage() );
     }
 
     /**
@@ -566,7 +599,7 @@ class UserRegistrationServiceTest extends TestCase
         $this->assertInstanceOf( UserConfirmationToken::class, $token );
         $this->assertEquals( $user->id, $token->user_id );
         $this->assertEquals( $tenant->id, $token->tenant_id );
-        $this->assertEquals( 'email_verification', $token->type );
+        $this->assertEquals( \App\Enums\TokenType::EMAIL_VERIFICATION, $token->type );
         $this->assertNotEmpty( $token->token );
         $this->assertNotNull( $token->expires_at );
     }

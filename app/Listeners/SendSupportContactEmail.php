@@ -88,7 +88,7 @@ class SendSupportContactEmail implements ShouldQueue
         } catch (Throwable $e) {
             // Tratamento de exceções
             $this->handleException($event, $e);
-            
+
             // Relança a exceção para que seja tratada pela queue
             throw $e;
 
@@ -106,14 +106,24 @@ class SendSupportContactEmail implements ShouldQueue
      */
     private function processEmailSending(SupportTicketCreated $event): void
     {
-        // Criar instância da mailable
+        // 1. Enviar email para a equipe de suporte
         $contactEmail = new ContactEmail(
             $event->contactData,
             $event->tenant
         );
 
-        // Enviar email
         Mail::send($contactEmail);
+
+        Log::info('Email de contato enviado para equipe de suporte', [
+            'support_id' => $event->support->id,
+            'email' => $event->support->email,
+            'subject' => $event->support->subject,
+            'tenant_id' => $event->tenant?->id,
+            'recipient' => $contactEmail->envelope()->to[0]->address ?? 'N/A',
+        ]);
+
+        // 2. Enviar email de confirmação para o usuário
+        $this->sendConfirmationEmailToUser($event);
 
         Log::info('Email de contato enviado com sucesso via evento', [
             'support_id' => $event->support->id,
@@ -121,7 +131,54 @@ class SendSupportContactEmail implements ShouldQueue
             'subject' => $event->support->subject,
             'tenant_id' => $event->tenant?->id,
             'processing_time' => $this->getProcessingTime(),
+            'emails_sent' => 2, // Um para suporte, outro para usuário
         ]);
+    }
+
+    /**
+     * Envia email de confirmação para o usuário que enviou a mensagem.
+     *
+     * @param SupportTicketCreated $event Evento de criação de ticket
+     */
+    private function sendConfirmationEmailToUser(SupportTicketCreated $event): void
+    {
+        try {
+            // Criar dados para o email de confirmação
+            $confirmationData = [
+                'first_name' => $event->contactData['first_name'] ?? null,
+                'last_name' => $event->contactData['last_name'] ?? null,
+                'email' => $event->contactData['email'],
+                'subject' => $event->contactData['subject'],
+                'message' => $event->contactData['message'],
+                'support_id' => $event->support->id,
+                'submitted_at' => now()->format('d/m/Y H:i:s'),
+            ];
+
+            // Criar instância da mailable de confirmação
+            $confirmationEmail = new \App\Mail\SupportConfirmationEmail(
+                $confirmationData,
+                $event->tenant
+            );
+
+            // Enviar email para o usuário
+            Mail::send($confirmationEmail);
+
+            Log::info('Email de confirmação enviado para usuário', [
+                'support_id' => $event->support->id,
+                'user_email' => $event->contactData['email'],
+                'subject' => 'Confirmação de recebimento - ' . $event->contactData['subject'],
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao enviar email de confirmação para usuário', [
+                'support_id' => $event->support->id,
+                'user_email' => $event->contactData['email'],
+                'error' => $e->getMessage(),
+            ]);
+
+            // Não lança exceção para não interromper o fluxo principal
+            // O email para suporte já foi enviado com sucesso
+        }
     }
 
     /**

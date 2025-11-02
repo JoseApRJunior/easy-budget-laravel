@@ -17,7 +17,7 @@ class ProviderMiddleware
      * Estas são rotas básicas de visualização e configuração
      */
     private const ALLOWED_ROUTES_WITH_EXPIRED_TRIAL = [
-        'dashboard',                    // Dashboard principal
+        'provider.dashboard',           // Dashboard principal
         'provider.update',              // Atualizar perfil
         'provider.update_store',        // Salvar atualização de perfil
         'provider.change_password',     // Mudar senha
@@ -34,9 +34,9 @@ class ProviderMiddleware
         'settings.audit',               // Auditoria
         'plans.index',                  // Visualizar planos
         'plans.show',                   // Visualizar detalhes do plano
-        'profile.edit',                 // Editar perfil
-        'profile.update',               // Atualizar perfil
-        'profile.destroy',              // Deletar perfil
+        'settings.profile.edit',        // Editar perfil
+        'settings.profile.update',      // Atualizar perfil
+        'settings.profile.destroy',     // Deletar perfil
     ];
 
     /**
@@ -103,7 +103,7 @@ class ProviderMiddleware
                     'ip'              => $request->ip()
                 ] );
 
-                return redirect()->route( 'plans.index' )
+                return redirect()->route( 'provider.plans.index' )
                     ->with( 'warning', 'Seu período de trial expirou. Escolha um plano para continuar usando o sistema.' );
             }
 

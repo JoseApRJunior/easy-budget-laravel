@@ -8,7 +8,7 @@
 -  **Engine:** InnoDB
 -  **Charset:** utf8mb4
 -  **Collation:** utf8mb4_unicode_ci
--  **Tabelas:** 50+ tabelas principais (contando tabelas de sistema)
+-  **Tabelas:** 40+ tabelas principais (contando tabelas de sistema)
 -  **Multi-tenant:** Isolamento completo por empresa
 -  **Arquitetura:** Sistema complexo com integração Mercado Pago
 -  **Status:** Schema inicial criado via migration em Laravel 12 (migrado de sistema legado Twig + DoctrineDBAL)
@@ -167,8 +167,9 @@ CREATE TABLE user_confirmation_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED,
     tenant_id BIGINT UNSIGNED,
-    token VARCHAR(64) UNIQUE NOT NULL,
+    token VARCHAR(43) UNIQUE NOT NULL,
     expires_at DATETIME NOT NULL,
+    type VARCHAR(50) DEFAULT 'email_verification',
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -341,7 +342,7 @@ CREATE TABLE budgets (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED,
     customer_id BIGINT UNSIGNED,
-    budget_statuses_id BIGINT UNSIGNED,
+    budget_statuses_id VARCHAR(20),
     user_confirmation_token_id BIGINT UNSIGNED NULL,
     code VARCHAR(50) UNIQUE NOT NULL,
     due_date DATE NULL,
@@ -352,11 +353,12 @@ CREATE TABLE budgets (
     attachment VARCHAR(255) NULL,
     history LONGTEXT NULL,
     pdf_verification_hash VARCHAR(64) UNIQUE NULL,
+    public_token VARCHAR(43) NULL UNIQUE,
+    public_expires_at TIMESTAMP NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT,
-    FOREIGN KEY (budget_statuses_id) REFERENCES budget_statuses(id) ON DELETE RESTRICT,
     FOREIGN KEY (user_confirmation_token_id) REFERENCES user_confirmation_tokens(id) ON DELETE SET NULL
 );
 ```
@@ -369,19 +371,22 @@ CREATE TABLE services (
     tenant_id BIGINT UNSIGNED,
     budget_id BIGINT UNSIGNED,
     category_id BIGINT UNSIGNED,
-    service_statuses_id BIGINT UNSIGNED,
+    service_statuses_id VARCHAR(20),
+    user_confirmation_token_id BIGINT UNSIGNED NULL,
     code VARCHAR(50) UNIQUE NOT NULL,
     description TEXT NULL,
     discount DECIMAL(10,2) DEFAULT 0,
     total DECIMAL(10,2) DEFAULT 0,
     due_date DATE NULL,
     pdf_verification_hash VARCHAR(64) NULL,
+    public_token VARCHAR(43) NULL UNIQUE,
+    public_expires_at TIMESTAMP NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE RESTRICT,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
-    FOREIGN KEY (service_statuses_id) REFERENCES service_statuses(id) ON DELETE RESTRICT
+    FOREIGN KEY (user_confirmation_token_id) REFERENCES user_confirmation_tokens(id) ON DELETE SET NULL
 );
 ```
 
@@ -414,7 +419,7 @@ CREATE TABLE invoices (
     tenant_id BIGINT UNSIGNED,
     service_id BIGINT UNSIGNED,
     customer_id BIGINT UNSIGNED,
-    invoice_statuses_id BIGINT UNSIGNED,
+    invoice_statuses_id VARCHAR(20),
     code VARCHAR(50) UNIQUE NOT NULL,
     public_hash VARCHAR(64) NULL,
     subtotal DECIMAL(10,2) NOT NULL,
@@ -425,13 +430,14 @@ CREATE TABLE invoices (
     payment_id VARCHAR(255) NULL,
     transaction_amount DECIMAL(10,2) NULL,
     transaction_date DATETIME NULL,
+    public_token VARCHAR(43) NULL UNIQUE,
+    public_expires_at TIMESTAMP NULL,
     notes TEXT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT,
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT,
-    FOREIGN KEY (invoice_statuses_id) REFERENCES invoice_statuses(id) ON DELETE RESTRICT
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT
 );
 ```
 
@@ -597,7 +603,6 @@ CREATE TABLE schedules (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,
     FOREIGN KEY (user_confirmation_token_id) REFERENCES user_confirmation_tokens(id) ON DELETE CASCADE
 );
 ```
@@ -667,13 +672,13 @@ CREATE TABLE audit_logs (
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_audit_tenant_created (tenant_id, created_at),
-    INDEX idx_audit_user_created (user_id, created_at),
-    INDEX idx_audit_tenant_severity (tenant_id, severity),
-    INDEX idx_audit_tenant_category (tenant_id, category),
-    INDEX idx_audit_tenant_action (tenant_id, action),
-    INDEX idx_audit_model (model_type, model_id),
-    INDEX idx_audit_tenant_user_created (tenant_id, user_id, created_at)
+    INDEX idx_audit_logs_tenant_created (tenant_id, created_at),
+    INDEX idx_audit_logs_user_created (user_id, created_at),
+    INDEX idx_audit_logs_severity_category (tenant_id, severity),
+    INDEX idx_audit_logs_tenant_category (tenant_id, category),
+    INDEX idx_audit_logs_tenant_action (tenant_id, action),
+    INDEX idx_audit_logs_model (model_type, model_id),
+    INDEX idx_audit_logs_tenant_user_created (tenant_id, user_id, created_at)
 );
 ```
 
@@ -951,6 +956,48 @@ CREATE TABLE cache_locks (
 );
 ```
 
+##### **jobs**
+
+```sql
+CREATE TABLE jobs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    queue VARCHAR(255) NOT NULL,
+    payload LONGTEXT NOT NULL,
+    attempts TINYINT UNSIGNED NOT NULL,
+    reserved_at INT UNSIGNED NULL,
+    available_at INT UNSIGNED NOT NULL,
+    created_at INT UNSIGNED NOT NULL,
+    INDEX jobs_queue_index (queue),
+    INDEX jobs_reserved_at_index (reserved_at),
+    INDEX jobs_available_at_index (available_at)
+);
+```
+
+##### **failed_jobs**
+
+```sql
+CREATE TABLE failed_jobs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(255) UNIQUE NOT NULL,
+    connection TEXT NOT NULL,
+    queue TEXT NOT NULL,
+    payload LONGTEXT NOT NULL,
+    exception LONGTEXT NOT NULL,
+    failed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    INDEX failed_jobs_uuid_index (uuid)
+);
+```
+
+##### **password_reset_tokens**
+
+```sql
+CREATE TABLE password_reset_tokens (
+    email VARCHAR(255) PRIMARY KEY,
+    token VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NULL
+);
+```
+
 ##### **sessions**
 
 ```sql
@@ -961,9 +1008,8 @@ CREATE TABLE sessions (
     user_agent TEXT NULL,
     payload LONGTEXT NOT NULL,
     last_activity INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_sessions_user_id (user_id),
-    INDEX idx_sessions_last_activity (last_activity)
+    INDEX sessions_user_id_index (user_id),
+    INDEX sessions_last_activity_index (last_activity)
 );
 ```
 

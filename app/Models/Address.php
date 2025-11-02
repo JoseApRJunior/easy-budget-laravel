@@ -5,6 +5,7 @@ namespace App\Models;
 
 use App\Models\Provider;
 use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Illuminate\Support\Carbon;
 
 class Address extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -47,6 +48,20 @@ class Address extends Model
     ];
 
     /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'address'        => null,
+        'address_number' => null,
+        'neighborhood'   => null,
+        'city'           => null,
+        'state'          => null,
+        'cep'            => null,
+    ];
+
+    /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
@@ -70,12 +85,12 @@ class Address extends Model
     {
         return [
             'tenant_id'      => 'required|integer|exists:tenants,id',
-            'address'        => 'required|string|max:255',
+            'address'        => 'nullable|string|max:255',
             'address_number' => 'nullable|string|max:20',
-            'neighborhood'   => 'required|string|max:100',
-            'city'           => 'required|string|max:100',
-            'state'          => 'required|string|max:2',
-            'cep'            => 'required|string|max:9|regex:/^\d{5}-?\d{3}$/',
+            'neighborhood'   => 'nullable|string|max:100',
+            'city'           => 'nullable|string|max:100',
+            'state'          => 'nullable|string|max:2',
+            'cep'            => 'nullable|string|max:9|regex:/^\d{5}-?\d{3}$/',
         ];
     }
 

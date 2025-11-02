@@ -14,7 +14,7 @@
                     escolha um plano de assinatura.
                 </p>
                 <div class="d-flex gap-2">
-                    <a href="{{ route( 'plans.index' ) }}" class="btn btn-sm btn-warning">
+                    <a href="{{ route( 'provider.plans.index' ) }}" class="btn btn-sm btn-warning">
                         <i class="bi bi-credit-card me-1"></i>Ver Planos
                     </a>
                     <button type="button" class="btn btn-sm btn-outline-warning" data-bs-dismiss="alert">

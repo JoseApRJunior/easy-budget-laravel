@@ -68,8 +68,17 @@ class CustomVerifyEmailController extends Controller
             ] );
         }
 
+        // Validar formato do token usando a função global
+        $sanitizedToken = validateAndSanitizeToken( $token, 'base64url' );
+        if ( !$sanitizedToken ) {
+            return view( 'auth.verify-email', [
+                'error' => 'Token de verificação inválido.',
+                'title' => 'Link inválido'
+            ] );
+        }
+
         return view( 'auth.verify-email', [
-            'token' => $token,
+            'token' => $sanitizedToken,
             'title' => 'Verificação de E-mail'
         ] );
     }
@@ -137,6 +146,19 @@ class CustomVerifyEmailController extends Controller
             );
         }
 
+        // Verificar se o usuário está ativo
+        if ( !$user->is_active ) {
+            $this->logSecurityEvent( 'USUARIO_INATIVO', $user->id, $user->tenant_id, [
+                'token_id' => $confirmationToken->id,
+                'ip'       => $request->ip(),
+            ] );
+
+            return $this->redirectError(
+                'login',
+                'Usuário não encontrado. Entre em contato com o suporte.',
+            );
+        }
+
         // Verificar se o usuário pertence ao tenant correto
         if ( $user->tenant_id !== $confirmationToken->tenant_id ) {
             $this->logSecurityEvent( 'TENANT_MISMATCH', $user->id, $confirmationToken->tenant_id, [
@@ -156,7 +178,7 @@ class CustomVerifyEmailController extends Controller
             $user->markEmailAsVerified();
 
             // 5. Disparar evento Verified do Laravel
-            // Event::dispatch( new Verified( $user ) );
+            Event::dispatch( new Verified( $user ) );
 
             // 6. Remover token usado após confirmação
             $this->userConfirmationTokenRepository->delete( $confirmationToken->id );
@@ -183,7 +205,7 @@ class CustomVerifyEmailController extends Controller
 
             // 10. Redirecionar para dashboard com sessão completa
             return $this->redirectSuccess(
-                'dashboard',
+                'provider.dashboard',
                 'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
             );
 
@@ -196,7 +218,7 @@ class CustomVerifyEmailController extends Controller
             ] );
 
             return $this->redirectError(
-                'login',
+                'provider.dashboard',
                 'Erro interno durante a verificação. Tente novamente ou entre em contato com o suporte.',
             );
         }
@@ -207,8 +229,9 @@ class CustomVerifyEmailController extends Controller
      *
      * Método otimizado que busca tokens válidos com validações de segurança:
      * - Verifica se token existe e não está expirado
-     * - Valida formato do token (64 caracteres)
+     * - Valida formato do token (base64url, 43 caracteres)
      * - Sanitiza entrada para prevenir ataques
+     * - Usa repository para busca case-insensitive
      * - Logging detalhado para auditoria de segurança
      *
      * @param string $token Token de confirmação a ser validado
@@ -217,12 +240,12 @@ class CustomVerifyEmailController extends Controller
      */
     private function findValidConfirmationToken( string $token, Request $request ): ?UserConfirmationToken
     {
-        // 1. Sanitizar e validar formato do token
-        $sanitizedToken = filter_var( $token, FILTER_SANITIZE_STRING );
+        // 1. Sanitizar e validar formato do token usando função global segura
+        $sanitizedToken = validateAndSanitizeToken( $token, 'base64url' );
 
-        if ( empty( $sanitizedToken ) || strlen( $sanitizedToken ) !== 64 ) {
+        if ( !$sanitizedToken ) {
             $this->logSecurityEvent( 'TOKEN_FORMATO_INVALIDO', null, null, [
-                'token_length' => strlen( $sanitizedToken ?? '' ),
+                'token_length' => strlen( $token ),
                 'ip'           => $request->ip(),
                 'user_agent'   => $request->userAgent(),
             ] );
@@ -230,12 +253,23 @@ class CustomVerifyEmailController extends Controller
             return null;
         }
 
-        // 2. Buscar token válido no banco de dados
-        $confirmationToken = UserConfirmationToken::where( 'token', $sanitizedToken )
-            ->where( 'expires_at', '>', now() )
-            ->first();
+        // 2. Buscar token válido no banco de dados usando repository (case-insensitive)
+        $confirmationToken = $this->userConfirmationTokenRepository->findByToken( $sanitizedToken );
 
-        // 3. Logging detalhado para auditoria
+        // 3. Verificar se token não expirou
+        if ( $confirmationToken && $confirmationToken->expires_at->isPast() ) {
+            $this->logSecurityEvent( 'TOKEN_EXPIRADO', $confirmationToken->user_id, $confirmationToken->tenant_id, [
+                'token_id'   => $confirmationToken->id,
+                'expires_at' => $confirmationToken->expires_at,
+                'ip'         => $request->ip(),
+            ] );
+
+            // Remover token expirado
+            $this->userConfirmationTokenRepository->delete( $confirmationToken->id );
+            $confirmationToken = null;
+        }
+
+        // 4. Logging detalhado para auditoria
         if ( $confirmationToken ) {
             $this->logSecurityEvent( 'TOKEN_VALIDO_ENCONTRADO', $confirmationToken->user_id, $confirmationToken->tenant_id, [
                 'token_id'   => $confirmationToken->id,

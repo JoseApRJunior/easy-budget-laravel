@@ -105,13 +105,13 @@ class PublicTenantSeeder extends Seeder
         // 2. Criar contato da empresa
         $contact = Contact::firstOrCreate(
             [
-                'tenant_id' => $tenant->id,
-                'email'     => 'contato@easybudget.net.br',
+                'tenant_id'      => $tenant->id,
+                'email_personal' => 'contato@easybudget.net.br',
             ],
             [
                 'tenant_id'      => $tenant->id,
-                'email'          => 'contato@easybudget.net.br',
-                'phone'          => '(11) 3000-0000',
+                'email_personal' => 'contato@easybudget.net.br',
+                'phone_personal' => '(11) 3000-0000',
                 'email_business' => 'suporte@easybudget.net.br',
                 'phone_business' => '(11) 3000-0001',
                 'website'        => 'https://easybudget.net.br',

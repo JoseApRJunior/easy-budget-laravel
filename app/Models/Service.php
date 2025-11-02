@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ServiceStatusEnum;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\ServiceItem;
-use App\Models\ServiceStatus;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,9 +46,12 @@ class Service extends Model
         'budget_id',
         'category_id',
         'service_statuses_id',
+        'user_confirmation_token_id',
         'code',
         'description',
         'pdf_verification_hash',
+        'public_token',
+        'public_expires_at',
         'discount',
         'total',
         'due_date',
@@ -69,18 +73,21 @@ class Service extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'             => 'integer',
-        'budget_id'             => 'integer',
-        'category_id'           => 'integer',
-        'service_statuses_id'   => 'integer',
-        'code'                  => 'string',
-        'description'           => 'string',
-        'discount'              => 'decimal:2',
-        'total'                 => 'decimal:2',
-        'due_date'              => 'date',
-        'pdf_verification_hash' => 'string',
-        'created_at'            => 'immutable_datetime',
-        'updated_at'            => 'datetime',
+        'tenant_id'                  => 'integer',
+        'budget_id'                  => 'integer',
+        'category_id'                => 'integer',
+        'service_statuses_id'        => ServiceStatusEnum::class,
+        'user_confirmation_token_id' => 'integer',
+        'code'                       => 'string',
+        'description'                => 'string',
+        'discount'                   => 'decimal:2',
+        'total'                      => 'decimal:2',
+        'due_date'                   => 'date',
+        'pdf_verification_hash'      => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
 
     /**
@@ -89,23 +96,26 @@ class Service extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'             => 'required|integer|exists:tenants,id',
-            'budget_id'             => 'required|integer|exists:budgets,id',
-            'category_id'           => 'required|integer|exists:categories,id',
-            'service_statuses_id'   => 'required|integer|exists:service_statuses,id',
-            'code'                  => 'required|string|max:50|unique:services,code',
-            'description'           => 'nullable|string',
-            'discount'              => 'required|numeric|min:0|max:999999.99',
-            'total'                 => 'required|numeric|min:0|max:999999.99',
-            'due_date'              => 'nullable|date',
-            'pdf_verification_hash' => 'nullable|string|max:64',
+            'tenant_id'                  => 'required|integer|exists:tenants,id',
+            'budget_id'                  => 'required|integer|exists:budgets,id',
+            'category_id'                => 'required|integer|exists:categories,id',
+            'service_statuses_id'        => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
+            'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
+            'code'                       => 'required|string|max:50|unique:services,code',
+            'description'                => 'nullable|string',
+            'discount'                   => 'required|numeric|min:0|max:999999.99',
+            'total'                      => 'required|numeric|min:0|max:999999.99',
+            'due_date'                   => 'nullable|date',
+            'pdf_verification_hash'      => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
+            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at'          => 'nullable|date',
         ];
     }
 
     /**
      * Get the tenant that owns the Service.
      */
-    public function tenant(): BelongsTo
+    public function tenant()
     {
         return $this->belongsTo( Tenant::class);
     }
@@ -113,7 +123,7 @@ class Service extends Model
     /**
      * Get the budget that owns the Service.
      */
-    public function budget(): BelongsTo
+    public function budget()
     {
         return $this->belongsTo( Budget::class);
     }
@@ -121,7 +131,7 @@ class Service extends Model
     /**
      * Get the customer through the budget relationship.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo( Customer::class, 'customer_id' );
     }
@@ -129,31 +139,31 @@ class Service extends Model
     /**
      * Get the category that owns the Service.
      */
-    public function category(): BelongsTo
+    public function category()
     {
         return $this->belongsTo( Category::class);
     }
 
     /**
-     * Get the service status that owns the Service.
+     * Get the user confirmation token for the Service.
      */
-    public function serviceStatus(): BelongsTo
+    public function userConfirmationToken()
     {
-        return $this->belongsTo( ServiceStatus::class, 'service_statuses_id' );
+        return $this->belongsTo( UserConfirmationToken::class);
     }
 
     /**
-     * Alias para serviceStatus() para compatibilidade.
+     * Get the service status enum.
      */
-    public function status(): BelongsTo
+    public function getServiceStatusAttribute(): ?ServiceStatusEnum
     {
-        return $this->serviceStatus();
+        return ServiceStatusEnum::tryFrom( $this->service_statuses_id );
     }
 
     /**
      * Get the service items for the Service.
      */
-    public function serviceItems(): HasMany
+    public function serviceItems()
     {
         return $this->hasMany( ServiceItem::class);
     }
@@ -161,7 +171,7 @@ class Service extends Model
     /**
      * Get the invoices for the Service.
      */
-    public function invoices(): HasMany
+    public function invoices()
     {
         return $this->hasMany( Invoice::class);
     }
@@ -169,7 +179,7 @@ class Service extends Model
     /**
      * Get the schedules for the Service.
      */
-    public function schedules(): HasMany
+    public function schedules()
     {
         return $this->hasMany( Schedule::class);
     }

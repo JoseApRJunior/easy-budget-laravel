@@ -7,8 +7,12 @@ namespace App\Services\Domain;
 use App\Models\SystemSettings;
 use App\Models\User;
 use App\Models\UserSettings;
+use App\Services\Application\FileUploadService;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\Domain\AuditService;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Serviço principal para gerenciamento de configurações
@@ -20,7 +24,7 @@ class SettingsService extends AbstractBaseService
      */
     public function getUserSettings( ?User $user = null ): UserSettings
     {
-        $user = $user ?? auth()->user();
+        $user = $user ?? Auth::user();
 
         if ( !$user ) {
             throw new Exception( 'Usuário não autenticado' );
@@ -53,7 +57,7 @@ class SettingsService extends AbstractBaseService
      */
     public function getSystemSettings( ?int $tenantId = null ): SystemSettings
     {
-        $tenantId = $tenantId ?? auth()->user()->tenant_id;
+        $tenantId = $tenantId ?? Auth::user()->tenant_id;
 
         return SystemSettings::firstOrCreate(
             [ 'tenant_id' => $tenantId ],
@@ -79,7 +83,7 @@ class SettingsService extends AbstractBaseService
      */
     public function updateUserSettings( array $data, ?User $user = null ): UserSettings
     {
-        $user         = $user ?? auth()->user();
+        $user         = $user ?? Auth::user();
         $userSettings = $this->getUserSettings( $user );
 
         // Valores antigos para auditoria
@@ -107,7 +111,7 @@ class SettingsService extends AbstractBaseService
      */
     public function updateSystemSettings( array $data, ?int $tenantId = null ): SystemSettings
     {
-        $tenantId       = $tenantId ?? auth()->user()->tenant_id;
+        $tenantId       = $tenantId ?? Auth::user()->tenant_id;
         $systemSettings = $this->getSystemSettings( $tenantId );
 
         // Valores antigos para auditoria
@@ -149,14 +153,23 @@ class SettingsService extends AbstractBaseService
      */
     public function updateProfileSettings( array $data ): array
     {
-        $user = auth()->user();
+        $user = $this->authUser();
+
+        if ( !$user ) {
+            throw new Exception( 'Usuário não autenticado ou inválido' );
+        }
+
+        // Busca o usuário do banco para garantir que é um modelo Eloquent
+        $user = User::find( $user->id );
 
         // Atualiza dados básicos do usuário se fornecidos
-        if ( isset( $data[ 'full_name' ] ) || isset( $data[ 'phone' ] ) || isset( $data[ 'birth_date' ] ) ) {
+        if ( isset( $data[ 'full_name' ] ) || isset( $data[ 'email' ] ) || isset( $data[ 'phone' ] ) || isset( $data[ 'birth_date' ] ) || isset( $data[ 'extra_links' ] ) ) {
             $user->update( [
-                'name'       => $data[ 'full_name' ] ?? $user->name,
-                'phone'      => $data[ 'phone' ] ?? $user->phone,
-                'birth_date' => $data[ 'birth_date' ] ?? $user->birth_date,
+                'name'        => $data[ 'full_name' ] ?? $user->name,
+                'email'       => $data[ 'email' ] ?? $user->email,
+                'phone'       => $data[ 'phone' ] ?? $user->phone,
+                'birth_date'  => $data[ 'birth_date' ] ?? $user->birth_date,
+                'extra_links' => $data[ 'extra_links' ] ?? $user->extra_links,
             ] );
         }
 
@@ -176,7 +189,14 @@ class SettingsService extends AbstractBaseService
      */
     public function updateSecuritySettings( array $data ): array
     {
-        $user = auth()->user();
+        $user = $this->authUser();
+
+        if ( !$user ) {
+            throw new Exception( 'Usuário não autenticado ou inválido' );
+        }
+
+        // Busca o usuário do banco para garantir que é um modelo Eloquent
+        $user = User::find( $user->id );
 
         // Verifica senha atual se fornecida nova senha
         if ( isset( $data[ 'new_password' ] ) ) {
@@ -227,9 +247,18 @@ class SettingsService extends AbstractBaseService
      */
     public function updateIntegrationSettings( array $data ): array
     {
+        $user = $this->authUser();
+
+        if ( !$user ) {
+            throw new Exception( 'Usuário não autenticado ou inválido' );
+        }
+
+        // Busca o usuário do banco para garantir que é um modelo Eloquent
+        $user = User::find( $user->id );
+
         // Implementação específica para integrações
         // Por enquanto, armazena nas preferências customizadas
-        $customPreferences                   = auth()->user()->settings->custom_preferences ?? [];
+        $customPreferences                   = $user->settings->custom_preferences ?? [];
         $customPreferences[ 'integrations' ] = $data;
 
         $userSettings = $this->updateUserSettings( [
@@ -262,7 +291,7 @@ class SettingsService extends AbstractBaseService
      */
     public function updateAvatar( $avatarFile ): array
     {
-        $user         = auth()->user();
+        $user         = Auth::user();
         $userSettings = $this->getUserSettings( $user );
 
         // Faz upload do novo avatar
@@ -302,7 +331,7 @@ class SettingsService extends AbstractBaseService
      */
     public function removeAvatar(): array
     {
-        $user         = auth()->user();
+        $user         = Auth::user();
         $userSettings = $this->getUserSettings( $user );
 
         if ( !$userSettings->avatar ) {
@@ -333,7 +362,7 @@ class SettingsService extends AbstractBaseService
         $userSettings->update( [ 'avatar' => null ] );
 
         // Registra auditoria
-        app( AuditService::class)->logAvatarUpdated( $user, $oldAvatar, null );
+        app( AuditService::class)->logAvatarUpdated( $user, $oldAvatar, '' );
 
         return [
             'success'  => true,
@@ -347,7 +376,7 @@ class SettingsService extends AbstractBaseService
      */
     public function updateCompanyLogo( $logoFile ): array
     {
-        $tenantId       = auth()->user()->tenant_id;
+        $tenantId       = Auth::user()->tenant_id;
         $systemSettings = $this->getSystemSettings( $tenantId );
 
         // Faz upload do novo logo
@@ -380,7 +409,14 @@ class SettingsService extends AbstractBaseService
      */
     public function getCompleteUserSettings( ?User $user = null ): array
     {
-        $user = $user ?? auth()->user();
+        $user = $user ?? $this->authUser();
+
+        if ( !$user ) {
+            throw new Exception( 'Usuário não autenticado ou inválido' );
+        }
+
+        // Busca o usuário do banco para garantir que é um modelo Eloquent
+        $user = User::find( $user->id );
 
         // Carrega relacionamentos necessários para o perfil
         $user->load( [
@@ -423,7 +459,7 @@ class SettingsService extends AbstractBaseService
      */
     public function getCompleteSystemSettings( ?int $tenantId = null ): array
     {
-        $tenantId       = $tenantId ?? auth()->user()->tenant_id;
+        $tenantId       = $tenantId ?? Auth::user()->tenant_id;
         $systemSettings = $this->getSystemSettings( $tenantId );
 
         return [
@@ -478,7 +514,7 @@ class SettingsService extends AbstractBaseService
      */
     public function restoreUserDefaultSettings( ?User $user = null ): array
     {
-        $user         = $user ?? auth()->user();
+        $user         = $user ?? Auth::user();
         $userSettings = $this->getUserSettings( $user );
 
         $oldValues = $userSettings->toArray();
@@ -528,7 +564,7 @@ class SettingsService extends AbstractBaseService
      */
     public function restoreSystemDefaultSettings( ?int $tenantId = null ): array
     {
-        $tenantId       = $tenantId ?? auth()->user()->tenant_id;
+        $tenantId       = $tenantId ?? Auth::user()->tenant_id;
         $systemSettings = $this->getSystemSettings( $tenantId );
 
         $oldValues = $systemSettings->toArray();
@@ -622,7 +658,7 @@ class SettingsService extends AbstractBaseService
      */
     public function getSettingsStats( ?int $tenantId = null ): array
     {
-        $tenantId = $tenantId ?? auth()->user()->tenant_id;
+        $tenantId = $tenantId ?? Auth::user()->tenant_id;
 
         return [
             'user_settings'   => [

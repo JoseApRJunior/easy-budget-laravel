@@ -73,4 +73,12 @@ class Profession extends Model
         return $this->hasMany( CommonData::class, 'profession_id' );
     }
 
+    /**
+     * Scope para buscar apenas profissões ativas.
+     */
+    public function scopeActive( $query )
+    {
+        return $query->where( 'is_active', true );
+    }
+
 }

@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatusEnum;
 use App\Models\Traits\TenantScoped;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,6 +41,7 @@ class Invoice extends Model
         'service_id',
         'customer_id',
         'invoice_statuses_id',
+        'user_confirmation_token_id',
         'code',
         'public_hash',
         'subtotal',
@@ -49,6 +52,8 @@ class Invoice extends Model
         'payment_id',
         'transaction_amount',
         'transaction_date',
+        'public_token',
+        'public_expires_at',
         'notes',
     ];
 
@@ -58,23 +63,26 @@ class Invoice extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'           => 'integer',
-        'service_id'          => 'integer',
-        'customer_id'         => 'integer',
-        'invoice_statuses_id' => 'integer',
-        'code'                => 'string',
-        'subtotal'            => 'decimal:2',
-        'total'               => 'decimal:2',
-        'due_date'            => 'date',
-        'transaction_date'    => 'datetime',
-        'payment_method'      => 'string',
-        'payment_id'          => 'string',
-        'transaction_amount'  => 'decimal:2',
-        'public_hash'         => 'string',
-        'discount'            => 'decimal:2',
-        'notes'               => 'string',
-        'created_at'          => 'immutable_datetime',
-        'updated_at'          => 'datetime',
+        'tenant_id'                  => 'integer',
+        'service_id'                 => 'integer',
+        'customer_id'                => 'integer',
+        'invoice_statuses_id'        => InvoiceStatusEnum::class,
+        'user_confirmation_token_id' => 'integer',
+        'code'                       => 'string',
+        'subtotal'                   => 'decimal:2',
+        'total'                      => 'decimal:2',
+        'due_date'                   => 'date',
+        'transaction_date'           => 'datetime',
+        'payment_method'             => 'string',
+        'payment_id'                 => 'string',
+        'transaction_amount'         => 'decimal:2',
+        'public_hash'                => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
+        'discount'                   => 'decimal:2',
+        'notes'                      => 'string',
+        'created_at'                 => 'immutable_datetime',
+        'updated_at'                 => 'datetime',
     ];
 
     /**
@@ -83,27 +91,30 @@ class Invoice extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'           => 'required|integer|exists:tenants,id',
-            'service_id'          => 'required|integer|exists:services,id',
-            'customer_id'         => 'required|integer|exists:customers,id',
-            'invoice_statuses_id' => 'required|integer|exists:invoice_statuses,id',
-            'code'                => 'required|string|max:50|unique:invoices,code',
-            'subtotal'            => 'required|numeric|min:0|max:999999.99',
-            'discount'            => 'required|numeric|min:0|max:999999.99',
-            'total'               => 'required|numeric|min:0|max:999999.99',
-            'due_date'            => 'nullable|date|after:today',
-            'payment_method'      => 'nullable|string|max:50',
-            'payment_id'          => 'nullable|string|max:255',
-            'transaction_amount'  => 'nullable|numeric|min:0|max:999999.99',
-            'transaction_date'    => 'nullable|date',
-            'notes'               => 'nullable|string|max:65535',
+            'tenant_id'                  => 'required|integer|exists:tenants,id',
+            'service_id'                 => 'required|integer|exists:services,id',
+            'customer_id'                => 'required|integer|exists:customers,id',
+            'invoice_statuses_id'        => 'required|string|in:' . implode( ',', array_column( InvoiceStatusEnum::cases(), 'value' ) ),
+            'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
+            'code'                       => 'required|string|max:50|unique:invoices,code',
+            'subtotal'                   => 'required|numeric|min:0|max:999999.99',
+            'discount'                   => 'required|numeric|min:0|max:999999.99',
+            'total'                      => 'required|numeric|min:0|max:999999.99',
+            'due_date'                   => 'nullable|date|after:today',
+            'payment_method'             => 'nullable|string|max:50',
+            'payment_id'                 => 'nullable|string|max:255',
+            'transaction_amount'         => 'nullable|numeric|min:0|max:999999.99',
+            'transaction_date'           => 'nullable|date',
+            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at'          => 'nullable|date',
+            'notes'                      => 'nullable|string|max:65535',
         ];
     }
 
     /**
      * Get the tenant that owns the Invoice.
      */
-    public function tenant(): BelongsTo
+    public function tenant()
     {
         return $this->belongsTo( Tenant::class);
     }
@@ -111,23 +122,23 @@ class Invoice extends Model
     /**
      * Get the customer that owns the Invoice.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo( Customer::class);
     }
 
     /**
-     * Get the invoice status that owns the Invoice.
+     * Get the invoice status enum.
      */
-    public function invoiceStatus(): BelongsTo
+    public function getInvoiceStatusAttribute(): ?InvoiceStatusEnum
     {
-        return $this->belongsTo( InvoiceStatus::class, 'invoice_statuses_id' );
+        return InvoiceStatusEnum::tryFrom( $this->invoice_statuses_id );
     }
 
     /**
      * Get the service that owns the Invoice.
      */
-    public function service(): BelongsTo
+    public function service()
     {
         return $this->belongsTo( Service::class);
     }
@@ -135,9 +146,17 @@ class Invoice extends Model
     /**
      * Get the invoice items for the Invoice.
      */
-    public function invoiceItems(): HasMany
+    public function invoiceItems()
     {
         return $this->hasMany( InvoiceItem::class);
+    }
+
+    /**
+     * Get the user confirmation token for the Invoice.
+     */
+    public function userConfirmationToken()
+    {
+        return $this->belongsTo( UserConfirmationToken::class);
     }
 
     /**

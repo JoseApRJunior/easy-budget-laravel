@@ -5,7 +5,7 @@ namespace App\Mail\Concerns;
 use App\Mail\Concerns\BaseEmail;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 
 /**
  * Classe base abstrata para e-mails simples sem tokens de confirmação.
@@ -27,9 +27,9 @@ abstract class AbstractBaseSimpleEmail extends BaseEmail
         User $user,
         ?Tenant $tenant = null,
         array $additionalData = [],
-        ?ConfirmationLinkService $confirmationLinkService = null,
+        ?LinkService $linkService = null,
     ) {
-        parent::__construct( $user, $tenant, $confirmationLinkService );
+        parent::__construct( $user, $tenant, $linkService );
 
         $this->additionalData = $additionalData;
     }

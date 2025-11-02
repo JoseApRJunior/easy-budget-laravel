@@ -23,6 +23,5 @@
 
     @stack( 'styles' )
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.3.6/dist/cdn.min.js"></script>
+
 </head>

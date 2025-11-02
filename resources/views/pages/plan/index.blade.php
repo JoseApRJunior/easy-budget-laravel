@@ -14,83 +14,86 @@ use App\Helpers\BladeHelper;
             <!-- Cards de Planos -->
             <div class="row g-4 justify-content-center">
                 @foreach ( $plans as $plan )
-                                @php
-                    $currentPlan   = checkPlan();
-                    $isCurrentPlan = $currentPlan->slug == $plan->slug && $currentPlan->status == 'active';
-                                @endphp
+                    @php
+                        $currentPlan   =  auth()->user()->activePlan();
+                        $isCurrentPlan = $currentPlan && $currentPlan->slug == $plan->slug;
+                    @endphp
 
-                                <div class="col-12 col-md-6 col-lg-4 position-relative">
-                                    <div class="card h-100 border-0 shadow-lg rounded-lg hover-shadow fade-in">
-                                        <!-- Cabeçalho do Plano -->
-                                        <div class="card-header bg-transparent border-0 text-center pt-4 pb-0">
-                                            @if ( $plan->slug == 'basic' || $plan->slug == 'trial' )
-                                                <i class="bi bi-rocket display-6 text-primary mb-2"></i>
-                                            @elseif ( $plan->slug == 'pro' )
-                                                <i class="bi bi-star display-6 text-success mb-2"></i>
-                                            @else
-                                                <i class="bi bi-gem display-6 text-info mb-2"></i>
-                                            @endif
+                    <div class="col-12 col-md-6 col-lg-4 position-relative">
+                        <div class="card h-100 border-0 shadow-lg rounded-lg hover-shadow fade-in">
+                            <!-- Cabeçalho do Plano -->
+                            <div class="card-header bg-transparent border-0 text-center pt-4 pb-0">
+                                @if ( $plan->slug == 'basic' || $plan->slug == 'trial' )
+                                    <i class="bi bi-rocket display-6 text-primary mb-2"></i>
+                                @elseif ( $plan->slug == 'pro' )
+                                    <i class="bi bi-star display-6 text-success mb-2"></i>
+                                @else
+                                    <i class="bi bi-gem display-6 text-info mb-2"></i>
+                                @endif
 
-                                            <h3 class="h4 fw-bold mb-0">{{ $plan->name }}</h3>
-                                        </div>
+                                <h3 class="h4 fw-bold mb-0">{{ $plan->name }}</h3>
+                            </div>
 
-                                        <!-- Corpo do Plano -->
-                                        <div class="card-body d-flex flex-column p-4">
-                                            <!-- Preço -->
-                                            <div class="text-center mb-4">
-                                                <div class="small text-muted mb-1">A partir de</div>
-                                                <div class="display-6 fw-bold text-primary mb-0">
-                                                    R$ {{ number_format( $plan->price, 2, ',', '.' ) }}
-                                                </div>
-                                                <div class="small text-muted">/mês</div>
-                                            </div>
-
-                                            <p class="card-text small-text mb-4">{{ $plan[ 'description' ] }}</p>
-
-                                            <!-- Features -->
-                                            <ul class="list-unstyled mb-4">
-                                                @foreach ( $plan->features as $feature )
-                                                    <li class="mb-3 d-flex align-items-center">
-                                                        <i class="bi bi-check-lg text-success me-2"></i>
-                                                        <span class="small">{{ $feature }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-
-                                            <!-- Botão de Ação -->
-                                            <form action="/plans/pay" method="post" class="mt-auto">
-                                                @csrf
-                                                <input type="hidden" name="planSlug" value="{{ $plan->slug }}" required>
-                                                <div class="d-grid">
-                                                    @if ( $isCurrentPlan )
-                                                        <button type="button" class="btn btn-lg btn-outline-secondary" disabled>
-                                                            <i class="bi bi-check2 me-2"></i>Plano Atual
-                                                        </button>
-                                                    @else
-                                                        <button type="submit" class="btn btn-lg btn-primary">
-                                                            <i class="bi bi-arrow-right me-2"></i>Escolher Plano
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </form>
-                                        </div>
+                            <!-- Corpo do Plano -->
+                            <div class="card-body d-flex flex-column p-4">
+                                <!-- Preço -->
+                                <div class="text-center mb-4">
+                                    <div class="small text-muted mb-1">A partir de</div>
+                                    <div class="display-6 fw-bold text-primary mb-0">
+                                        R$ {{ number_format( $plan->price, 2, ',', '.' ) }}
                                     </div>
-
-                                    <!-- Destaque para Plano Recomendado -->
-                                    @if ( $plan->slug == 'pro' )
-                                        <div class="position-absolute top-0 start-50 translate-middle" style="z-index: 1000; margin-top: -10px;">
-                                            <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold shadow-lg border">
-                                                <i class="bi bi-star-fill me-1"></i>Mais Popular
-                                            </span>
-                                        </div>
-                                    @endif
+                                    <div class="small text-muted">/mês</div>
                                 </div>
+
+                                <p class="card-text small-text mb-4">{{ $plan[ 'description' ] }}</p>
+
+                                <!-- Features -->
+                                <ul class="list-unstyled mb-4">
+                                    @php
+                                        $features = is_array($plan->features) ? $plan->features : json_decode($plan->features ?? '[]', true);
+                                    @endphp
+                                    @foreach ( $features as $feature )
+                                        <li class="mb-3 d-flex align-items-center">
+                                            <i class="bi bi-check-lg text-success me-2"></i>
+                                            <span class="small">{{ $feature }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <!-- Botão de Ação -->
+                                <form action="/plans/pay" method="post" class="mt-auto">
+                                    @csrf
+                                    <input type="hidden" name="planSlug" value="{{ $plan->slug }}" required>
+                                    <div class="d-grid">
+                                        @if ( $isCurrentPlan )
+                                            <button type="button" class="btn btn-lg btn-outline-secondary" disabled>
+                                                <i class="bi bi-check2 me-2"></i>Plano Atual
+                                            </button>
+                                        @else
+                                            <button type="submit" class="btn btn-lg btn-primary">
+                                                <i class="bi bi-arrow-right me-2"></i>Escolher Plano
+                                            </button>
+                                        @endif
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Destaque para Plano Recomendado -->
+                        @if ( $plan->slug == 'pro' )
+                            <div class="position-absolute top-0 start-50 translate-middle" style="z-index: 1000; margin-top: -10px;">
+                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold shadow-lg border">
+                                    <i class="bi bi-star-fill me-1"></i>Mais Popular
+                                </span>
+                            </div>
+                        @endif
+                    </div>
                 @endforeach
 
                 <!-- Corpo do Modal -->
                 <div class="modal-body">
                     @php
-    $pendingPlan = checkPlanPending();
+    $pendingPlan = auth()->user()->pendingPlan();
                     @endphp
                     @if ( $pendingPlan && $pendingPlan->status == 'pending' )
                         <p class="text-muted mb-3">

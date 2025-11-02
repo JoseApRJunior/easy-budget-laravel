@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\UserRegistered;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +50,7 @@ class SendWelcomeEmail implements ShouldQueue
      * Serviço para construção segura de links de confirmação.
      * Injetado automaticamente pelo Laravel.
      */
-    protected ConfirmationLinkService $confirmationLinkService;
+    protected LinkService $linkService;
 
     /**
      * Métricas de performance do processamento.
@@ -61,14 +61,14 @@ class SendWelcomeEmail implements ShouldQueue
      * Cria uma nova instância do listener.
      *
      * @param MailerService $mailerService Serviço de e-mail injetado
-     * @param ConfirmationLinkService $confirmationLinkService Serviço de links de confirmação injetado
+     * @param LinkService $linkService Serviço de links de confirmação injetado
      */
     public function __construct(
         MailerService $mailerService,
-        ConfirmationLinkService $confirmationLinkService,
+        LinkService $linkService,
     ) {
-        $this->mailerService           = $mailerService;
-        $this->confirmationLinkService = $confirmationLinkService;
+        $this->mailerService = $mailerService;
+        $this->linkService   = $linkService;
         $this->initializePerformanceMetrics();
     }
 
@@ -136,21 +136,14 @@ class SendWelcomeEmail implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de boas-vindas' );
             }
 
-            // Validação rigorosa do token de verificação
-            if ( !$event->verificationToken ) {
-                throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado para boas-vindas' );
-            }
-
-            if ( strlen( $event->verificationToken ) !== 64 ) {
-                throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido para boas-vindas' );
-            }
-
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+            // Validação rigorosa do token de verificação usando formato base64url
+            if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de verificação com formato inválido para boas-vindas' );
             }
 
             // Gera URL de confirmação segura usando serviço centralizado
-            $confirmationLink = $this->confirmationLinkService->buildConfirmationLinkByContext( $event->verificationToken, 'welcome' );
+            $confirmationLink = $this->linkService->buildConfirmationLinkByContext( $event->verificationToken, 'welcome' );
+            // teste apos registro com google so recebe email de boas vindas
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendWelcomeEmail(
@@ -203,13 +196,8 @@ class SendWelcomeEmail implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado para boas-vindas' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->verificationToken ) !== 64 ) {
-            throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido para boas-vindas' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+        // Validação de formato do token usando base64url (32 bytes = 43 caracteres)
+        if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
             throw new \InvalidArgumentException( 'Token de verificação com formato inválido para boas-vindas' );
         }
 
@@ -380,45 +368,6 @@ class SendWelcomeEmail implements ShouldQueue
     private function getProcessingTime(): float
     {
         return $this->performanceMetrics[ 'end_time' ] - $this->performanceMetrics[ 'start_time' ];
-    }
-
-    /**
-     * Constrói URL de confirmação segura usando o serviço centralizado.
-     *
-     * @param string|null $token Token de confirmação
-     * @param string $route Rota para confirmação (padrão: /confirm-account)
-     * @param string $fallbackRoute Rota de fallback (padrão: /login)
-     * @return string URL de confirmação segura
-     */
-    protected function buildConfirmationLink(
-        ?string $token,
-        string $route = '/confirm-account',
-        string $fallbackRoute = '/login',
-    ): string {
-        return $this->confirmationLinkService->buildConfirmationLink( $token, $route, $fallbackRoute );
-    }
-
-    /**
-     * Constrói URL de confirmação para e-mails de boas-vindas.
-     *
-     * @deprecated Use buildConfirmationLinkByContext() com contexto 'welcome'
-     * @param string|null $token Token de confirmação
-     * @return string URL de confirmação
-     */
-    protected function buildWelcomeConfirmationLink( ?string $token ): string
-    {
-        return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'welcome' );
-    }
-
-    /**
-     * Verifica se um token é válido usando o serviço centralizado.
-     *
-     * @param string|null $token Token a ser verificado
-     * @return bool True se válido, false caso contrário
-     */
-    protected function isValidConfirmationToken( ?string $token ): bool
-    {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
     }
 
 }

@@ -113,7 +113,7 @@ class GoogleController extends Controller
             ] );
 
             // Redireciona para o dashboard
-            return redirect()->route( 'dashboard' )->with( 'success', $authResult->getMessage() );
+            return redirect()->route( 'provider.dashboard' )->with( 'success', $authResult->getMessage() );
 
         } catch ( \Exception $e ) {
             Log::error( 'Erro no callback do Google OAuth', [
@@ -172,29 +172,6 @@ class GoogleController extends Controller
                 'ip'      => $request->ip(),
             ] );
         }
-    }
-
-    /**
-     * Gera fingerprint único da sessão para segurança
-     *
-     * Combina dados do usuário e requisição para criar
-     * identificador único da sessão.
-     *
-     * @param Request $request
-     * @return string
-     */
-    private function generateSessionFingerprint( Request $request ): string
-    {
-        $user = Auth::user();
-
-        $fingerprintData = [
-            'user_id'    => $user->id,
-            'user_agent' => $request->userAgent(),
-            'ip'         => $request->ip(),
-            'timestamp'  => now()->timestamp,
-        ];
-
-        return hash( 'sha256', json_encode( $fingerprintData ) );
     }
 
     /**

@@ -30,8 +30,7 @@ class AreaOfActivity extends Model
         'updated_at' => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
@@ -55,6 +54,14 @@ class AreaOfActivity extends Model
     public function commonData()
     {
         return $this->hasMany( CommonData::class, 'area_of_activity_id' );
+    }
+
+    /**
+     * Scope para buscar apenas áreas ativas.
+     */
+    public function scopeActive( $query )
+    {
+        return $query->where( 'is_active', true );
     }
 
 }

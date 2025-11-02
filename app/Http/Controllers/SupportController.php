@@ -26,10 +26,11 @@ class SupportController extends Controller
      *
      * @param SupportService $supportService Serviço de suporte
      */
-    public function __construct(SupportService $supportService)
+    public function __construct( SupportService $supportService )
     {
         $this->supportService = $supportService;
     }
+
     /**
      * Exibe a página de suporte (GET /support)
      *
@@ -46,48 +47,82 @@ class SupportController extends Controller
      * @param SupportContactRequest $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(SupportContactRequest $request)
+    public function store( SupportContactRequest $request )
     {
+        Log::info( 'SupportController::store - Iniciando processamento do formulário', [
+            'email'          => $request->input( 'email' ),
+            'subject'        => $request->input( 'subject' ),
+            'has_first_name' => $request->filled( 'first_name' ),
+            'has_last_name'  => $request->filled( 'last_name' ),
+            'message_length' => strlen( $request->input( 'message', '' ) ),
+            'ip'             => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+        ] );
+
         try {
             // Obtém dados validados e sanitizados do FormRequest
             $validatedData = $request->getValidatedData();
 
+            Log::info( 'SupportController::store - Dados validados obtidos', [
+                'email'         => $validatedData[ 'email' ],
+                'subject'       => $validatedData[ 'subject' ],
+                'full_name'     => $request->getFullName(),
+                'has_full_name' => $request->hasFullName(),
+            ] );
+
             // Cria o ticket de suporte usando o SupportService
-            $result = $this->supportService->createSupportTicket($validatedData);
+            $result = $this->supportService->createSupportTicket( $validatedData );
 
-            if (!$result->isSuccess()) {
-                Log::warning('Falha ao criar ticket de suporte', [
-                    'email' => $validatedData['email'],
-                    'subject' => $validatedData['subject'],
-                    'error' => $result->getMessage(),
+            if ( !$result->isSuccess() ) {
+                Log::warning( 'SupportController::store - Falha ao criar ticket', [
+                    'email'    => $validatedData[ 'email' ],
+                    'subject'  => $validatedData[ 'subject' ],
+                    'error'    => $result->getMessage(),
                     'log_data' => $request->getLogData()
-                ]);
+                ] );
 
-                return $this->redirectError('support', $result->getMessage())
+                return $this->redirectError( 'support', $result->getMessage() )
                     ->withInput();
             }
 
             $support = $result->getData();
 
-            $this->logOperation('support_contact_received', [
+            Log::info( 'SupportController::store - Ticket criado com sucesso', [
                 'support_id' => $support->id,
-                'full_name' => $request->getFullName(),
-                'email' => $validatedData['email'],
-                'subject' => $validatedData['subject'],
+                'email'      => $validatedData[ 'email' ],
+                'subject'    => $validatedData[ 'subject' ],
+                'tenant_id'  => $support->tenant_id,
+            ] );
+
+            $this->logOperation( 'support_contact_received', [
+                'support_id'    => $support->id,
+                'full_name'     => $request->getFullName(),
+                'email'         => $validatedData[ 'email' ],
+                'subject'       => $validatedData[ 'subject' ],
                 'has_full_name' => $request->hasFullName(),
-                'log_data' => $request->getLogData()
-            ]);
+                'log_data'      => $request->getLogData()
+            ] );
 
-            return $this->redirectSuccess('support', 'Mensagem enviada com sucesso! Entraremos em contato em breve.');
+            Log::info( 'SupportController::store - Processamento concluído com sucesso', [
+                'support_id'     => $support->id,
+                'email'          => $validatedData[ 'email' ],
+                'redirect_route' => 'support',
+            ] );
 
-        } catch (Exception $e) {
-            Log::error('Erro ao processar contato de suporte: ' . $e->getMessage(), [
-                'email' => $request->input('email', 'N/A'),
-                'subject' => $request->input('subject', 'N/A'),
-                'log_data' => $request->getLogData()
-            ]);
+            return $this->redirectSuccess( 'support', 'Mensagem enviada com sucesso! Entraremos em contato em breve.' );
 
-            return $this->redirectError('support', 'Erro ao enviar mensagem. Tente novamente mais tarde.')
+        } catch ( Exception $e ) {
+            Log::error( 'SupportController::store - Erro durante processamento', [
+                'error'       => $e->getMessage(),
+                'error_file'  => $e->getFile(),
+                'error_line'  => $e->getLine(),
+                'email'       => $request->input( 'email', 'N/A' ),
+                'subject'     => $request->input( 'subject', 'N/A' ),
+                'log_data'    => $request->getLogData(),
+                'stack_trace' => $e->getTraceAsString(),
+            ] );
+
+            return $this->redirectError( 'support', 'Erro ao enviar mensagem. Tente novamente mais tarde.' )
                 ->withInput();
         }
     }

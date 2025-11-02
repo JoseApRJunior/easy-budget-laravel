@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\EmailVerificationRequested;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +50,7 @@ class SendEmailVerification implements ShouldQueue
      * Serviço para construção segura de links de confirmação.
      * Injetado automaticamente pelo Laravel.
      */
-    protected ConfirmationLinkService $confirmationLinkService;
+    protected LinkService $linkService;
 
     /**
      * Métricas de performance do processamento.
@@ -61,14 +61,14 @@ class SendEmailVerification implements ShouldQueue
      * Cria uma nova instância do listener.
      *
      * @param MailerService $mailerService Serviço de e-mail injetado
-     * @param ConfirmationLinkService $confirmationLinkService Serviço de links de confirmação injetado
+     * @param LinkService $linkService Serviço de links de confirmação injetado
      */
     public function __construct(
         MailerService $mailerService,
-        ConfirmationLinkService $confirmationLinkService,
+        LinkService $linkService,
     ) {
-        $this->mailerService           = $mailerService;
-        $this->confirmationLinkService = $confirmationLinkService;
+        $this->mailerService = $mailerService;
+        $this->linkService   = $linkService;
         $this->initializePerformanceMetrics();
     }
 
@@ -136,16 +136,8 @@ class SendEmailVerification implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de verificação' );
             }
 
-            // Validação rigorosa do token de verificação
-            if ( !$event->verificationToken ) {
-                throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado' );
-            }
-
-            if ( strlen( $event->verificationToken ) !== 64 ) {
-                throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido' );
-            }
-
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+            // Validação rigorosa do token de verificação usando formato base64url
+            if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de verificação com formato inválido' );
             }
 
@@ -161,7 +153,7 @@ class SendEmailVerification implements ShouldQueue
             }
 
             // Gera URL de verificação segura usando serviço centralizado
-            $confirmationLink = $this->confirmationLinkService->buildConfirmationLinkByContext( $event->verificationToken, 'verification' );
+            $confirmationLink = $this->linkService->buildConfirmationLinkByContext( $event->verificationToken, 'verification' );
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendEmailVerificationMail(
@@ -219,24 +211,12 @@ class SendEmailVerification implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de verificação obrigatório não informado' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->verificationToken ) !== 64 ) {
-            Log::error( 'Token de verificação com comprimento inválido', [
-                'token_length'    => strlen( $event->verificationToken ),
-                'expected_length' => 64,
-                'user_id'         => $event->user->id,
-                'tenant_id'       => $event->tenant?->id,
-            ] );
-            throw new \InvalidArgumentException( 'Token de verificação com comprimento inválido' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->verificationToken ) ) {
+        // Validação de formato do token usando base64url
+        if ( !validateAndSanitizeToken( $event->verificationToken, 'base64url' ) ) {
             Log::error( 'Token de verificação com formato inválido', [
                 'token_length'    => strlen( $event->verificationToken ),
                 'token_sample'    => substr( $event->verificationToken, 0, 10 ) . '...',
-                'expected_length' => 64,
-                'expected_format' => 'hexadecimal_minúsculo',
+                'expected_format' => 'base64url',
                 'user_id'         => $event->user->id,
                 'tenant_id'       => $event->tenant?->id,
             ] );
@@ -425,7 +405,7 @@ class SendEmailVerification implements ShouldQueue
         string $route = '/confirm-account',
         string $fallbackRoute = '/login',
     ): string {
-        return $this->confirmationLinkService->buildConfirmationLink( $token, $route, $fallbackRoute );
+        return $this->linkService->buildLink( $token, $route, $fallbackRoute );
     }
 
     /**
@@ -437,18 +417,7 @@ class SendEmailVerification implements ShouldQueue
      */
     protected function buildVerificationConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildConfirmationLinkByContext( $token, 'verification' );
-    }
-
-    /**
-     * Verifica se um token é válido usando o serviço centralizado.
-     *
-     * @param string|null $token Token a ser verificado
-     * @return bool True se válido, false caso contrário
-     */
-    protected function isValidConfirmationToken( ?string $token ): bool
-    {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
+        return $this->linkService->buildConfirmationLinkByContext( $token, 'verification' );
     }
 
 }

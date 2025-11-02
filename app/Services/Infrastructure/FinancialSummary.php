@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
 
+use App\Enums\BudgetStatus;
 use App\Enums\OperationStatus;
 use App\Models\Budget;
-use App\Models\BudgetStatus;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Carbon;
@@ -32,17 +32,21 @@ class FinancialSummary
     /**
      * Status de orçamentos considerados como receita (faturamento).
      */
-    private const REVENUE_STATUSES = [ 'IN_PROGRESS', 'COMPLETED' ];
+    private const REVENUE_STATUSES = [ BudgetStatus::APPROVED->value, BudgetStatus::COMPLETED->value ];
 
     /**
      * Status de orçamentos pendentes para análise.
      */
-    private const PENDING_STATUSES = [ 'DRAFT', 'PENDING' ];
+    private const PENDING_STATUSES = [ BudgetStatus::DRAFT->value, BudgetStatus::PENDING->value ];
 
     /**
      * Status de orçamentos para projeção futura.
      */
-    private const PROJECTION_STATUSES = [ 'DRAFT', 'PENDING', 'APPROVED', 'IN_PROGRESS' ];
+    private const PROJECTION_STATUSES = [
+        BudgetStatus::DRAFT->value,
+        BudgetStatus::PENDING->value,
+        BudgetStatus::APPROVED->value
+    ];
 
     /**
      * Obtém o resumo financeiro mensal por tenant.
@@ -126,9 +130,7 @@ class FinancialSummary
                     return $query->whereRaw( 'DATE_FORMAT(created_at, "%Y-%m") = ?', [ $period ] );
                 } )
                 ->when( $statusFilter, function ( $query, $statusFilter ) {
-                    return $query->whereHas( 'budgetStatus', function ( $q ) use ( $statusFilter ) {
-                        $q->where( 'slug', $statusFilter );
-                    } );
+                    return $query->where( 'budget_statuses_id', $statusFilter );
                 } )
                 ->groupBy( 'tenant_id' )
                 ->orderBy( 'total_value', 'desc' )
@@ -192,9 +194,8 @@ class FinancialSummary
                     DB::raw( 'COUNT(*) as total_budgets' ),
                     DB::raw( 'SUM(total) as total_revenue' ),
                     DB::raw( 'AVG(total) as average_budget' ),
-                    DB::raw( 'COUNT(CASE WHEN budget_statuses.slug IN ("COMPLETED", "IN_PROGRESS") THEN 1 END) as completed_budgets' ),
+                    DB::raw( 'COUNT(CASE WHEN budget_statuses_id IN ("' . implode( '","', self::REVENUE_STATUSES ) . '") THEN 1 END) as completed_budgets' ),
                 ] )
-                ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
                 ->where( 'tenant_id', $tenantId )
                 ->whereBetween( 'created_at', [ $startDate, $endDate ] )
                 ->groupBy( 'period' )
@@ -288,9 +289,8 @@ class FinancialSummary
     private function calculateMonthlyRevenue( int $tenantId, string $period ): float
     {
         return Budget::query()
-            ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses.slug', self::REVENUE_STATUSES )
+            ->whereIn( 'budget_statuses_id', self::REVENUE_STATUSES )
             ->whereRaw( 'DATE_FORMAT(budgets.updated_at, "%Y-%m") = ?', [ $period ] )
             ->sum( 'total' );
     }
@@ -304,9 +304,8 @@ class FinancialSummary
     private function calculatePendingBudgets( int $tenantId ): array
     {
         $result = Budget::query()
-            ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses.slug', self::PENDING_STATUSES )
+            ->whereIn( 'budget_statuses_id', self::PENDING_STATUSES )
             ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
             ->first();
 

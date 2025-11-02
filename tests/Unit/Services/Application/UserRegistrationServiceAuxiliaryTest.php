@@ -463,10 +463,10 @@ class UserRegistrationServiceAuxiliaryTest extends TestCase
         $token = $result->getData();
         $this->assertEquals( $user->id, $token->user_id );
         $this->assertEquals( $tenant->id, $token->tenant_id );
-        $this->assertEquals( 'email_verification', $token->type );
+        $this->assertEquals( \App\Enums\TokenType::EMAIL_VERIFICATION, $token->type );
         $this->assertNotEmpty( $token->token );
         $this->assertNotNull( $token->expires_at );
-        $this->assertEquals( 64, strlen( $token->token ) ); // Token deve ter 64 caracteres
+        $this->assertEquals( 43, strlen( $token->token ) ); // Token deve ter 43 caracteres (base64url: 32 bytes)
     }
 
     /**

@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\TokenType;
 use App\Models\Budget;
+use App\Models\Schedule;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 
 class UserConfirmationToken extends Model
 {
-    use TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -38,6 +44,7 @@ class UserConfirmationToken extends Model
         'tenant_id',
         'token',
         'expires_at',
+        'type',
     ];
 
     /**
@@ -50,9 +57,47 @@ class UserConfirmationToken extends Model
         'tenant_id'  => 'integer',
         'token'      => 'string',
         'expires_at' => 'datetime',
+        'type'       => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Set the type attribute.
+     * Convert enum to string value when saving to database.
+     */
+    public function setTypeAttribute( $value ): void
+    {
+        if ( $value instanceof TokenType ) {
+            $this->attributes[ 'type' ] = $value->value;
+        } else {
+            $this->attributes[ 'type' ] = $value;
+        }
+    }
+
+    /**
+     * Get the type attribute.
+     * Convert string value back to enum when loading from database.
+     */
+    public function getTypeAttribute( $value ): TokenType
+    {
+        $tokenType = TokenType::tryFrom( $value );
+
+        if ( $tokenType === null ) {
+            // Log warning for invalid token type and return default
+            Log::warning( 'Invalid token type found in database', [
+                'token_type_value' => $value,
+                'token_id'         => $this->id,
+                'user_id'          => $this->user_id,
+                'tenant_id'        => $this->tenant_id,
+            ] );
+
+            // Return default EMAIL_VERIFICATION for backward compatibility
+            return TokenType::EMAIL_VERIFICATION;
+        }
+
+        return $tokenType;
+    }
 
     /**
      * Regras de validação para o modelo UserConfirmationToken.
@@ -62,23 +107,10 @@ class UserConfirmationToken extends Model
         return [
             'user_id'    => 'required|integer|exists:users,id',
             'tenant_id'  => 'required|integer|exists:tenants,id',
-            'token'      => 'required|string|size:64|unique:user_confirmation_tokens,token',
+            'token'      => 'required|string|size:43|unique:user_confirmation_tokens,token', // base64url format: 32 bytes = 43 caracteres
             'expires_at' => 'required|date|after:now',
+            'type'       => 'required|string|in:' . implode( ',', TokenType::getAllTypes() ),
         ];
-    }
-
-    /**
-     * Validação customizada para verificar se o token é único no tenant.
-     */
-    public static function validateUniqueTokenInTenant( string $token, int $tenantId, ?int $excludeTokenId = null ): bool
-    {
-        $query = static::where( 'token', $token )->where( 'tenant_id', $tenantId );
-
-        if ( $excludeTokenId ) {
-            $query->where( 'id', '!=', $excludeTokenId );
-        }
-
-        return !$query->exists();
     }
 
     /**

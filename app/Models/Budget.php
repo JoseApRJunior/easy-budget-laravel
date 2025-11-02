@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\BudgetStatus;
+use App\Enums\BudgetStatus;
 use App\Models\Customer;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
@@ -11,6 +11,7 @@ use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Budget extends Model
 {
@@ -41,7 +42,7 @@ class Budget extends Model
     protected $fillable = [
         'tenant_id',
         'customer_id',
-        'budget_statuses_id',
+        'budget_status',
         'user_confirmation_token_id',
         'code',
         'due_date',
@@ -52,6 +53,8 @@ class Budget extends Model
         'attachment',
         'history',
         'pdf_verification_hash',
+        'public_token',
+        'public_expires_at',
     ];
 
     /**
@@ -62,7 +65,7 @@ class Budget extends Model
     protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
-        'budget_statuses_id'         => 'integer',
+        'budget_status'              => \App\Enums\BudgetStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'discount'                   => 'decimal:2',
@@ -73,6 +76,8 @@ class Budget extends Model
         'attachment'                 => 'string',
         'history'                    => 'string',
         'pdf_verification_hash'      => 'string',
+        'public_token'               => 'string',
+        'public_expires_at'          => 'datetime',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'datetime',
     ];
@@ -94,7 +99,7 @@ class Budget extends Model
         return [
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'customer_id'                => 'required|integer|exists:customers,id',
-            'budget_statuses_id'         => 'required|integer|exists:budget_statuses,id',
+            'budget_status'              => 'required|string|in:' . implode( ',', array_column( \App\Enums\BudgetStatus::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:budgets,code',
             'due_date'                   => 'nullable|date|after:today',
@@ -104,7 +109,7 @@ class Budget extends Model
             'payment_terms'              => 'nullable|string|max:65535',
             'attachment'                 => 'nullable|string|max:255',
             'history'                    => 'nullable|string|max:65535',
-            'pdf_verification_hash'      => 'nullable|string|max:64|unique:budgets,pdf_verification_hash',
+            'pdf_verification_hash'      => 'nullable|string|max:64|unique:budgets,pdf_verification_hash', // SHA256 hash, not a confirmation token
         ];
     }
 
@@ -157,7 +162,7 @@ class Budget extends Model
     /**
      * Get the tenant that owns the Budget.
      */
-    public function tenant(): BelongsTo
+    public function tenant()
     {
         return $this->belongsTo( Tenant::class);
     }
@@ -165,20 +170,28 @@ class Budget extends Model
     /**
      * Get the customer that owns the Budget.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo( Customer::class);
     }
 
     /**
-     * Get the budget status that owns the Budget.
+     * Get the budget status enum.
      */
-    public function budgetStatus(): BelongsTo
+    public function getBudgetStatusAttribute(): ?BudgetStatus
     {
-        return $this->belongsTo( BudgetStatus::class, 'budget_statuses_id' );
+        return \App\Enums\BudgetStatus::tryFrom( $this->budget_status );
     }
 
-    public function userConfirmationToken(): BelongsTo
+    /**
+     * Get the budget status enum for backward compatibility with views.
+     */
+    public function budgetStatus(): ?BudgetStatus
+    {
+        return $this->budget_status;
+    }
+
+    public function userConfirmationToken()
     {
         return $this->belongsTo( UserConfirmationToken::class);
     }
@@ -186,7 +199,7 @@ class Budget extends Model
     /**
      * Get the services for the Budget.
      */
-    public function services(): HasMany
+    public function services()
     {
         return $this->hasMany( Service::class);
     }
@@ -194,7 +207,7 @@ class Budget extends Model
     /**
      * Get the budget items for the Budget.
      */
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany( BudgetItem::class);
     }
@@ -202,7 +215,7 @@ class Budget extends Model
     /**
      * Get the budget versions for the Budget.
      */
-    public function versions(): HasMany
+    public function versions()
     {
         return $this->hasMany( BudgetVersion::class);
     }
@@ -210,7 +223,7 @@ class Budget extends Model
     /**
      * Get the current budget version.
      */
-    public function currentVersion(): BelongsTo
+    public function currentVersion()
     {
         return $this->belongsTo( BudgetVersion::class, 'current_version_id' );
     }
@@ -218,7 +231,7 @@ class Budget extends Model
     /**
      * Get the budget attachments.
      */
-    public function attachments(): HasMany
+    public function attachments()
     {
         return $this->hasMany( BudgetAttachment::class);
     }
@@ -226,7 +239,7 @@ class Budget extends Model
     /**
      * Get the budget shares.
      */
-    public function shares(): HasMany
+    public function shares()
     {
         return $this->hasMany( BudgetShare::class);
     }
@@ -234,7 +247,7 @@ class Budget extends Model
     /**
      * Get the budget action history.
      */
-    public function actionHistory(): HasMany
+    public function actionHistory()
     {
         return $this->hasMany( BudgetActionHistory::class);
     }
@@ -242,7 +255,7 @@ class Budget extends Model
     /**
      * Get the budget notifications.
      */
-    public function notifications(): HasMany
+    public function notifications()
     {
         return $this->hasMany( BudgetNotification::class);
     }
@@ -252,9 +265,12 @@ class Budget extends Model
      */
     public function scopeActive( $query )
     {
-        return $query->whereHas( 'budgetStatus', function ( $q ) {
-            $q->where( 'is_active', true );
-        } );
+        $activeStatuses = array_filter(
+            array_column( \App\Enums\BudgetStatus::cases(), 'value' ),
+            fn( $status ) => \App\Enums\BudgetStatus::tryFrom( $status )?->isActive() ?? false
+        );
+
+        return $query->whereIn( 'budget_statuses_id', $activeStatuses );
     }
 
     /**
@@ -262,9 +278,7 @@ class Budget extends Model
      */
     public function scopeByStatus( $query, $statusSlug )
     {
-        return $query->whereHas( 'budgetStatus', function ( $q ) use ( $statusSlug ) {
-            $q->where( 'slug', $statusSlug );
-        } );
+        return $query->where( 'budget_statuses_id', $statusSlug );
     }
 
     /**
@@ -339,7 +353,7 @@ class Budget extends Model
      */
     public function canBeEdited(): bool
     {
-        return in_array( $this->budgetStatus->slug, [ 'rascunho', 'rejeitado' ] );
+        return in_array( $this->budget_status?->value, [ \App\Enums\BudgetStatus::DRAFT->value, \App\Enums\BudgetStatus::REJECTED->value ] );
     }
 
     /**
@@ -347,7 +361,7 @@ class Budget extends Model
      */
     public function canBeSent(): bool
     {
-        return $this->budgetStatus->slug === 'rascunho' && $this->isValid();
+        return $this->budget_status === BudgetStatus::DRAFT && $this->isValid();
     }
 
     /**
@@ -355,7 +369,7 @@ class Budget extends Model
      */
     public function canBeApproved(): bool
     {
-        return $this->budgetStatus->slug === 'enviado' && $this->isValid();
+        return $this->budget_status === \App\Enums\BudgetStatus::PENDING && $this->isValid();
     }
 
     /**
@@ -363,7 +377,7 @@ class Budget extends Model
      */
     public function canBeRejected(): bool
     {
-        return $this->budgetStatus->slug === 'enviado';
+        return $this->budget_status === \App\Enums\BudgetStatus::PENDING;
     }
 
     /**
@@ -382,8 +396,8 @@ class Budget extends Model
 
         // Aplicar desconto global se houver
         if ( $this->global_discount_percentage > 0 ) {
-            $globalDiscount = $subtotal * ( $this->global_discount_percentage / 100 );
-            $discountTotal += $globalDiscount;
+            $globalDiscount  = $subtotal * ( $this->global_discount_percentage / 100 );
+            $discountTotal  += $globalDiscount;
         }
 
         $taxesTotal = $this->items->sum( function ( $item ) {
@@ -530,7 +544,7 @@ class Budget extends Model
     {
         $newBudget                     = $this->replicate();
         $newBudget->code               = $this->generateDuplicateCode();
-        $newBudget->budget_statuses_id = BudgetStatus::where( 'slug', 'rascunho' )->first()->id;
+        $newBudget->budget_status      = \App\Enums\BudgetStatus::DRAFT->value;
         $newBudget->current_version_id = null;
         $newBudget->save();
 

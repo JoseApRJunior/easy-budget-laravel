@@ -1,4 +1,4 @@
-@extends( 'layout.pdf' )
+@extends( 'layouts.pdf' )
 
 @section( 'content' )
     <div class="container-fluid">

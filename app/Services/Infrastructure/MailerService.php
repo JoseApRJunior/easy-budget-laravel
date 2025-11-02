@@ -229,7 +229,7 @@ class MailerService
         string $resetToken,
     ): ServiceResult {
         try {
-            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], false );
+            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], true );
             $subject   = 'Redefinição de senha - Easy Budget';
 
             $templateData = [
@@ -552,7 +552,7 @@ class MailerService
         string $confirmationLink,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class) );
+            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink );
 
             // Define o destinatário e usa queue para processamento assíncrono
             Mail::to( $user->email )->queue( $mailable );
@@ -711,21 +711,17 @@ class MailerService
      * @param User $user Usuário que receberá o e-mail
      * @param string $token Token de redefinição de senha
      * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendPasswordResetNotification(
         User $user,
         string $token,
         ?Tenant $tenant = null,
-        ?array $company = null,
     ): ServiceResult {
         try {
             $mailable = new PasswordResetNotification(
                 $user,
                 $token,
-                $tenant,
-                $company,
             );
 
             Mail::to( $user->email )->send( $mailable );
@@ -1422,7 +1418,7 @@ class MailerService
 
         try {
             $mailable = new EmailVerificationMail(
-                $user, $tenant, $confirmationLink, app( ConfirmationLinkService::class),
+                $user, $tenant, $confirmationLink,
             );
 
             // Define o destinatário e usa queue para processamento assíncrono

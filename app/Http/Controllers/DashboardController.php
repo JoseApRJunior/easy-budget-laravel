@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\ChartService;
+use App\Services\Domain\ActivityService;
+use App\Services\MetricsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +18,8 @@ class DashboardController extends Controller
 {
     public function __construct(
         private ChartService $chartService,
+        private MetricsService $metricsService,
+        private ActivityService $activityService,
     ) {}
 
     /**
@@ -32,17 +36,17 @@ class DashboardController extends Controller
 
         $dashboardData = Cache::remember( $cacheKey, $ttl, function () use ($userId, $period) {
             return [
-                'metrics'             => $this->metricsService->getMetrics( $userId, $period ),
-                'charts'              => $this->chartService->getInitialChartData( $userId, $period ),
-                'recent_transactions' => $this->getRecentTransactions( $userId ),
-                'quick_actions'       => $this->getQuickActions()
+                'metrics'           => $this->metricsService->getMetrics( $userId, $period ),
+                'charts'            => $this->chartService->getInitialChartData( $userId, $period ),
+                'recent_activities' => $this->getRecentActivities( $userId ),
+                'quick_actions'     => $this->getQuickActions()
             ];
         } );
 
         return view( 'dashboard.index', [
             'metrics'            => $dashboardData[ 'metrics' ],
             'charts'             => $dashboardData[ 'charts' ],
-            'recentTransactions' => $dashboardData[ 'recent_transactions' ],
+            'recentTransactions' => $dashboardData[ 'recent_activities' ],
             'quickActions'       => $dashboardData[ 'quick_actions' ],
             'currentPeriod'      => $period,
             'lastUpdated'        => Carbon::now()->toDateTimeString()
@@ -50,43 +54,40 @@ class DashboardController extends Controller
     }
 
     /**
-     * Obtém transações recentes para o dashboard
+     * Obtém atividades recentes para o dashboard
      */
-    private function getRecentTransactions( int $userId, int $limit = 10 ): array
+    private function getRecentActivities( int $userId, int $limit = 10 ): array
     {
-        // Por enquanto retorna dados mock até implementar o modelo Transaction
-        return [
-            [
-                'id'          => 1,
-                'description' => 'Pagamento recebido - Cliente ABC',
-                'amount'      => 1500.00,
-                'type'        => 'receita',
-                'date'        => Carbon::now()->subDays( 1 )->toDateString(),
-                'category'    => 'Vendas',
-                'icon'        => 'plus-circle',
-                'color'       => 'green'
-            ],
-            [
-                'id'          => 2,
-                'description' => 'Compra de material escritório',
-                'amount'      => 250.00,
-                'type'        => 'despesa',
-                'date'        => Carbon::now()->subDays( 2 )->toDateString(),
-                'category'    => 'Escritório',
-                'icon'        => 'dash-circle',
-                'color'       => 'red'
-            ],
-            [
-                'id'          => 3,
-                'description' => 'Serviço de manutenção',
-                'amount'      => 800.00,
-                'type'        => 'despesa',
-                'date'        => Carbon::now()->subDays( 3 )->toDateString(),
-                'category'    => 'Manutenção',
-                'icon'        => 'dash-circle',
-                'color'       => 'red'
-            ]
-        ];
+        $user = Auth::user();
+        if ( !$user ) {
+            return [];
+        }
+
+        $activitiesResult = $this->activityService->getActivitiesByUser( $userId, [
+            'limit'           => $limit,
+            'order_by'        => 'created_at',
+            'order_direction' => 'desc'
+        ] );
+
+        if ( !$activitiesResult->isSuccess() ) {
+            return [];
+        }
+
+        $activities = $activitiesResult->getData();
+
+        // Transform activities to include user_name for the component
+        return $activities->map( function ( $activity ) {
+            return (object) [
+                'id'          => $activity->id,
+                'action_type' => $activity->action_type,
+                'description' => $activity->description,
+                'created_at'  => $activity->created_at,
+                'user_name'   => $activity->user->name ?? 'Sistema',
+                'entity_type' => $activity->entity_type,
+                'entity_id'   => $activity->entity_id,
+                'metadata'    => $activity->metadata,
+            ];
+        } )->toArray();
     }
 
     /**

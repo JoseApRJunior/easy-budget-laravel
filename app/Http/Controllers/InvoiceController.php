@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\InvoiceStatusEnum;
 use App\Events\InvoiceCreated;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InvoiceRequest;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Tenant;
+use App\Models\UserConfirmationToken;
+use App\Repositories\InvoiceStatusRepository;
 use App\Services\Domain\InvoiceService;
 use App\Support\ServiceResult;
 use Illuminate\Http\RedirectResponse;
@@ -30,11 +33,15 @@ use Illuminate\View\View;
  */
 class InvoiceController extends Controller
 {
-    private InvoiceService $invoiceService;
+    private InvoiceService          $invoiceService;
+    private InvoiceStatusRepository $invoiceStatusRepository;
 
-    public function __construct( InvoiceService $invoiceService )
-    {
-        $this->invoiceService = $invoiceService;
+    public function __construct(
+        InvoiceService $invoiceService,
+        InvoiceStatusRepository $invoiceStatusRepository,
+    ) {
+        $this->invoiceService          = $invoiceService;
+        $this->invoiceStatusRepository = $invoiceStatusRepository;
     }
 
     /**
@@ -285,6 +292,172 @@ class InvoiceController extends Controller
                 route( 'invoices.show', $invoice->id ),
                 'Erro interno ao atualizar status da fatura. Tente novamente.',
             );
+        }
+    }
+
+    /**
+     * Display the invoice status page for public access.
+     */
+    public function viewInvoiceStatus( string $code, string $token ): View|RedirectResponse
+    {
+        try {
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
+                    $query->where( 'token', $token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [ 'customer', 'userConfirmationToken', 'service', 'tenant' ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired', [
+                    'code'  => $code,
+                    'token' => $token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            // Get the status enum using the repository
+            $invoiceStatus = $this->invoiceStatusRepository->findById( $invoice->invoice_statuses_id );
+
+            return view( 'invoices.public.view-status', [
+                'invoice'       => $invoice,
+                'invoiceStatus' => $invoiceStatus,
+                'token'         => $token
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in viewInvoiceStatus', [
+                'code'  => $code,
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'ip'    => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Process the invoice status selection for public access.
+     */
+    public function chooseInvoiceStatus( Request $request ): RedirectResponse
+    {
+        try {
+            $request->validate( [
+                'invoice_code'      => 'required|string',
+                'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
+                'invoice_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, InvoiceStatusEnum::cases() ) ) ]
+            ] );
+
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $request->invoice_code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $request ) {
+                    $query->where( 'token', $request->token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [ 'customer', 'userConfirmationToken' ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired in choose status', [
+                    'code'  => $request->invoice_code,
+                    'token' => $request->token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            // Validate that the selected status is allowed for public updates
+            $allowedStatuses = [ InvoiceStatusEnum::PAID->value, InvoiceStatusEnum::CANCELLED->value, InvoiceStatusEnum::OVERDUE->value ];
+            if ( !in_array( $request->invoice_status_id, $allowedStatuses ) ) {
+                Log::warning( 'Invalid invoice status selected', [
+                    'invoice_code' => $request->invoice_code,
+                    'status_id'    => $request->invoice_status_id,
+                    'ip'           => request()->ip()
+                ] );
+                return redirect()->back()->with( 'error', 'Status inválido selecionado.' );
+            }
+
+            // Update invoice status using enum value
+            $invoice->update( [
+                'invoice_statuses_id' => $request->invoice_status_id,
+                'updated_at'          => now()
+            ] );
+
+            // Log the action
+            $newStatusEnum = InvoiceStatusEnum::tryFrom( $request->invoice_status_id );
+            $oldStatusEnum = $this->invoiceStatusRepository->findById( $invoice->getOriginal( 'invoice_statuses_id' ) );
+
+            Log::info( 'Invoice status updated via public link', [
+                'invoice_id'   => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'old_status'   => $oldStatusEnum?->getName() ?? 'Unknown',
+                'new_status'   => $newStatusEnum?->getName() ?? 'Unknown',
+                'ip'           => request()->ip()
+            ] );
+
+            return redirect()->route( 'invoices.public.view-status', [
+                'code'  => $invoice->code,
+                'token' => $request->token
+            ] )->with( 'success', 'Status da fatura atualizado com sucesso!' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in chooseInvoiceStatus', [
+                'error'   => $e->getMessage(),
+                'request' => $request->all(),
+                'ip'      => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Print invoice for public access.
+     */
+    public function print( string $code, string $token ): View|RedirectResponse
+    {
+        try {
+            // Find the invoice by code and token
+            $invoice = Invoice::where( 'code', $code )
+                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
+                    $query->where( 'token', $token )
+                        ->where( 'expires_at', '>', now() );
+                } )
+                ->with( [
+                    'customer',
+                    'items.product',
+                    'userConfirmationToken',
+                    'service.budget.tenant'
+                ] )
+                ->first();
+
+            if ( !$invoice ) {
+                Log::warning( 'Invoice not found or token expired for print', [
+                    'code'  => $code,
+                    'token' => $token,
+                    'ip'    => request()->ip()
+                ] );
+                return redirect()->route( 'error.not-found' );
+            }
+
+            // Get the status enum using the repository
+            $invoiceStatus = $this->invoiceStatusRepository->findById( $invoice->invoice_statuses_id );
+
+            return view( 'invoices.public.print', [
+                'invoice'       => $invoice,
+                'invoiceStatus' => $invoiceStatus
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error in invoice print', [
+                'code'  => $code,
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'ip'    => request()->ip()
+            ] );
+            return redirect()->route( 'error.internal' );
         }
     }
 

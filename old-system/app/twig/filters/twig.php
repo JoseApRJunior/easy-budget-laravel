@@ -1,13 +1,13 @@
 <?php
 
-use app\enums\BudgetStatusEnum;
+use app\enums\BudgetStatus;
 use app\enums\ServiceStatusEnum;
 
 return [
     // Filtro para status
-    'status_badge' =>
-        function ($status) {
-            if (!$status) {
+    'status_badge'           =>
+        function ( $status ) {
+            if ( !$status ) {
                 return '';
             }
 
@@ -26,35 +26,35 @@ return [
         },
 
     // Filtro para próximos status permitidos em serviços
-    'service_next_statuses' =>
-        function ($currentStatus) {
-            if (!$currentStatus) {
+    'service_next_statuses'  =>
+        function ( $currentStatus ) {
+            if ( !$currentStatus ) {
                 return [];
             }
 
-            return ServiceStatusEnum::getAllowedTransitions($currentStatus[ 'slug' ]);
+            return ServiceStatusEnum::getAllowedTransitions( $currentStatus[ 'slug' ] );
         },
     // Filtro para opções de status do orçamento
-    'service_status_options' => function ($selectedStatus = '') {
+    'service_status_options' => function ( $selectedStatus = '' ) {
         $statuses = [
-            '' => 'Todos',
-            'PENDING' => 'Pendente',
-            'SCHEDULING' => 'Agendamento',
-            'PREPARING' => 'Em Preparação',
-            'IN_PROGRESS' => 'Em Progresso',
-            'ON_HOLD' => 'Em Espera',
-            'SCHEDULED' => 'Agendado',
-            'COMPLETED' => 'Concluído',
-            'PARTIAL' => 'Concluído Parcial',
-            'CANCELLED' => 'Cancelado',
+            ''              => 'Todos',
+            'PENDING'       => 'Pendente',
+            'SCHEDULING'    => 'Agendamento',
+            'PREPARING'     => 'Em Preparação',
+            'IN_PROGRESS'   => 'Em Progresso',
+            'ON_HOLD'       => 'Em Espera',
+            'SCHEDULED'     => 'Agendado',
+            'COMPLETED'     => 'Concluído',
+            'PARTIAL'       => 'Concluído Parcial',
+            'CANCELLED'     => 'Cancelado',
             'NOT_PERFORMED' => 'Não Realizado',
-            'EXPIRED' => 'Expirado',
+            'EXPIRED'       => 'Expirado',
 
         ];
 
         $options = [];
-        foreach ($statuses as $value => $label) {
-            $selected = $selectedStatus === $value ? 'selected' : '';
+        foreach ( $statuses as $value => $label ) {
+            $selected  = $selectedStatus === $value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
                 $value,
@@ -63,105 +63,105 @@ return [
             );
         }
 
-        return implode("\n", $options);
+        return implode( "\n", $options );
     },
 
     // Filtro para status de serviços
-    'status_progress' => function ($status) {
+    'status_progress'        => function ( $status ) {
         $progressMap = [
-            'SCHEDULED' => 10,
-            'PREPARING' => 25,
-            'IN_PROGRESS' => 50,
-            'ON_HOLD' => 50,
-            'PARTIAL' => 75,
-            'COMPLETED' => 100,
-            'CANCELLED' => 100,
+            'SCHEDULED'     => 10,
+            'PREPARING'     => 25,
+            'IN_PROGRESS'   => 50,
+            'ON_HOLD'       => 50,
+            'PARTIAL'       => 75,
+            'COMPLETED'     => 100,
+            'CANCELLED'     => 100,
             'NOT_PERFORMED' => 100,
         ];
 
         return $progressMap[ $status ] ?? 0;
     },
 
-    'status_color_class' => function ($status) {
+    'status_color_class'     => function ( $status ) {
         $colorMap = [
-            'SCHEDULED' => 'info',
-            'PREPARING' => 'primary',
-            'IN_PROGRESS' => 'primary',
-            'ON_HOLD' => 'warning',
-            'PARTIAL' => 'info',
-            'COMPLETED' => 'success',
-            'CANCELLED' => 'danger',
+            'SCHEDULED'     => 'info',
+            'PREPARING'     => 'primary',
+            'IN_PROGRESS'   => 'primary',
+            'ON_HOLD'       => 'warning',
+            'PARTIAL'       => 'info',
+            'COMPLETED'     => 'success',
+            'CANCELLED'     => 'danger',
             'NOT_PERFORMED' => 'secondary',
         ];
 
         return $colorMap[ $status ] ?? 'secondary';
     },
     // Filtro para próximos status permitidos em orçamentos
-    'budget_next_statuses' =>
-        function ($currentStatus) {
-            if (!$currentStatus) {
+    'budget_next_statuses'   =>
+        function ( $currentStatus ) {
+            if ( !$currentStatus ) {
                 return [];
             }
 
-            return BudgetStatusEnum::getAllowedTransitions($currentStatus[ 'slug' ]);
+            return BudgetStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
         },
 
     // Filtro genérico para verificar se um status permite edição
-    'status_allows_edit' =>
-        function ($status, string $type = 'budget') {
-            if (!$status) {
+    'status_allows_edit'     =>
+        function ( $status, string $type = 'budget' ) {
+            if ( !$status ) {
                 return false;
             }
 
-            if ($type === 'budget') {
-                return BudgetStatusEnum::isEditable($status[ 'slug' ]);
+            if ( $type === 'budget' ) {
+                return BudgetStatus::isEditable( $status[ 'slug' ] );
             }
 
-            if ($type === 'service') {
-                return in_array($status[ 'slug' ], [
+            if ( $type === 'service' ) {
+                return in_array( $status[ 'slug' ], [
                     ServiceStatusEnum::PENDING,
                     ServiceStatusEnum::SCHEDULED,
                     ServiceStatusEnum::ON_HOLD,
-                ]);
+                ] );
             }
 
             return false;
         },
 
     // Filtro para verificar se é status final
-    'is_final_status' =>
-        function ($status, string $type = 'budget') {
-            if (!$status) {
+    'is_final_status'        =>
+        function ( $status, string $type = 'budget' ) {
+            if ( !$status ) {
                 return false;
             }
 
-            if ($type === 'budget') {
-                return BudgetStatusEnum::isFinalStatus($status[ 'slug' ]);
+            if ( $type === 'budget' ) {
+                return BudgetStatus::isFinalStatus( $status[ 'slug' ] );
             }
 
-            if ($type === 'service') {
-                return ServiceStatusEnum::isFinalStatus($status[ 'slug' ]);
+            if ( $type === 'service' ) {
+                return ServiceStatusEnum::isFinalStatus( $status[ 'slug' ] );
             }
 
             return false;
         },
 
     // Filtro para opções de status do orçamento
-    'budget_status_options' => function ($selectedStatus = '') {
+    'budget_status_options'  => function ( $selectedStatus = '' ) {
         $statuses = [
-            '' => 'Todos',
-            'DRAFT' => 'Rascunho',
-            'PENDING' => 'Pendente',
-            'APPROVED' => 'Aprovado',
+            ''          => 'Todos',
+            'DRAFT'     => 'Rascunho',
+            'PENDING'   => 'Pendente',
+            'APPROVED'  => 'Aprovado',
             'COMPLETED' => 'Concluído',
-            'REJECTED' => 'Rejeitado',
+            'REJECTED'  => 'Rejeitado',
             'CANCELLED' => 'Cancelado',
-            'EXPIRED' => 'Expirado',
+            'EXPIRED'   => 'Expirado',
         ];
 
         $options = [];
-        foreach ($statuses as $value => $label) {
-            $selected = $selectedStatus === $value ? 'selected' : '';
+        foreach ( $statuses as $value => $label ) {
+            $selected  = $selectedStatus === $value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
                 $value,
@@ -170,35 +170,35 @@ return [
             );
         }
 
-        return implode("\n", $options);
+        return implode( "\n", $options );
     },
 
     // Filtro para verificar se status está ativo
-    'is_active_status' => function ($status, string $type = 'budget') {
-        if (!$status) {
+    'is_active_status'       => function ( $status, string $type = 'budget' ) {
+        if ( !$status ) {
             return false;
         }
 
-        if ($type === 'budget') {
-            return BudgetStatusEnum::isActive($status[ 'slug' ]);
+        if ( $type === 'budget' ) {
+            return BudgetStatus::isActive( $status[ 'slug' ] );
         }
 
         return false;
     },
 
     // Filtro para opções de status do orçamento
-    'invoice_status_options' => function ($selectedStatus = '') {
+    'invoice_status_options' => function ( $selectedStatus = '' ) {
         $statuses = [
-            '' => 'Todos',
-            'PENDING' => 'Pendente',
-            'PAID' => 'Paga',
+            ''          => 'Todos',
+            'PENDING'   => 'Pendente',
+            'PAID'      => 'Paga',
             'CANCELLED' => 'Cancelada',
-            'OVERDUE' => 'Vencida',
+            'OVERDUE'   => 'Vencida',
         ];
 
         $options = [];
-        foreach ($statuses as $value => $label) {
-            $selected = $selectedStatus === $value ? 'selected' : '';
+        foreach ( $statuses as $value => $label ) {
+            $selected  = $selectedStatus === $value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
                 $value,
@@ -207,7 +207,7 @@ return [
             );
         }
 
-        return implode("\n", $options);
+        return implode( "\n", $options );
     },
 
 ];

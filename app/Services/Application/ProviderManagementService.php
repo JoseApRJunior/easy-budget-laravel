@@ -4,22 +4,61 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Enums\OperationStatus;
 use App\Models\Activity;
+use App\Models\AreaOfActivity;
 use App\Models\Budget;
+use App\Models\CommonData;
+use App\Models\Customer;
+use App\Models\Plan;
+use App\Models\PlanSubscription;
+use App\Models\Profession;
 use App\Models\Provider;
+use App\Models\Role;
+use App\Models\Service;
+use App\Models\Tenant;
 use App\Models\User;
+use App\Repositories\CommonDataRepository;
+use App\Repositories\PlanRepository;
+use App\Repositories\ProviderRepository;
+use App\Repositories\RoleRepository;
+use App\Repositories\TenantRepository;
+use App\Repositories\UserRepository;
 use App\Services\Domain\ActivityService;
+use App\Services\Domain\ProviderService;
+use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
+use App\Services\Shared\EntityDataService;
+use App\Support\ServiceResult;
+use Exception;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+// Constants for magic strings to improve maintainability
+const ROLE_PROVIDER              = 'provider';
+const PLAN_SLUG_TRIAL            = 'trial';
+const SUBSCRIPTION_STATUS_ACTIVE = 'active';
+const PAYMENT_METHOD_TRIAL       = 'trial';
+const TRIAL_DAYS                 = 7;
 
 class ProviderManagementService
 {
     public function __construct(
         private FinancialSummary $financialSummary,
         private ActivityService $activityService,
+        private ProviderService $providerService,
+        private EntityDataService $entityDataService,
+        private FileUploadService $fileUploadService,
+        private CommonDataRepository $commonDataRepository,
+        private ProviderRepository $providerRepository,
+        private PlanRepository $planRepository,
+        private RoleRepository $roleRepository,
+        private TenantRepository $tenantRepository,
+        private UserRepository $userRepository,
     ) {}
 
     /**
@@ -27,7 +66,7 @@ class ProviderManagementService
      */
     public function getDashboardData( int $tenantId ): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Buscar orçamentos recentes
         $budgets = Budget::where( 'tenant_id', $tenantId )
@@ -61,90 +100,96 @@ class ProviderManagementService
     /**
      * Get provider data for update form.
      */
-    public function getProviderForUpdate(): array
+    public function getProviderForUpdate(): ServiceResult
     {
-        $user     = auth()->user();
-        $provider = $user->provider;
+        $user     = Auth::user();
+        $provider = $this->providerService->getByUserId( $user->id, $user->tenant_id );
 
         if ( !$provider ) {
-            throw new \Exception( 'Provider não encontrado' );
+            return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
         }
 
-        return [
-            'provider'          => $provider->load( [ 'user', 'commonData', 'contact', 'address' ] ),
-            'areas_of_activity' => \App\Models\AreaOfActivity::where( 'tenant_id', $user->tenant_id )->get(),
-            'professions'       => \App\Models\Profession::where( 'tenant_id', $user->tenant_id )->get(),
-        ];
+        return ServiceResult::success( [
+            'provider'          => $provider,
+            'areas_of_activity' => AreaOfActivity::get(),
+            'professions'       => Profession::get(),
+        ] );
     }
 
     /**
      * Update provider data.
      */
-    public function updateProvider( array $data ): void
+    public function updateProvider( array $data ): ServiceResult
     {
-        $user     = auth()->user();
-        $provider = $user->provider;
+        try {
+            $user     = Auth::user();
+            $provider = $user->provider;
 
-        if ( !$provider ) {
-            throw new \Exception( 'Provider não encontrado' );
-        }
-
-        DB::transaction( function () use ($provider, $data, $user) {
-            // Handle logo upload
-            if ( isset( $data[ 'logo' ] ) && $data[ 'logo' ] instanceof UploadedFile ) {
-                $logoPath       = $this->handleLogoUpload( $data[ 'logo' ], $user->logo );
-                $data[ 'logo' ] = $logoPath;
+            if ( !$provider ) {
+                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
             }
 
-            // Update User
-            $user->update( [
-                'email' => $data[ 'email' ],
-                'logo'  => $data[ 'logo' ] ?? $user->logo,
-            ] );
+            // Load relationships if not already loaded
+            $provider->load( [ 'commonData', 'contact', 'address' ] );
 
-            // Update CommonData
-            $provider->commonData->update( [
-                'first_name'          => $data[ 'first_name' ],
-                'last_name'           => $data[ 'last_name' ],
-                'birth_date'          => $data[ 'birth_date' ] ?? null,
-                'cnpj'                => $data[ 'cnpj' ] ?? null,
-                'cpf'                 => $data[ 'cpf' ] ?? null,
-                'company_name'        => $data[ 'company_name' ] ?? null,
-                'description'         => $data[ 'description' ] ?? null,
-                'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-                'profession_id'       => $data[ 'profession_id' ] ?? null,
-            ] );
+            // Transação garante rollback automático se qualquer operação falhar
+            DB::transaction( function () use ($provider, $data, $user) {
+                // Handle logo upload
+                if ( isset( $data[ 'logo' ] ) && $data[ 'logo' ] instanceof UploadedFile ) {
+                    $logoPath       = $this->fileUploadService->uploadProviderLogo( $data[ 'logo' ], $user->logo );
+                    $data[ 'logo' ] = $logoPath;
+                }
 
-            // Update Contact
-            $provider->contact->update( [
-                'email'          => $data[ 'email' ], // Sync with user email
-                'phone'          => $data[ 'phone' ] ?? null,
-                'email_business' => $data[ 'email_business' ] ?? null,
-                'phone_business' => $data[ 'phone_business' ] ?? null,
-                'website'        => $data[ 'website' ] ?? null,
-            ] );
+                // Update User (email and logo only)
+                $userUpdate = array_filter( [
+                    'email' => $data[ 'email' ] ?? null,
+                    'logo'  => $data[ 'logo' ] ?? null,
+                ], fn( $value ) => $value !== null );
 
-            // Update Address
-            $provider->address->update( [
-                'address'        => $data[ 'address' ],
-                'address_number' => $data[ 'address_number' ] ?? null,
-                'neighborhood'   => $data[ 'neighborhood' ],
-                'city'           => $data[ 'city' ],
-                'state'          => $data[ 'state' ],
-                'cep'            => $data[ 'cep' ],
-            ] );
+                if ( !empty( $userUpdate ) ) {
+                    $this->userRepository->update( $user, $userUpdate );
+                    // ✅ Recarregar dados do banco para atualizar Auth::user()
+                    $user = $this->userRepository->find( $user->id );
+                }
 
-            // Log activity
-            $this->activityService->logActivity(
-                $user->tenant_id,
-                $user->id,
-                'provider_updated',
-                'provider',
-                $provider->id,
-                "Prestador {$data[ 'first_name' ]} {$data[ 'last_name' ]} atualizado com sucesso!",
-                $data,
+                // Update CommonData, Contact, Address using EntityDataService
+                $entityData = $this->entityDataService->updateCompleteEntityData(
+                    $provider->commonData,
+                    $provider->contact,
+                    $provider->address,
+                    $data,
+                );
+
+                // Verificar se atualizou corretamente
+                if ( !$entityData[ 'common_data' ] || !$entityData[ 'contact' ] || !$entityData[ 'address' ] ) {
+                    throw new Exception( 'Erro ao atualizar dados da entidade' );
+                }
+
+                // Atualizar relacionamentos do provider com dados atualizados
+                $provider->setRelation( 'commonData', $entityData[ 'common_data' ] );
+                $provider->setRelation( 'contact', $entityData[ 'contact' ] );
+                $provider->setRelation( 'address', $entityData[ 'address' ] );
+
+                // Log activity
+                // $this->activityService->logActivity(
+                //     $user->tenant_id,
+                //     $user->id,
+                //     'provider_business_updated',
+                //     'provider',
+                //     $provider->id,
+                //     'Dados empresariais atualizados com sucesso!',
+                //     $data
+                // );
+            } );
+
+            // Retornar provider com dados já atualizados
+            return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao atualizar provider: ' . $e->getMessage()
             );
-        } );
+        }
     }
 
     /**
@@ -152,36 +197,30 @@ class ProviderManagementService
      */
     public function changePassword( string $newPassword ): void
     {
-        $user = auth()->user();
+        $user         = Auth::user();
+        $isGoogleUser = is_null( $user->password );
 
-        $user->update( [
+        $this->userRepository->update( $user, [
             'password' => Hash::make( $newPassword )
         ] );
 
         // Log activity
+        $activityType    = $isGoogleUser ? 'password_set' : 'password_changed';
+        $activityMessage = $isGoogleUser ? 'Primeira senha definida com sucesso!' : 'Senha atualizada com sucesso!';
+        //TODO  App\Services\Domain\ActivityService::logActivity(): Argument #1 ($action) must be of type string, int given, called in C:\xampp\htdocs\easy-budget-laravel\app\Services\Application\ProviderManagementService.php on line 223
+//TODO  analisar antiga logica de logs, se vamos migrar
         $this->activityService->logActivity(
             $user->tenant_id,
             $user->id,
-            'user_updated',
+            $activityType,
             'user',
             $user->id,
-            'Senha atualizada com sucesso!',
-            [ 'email' => $user->email ],
+            $activityMessage,
+            [
+                'email'          => $user->email,
+                'is_google_user' => $isGoogleUser,
+            ],
         );
-    }
-
-    /**
-     * Handle logo file upload.
-     */
-    private function handleLogoUpload( UploadedFile $file, ?string $currentLogo ): ?string
-    {
-        // Delete old logo if exists
-        if ( $currentLogo && Storage::disk( 'public' )->exists( $currentLogo ) ) {
-            Storage::disk( 'public' )->delete( $currentLogo );
-        }
-
-        // Store new logo
-        return $file->store( 'providers/logos', 'public' );
     }
 
     /**
@@ -189,20 +228,15 @@ class ProviderManagementService
      */
     public function getProviderByUserId( int $userId, int $tenantId ): ?Provider
     {
-        return Provider::where( 'user_id', $userId )
-            ->where( 'tenant_id', $tenantId )
-            ->with( [ 'user', 'commonData', 'contact', 'address' ] )
-            ->first();
+        return $this->providerService->getByUserId( $userId, $tenantId );
     }
 
     /**
      * Check if email exists for another user.
      */
-    public function isEmailAvailable( string $email, int $excludeUserId ): bool
+    public function isEmailAvailable( string $email, int $excludeUserId, int $tenantId ): bool
     {
-        return !User::where( 'email', $email )
-            ->where( 'id', '!=', $excludeUserId )
-            ->exists();
+        return $this->providerService->isEmailAvailable( $email, $excludeUserId, $tenantId );
     }
 
     /**
@@ -287,7 +321,7 @@ class ProviderManagementService
     public function getServiceReports( int $tenantId ): array
     {
         // Buscar serviços do mês atual
-        $services = \App\Models\Service::where( 'tenant_id', $tenantId )
+        $services = Service::where( 'tenant_id', $tenantId )
             ->with( [ 'budget.customer', 'items' ] )
             ->whereMonth( 'created_at', now()->month )
             ->whereYear( 'created_at', now()->year )
@@ -317,7 +351,7 @@ class ProviderManagementService
     public function getCustomerReports( int $tenantId ): array
     {
         // Buscar clientes ativos
-        $customers = \App\Models\Customer::where( 'tenant_id', $tenantId )
+        $customers = Customer::where( 'tenant_id', $tenantId )
             ->with( [ 'budgets', 'services' ] )
             ->latest()
             ->limit( 50 )
@@ -343,6 +377,245 @@ class ProviderManagementService
             'customer_stats' => $customerStats,
             'period'         => now()->format( 'F Y' ),
         ];
+    }
+
+    /**
+     * Create complete registration from user data.
+     *
+     * This method handles the complete registration flow:
+     * 1. Create Tenant
+     * 2. Create User
+     * 3. Create Provider with all related data
+     *
+     * @param array $userData User registration data
+     * @return ServiceResult Result of the operation with user, tenant, provider, plan, and subscription
+     */
+    public function createProviderFromRegistration( array $userData ): ServiceResult
+    {
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Create Tenant
+            $tenantResult = $this->createTenant( $userData );
+            if ( !$tenantResult->isSuccess() ) {
+                DB::rollBack();
+                return $tenantResult;
+            }
+            $tenant = $tenantResult->getData();
+
+            // Step 2: Create User
+            $userResult = $this->createUser( $userData, $tenant );
+            if ( !$userResult->isSuccess() ) {
+                DB::rollBack();
+                return $userResult;
+            }
+            $user = $userResult->getData();
+
+            // Step 3: Create Provider with all related data
+            $providerResult = $this->createProviderWithRelatedData( $userData, $user, $tenant );
+            if ( !$providerResult->isSuccess() ) {
+                DB::rollBack();
+                return $providerResult;
+            }
+
+            $providerData = $providerResult->getData();
+
+            DB::commit();
+
+            return ServiceResult::success( [
+                'user'         => $user,
+                'tenant'       => $tenant,
+                'provider'     => $providerData[ 'provider' ],
+                'plan'         => $providerData[ 'plan' ],
+                'subscription' => $providerData[ 'subscription' ],
+            ], 'Registro completo realizado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            DB::rollBack();
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar provider: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Create provider with all related data (CommonData, Role, Plan, Subscription).
+     *
+     * @param array $userData User registration data
+     * @param User $user The created user
+     * @param Tenant $tenant The created tenant
+     * @return ServiceResult Result of the operation
+     */
+    private function createProviderWithRelatedData( array $userData, User $user, Tenant $tenant ): ServiceResult
+    {
+        try {
+            // Preparar dados para EntityDataService
+            $entityData = [
+                'first_name'     => $userData[ 'first_name' ],
+                'last_name'      => $userData[ 'last_name' ],
+                'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
+                'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
+            ];
+
+            // Usar EntityDataService para criar CommonData, Contact, Address
+            $createdEntities = $this->entityDataService->createCompleteEntityData( $entityData, $tenant->id );
+
+            // Create Provider usando IDs das entidades criadas
+            $provider = new Provider( [
+                'tenant_id'      => $tenant->id,
+                'user_id'        => $user->id,
+                'common_data_id' => $createdEntities[ 'common_data' ]->id,
+                'contact_id'     => $createdEntities[ 'contact' ]->id,
+                'address_id'     => $createdEntities[ 'address' ]->id,
+                'terms_accepted' => $userData[ 'terms_accepted' ],
+            ] );
+
+            $savedProvider = $this->providerRepository->create( $provider->toArray() );
+
+            // Assign Provider Role
+            $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
+
+            if ( !$providerRole ) {
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Role provider não encontrado no banco de dados',
+                );
+            }
+
+            $user->roles()->attach( $providerRole->id, [
+                'tenant_id'  => $tenant->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ] );
+
+            // Find Trial Plan
+            $plan = Plan::where( 'slug', PLAN_SLUG_TRIAL )->first();
+
+            if ( !$plan ) {
+                $plan = Plan::where( 'status', true )->where( 'price', 0.00 )->first();
+            }
+
+            if ( !$plan ) {
+                return ServiceResult::error(
+                    OperationStatus::ERROR,
+                    'Plano trial não encontrado. Entre em contato com nosso suporte para ativar seu acesso gratuito.',
+                );
+            }
+
+            // Create Plan Subscription
+            $planSubscription = new PlanSubscription( [
+                'tenant_id'          => $tenant->id,
+                'plan_id'            => $plan->id,
+                'user_id'            => $user->id,
+                'provider_id'        => $savedProvider->id,
+                'status'             => SUBSCRIPTION_STATUS_ACTIVE,
+                'transaction_amount' => $plan->price ?? 0.00,
+                'start_date'         => now(),
+                'end_date'           => now()->addDays( TRIAL_DAYS ),
+                'transaction_date'   => now(),
+                'payment_method'     => PAYMENT_METHOD_TRIAL,
+                'payment_id'         => 'TRIAL_' . uniqid(),
+                'public_hash'        => 'TRIAL_HASH_' . uniqid(),
+            ] );
+
+            $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );
+
+            return ServiceResult::success( [
+                'provider'     => $savedProvider,
+                'role'         => $providerRole,
+                'plan'         => $plan,
+                'subscription' => $savedSubscription,
+            ], 'Provider criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar provider: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Cria um tenant único para o usuário durante o registro.
+     *
+     * @param array $userData Dados do usuário
+     * @return ServiceResult Resultado da operação
+     */
+    private function createTenant( array $userData ): ServiceResult
+    {
+        try {
+            $tenantName = $this->generateUniqueTenantName( $userData[ 'first_name' ], $userData[ 'last_name' ] );
+
+            $tenant = new Tenant( [
+                'name'      => $tenantName,
+                'is_active' => true,
+            ] );
+
+            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
+
+            return ServiceResult::success( $savedTenant, 'Tenant criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar tenant: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Cria um usuário no sistema durante o registro.
+     *
+     * @param array $userData Dados do usuário
+     * @param Tenant $tenant Tenant do usuário
+     * @return ServiceResult Resultado da operação
+     */
+    private function createUser( array $userData, Tenant $tenant ): ServiceResult
+    {
+        try {
+            // Handle password: let the model cast handle hashing for regular registration
+            // For social registration, password is null
+            $password            = isset( $userData[ 'password' ] ) && $userData[ 'password' ] !== null
+                ? $userData[ 'password' ]  // Plain password, model will hash it
+                : null;
+            $userDataForCreation = [
+                'tenant_id' => $tenant->id,
+                'email'     => $userData[ 'email' ],
+                'password'  => $password,
+                'is_active' => true,
+            ];
+            $savedUser           = $this->userRepository->create( $userDataForCreation );
+
+            return ServiceResult::success( $savedUser, 'Usuário criado com sucesso.' );
+
+        } catch ( Exception $e ) {
+            return ServiceResult::error(
+                OperationStatus::ERROR,
+                'Erro ao criar usuário: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Gera um nome único para o tenant baseado no nome do usuário.
+     *
+     * @param string $firstName Primeiro nome
+     * @param string $lastName Sobrenome
+     * @return string Nome único para o tenant
+     */
+    private function generateUniqueTenantName( string $firstName, string $lastName ): string
+    {
+        $baseName   = Str::slug( $firstName . '-' . $lastName );
+        $tenantName = $baseName;
+        $counter    = 1;
+
+        while ( $this->tenantRepository->findByName( $tenantName ) ) {
+            $tenantName = $baseName . '-' . $counter;
+            $counter++;
+        }
+
+        return $tenantName;
     }
 
 }

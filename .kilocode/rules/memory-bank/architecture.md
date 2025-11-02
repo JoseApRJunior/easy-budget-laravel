@@ -17,6 +17,12 @@ Controllers → Services → Repositories → Models → Database
   - Tratamento padronizado de responses
   - Logging automático de operações
   - Validação e redirect consistentes
+
+🔧 Padrão Multi-Service Integration:
+  - Controllers orquestram múltiplos serviços
+  - Exemplo: ProviderBusinessController integra 6 serviços
+  - Atualização seletiva (apenas campos modificados)
+  - Gerenciamento de arquivos e sessões
 ```
 
 #### **🏢 Multi-tenant Architecture**
@@ -325,6 +331,31 @@ class FinancialSummary extends AbstractBaseService
 
         $total = collect($budgets->getData())->sum('total_value');
         return $this->success($total, 'Receita mensal calculada com sucesso');
+    }
+}
+
+// Padrão Multi-Service Integration (exemplo real)
+class ProviderBusinessController extends Controller
+{
+    public function __construct(
+        private ProviderManagementService $providerService,
+        private UserService $userService,
+        private CommonDataService $commonDataService,
+        private ContactService $contactService,
+        private AddressService $addressService,
+        private FileUploadService $fileUpload,
+    ) {}
+
+    // Orquestração de múltiplos serviços para atualização completa
+    public function update(ProviderBusinessUpdateRequest $request): RedirectResponse
+    {
+        // 1. Upload de logo via FileUploadService
+        // 2. Atualiza User via UserService
+        // 3. Atualiza CommonData via CommonDataService
+        // 4. Atualiza Contact via ContactService
+        // 5. Atualiza Address via AddressService
+        // 6. Atualiza Provider via ProviderManagementService
+        // 7. Limpa sessões relacionadas
     }
 }
 ```
@@ -651,12 +682,13 @@ class ApiThrottleMiddleware
 -  **Multi-tenant:** ✅ **Implementado e funcional** com funcionalidades avançadas
 -  **Traits Essenciais:** ✅ **TenantScoped e Auditable** implementados
 -  **Controller Base:** ✅ **Implementado** com integração ServiceResult completa
+-  **Multi-Service Integration:** ✅ **Implementado** - ProviderBusinessController com 6 serviços
 -  **Contratos Aprimorados:** ✅ **Documentação rica** e exemplos práticos em todos os contratos
 -  **Service Layer:** ✅ **Funcionalidades avançadas** com filtros inteligentes e operações em lote
 -  **Repository Pattern:** ✅ **Funcionalidades expandidas** com operações especializadas
 -  **Sistema de Cache:** ✅ **Configurado** (Redis)
 -  **Processamento Assíncrono:** ✅ **Estrutura preparada** (Queue)
--  **Middleware:** 🔄 **Em desenvolvimento** com funcionalidades avançadas
+-  **Middleware:** ✅ **Implementado** com funcionalidades avançadas
 
 ### **🏗️ Sistema de Padrões Arquiteturais** ✅ **100% Implementado**
 

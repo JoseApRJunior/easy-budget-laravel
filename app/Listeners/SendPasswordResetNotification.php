@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\PasswordResetRequested;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +50,7 @@ class SendPasswordResetNotification implements ShouldQueue
      * Serviço para construção segura de links de confirmação.
      * Injetado automaticamente pelo Laravel.
      */
-    protected ConfirmationLinkService $confirmationLinkService;
+    protected LinkService $linkService;
 
     /**
      * Métricas de performance do processamento.
@@ -61,14 +61,14 @@ class SendPasswordResetNotification implements ShouldQueue
      * Cria uma nova instância do listener.
      *
      * @param MailerService $mailerService Serviço de e-mail injetado
-     * @param ConfirmationLinkService $confirmationLinkService Serviço de links de confirmação injetado
+     * @param LinkService $linkService Serviço de links de confirmação injetado
      */
     public function __construct(
         MailerService $mailerService,
-        ConfirmationLinkService $confirmationLinkService,
+        LinkService $linkService,
     ) {
-        $this->mailerService           = $mailerService;
-        $this->confirmationLinkService = $confirmationLinkService;
+        $this->mailerService = $mailerService;
+        $this->linkService   = $linkService;
         $this->initializePerformanceMetrics();
     }
 
@@ -147,16 +147,8 @@ class SendPasswordResetNotification implements ShouldQueue
                 throw new \InvalidArgumentException( 'E-mail do usuário não informado no evento de redefinição de senha' );
             }
 
-            // Validação rigorosa do token de redefinição
-            if ( !$event->resetToken ) {
-                throw new \InvalidArgumentException( 'Token de redefinição obrigatório não informado' );
-            }
-
-            if ( strlen( $event->resetToken ) !== 64 ) {
-                throw new \InvalidArgumentException( 'Token de redefinição com comprimento inválido' );
-            }
-
-            if ( !preg_match( '/^[a-f0-9]{64}$/', $event->resetToken ) ) {
+            // Validação rigorosa do token de redefinição usando formato base64url
+            if ( !validateAndSanitizeToken( $event->resetToken, 'base64url' ) ) {
                 throw new \InvalidArgumentException( 'Token de redefinição com formato inválido' );
             }
 
@@ -223,13 +215,8 @@ class SendPasswordResetNotification implements ShouldQueue
             throw new \InvalidArgumentException( 'Token de redefinição obrigatório não informado' );
         }
 
-        // Validação de comprimento do token
-        if ( strlen( $event->resetToken ) !== 64 ) {
-            throw new \InvalidArgumentException( 'Token de redefinição com comprimento inválido' );
-        }
-
-        // Validação de formato (apenas caracteres hexadecimais minúsculos)
-        if ( !preg_match( '/^[a-f0-9]{64}$/', $event->resetToken ) ) {
+        // Validação de formato do token usando base64url (32 bytes = 43 caracteres)
+        if ( !validateAndSanitizeToken( $event->resetToken, 'base64url' ) ) {
             throw new \InvalidArgumentException( 'Token de redefinição com formato inválido' );
         }
 
@@ -415,7 +402,7 @@ class SendPasswordResetNotification implements ShouldQueue
         string $route = '/confirm-account',
         string $fallbackRoute = '/login',
     ): string {
-        return $this->confirmationLinkService->buildConfirmationLink( $token, $route, $fallbackRoute );
+        return $this->linkService->buildLink( $token, $route, $fallbackRoute );
     }
 
     /**
@@ -426,7 +413,7 @@ class SendPasswordResetNotification implements ShouldQueue
      */
     protected function buildWelcomeConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildWelcomeConfirmationLink( $token );
+        return $this->linkService->buildWelcomeConfirmationLink( $token );
     }
 
     /**
@@ -437,18 +424,7 @@ class SendPasswordResetNotification implements ShouldQueue
      */
     protected function buildVerificationConfirmationLink( ?string $token ): string
     {
-        return $this->confirmationLinkService->buildVerificationConfirmationLink( $token );
-    }
-
-    /**
-     * Verifica se um token é válido usando o serviço centralizado.
-     *
-     * @param string|null $token Token a ser verificado
-     * @return bool True se válido, false caso contrário
-     */
-    protected function isValidConfirmationToken( ?string $token ): bool
-    {
-        return $this->confirmationLinkService->isValidConfirmationToken( $token );
+        return $this->linkService->buildVerificationConfirmationLink( $token );
     }
 
 }

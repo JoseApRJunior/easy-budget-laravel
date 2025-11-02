@@ -1,18 +1,21 @@
 @if ( auth()->check() )
+    @php
+        $provider = auth()->user()->provider;
+    @endphp
     <div class="col-12">
         <div class="mb-3">
             <label class="small text-muted">Empresa</label>
-            <p class="mb-0">{{ auth()->user()->company_name ?? 'Não informado' }}</p>
+            <p class="mb-0">{{ $provider?->commonData?->company_name ?? 'Não informado' }}</p>
         </div>
     </div>
     <div class="col-12">
         <div class="mb-3">
             <label class="small text-muted">Endereço</label>
             <p class="mb-0">
-                {{ auth()->user()->address ?? '' }}, {{ auth()->user()->address_number ?? '' }}<br>
-                {{ auth()->user()->neighborhood ?? '' }} -
-                {{ auth()->user()->city ?? '' }}/{{ auth()->user()->state ?? '' }}<br>
-                CEP: {{ auth()->user()->cep ?? '' }}
+                {{ $provider?->address?->address ?? '' }}, {{ $provider?->address?->address_number ?? '' }}<br>
+                {{ $provider?->address?->neighborhood ?? '' }} -
+                {{ $provider?->address?->city ?? '' }}/{{ $provider?->address?->state ?? '' }}<br>
+                CEP: {{ $provider?->address?->cep ?? '' }}
             </p>
         </div>
     </div>

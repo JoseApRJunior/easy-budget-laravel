@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class UserRole extends Pivot
 {
+    use HasFactory;
 
     /**
      * The table associated with the model.
@@ -112,7 +114,7 @@ class UserRole extends Pivot
     /**
      * Verifica se esta atribuição de role está ativa para o tenant especificado.
      */
-    public function isActiveForTenant(int $tenantId): bool
+    public function isActiveForTenant( int $tenantId ): bool
     {
         return $this->tenant_id === $tenantId;
     }
@@ -120,25 +122,25 @@ class UserRole extends Pivot
     /**
      * Scope para buscar UserRoles por tenant.
      */
-    public function scopeForTenant($query, int $tenantId)
+    public function scopeForTenant( $query, int $tenantId )
     {
-        return $query->where('tenant_id', $tenantId);
+        return $query->where( 'tenant_id', $tenantId );
     }
 
     /**
      * Scope para buscar UserRoles por usuário.
      */
-    public function scopeForUser($query, int $userId)
+    public function scopeForUser( $query, int $userId )
     {
-        return $query->where('user_id', $userId);
+        return $query->where( 'user_id', $userId );
     }
 
     /**
      * Scope para buscar UserRoles por role.
      */
-    public function scopeForRole($query, int $roleId)
+    public function scopeForRole( $query, int $roleId )
     {
-        return $query->where('role_id', $roleId);
+        return $query->where( 'role_id', $roleId );
     }
 
 }

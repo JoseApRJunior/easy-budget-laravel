@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Traits;
 
+use App\Enums\BudgetStatus;
+use App\Enums\InvoiceStatusEnum;
+use App\Enums\ServiceStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -12,85 +15,96 @@ use Illuminate\Support\Arr;
  * Trait HasEnums
  *
  * Fornece suporte para enums customizados em modelos Eloquent.
- * Inclui constantes para status de orçamento, serviço, fatura e suporte.
- * Métodos para validação, opções, labels e cores de status.
+ * Agora usa os enums reais (BudgetStatus, ServiceStatusEnum, InvoiceStatusEnum)
+ * em vez de arrays estáticos, mantendo compatibilidade com código legado.
  */
 trait HasEnums
 {
     /**
-     * Status de Orçamento (Budget) - 7 valores identificados na análise.
+     * Status de Orçamento (Budget) - Agora usa BudgetStatus real.
+     * Mantido para compatibilidade com código que ainda usa as constantes.
      *
-     * @var array
+     * @deprecated Use BudgetStatus diretamente
      */
-    protected const BUDGET_STATUS_ENUM = [ 
-        self::BUDGET_DRAFT     => [ 
+    protected const BUDGET_STATUS_ENUM = [
+        self::BUDGET_DRAFT     => [
             'value'       => 1,
             'slug'        => 'draft',
             'name'        => 'Rascunho',
             'description' => 'Orçamento em elaboração',
-            'color'       => '#6c757d',
-            'icon'        => 'file-outline',
+            'color'       => '#9CA3AF',
+            'icon'        => 'mdi-file-document-edit',
             'order_index' => 1,
             'is_active'   => true,
         ],
-        self::BUDGET_PENDING   => [ 
+        self::BUDGET_SENT      => [
             'value'       => 2,
-            'slug'        => 'pending',
-            'name'        => 'Pendente',
+            'slug'        => 'sent',
+            'name'        => 'Enviado',
             'description' => 'Aguardando aprovação do cliente',
-            'color'       => '#ffc107',
-            'icon'        => 'clock-outline',
+            'color'       => '#3B82F6',
+            'icon'        => 'mdi-send',
             'order_index' => 2,
             'is_active'   => true,
         ],
-        self::BUDGET_APPROVED  => [ 
+        self::BUDGET_APPROVED  => [
             'value'       => 3,
             'slug'        => 'approved',
             'name'        => 'Aprovado',
             'description' => 'Orçamento aprovado pelo cliente',
-            'color'       => '#28a745',
-            'icon'        => 'checkmark-circle-outline',
+            'color'       => '#10B981',
+            'icon'        => 'mdi-check-circle',
             'order_index' => 3,
             'is_active'   => true,
         ],
-        self::BUDGET_COMPLETED => [ 
+        self::BUDGET_COMPLETED => [
             'value'       => 4,
             'slug'        => 'completed',
             'name'        => 'Concluído',
-            'description' => 'Orçamento finalizado e executado',
-            'color'       => '#007bff',
-            'icon'        => 'flag-checkered',
+            'description' => 'Orçamento aprovado e executado',
+            'color'       => '#059669',
+            'icon'        => 'mdi-check-circle-outline',
             'order_index' => 4,
             'is_active'   => true,
         ],
-        self::BUDGET_REJECTED  => [ 
+        self::BUDGET_REJECTED  => [
             'value'       => 5,
             'slug'        => 'rejected',
             'name'        => 'Rejeitado',
             'description' => 'Orçamento rejeitado pelo cliente',
-            'color'       => '#dc3545',
-            'icon'        => 'close-circle-outline',
+            'color'       => '#EF4444',
+            'icon'        => 'mdi-close-circle',
             'order_index' => 5,
             'is_active'   => true,
         ],
-        self::BUDGET_CANCELLED => [ 
+        self::BUDGET_EXPIRED   => [
             'value'       => 6,
-            'slug'        => 'cancelled',
-            'name'        => 'Cancelado',
-            'description' => 'Orçamento cancelado pelo provedor',
-            'color'       => '#6c757d',
-            'icon'        => 'ban-outline',
-            'order_index' => 6,
-            'is_active'   => true,
-        ],
-        self::BUDGET_EXPIRED   => [ 
-            'value'       => 7,
             'slug'        => 'expired',
             'name'        => 'Expirado',
             'description' => 'Orçamento expirou sem aprovação',
-            'color'       => '#fd7e14',
-            'icon'        => 'time-outline',
-            'order_index' => 7,
+            'color'       => '#F59E0B',
+            'icon'        => 'mdi-timer-off',
+            'order_index' => 6,
+            'is_active'   => true,
+        ],
+        self::BUDGET_REVISED   => [
+            'value'       => 8,
+            'slug'        => 'revised',
+            'name'        => 'Revisado',
+            'description' => 'Orçamento revisado',
+            'color'       => '#8B5CF6',
+            'icon'        => 'mdi-file-compare',
+            'order_index' => 8,
+            'is_active'   => true,
+        ],
+        self::BUDGET_CANCELLED => [
+            'value'       => 7,
+            'slug'        => 'cancelled',
+            'name'        => 'Cancelado',
+            'description' => 'Orçamento cancelado pelo provedor',
+            'color'       => '#6B7280',
+            'icon'        => 'mdi-cancel',
+            'order_index' => 9,
             'is_active'   => true,
         ],
     ];
@@ -100,8 +114,8 @@ trait HasEnums
      *
      * @var array
      */
-    protected const SERVICE_STATUS_ENUM = [ 
-        self::SERVICE_DRAFT         => [ 
+    protected const SERVICE_STATUS_ENUM = [
+        self::SERVICE_DRAFT         => [
             'value'       => 1,
             'slug'        => 'draft',
             'name'        => 'Rascunho',
@@ -111,7 +125,7 @@ trait HasEnums
             'order_index' => 1,
             'is_active'   => true,
         ],
-        self::SERVICE_PENDING       => [ 
+        self::SERVICE_PENDING       => [
             'value'       => 2,
             'slug'        => 'pending',
             'name'        => 'Pendente',
@@ -121,7 +135,7 @@ trait HasEnums
             'order_index' => 2,
             'is_active'   => true,
         ],
-        self::SERVICE_SCHEDULING    => [ 
+        self::SERVICE_SCHEDULING    => [
             'value'       => 3,
             'slug'        => 'scheduling',
             'name'        => 'Agendamento',
@@ -131,7 +145,7 @@ trait HasEnums
             'order_index' => 3,
             'is_active'   => true,
         ],
-        self::SERVICE_PREPARING     => [ 
+        self::SERVICE_PREPARING     => [
             'value'       => 4,
             'slug'        => 'preparing',
             'name'        => 'Preparando',
@@ -141,7 +155,7 @@ trait HasEnums
             'order_index' => 4,
             'is_active'   => true,
         ],
-        self::SERVICE_IN_PROGRESS   => [ 
+        self::SERVICE_IN_PROGRESS   => [
             'value'       => 5,
             'slug'        => 'in_progress',
             'name'        => 'Em Andamento',
@@ -151,7 +165,7 @@ trait HasEnums
             'order_index' => 5,
             'is_active'   => true,
         ],
-        self::SERVICE_ON_HOLD       => [ 
+        self::SERVICE_ON_HOLD       => [
             'value'       => 6,
             'slug'        => 'on_hold',
             'name'        => 'Em Espera',
@@ -161,7 +175,7 @@ trait HasEnums
             'order_index' => 6,
             'is_active'   => true,
         ],
-        self::SERVICE_SCHEDULED     => [ 
+        self::SERVICE_SCHEDULED     => [
             'value'       => 7,
             'slug'        => 'scheduled',
             'name'        => 'Agendado',
@@ -171,7 +185,7 @@ trait HasEnums
             'order_index' => 7,
             'is_active'   => true,
         ],
-        self::SERVICE_COMPLETED     => [ 
+        self::SERVICE_COMPLETED     => [
             'value'       => 8,
             'slug'        => 'completed',
             'name'        => 'Concluído',
@@ -181,7 +195,7 @@ trait HasEnums
             'order_index' => 8,
             'is_active'   => true,
         ],
-        self::SERVICE_PARTIAL       => [ 
+        self::SERVICE_PARTIAL       => [
             'value'       => 9,
             'slug'        => 'partial',
             'name'        => 'Parcial',
@@ -191,7 +205,7 @@ trait HasEnums
             'order_index' => 9,
             'is_active'   => true,
         ],
-        self::SERVICE_CANCELLED     => [ 
+        self::SERVICE_CANCELLED     => [
             'value'       => 10,
             'slug'        => 'cancelled',
             'name'        => 'Cancelado',
@@ -201,7 +215,7 @@ trait HasEnums
             'order_index' => 10,
             'is_active'   => true,
         ],
-        self::SERVICE_NOT_PERFORMED => [ 
+        self::SERVICE_NOT_PERFORMED => [
             'value'       => 11,
             'slug'        => 'not_performed',
             'name'        => 'Não Realizado',
@@ -211,7 +225,7 @@ trait HasEnums
             'order_index' => 11,
             'is_active'   => true,
         ],
-        self::SERVICE_EXPIRED       => [ 
+        self::SERVICE_EXPIRED       => [
             'value'       => 12,
             'slug'        => 'expired',
             'name'        => 'Expirado',
@@ -228,8 +242,8 @@ trait HasEnums
      *
      * @var array
      */
-    protected const INVOICE_STATUS_ENUM = [ 
-        self::INVOICE_PENDING   => [ 
+    protected const INVOICE_STATUS_ENUM = [
+        self::INVOICE_PENDING   => [
             'value'       => 1,
             'slug'        => 'pending',
             'name'        => 'Pendente',
@@ -239,7 +253,7 @@ trait HasEnums
             'order_index' => 1,
             'is_active'   => true,
         ],
-        self::INVOICE_PAID      => [ 
+        self::INVOICE_PAID      => [
             'value'       => 2,
             'slug'        => 'paid',
             'name'        => 'Pago',
@@ -249,7 +263,7 @@ trait HasEnums
             'order_index' => 2,
             'is_active'   => true,
         ],
-        self::INVOICE_CANCELLED => [ 
+        self::INVOICE_CANCELLED => [
             'value'       => 3,
             'slug'        => 'cancelled',
             'name'        => 'Cancelado',
@@ -259,7 +273,7 @@ trait HasEnums
             'order_index' => 3,
             'is_active'   => true,
         ],
-        self::INVOICE_OVERDUE   => [ 
+        self::INVOICE_OVERDUE   => [
             'value'       => 4,
             'slug'        => 'overdue',
             'name'        => 'Atrasado',
@@ -276,8 +290,8 @@ trait HasEnums
      *
      * @var array
      */
-    protected const SUPPORT_STATUS_ENUM = [ 
-        self::SUPPORT_OPEN        => [ 
+    protected const SUPPORT_STATUS_ENUM = [
+        self::SUPPORT_OPEN        => [
             'value'       => 1,
             'slug'        => 'open',
             'name'        => 'Aberto',
@@ -287,7 +301,7 @@ trait HasEnums
             'order_index' => 1,
             'is_active'   => true,
         ],
-        self::SUPPORT_IN_PROGRESS => [ 
+        self::SUPPORT_IN_PROGRESS => [
             'value'       => 2,
             'slug'        => 'in_progress',
             'name'        => 'Em Atendimento',
@@ -297,7 +311,7 @@ trait HasEnums
             'order_index' => 2,
             'is_active'   => true,
         ],
-        self::SUPPORT_CLOSED      => [ 
+        self::SUPPORT_CLOSED      => [
             'value'       => 3,
             'slug'        => 'closed',
             'name'        => 'Fechado',
@@ -307,7 +321,7 @@ trait HasEnums
             'order_index' => 3,
             'is_active'   => true,
         ],
-        self::SUPPORT_CANCELLED   => [ 
+        self::SUPPORT_CANCELLED   => [
             'value'       => 4,
             'slug'        => 'cancelled',
             'name'        => 'Cancelado',
@@ -321,12 +335,14 @@ trait HasEnums
 
     // Constantes de conveniência para os valores dos enums
     public const BUDGET_DRAFT     = 1;
+    public const BUDGET_SENT      = 2;
     public const BUDGET_PENDING   = 2;
     public const BUDGET_APPROVED  = 3;
     public const BUDGET_COMPLETED = 4;
-    public const BUDGET_REJECTED  = 5;
-    public const BUDGET_CANCELLED = 6;
-    public const BUDGET_EXPIRED   = 7;
+    public const BUDGET_REJECTED  = 4;
+    public const BUDGET_EXPIRED   = 5;
+    public const BUDGET_REVISED   = 8;
+    public const BUDGET_CANCELLED = 7;
 
     public const SERVICE_DRAFT         = 1;
     public const SERVICE_PENDING       = 2;
@@ -353,6 +369,7 @@ trait HasEnums
 
     /**
      * Obtém as opções de enum para um tipo específico.
+     * Agora usa os enums reais quando disponíveis, mantendo compatibilidade.
      *
      * @param string $type Tipo de enum: 'budget', 'service', 'invoice', 'support'
      * @return array
@@ -360,12 +377,81 @@ trait HasEnums
     public function getEnumOptions( string $type ): array
     {
         return match ( strtolower( $type ) ) {
-            'budget'  => self::BUDGET_STATUS_ENUM,
-            'service' => self::SERVICE_STATUS_ENUM,
-            'invoice' => self::INVOICE_STATUS_ENUM,
+            'budget'  => $this->getBudgetStatusOptions(),
+            'service' => $this->getServiceStatusOptions(),
+            'invoice' => $this->getInvoiceStatusOptions(),
             'support' => self::SUPPORT_STATUS_ENUM,
             default   => [],
         };
+    }
+
+    /**
+     * Obtém opções de status de orçamento usando BudgetStatus real.
+     *
+     * @return array
+     */
+    private function getBudgetStatusOptions(): array
+    {
+        $options = [];
+        foreach ( BudgetStatus::cases() as $status ) {
+            $options[ $status->value ] = [
+                'value'       => $status->value,
+                'slug'        => $status->name,
+                'name'        => $status->getName(),
+                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'color'       => $status->getColor(),
+                'icon'        => $status->getIcon(),
+                'order_index' => $status->getOrderIndex(),
+                'is_active'   => $status->isActive(),
+            ];
+        }
+        return $options;
+    }
+
+    /**
+     * Obtém opções de status de serviço usando ServiceStatusEnum real.
+     *
+     * @return array
+     */
+    private function getServiceStatusOptions(): array
+    {
+        $options = [];
+        foreach ( ServiceStatusEnum::cases() as $status ) {
+            $options[ $status->value ] = [
+                'value'       => $status->value,
+                'slug'        => $status->name,
+                'name'        => $status->getName(),
+                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'color'       => $status->getColor(),
+                'icon'        => $status->getIcon(),
+                'order_index' => $status->getOrderIndex(),
+                'is_active'   => $status->isActive(),
+            ];
+        }
+        return $options;
+    }
+
+    /**
+     * Obtém opções de status de fatura usando InvoiceStatusEnum real.
+     *
+     * @return array
+     */
+    private function getInvoiceStatusOptions(): array
+    {
+        $options = [];
+        foreach ( InvoiceStatusEnum::cases() as $status ) {
+            $options[ $status->value ] = [
+                'value'       => $status->value,
+                'slug'        => $status->name,
+                'name'        => $status->getName(),
+                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'color'       => $status->getColor(),
+                'icon'        => $status->getIcon(),
+                'order_index' => $status->getOrderIndex(),
+                'is_active'   => $status->isActive(),
+            ];
+        }
+        return $options;
     }
 
     /**
@@ -462,7 +548,7 @@ trait HasEnums
      *
      * Exemplo de uso correto em Budget (que tem budget_statuses_id referenciando BudgetStatus):
      * Budget::whereHas('status', fn($q) => $q->where('is_active', true))
-     *        ->orWhere('budget_statuses_id', BudgetStatus::ACTIVE_VALUE);
+     *        ->orWhere('budget_statuses_id', BudgetStatus::APPROVED->value);
      *
      * Esta limitação evita erros de runtime por coluna inexistente e promove Clean Architecture
      * com responsabilidades bem definidas.

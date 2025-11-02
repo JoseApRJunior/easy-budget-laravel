@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Provider;
+use App\Models\User;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,9 +31,9 @@ class ProviderRepository extends AbstractTenantRepository
      * @param int $userId
      * @return Provider|null
      */
-    public function findByUserId(int $userId): ?Provider
+    public function findByUserId( int $userId ): ?Provider
     {
-        return $this->model->where('user_id', $userId)->first();
+        return $this->model->where( 'user_id', $userId )->first();
     }
 
     /**
@@ -41,8 +42,39 @@ class ProviderRepository extends AbstractTenantRepository
      * @param string $slug
      * @return Provider|null
      */
-    public function findBySlug(string $slug): ?Provider
+    public function findBySlug( string $slug ): ?Provider
     {
-        return $this->findByTenantAndSlug($slug);
+        return $this->findByTenantAndSlug( $slug );
     }
+
+    /**
+     * Busca Provider por user_id com tenant específico.
+     */
+    public function findByUserIdAndTenant( int $userId, int $tenantId ): ?Provider
+    {
+        return Provider::where( 'user_id', $userId )
+            ->where( 'tenant_id', $tenantId )
+            ->with( [ 'user', 'commonData', 'contact', 'address' ] )
+            ->first();
+    }
+
+    /**
+     * Verifica disponibilidade de email.
+     */
+    public function isEmailAvailable( string $email, int $excludeUserId, int $tenantId ): bool
+    {
+        return !User::where( 'email', $email )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'id', '!=', $excludeUserId )
+            ->exists();
+    }
+
+    /**
+     * Busca Provider com relacionamentos específicos.
+     */
+    public function findWithRelations( int $providerId, array $relations = [] ): ?Provider
+    {
+        return Provider::with( $relations )->find( $providerId );
+    }
+
 }

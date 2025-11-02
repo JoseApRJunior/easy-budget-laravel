@@ -81,6 +81,13 @@ class SettingsController extends Controller
                     'user_settings' => $userSettings,
                 ],
             ],
+            'provider'      => [
+                'label' => 'Provider',
+                'icon'  => 'building',
+                'data'  => [
+                    'provider' => auth()->user()->provider,
+                ],
+            ],
         ];
 
         return view( 'settings.index', [
@@ -139,6 +146,7 @@ class SettingsController extends Controller
                 'social_twitter'   => 'nullable|url|max:255',
                 'social_linkedin'  => 'nullable|url|max:255',
                 'social_instagram' => 'nullable|url|max:255',
+                'extra_links'      => 'nullable|string|max:1000',
             ] );
 
             $this->settingsService->updateProfileSettings( $validated );

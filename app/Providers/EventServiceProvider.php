@@ -7,6 +7,8 @@ namespace App\Providers;
 use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
+use App\Events\SocialAccountLinked;
+use App\Events\SocialLoginWelcome;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
@@ -14,6 +16,8 @@ use App\Events\UserRegistered;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
+use App\Listeners\SendSocialAccountLinkedNotification;
+use App\Listeners\SendSocialLoginWelcomeNotification;
 use App\Listeners\SendStatusUpdateNotification;
 use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
@@ -63,6 +67,14 @@ class EventServiceProvider extends ServiceProvider
 
         EmailVerificationRequested::class => [
             SendEmailVerification::class,
+        ],
+
+        SocialLoginWelcome::class         => [
+            SendSocialLoginWelcomeNotification::class,
+        ],
+
+        SocialAccountLinked::class        => [
+            SendSocialAccountLinkedNotification::class,
         ],
 
         SupportTicketCreated::class       => [
@@ -129,6 +141,8 @@ class EventServiceProvider extends ServiceProvider
             StatusUpdated::class,
             PasswordResetRequested::class,
             EmailVerificationRequested::class,
+            SocialLoginWelcome::class,
+            SocialAccountLinked::class,
             SupportTicketCreated::class,
             SupportTicketResponded::class,
         ];
@@ -231,6 +245,24 @@ class EventServiceProvider extends ServiceProvider
                     'user_id'   => $event->user->id,
                     'email'     => $event->user->email,
                     'tenant_id' => $event->tenant?->id,
+                ];
+                break;
+
+            case SocialLoginWelcome::class:
+                $data = [
+                    'user_id'   => $event->user->id,
+                    'email'     => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                    'provider'  => $event->provider,
+                ];
+                break;
+
+            case SocialAccountLinked::class:
+                $data = [
+                    'user_id'   => $event->user->id,
+                    'email'     => $event->user->email,
+                    'tenant_id' => $event->user->tenant_id,
+                    'provider'  => $event->provider,
                 ];
                 break;
 

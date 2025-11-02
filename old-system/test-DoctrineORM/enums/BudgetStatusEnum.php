@@ -2,29 +2,29 @@
 
 namespace app\enums;
 
-final class BudgetStatusEnum
+final class BudgetStatus
 {
-    public const DRAFT = 'DRAFT';
-    public const PENDING = 'PENDING';
-    public const APPROVED = 'APPROVED';
+    public const DRAFT       = 'DRAFT';
+    public const PENDING     = 'PENDING';
+    public const APPROVED    = 'APPROVED';
     public const IN_PROGRESS = 'IN_PROGRESS';
-    public const COMPLETED = 'COMPLETED';
-    public const REJECTED = 'REJECTED';
-    public const CANCELLED = 'CANCELLED';
-    public const EXPIRED = 'EXPIRED';
+    public const COMPLETED   = 'COMPLETED';
+    public const REJECTED    = 'REJECTED';
+    public const CANCELLED   = 'CANCELLED';
+    public const EXPIRED     = 'EXPIRED';
 
     private const ALLOWED_TRANSITIONS = [
-        self::DRAFT => [
+        self::DRAFT       => [
             self::PENDING,
             self::CANCELLED,
         ],
-        self::PENDING => [
+        self::PENDING     => [
             self::APPROVED,
             self::REJECTED,
             self::EXPIRED,
             self::CANCELLED,
         ],
-        self::APPROVED => [
+        self::APPROVED    => [
             self::IN_PROGRESS,
             self::CANCELLED,
         ],
@@ -32,10 +32,10 @@ final class BudgetStatusEnum
             self::COMPLETED,
             self::CANCELLED,
         ],
-        self::COMPLETED => [], // Estado final
-        self::REJECTED => [], // Estado final
-        self::CANCELLED => [], // Estado final
-        self::EXPIRED => [
+        self::COMPLETED   => [], // Estado final
+        self::REJECTED    => [], // Estado final
+        self::CANCELLED   => [], // Estado final
+        self::EXPIRED     => [
             self::DRAFT, // Permite criar novo rascunho
         ],
     ];
@@ -43,14 +43,14 @@ final class BudgetStatusEnum
     /**
      * Verifica se a transição de status é permitida
      */
-    public static function canTransitionTo(string $currentStatus, string $newStatus): bool
+    public static function canTransitionTo( string $currentStatus, string $newStatus ): bool
     {
-        return in_array($newStatus, self::ALLOWED_TRANSITIONS[ $currentStatus ] ?? []);
+        return in_array( $newStatus, self::ALLOWED_TRANSITIONS[ $currentStatus ] ?? [] );
     }
 
     /**
      * Retorna todos os status possíveis
-     * 
+     *
      * @return array<int, string>
      */
     public static function getAllStatuses(): array
@@ -69,11 +69,11 @@ final class BudgetStatusEnum
 
     /**
      * Retorna as transições permitidas para um status
-     * 
+     *
      * @param string $status Status atual
      * @return array<int, string>
      */
-    public static function getAllowedTransitions(string $status): array
+    public static function getAllowedTransitions( string $status ): array
     {
         return self::ALLOWED_TRANSITIONS[ $status ] ?? [];
     }
@@ -81,46 +81,46 @@ final class BudgetStatusEnum
     /**
      * Verifica se o status é final
      */
-    public static function isFinalStatus(string $status): bool
+    public static function isFinalStatus( string $status ): bool
     {
-        return empty(self::ALLOWED_TRANSITIONS[ $status ]);
+        return empty( self::ALLOWED_TRANSITIONS[ $status ] );
     }
 
     /**
      * Verifica se o status permite edição do orçamento
      */
-    public static function isEditable(string $status): bool
+    public static function isEditable( string $status ): bool
     {
-        return in_array($status, [ self::DRAFT ]);
+        return in_array( $status, [ self::DRAFT ] );
     }
 
     /**
      * Verifica se o status está aguardando ação do cliente
      */
-    public static function isPendingCustomerAction(string $status): bool
+    public static function isPendingCustomerAction( string $status ): bool
     {
-        return in_array($status, [ self::PENDING ]);
+        return in_array( $status, [ self::PENDING ] );
     }
 
     /**
      * Verifica se o orçamento está ativo (em andamento ou aprovado)
      */
-    public static function isActive(string $status): bool
+    public static function isActive( string $status ): bool
     {
-        return in_array($status, [ self::APPROVED, self::IN_PROGRESS ]);
+        return in_array( $status, [ self::APPROVED, self::IN_PROGRESS ] );
     }
 
     /**
      * Verifica se o orçamento foi finalizado (completo ou cancelado)
      */
-    public static function isFinished(string $status): bool
+    public static function isFinished( string $status ): bool
     {
-        return in_array($status, [ self::COMPLETED, self::REJECTED, self::CANCELLED, self::EXPIRED ]);
+        return in_array( $status, [ self::COMPLETED, self::REJECTED, self::CANCELLED, self::EXPIRED ] );
     }
 
     /**
      * Retorna os status que representam conclusão negativa
-     * 
+     *
      * @return array<int, string>
      */
     public static function getNegativeStatuses(): array
@@ -130,7 +130,7 @@ final class BudgetStatusEnum
 
     /**
      * Retorna os status que representam conclusão positiva
-     * 
+     *
      * @return array<int, string>
      */
     public static function getPositiveStatuses(): array

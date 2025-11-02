@@ -63,6 +63,29 @@
                                             <p class="small">Preencha os dados abaixo para começar</p>
                                         </div>
 
+                                        <!-- Opção de cadastro social -->
+                                        <div class="text-center mb-4">
+                                            <p class="text-muted mb-3">Ou cadastre-se rapidamente com:</p>
+                                            <a href="{{ route('auth.google') }}" class="btn btn-outline-danger btn-lg w-100 mb-3">
+                                                <i class="bi bi-google me-2"></i>
+                                                Continuar com Google
+                                            </a>
+                                            <div class="text-center">
+                                                <small class="text-muted">
+                                                    Ao continuar com Google, você concorda com nossos
+                                                    <a href="/terms-of-service" target="_blank" class="text-decoration-none">Termos de Serviço</a>
+                                                    e
+                                                    <a href="/privacy-policy" target="_blank" class="text-decoration-none">Política de Privacidade</a>.
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <div class="text-center mb-4">
+                                            <p class="text-muted mb-0">Ou preencha o formulário abaixo:</p>
+                                        </div>
+
                                         @if ( $errors->any() )
                                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                                 <strong>Ops!</strong> Verifique os erros abaixo:

@@ -18,8 +18,8 @@ class AdminMiddleware
         }
 
         // Check if user has admin role
-        if ( !$user->role || $user->role->name !== 'admin' ) {
-            Log::warning( 'Admin access denied', [ 
+        if ( !$user->hasRole( 'admin' ) ) {
+            Log::warning( 'Admin access denied', [
                 'user_id'         => $user->id,
                 'ip'              => $request->ip(),
                 'attempted_route' => $request->route()->getName()

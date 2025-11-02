@@ -57,18 +57,6 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        Schema::create( 'budget_statuses', function ( Blueprint $table ) {
-            $table->id();
-            $table->string( 'slug', 50 )->unique();
-            $table->string( 'name', 100 )->unique();
-            $table->string( 'description', 500 )->nullable();
-            $table->string( 'color', 7 )->nullable();
-            $table->string( 'icon', 50 )->nullable();
-            $table->integer( 'order_index' )->nullable();
-            $table->boolean( 'is_active' )->default( true );
-            $table->timestamps();
-        } );
-
         Schema::create( 'service_statuses', function ( Blueprint $table ) {
             $table->id();
             $table->string( 'slug', 20 )->unique();
@@ -126,6 +114,7 @@ return new class extends Migration
             $table->boolean( 'is_active' )->default( true );
             $table->string( 'logo', 255 )->nullable();
             $table->timestamp( 'email_verified_at' )->nullable();
+            $table->text( 'extra_links' )->nullable(); // campo para links adicionais
             $table->rememberToken();
             $table->timestamps();
 
@@ -155,20 +144,20 @@ return new class extends Migration
         Schema::create( 'addresses', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'address', 255 );
+            $table->string( 'address', 255 )->nullable();
             $table->string( 'address_number', 20 )->nullable();
-            $table->string( 'neighborhood', 100 );
-            $table->string( 'city', 100 );
-            $table->string( 'state', 2 );
-            $table->string( 'cep', 9 );
+            $table->string( 'neighborhood', 100 )->nullable();
+            $table->string( 'city', 100 )->nullable();
+            $table->string( 'state', 2 )->nullable();
+            $table->string( 'cep', 9 )->nullable();
             $table->timestamps();
         } );
 
         Schema::create( 'contacts', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'email', 255 )->unique();
-            $table->string( 'phone', 20 )->nullable();
+            $table->string( 'email_personal', 255 )->nullable()->unique();
+            $table->string( 'phone_personal', 20 )->nullable();
             $table->string( 'email_business', 255 )->nullable()->unique();
             $table->string( 'phone_business', 20 )->nullable();
             $table->string( 'website', 255 )->nullable();
@@ -264,8 +253,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'token', 64 )->unique();
+            $table->string( 'token', 43 )->unique(); // base64url format: 32 bytes = 43 caracteres
             $table->dateTime( 'expires_at' );
+            $table->string( 'type', 50 )->default( 'email_verification' ); // Tipo do token: email_verification, password_reset
             $table->timestamps();
         } );
 
@@ -286,7 +276,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->foreignId( 'budget_statuses_id' )->constrained( 'budget_statuses' )->restrictOnDelete();
+            $table->string( 'budget_status', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
             $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->date( 'due_date' )->nullable();
@@ -296,7 +286,25 @@ return new class extends Migration
             $table->text( 'payment_terms' )->nullable();
             $table->string( 'attachment', 255 )->nullable();
             $table->longText( 'history' )->nullable();
-            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique();
+            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique(); // SHA256 hash, not a confirmation token
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
+            $table->timestamps();
+        } );
+
+        Schema::create( 'budget_shares', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'budget_id' )->constrained( 'budgets' )->cascadeOnDelete();
+            $table->string( 'share_token', 43 )->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->string( 'recipient_email', 255 )->nullable();
+            $table->string( 'recipient_name', 255 )->nullable();
+            $table->text( 'message' )->nullable();
+            $table->json( 'permissions' )->nullable();
+            $table->timestamp( 'expires_at' )->nullable();
+            $table->boolean( 'is_active' )->default( true );
+            $table->integer( 'access_count' )->default( 0 );
+            $table->timestamp( 'last_accessed_at' )->nullable();
             $table->timestamps();
         } );
 
@@ -305,13 +313,16 @@ return new class extends Migration
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'budget_id' )->constrained( 'budgets' )->restrictOnDelete();
             $table->foreignId( 'category_id' )->constrained( 'categories' )->restrictOnDelete();
-            $table->foreignId( 'service_statuses_id' )->constrained( 'service_statuses' )->restrictOnDelete();
+            $table->string( 'service_statuses_id', 20 ); // Changed from foreignId to string for enum compatibility
+            $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->text( 'description' )->nullable();
             $table->decimal( 'discount', 10, 2 )->default( 0 );
             $table->decimal( 'total', 10, 2 )->default( 0 );
             $table->date( 'due_date' )->nullable();
             $table->string( 'pdf_verification_hash', 64 )->nullable();
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
             $table->timestamps();
         } );
 
@@ -337,7 +348,7 @@ return new class extends Migration
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'service_id' )->constrained( 'services' )->restrictOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->foreignId( 'invoice_statuses_id' )->constrained( 'invoice_statuses' )->restrictOnDelete();
+            $table->string( 'invoice_statuses_id', 20 ); // Changed from foreignId to string for enum compatibility
             $table->string( 'code', 50 )->unique();
             $table->string( 'public_hash', 64 )->nullable();
             $table->decimal( 'subtotal', 10, 2 );
@@ -348,6 +359,8 @@ return new class extends Migration
             $table->string( 'payment_id', 255 )->nullable();
             $table->decimal( 'transaction_amount', 10, 2 )->nullable();
             $table->dateTime( 'transaction_date' )->nullable();
+            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
+            $table->timestamp( 'public_expires_at' )->nullable();
             $table->text( 'notes' )->nullable();
             $table->timestamps();
         } );
@@ -718,6 +731,7 @@ return new class extends Migration
         Schema::dropIfExists( 'invoices' );
         Schema::dropIfExists( 'service_items' );
         Schema::dropIfExists( 'services' );
+        Schema::dropIfExists( 'budget_shares' );
         Schema::dropIfExists( 'budgets' );
         Schema::dropIfExists( 'schedules' );
         Schema::dropIfExists( 'user_confirmation_tokens' );
@@ -739,7 +753,6 @@ return new class extends Migration
         Schema::dropIfExists( 'plans' );
         Schema::dropIfExists( 'invoice_statuses' );
         Schema::dropIfExists( 'service_statuses' );
-        Schema::dropIfExists( 'budget_statuses' );
         Schema::dropIfExists( 'permissions' );
         Schema::dropIfExists( 'roles' );
         Schema::dropIfExists( 'professions' );

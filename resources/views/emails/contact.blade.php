@@ -1,79 +1,144 @@
-@extends('emails.layouts.base')
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-@section('title', 'Nova Mensagem de Contato - ' . config('app.name'))
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ $appName }} - Nova mensagem de contato</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
 
-@section('content')
-    <div class="notice">
-        <span class="icon">✉</span>
-        <span>Nova mensagem de contato recebida</span>
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      background-color: #0D6EFD;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .contact-info {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    .contact-info h3 {
+      margin-top: 0;
+      color: #0D6EFD;
+    }
+
+    .contact-info ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .contact-info li {
+      margin-bottom: 10px;
+    }
+
+    .contact-info strong {
+      color: #495057;
+    }
+
+    .message-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0D6EFD;
+      padding: 15px;
+      margin: 20px 0;
+      font-style: italic;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      font-size: 0.9em;
+      color: #6c757d;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0D6EFD;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .btn:hover {
+      background-color: #0b5ed7;
+    }
+  </style>
+</head>
+
+<body>
+  <div class='container'>
+    <div class='header'>
+      <h1>{{ $appName }}</h1>
+      <p>Nova mensagem de contato recebida</p>
     </div>
+    <div class='content'>
+      <p>Olá,</p>
+      <p>Uma nova mensagem de contato foi recebida através do formulário de suporte. Aqui estão os detalhes:</p>
 
-    <p><strong>Olá, equipe de suporte!</strong></p>
-    
-    <p>Uma nova mensagem de contato foi recebida através do formulário do site. Seguem os detalhes:</p>
-
-    <div class="panel">
-        <h3 style="margin-top: 0; color: #374151;">📋 Detalhes do Contato</h3>
-        
-        <p><strong>Nome:</strong> {{ $contactData['name'] ?? ($contactData['first_name'] ?? '') . ' ' . ($contactData['last_name'] ?? '') }}</p>
-        
-        <p><strong>E-mail:</strong> 
-            <a href="mailto:{{ $contactData['email'] }}" style="color: #0d6efd;">{{ $contactData['email'] }}</a>
-        </p>
-        
-        <p><strong>Assunto:</strong> {{ $contactData['subject'] }}</p>
-        
-        <p><strong>Data/Hora:</strong> {{ now()->format('d/m/Y H:i:s') }}</p>
-        
-        @if($tenant)
-            <p><strong>Tenant:</strong> {{ $tenant->name }} (ID: {{ $tenant->id }})</p>
-        @endif
-    </div>
-
-    <div class="panel">
-        <h3 style="margin-top: 0; color: #374151;">💬 Mensagem</h3>
-        <div style="background: #ffffff; padding: 12px; border-radius: 4px; border-left: 4px solid #0d6efd;">
-            {!! nl2br(e($contactData['message'])) !!}
-        </div>
-    </div>
-
-    <div style="margin: 24px 0; text-align: center;">
-        <a href="mailto:{{ $contactData['email'] }}?subject=Re: {{ urlencode($contactData['subject']) }}" 
-           class="btn" 
-           style="margin-right: 10px;">
-            📧 Responder por E-mail
-        </a>
-        
-        @if(isset($supportUrl))
-            <a href="{{ $supportUrl }}" class="btn" style="background: #6b7280;">
-                🎫 Acessar Painel de Suporte
-            </a>
-        @endif
-    </div>
-
-    <div class="panel" style="font-size: 12px; color: #6b7280;">
-        <p style="margin: 0;"><strong>💡 Dicas para resposta:</strong></p>
-        <ul style="margin: 8px 0; padding-left: 20px;">
-            <li>Responda em até 24 horas para manter um bom atendimento</li>
-            <li>Use um tom profissional e cordial</li>
-            <li>Se necessário, solicite informações adicionais</li>
-            <li>Considere criar um ticket de suporte se o problema for complexo</li>
+      <div class="contact-info">
+        <h3>Informações do Contato</h3>
+        <ul>
+          <li><strong>Nome:</strong> {{ $contactData[ 'first_name' ] ?? '' }} {{ $contactData[ 'last_name' ] ?? '' }}</li>
+          <li><strong>E-mail:</strong> {{ $contactData[ 'email' ] }}</li>
+          <li><strong>Assunto:</strong> {{ $contactData[ 'subject' ] }}</li>
+          <li><strong>Data/Hora:</strong> {{ now()->format( 'd/m/Y H:i:s' ) }}</li>
+          @if( $tenant )
+            <li><strong>Empresa:</strong> {{ $tenant->name }}</li>
+          @endif
         </ul>
-    </div>
+      </div>
 
-    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-    
-    <p style="font-size: 13px; color: #6b7280; text-align: center;">
-        <strong>Informações do Sistema:</strong><br>
-        IP do remetente: {{ request()->ip() ?? 'N/A' }}<br>
-        User Agent: {{ request()->userAgent() ?? 'N/A' }}<br>
-        Timestamp: {{ now()->toISOString() }}
-    </p>
-@endsection
+      <div class="message-box">
+        <strong>Mensagem:</strong><br>
+        {{ $contactData[ 'message' ] }}
+      </div>
 
-@section('footerExtra')
-    <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">
-        Este e-mail foi gerado automaticamente pelo sistema {{ config('app.name') }}.<br>
-        Para responder ao contato, use o botão "Responder por E-mail" acima.
+      <p>Por favor, responda ao contato o mais breve possível para manter um bom atendimento ao cliente.</p>
+
+      <hr>
+      <a href="{{ $supportUrl }}" class="btn">Acessar Sistema de Suporte</a>
     </div>
-@endsection
+    <div class='footer'>
+      <p>Este é um e-mail automático enviado pelo sistema {{ $appName }}.</p>
+      <p>&copy; {{ date( 'Y' ) }} {{ $appName }}.<br>Todos os direitos reservados.</p>
+    </div>
+  </div>
+
+</body>
+
+</html>

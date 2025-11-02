@@ -162,9 +162,9 @@ class BudgetPdfService
      */
     private function getWatermark( Budget $budget ): ?string
     {
-        $statusSlug = $budget->budgetStatus->slug ?? '';
+        $statusSlug = $budget->budgetStatus->value ?? '';
 
-        if ( $statusSlug === 'rascunho' ) {
+        if ( $statusSlug === 'draft' ) {
             return 'RASCUNHO';
         }
 
@@ -234,7 +234,6 @@ class BudgetPdfService
         // Criar token público se não existir
         if ( !$budget->public_token ) {
             $budget->update( [
-                'public_token'      => str_random( 64 ),
                 'public_expires_at' => now()->addDays( 30 ),
             ] );
         }

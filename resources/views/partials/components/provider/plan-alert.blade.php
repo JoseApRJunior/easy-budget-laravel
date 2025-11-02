@@ -13,7 +13,7 @@
         <small class="text-muted">
             Você será redirecionado automaticamente para a página de planos...
         </small>
-        <a href="{{ route( 'plans.index' ) }}" class="btn btn-primary">
+        <a href="{{ route( 'provider.plans.index' ) }}" class="btn btn-primary">
             <i class="bi bi-arrow-right-circle me-2"></i>
             Escolher Plano
         </a>
@@ -22,5 +22,5 @@
 </div>
 
 <script>
-    setTimeout( () => window.location.href = "{{ route( 'plans.index' ) }}", 5000 );
+    setTimeout( () => window.location.href = "{{ route( 'provider.plans.index' ) }}", 5000 );
 </script>

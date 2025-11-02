@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\UserConfirmationToken;
-use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Repositório para tokens de confirmação de usuário.
  *
- * Estende AbstractTenantRepository para operações tenant-aware
- * com isolamento automático de dados por empresa.
+ * Estende AbstractGlobalRepository para operações globais
+ * pois tokens de confirmação são independentes de tenant.
  */
-class UserConfirmationTokenRepository extends AbstractTenantRepository
+class UserConfirmationTokenRepository extends AbstractGlobalRepository
 {
     /**
      * Define o Model a ser utilizado pelo Repositório.
@@ -27,12 +27,15 @@ class UserConfirmationTokenRepository extends AbstractTenantRepository
     /**
      * Encontra token por token hash dentro do tenant atual.
      *
+     * Busca case-insensitive para evitar problemas de compatibilidade
+     * entre geração e validação de tokens.
+     *
      * @param string $tokenHash
      * @return UserConfirmationToken|null
      */
     public function findByToken( string $tokenHash ): ?UserConfirmationToken
     {
-        return $this->model->where( 'token', $tokenHash )->first();
+        return $this->model->whereRaw( 'LOWER(token) = LOWER(?)', [ $tokenHash ] )->first();
     }
 
     /**

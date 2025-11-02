@@ -6,7 +6,7 @@ namespace App\Mail\Concerns;
 
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\Infrastructure\ConfirmationLinkService;
+use App\Services\Infrastructure\LinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -43,7 +43,7 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     /**
      * Serviço para construção segura de links de confirmação.
      */
-    protected ConfirmationLinkService $confirmationLinkService;
+    protected LinkService $linkService;
 
     /**
      * Cria uma nova instância da mailable base.
@@ -51,11 +51,11 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
-        ?ConfirmationLinkService $confirmationLinkService = null,
+        ?LinkService $linkService = null,
     ) {
         $this->user                    = $user;
         $this->tenant                  = $tenant;
-        $this->confirmationLinkService = $confirmationLinkService ?? app( ConfirmationLinkService::class);
+        $this->linkService = $linkService ?? app( LinkService::class);
     }
 
     /**

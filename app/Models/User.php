@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Activity;
 use App\Models\Permission;
+use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -46,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'logo',
         'remember_token',
         'email_verified_at',
+        'extra_links',
     ];
 
     protected $hidden = [
@@ -66,6 +68,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active'         => 'boolean',
         'remember_token'    => 'string',
         'email_verified_at' => 'datetime',
+        'extra_links'       => 'string',
         'created_at'        => 'immutable_datetime',
         'updated_at'        => 'datetime',
     ];
@@ -78,14 +81,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public static function businessRules(): array
     {
         return [
-            'tenant_id' => 'required|integer|exists:tenants,id',
-            'name'      => 'nullable|string|max:150',
-            'email'     => 'required|email|max:100|unique:users,email',
-            'password'  => 'nullable|string|min:8|max:255|confirmed',
-            'google_id' => 'nullable|string|max:255',
-            'avatar'    => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'logo'      => 'nullable|string|max:255',
+            'tenant_id'   => 'required|integer|exists:tenants,id',
+            'name'        => 'nullable|string|max:150',
+            'email'       => 'required|email|max:100|unique:users,email',
+            'password'    => 'nullable|string|min:8|max:255|confirmed',
+            'google_id'   => 'nullable|string|max:255',
+            'avatar'      => 'nullable|string|max:255',
+            'is_active'   => 'boolean',
+            'logo'        => 'nullable|string|max:255',
+            'extra_links' => 'nullable|string|max:1000',
         ];
     }
 
@@ -157,6 +161,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function userConfirmationTokens(): HasMany
     {
         return $this->hasMany( UserConfirmationToken::class);
+    }
+
+    public function settings(): HasOne
+    {
+        return $this->hasOne( UserSettings::class);
     }
 
     public function scopeActive( $query ): Builder
@@ -288,6 +297,45 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $activeSubscription->end_date < now();
+    }
+
+    /* ==========================
+     * Métodos de Avatar e Imagens
+     * ========================== */
+
+    public function getAvatarUrlAttribute(): string
+    {
+        $avatar = $this->avatar;
+
+        // Se não tem avatar definido
+        if ( empty( $avatar ) ) {
+            return asset( 'img/default_avatar.png' );
+        }
+
+        // Se é uma URL externa (Google, Facebook, etc.)
+        if ( filter_var( $avatar, FILTER_VALIDATE_URL ) ) {
+            return $avatar;
+        }
+
+        // Se é um arquivo local (armazenado no storage)
+        return asset( 'storage/' . $avatar );
+    }
+
+    public function getAvatarOrGoogleAvatarAttribute(): string
+    {
+        // Prioriza avatar local salvo
+        $localAvatar = $this->getAvatarUrlAttribute();
+        if ( $localAvatar !== asset( 'img/default_avatar.png' ) ) {
+            return $localAvatar;
+        }
+
+        // Se não tem avatar local, verifica dados do Google
+        if ( $this->google_data && isset( $this->google_data[ 'avatar' ] ) ) {
+            return $this->google_data[ 'avatar' ];
+        }
+
+        // Fallback para avatar padrão
+        return asset( 'img/default_avatar.png' );
     }
 
 }

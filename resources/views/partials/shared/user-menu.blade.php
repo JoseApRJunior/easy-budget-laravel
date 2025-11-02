@@ -16,17 +16,17 @@
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
         data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="{{ auth()->user()->avatar ?? asset( 'assets/img/default-avatar.png' ) }}" alt="Avatar"
-            class="rounded-circle me-2" width="32" height="32">
+        <img src="{{ auth()->user()->avatar_or_google_avatar }}" alt="Avatar" class="rounded-circle me-2 "
+            style="object-fit: cover;" width="32" height="32">
         {{ Str::before( auth()->user()->name, ' ' ) ?: auth()->user()->name ?? auth()->user()->email }}
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
 
         {{-- Links comuns para todos os usuários --}}
+        <li><a class="dropdown-item" href="{{ route( 'provider.plans.index' ) }}">
+                <i class="bi bi-clipboard-check me-2"></i>Planos</a></li>
         <li><a class="dropdown-item" href="{{ route( 'settings.index' ) }}">
                 <i class="bi bi-gear me-2"></i>Configurações</a></li>
-        <li><a class="dropdown-item" href="{{ url( '/about' ) }}">
-                <i class="bi bi-info-circle me-2"></i>Sobre</a></li>
         {{-- Acesso administrativo - apenas para admins --}}
         @role( 'admin' )
         <li>

@@ -97,7 +97,7 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
                     'first_name' => $this->getUserFirstName(),
                     'name'       => $this->getUserName(),
                     'email'      => $this->getUserEmail(),
-                    'reset_link' => route( 'password.reset', [ 'token' => $this->token ], false ),
+                    'reset_link' => route( 'password.reset', [ 'token' => $this->token ], true ),
                     'expires_at' => now()->addHours( 1 )->format( 'd/m/Y H:i:s' ),
                     'app_name'   => config( 'app.name', 'Easy Budget' ),
                 ],
@@ -130,7 +130,7 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
         try {
             // Usar route() helper para gerar URL com rota nomeada
             // A rota 'password.reset' espera um parâmetro 'token'
-            $resetUrl = route( 'password.reset', [ 'token' => $this->token ], false );
+            $resetUrl = route( 'password.reset', [ 'token' => $this->token ], true );
 
             // Log da geração do link para auditoria
             $this->logEmailOperation( 'password_reset_link_generated', [
@@ -149,7 +149,7 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
             ] );
 
             // Fallback para URL padrão em caso de erro
-            return route( 'password.reset', [ 'token' => $this->token ], false );
+            return route( 'password.reset', [ 'token' => $this->token ], true );
         }
     }
 

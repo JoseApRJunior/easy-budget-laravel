@@ -61,7 +61,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
 
         // Verificar se usuário foi criado no banco
@@ -207,13 +207,12 @@ class RegistrationIntegrationTest extends TestCase
         $user   = User::factory()->create();
         $tenant = \App\Models\Tenant::factory()->create();
 
-        // Act
-        $listener = new SendWelcomeEmail();
-        $listener->handle( new UserRegistered( $user, $tenant ) );
+        // Act - Dispatch the event which will automatically resolve listener dependencies
+        Event::dispatch( new UserRegistered( $user, $tenant, 'test_verification_token_123' ) );
 
         // Assert - O listener deve processar sem erros
         // Em um cenário real, verificaria se o e-mail foi enfileirado
-        $this->assertTrue( true ); // Listener executou sem lançar exceção
+        Event::assertDispatched( UserRegistered::class);
     }
 
     /**
@@ -239,7 +238,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verificar se telefone foi formatado e salvo corretamente
         $this->assertDatabaseHas( 'contacts', [
@@ -273,7 +272,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
 
         // Verificar que tenant foi criado com nome único
         $this->assertDatabaseHas( 'tenants', [
@@ -321,7 +320,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->postJson( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
 
         // Verificar que usuário foi criado mesmo com falha no e-mail
@@ -366,7 +365,7 @@ class RegistrationIntegrationTest extends TestCase
         $response = $this->post( '/register', $userData );
 
         // Assert
-        $response->assertRedirect( '/dashboard' );
+        $response->assertRedirect( route( 'provider.dashboard', absolute: false ) );
         $response->assertSessionHas( 'success' );
     }
 
