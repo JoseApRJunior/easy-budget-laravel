@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Activity;
+
 use App\Models\Permission;
 use App\Models\PlanSubscription;
 use App\Models\Provider;
@@ -155,7 +155,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function activities(): HasMany
     {
-        return $this->hasMany( Activity::class);
+        return $this->hasMany( AuditLog::class);
     }
 
     public function userConfirmationTokens(): HasMany

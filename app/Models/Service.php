@@ -45,7 +45,7 @@ class Service extends Model
         'tenant_id',
         'budget_id',
         'category_id',
-        'service_statuses_id',
+        'status',
         'user_confirmation_token_id',
         'code',
         'description',
@@ -76,7 +76,7 @@ class Service extends Model
         'tenant_id'                  => 'integer',
         'budget_id'                  => 'integer',
         'category_id'                => 'integer',
-        'service_statuses_id'        => ServiceStatusEnum::class,
+        'status'                     => ServiceStatusEnum::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'description'                => 'string',
@@ -99,7 +99,7 @@ class Service extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'budget_id'                  => 'required|integer|exists:budgets,id',
             'category_id'                => 'required|integer|exists:categories,id',
-            'service_statuses_id'        => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
+            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:services,code',
             'description'                => 'nullable|string',
@@ -157,7 +157,7 @@ class Service extends Model
      */
     public function getServiceStatusAttribute(): ?ServiceStatusEnum
     {
-        return ServiceStatusEnum::tryFrom( $this->service_statuses_id );
+        return $this->status;
     }
 
     /**

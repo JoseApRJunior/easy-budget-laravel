@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\AuditLog;
 use App\Services\ChartService;
-use App\Services\Domain\ActivityService;
 use App\Services\MetricsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -19,7 +19,6 @@ class DashboardController extends Controller
     public function __construct(
         private ChartService $chartService,
         private MetricsService $metricsService,
-        private ActivityService $activityService,
     ) {}
 
     /**
@@ -63,28 +62,21 @@ class DashboardController extends Controller
             return [];
         }
 
-        $activitiesResult = $this->activityService->getActivitiesByUser( $userId, [
-            'limit'           => $limit,
-            'order_by'        => 'created_at',
-            'order_direction' => 'desc'
-        ] );
+        $activities = AuditLog::where('user_id', $userId)
+            ->with('user')
+            ->latest()
+            ->limit($limit)
+            ->get();
 
-        if ( !$activitiesResult->isSuccess() ) {
-            return [];
-        }
-
-        $activities = $activitiesResult->getData();
-
-        // Transform activities to include user_name for the component
         return $activities->map( function ( $activity ) {
             return (object) [
                 'id'          => $activity->id,
-                'action_type' => $activity->action_type,
+                'action_type' => $activity->action,
                 'description' => $activity->description,
                 'created_at'  => $activity->created_at,
                 'user_name'   => $activity->user->name ?? 'Sistema',
-                'entity_type' => $activity->entity_type,
-                'entity_id'   => $activity->entity_id,
+                'entity_type' => $activity->model_type,
+                'entity_id'   => $activity->model_id,
                 'metadata'    => $activity->metadata,
             ];
         } )->toArray();

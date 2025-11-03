@@ -40,7 +40,7 @@ class Invoice extends Model
         'tenant_id',
         'service_id',
         'customer_id',
-        'invoice_statuses_id',
+        'status',
         'user_confirmation_token_id',
         'code',
         'public_hash',
@@ -66,7 +66,7 @@ class Invoice extends Model
         'tenant_id'                  => 'integer',
         'service_id'                 => 'integer',
         'customer_id'                => 'integer',
-        'invoice_statuses_id'        => InvoiceStatusEnum::class,
+        'status'                     => InvoiceStatusEnum::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'subtotal'                   => 'decimal:2',
@@ -94,7 +94,7 @@ class Invoice extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'service_id'                 => 'required|integer|exists:services,id',
             'customer_id'                => 'required|integer|exists:customers,id',
-            'invoice_statuses_id'        => 'required|string|in:' . implode( ',', array_column( InvoiceStatusEnum::cases(), 'value' ) ),
+            'status'                     => 'required|string|in:' . implode( ',', array_column( InvoiceStatusEnum::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:invoices,code',
             'subtotal'                   => 'required|numeric|min:0|max:999999.99',
@@ -132,7 +132,7 @@ class Invoice extends Model
      */
     public function getInvoiceStatusAttribute(): ?InvoiceStatusEnum
     {
-        return InvoiceStatusEnum::tryFrom( $this->invoice_statuses_id );
+        return $this->status;
     }
 
     /**

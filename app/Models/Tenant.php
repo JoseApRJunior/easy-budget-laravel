@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Activity;
+
 use App\Models\Address;
 use App\Models\Budget;
 use App\Models\CommonData;
@@ -101,7 +101,7 @@ class Tenant extends Model
      */
     public function activities(): HasMany
     {
-        return $this->hasMany( Activity::class);
+        return $this->hasMany( AuditLog::class);
     }
 
     /**

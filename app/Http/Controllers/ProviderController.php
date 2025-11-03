@@ -7,7 +7,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\ProviderManagementService;
-use App\Services\Domain\ActivityService;
+
 use App\Services\Domain\AddressService;
 use App\Services\Domain\CommonDataService;
 use App\Services\Domain\ContactService;
@@ -39,7 +39,7 @@ class ProviderController extends Controller
         private CommonDataService $commonDataService,
         private ContactService $contactService,
         private AddressService $addressService,
-        private ActivityService $activityService,
+
         private FileUploadService $fileUpload,
     ) {}
 

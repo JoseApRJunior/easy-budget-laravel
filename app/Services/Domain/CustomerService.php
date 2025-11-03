@@ -53,6 +53,24 @@ class CustomerService extends AbstractBaseService
     public function createCustomer( array $data ): ServiceResult
     {
         try {
+            // Converter data de nascimento do formato brasileiro para americano se necessário
+            if ( !empty( $data[ 'birth_date' ] ) ) {
+                try {
+                    // Verificar se já está no formato YYYY-MM-DD
+                    if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $data[ 'birth_date' ] ) ) {
+                        // Já está no formato correto
+                    } else {
+                        // Tentar converter de DD/MM/YYYY para YYYY-MM-DD
+                        $data[ 'birth_date' ] = \Carbon\Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' );
+                    }
+                } catch ( \Exception $e ) {
+                    // Se não conseguir converter, assumir que já está no formato correto
+                    \Illuminate\Support\Facades\Log::warning( 'Erro ao converter data de nascimento: ' . $e->getMessage(), [
+                        'original_date' => $data[ 'birth_date' ]
+                    ] );
+                }
+            }
+
             $validation = $this->validateCustomerData( $data );
             if ( !$validation->isSuccess() ) {
                 return $validation;
@@ -127,8 +145,19 @@ class CustomerService extends AbstractBaseService
 
         // Validar data de nascimento se fornecida
         if ( !empty( $data[ 'birth_date' ] ) ) {
-            if ( !ValidationHelper::isValidBirthDate( $data[ 'birth_date' ], 18 ) ) {
-                return $this->error( 'Data de nascimento inválida ou cliente menor de 18 anos' );
+            try {
+                $birthDate = \Carbon\Carbon::parse( $data[ 'birth_date' ] );
+                $age       = $birthDate->age;
+
+                if ( $age < 18 ) {
+                    return $this->error( 'Cliente deve ter pelo menos 18 anos' );
+                }
+
+                if ( $birthDate->isFuture() ) {
+                    return $this->error( 'Data de nascimento não pode ser no futuro' );
+                }
+            } catch ( \Exception $e ) {
+                return $this->error( 'Data de nascimento inválida' );
             }
         }
 
@@ -170,6 +199,24 @@ class CustomerService extends AbstractBaseService
     public function updateCustomer( int $id, array $data ): ServiceResult
     {
         try {
+            // Converter data de nascimento do formato brasileiro para americano se necessário
+            if ( !empty( $data[ 'birth_date' ] ) ) {
+                try {
+                    // Verificar se já está no formato YYYY-MM-DD
+                    if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $data[ 'birth_date' ] ) ) {
+                        // Já está no formato correto
+                    } else {
+                        // Tentar converter de DD/MM/YYYY para YYYY-MM-DD
+                        $data[ 'birth_date' ] = \Carbon\Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' );
+                    }
+                } catch ( \Exception $e ) {
+                    // Se não conseguir converter, assumir que já está no formato correto
+                    \Illuminate\Support\Facades\Log::warning( 'Erro ao converter data de nascimento: ' . $e->getMessage(), [
+                        'original_date' => $data[ 'birth_date' ]
+                    ] );
+                }
+            }
+
             $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
@@ -266,7 +313,10 @@ class CustomerService extends AbstractBaseService
     private function isEmailUniqueInTenant( string $email, ?int $excludeCustomerId = null ): bool
     {
         $query = Contact::where( 'tenant_id', auth()->user()->tenant_id )
-            ->where( 'email', $email );
+            ->where( function ( $q ) use ( $email ) {
+                $q->where( 'email_personal', $email )
+                    ->orWhere( 'email_business', $email );
+            } );
 
         if ( $excludeCustomerId ) {
             $query->whereHas( 'customer', function ( $q ) use ( $excludeCustomerId ) {

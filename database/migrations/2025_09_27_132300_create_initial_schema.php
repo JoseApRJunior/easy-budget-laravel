@@ -276,7 +276,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->string( 'budget_status', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
+            $table->string( 'status', 20 ); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
             $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->date( 'due_date' )->nullable();
@@ -313,7 +313,7 @@ return new class extends Migration
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'budget_id' )->constrained( 'budgets' )->restrictOnDelete();
             $table->foreignId( 'category_id' )->constrained( 'categories' )->restrictOnDelete();
-            $table->string( 'service_statuses_id', 20 ); // Changed from foreignId to string for enum compatibility
+            $table->string( 'status', 20 ); // Status enum value
             $table->foreignId( 'user_confirmation_token_id' )->nullable()->constrained( 'user_confirmation_tokens' )->nullOnDelete();
             $table->string( 'code', 50 )->unique();
             $table->text( 'description' )->nullable();
@@ -348,7 +348,7 @@ return new class extends Migration
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'service_id' )->constrained( 'services' )->restrictOnDelete();
             $table->foreignId( 'customer_id' )->constrained( 'customers' )->restrictOnDelete();
-            $table->string( 'invoice_statuses_id', 20 ); // Changed from foreignId to string for enum compatibility
+            $table->string( 'status', 20 ); // Status enum value
             $table->string( 'code', 50 )->unique();
             $table->string( 'public_hash', 64 )->nullable();
             $table->decimal( 'subtotal', 10, 2 );

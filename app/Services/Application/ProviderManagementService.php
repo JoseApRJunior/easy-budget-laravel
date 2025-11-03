@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-use App\Models\Activity;
+
 use App\Models\AreaOfActivity;
 use App\Models\Budget;
 use App\Models\CommonData;
@@ -24,7 +24,7 @@ use App\Repositories\ProviderRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
-use App\Services\Domain\ActivityService;
+
 use App\Services\Domain\ProviderService;
 use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
@@ -49,7 +49,7 @@ class ProviderManagementService
 {
     public function __construct(
         private FinancialSummary $financialSummary,
-        private ActivityService $activityService,
+
         private ProviderService $providerService,
         private EntityDataService $entityDataService,
         private FileUploadService $fileUploadService,
@@ -76,7 +76,7 @@ class ProviderManagementService
             ->get();
 
         // Buscar atividades recentes
-        $activities = Activity::where( 'tenant_id', $tenantId )
+        $activities = \App\Models\AuditLog::where( 'tenant_id', $tenantId )
             ->where( 'user_id', $user->id )
             ->latest()
             ->limit( 10 )
@@ -147,9 +147,9 @@ class ProviderManagementService
                 ], fn( $value ) => $value !== null );
 
                 if ( !empty( $userUpdate ) ) {
-                    $this->userRepository->update( $user, $userUpdate );
+                    $user->update( $userUpdate ); // ✅ Usar método direto do model
                     // ✅ Recarregar dados do banco para atualizar Auth::user()
-                    $user = $this->userRepository->find( $user->id );
+                    $user->refresh();
                 }
 
                 // Update CommonData, Contact, Address using EntityDataService
@@ -170,16 +170,7 @@ class ProviderManagementService
                 $provider->setRelation( 'contact', $entityData[ 'contact' ] );
                 $provider->setRelation( 'address', $entityData[ 'address' ] );
 
-                // Log activity
-                // $this->activityService->logActivity(
-                //     $user->tenant_id,
-                //     $user->id,
-                //     'provider_business_updated',
-                //     'provider',
-                //     $provider->id,
-                //     'Dados empresariais atualizados com sucesso!',
-                //     $data
-                // );
+                // Activity logged automatically by ProviderObserver
             } );
 
             // Retornar provider com dados já atualizados
@@ -197,30 +188,13 @@ class ProviderManagementService
      */
     public function changePassword( string $newPassword ): void
     {
-        $user         = Auth::user();
-        $isGoogleUser = is_null( $user->password );
+        $user = Auth::user();
 
         $this->userRepository->update( $user, [
             'password' => Hash::make( $newPassword )
         ] );
 
-        // Log activity
-        $activityType    = $isGoogleUser ? 'password_set' : 'password_changed';
-        $activityMessage = $isGoogleUser ? 'Primeira senha definida com sucesso!' : 'Senha atualizada com sucesso!';
-        //TODO  App\Services\Domain\ActivityService::logActivity(): Argument #1 ($action) must be of type string, int given, called in C:\xampp\htdocs\easy-budget-laravel\app\Services\Application\ProviderManagementService.php on line 223
-//TODO  analisar antiga logica de logs, se vamos migrar
-        $this->activityService->logActivity(
-            $user->tenant_id,
-            $user->id,
-            $activityType,
-            'user',
-            $user->id,
-            $activityMessage,
-            [
-                'email'          => $user->email,
-                'is_google_user' => $isGoogleUser,
-            ],
-        );
+        // Activity logged automatically by UserObserver
     }
 
     /**
