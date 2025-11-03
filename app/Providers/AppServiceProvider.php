@@ -4,6 +4,20 @@ namespace App\Providers;
 
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
+use App\Models\Budget;
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Product;
+use App\Models\Provider;
+use App\Models\Service;
+use App\Models\User;
+use App\Observers\BudgetObserver;
+use App\Observers\CustomerObserver;
+use App\Observers\InvoiceObserver;
+use App\Observers\ProductObserver;
+use App\Observers\ProviderObserver;
+use App\Observers\ServiceObserver;
+use App\Observers\UserObserver;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Services\Application\Auth\SocialAuthenticationService;
@@ -26,13 +40,6 @@ class AppServiceProvider extends ServiceProvider
             ->needs( UserRegistrationService::class)
             ->give( function ( $app ) {
                 return $app->make( UserRegistrationService::class);
-            } );
-
-        // Binding contextual para ActivityService usar AuditLogRepository
-        $this->app->when( \App\Services\Domain\ActivityService::class)
-            ->needs( BaseRepositoryInterface::class)
-            ->give( function ( $app ) {
-                return $app->make( AuditLogRepository::class);
             } );
 
         // Binding padrão para BaseRepositoryInterface (fallback)
@@ -72,6 +79,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // Register model observers for automatic audit logging
+        User::observe(UserObserver::class);
+        Provider::observe(ProviderObserver::class);
+        Customer::observe(CustomerObserver::class);
+        Budget::observe(BudgetObserver::class);
+        Invoice::observe(InvoiceObserver::class);
+        Product::observe(ProductObserver::class);
+        Service::observe(ServiceObserver::class);
+
         Blade::if( 'role', fn( $role ) => auth()->check() && auth()->user()->hasRole( $role ) );
         Blade::if( 'anyrole', fn( $roles ) => auth()->check() && auth()->user()->hasAnyRole( (array) $roles ) );
     }

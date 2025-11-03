@@ -42,7 +42,7 @@ class Budget extends Model
     protected $fillable = [
         'tenant_id',
         'customer_id',
-        'budget_status',
+        'status',
         'user_confirmation_token_id',
         'code',
         'due_date',
@@ -65,7 +65,7 @@ class Budget extends Model
     protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
-        'budget_status'              => \App\Enums\BudgetStatus::class,
+        'status'                     => \App\Enums\BudgetStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'discount'                   => 'decimal:2',
@@ -99,7 +99,7 @@ class Budget extends Model
         return [
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'customer_id'                => 'required|integer|exists:customers,id',
-            'budget_status'              => 'required|string|in:' . implode( ',', array_column( \App\Enums\BudgetStatus::cases(), 'value' ) ),
+            'status'                     => 'required|string|in:' . implode( ',', array_column( \App\Enums\BudgetStatus::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:budgets,code',
             'due_date'                   => 'nullable|date|after:today',
@@ -180,7 +180,7 @@ class Budget extends Model
      */
     public function getBudgetStatusAttribute(): ?BudgetStatus
     {
-        return \App\Enums\BudgetStatus::tryFrom( $this->budget_status );
+        return $this->status;
     }
 
     /**
@@ -188,7 +188,7 @@ class Budget extends Model
      */
     public function budgetStatus(): ?BudgetStatus
     {
-        return $this->budget_status;
+        return $this->status;
     }
 
     public function userConfirmationToken()
@@ -270,7 +270,7 @@ class Budget extends Model
             fn( $status ) => \App\Enums\BudgetStatus::tryFrom( $status )?->isActive() ?? false
         );
 
-        return $query->whereIn( 'budget_statuses_id', $activeStatuses );
+        return $query->whereIn( 'status', $activeStatuses );
     }
 
     /**
@@ -278,7 +278,7 @@ class Budget extends Model
      */
     public function scopeByStatus( $query, $statusSlug )
     {
-        return $query->where( 'budget_statuses_id', $statusSlug );
+        return $query->where( 'status', $statusSlug );
     }
 
     /**
@@ -353,7 +353,7 @@ class Budget extends Model
      */
     public function canBeEdited(): bool
     {
-        return in_array( $this->budget_status?->value, [ \App\Enums\BudgetStatus::DRAFT->value, \App\Enums\BudgetStatus::REJECTED->value ] );
+        return in_array( $this->status?->value, [ \App\Enums\BudgetStatus::DRAFT->value, \App\Enums\BudgetStatus::REJECTED->value ] );
     }
 
     /**
@@ -361,7 +361,7 @@ class Budget extends Model
      */
     public function canBeSent(): bool
     {
-        return $this->budget_status === BudgetStatus::DRAFT && $this->isValid();
+        return $this->status === BudgetStatus::DRAFT && $this->isValid();
     }
 
     /**
@@ -369,7 +369,7 @@ class Budget extends Model
      */
     public function canBeApproved(): bool
     {
-        return $this->budget_status === \App\Enums\BudgetStatus::PENDING && $this->isValid();
+        return $this->status === \App\Enums\BudgetStatus::PENDING && $this->isValid();
     }
 
     /**
@@ -377,7 +377,7 @@ class Budget extends Model
      */
     public function canBeRejected(): bool
     {
-        return $this->budget_status === \App\Enums\BudgetStatus::PENDING;
+        return $this->status === \App\Enums\BudgetStatus::PENDING;
     }
 
     /**
@@ -494,7 +494,7 @@ class Budget extends Model
         $budgetData = $version->budget_data;
         $this->update( [
             'customer_id'           => $budgetData[ 'customer_id' ],
-            'budget_statuses_id'    => $budgetData[ 'budget_statuses_id' ],
+            'status'                => $budgetData[ 'status' ],
             'code'                  => $budgetData[ 'code' ],
             'due_date'              => $budgetData[ 'due_date' ],
             'discount'              => $budgetData[ 'discount' ],
@@ -544,7 +544,7 @@ class Budget extends Model
     {
         $newBudget                     = $this->replicate();
         $newBudget->code               = $this->generateDuplicateCode();
-        $newBudget->budget_status      = \App\Enums\BudgetStatus::DRAFT->value;
+        $newBudget->status             = \App\Enums\BudgetStatus::DRAFT->value;
         $newBudget->current_version_id = null;
         $newBudget->save();
 

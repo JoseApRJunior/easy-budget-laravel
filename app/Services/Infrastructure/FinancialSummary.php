@@ -130,7 +130,7 @@ class FinancialSummary
                     return $query->whereRaw( 'DATE_FORMAT(created_at, "%Y-%m") = ?', [ $period ] );
                 } )
                 ->when( $statusFilter, function ( $query, $statusFilter ) {
-                    return $query->where( 'budget_statuses_id', $statusFilter );
+                    return $query->where( 'status', $statusFilter );
                 } )
                 ->groupBy( 'tenant_id' )
                 ->orderBy( 'total_value', 'desc' )
@@ -194,7 +194,7 @@ class FinancialSummary
                     DB::raw( 'COUNT(*) as total_budgets' ),
                     DB::raw( 'SUM(total) as total_revenue' ),
                     DB::raw( 'AVG(total) as average_budget' ),
-                    DB::raw( 'COUNT(CASE WHEN budget_statuses_id IN ("' . implode( '","', self::REVENUE_STATUSES ) . '") THEN 1 END) as completed_budgets' ),
+                    DB::raw( 'COUNT(CASE WHEN status IN ("' . implode( '","', self::REVENUE_STATUSES ) . '") THEN 1 END) as completed_budgets' ),
                 ] )
                 ->where( 'tenant_id', $tenantId )
                 ->whereBetween( 'created_at', [ $startDate, $endDate ] )
@@ -290,7 +290,7 @@ class FinancialSummary
     {
         return Budget::query()
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses_id', self::REVENUE_STATUSES )
+            ->whereIn( 'status', self::REVENUE_STATUSES )
             ->whereRaw( 'DATE_FORMAT(budgets.updated_at, "%Y-%m") = ?', [ $period ] )
             ->sum( 'total' );
     }
@@ -305,7 +305,7 @@ class FinancialSummary
     {
         $result = Budget::query()
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses_id', self::PENDING_STATUSES )
+            ->whereIn( 'status', self::PENDING_STATUSES )
             ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
             ->first();
 
@@ -324,9 +324,8 @@ class FinancialSummary
     private function calculateOverduePayments( int $tenantId ): array
     {
         $result = Budget::query()
-            ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
-            ->where( 'budget_statuses.slug', 'PENDING' )
+            ->where( 'status', 'PENDING' )
             ->where( 'due_date', '<', Carbon::now() )
             ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
             ->first();
@@ -349,9 +348,8 @@ class FinancialSummary
         $nextMonth = Carbon::now()->parse( $currentPeriod . '-01' )->addMonth()->format( 'Y-m' );
 
         return Budget::query()
-            ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses.slug', self::PROJECTION_STATUSES )
+            ->whereIn( 'status', self::PROJECTION_STATUSES )
             ->whereRaw( 'DATE_FORMAT(due_date, "%Y-%m") = ?', [ $nextMonth ] )
             ->sum( 'total' );
     }
@@ -369,9 +367,8 @@ class FinancialSummary
                 DB::raw( 'DATE_FORMAT(budgets.created_at, "%Y-%m") as period' ),
                 DB::raw( 'SUM(total) as revenue' ),
             ] )
-            ->join( 'budget_statuses', 'budgets.budget_statuses_id', '=', 'budget_statuses.id' )
             ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'budget_statuses.slug', self::REVENUE_STATUSES )
+            ->whereIn( 'status', self::REVENUE_STATUSES )
             ->where( 'budgets.created_at', '>=', Carbon::now()->subMonths( 3 ) )
             ->groupBy( 'period' )
             ->orderBy( 'period' )
