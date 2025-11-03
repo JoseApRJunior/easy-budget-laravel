@@ -17,62 +17,82 @@
             </nav>
         </div>
 
-        <form id="createForm" action="{{ route( 'provider.customers.store' ) }}" method="POST" enctype="multipart/form-data">
+        <form id="createForm" action="{{ route( 'provider.customers.store' ) }}" method="POST"
+            enctype="multipart/form-data">
             @csrf
 
             <div class="row g-4">
-                <!-- Dados Pessoais -->
-                <div class="col-12 col-lg-4">
+                <!-- Dados Básicos -->
+                <div class="col-12 col-lg-6">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent border-0">
                             <h5 class="card-title mb-0">
-                                <i class="bi bi-person me-2"></i>Dados Pessoais
+                                <i class="bi bi-person me-2"></i>Dados Básicos
                             </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <!-- Campos pessoais aqui -->
-                                @include( 'partials.customer.personal_fields' )
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dados Profissionais -->
-                <div class="col-12 col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent border-0">
-                            <h5 class="card-title mb-0">
-                                <i class="bi bi-briefcase me-2"></i>Dados Profissionais
-                            </h5>
-                            <div class="alert alert-info py-2 mb-0">
+                            <div class="alert alert-info py-2 mb-3">
                                 <small class="mb-0">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                    <strong>Obrigatório:</strong> Preencha o campo CPF ou CNPJ.
+                                    <i class="bi bi-info-circle-fill me-1"></i>
+                                    <strong>Passo 1:</strong> Preencha os dados básicos e selecione o tipo de cliente.
                                 </small>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <!-- Campos profissionais aqui -->
-                                @include( 'partials.customer.professional_fields' )
+                                <!-- Seletor de tipo de cliente -->
+                                <div class="col-12">
+                                    <label for="customer_type" class="form-label">Tipo de Cliente</label>
+                                    <select name="customer_type" id="customer_type"
+                                        class="form-select @error( 'customer_type' ) is-invalid @enderror" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="pf" {{ old( 'customer_type' ) == 'pf' ? 'selected' : '' }}>Pessoa
+                                            Física
+                                        </option>
+                                        <option value="pj" {{ old( 'customer_type' ) == 'pj' ? 'selected' : '' }}>Pessoa
+                                            Jurídica</option>
+                                    </select>
+                                    @error( 'customer_type' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Campos pessoais básicos -->
+                                @include( 'partials.customer.basic_fields' )
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Endereço -->
-                <div class="col-12 col-lg-4">
+                <!-- Campos Específicos (dinâmicos) -->
+                <div class="col-12 col-lg-6">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent border-0">
                             <h5 class="card-title mb-0">
-                                <i class="bi bi-geo-alt me-2"></i>Endereço
+                                <i class="bi bi-briefcase me-2"></i>Dados Específicos
                             </h5>
+                            <div class="alert alert-warning py-2 mb-3" id="type_warning" style="display: none;">
+                                <small class="mb-0">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    <strong>Atenção:</strong> Selecione o tipo de cliente para liberar os campos
+                                    específicos.
+                                </small>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <!-- Campos de endereço aqui -->
-                                @include( 'partials.customer.address_fields' )
+                                <!-- Campos específicos PF -->
+                                <div id="pf_fields" class="pf-specific" style="display: none;">
+                                    @include( 'partials.customer.pf_specific_fields' )
+                                </div>
+
+                                <!-- Campos específicos PJ -->
+                                <div id="pj_fields" class="pj-specific" style="display: none;">
+                                    @include( 'partials.customer.pj_specific_fields' )
+                                </div>
+
+                                <!-- Campos comuns (endereço) -->
+                                <div id="common_fields" class="common-fields" style="display: none;">
+                                    @include( 'partials.customer.address_fields' )
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -97,6 +117,45 @@
     <!-- Scripts específicos da página -->
 
     <script>
+        // ========================================
+        // CONTROLE DE FORMULÁRIO PROGRESSIVO
+        // ========================================
+
+        /**
+         * Controla exibição dos campos específicos baseado no tipo de cliente
+         */
+        function toggleCustomerFields() {
+            const customerType = document.getElementById( 'customer_type' ).value;
+            const pfFields = document.getElementById( 'pf_fields' );
+            const pjFields = document.getElementById( 'pj_fields' );
+            const commonFields = document.getElementById( 'common_fields' );
+            const typeWarning = document.getElementById( 'type_warning' );
+            const createButton = document.getElementById( 'createButton' );
+
+            if ( customerType === 'pf' ) {
+                pfFields.style.display = 'block';
+                pjFields.style.display = 'none';
+                commonFields.style.display = 'block';
+                typeWarning.style.display = 'none';
+                createButton.disabled = false;
+                createButton.textContent = 'Criar Cliente (Pessoa Física)';
+            } else if ( customerType === 'pj' ) {
+                pfFields.style.display = 'none';
+                pjFields.style.display = 'block';
+                commonFields.style.display = 'block';
+                typeWarning.style.display = 'none';
+                createButton.disabled = false;
+                createButton.textContent = 'Criar Cliente (Pessoa Jurídica)';
+            } else {
+                pfFields.style.display = 'none';
+                pjFields.style.display = 'none';
+                commonFields.style.display = 'none';
+                typeWarning.style.display = 'block';
+                createButton.disabled = true;
+                createButton.textContent = 'Selecione o tipo de cliente';
+            }
+        }
+
         // ========================================
         // VALIDAÇÃO EM TEMPO REAL
         // ========================================
@@ -195,8 +254,17 @@
         // OUTRAS FUNCIONALIDADES
         // ========================================
 
-        // Buscar CEP automático
+        // Inicializar formulário progressivo
         document.addEventListener( 'DOMContentLoaded', function () {
+            // Configurar seletor de tipo de cliente
+            const customerTypeSelect = document.getElementById( 'customer_type' );
+            if ( customerTypeSelect ) {
+                customerTypeSelect.addEventListener( 'change', toggleCustomerFields );
+
+                // Inicializar estado baseado no valor atual (útil para edição)
+                toggleCustomerFields();
+            }
+
             // Formatar valores já carregados
             const cpfInput = document.getElementById( 'cpf' );
             const cnpjInput = document.getElementById( 'cnpj' );
@@ -213,28 +281,30 @@
             if ( form ) {
                 form.addEventListener( 'submit', function ( e ) {
                     const birthDateInput = document.getElementById( 'birth_date' );
-                    const value = birthDateInput.value.trim();
+                    if ( birthDateInput ) {
+                        const value = birthDateInput.value.trim();
 
-                    if ( value && !isValidBirthDate( value ) ) {
-                        e.preventDefault();
-                        if ( !isValidDateFormat( value ) ) {
-                            showBirthDateError( birthDateInput, 'Formato inválido. Use DD/MM/YYYY' );
-                        } else {
-                            const parts = value.split( '/' );
-                            const day = parseInt( parts[0], 10 );
-                            const month = parseInt( parts[1], 10 ) - 1;
-                            const year = parseInt( parts[2], 10 );
-                            const birthDate = new Date( year, month, day );
-                            const today = new Date();
-
-                            if ( birthDate >= today ) {
-                                showBirthDateError( birthDateInput, 'Data não pode ser futura' );
+                        if ( value && !isValidBirthDate( value ) ) {
+                            e.preventDefault();
+                            if ( !isValidDateFormat( value ) ) {
+                                showBirthDateError( birthDateInput, 'Formato inválido. Use DD/MM/YYYY' );
                             } else {
-                                showBirthDateError( birthDateInput, 'É necessário ter pelo menos 18 anos' );
+                                const parts = value.split( '/' );
+                                const day = parseInt( parts[0], 10 );
+                                const month = parseInt( parts[1], 10 ) - 1;
+                                const year = parseInt( parts[2], 10 );
+                                const birthDate = new Date( year, month, day );
+                                const today = new Date();
+
+                                if ( birthDate >= today ) {
+                                    showBirthDateError( birthDateInput, 'Data não pode ser futura' );
+                                } else {
+                                    showBirthDateError( birthDateInput, 'É necessário ter pelo menos 18 anos' );
+                                }
                             }
+                            birthDateInput.focus();
+                            return false;
                         }
-                        birthDateInput.focus();
-                        return false;
                     }
                 } );
             }
@@ -307,61 +377,30 @@
                     textarea.addEventListener( 'input', updateCharCount );
                 }
 
-                // Validação de CPF/CNPJ obrigatório
-                const cpfInput = document.getElementById( 'cpf' );
-                const cnpjInput = document.getElementById( 'cnpj' );
-                const createButton = document.getElementById( 'createButton' );
-
-                function validateDocumentFields() {
-                    const hasCpf = cpfInput && cpfInput.value.trim().length > 0;
-                    const hasCnpj = cnpjInput && cnpjInput.value.trim().length > 0;
-
-                    if ( hasCpf || hasCnpj ) {
-                        createButton.disabled = false;
-                        createButton.textContent = 'Criar Cliente';
-                    } else {
-                        createButton.disabled = true;
-                        createButton.textContent = 'Preencha CPF ou CNPJ';
-                    }
-                }
-
-                // Adicionar listeners para validação em tempo real
-                if ( cpfInput ) {
-                    cpfInput.addEventListener( 'input', validateDocumentFields );
-                    cpfInput.addEventListener( 'blur', validateDocumentFields );
-                }
-
-                if ( cnpjInput ) {
-                    cnpjInput.addEventListener( 'input', validateDocumentFields );
-                    cnpjInput.addEventListener( 'blur', validateDocumentFields );
-                }
-
-                // Validação inicial
-                validateDocumentFields();
-            }, 100 );
-
-            const cepInput = document.getElementById( 'cep' );
-            if ( cepInput ) {
-                cepInput.addEventListener( 'blur', function () {
-                    const cep = this.value.replace( /\D/g, '' );
-                    if ( cep.length === 8 ) {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open( 'GET', `https://viacep.com.br/ws/${cep}/json/`, true );
-                        xhr.onload = function () {
-                            if ( xhr.status === 200 ) {
-                                const data = JSON.parse( xhr.responseText );
-                                if ( !data.erro ) {
-                                    document.getElementById( 'address' ).value = data.logradouro || '';
-                                    document.getElementById( 'neighborhood' ).value = data.bairro || '';
-                                    document.getElementById( 'city' ).value = data.localidade || '';
-                                    document.getElementById( 'state' ).value = data.uf || '';
+                // Buscar CEP automático
+                const cepInput = document.getElementById( 'cep' );
+                if ( cepInput ) {
+                    cepInput.addEventListener( 'blur', function () {
+                        const cep = this.value.replace( /\D/g, '' );
+                        if ( cep.length === 8 ) {
+                            const xhr = new XMLHttpRequest();
+                            xhr.open( 'GET', `https://viacep.com.br/ws/${cep}/json/`, true );
+                            xhr.onload = function () {
+                                if ( xhr.status === 200 ) {
+                                    const data = JSON.parse( xhr.responseText );
+                                    if ( !data.erro ) {
+                                        document.getElementById( 'address' ).value = data.logradouro || '';
+                                        document.getElementById( 'neighborhood' ).value = data.bairro || '';
+                                        document.getElementById( 'city' ).value = data.localidade || '';
+                                        document.getElementById( 'state' ).value = data.uf || '';
+                                    }
                                 }
-                            }
-                        };
-                        xhr.send();
-                    }
-                } );
-            }
+                            };
+                            xhr.send();
+                        }
+                    } );
+                }
+            }, 100 );
         } );
     </script>
 @endpush

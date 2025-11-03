@@ -7,8 +7,12 @@ use App\Models\Address;
 use App\Models\Budget;
 use App\Models\CommonData;
 use App\Models\Contact;
+use App\Models\CustomerInteraction;
+use App\Models\CustomerTag;
+use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
+use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -167,7 +171,7 @@ class Customer extends Model
      */
     public function addresses()
     {
-        return $this->hasMany( CustomerAddress::class);
+        return $this->hasMany( Address::class);
     }
 
     /**
@@ -175,7 +179,7 @@ class Customer extends Model
      */
     public function primaryAddress()
     {
-        return $this->hasOne( CustomerAddress::class)->where( 'is_primary', true );
+        return $this->hasOne( Address::class)->where( 'is_primary', true );
     }
 
     /**
@@ -183,7 +187,7 @@ class Customer extends Model
      */
     public function contacts()
     {
-        return $this->hasMany( CustomerContact::class);
+        return $this->hasMany( Contact::class);
     }
 
     /**
@@ -191,7 +195,7 @@ class Customer extends Model
      */
     public function primaryContacts()
     {
-        return $this->hasMany( CustomerContact::class)->where( 'is_primary', true );
+        return $this->hasMany( Contact::class)->where( 'is_primary', true );
     }
 
     /**
@@ -432,7 +436,7 @@ class Customer extends Model
      */
     public function getUpdatedAtAttribute( $value )
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
+        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
     }
 
     /**

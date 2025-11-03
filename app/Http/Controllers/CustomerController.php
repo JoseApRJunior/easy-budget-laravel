@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\CustomerPessoaFisicaRequest;
+use App\Http\Requests\CustomerPessoaJuridicaRequest;
 use App\Models\AreaOfActivity;
 use App\Models\Customer;
 use App\Models\Profession;
@@ -51,6 +53,29 @@ class CustomerController extends Controller
     }
 
     /**
+     * Validar dados do cliente usando FormRequest apropriado
+     */
+    private function validateCustomerRequest( Request $request, string $customerType ): array
+    {
+        if ( $customerType === 'pf' ) {
+            $formRequest = app( CustomerPessoaFisicaRequest::class);
+        } elseif ( $customerType === 'pj' ) {
+            $formRequest = app( CustomerPessoaJuridicaRequest::class);
+        } else {
+            throw new \InvalidArgumentException( 'Tipo de cliente inválido: ' . $customerType );
+        }
+
+        // Configurar o FormRequest com dados da requisição atual
+        $formRequest->setContainer( app() );
+        $formRequest->setRedirector( app( 'redirect' ) );
+        $formRequest->replace( $request->all() );
+
+        // Executar validação e retornar dados validados
+        $formRequest->validate();
+        return $formRequest->validated();
+    }
+
+    /**
      * Formulário de criação de cliente
      */
     public function create(): View
@@ -66,7 +91,7 @@ class CustomerController extends Controller
     }
 
     /**
-     * Criar cliente (Pessoa Física ou Jurídica)
+     * Criar cliente (Pessoa Física ou Jurídica) com validação condicional
      */
     public function store( Request $request ): RedirectResponse
     {
@@ -78,17 +103,20 @@ class CustomerController extends Controller
             'data'          => $request->all(),
             'user_id'       => Auth::id(),
             'tenant_id'     => Auth::user()?->tenant_id,
-            'note'          => 'Preencha o campo CPF ou CNPJ.'
+            'note'          => 'Usando validação condicional com FormRequests.'
         ] );
 
         try {
-            $result = $this->customerService->createCustomer( $request->all() );
+            // Usar FormRequest apropriado baseado no tipo de cliente
+            $validatedData = $this->validateCustomerRequest( $request, $customerType );
+
+            $result = $this->customerService->createCustomer( $validatedData );
 
             if ( !$result->isSuccess() ) {
                 Log::error( 'Erro ao criar cliente', [
                     'customer_type' => $customerType,
                     'error'         => $result->getMessage(),
-                    'data'          => $request->all(),
+                    'data'          => $validatedData,
                     'user_id'       => Auth::id()
                 ] );
 

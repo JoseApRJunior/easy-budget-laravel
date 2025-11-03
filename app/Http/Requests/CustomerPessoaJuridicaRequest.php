@@ -28,64 +28,49 @@ class CustomerPessoaJuridicaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Dados empresariais obrigatórios
-            'company_name'             => 'required|string|max:255|regex:/^[a-zA-ZÀ-ÿ0-9\s&\-\.]+$/',
-            'fantasy_name'             => 'nullable|string|max:255|regex:/^[a-zA-ZÀ-ÿ0-9\s&\-\.]+$/',
-            'document'                 => 'required|string|size:14|unique:customers,document|regex:/^\d{14}$/',
-            'state_registration'       => 'nullable|string|max:20|regex:/^[0-9]+$/',
-            'municipal_registration'   => 'nullable|string|max:20|regex:/^[0-9]+$/',
-            'founding_date'            => 'nullable|date|before:today|after:1800-01-01',
-            'company_email'            => 'required|email|max:255|unique:customers,email',
-            'company_phone'            => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'company_website'          => 'nullable|url|max:255',
-            'industry'                 => 'nullable|string|max:100',
-            'company_size'             => 'nullable|string|in:micro,pequena,media,grande',
-            'notes'                    => 'nullable|string|max:1000',
+            // Regras estruturais do Customer (do Model)
+            'tenant_id'           => 'sometimes|integer|exists:tenants,id',
+            'status'              => 'sometimes|string|in:active,inactive,deleted',
 
-            // Dados do contato principal (opcional)
-            'contact_person_name'      => 'nullable|string|max:255|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'contact_person_role'      => 'nullable|string|max:100',
-            'contact_person_email'     => 'nullable|email|max:255',
-            'contact_person_phone'     => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            // Dados básicos (CommonData)
+            'first_name'          => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'last_name'           => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'company_name'        => 'required|string|max:255',
+            'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
+            'profession_id'       => 'nullable|integer|exists:professions,id',
+            'description'         => 'nullable|string|max:250',
+            'website'             => 'nullable|url|max:255',
 
-            // Configurações do cliente
-            'customer_type'            => 'required|in:company',
-            'priority_level'           => 'required|in:normal,vip,premium',
-            'status'                   => 'required|in:active,inactive',
+            // Dados de contato (Contact)
+            'email_personal'      => 'required|email|max:255',
+            'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'email_business'      => 'nullable|email|max:255',
+            'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // Área de atuação
-            'area_of_activity_id'      => 'nullable|integer|exists:area_of_activities,id',
+            // Documento com validação customizada via Helper
+            'document'            => [
+                'required',
+                'string',
+                'size:14',
+                'regex:/^\d{14}$/',
+                function ( $attribute, $value, $fail ) {
+                    if ( !\App\Helpers\ValidationHelper::isValidCnpj( $value ) ) {
+                        $fail( 'CNPJ inválido.' );
+                    }
+                },
+            ],
+
+            // Endereço (Address)
+            'cep'                 => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
+            'address'             => 'required|string|max:255',
+            'address_number'      => 'nullable|string|max:20',
+            'neighborhood'        => 'required|string|max:100',
+            'city'                => 'required|string|max:100',
+            'state'               => 'required|string|size:2|alpha',
 
             // Tags
-            'tags'                     => 'nullable|array',
-            'tags.*'                   => 'integer|exists:customer_tags,id',
-
-            // Endereços (mínimo 1 endereço obrigatório)
-            'addresses'                => 'required|array|min:1|max:10',
-            'addresses.*.type'         => 'required|string|in:principal,trabalho,cobranca,entrega,outros',
-            'addresses.*.cep'          => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
-            'addresses.*.street'       => 'required|string|max:255',
-            'addresses.*.number'       => 'required|string|max:20',
-            'addresses.*.complement'   => 'nullable|string|max:100',
-            'addresses.*.neighborhood' => 'required|string|max:100',
-            'addresses.*.city'         => 'required|string|max:100',
-            'addresses.*.state'        => 'required|string|size:2|alpha',
-            'addresses.*.latitude'     => 'nullable|numeric|between:-90,90',
-            'addresses.*.longitude'    => 'nullable|numeric|between:-180,180',
-
-            // Contatos adicionais (mínimo 1 contato obrigatório)
-            'contacts'                 => 'required|array|min:1|max:10',
-            'contacts.*.type'          => 'required|string|in:email,phone,whatsapp,linkedin,site,skype,outros',
-            'contacts.*.label'         => 'nullable|string|max:100',
-            'contacts.*.value'         => 'required|string|max:255',
-            'contacts.*.is_primary'    => 'boolean',
-
-            // Validações condicionais para tipos específicos de contato
-            'contacts.*.value'         => 'required_if:contacts.*.type,email|email|unique:customer_contacts,value',
-            'contacts.*.value'         => 'required_if:contacts.*.type,phone|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'contacts.*.value'         => 'required_if:contacts.*.type,whatsapp|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'contacts.*.value'         => 'required_if:contacts.*.type,site|url',
-            'contacts.*.value'         => 'required_if:contacts.*.type,linkedin|url|regex:/^https:\/\/[www\.]?linkedin\.com/',
+            'tags'                => 'nullable|array',
+            'tags.*'              => 'integer|exists:customer_tags,id',
         ];
     }
 
@@ -311,8 +296,8 @@ class CustomerPessoaJuridicaRequest extends FormRequest
         $sum        = 0;
         $multiplier = 2;
         for ( $i = 11; $i >= 0; $i-- ) {
-            $sum += (int) $cnpj[ $i ] * $multiplier;
-            $multiplier = $multiplier === 9 ? 2 : $multiplier + 1;
+            $sum        += (int) $cnpj[ $i ] * $multiplier;
+            $multiplier  = $multiplier === 9 ? 2 : $multiplier + 1;
         }
 
         $remainder = $sum % 11;
@@ -326,8 +311,8 @@ class CustomerPessoaJuridicaRequest extends FormRequest
         $sum        = 0;
         $multiplier = 2;
         for ( $i = 12; $i >= 0; $i-- ) {
-            $sum += (int) $cnpj[ $i ] * $multiplier;
-            $multiplier = $multiplier === 9 ? 2 : $multiplier + 1;
+            $sum        += (int) $cnpj[ $i ] * $multiplier;
+            $multiplier  = $multiplier === 9 ? 2 : $multiplier + 1;
         }
 
         $remainder = $sum % 11;
