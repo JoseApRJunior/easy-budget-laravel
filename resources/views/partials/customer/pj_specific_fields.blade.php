@@ -61,19 +61,19 @@
 </div>
 
 <div class="mb-3">
-  <label for="company_email" class="form-label">Email Empresarial</label>
-  <input type="email" class="form-control @error( 'company_email' ) is-invalid @enderror" id="company_email"
-    name="company_email" value="{{ old( 'company_email', $customer->company_email ?? '' ) }}">
-  @error( 'company_email' )
+  <label for="email_business" class="form-label">Email Empresarial</label>
+  <input type="email" class="form-control @error( 'email_business' ) is-invalid @enderror" id="email_business"
+    name="email_business" value="{{ old( 'email_business', $customer->contact->email_business ?? '' ) }}">
+  @error( 'email_business' )
     <div class="invalid-feedback">{{ $message }}</div>
   @enderror
 </div>
 
 <div class="mb-3">
-  <label for="company_phone" class="form-label">Telefone Empresarial</label>
-  <input type="tel" class="form-control @error( 'company_phone' ) is-invalid @enderror" id="company_phone"
-    name="company_phone" value="{{ old( 'company_phone', $customer->company_phone ?? '' ) }}">
-  @error( 'company_phone' )
+  <label for="phone_business" class="form-label">Telefone Empresarial</label>
+  <input type="tel" class="form-control @error( 'phone_business' ) is-invalid @enderror" id="phone_business"
+    name="phone_business" value="{{ old( 'phone_business', $customer->contact->phone_business ?? '' ) }}">
+  @error( 'phone_business' )
     <div class="invalid-feedback">{{ $message }}</div>
   @enderror
 </div>

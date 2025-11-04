@@ -159,8 +159,8 @@ class ProviderManagementService
                 $type = !empty( $data[ 'cnpj' ] ) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
                 // Limpar máscaras e converter datas
-                $data[ 'cpf' ]        = clean_document_number( $data[ 'cpf' ] ?? null );
-                $data[ 'cnpj' ]       = clean_document_number( $data[ 'cnpj' ] ?? null );
+                $data[ 'cpf' ]        = !empty($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : null;
+                $data[ 'cnpj' ]       = !empty($data['cnpj']) ? preg_replace('/\D/', '', $data['cnpj']) : null;
                 $data[ 'birth_date' ] = !empty( $data[ 'birth_date' ] ) ? Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' ) : null;
 
                 // Atualizar CommonData (preserva dados de ambos os tipos)

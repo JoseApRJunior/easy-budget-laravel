@@ -462,16 +462,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
         if (typeof VanillaMask !== 'undefined') {
+            // Inicializar máscaras básicas
+            new VanillaMask('phone_personal', 'phone');
+            new VanillaMask('phone_business', 'phone');
+            new VanillaMask('cep', 'cep');
+
+            // Inicializar máscara baseada no tipo de pessoa atual
             const type = document.getElementById('person_type').value;
-            
-            VMasker(document.getElementById('phone_personal')).maskPattern('(99) 99999-9999');
-            VMasker(document.getElementById('phone_business')).maskPattern('(99) 99999-9999');
-            VMasker(document.getElementById('cep')).maskPattern('99999-999');
-            
             if (type === 'pf') {
-                VMasker(document.getElementById('cpf')).maskPattern('999.999.999-99');
+                new VanillaMask('cpf', 'cpf');
             } else if (type === 'pj') {
-                VMasker(document.getElementById('cnpj')).maskPattern('99.999.999/9999-99');
+                new VanillaMask('cnpj', 'cnpj');
+            }
+
+            // Aplicar formatação aos valores existentes nos campos
+            const cpfField = document.getElementById('cpf');
+            const cnpjField = document.getElementById('cnpj');
+
+            if (cpfField && cpfField.value && type === 'pf') {
+                cpfField.value = window.formatCPF ? window.formatCPF(cpfField.value) : cpfField.value;
+            }
+
+            if (cnpjField && cnpjField.value && type === 'pj') {
+                cnpjField.value = window.formatCNPJ ? window.formatCNPJ(cnpjField.value) : cnpjField.value;
             }
         }
     }, 500);
@@ -480,11 +493,11 @@ document.addEventListener('DOMContentLoaded', function() {
         togglePersonFields();
         setTimeout(() => {
             if (typeof VanillaMask !== 'undefined') {
-                const type = document.getElementById('person_type').value;
+                const type = this.value;
                 if (type === 'pf') {
-                    VMasker(document.getElementById('cpf')).maskPattern('999.999.999-99');
+                    new VanillaMask('cpf', 'cpf');
                 } else if (type === 'pj') {
-                    VMasker(document.getElementById('cnpj')).maskPattern('99.999.999/9999-99');
+                    new VanillaMask('cnpj', 'cnpj');
                 }
             }
         }, 200);

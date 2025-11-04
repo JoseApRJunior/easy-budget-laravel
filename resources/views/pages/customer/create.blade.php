@@ -132,6 +132,9 @@
                 if (document.getElementById('phone_business')) {
                     const phoneBusinessMask = new VanillaMask( 'phone_business', 'phone' );
                 }
+                if (document.getElementById('email_business')) {
+                    // Email business field - no mask needed
+                }
                 if (document.getElementById('cpf')) {
                     const cpfMask = new VanillaMask( 'cpf', 'cpf' );
                 }
