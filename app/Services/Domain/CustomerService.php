@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\Helpers\DateHelper;
 use App\Helpers\ValidationHelper;
 use App\Models\Address;
+use App\Models\BusinessData;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\Customer;
@@ -79,19 +80,39 @@ class CustomerService extends AbstractBaseService
             $tenantId = auth()->user()->tenant_id;
 
             $customer = DB::transaction( function () use ($data, $tenantId) {
-                // Usar EntityDataService para criar dados compartilhados
-                $entityData = $this->entityDataService->createCompleteEntityData( $data, $tenantId );
+                // Sempre criar novos registros para Customer
+                $commonData = $this->entityDataService->createCommonData( $data, $tenantId );
+                $contact = $this->entityDataService->createContact( $data, $tenantId );
+                $address = $this->entityDataService->createAddress( $data, $tenantId );
 
-                // Criar Customer com IDs gerados
+                // Criar Customer
                 $customer = Customer::create( [
                     'tenant_id'      => $tenantId,
-                    'common_data_id' => $entityData[ 'common_data' ]->id,
-                    'contact_id'     => $entityData[ 'contact' ]->id,
-                    'address_id'     => $entityData[ 'address' ]->id,
+                    'common_data_id' => $commonData->id,
+                    'contact_id'     => $contact->id,
+                    'address_id'     => $address->id,
                     'status'         => 'active',
                 ] );
 
-                return $customer->load( [ 'commonData', 'contact', 'address' ] );
+                // Se for PJ, criar dados empresariais
+                if ( !empty( $data['cnpj'] ) ) {
+                    BusinessData::create( [
+                        'tenant_id'              => $tenantId,
+                        'customer_id'            => $customer->id,
+                        'fantasy_name'           => $data['fantasy_name'] ?? null,
+                        'state_registration'     => $data['state_registration'] ?? null,
+                        'municipal_registration' => $data['municipal_registration'] ?? null,
+                        'founding_date'          => !empty($data['founding_date']) ? \Carbon\Carbon::createFromFormat('d/m/Y', $data['founding_date'])->format('Y-m-d') : null,
+                        'company_email'          => $data['company_email'] ?? null,
+                        'company_phone'          => $data['company_phone'] ?? null,
+                        'company_website'        => $data['company_website'] ?? null,
+                        'industry'               => $data['industry'] ?? null,
+                        'company_size'           => $data['company_size'] ?? null,
+                        'notes'                  => $data['notes'] ?? null,
+                    ] );
+                }
+
+                return $customer->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
             } );
 
             return $this->success( $customer, 'Cliente criado com sucesso' );
@@ -169,9 +190,21 @@ class CustomerService extends AbstractBaseService
             }
         }
 
-        // Validar unicidade de email no tenant
+        // Validar se Provider está tentando usar seus próprios dados
+        if ( !$this->isDocumentUniqueFromProvider( $data['cpf'] ?? null, $data['cnpj'] ?? null ) ) {
+            return $this->error( 'Você não pode cadastrar um cliente com seu próprio CPF/CNPJ. Use dados diferentes.' );
+        }
+        
+        // Validar unicidade de email
         if ( !$this->isEmailUniqueInTenant( $data[ 'email_personal' ], $excludeCustomerId ) ) {
-            return $this->error( 'Email já cadastrado para outro cliente' );
+            $provider = auth()->user()->provider;
+            $providerEmail = $provider?->contact?->email_personal ?? $provider?->contact?->email_business;
+            
+            if ( $providerEmail === $data['email_personal'] ) {
+                return $this->error( 'Você não pode cadastrar um cliente com seu próprio email. Use um email diferente.' );
+            }
+            
+            return $this->error( 'Email já cadastrado para outro cliente.' );
         }
 
         return $this->success();
@@ -229,7 +262,7 @@ class CustomerService extends AbstractBaseService
 
             $updated = DB::transaction( function () use ($customer, $data) {
                 // Carregar relacionamentos
-                $customer->load( [ 'commonData', 'contact', 'address' ] );
+                $customer->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
 
                 // Usar EntityDataService para atualizar
                 $this->entityDataService->updateCompleteEntityData(
@@ -239,12 +272,37 @@ class CustomerService extends AbstractBaseService
                     $data,
                 );
 
+                // Atualizar dados empresariais se for PJ
+                if ( !empty( $data['cnpj'] ) ) {
+                    $businessData = [
+                        'fantasy_name'           => $data['fantasy_name'] ?? null,
+                        'state_registration'     => $data['state_registration'] ?? null,
+                        'municipal_registration' => $data['municipal_registration'] ?? null,
+                        'founding_date'          => !empty($data['founding_date']) ? \Carbon\Carbon::createFromFormat('d/m/Y', $data['founding_date'])->format('Y-m-d') : null,
+                        'company_email'          => $data['company_email'] ?? null,
+                        'company_phone'          => $data['company_phone'] ?? null,
+                        'company_website'        => $data['company_website'] ?? null,
+                        'industry'               => $data['industry'] ?? null,
+                        'company_size'           => $data['company_size'] ?? null,
+                        'notes'                  => $data['notes'] ?? null,
+                    ];
+
+                    if ( $customer->businessData ) {
+                        $customer->businessData->update( $businessData );
+                    } else {
+                        BusinessData::create( array_merge( $businessData, [
+                            'tenant_id'   => $customer->tenant_id,
+                            'customer_id' => $customer->id,
+                        ] ) );
+                    }
+                }
+
                 // Atualizar status do Customer se fornecido
                 if ( isset( $data[ 'status' ] ) ) {
                     $customer->update( [ 'status' => $data[ 'status' ] ] );
                 }
 
-                return $customer->fresh( [ 'commonData', 'contact', 'address' ] );
+                return $customer->fresh( [ 'commonData', 'contact', 'address', 'businessData' ] );
             } );
 
             return $this->success( $updated, 'Cliente atualizado com sucesso' );
@@ -308,23 +366,59 @@ class CustomerService extends AbstractBaseService
     }
 
     /**
-     * Verifica se email é único no tenant.
+     * Verifica se email/CPF/CNPJ já está em uso pelo Provider ou outro Customer.
      */
     private function isEmailUniqueInTenant( string $email, ?int $excludeCustomerId = null ): bool
     {
-        $query = Contact::where( 'tenant_id', auth()->user()->tenant_id )
-            ->where( function ( $q ) use ( $email ) {
+        $provider = auth()->user()->provider;
+        
+        // Verificar se Provider usa este email
+        if ( $provider && $provider->contact ) {
+            $providerEmail = $provider->contact->email_personal ?? $provider->contact->email_business;
+            if ( $providerEmail === $email ) {
+                return false; // Provider não pode usar mesmo email
+            }
+        }
+
+        // Verificar se outro Customer usa este email
+        $query = Customer::where( 'tenant_id', auth()->user()->tenant_id )
+            ->whereHas( 'contact', function ( $q ) use ( $email ) {
                 $q->where( 'email_personal', $email )
                     ->orWhere( 'email_business', $email );
             } );
 
         if ( $excludeCustomerId ) {
-            $query->whereHas( 'customer', function ( $q ) use ( $excludeCustomerId ) {
-                $q->where( 'id', '!=', $excludeCustomerId );
-            } );
+            $query->where( 'id', '!=', $excludeCustomerId );
         }
 
         return !$query->exists();
+    }
+    
+    /**
+     * Verifica se CPF/CNPJ já está em uso pelo Provider.
+     */
+    private function isDocumentUniqueFromProvider( ?string $cpf, ?string $cnpj ): bool
+    {
+        $provider = auth()->user()->provider;
+        
+        if ( !$provider || !$provider->commonData ) {
+            return true;
+        }
+        
+        $providerCpf = $provider->commonData->cpf;
+        $providerCnpj = $provider->commonData->cnpj;
+        
+        // Limpar documentos
+        $cleanCpf = $cpf ? preg_replace('/\D/', '', $cpf) : null;
+        $cleanCnpj = $cnpj ? preg_replace('/\D/', '', $cnpj) : null;
+        
+        // Verificar se Provider usa este CPF ou CNPJ
+        if ( ($providerCpf && $providerCpf === $cleanCpf) || 
+             ($providerCnpj && $providerCnpj === $cleanCnpj) ) {
+            return false;
+        }
+        
+        return true;
     }
 
     /**

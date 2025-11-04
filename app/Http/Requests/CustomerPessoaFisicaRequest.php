@@ -35,33 +35,33 @@ class CustomerPessoaFisicaRequest extends FormRequest
             // Dados básicos (CommonData)
             'first_name'          => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
             'last_name'           => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'birth_date'          => 'nullable|date|before:today|after:1900-01-01',
+            'birth_date'          => 'nullable|date_format:d/m/Y|before:today|after:1900-01-01',
             'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id'       => 'nullable|integer|exists:professions,id',
             'description'         => 'nullable|string|max:250',
             'website'             => 'nullable|url|max:255',
 
-            // Dados de contato (Contact)
+            // Dados de contato (Contact) - Sem validação de unicidade (compartilhado com Provider)
             'email_personal'      => 'required|email|max:255',
             'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
             'email_business'      => 'nullable|email|max:255',
             'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // Documento com validação customizada via Helper
-            'document'            => [
+            // CPF com validação customizada via Helper
+            'cpf'                 => [
                 'required',
                 'string',
-                'size:11',
-                'regex:/^\d{11}$/',
-                function ( $attribute, $value, $fail ) {
-                    if ( !\App\Helpers\ValidationHelper::isValidCpf( $value ) ) {
-                        $fail( 'CPF inválido.' );
+                'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/',
+                function ($attribute, $value, $fail) {
+                    $cleanCpf = preg_replace('/[^0-9]/', '', $value);
+                    if (strlen($cleanCpf) !== 11 || !\App\Helpers\ValidationHelper::isValidCpf($cleanCpf)) {
+                        $fail('CPF inválido.');
                     }
                 },
             ],
 
             // Endereço (Address)
-            'cep'                 => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
+            'cep'                 => 'required|string|regex:/^\d{5}-?\d{3}$/',
             'address'             => 'required|string|max:255',
             'address_number'      => 'nullable|string|max:20',
             'neighborhood'        => 'required|string|max:100',

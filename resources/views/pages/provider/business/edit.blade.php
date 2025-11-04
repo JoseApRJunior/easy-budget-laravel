@@ -99,34 +99,54 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
+                                <!-- Seletor de tipo de pessoa -->
                                 <div class="col-12">
-                                    <label for="company_name" class="form-label">Nome da Empresa</label>
-                                    <input type="text" class="form-control @error( 'company_name' ) is-invalid @enderror"
-                                           id="company_name" name="company_name"
-                                           value="{{ old( 'company_name', $provider->commonData?->company_name ?? '' ) }}">
-                                    @error( 'company_name' )
+                                    <label for="person_type" class="form-label">Tipo de Pessoa</label>
+                                    <select name="person_type" id="person_type"
+                                        class="form-select @error( 'person_type' ) is-invalid @enderror" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="pf" {{ old( 'person_type', ($provider->commonData?->cpf ? 'pf' : ($provider->commonData?->cnpj ? 'pj' : '')) ) == 'pf' ? 'selected' : '' }}>Pessoa Física</option>
+                                        <option value="pj" {{ old( 'person_type', ($provider->commonData?->cpf ? 'pf' : ($provider->commonData?->cnpj ? 'pj' : '')) ) == 'pj' ? 'selected' : '' }}>Pessoa Jurídica</option>
+                                    </select>
+                                    @error( 'person_type' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <div class="col-12">
-                                    <label for="cnpj" class="form-label">CNPJ</label>
-                                    <input type="text" class="form-control @error( 'cnpj' ) is-invalid @enderror"
-                                           id="cnpj" name="cnpj"
-                                           value="{{ old( 'cnpj', $provider->commonData?->cnpj ?? '' ) }}">
-                                    @error( 'cnpj' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <!-- Campos específicos PF -->
+                                <div id="pf_fields" class="pf-specific" style="display: none;">
+                                    <div class="col-12">
+                                        <label for="cpf" class="form-label">CPF</label>
+                                        <input type="text" class="form-control @error( 'cpf' ) is-invalid @enderror"
+                                               id="cpf" name="cpf"
+                                               value="{{ old( 'cpf', $provider->commonData?->cpf ?? '' ) }}">
+                                        @error( 'cpf' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
 
-                                <div class="col-12">
-                                    <label for="cpf" class="form-label">CPF</label>
-                                    <input type="text" class="form-control @error( 'cpf' ) is-invalid @enderror"
-                                           id="cpf" name="cpf"
-                                           value="{{ old( 'cpf', $provider->commonData?->cpf ?? '' ) }}">
-                                    @error( 'cpf' )
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <!-- Campos específicos PJ -->
+                                <div id="pj_fields" class="pj-specific" style="display: none;">
+                                    <div class="col-12">
+                                        <label for="company_name" class="form-label">Nome da Empresa</label>
+                                        <input type="text" class="form-control @error( 'company_name' ) is-invalid @enderror"
+                                               id="company_name" name="company_name"
+                                               value="{{ old( 'company_name', $provider->commonData?->company_name ?? '' ) }}">
+                                        @error( 'company_name' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="cnpj" class="form-label">CNPJ</label>
+                                        <input type="text" class="form-control @error( 'cnpj' ) is-invalid @enderror"
+                                               id="cnpj" name="cnpj"
+                                               value="{{ old( 'cnpj', $provider->commonData?->cnpj ?? '' ) }}">
+                                        @error( 'cnpj' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
 
                                 <div class="col-12">
@@ -171,6 +191,85 @@
                                     @error( 'description' )
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                <!-- Campos específicos PJ (dados empresariais adicionais) -->
+                                <div id="business-data-fields" class="business-data-fields" style="display: none;">
+                                    <div class="col-12">
+                                        <label for="fantasy_name" class="form-label">Nome Fantasia</label>
+                                        <input type="text" class="form-control @error( 'fantasy_name' ) is-invalid @enderror"
+                                               id="fantasy_name" name="fantasy_name"
+                                               value="{{ old( 'fantasy_name', $provider->businessData?->fantasy_name ?? '' ) }}">
+                                        @error( 'fantasy_name' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="state_registration" class="form-label">Inscrição Estadual</label>
+                                        <input type="text" class="form-control @error( 'state_registration' ) is-invalid @enderror"
+                                               id="state_registration" name="state_registration"
+                                               value="{{ old( 'state_registration', $provider->businessData?->state_registration ?? '' ) }}">
+                                        @error( 'state_registration' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="municipal_registration" class="form-label">Inscrição Municipal</label>
+                                        <input type="text" class="form-control @error( 'municipal_registration' ) is-invalid @enderror"
+                                               id="municipal_registration" name="municipal_registration"
+                                               value="{{ old( 'municipal_registration', $provider->businessData?->municipal_registration ?? '' ) }}">
+                                        @error( 'municipal_registration' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="founding_date" class="form-label">Data de Fundação</label>
+                                        <input type="text" class="form-control @error( 'founding_date' ) is-invalid @enderror"
+                                               id="founding_date" name="founding_date"
+                                               value="{{ old( 'founding_date', $provider->businessData?->founding_date ? \Carbon\Carbon::parse($provider->businessData->founding_date)->format('d/m/Y') : '' ) }}"
+                                               placeholder="DD/MM/AAAA">
+                                        @error( 'founding_date' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="industry" class="form-label">Setor de Atuação</label>
+                                        <input type="text" class="form-control @error( 'industry' ) is-invalid @enderror"
+                                               id="industry" name="industry"
+                                               value="{{ old( 'industry', $provider->businessData?->industry ?? '' ) }}">
+                                        @error( 'industry' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="company_size" class="form-label">Porte da Empresa</label>
+                                        <select name="company_size" class="form-select @error( 'company_size' ) is-invalid @enderror"
+                                                id="company_size">
+                                            <option value="">Selecione</option>
+                                            <option value="micro" {{ old( 'company_size', $provider->businessData?->company_size ?? '' ) == 'micro' ? 'selected' : '' }}>Microempresa (até R$ 360.000)</option>
+                                            <option value="pequena" {{ old( 'company_size', $provider->businessData?->company_size ?? '' ) == 'pequena' ? 'selected' : '' }}>Pequena Empresa (R$ 360.001 a R$ 4,8 milhões)</option>
+                                            <option value="media" {{ old( 'company_size', $provider->businessData?->company_size ?? '' ) == 'media' ? 'selected' : '' }}>Média Empresa (R$ 4,8 milhões a R$ 300 milhões)</option>
+                                            <option value="grande" {{ old( 'company_size', $provider->businessData?->company_size ?? '' ) == 'grande' ? 'selected' : '' }}>Grande Empresa (acima de R$ 300 milhões)</option>
+                                        </select>
+                                        @error( 'company_size' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="notes" class="form-label">Observações</label>
+                                        <textarea class="form-control @error( 'notes' ) is-invalid @enderror"
+                                                  id="notes" name="notes" rows="3"
+                                                  placeholder="Informações adicionais sobre a empresa...">{{ old( 'notes', $provider->businessData?->notes ?? '' ) }}</textarea>
+                                        @error( 'notes' )
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -220,7 +319,7 @@
                                 <div class="col-12">
                                     <label for="cep" class="form-label">CEP</label>
                                     <input type="text" class="form-control @error( 'cep' ) is-invalid @enderror"
-                                           id="cep" name="cep"
+                                           id="cep" name="cep" data-cep-lookup
                                            value="{{ old( 'cep', $provider->address?->cep ?? '' ) }}" required>
                                     @error( 'cep' )
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -469,8 +568,34 @@
             }
         });
 
-        // Buscar CEP automático
-        document.addEventListener('DOMContentLoaded', function() {
+        // ========================================
+        // MÁSCARAS DE CAMPO
+        // ========================================
+
+        // Aguardar carregamento do VanillaMask e aplicar máscaras
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Verificar se VanillaMask está disponível
+            if ( typeof VanillaMask !== 'undefined' ) {
+                // Aplicar máscaras apenas se os elementos existirem
+                if (document.getElementById('phone_personal')) {
+                    const phoneMask = new VanillaMask( 'phone_personal', 'phone' );
+                }
+                if (document.getElementById('phone_business')) {
+                    const phoneBusinessMask = new VanillaMask( 'phone_business', 'phone' );
+                }
+                if (document.getElementById('cpf')) {
+                    const cpfMask = new VanillaMask( 'cpf', 'cpf' );
+                }
+                if (document.getElementById('cnpj')) {
+                    const cnpjMask = new VanillaMask( 'cnpj', 'cnpj' );
+                }
+                if (document.getElementById('cep')) {
+                    const cepMask = new VanillaMask( 'cep', 'cep' );
+                }
+            } else {
+                console.warn( 'VanillaMask não está disponível. Máscaras não serão aplicadas.' );
+            }
+
             // Formatar valores já carregados
             const cnpjInput = document.getElementById('cnpj');
             const cpfInput = document.getElementById('cpf');
@@ -480,6 +605,36 @@
             }
             if (cpfInput && cpfInput.value) {
                 cpfInput.value = formatCPF(cpfInput.value);
+            }
+
+            // Toggle campos baseado no tipo de pessoa
+            function togglePersonFields() {
+                const personType = document.getElementById('person_type').value;
+                const pfFields = document.getElementById('pf_fields');
+                const pjFields = document.getElementById('pj_fields');
+                const businessDataFields = document.getElementById('business-data-fields');
+
+                if (personType === 'pf') {
+                    pfFields.style.display = 'block';
+                    pjFields.style.display = 'none';
+                    businessDataFields.style.display = 'none';
+                } else if (personType === 'pj') {
+                    pfFields.style.display = 'none';
+                    pjFields.style.display = 'block';
+                    businessDataFields.style.display = 'block';
+                } else {
+                    pfFields.style.display = 'none';
+                    pjFields.style.display = 'none';
+                    businessDataFields.style.display = 'none';
+                }
+            }
+
+            // Inicializar seletor de tipo de pessoa
+            const personTypeSelect = document.getElementById('person_type');
+            if (personTypeSelect) {
+                personTypeSelect.addEventListener('change', togglePersonFields);
+                // Inicializar estado baseado no valor atual
+                togglePersonFields();
             }
             // Validação no submit
             const form = document.getElementById('businessForm');
@@ -562,28 +717,6 @@
                 }
             }, 100);
 
-            const cepInput = document.getElementById('cep');
-            if (cepInput) {
-                cepInput.addEventListener('blur', function() {
-                    const cep = this.value.replace(/\D/g, '');
-                    if (cep.length === 8) {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('GET', `https://viacep.com.br/ws/${cep}/json/`, true);
-                        xhr.onload = function() {
-                            if (xhr.status === 200) {
-                                const data = JSON.parse(xhr.responseText);
-                                if (!data.erro) {
-                                    document.getElementById('address').value = data.logradouro || '';
-                                    document.getElementById('neighborhood').value = data.bairro || '';
-                                    document.getElementById('city').value = data.localidade || '';
-                                    document.getElementById('state').value = data.uf || '';
-                                }
-                            }
-                        };
-                        xhr.send();
-                    }
-                });
-            }
         });
     </script>
 @endpush

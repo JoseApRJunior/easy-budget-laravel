@@ -5,6 +5,7 @@ namespace App\Models;
 
 use App\Models\Address;
 use App\Models\Budget;
+use App\Models\BusinessData;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\CustomerInteraction;
@@ -148,6 +149,14 @@ class Customer extends Model
     public function address(): BelongsTo
     {
         return $this->belongsTo( Address::class);
+    }
+
+    /**
+     * Get the business data associated with the Customer (PJ only).
+     */
+    public function businessData(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne( BusinessData::class);
     }
 
     /**

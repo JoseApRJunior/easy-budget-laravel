@@ -118,6 +118,35 @@
 
     <script>
         // ========================================
+        // MÁSCARAS DE CAMPO
+        // ========================================
+
+        // Aguardar carregamento do VanillaMask e aplicar máscaras
+        document.addEventListener( 'DOMContentLoaded', function () {
+            // Verificar se VanillaMask está disponível
+            if ( typeof VanillaMask !== 'undefined' ) {
+                // Aplicar máscaras apenas se os elementos existirem
+                if (document.getElementById('phone_personal')) {
+                    const phoneMask = new VanillaMask( 'phone_personal', 'phone' );
+                }
+                if (document.getElementById('phone_business')) {
+                    const phoneBusinessMask = new VanillaMask( 'phone_business', 'phone' );
+                }
+                if (document.getElementById('cpf')) {
+                    const cpfMask = new VanillaMask( 'cpf', 'cpf' );
+                }
+                if (document.getElementById('cnpj')) {
+                    const cnpjMask = new VanillaMask( 'cnpj', 'cnpj' );
+                }
+                if (document.getElementById('cep')) {
+                    const cepMask = new VanillaMask( 'cep', 'cep' );
+                }
+            } else {
+                console.warn( 'VanillaMask não está disponível. Máscaras não serão aplicadas.' );
+            }
+        } );
+
+        // ========================================
         // CONTROLE DE FORMULÁRIO PROGRESSIVO
         // ========================================
 
@@ -377,29 +406,7 @@
                     textarea.addEventListener( 'input', updateCharCount );
                 }
 
-                // Buscar CEP automático
-                const cepInput = document.getElementById( 'cep' );
-                if ( cepInput ) {
-                    cepInput.addEventListener( 'blur', function () {
-                        const cep = this.value.replace( /\D/g, '' );
-                        if ( cep.length === 8 ) {
-                            const xhr = new XMLHttpRequest();
-                            xhr.open( 'GET', `https://viacep.com.br/ws/${cep}/json/`, true );
-                            xhr.onload = function () {
-                                if ( xhr.status === 200 ) {
-                                    const data = JSON.parse( xhr.responseText );
-                                    if ( !data.erro ) {
-                                        document.getElementById( 'address' ).value = data.logradouro || '';
-                                        document.getElementById( 'neighborhood' ).value = data.bairro || '';
-                                        document.getElementById( 'city' ).value = data.localidade || '';
-                                        document.getElementById( 'state' ).value = data.uf || '';
-                                    }
-                                }
-                            };
-                            xhr.send();
-                        }
-                    } );
-                }
+                // CEP lookup já está em /public/assets/js/cep-lookup.js
             }, 100 );
         } );
     </script>

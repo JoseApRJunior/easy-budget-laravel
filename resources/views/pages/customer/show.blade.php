@@ -15,7 +15,9 @@
                     </li>
                     <li class="breadcrumb-item"><a href="{{ url( '/provider/customers' ) }}"
                             class="text-decoration-none">Clientes</a></li>
-                    <li class="breadcrumb-item active">{{ $customer->first_name }} {{ $customer->last_name }}</li>
+                    <li class="breadcrumb-item active">{{ $customer->commonData?->first_name }}
+                        {{ $customer->commonData?->last_name }}
+                    </li>
                 </ol>
             </nav>
         </div>
@@ -33,10 +35,10 @@
                     <div class="card-body">
                         <div class="info-item mb-3 ">
                             <label class="text-muted small d-block mb-1">Nome Completo</label>
-                            <p class="mb-0 d-flex align-items-center fw-bold">{{ $customer->first_name }}
-                                {{ $customer->last_name }}
+                            <p class="mb-0 d-flex align-items-center fw-bold">{{ $customer->commonData?->first_name }}
+                                {{ $customer->commonData?->last_name }}
                             </p>
-                            @if ( $customer->status )
+                            @if ( $customer->status === 'active' )
                                 <span class="badge bg-success mt-2">
                                     <i class="bi bi-check-circle-fill me-1"></i>Ativo
                                 </span>
@@ -46,11 +48,10 @@
 
                         @php
                             $personal_info = [
-                                'Email'              => [ 'icon' => 'envelope-fill', 'value' => $customer->email ],
-                                'Email Comercial'    => [ 'icon' => 'envelope-fill', 'value' => $customer->email_business ],
-                                'Telefone'           => [ 'icon' => 'phone-fill', 'value' => $customer->phone ],
-                                'Telefone Comercial' => [ 'icon' => 'telephone-fill', 'value' => $customer->phone_business ],
-                                'Data de Nascimento' => [ 'icon' => 'calendar-fill', 'value' => \Carbon\Carbon::parse( $customer->birth_date )->format( 'd/m/Y' ) ]
+                                'Email'              => [ 'icon' => 'envelope-fill', 'value' => $customer->contact?->email_personal ],
+                                'Email Comercial'    => [ 'icon' => 'envelope-fill', 'value' => $customer->contact?->email_business ],
+                                'Telefone'           => [ 'icon' => 'phone-fill', 'value' => $customer->contact?->phone_personal ],
+                                'Telefone Comercial' => [ 'icon' => 'telephone-fill', 'value' => $customer->contact?->phone_business ],
                             ];
                         @endphp
 
@@ -67,40 +68,61 @@
                 </div>
             </div>
 
-            <!-- Informações Profissionais -->
+            <!-- Informações Específicas -->
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 card-hover">
                     <div class="card-header bg-transparent border-0 py-1">
                         <h5 class="card-title mb-0 d-flex align-items-center">
                             <i class="bi bi-briefcase-fill me-2 "></i>
-                            <span>Informações Profissionais</span>
+                            <span>Informações Específicas</span>
                         </h5>
                     </div>
                     <div class="card-body">
-                        @php
-                            $professional_info = [
-                                'Companhia'       => [ 'icon' => 'building', 'value' => $customer->company_name ],
-                                'CNPJ'            => [ 'icon' => 'card-text', 'value' => $customer->cnpj ],
-                                'CPF'             => [ 'icon' => 'person-badge', 'value' => $customer->cpf ],
-                                'Área de Atuação' => [ 'icon' => 'diagram-3', 'value' => $customer->area_of_activity_name ],
-                                'Profissão'       => [ 'icon' => 'person-workspace', 'value' => $customer->profession_name ],
-                                'Website'         => [ 'icon' => 'globe', 'value' => $customer->website ]
-                            ];
-                        @endphp
+                        @if ( $customer->isCompany() )
+                            <!-- Campos PJ -->
+                            @php
+                                $specific_info = [
+                                    'Razão Social'         => [ 'icon' => 'building', 'value' => $customer->commonData?->company_name ],
+                                    'Nome Fantasia'        => [ 'icon' => 'building-fill', 'value' => $customer->commonData?->fantasy_name ],
+                                    'CNPJ'                 => [ 'icon' => 'card-text', 'value' => format_cnpj( $customer->commonData?->cnpj ) ],
+                                    'Inscrição Estadual'   => [ 'icon' => 'file-earmark-text', 'value' => $customer->commonData?->state_registration ],
+                                    'Inscrição Municipal'  => [ 'icon' => 'file-earmark-text-fill', 'value' => $customer->commonData?->municipal_registration ],
+                                    'Data de Fundação'     => [ 'icon' => 'calendar-event', 'value' => $customer->commonData?->founding_date ? \Carbon\Carbon::parse( $customer->commonData->founding_date )->format( 'd/m/Y' ) : '' ],
+                                    'Email Empresarial'    => [ 'icon' => 'envelope-at', 'value' => $customer->contact?->email_business ],
+                                    'Telefone Empresarial' => [ 'icon' => 'telephone', 'value' => $customer->contact?->phone_business ],
+                                    'Website'              => [ 'icon' => 'globe', 'value' => $customer->contact?->website ],
+                                    'Setor de Atuação'     => [ 'icon' => 'diagram-3', 'value' => $customer->commonData?->industry ],
+                                    'Porte da Empresa'     => [ 'icon' => 'building-gear', 'value' => $customer->commonData?->company_size ? ucfirst( $customer->commonData->company_size ) : '' ],
+                                ];
+                            @endphp
+                        @else
+                            <!-- Campos PF -->
+                            @php
+                                $specific_info = [
+                                    'CPF'                => [ 'icon' => 'person-badge', 'value' => format_cpf( $customer->commonData?->cpf ) ],
+                                    'Data de Nascimento' => [ 'icon' => 'calendar-fill', 'value' => $customer->commonData?->birth_date ? \Carbon\Carbon::parse( $customer->commonData->birth_date )->format( 'd/m/Y' ) : '' ],
+                                    'Área de Atuação'    => [ 'icon' => 'diagram-3', 'value' => $customer->commonData?->areaOfActivity?->name ],
+                                    'Profissão'          => [ 'icon' => 'person-workspace', 'value' => $customer->commonData?->profession?->name ],
+                                    'Website'            => [ 'icon' => 'globe', 'value' => $customer->contact?->website ],
+                                ];
+                            @endphp
+                        @endif
 
-                        @foreach ( $professional_info as $key => $info )
-                            <div class="info-item mb-3">
-                                <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
-                                <p class="mb-0 d-flex align-items-center">
-                                    <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
-                                    @if ( $key == 'Website' && $info[ 'value' ] )
-                                        <a href="{{ $info[ 'value' ] }}" target="_blank"
-                                            class="text-decoration-none">{{ $info[ 'value' ] }}</a>
-                                    @else
-                                        <span>{{ $info[ 'value' ] }}</span>
-                                    @endif
-                                </p>
-                            </div>
+                        @foreach ( $specific_info as $key => $info )
+                            @if ( $info[ 'value' ] )
+                                <div class="info-item mb-3">
+                                    <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
+                                    <p class="mb-0 d-flex align-items-center">
+                                        <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
+                                        @if ( $key == 'Website' && $info[ 'value' ] )
+                                            <a href="{{ $info[ 'value' ] }}" target="_blank"
+                                                class="text-decoration-none">{{ $info[ 'value' ] }}</a>
+                                        @else
+                                            <span>{{ $info[ 'value' ] }}</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -120,7 +142,7 @@
                             <label class="text-muted small d-block mb-1">CEP</label>
                             <p class="mb-0 d-flex align-items-center">
                                 <i class="bi bi-mailbox me-2 "></i>
-                                <span>{{ $customer->cep }}</span>
+                                <span>{{ $customer->address?->cep }}</span>
                             </p>
                         </div>
 
@@ -129,9 +151,9 @@
                             <p class="mb-0 d-flex align-items-start">
                                 <i class="bi bi-pin-map-fill me-2 "></i>
                                 <span>
-                                    {{ $customer->address }}, {{ $customer->address_number }}<br>
-                                    {{ $customer->neighborhood }}<br>
-                                    {{ $customer->city }} - {{ $customer->state }}
+                                    {{ $customer->address?->address }}, {{ $customer->address?->address_number }}<br>
+                                    {{ $customer->address?->neighborhood }}<br>
+                                    {{ $customer->address?->city }} - {{ $customer->address?->state }}
                                 </span>
                             </p>
                         </div>
@@ -140,17 +162,31 @@
             </div>
 
             <!-- Descrição -->
-            @if ( $customer->description )
+            @if ( $customer->isCompany() && $customer->commonData?->notes )
                 <div class="col-12">
                     <div class="card border-0 shadow-sm card-hover">
                         <div class="card-header bg-transparent border-0 py-1">
                             <h5 class="card-title mb-0 d-flex align-items-center">
                                 <i class="bi bi-info-circle-fill me-2 "></i>
-                                <span>Informações Adicionais</span>
+                                <span>Observações</span>
                             </h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-0">{{ $customer->description }}</p>
+                            <p class="mb-0">{{ $customer->commonData->notes }}</p>
+                        </div>
+                    </div>
+                </div>
+            @elseif ( !$customer->isCompany() && $customer->commonData?->description )
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm card-hover">
+                        <div class="card-header bg-transparent border-0 py-1">
+                            <h5 class="card-title mb-0 d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill me-2 "></i>
+                                <span>Descrição Profissional</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ $customer->commonData->description }}</p>
                         </div>
                     </div>
                 </div>

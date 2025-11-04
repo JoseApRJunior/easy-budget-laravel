@@ -23,6 +23,7 @@
     <script src="{{ asset( 'assets/js/modules/utils.js' ) }}" type="module"></script>
     <script src="{{ asset( 'assets/js/main.js' ) }}" type="module"></script>
     <script src="{{ asset( 'assets/js/components/alerts.js' ) }}"></script>
+    <script src="{{ asset( 'assets/js/cep-lookup.js' ) }}"></script>
 
     @stack( 'scripts' )
 
@@ -32,17 +33,24 @@
             // Configura o token CSRF para todas as requisições AJAX
             const csrfToken = document.querySelector( 'meta[name="csrf-token"]' ).content;
 
-            // Adiciona o token em todas as requisições fetch
+            // Adiciona o token apenas em requisições internas
             const originalFetch = window.fetch;
             window.fetch = function () {
                 let [resource, config] = arguments;
-                if ( config === undefined ) {
-                    config = {};
+                
+                // Só adiciona CSRF token para requisições internas
+                const url = typeof resource === 'string' ? resource : resource.url;
+                const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+                
+                if (isInternal) {
+                    if ( config === undefined ) {
+                        config = {};
+                    }
+                    if ( config.headers === undefined ) {
+                        config.headers = {};
+                    }
+                    config.headers['X-CSRF-TOKEN'] = csrfToken;
                 }
-                if ( config.headers === undefined ) {
-                    config.headers = {};
-                }
-                config.headers['X-CSRF-TOKEN'] = csrfToken;
                 return originalFetch( resource, config );
             };
         } );

@@ -156,12 +156,15 @@ return new class extends Migration
         Schema::create( 'contacts', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'email_personal', 255 )->nullable()->unique();
+            $table->string( 'email_personal', 255 )->nullable();
             $table->string( 'phone_personal', 20 )->nullable();
-            $table->string( 'email_business', 255 )->nullable()->unique();
+            $table->string( 'email_business', 255 )->nullable();
             $table->string( 'phone_business', 20 )->nullable();
             $table->string( 'website', 255 )->nullable();
             $table->timestamps();
+            
+            $table->unique( [ 'tenant_id', 'email_personal' ], 'uq_contacts_tenant_email_personal' );
+            $table->unique( [ 'tenant_id', 'email_business' ], 'uq_contacts_tenant_email_business' );
         } );
 
         Schema::create( 'common_datas', function ( Blueprint $table ) {
@@ -170,13 +173,16 @@ return new class extends Migration
             $table->string( 'first_name', 100 );
             $table->string( 'last_name', 100 );
             $table->date( 'birth_date' )->nullable();
-            $table->string( 'cnpj', 14 )->nullable()->unique();
-            $table->string( 'cpf', 11 )->nullable()->unique();
+            $table->string( 'cnpj', 14 )->nullable();
+            $table->string( 'cpf', 11 )->nullable();
             $table->string( 'company_name', 255 )->nullable();
             $table->text( 'description' )->nullable();
             $table->foreignId( 'area_of_activity_id' )->nullable()->constrained( 'areas_of_activity' )->restrictOnDelete();
             $table->foreignId( 'profession_id' )->nullable()->constrained( 'professions' )->restrictOnDelete();
             $table->timestamps();
+            
+            $table->unique( [ 'tenant_id', 'cpf' ], 'uq_common_datas_tenant_cpf' );
+            $table->unique( [ 'tenant_id', 'cnpj' ], 'uq_common_datas_tenant_cnpj' );
         } );
 
         Schema::create( 'customers', function ( Blueprint $table ) {
@@ -212,6 +218,26 @@ return new class extends Migration
             $table->foreignId( 'provider_id' )->constrained( 'providers' )->cascadeOnDelete();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->timestamps();
+        } );
+
+        Schema::create( 'business_data', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'customer_id' )->nullable()->constrained( 'customers' )->cascadeOnDelete();
+            $table->foreignId( 'provider_id' )->nullable()->constrained( 'providers' )->cascadeOnDelete();
+            $table->string( 'fantasy_name', 255 )->nullable();
+            $table->string( 'state_registration', 50 )->nullable();
+            $table->string( 'municipal_registration', 50 )->nullable();
+            $table->date( 'founding_date' )->nullable();
+            $table->string( 'company_email', 255 )->nullable();
+            $table->string( 'company_phone', 20 )->nullable();
+            $table->string( 'company_website', 255 )->nullable();
+            $table->string( 'industry', 255 )->nullable();
+            $table->enum( 'company_size', [ 'micro', 'pequena', 'media', 'grande' ] )->nullable();
+            $table->text( 'notes' )->nullable();
+            $table->timestamps();
+            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_business_data_tenant_customer' );
+            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_business_data_tenant_provider' );
         } );
 
         // 4) Produtos e estoque
@@ -708,6 +734,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists( 'business_data' );
         Schema::dropIfExists( 'audit_logs' );
         Schema::dropIfExists( 'failed_jobs' );
         Schema::dropIfExists( 'jobs' );

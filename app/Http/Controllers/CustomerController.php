@@ -52,28 +52,7 @@ class CustomerController extends Controller
         ] );
     }
 
-    /**
-     * Validar dados do cliente usando FormRequest apropriado
-     */
-    private function validateCustomerRequest( Request $request, string $customerType ): array
-    {
-        if ( $customerType === 'pf' ) {
-            $formRequest = app( CustomerPessoaFisicaRequest::class);
-        } elseif ( $customerType === 'pj' ) {
-            $formRequest = app( CustomerPessoaJuridicaRequest::class);
-        } else {
-            throw new \InvalidArgumentException( 'Tipo de cliente inválido: ' . $customerType );
-        }
 
-        // Configurar o FormRequest com dados da requisição atual
-        $formRequest->setContainer( app() );
-        $formRequest->setRedirector( app( 'redirect' ) );
-        $formRequest->replace( $request->all() );
-
-        // Executar validação e retornar dados validados
-        $formRequest->validate();
-        return $formRequest->validated();
-    }
 
     /**
      * Formulário de criação de cliente
@@ -91,93 +70,43 @@ class CustomerController extends Controller
     }
 
     /**
-     * Criar cliente (Pessoa Física ou Jurídica) com validação condicional
+     * Criar cliente (PF ou PJ baseado no tipo de documento)
      */
     public function store( Request $request ): RedirectResponse
     {
-        // Determinar tipo baseado nos dados enviados
-        $customerType = $this->determineCustomerType( $request );
+        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
+        $cnpj = $request->input( 'cnpj', '' );
+        $cpf = $request->input( 'cpf', '' );
+        $isPJ = !empty( $cnpj );
+        
+        $formRequest = $isPJ 
+            ? app( CustomerPessoaJuridicaRequest::class )
+            : app( CustomerPessoaFisicaRequest::class );
+        
+        $formRequest->setContainer( app() )
+            ->setRedirector( app( 'redirect' ) )
+            ->replace( $request->all() );
+        
+        $formRequest->validateResolved();
+        $validated = $formRequest->validated();
 
-        Log::info( 'Iniciando criação de cliente', [
-            'customer_type' => $customerType,
-            'data'          => $request->all(),
-            'user_id'       => Auth::id(),
-            'tenant_id'     => Auth::user()?->tenant_id,
-            'note'          => 'Usando validação condicional com FormRequests.'
+        $result = $this->customerService->createCustomer( $validated );
+
+        if ( !$result->isSuccess() ) {
+            return back()->withInput()->with( 'error', $result->getMessage() );
+        }
+
+        $this->logOperation( 'customer_created', [
+            'customer_id' => $result->getData()->id,
+            'type'        => $isPJ ? 'pj' : 'pf'
         ] );
 
-        try {
-            // Usar FormRequest apropriado baseado no tipo de cliente
-            $validatedData = $this->validateCustomerRequest( $request, $customerType );
-
-            $result = $this->customerService->createCustomer( $validatedData );
-
-            if ( !$result->isSuccess() ) {
-                Log::error( 'Erro ao criar cliente', [
-                    'customer_type' => $customerType,
-                    'error'         => $result->getMessage(),
-                    'data'          => $validatedData,
-                    'user_id'       => Auth::id()
-                ] );
-
-                return redirect()
-                    ->route( 'provider.customers.create' )
-                    ->with( 'error', $result->getMessage() );
-            }
-
-            Log::info( 'Cliente criado com sucesso', [
-                'customer_type' => $customerType,
-                'customer_id'   => $result->getData()->id,
-                'user_id'       => Auth::id()
-            ] );
-
-            $this->logOperation( 'customer_created', [
-                'customer_id' => $result->getData()->id,
-                'type'        => $customerType
-            ] );
-
-            return redirect()
-                ->route( 'provider.customers.show', $result->getData() )
-                ->with( 'success', $result->getMessage() );
-
-        } catch ( \Throwable $e ) {
-            Log::error( 'Exceção ao criar cliente', [
-                'customer_type' => $customerType,
-                'exception'     => $e->getMessage(),
-                'trace'         => $e->getTraceAsString(),
-                'data'          => $request->all(),
-                'user_id'       => Auth::id()
-            ] );
-
-            return redirect()
-                ->route( 'provider.customers.create' )
-                ->with( 'error', 'Erro interno do servidor. Tente novamente mais tarde.' );
-        }
+        return redirect()
+            ->route( 'provider.customers.show', $result->getData() )
+            ->with( 'success', $result->getMessage() );
     }
 
-    /**
-     * Determinar tipo de cliente baseado nos dados enviados
-     */
-    private function determineCustomerType( Request $request ): string
-    {
-        // Se tem CNPJ, é pessoa jurídica
-        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 14 ) {
-            return 'pessoa_juridica';
-        }
 
-        // Se tem CPF, é pessoa física
-        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 11 ) {
-            return 'pessoa_fisica';
-        }
-
-        // Fallback: verificar se tem dados empresariais
-        if ( $request->filled( [ 'company_name', 'company_email' ] ) ) {
-            return 'pessoa_juridica';
-        }
-
-        // Default: pessoa física
-        return 'pessoa_fisica';
-    }
 
     /**
      * Detalhes do cliente
@@ -218,46 +147,37 @@ class CustomerController extends Controller
     }
 
     /**
-     * Atualizar cliente
+     * Atualizar cliente (PF ou PJ baseado no documento existente)
      */
     public function update( Customer $customer, Request $request ): RedirectResponse
     {
-        // Verificar se o cliente pertence ao tenant do usuário
         if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
             abort( 403, 'Cliente não encontrado.' );
         }
 
-        // Usar validação apropriada baseada no tipo de cliente
-        if ( $customer->isCompany() ) {
-            $request->validate( [
-                // Regras para pessoa jurídica
-                'company_name'  => 'required|string|max:255',
-                'document'      => 'required|string|size:14|unique:customers,document,' . $customer->id,
-                'company_email' => 'required|email|unique:customers,email,' . $customer->id,
-                // ... outras regras
-            ] );
-        } else {
-            $request->validate( [
-                // Regras para pessoa física
-                'name'     => 'required|string|max:255',
-                'document' => 'required|string|size:11|unique:customers,document,' . $customer->id,
-                'email'    => 'required|email|unique:customers,email,' . $customer->id,
-                // ... outras regras
-            ] );
-        }
+        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
+        $cnpj = $request->input( 'cnpj', '' );
+        $cpf = $request->input( 'cpf', '' );
+        $isPJ = !empty( $cnpj );
+        
+        $formRequest = $isPJ 
+            ? app( CustomerPessoaJuridicaRequest::class )
+            : app( CustomerPessoaFisicaRequest::class );
+        
+        $formRequest->setContainer( app() )
+            ->setRedirector( app( 'redirect' ) )
+            ->replace( $request->all() );
+        
+        $formRequest->validateResolved();
+        $validated = $formRequest->validated();
 
-        $result = $this->customerService->updateCustomer( $customer->id, $request->all() );
+        $result = $this->customerService->updateCustomer( $customer->id, $validated );
 
         if ( !$result->isSuccess() ) {
-            return redirect()
-                ->route( 'provider.customers.edit', $customer )
-                ->with( 'error', $result->getMessage() );
+            return back()->withInput()->with( 'error', $result->getMessage() );
         }
 
-        $this->logOperation( 'customer_updated', [
-            'customer_id' => $customer->id,
-            'changes'     => $request->all()
-        ] );
+        $this->logOperation( 'customer_updated', [ 'customer_id' => $customer->id ] );
 
         return redirect()
             ->route( 'provider.customers.show', $customer )

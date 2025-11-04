@@ -8,6 +8,7 @@ use App\Enums\OperationStatus;
 
 use App\Models\AreaOfActivity;
 use App\Models\Budget;
+use App\Models\BusinessData;
 use App\Models\CommonData;
 use App\Models\Customer;
 use App\Models\Plan;
@@ -147,9 +148,7 @@ class ProviderManagementService
                 ], fn( $value ) => $value !== null );
 
                 if ( !empty( $userUpdate ) ) {
-                    $user->update( $userUpdate ); // ✅ Usar método direto do model
-                    // ✅ Recarregar dados do banco para atualizar Auth::user()
-                    $user->refresh();
+                    $this->userRepository->update( $user->id, $userUpdate );
                 }
 
                 // Update CommonData, Contact, Address using EntityDataService
@@ -169,6 +168,31 @@ class ProviderManagementService
                 $provider->setRelation( 'commonData', $entityData[ 'common_data' ] );
                 $provider->setRelation( 'contact', $entityData[ 'contact' ] );
                 $provider->setRelation( 'address', $entityData[ 'address' ] );
+
+                // Atualizar dados empresariais se for PJ
+                if ( !empty( $data[ 'cnpj' ] ) ) {
+                    $businessData = [
+                        'fantasy_name'           => $data[ 'fantasy_name' ] ?? null,
+                        'state_registration'     => $data[ 'state_registration' ] ?? null,
+                        'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
+                        'founding_date'          => !empty( $data[ 'founding_date' ] ) ? \Carbon\Carbon::createFromFormat( 'd/m/Y', $data[ 'founding_date' ] )->format( 'Y-m-d' ) : null,
+                        'company_email'          => $data[ 'company_email' ] ?? null,
+                        'company_phone'          => $data[ 'company_phone' ] ?? null,
+                        'company_website'        => $data[ 'company_website' ] ?? null,
+                        'industry'               => $data[ 'industry' ] ?? null,
+                        'company_size'           => $data[ 'company_size' ] ?? null,
+                        'notes'                  => $data[ 'notes' ] ?? null,
+                    ];
+
+                    if ( $provider->businessData ) {
+                        $provider->businessData->update( $businessData );
+                    } else {
+                        BusinessData::create( array_merge( $businessData, [
+                            'tenant_id'   => $provider->tenant_id,
+                            'provider_id' => $provider->id,
+                        ] ) );
+                    }
+                }
 
                 // Activity logged automatically by ProviderObserver
             } );
@@ -190,7 +214,7 @@ class ProviderManagementService
     {
         $user = Auth::user();
 
-        $this->userRepository->update( $user, [
+        $this->userRepository->update( $user->id, [
             'password' => Hash::make( $newPassword )
         ] );
 

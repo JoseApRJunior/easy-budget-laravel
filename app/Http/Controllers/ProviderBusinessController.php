@@ -40,7 +40,7 @@ class ProviderBusinessController extends Controller
         }
 
         // Carregar relacionamentos necessários
-        $provider->load( [ 'commonData', 'contact', 'address' ] );
+        $provider->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
 
         return view( 'pages.provider.business.edit', [
             'provider'          => $provider,
