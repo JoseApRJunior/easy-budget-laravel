@@ -31,6 +31,11 @@ class BudgetController extends Controller
         ] );
     }
 
+    public function create(): View
+    {
+        return view( 'pages.budget.create' );
+    }
+
     /**
      * Display the budget status selection page for public access.
      */

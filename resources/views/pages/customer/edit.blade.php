@@ -411,12 +411,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
         if (typeof VanillaMask !== 'undefined') {
-            ['phone_personal', 'phone_business', 'cep', 'cpf', 'cnpj'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) new VanillaMask(id, id === 'phone_personal' || id === 'phone_business' ? 'phone' : id);
-            });
+            // Inicializar máscaras básicas
+            new VanillaMask('phone_personal', 'phone');
+            new VanillaMask('phone_business', 'phone');
+            new VanillaMask('cep', 'cep');
+
+            // Inicializar máscara baseada no tipo de pessoa atual
+            const type = document.getElementById('person_type').value;
+            if (type === 'pf') {
+                new VanillaMask('cpf', 'cpf');
+            } else if (type === 'pj') {
+                new VanillaMask('cnpj', 'cnpj');
+            }
+
+            // Aplicar formatação aos valores existentes nos campos
+            const cpfField = document.getElementById('cpf');
+            const cnpjField = document.getElementById('cnpj');
+
+            if (cpfField && cpfField.value && type === 'pf') {
+                cpfField.value = window.formatCPF ? window.formatCPF(cpfField.value) : cpfField.value;
+            }
+
+            if (cnpjField && cnpjField.value && type === 'pj') {
+                cnpjField.value = window.formatCNPJ ? window.formatCNPJ(cnpjField.value) : cnpjField.value;
+            }
         }
-    }, 100);
+    }, 500);
 
     document.getElementById('person_type')?.addEventListener('change', function() {
         togglePersonFields();

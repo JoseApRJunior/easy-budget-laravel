@@ -172,5 +172,5 @@
 
 @push( 'scripts' )
     <script src="{{ asset( 'assets/js/modules/table-paginator.js' ) }}"></script>
-    <script src="{{ asset( 'assets/js/customer.js' ) }}"></script>
+    <script src="{{ asset( 'assets/js/customer.js' ) }}?v={{ time() }}"></script>
 @endpush

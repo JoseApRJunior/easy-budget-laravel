@@ -54,23 +54,8 @@ class CustomerService extends AbstractBaseService
     public function createCustomer( array $data ): ServiceResult
     {
         try {
-            // Converter data de nascimento do formato brasileiro para americano se necessário
-            if ( !empty( $data[ 'birth_date' ] ) ) {
-                try {
-                    // Verificar se já está no formato YYYY-MM-DD
-                    if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $data[ 'birth_date' ] ) ) {
-                        // Já está no formato correto
-                    } else {
-                        // Tentar converter de DD/MM/YYYY para YYYY-MM-DD
-                        $data[ 'birth_date' ] = \Carbon\Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' );
-                    }
-                } catch ( \Exception $e ) {
-                    // Se não conseguir converter, assumir que já está no formato correto
-                    \Illuminate\Support\Facades\Log::warning( 'Erro ao converter data de nascimento: ' . $e->getMessage(), [
-                        'original_date' => $data[ 'birth_date' ]
-                    ] );
-                }
-            }
+            // Converter data de nascimento usando helper
+            $data[ 'birth_date' ] = DateHelper::parseBirthDate( $data[ 'birth_date' ] ?? null );
 
             $validation = $this->validateCustomerData( $data );
             if ( !$validation->isSuccess() ) {
@@ -250,7 +235,7 @@ class CustomerService extends AbstractBaseService
     public function findCustomer( int $id ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
+            $customer = $this->customerRepository->find( $id );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
             }
@@ -266,25 +251,10 @@ class CustomerService extends AbstractBaseService
     public function updateCustomer( int $id, array $data ): ServiceResult
     {
         try {
-            // Converter data de nascimento do formato brasileiro para americano se necessário
-            if ( !empty( $data[ 'birth_date' ] ) ) {
-                try {
-                    // Verificar se já está no formato YYYY-MM-DD
-                    if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $data[ 'birth_date' ] ) ) {
-                        // Já está no formato correto
-                    } else {
-                        // Tentar converter de DD/MM/YYYY para YYYY-MM-DD
-                        $data[ 'birth_date' ] = \Carbon\Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' );
-                    }
-                } catch ( \Exception $e ) {
-                    // Se não conseguir converter, assumir que já está no formato correto
-                    \Illuminate\Support\Facades\Log::warning( 'Erro ao converter data de nascimento: ' . $e->getMessage(), [
-                        'original_date' => $data[ 'birth_date' ]
-                    ] );
-                }
-            }
+            // Converter data de nascimento usando helper
+            $data[ 'birth_date' ] = DateHelper::parseBirthDate( $data[ 'birth_date' ] ?? null );
 
-            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
+            $customer = $this->customerRepository->find( $id );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
             }
@@ -385,7 +355,7 @@ class CustomerService extends AbstractBaseService
     public function deleteCustomer( int $id ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
+            $customer = $this->customerRepository->find( $id );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
             }
@@ -403,7 +373,7 @@ class CustomerService extends AbstractBaseService
     public function createInteraction( int $customerId, array $data ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findByIdAndTenantId( $customerId, auth()->user()->tenant_id );
+            $customer = $this->customerRepository->find( $customerId );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
             }
@@ -421,7 +391,7 @@ class CustomerService extends AbstractBaseService
     public function listInteractions( int $customerId, array $filters = [] ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findByIdAndTenantId( $customerId, auth()->user()->tenant_id );
+            $customer = $this->customerRepository->find( $customerId );
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
             }
@@ -508,10 +478,7 @@ class CustomerService extends AbstractBaseService
     public function hasRelationships( int $customerId ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findByIdAndTenantId(
-                $customerId,
-                auth()->user()->tenant_id,
-            );
+            $customer = $this->customerRepository->find( $customerId );
 
             if ( !$customer ) {
                 return $this->error( 'Cliente não encontrado' );
@@ -538,10 +505,7 @@ class CustomerService extends AbstractBaseService
     public function duplicateCustomer( int $customerId ): ServiceResult
     {
         try {
-            $original = $this->customerRepository->findByIdAndTenantId(
-                $customerId,
-                auth()->user()->tenant_id,
-            );
+            $original = $this->customerRepository->find( $customerId );
 
             if ( !$original ) {
                 return $this->error( 'Cliente não encontrado' );

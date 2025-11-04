@@ -351,6 +351,72 @@ class CustomerController extends Controller
     }
 
     /**
+     * Busca AJAX de clientes
+     */
+    public function search(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $searchTerm = $request->input('search', '');
+            
+            // Busca direta no modelo para testar
+            $query = Customer::with(['commonData', 'contact'])
+                ->where('tenant_id', Auth::user()->tenant_id);
+            
+            if (!empty($searchTerm)) {
+                $query->where(function($q) use ($searchTerm) {
+                    $q->whereHas('commonData', function($subQ) use ($searchTerm) {
+                        $subQ->where('first_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('company_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('cpf', 'like', "%{$searchTerm}%")
+                             ->orWhere('cnpj', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('contact', function($subQ) use ($searchTerm) {
+                        $subQ->where('email_personal', 'like', "%{$searchTerm}%")
+                             ->orWhere('email_business', 'like', "%{$searchTerm}%");
+                    });
+                });
+            }
+            
+            $customers = $query->limit(50)->get();
+
+            $result = $customers->map(function ($customer) {
+                $commonData = $customer->commonData;
+                $contact = $customer->contact;
+                
+                return [
+                    'id' => $customer->id,
+                    'customer_name' => $commonData ? 
+                        ($commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name)) : 
+                        'Nome não informado',
+                    'cpf' => $commonData?->cpf ?? '',
+                    'cnpj' => $commonData?->cnpj ?? '',
+                    'email' => $contact?->email_personal ?? '',
+                    'email_business' => $contact?->email_business ?? '',
+                    'phone' => $contact?->phone_personal ?? '',
+                    'phone_business' => $contact?->phone_business ?? '',
+                    'created_at' => $customer->created_at->toISOString(),
+                ];
+            });
+
+            return response()->json($result);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro na busca de clientes', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'user_id' => Auth::id(),
+                'search_term' => $request->input('search')
+            ]);
+            
+            return response()->json([
+                'error' => 'Erro interno: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Log de operações para auditoria
      */
     protected function logOperation( string $action, array $context = [] ): void

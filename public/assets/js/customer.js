@@ -1,8 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-   // Inicializa tooltips
-   const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-   tooltips.forEach((el) => new bootstrap.Tooltip(el));
-
    // Elementos do DOM
    const searchInput = document.getElementById("search");
    const clearMainSearch = document.getElementById("clearMainSearch");
@@ -10,8 +6,15 @@ document.addEventListener("DOMContentLoaded", function () {
    const initialMessage = document.getElementById("initial-message");
    const loadingSpinner = document.getElementById("loading-spinner");
    const resultsContainer = document.getElementById("results-container");
-   const tableBody = document.querySelector("tbody");
    const resultsCount = document.getElementById("results-count");
+
+
+
+   // Verificação de elementos essenciais
+   if (!searchInput) {
+      console.error('Elemento #search não encontrado!');
+      return;
+   }
 
    // Inicializa o paginador de tabela
    const customerPaginator = new TablePaginator({
@@ -23,11 +26,13 @@ document.addEventListener("DOMContentLoaded", function () {
       formatRow: formatCustomerRow,
    });
 
-   // Verificação de debug
-   console.log("Elemento de paginação:", document.getElementById("pagination"));
-
    async function performSearch() {
-      const searchTerm = searchInput.value.trim();
+      const searchTerm = searchInput?.value?.trim() || '';
+
+      if (!initialMessage || !loadingSpinner || !resultsContainer) {
+         console.error('Elementos da interface não encontrados');
+         return;
+      }
 
       // Controle de visibilidade dos elementos
       initialMessage.classList.add("d-none");
@@ -35,16 +40,22 @@ document.addEventListener("DOMContentLoaded", function () {
       resultsContainer.classList.add("d-none");
 
       try {
+         // Obtém o token CSRF
+         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+         if (!csrfToken) {
+            throw new Error('Token CSRF não encontrado');
+         }
+
          // Configuração da requisição AJAX
          const response = await fetch("/provider/customers/search", {
             method: "POST",
             headers: {
                "Content-Type": "application/json",
                "X-Requested-With": "XMLHttpRequest",
+               "X-CSRF-TOKEN": csrfToken,
             },
             body: JSON.stringify({
                search: searchTerm,
-               csrf_token: document.querySelector('[name="csrf_token"]').value,
             }),
          });
 
@@ -75,19 +86,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Função para limpar campos e resetar estado
    function clearFields() {
-      searchInput.value = "";
-      searchInput.focus();
-
-      // Reset visual state
-      initialMessage.classList.remove("d-none");
-      resultsContainer.classList.add("d-none");
-      loadingSpinner.classList.add("d-none");
-
-      if (resultsCount) {
-         resultsCount.textContent = "";
+      if (searchInput) {
+         searchInput.value = "";
+         searchInput.focus();
       }
 
-      // Limpa a tabela
+      if (initialMessage) initialMessage.classList.remove("d-none");
+      if (resultsContainer) resultsContainer.classList.add("d-none");
+      if (loadingSpinner) loadingSpinner.classList.add("d-none");
+      if (resultsCount) resultsCount.textContent = "";
+
       customerPaginator.updateTable([]);
    }
 
@@ -96,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return `
    <tr>
       <td class="px-4 align-middle">
-         <span class="fw-semibold">${customer.customer_name}</span>
+         <span class="fw-semibold">${customer.customer_name || 'Nome não informado'}</span>
       </td>
       <td class="align-middle">
          ${customer.cpf || ""}
@@ -141,19 +149,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Função para mostrar mensagens de erro
    function showError(message) {
-      const errorAlert = document.createElement("div");
-      errorAlert.className = "alert alert-danger alert-dismissible fade show";
-      errorAlert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+      const existingAlerts = document.querySelectorAll('.alert');
+      existingAlerts.forEach(alert => alert.remove());
 
-      document
-         .querySelector(".card-body")
-         .insertAdjacentElement("afterbegin", errorAlert);
+      const alertContainer = document.createElement('div');
+      alertContainer.innerHTML = `
+         <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+         </div>
+      `;
+
+      const container = document.querySelector('.container-fluid');
+      if (container) {
+         container.insertBefore(alertContainer.firstElementChild, container.firstElementChild);
+      }
 
       setTimeout(() => {
-         errorAlert.remove();
+         const alert = document.querySelector('.alert-danger');
+         if (alert) {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+         }
       }, 5000);
    }
 
@@ -164,28 +182,25 @@ document.addEventListener("DOMContentLoaded", function () {
    }
 
    // Event Listeners
-   mainSearchBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      performSearch();
-   });
-
-   searchInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
+   if (mainSearchBtn) {
+      mainSearchBtn.addEventListener("click", (e) => {
          e.preventDefault();
          performSearch();
-      }
-   });
+      });
+   }
 
-   clearMainSearch.addEventListener("click", clearFields);
+   if (searchInput) {
+      searchInput.addEventListener("keypress", (e) => {
+         if (e.key === "Enter") {
+            e.preventDefault();
+            performSearch();
+         }
+      });
+   }
 
-   // Animações e efeitos visuais
-   searchInput.addEventListener("focus", () => {
-      searchInput.parentElement.classList.add("search-focused");
-   });
-
-   searchInput.addEventListener("blur", () => {
-      searchInput.parentElement.classList.remove("search-focused");
-   });
+   if (clearMainSearch) {
+      clearMainSearch.addEventListener("click", clearFields);
+   }
 });
 
 // Função para confirmar exclusão
