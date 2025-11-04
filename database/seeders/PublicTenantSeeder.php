@@ -126,8 +126,9 @@ class PublicTenantSeeder extends Seeder
             ],
             [
                 'tenant_id'           => $tenant->id,
-                'first_name'          => 'Easy',
-                'last_name'           => 'Budget',
+                'type'                => 'company',
+                'first_name'          => null,
+                'last_name'           => null,
                 'birth_date'          => null,
                 'cpf'                 => null,
                 'cnpj'                => '00000000000100',

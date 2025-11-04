@@ -80,22 +80,56 @@ class CustomerService extends AbstractBaseService
             $tenantId = auth()->user()->tenant_id;
 
             $customer = DB::transaction( function () use ($data, $tenantId) {
-                // Sempre criar novos registros para Customer
-                $commonData = $this->entityDataService->createCommonData( $data, $tenantId );
-                $contact = $this->entityDataService->createContact( $data, $tenantId );
-                $address = $this->entityDataService->createAddress( $data, $tenantId );
-
-                // Criar Customer
+                // Criar Customer primeiro
                 $customer = Customer::create( [
+                    'tenant_id' => $tenantId,
+                    'status'    => 'active',
+                ] );
+
+                // Detectar tipo (PF ou PJ)
+                $type = !empty( $data['cnpj'] ) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+
+                // Criar CommonData vinculado ao Customer
+                $commonData = CommonData::create( [
+                    'tenant_id'           => $tenantId,
+                    'customer_id'         => $customer->id,
+                    'type'                => $type,
+                    'first_name'          => $data['first_name'] ?? null,
+                    'last_name'           => $data['last_name'] ?? null,
+                    'cpf'                 => $data['cpf'] ?? null,
+                    'birth_date'          => $data['birth_date'] ?? null,
+                    'company_name'        => $data['company_name'] ?? null,
+                    'cnpj'                => $data['cnpj'] ?? null,
+                    'description'         => $data['description'] ?? null,
+                    'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
+                    'profession_id'       => $data['profession_id'] ?? null,
+                ] );
+
+                // Criar Contact vinculado ao Customer
+                $contact = Contact::create( [
                     'tenant_id'      => $tenantId,
-                    'common_data_id' => $commonData->id,
-                    'contact_id'     => $contact->id,
-                    'address_id'     => $address->id,
-                    'status'         => 'active',
+                    'customer_id'    => $customer->id,
+                    'email_personal' => $data['email_personal'] ?? null,
+                    'phone_personal' => $data['phone_personal'] ?? null,
+                    'email_business' => $data['email_business'] ?? null,
+                    'phone_business' => $data['phone_business'] ?? null,
+                    'website'        => $data['website'] ?? null,
+                ] );
+
+                // Criar Address vinculado ao Customer
+                $address = Address::create( [
+                    'tenant_id'      => $tenantId,
+                    'customer_id'    => $customer->id,
+                    'address'        => $data['address'] ?? null,
+                    'address_number' => $data['address_number'] ?? null,
+                    'neighborhood'   => $data['neighborhood'] ?? null,
+                    'city'           => $data['city'] ?? null,
+                    'state'          => $data['state'] ?? null,
+                    'cep'            => $data['cep'] ?? null,
                 ] );
 
                 // Se for PJ, criar dados empresariais
-                if ( !empty( $data['cnpj'] ) ) {
+                if ( $type === CommonData::TYPE_COMPANY ) {
                     BusinessData::create( [
                         'tenant_id'              => $tenantId,
                         'customer_id'            => $customer->id,
@@ -264,16 +298,50 @@ class CustomerService extends AbstractBaseService
                 // Carregar relacionamentos
                 $customer->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
 
-                // Usar EntityDataService para atualizar
-                $this->entityDataService->updateCompleteEntityData(
-                    $customer->commonData,
-                    $customer->contact,
-                    $customer->address,
-                    $data,
-                );
+                // Detectar tipo (PF ou PJ)
+                $type = !empty( $data['cnpj'] ) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+
+                // Atualizar CommonData
+                if ( $customer->commonData ) {
+                    $customer->commonData->update( [
+                        'type'                => $type,
+                        'first_name'          => $data['first_name'] ?? null,
+                        'last_name'           => $data['last_name'] ?? null,
+                        'cpf'                 => $data['cpf'] ?? null,
+                        'birth_date'          => $data['birth_date'] ?? null,
+                        'company_name'        => $data['company_name'] ?? null,
+                        'cnpj'                => $data['cnpj'] ?? null,
+                        'description'         => $data['description'] ?? null,
+                        'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
+                        'profession_id'       => $data['profession_id'] ?? null,
+                    ] );
+                }
+
+                // Atualizar Contact
+                if ( $customer->contact ) {
+                    $customer->contact->update( [
+                        'email_personal' => $data['email_personal'] ?? null,
+                        'phone_personal' => $data['phone_personal'] ?? null,
+                        'email_business' => $data['email_business'] ?? null,
+                        'phone_business' => $data['phone_business'] ?? null,
+                        'website'        => $data['website'] ?? null,
+                    ] );
+                }
+
+                // Atualizar Address
+                if ( $customer->address ) {
+                    $customer->address->update( [
+                        'address'        => $data['address'] ?? null,
+                        'address_number' => $data['address_number'] ?? null,
+                        'neighborhood'   => $data['neighborhood'] ?? null,
+                        'city'           => $data['city'] ?? null,
+                        'state'          => $data['state'] ?? null,
+                        'cep'            => $data['cep'] ?? null,
+                    ] );
+                }
 
                 // Atualizar dados empresariais se for PJ
-                if ( !empty( $data['cnpj'] ) ) {
+                if ( $type === CommonData::TYPE_COMPANY ) {
                     $businessData = [
                         'fantasy_name'           => $data['fantasy_name'] ?? null,
                         'state_registration'     => $data['state_registration'] ?? null,

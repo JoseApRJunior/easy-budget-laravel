@@ -39,9 +39,6 @@ class Provider extends Model
     protected $fillable = [
         'tenant_id',
         'user_id',
-        'common_data_id',
-        'contact_id',
-        'address_id',
         'terms_accepted',
     ];
 
@@ -53,9 +50,6 @@ class Provider extends Model
     protected $casts = [
         'tenant_id'      => 'integer',
         'user_id'        => 'integer',
-        'common_data_id' => 'integer',
-        'contact_id'     => 'integer',
-        'address_id'     => 'integer',
         'terms_accepted' => 'boolean',
         'created_at'     => 'immutable_datetime',
         'updated_at'     => 'datetime',
@@ -69,9 +63,6 @@ class Provider extends Model
         return [
             'tenant_id'      => 'required|integer|exists:tenants,id',
             'user_id'        => 'required|integer|exists:users,id',
-            'common_data_id' => 'nullable|integer|exists:common_datas,id',
-            'contact_id'     => 'nullable|integer|exists:contacts,id',
-            'address_id'     => 'nullable|integer|exists:addresses,id',
             'terms_accepted' => 'required|boolean',
         ];
     }
@@ -165,25 +156,41 @@ class Provider extends Model
     /**
      * Get the common data associated with the Provider.
      */
-    public function commonData(): BelongsTo
+    public function commonData(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( CommonData::class);
+        return $this->hasOne( CommonData::class);
     }
 
     /**
      * Get the contact associated with the Provider.
      */
-    public function contact(): BelongsTo
+    public function contact(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( Contact::class);
+        return $this->hasOne( Contact::class);
     }
 
     /**
      * Get the address associated with the Provider.
      */
-    public function address(): BelongsTo
+    public function address(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( Address::class);
+        return $this->hasOne( Address::class);
+    }
+
+    /**
+     * Check if provider is a company (PJ).
+     */
+    public function isCompany(): bool
+    {
+        return $this->commonData?->type === CommonData::TYPE_COMPANY;
+    }
+
+    /**
+     * Check if provider is an individual (PF).
+     */
+    public function isIndividual(): bool
+    {
+        return $this->commonData?->type === CommonData::TYPE_INDIVIDUAL;
     }
 
     /**

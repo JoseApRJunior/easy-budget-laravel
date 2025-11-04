@@ -176,19 +176,20 @@ class ProviderTestSeeder extends Seeder
         $commonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cpf'       => $cpf,
+                'cnpj'      => $cnpj,
             ],
             [
                 'tenant_id'           => $tenant->id,
-                'first_name'          => $firstName,
-                'last_name'           => $lastName,
-                'birth_date'          => '1985-05-15',
-                'cpf'                 => $cpf,
+                'type'                => 'company',
+                'first_name'          => null,
+                'last_name'           => null,
+                'birth_date'          => null,
+                'cpf'                 => null,
                 'cnpj'                => $cnpj,
                 'company_name'        => $companyName,
                 'description'         => $description,
                 'area_of_activity_id' => $areaOfActivity->id,
-                'profession_id'       => $profession->id,
+                'profession_id'       => null,
             ],
         );
 
@@ -201,12 +202,14 @@ class ProviderTestSeeder extends Seeder
             [
                 'user_id'        => $user->id,
                 'tenant_id'      => $tenant->id,
-                'common_data_id' => $commonData->id,
-                'contact_id'     => $contact->id,
-                'address_id'     => $addressModel->id,
                 'terms_accepted' => true,
             ],
         );
+
+        // Vincular dados relacionados ao provider
+        $commonData->update( [ 'provider_id' => $provider->id ] );
+        $contact->update( [ 'provider_id' => $provider->id ] );
+        $addressModel->update( [ 'provider_id' => $provider->id ] );
 
         // 7. Associar role provider ao usuário
         $providerRole = Role::firstOrCreate(
@@ -277,6 +280,7 @@ class ProviderTestSeeder extends Seeder
             ],
             [
                 'tenant_id'    => $tenant->id,
+                'type'         => 'individual',
                 'first_name'   => 'Cliente',
                 'last_name'    => 'Teste',
                 'birth_date'   => '1990-03-10',
@@ -324,17 +328,19 @@ class ProviderTestSeeder extends Seeder
         // Criar customer vinculado ao provider
         $customer = \App\Models\Customer::firstOrCreate(
             [
-                'tenant_id'      => $tenant->id,
-                'common_data_id' => $customerCommonData->id,
+                'tenant_id' => $tenant->id,
+                'status'    => 'active',
             ],
             [
-                'tenant_id'      => $tenant->id,
-                'common_data_id' => $customerCommonData->id,
-                'contact_id'     => $customerContact->id,
-                'address_id'     => $customerAddress->id,
-                'status'         => 'active',
+                'tenant_id' => $tenant->id,
+                'status'    => 'active',
             ],
         );
+
+        // Vincular dados relacionados ao customer
+        $customerCommonData->update( [ 'customer_id' => $customer->id ] );
+        $customerContact->update( [ 'customer_id' => $customer->id ] );
+        $customerAddress->update( [ 'customer_id' => $customer->id ] );
 
         $this->command->info( "   📋 Cliente de teste criado: {$emailPersonal}" );
     }

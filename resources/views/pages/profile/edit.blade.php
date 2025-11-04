@@ -60,7 +60,7 @@
                                     @enderror
                                     @if( $user->avatar ?? false )
                                         <div class="mt-2">
-                                            <img src="{{ asset( 'storage/' . $user->avatar ) }}" alt="Avatar atual"
+                                            <img src="{{ $user->getAvatarOrGoogleAvatarAttribute() }}" alt="Avatar atual"
                                                 class="img-thumbnail" width="100" height="100">
                                         </div>
                                     @endif

@@ -77,9 +77,6 @@ class Customer extends Model
      */
     protected $fillable = [
         'tenant_id',
-        'common_data_id',
-        'contact_id',
-        'address_id',
         'status',
     ];
 
@@ -96,13 +93,10 @@ class Customer extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'      => 'integer',
-        'common_data_id' => 'integer',
-        'contact_id'     => 'integer',
-        'address_id'     => 'integer',
-        'status'         => 'string', // enum('active', 'inactive', 'deleted') crie const
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'datetime',
+        'tenant_id'  => 'integer',
+        'status'     => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -111,11 +105,8 @@ class Customer extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'      => 'required|integer|exists:tenants,id',
-            'common_data_id' => 'nullable|integer|exists:common_datas,id',
-            'contact_id'     => 'nullable|integer|exists:contacts,id',
-            'address_id'     => 'nullable|integer|exists:addresses,id',
-            'status'         => 'required|string|in:' . implode( ',', self::STATUSES ),
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'status'    => 'required|string|in:' . implode( ',', self::STATUSES ),
         ];
     }
 
@@ -130,25 +121,25 @@ class Customer extends Model
     /**
      * Get the common data associated with the Customer.
      */
-    public function commonData(): BelongsTo
+    public function commonData(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( CommonData::class);
+        return $this->hasOne( CommonData::class);
     }
 
     /**
      * Get the contact associated with the Customer.
      */
-    public function contact(): BelongsTo
+    public function contact(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( Contact::class);
+        return $this->hasOne( Contact::class);
     }
 
     /**
      * Get the address associated with the Customer.
      */
-    public function address(): BelongsTo
+    public function address(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->belongsTo( Address::class);
+        return $this->hasOne( Address::class);
     }
 
     /**
@@ -176,35 +167,19 @@ class Customer extends Model
     }
 
     /**
-     * Get the addresses for the Customer.
+     * Check if customer is a company (PJ).
      */
-    public function addresses()
+    public function isCompany(): bool
     {
-        return $this->hasMany( Address::class);
+        return $this->commonData?->type === CommonData::TYPE_COMPANY;
     }
 
     /**
-     * Get the primary address for the Customer.
+     * Check if customer is an individual (PF).
      */
-    public function primaryAddress()
+    public function isIndividual(): bool
     {
-        return $this->hasOne( Address::class)->where( 'is_primary', true );
-    }
-
-    /**
-     * Get the contacts for the Customer.
-     */
-    public function contacts()
-    {
-        return $this->hasMany( Contact::class);
-    }
-
-    /**
-     * Get the primary contacts for the Customer.
-     */
-    public function primaryContacts()
-    {
-        return $this->hasMany( Contact::class)->where( 'is_primary', true );
+        return $this->commonData?->type === CommonData::TYPE_INDIVIDUAL;
     }
 
     /**
@@ -509,15 +484,7 @@ class Customer extends Model
         return $this->formatPhone( $this->contact?->phone_business ?? '' );
     }
 
-    /**
-     * Check if the customer is a company (CNPJ).
-     *
-     * @return bool
-     */
-    public function isCompany(): bool
-    {
-        return !empty( $this->commonData?->cnpj );
-    }
+
 
     /**
      * Get the customer's age based on birth date.

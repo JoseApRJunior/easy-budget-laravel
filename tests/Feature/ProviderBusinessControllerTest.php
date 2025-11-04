@@ -146,7 +146,7 @@ class ProviderBusinessControllerTest extends TestCase
         $response->assertSessionHas( 'error', 'Provider não encontrado' );
     }
 
-    public function test_update_business_data_successfully(): void
+    public function test_update_business_datas_successfully(): void
     {
         Storage::fake( 'public' );
 

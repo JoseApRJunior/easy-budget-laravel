@@ -37,14 +37,20 @@ class CommonData extends Model
      *
      * @var array<int, string>
      */
+    const TYPE_INDIVIDUAL = 'individual';
+    const TYPE_COMPANY = 'company';
+
     protected $fillable = [
         'tenant_id',
+        'customer_id',
+        'provider_id',
+        'type',
         'first_name',
         'last_name',
         'birth_date',
-        'cnpj',
         'cpf',
         'company_name',
+        'cnpj',
         'description',
         'area_of_activity_id',
         'profession_id',
@@ -57,12 +63,15 @@ class CommonData extends Model
      */
     protected $casts = [
         'tenant_id'           => 'integer',
+        'customer_id'         => 'integer',
+        'provider_id'         => 'integer',
+        'type'                => 'string',
         'first_name'          => 'string',
         'last_name'           => 'string',
         'birth_date'          => 'date',
-        'cnpj'                => 'string',
         'cpf'                 => 'string',
         'company_name'        => 'string',
+        'cnpj'                => 'string',
         'description'         => 'string',
         'area_of_activity_id' => 'integer',
         'profession_id'       => 'integer',
@@ -73,20 +82,27 @@ class CommonData extends Model
     /**
      * Regras de validação para o modelo CommonData.
      */
-    public static function businessRules(): array
+    public static function businessRules(string $type): array
     {
-        return [
+        $rules = [
             'tenant_id'           => 'required|integer|exists:tenants,id',
-            'first_name'          => 'required|string|max:100',
-            'last_name'           => 'required|string|max:100',
-            'birth_date'          => 'nullable|date|before:today',
-            'cnpj'                => 'nullable|string|size:14|unique:common_datas,cnpj',
-            'cpf'                 => 'nullable|string|size:11|unique:common_datas,cpf',
-            'company_name'        => 'nullable|string|max:255',
+            'type'                => 'required|in:individual,company',
             'description'         => 'nullable|string|max:65535',
             'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
             'profession_id'       => 'nullable|integer|exists:professions,id',
         ];
+
+        if ($type === self::TYPE_INDIVIDUAL) {
+            $rules['first_name'] = 'required|string|max:100';
+            $rules['last_name'] = 'required|string|max:100';
+            $rules['cpf'] = 'required|string|size:11|unique:common_datas,cpf';
+            $rules['birth_date'] = 'nullable|date|before:today';
+        } else {
+            $rules['company_name'] = 'required|string|max:255';
+            $rules['cnpj'] = 'required|string|size:14|unique:common_datas,cnpj';
+        }
+
+        return $rules;
     }
 
     /**
@@ -114,19 +130,51 @@ class CommonData extends Model
     }
 
     /**
-     * Get the customers associated with the CommonData.
+     * Get the customer associated with the CommonData.
      */
-    public function customers(): HasOne
+    public function customer(): BelongsTo
     {
-        return $this->hasOne( Customer::class);
+        return $this->belongsTo( Customer::class);
     }
 
     /**
-     * Get the providers associated with the CommonData.
+     * Get the provider associated with the CommonData.
      */
-    public function providers(): HasOne
+    public function provider(): BelongsTo
     {
-        return $this->hasOne( Provider::class);
+        return $this->belongsTo( Provider::class);
+    }
+
+    /**
+     * Scope to filter by individual type.
+     */
+    public function scopeIndividual($query)
+    {
+        return $query->where('type', self::TYPE_INDIVIDUAL);
+    }
+
+    /**
+     * Scope to filter by company type.
+     */
+    public function scopeCompany($query)
+    {
+        return $query->where('type', self::TYPE_COMPANY);
+    }
+
+    /**
+     * Check if is individual (PF).
+     */
+    public function isIndividual(): bool
+    {
+        return $this->type === self::TYPE_INDIVIDUAL;
+    }
+
+    /**
+     * Check if is company (PJ).
+     */
+    public function isCompany(): bool
+    {
+        return $this->type === self::TYPE_COMPANY;
     }
 
 }

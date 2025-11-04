@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\TenantScoped;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,7 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class BusinessData extends Model
 {
-    protected $table = 'business_data';
+    use HasFactory, TenantScoped;
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+    protected $table = 'business_datas';
 
     protected $fillable = [
         'tenant_id',
@@ -22,9 +31,6 @@ class BusinessData extends Model
         'state_registration',
         'municipal_registration',
         'founding_date',
-        'company_email',
-        'company_phone',
-        'company_website',
         'industry',
         'company_size',
         'notes',
@@ -36,16 +42,17 @@ class BusinessData extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo( Customer::class);
     }
 
     public function provider(): BelongsTo
     {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo( Tenant::class);
     }
+
 }

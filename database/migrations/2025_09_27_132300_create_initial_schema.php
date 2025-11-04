@@ -140,58 +140,11 @@ return new class extends Migration
             $table->unique( [ 'user_id', 'role_id', 'tenant_id' ], 'uq_user_roles' );
         } );
 
-        // 3) Contatos, endereços, dados comuns, clientes, provedores
-        Schema::create( 'addresses', function ( Blueprint $table ) {
-            $table->id();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'address', 255 )->nullable();
-            $table->string( 'address_number', 20 )->nullable();
-            $table->string( 'neighborhood', 100 )->nullable();
-            $table->string( 'city', 100 )->nullable();
-            $table->string( 'state', 2 )->nullable();
-            $table->string( 'cep', 9 )->nullable();
-            $table->timestamps();
-        } );
-
-        Schema::create( 'contacts', function ( Blueprint $table ) {
-            $table->id();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'email_personal', 255 )->nullable();
-            $table->string( 'phone_personal', 20 )->nullable();
-            $table->string( 'email_business', 255 )->nullable();
-            $table->string( 'phone_business', 20 )->nullable();
-            $table->string( 'website', 255 )->nullable();
-            $table->timestamps();
-            
-            $table->unique( [ 'tenant_id', 'email_personal' ], 'uq_contacts_tenant_email_personal' );
-            $table->unique( [ 'tenant_id', 'email_business' ], 'uq_contacts_tenant_email_business' );
-        } );
-
-        Schema::create( 'common_datas', function ( Blueprint $table ) {
-            $table->id();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'first_name', 100 );
-            $table->string( 'last_name', 100 );
-            $table->date( 'birth_date' )->nullable();
-            $table->string( 'cnpj', 14 )->nullable();
-            $table->string( 'cpf', 11 )->nullable();
-            $table->string( 'company_name', 255 )->nullable();
-            $table->text( 'description' )->nullable();
-            $table->foreignId( 'area_of_activity_id' )->nullable()->constrained( 'areas_of_activity' )->restrictOnDelete();
-            $table->foreignId( 'profession_id' )->nullable()->constrained( 'professions' )->restrictOnDelete();
-            $table->timestamps();
-            
-            $table->unique( [ 'tenant_id', 'cpf' ], 'uq_common_datas_tenant_cpf' );
-            $table->unique( [ 'tenant_id', 'cnpj' ], 'uq_common_datas_tenant_cnpj' );
-        } );
-
+        // 3) Clientes e provedores (sem FKs para dependentes)
         Schema::create( 'customers', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->foreignId( 'common_data_id' )->nullable()->constrained( 'common_datas' )->nullOnDelete();
-            $table->foreignId( 'contact_id' )->nullable()->constrained( 'contacts' )->nullOnDelete();
-            $table->foreignId( 'address_id' )->nullable()->constrained( 'addresses' )->nullOnDelete();
-            $table->string( 'status', 20 );
+            $table->enum( 'status', [ 'active', 'inactive', 'deleted' ] )->default( 'active' );
             $table->timestamps();
         } );
 
@@ -199,12 +152,66 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
-            $table->foreignId( 'common_data_id' )->nullable()->constrained( 'common_datas' )->nullOnDelete();
-            $table->foreignId( 'contact_id' )->nullable()->constrained( 'contacts' )->nullOnDelete();
-            $table->foreignId( 'address_id' )->nullable()->constrained( 'addresses' )->nullOnDelete();
-            $table->boolean( 'terms_accepted' );
+            $table->boolean( 'terms_accepted' )->default( false );
             $table->timestamps();
             $table->unique( [ 'tenant_id', 'user_id' ], 'uq_providers_tenant_user' );
+        } );
+
+        // 4) Tabelas dependentes (com FKs para customers/providers)
+        Schema::create( 'addresses', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'customer_id' )->nullable()->constrained( 'customers' )->cascadeOnDelete();
+            $table->foreignId( 'provider_id' )->nullable()->constrained( 'providers' )->cascadeOnDelete();
+            $table->string( 'address', 255 )->nullable();
+            $table->string( 'address_number', 20 )->nullable();
+            $table->string( 'neighborhood', 100 )->nullable();
+            $table->string( 'city', 100 )->nullable();
+            $table->string( 'state', 2 )->nullable();
+            $table->string( 'cep', 9 )->nullable();
+            $table->timestamps();
+
+            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_addresses_tenant_customer' );
+            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_addresses_tenant_provider' );
+        } );
+
+        Schema::create( 'contacts', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'customer_id' )->nullable()->constrained( 'customers' )->cascadeOnDelete();
+            $table->foreignId( 'provider_id' )->nullable()->constrained( 'providers' )->cascadeOnDelete();
+            $table->string( 'email_personal', 255 )->nullable();
+            $table->string( 'phone_personal', 20 )->nullable();
+            $table->string( 'email_business', 255 )->nullable();
+            $table->string( 'phone_business', 20 )->nullable();
+            $table->string( 'website', 255 )->nullable();
+            $table->timestamps();
+
+            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_contacts_tenant_customer' );
+            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_contacts_tenant_provider' );
+        } );
+
+        Schema::create( 'common_datas', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'customer_id' )->nullable()->constrained( 'customers' )->cascadeOnDelete();
+            $table->foreignId( 'provider_id' )->nullable()->constrained( 'providers' )->cascadeOnDelete();
+            $table->enum( 'type', [ 'individual', 'company' ] )->default( 'individual' );
+            $table->string( 'first_name', 100 )->nullable();
+            $table->string( 'last_name', 100 )->nullable();
+            $table->date( 'birth_date' )->nullable();
+            $table->string( 'cpf', 11 )->nullable();
+            $table->string( 'company_name', 255 )->nullable();
+            $table->string( 'cnpj', 14 )->nullable();
+            $table->text( 'description' )->nullable();
+            $table->foreignId( 'area_of_activity_id' )->nullable()->constrained( 'areas_of_activity' )->restrictOnDelete();
+            $table->foreignId( 'profession_id' )->nullable()->constrained( 'professions' )->restrictOnDelete();
+            $table->timestamps();
+
+            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_common_datas_tenant_customer' );
+            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_common_datas_tenant_provider' );
+            $table->unique( [ 'tenant_id', 'cpf' ], 'uq_common_datas_tenant_cpf' );
+            $table->unique( [ 'tenant_id', 'cnpj' ], 'uq_common_datas_tenant_cnpj' );
         } );
 
         Schema::create( 'provider_credentials', function ( Blueprint $table ) {
@@ -220,7 +227,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        Schema::create( 'business_data', function ( Blueprint $table ) {
+        Schema::create( 'business_datas', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'customer_id' )->nullable()->constrained( 'customers' )->cascadeOnDelete();
@@ -229,18 +236,15 @@ return new class extends Migration
             $table->string( 'state_registration', 50 )->nullable();
             $table->string( 'municipal_registration', 50 )->nullable();
             $table->date( 'founding_date' )->nullable();
-            $table->string( 'company_email', 255 )->nullable();
-            $table->string( 'company_phone', 20 )->nullable();
-            $table->string( 'company_website', 255 )->nullable();
             $table->string( 'industry', 255 )->nullable();
             $table->enum( 'company_size', [ 'micro', 'pequena', 'media', 'grande' ] )->nullable();
             $table->text( 'notes' )->nullable();
             $table->timestamps();
-            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_business_data_tenant_customer' );
-            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_business_data_tenant_provider' );
+            $table->unique( [ 'tenant_id', 'customer_id' ], 'uq_business_datas_tenant_customer' );
+            $table->unique( [ 'tenant_id', 'provider_id' ], 'uq_business_datas_tenant_provider' );
         } );
 
-        // 4) Produtos e estoque
+        // 5) Produtos e estoque
         Schema::create( 'products', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
@@ -274,7 +278,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        // 5) Tokens e agendamentos
+        // 6) Tokens e agendamentos
         Schema::create( 'user_confirmation_tokens', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
@@ -297,7 +301,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        // 6) Budgets, Services e itens (depende de tokens, customers, categories, statuses)
+        // 7) Budgets, Services e itens (depende de tokens, customers, categories, statuses)
         Schema::create( 'budgets', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
@@ -368,7 +372,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        // 7) Invoices e itens
+        // 8) Invoices e itens
         Schema::create( 'invoices', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
@@ -403,7 +407,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        // 8) Pagamentos MercadoPago
+        // 9) Pagamentos MercadoPago
         Schema::create( 'plan_subscriptions', function ( Blueprint $table ) {
             $table->id();
             $table->enum( 'status', [ 'active', 'cancelled', 'pending', 'expired' ] );
@@ -459,7 +463,7 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        // 9) Relatórios, notificações, recursos, alertas/metricas, atividades, sessões
+        // 10) Relatórios, notificações, recursos, alertas/metricas, atividades, sessões
         Schema::create( 'reports', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
@@ -734,7 +738,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists( 'business_data' );
+        Schema::dropIfExists( 'business_datas' );
         Schema::dropIfExists( 'audit_logs' );
         Schema::dropIfExists( 'failed_jobs' );
         Schema::dropIfExists( 'jobs' );
