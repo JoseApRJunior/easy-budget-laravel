@@ -284,7 +284,7 @@ class ProviderManagementService
             ->where( 'status', 'approved' )
             ->whereMonth( 'created_at', now()->month )
             ->whereYear( 'created_at', now()->year )
-            ->sum( 'total_gross' );
+            ->sum( 'total' );
 
         // Buscar orçamentos pendentes
         $pendingBudgets = Budget::where( 'tenant_id', $tenantId )
@@ -298,7 +298,6 @@ class ProviderManagementService
         $overduePayments = Budget::where( 'tenant_id', $tenantId )
             ->where( 'status', 'approved' )
             ->where( 'due_date', '<', now() )
-            ->whereNull( 'paid_at' )
             ->with( [ 'customer' ] )
             ->latest()
             ->limit( 10 )
@@ -331,8 +330,8 @@ class ProviderManagementService
             'approved_budgets' => $budgets->where( 'status', 'approved' )->count(),
             'pending_budgets'  => $budgets->where( 'status', 'pending' )->count(),
             'rejected_budgets' => $budgets->where( 'status', 'rejected' )->count(),
-            'total_value'      => $budgets->sum( 'total_gross' ),
-            'average_value'    => $budgets->count() > 0 ? $budgets->avg( 'total_gross' ) : 0,
+            'total_value'      => $budgets->sum( 'total' ),
+            'average_value'    => $budgets->count() > 0 ? $budgets->avg( 'total' ) : 0,
         ];
 
         return [
@@ -361,8 +360,8 @@ class ProviderManagementService
             'completed_services' => $services->where( 'status', 'completed' )->count(),
             'pending_services'   => $services->where( 'status', 'pending' )->count(),
             'cancelled_services' => $services->where( 'status', 'cancelled' )->count(),
-            'total_value'        => $services->sum( 'total_gross' ),
-            'average_value'      => $services->count() > 0 ? $services->avg( 'total_gross' ) : 0,
+            'total_value'        => $services->sum( 'total' ),
+            'average_value'      => $services->count() > 0 ? $services->avg( 'total' ) : 0,
         ];
 
         return [
@@ -550,7 +549,6 @@ class ProviderManagementService
             $planSubscription = new PlanSubscription( [
                 'tenant_id'          => $tenant->id,
                 'plan_id'            => $plan->id,
-                'user_id'            => $user->id,
                 'provider_id'        => $savedProvider->id,
                 'status'             => SUBSCRIPTION_STATUS_ACTIVE,
                 'transaction_amount' => $plan->price ?? 0.00,

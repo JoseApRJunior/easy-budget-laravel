@@ -37,8 +37,9 @@ class BudgetService extends AbstractBaseService
             throw new InvalidArgumentException( 'Usuário ou tenant não encontrado.' );
         }
 
-        // Adiciona filtro por usuário (provider)
-        $filters[ 'user_id' ] = $userId;
+        // Note: Budgets are related to customers within the tenant, not directly to users
+        // The filtering is done by tenant_id in the repository
+        // Remove the incorrect user_id filter as budgets table doesn't have this column
 
         // Configura paginação padrão
         $perPage = $filters[ 'per_page' ] ?? 10;
@@ -70,14 +71,14 @@ class BudgetService extends AbstractBaseService
             $data[ 'tenant_id' ] = $tenantId;
 
             // Define status padrão se não fornecido
-            if ( !isset( $data[ 'budget_statuses_id' ] ) ) {
-                $data[ 'budget_statuses_id' ] = BudgetStatus::DRAFT->value;
+            if ( !isset( $data[ 'status' ] ) ) {
+                $data[ 'status' ] = BudgetStatus::DRAFT->value;
             }
 
             // Valida status
-            if ( !$this->isValidBudgetStatus( $data[ 'budget_statuses_id' ] ) ) {
+            if ( !$this->isValidBudgetStatus( $data[ 'status' ] ) ) {
                 return ServiceResult::error(
-                    'Status de orçamento inválido: ' . $data[ 'budget_statuses_id' ]
+                    'Status de orçamento inválido: ' . $data[ 'status' ]
                 );
             }
 
@@ -120,9 +121,9 @@ class BudgetService extends AbstractBaseService
             }
 
             // Valida status se fornecido
-            if ( isset( $data[ 'budget_statuses_id' ] ) && !$this->isValidBudgetStatus( $data[ 'budget_statuses_id' ] ) ) {
+            if ( isset( $data[ 'status' ] ) && !$this->isValidBudgetStatus( $data[ 'status' ] ) ) {
                 return ServiceResult::error(
-                    'Status de orçamento inválido: ' . $data[ 'budget_statuses_id' ]
+                    'Status de orçamento inválido: ' . $data[ 'status' ]
                 );
             }
 
@@ -173,7 +174,7 @@ class BudgetService extends AbstractBaseService
 
             // Atualiza status e comentário
             $updatedBudget = $this->repository->update( $budgetId, [
-                'budget_statuses_id' => $status,
+                'status'             => $status,
                 'status_comment'     => $comment,
                 'status_updated_at'  => now(),
                 'status_updated_by'  => $this->authUser()?->id
@@ -293,7 +294,7 @@ class BudgetService extends AbstractBaseService
 
             // Verifica se o orçamento pode ser visualizado (status apropriado)
             $viewableStatuses = [ 'sent', 'approved', 'completed' ];
-            if ( !in_array( $budget->budget_statuses_id, $viewableStatuses ) ) {
+            if ( !in_array( $budget->status->value, $viewableStatuses ) ) {
                 return ServiceResult::error(
                     'Orçamento não pode ser visualizado no status atual.',
                 );
@@ -402,13 +403,13 @@ class BudgetService extends AbstractBaseService
                 $duplicateData[ 'code' ],
                 $duplicateData[ 'created_at' ],
                 $duplicateData[ 'updated_at' ],
-                $duplicateData[ 'budget_statuses_id' ] // Reseta para draft
+                $duplicateData[ 'status' ] // Reseta para draft
             );
 
             // Define novo título e status
-            $duplicateData[ 'title' ]              = 'Cópia de: ' . $originalBudget->title;
-            $duplicateData[ 'budget_statuses_id' ] = BudgetStatus::DRAFT->value;
-            $duplicateData[ 'tenant_id' ]          = $tenantId;
+            $duplicateData[ 'title' ]     = 'Cópia de: ' . $originalBudget->title;
+            $duplicateData[ 'status' ]    = BudgetStatus::DRAFT->value;
+            $duplicateData[ 'tenant_id' ] = $tenantId;
 
             // Gera novo código único
             $duplicateData[ 'code' ] = $this->generateUniqueBudgetCode( $tenantId );
@@ -602,7 +603,7 @@ class BudgetService extends AbstractBaseService
     {
         return [
             'id', 'code', 'title', 'description', 'total', 'customer_id',
-            'budget_statuses_id', 'created_at', 'updated_at', 'date_from', 'date_to'
+            'status', 'created_at', 'updated_at', 'date_from', 'date_to'
         ];
     }
 

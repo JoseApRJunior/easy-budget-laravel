@@ -126,12 +126,12 @@ class BudgetController extends Controller
             // Update budget status
             $newStatusEnum = BudgetStatus::from( $request->budget_status_id );
             $budget->update( [
-                'budget_statuses_id' => $request->budget_status_id,
-                'history'            => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
+                'status'  => $request->budget_status_id,
+                'history' => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
             ] );
 
             // Log the action
-            $oldStatusEnum = BudgetStatus::from( $budget->budget_statuses_id );
+            $oldStatusEnum = $budget->status; // Use the enum directly from the model
             Log::info( 'Budget status updated via public link', [
                 'budget_id'   => $budget->id,
                 'budget_code' => $budget->code,

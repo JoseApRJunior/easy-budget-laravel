@@ -13,15 +13,15 @@ class StatusHelper
         if ( $status instanceof BudgetStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
-            $status_name  = $status->getName();
+            $status_name  = $status->getDescription();
         } elseif ( $status instanceof ServiceStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
-            $status_name  = $status->getName();
+            $status_name  = $status->getDescription();
         } elseif ( $status instanceof InvoiceStatus ) {
             $status_color = $status->getColor();
             $status_icon  = $status->getIcon();
-            $status_name  = $status->getName();
+            $status_name  = $status->getDescription();
         } elseif ( is_array( $status ) && !empty( $status ) ) {
             // Fallback para arrays legados
             $status_color       = $status[ 'status_color' ] ?? '#6c757d';
@@ -51,9 +51,19 @@ class StatusHelper
     public static function service_next_statuses( $currentStatus )
     {
         if ( $currentStatus instanceof ServiceStatus ) {
-            return ServiceStatus::getAllowedTransitions( $currentStatus->value );
+            // Get valid transitions based on the enum's canTransitionTo method if it exists
+            $validTransitions = [];
+            foreach ( ServiceStatus::cases() as $status ) {
+                if ( method_exists( $currentStatus, 'canTransitionTo' ) && $currentStatus->canTransitionTo( $status ) ) {
+                    $validTransitions[] = $status->value;
+                }
+            }
+            return $validTransitions;
         } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            return ServiceStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
+            $statusEnum = ServiceStatus::tryFrom( $currentStatus[ 'slug' ] );
+            if ( $statusEnum ) {
+                return self::service_next_statuses( $statusEnum );
+            }
         }
 
         return [];
@@ -69,7 +79,7 @@ class StatusHelper
                 '<option value="%s" %s>%s</option>',
                 e( $status->value ),
                 $selected,
-                e( $status->getName() ),
+                e( $status->getDescription() ),
             );
         }
 
@@ -121,9 +131,19 @@ class StatusHelper
     public static function budget_next_statuses( $currentStatus )
     {
         if ( $currentStatus instanceof BudgetStatus ) {
-            return BudgetStatus::getAllowedTransitions( $currentStatus->value );
+            // Get valid transitions based on the enum's canTransitionTo method
+            $validTransitions = [];
+            foreach ( BudgetStatus::cases() as $status ) {
+                if ( $currentStatus->canTransitionTo( $status ) ) {
+                    $validTransitions[] = $status->value;
+                }
+            }
+            return $validTransitions;
         } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            return BudgetStatus::getAllowedTransitions( $currentStatus[ 'slug' ] );
+            $statusEnum = BudgetStatus::tryFrom( $currentStatus[ 'slug' ] );
+            if ( $statusEnum ) {
+                return self::budget_next_statuses( $statusEnum );
+            }
         }
 
         return [];
@@ -157,7 +177,7 @@ class StatusHelper
         }
 
         if ( $status instanceof BudgetStatus ) {
-            return in_array( $status->value, BudgetStatus::getFinalStatuses() );
+            return $status->isFinished();
         }
 
         return false;
@@ -173,7 +193,7 @@ class StatusHelper
                 '<option value="%s" %s>%s</option>',
                 e( $status->value ),
                 $selected,
-                e( $status->getName() ),
+                e( $status->getDescription() ),
             );
         }
 
@@ -187,7 +207,7 @@ class StatusHelper
         }
 
         if ( $status instanceof BudgetStatus ) {
-            return !in_array( $status->value, BudgetStatus::getInactiveStatuses() );
+            return $status->isActive();
         }
 
         return false;
@@ -203,7 +223,7 @@ class StatusHelper
                 '<option value="%s" %s>%s</option>',
                 e( $status->value ),
                 $selected,
-                e( $status->getName() ),
+                e( $status->getDescription() ),
             );
         }
 

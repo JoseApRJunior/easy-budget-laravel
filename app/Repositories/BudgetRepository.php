@@ -47,7 +47,7 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function countByStatus( string $status ): int
     {
-        return $this->countByTenant( [ 'budget_statuses_id' => $status ] );
+        return $this->countByTenant( [ 'status' => $status ] );
     }
 
     /**
@@ -256,8 +256,8 @@ class BudgetRepository extends AbstractTenantRepository
 
         // Mapeia campos do banco para os filtros esperados
         $fieldMapping = [
-            'budget_statuses_id' => 'budget_statuses_id',
-            'status'             => 'budget_statuses_id',
+            'budget_statuses_id' => 'status', // Legacy compatibility
+            'status'             => 'status',
             'customer_id'        => 'customer_id',
             'code'               => 'code',
             'total'              => 'total',
@@ -287,7 +287,7 @@ class BudgetRepository extends AbstractTenantRepository
         }
 
         return $query->paginate( $perPage, [
-            'id', 'code', 'description', 'budget_statuses_id', 'total', 'created_at',
+            'id', 'code', 'description', 'status', 'total', 'created_at',
             'customer_id', 'tenant_id'
         ] );
     }
@@ -438,9 +438,9 @@ class BudgetRepository extends AbstractTenantRepository
         $stats = $this->applyTenantFilter( $this->model::query(), $tenantId )
             ->selectRaw( '
                 COUNT(*) as total,
-                SUM(CASE WHEN budget_statuses_id = "approved" THEN 1 ELSE 0 END) as approved,
-                SUM(CASE WHEN budget_statuses_id = "completed" THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN budget_statuses_id = "rejected" THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = "rejected" THEN 1 ELSE 0 END) as rejected,
                 AVG(total) as avg_value,
                 SUM(total) as total_value
             ' )
