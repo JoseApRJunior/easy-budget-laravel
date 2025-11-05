@@ -187,6 +187,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
         Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
+        Route::get( '/financial', [ ReportController::class, 'financial' ] )->name( 'financial' );
         Route::get( '/budgets', [ ReportController::class, 'budgets' ] )->name( 'budgets' );
         Route::get( '/budgets/excel', [ ReportController::class, 'budgets_excel' ] )->name( 'budgets.excel' );
         Route::get( '/budgets/pdf', [ ReportController::class, 'budgets_pdf' ] )->name( 'budgets.pdf' );

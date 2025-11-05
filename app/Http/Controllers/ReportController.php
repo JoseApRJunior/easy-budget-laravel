@@ -26,6 +26,14 @@ class ReportController extends Controller
     }
 
     /**
+     * Relatório financeiro
+     */
+    public function financial(): View
+    {
+        return view( 'pages.report.financial.financial' );
+    }
+
+    /**
      * Relatório de clientes
      */
     public function customers(): View

@@ -309,7 +309,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Se não tem avatar definido
         if ( empty( $avatar ) ) {
-            return asset( 'img/default_avatar.png' );
+            return asset( 'assets/img/default_avatar.png' );
         }
 
         // Se é uma URL externa (Google, Facebook, etc.)
@@ -325,7 +325,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Prioriza avatar local salvo
         $localAvatar = $this->getAvatarUrlAttribute();
-        if ( $localAvatar !== asset( 'img/default_avatar.png' ) ) {
+        if ( $localAvatar !== asset( 'assets/img/default_avatar.png' ) ) {
             return $localAvatar;
         }
 
@@ -335,7 +335,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         // Fallback para avatar padrão
-        return asset( 'img/default_avatar.png' );
+        return asset( 'assets/img/default_avatar.png' );
     }
 
 }
