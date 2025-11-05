@@ -1,8 +1,15 @@
-@extends('layout_pdf_base')
+@extends('layouts.pdf_base')
 
-@section('title')Relatório de Clientes@endsection
+@section('title')Relatório de Clientes @endsection
 
 @section('content')
+<!-- Botão de Impressão -->
+<div class="print-button-container" style="text-align: right; margin-bottom: 20px;">
+    <button onclick="window.print()" class="btn-print" style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+        🖨️ Imprimir
+    </button>
+</div>
+
 <div class="report-container">
     {{-- Cabeçalho do Relatório --}}
     <div class="report-header">
@@ -11,26 +18,38 @@
                 <!-- Coluna da Esquerda - Informações da Empresa -->
                 <td style="width: 50%; vertical-align: top;">
                     <div class="company-info">
+                        @php
+                            $provider = auth()->user()->provider;
+                            $commonData = $provider?->commonData;
+                            $contact = $provider?->contact;
+                            $address = $provider?->address;
+                        @endphp
                         <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
-                            {{ auth()->user()->company_name }}
+                            {{ $commonData?->company_name ?: ($commonData?->first_name . ' ' . $commonData?->last_name) ?: 'Empresa' }}
                         </h2>
                         <div class="company-details">
+                            @if($address)
                             <div style="margin-bottom: 5px; font-size: 11px;">
                                 <span style="margin-right: 8px;">➤</span>
-                                <span>{{ auth()->user()->address }}</span>
+                                <span>{{ $address->address }}, {{ $address->address_number }} - {{ $address->neighborhood }}, {{ $address->city }}/{{ $address->state }}</span>
                             </div>
+                            @endif
+                            @if($commonData)
                             <div style="margin-bottom: 5px; font-size: 11px;">
                                 <span style="margin-right: 8px;">⚑</span>
-                                <span>@if(auth()->user()->cnpj)CNPJ: {{ auth()->user()->cnpj }}@else CPF: {{ auth()->user()->cpf }}@endif</span>
+                                <span>@if($commonData->cnpj)CNPJ: {{ format_cnpj($commonData->cnpj) }}@elseif($commonData->cpf)CPF: {{ format_cpf($commonData->cpf) }}@endif</span>
                             </div>
+                            @endif
+                            @if($contact)
                             <div style="margin-bottom: 5px; font-size: 11px;">
                                 <span style="margin-right: 8px;">☎</span>
-                                <span>@if(auth()->user()->phone_business){{ auth()->user()->phone_business }}@else{{ auth()->user()->phone }}@endif</span>
+                                <span>{{ format_phone($contact->phone_business ?: $contact->phone_personal) }}</span>
                             </div>
                             <div style="margin-bottom: 5px; font-size: 11px;">
                                 <span style="margin-right: 8px;">✉</span>
-                                <span>@if(auth()->user()->email_business){{ auth()->user()->email_business }}@else{{ auth()->user()->email }}@endif</span>
+                                <span>{{ $contact->email_business ?: $contact->email_personal ?: auth()->user()->email }}</span>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </td>
@@ -71,36 +90,46 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
                 <tr>
-                    <th style="width: 30%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
+                    <th style="width: 25%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
                         Nome</th>
                     <th style="width: 25%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
                         Email</th>
                     <th style="width: 15%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
                         Telefone</th>
-                    <th style="width: 15%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
+                    <th style="width: 20%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
                         CPF/CNPJ</th>
                     <th style="width: 15%; text-align: left; background-color: #f8f9fa !important; padding: 8px; font-size: 12px; color: #333; border-bottom: 2px solid #dee2e6; font-weight: 600;">
-                        Data de Cadastro</th>
+                        Data</th>
                 </tr>
             </thead>
 
             <tbody>
                 @foreach($customers as $customer)
+                @php
+                    $commonData = $customer->commonData;
+                    $contact = $customer->contact;
+                @endphp
                 <tr>
-                    <td style="width: 30%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        {{ $customer->name }}
+                    <td style="width: 25%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
+                        {{ $commonData?->company_name ?: ($commonData?->first_name . ' ' . $commonData?->last_name) ?: 'Nome não informado' }}
                     </td>
                     <td style="width: 25%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        {{ $customer->email }}
+                        {{ $contact?->email_personal ?: $contact?->email_business ?: 'Não informado' }}
+                    </td>
+                    <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6; white-space: nowrap;">
+                        {{ format_phone($contact?->phone_personal ?: $contact?->phone_business) ?: 'Não informado' }}
+                    </td>
+                    <td style="width: 20%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6; white-space: nowrap;">
+                        @if($commonData?->cpf)
+                            {{ format_cpf($commonData->cpf) }}
+                        @elseif($commonData?->cnpj)
+                            {{ format_cnpj($commonData->cnpj) }}
+                        @else
+                            Não informado
+                        @endif
                     </td>
                     <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        {{ $customer->phone }}
-                    </td>
-                    <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        {{ $customer->document }}
-                    </td>
-                    <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        {{ \Carbon\Carbon::parse($customer->created_at)->format('d/m/Y') }}
+                        {{ $customer->created_at->format('d/m/Y') }}
                     </td>
                 </tr>
                 @endforeach
@@ -139,8 +168,18 @@
         text-align: right !important;
     }
 
+    .btn-print:hover {
+        background: #0056b3 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
     /* Otimizações para Impressão */
     @media print {
+        .print-button-container {
+            display: none !important;
+        }
+
         * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;

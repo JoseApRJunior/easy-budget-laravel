@@ -186,13 +186,15 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
-        Route::get( '/', [ ProviderController::class, 'reports_index' ] )->name( 'index' );
-        Route::get( '/financial', [ ProviderController::class, 'financial_reports' ] )->name( 'financial' );
-        Route::get( '/budgets', [ ProviderController::class, 'budget_reports' ] )->name( 'budgets' );
-        Route::get( '/budgets/excel', [ ProviderController::class, 'budget_reports_excel' ] )->name( 'budgets.excel' );
-        Route::get( '/budgets/pdf', [ ProviderController::class, 'budget_reports_pdf' ] )->name( 'budgets.pdf' );
-        Route::get( '/services', [ ProviderController::class, 'service_reports' ] )->name( 'services' );
-        Route::get( '/customers', [ ProviderController::class, 'customer_reports' ] )->name( 'customers' );
+        Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
+        Route::get( '/budgets', [ ReportController::class, 'budgets' ] )->name( 'budgets' );
+        Route::get( '/budgets/excel', [ ReportController::class, 'budgets_excel' ] )->name( 'budgets.excel' );
+        Route::get( '/budgets/pdf', [ ReportController::class, 'budgets_pdf' ] )->name( 'budgets.pdf' );
+        Route::get( '/services', [ ReportController::class, 'services' ] )->name( 'services' );
+        Route::get( '/customers', [ ReportController::class, 'customers' ] )->name( 'customers' );
+        Route::post( '/customers/search', [ ReportController::class, 'customersSearch' ] )->name( 'customers.search' );
+        Route::get( '/customers/pdf', [ ReportController::class, 'customersPdf' ] )->name( 'customers.pdf' );
+        Route::get( '/products', [ ReportController::class, 'products' ] )->name( 'products' );
     } );
 
     // Business

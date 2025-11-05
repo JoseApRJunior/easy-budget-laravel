@@ -99,50 +99,69 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Função para formatar cada linha da tabela de clientes
    function formatCustomerRow(customer) {
+      const customerType = customer.cnpj ? 'PJ' : 'PF';
+      const customerTypeClass = customer.cnpj ? 'text-info' : 'text-success';
+      const customerTypeIcon = customer.cnpj ? 'bi-building' : 'bi-person';
+      
       return `
-   <tr>
-      <td class="px-4 align-middle">
-         <span class="fw-semibold">${customer.customer_name || 'Nome não informado'}</span>
-      </td>
-      <td class="align-middle">
-         ${customer.cpf || ""}
-         ${customer.cnpj ? "/ " + customer.cnpj : ""}
-      </td>
-      <td class="align-middle">
-         ${customer.email || ""}
-         ${customer.email_business ? "/ " + customer.email_business : ""}
-      </td>
-      <td class="align-middle">
-         ${customer.phone || ""}
-         ${customer.phone_business ? "/ " + customer.phone_business : ""}
-      </td>
-      <td class="align-middle">
-         ${formatDate(customer.created_at)}
-      </td>
-      <td class="text-end px-4 align-middle">
-         <div class="btn-group gap-1">
-            <a href="/provider/customers/show/${customer.id}"
-               class="btn btn-sm btn-outline-warning"
-               data-bs-toggle="tooltip"
-               title="Visualizar">
-               <i class="bi bi-eye"></i>
-            </a>
-            <a href="/provider/customers/update/${customer.id}"
-               class="btn btn-sm btn-outline-primary"
-               data-bs-toggle="tooltip"
-               title="Editar">
-               <i class="bi bi-pencil"></i>
-            </a>
-            <button type="button"
-                  class="btn btn-sm btn-outline-danger"
+      <tr class="table-row-hover">
+         <td class="px-4 py-3 align-middle">
+            <div>
+               <div class="fw-semibold mb-1">${customer.customer_name || 'Nome não informado'}</div>
+               <small class="badge bg-light ${customerTypeClass} border">${customerType}</small>
+            </div>
+         </td>
+         <td class="px-3 py-3 align-middle">
+            <div class="document-info">
+               ${customer.cpf ? `<div class="text-dark"><i class="bi bi-person-vcard me-1"></i>${formatDocument(customer.cpf, 'cpf')}</div>` : ''}
+               ${customer.cnpj ? `<div class="text-dark"><i class="bi bi-building me-1"></i>${formatDocument(customer.cnpj, 'cnpj')}</div>` : ''}
+               ${!customer.cpf && !customer.cnpj ? '<span class="text-muted">Não informado</span>' : ''}
+            </div>
+         </td>
+         <td class="px-3 py-3 align-middle">
+            <div class="email-info">
+               ${customer.email ? `<div class="text-dark mb-1"><i class="bi bi-envelope me-1"></i>${customer.email}</div>` : ''}
+               ${customer.email_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${customer.email_business}</div>` : ''}
+               ${!customer.email && !customer.email_business ? '<span class="text-muted">Não informado</span>' : ''}
+            </div>
+         </td>
+         <td class="px-3 py-3 align-middle">
+            <div class="phone-info">
+               ${customer.phone ? `<div class="text-dark mb-1"><i class="bi bi-telephone me-1"></i>${formatPhone(customer.phone)}</div>` : ''}
+               ${customer.phone_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${formatPhone(customer.phone_business)}</div>` : ''}
+               ${!customer.phone && !customer.phone_business ? '<span class="text-muted">Não informado</span>' : ''}
+            </div>
+         </td>
+         <td class="px-3 py-3 align-middle">
+            <div class="date-info">
+               <div class="text-dark">${formatDate(customer.created_at)}</div>
+               <small class="text-muted">${formatTimeAgo(customer.created_at)}</small>
+            </div>
+         </td>
+         <td class="text-center align-middle">
+            <div class="btn-group" role="group">
+               <a href="/provider/customers/${customer.id}"
+                  class="btn btn-sm btn-outline-primary"
                   data-bs-toggle="tooltip"
-                  onclick="confirmDelete('${customer.id}')"
-                  title="Excluir">
-               <i class="bi bi-trash"></i>
-            </button>
-         </div>
-      </td>
-   </tr>`;
+                  title="Visualizar">
+                  <i class="bi bi-eye"></i>
+               </a>
+               <a href="/provider/customers/${customer.id}/edit"
+                  class="btn btn-sm btn-outline-success"
+                  data-bs-toggle="tooltip"
+                  title="Editar">
+                  <i class="bi bi-pencil"></i>
+               </a>
+               <button type="button"
+                     class="btn btn-sm btn-outline-danger"
+                     data-bs-toggle="tooltip"
+                     onclick="confirmDelete('${customer.id}')"
+                     title="Excluir">
+                  <i class="bi bi-trash"></i>
+               </button>
+            </div>
+         </td>
+      </tr>`;
    }
 
    // Função para mostrar mensagens de erro
@@ -177,6 +196,46 @@ document.addEventListener("DOMContentLoaded", function () {
    function formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString("pt-BR");
+   }
+
+   // Formata documento (CPF/CNPJ)
+   function formatDocument(document, type) {
+      if (!document) return '';
+      const clean = document.replace(/\D/g, '');
+      if (type === 'cpf' && clean.length === 11) {
+         return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      }
+      if (type === 'cnpj' && clean.length === 14) {
+         return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      return document;
+   }
+
+   // Formata telefone
+   function formatPhone(phone) {
+      if (!phone) return '';
+      const clean = phone.replace(/\D/g, '');
+      if (clean.length === 11) {
+         return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      }
+      if (clean.length === 10) {
+         return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+      }
+      return phone;
+   }
+
+   // Formata tempo relativo
+   function formatTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return 'Ontem';
+      if (diffDays < 7) return `${diffDays} dias atrás`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} semanas atrás`;
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)} meses atrás`;
+      return `${Math.floor(diffDays / 365)} anos atrás`;
    }
 
    // Event Listeners

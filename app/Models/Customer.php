@@ -166,6 +166,8 @@ class Customer extends Model
         return $this->hasMany( Invoice::class);
     }
 
+
+
     /**
      * Check if customer is a company (PJ).
      */

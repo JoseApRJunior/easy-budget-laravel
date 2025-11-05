@@ -379,7 +379,7 @@ class ProviderManagementService
     {
         // Buscar clientes ativos
         $customers = Customer::where( 'tenant_id', $tenantId )
-            ->with( [ 'budgets', 'services' ] )
+            ->with( [ 'budgets', 'invoices', 'commonData', 'contact' ] )
             ->latest()
             ->limit( 50 )
             ->get();
@@ -387,15 +387,17 @@ class ProviderManagementService
         // Estatísticas dos clientes
         $customerStats = [
             'total_customers'     => $customers->count(),
-            'active_customers'    => $customers->where( 'is_active', true )->count(),
-            'inactive_customers'  => $customers->where( 'is_active', false )->count(),
-            'new_customers_month' => $customers->whereMonth( 'created_at', now()->month )
-                ->whereYear( 'created_at', now()->year )->count(),
+            'active_customers'    => $customers->where( 'status', 'active' )->count(),
+            'inactive_customers'  => $customers->where( 'status', 'inactive' )->count(),
+            'new_customers_month' => $customers->filter( function ( $customer ) {
+                return $customer->created_at->month === now()->month && 
+                       $customer->created_at->year === now()->year;
+            } )->count(),
             'total_budgets'       => $customers->sum( function ( $customer ) {
                 return $customer->budgets->count();
             } ),
-            'total_services'      => $customers->sum( function ( $customer ) {
-                return $customer->services->count();
+            'total_invoices'      => $customers->sum( function ( $customer ) {
+                return $customer->invoices->count();
             } ),
         ];
 
