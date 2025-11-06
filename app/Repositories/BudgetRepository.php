@@ -30,7 +30,7 @@ class BudgetRepository extends AbstractTenantRepository
      * @param int|null $limit Limite de registros
      * @return \Illuminate\Database\Eloquent\Collection<int, Budget> Budgets encontrados
      */
-    public function listByStatuses( array $statuses, ?array $orderBy = null, ?int $limit = null ): \Illuminate\Database\Eloquent\Collection
+    public function listByStatuses( array $statuses, ?array $orderBy = null, ?int $limit = null ): Collection
     {
         return $this->getAllByTenant(
             [ 'status' => $statuses ],
@@ -249,47 +249,55 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function getPaginatedBudgets( int $tenantId, array $filters = [], int $perPage = 15 ): LengthAwarePaginator
     {
-        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
+        $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->with(['customer.commonData', 'customer.contact']);
 
-        // Aplica filtros usando o método applyFilters do trait
-        $this->applyFilters( $query, $filters );
-
-        // Mapeia campos do banco para os filtros esperados
-        $fieldMapping = [
-            'budget_statuses_id' => 'status', // Legacy compatibility
-            'status'             => 'status',
-            'customer_id'        => 'customer_id',
-            'code'               => 'code',
-            'total'              => 'total',
-            'created_at'         => 'created_at',
-            'date_from'          => 'created_at',
-            'date_to'            => 'created_at',
-        ];
-
-        foreach ( $filters as $key => $value ) {
-            if ( isset( $fieldMapping[ $key ] ) ) {
-                $field = $fieldMapping[ $key ];
-
-                if ( $key === 'date_from' ) {
-                    $query->where( $field, '>=', $value );
-                } elseif ( $key === 'date_to' ) {
-                    $query->where( $field, '<=', $value );
-                } elseif ( $key === 'status' ) {
-                    if ( is_array( $value ) ) {
-                        $query->whereIn( $field, $value );
-                    } else {
-                        $query->where( $field, $value );
-                    }
-                } else {
-                    $query->where( $field, $value );
-                }
-            }
+        // Aplicar filtros da view
+        if (!empty($filters['filter_code'])) {
+            $query->where('code', 'like', '%' . $filters['filter_code'] . '%');
         }
 
-        return $query->paginate( $perPage, [
-            'id', 'code', 'description', 'status', 'total', 'created_at',
-            'customer_id', 'tenant_id'
-        ] );
+        if (!empty($filters['filter_start_date'])) {
+            $query->whereDate('created_at', '>=', $filters['filter_start_date']);
+        }
+
+        if (!empty($filters['filter_end_date'])) {
+            $query->whereDate('created_at', '<=', $filters['filter_end_date']);
+        }
+
+        if (!empty($filters['filter_customer'])) {
+            $query->whereHas('customer.commonData', function($q) use ($filters) {
+                $q->where('first_name', 'like', '%' . $filters['filter_customer'] . '%')
+                  ->orWhere('last_name', 'like', '%' . $filters['filter_customer'] . '%')
+                  ->orWhere('company_name', 'like', '%' . $filters['filter_customer'] . '%');
+            });
+        }
+
+        if (!empty($filters['filter_min_value'])) {
+            $query->where('total', '>=', $filters['filter_min_value']);
+        }
+
+        if (!empty($filters['filter_status'])) {
+            $query->where('status', $filters['filter_status']);
+        }
+
+        // Ordenação
+        $orderBy = $filters['filter_order_by'] ?? 'created_at_desc';
+        switch ($orderBy) {
+            case 'created_at_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'total_desc':
+                $query->orderBy('total', 'desc');
+                break;
+            case 'total_asc':
+                $query->orderBy('total', 'asc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+
+        return $query->paginate($perPage);
     }
 
     /**
@@ -309,13 +317,19 @@ class BudgetRepository extends AbstractTenantRepository
      *
      * @param string $code Código do orçamento
      * @param int $tenantId ID do tenant
+     * @param array $with Relacionamentos a carregar
      * @return Budget|null Orçamento encontrado
      */
-    public function findByCode( string $code, int $tenantId ): ?Budget
+    public function findByCode( string $code, int $tenantId, array $with = [] ): ?Budget
     {
-        return $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->where( 'code', $code )
-            ->first();
+        $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->where( 'code', $code );
+            
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+        
+        return $query->first();
     }
 
     /**
@@ -497,6 +511,21 @@ class BudgetRepository extends AbstractTenantRepository
             ] )
             ->where( 'id', $budgetId )
             ->first();
+    }
+
+    /**
+     * Busca o último código de orçamento por prefixo dentro do tenant.
+     *
+     * @param string $prefix Prefixo do código (ex: 'ORC-20241106')
+     * @param int $tenantId ID do tenant
+     * @return string|null Último código encontrado
+     */
+    public function getLastBudgetCodeByPrefix( string $prefix, int $tenantId ): ?string
+    {
+        return $this->applyTenantFilter( $this->model::query(), $tenantId )
+            ->where( 'code', 'like', $prefix . '%' )
+            ->orderBy( 'code', 'desc' )
+            ->value( 'code' );
     }
 
     /**

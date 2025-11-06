@@ -315,10 +315,14 @@ return new class extends Migration
             $table->text( 'description' )->nullable();
             $table->text( 'payment_terms' )->nullable();
             $table->string( 'attachment', 255 )->nullable();
-            $table->longText( 'history' )->nullable();
-            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique(); // SHA256 hash, not a confirmation token
-            $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
-            $table->timestamp( 'public_expires_at' )->nullable();
+            $table->longText( 'history' )->nullable()->comment('Histórico de mudanças em JSON');
+            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique()->comment('Hash SHA256 do PDF');
+            $table->string( 'public_token', 43 )->nullable()->unique()->comment('Token para acesso público');
+            $table->timestamp( 'public_expires_at' )->nullable()->comment('Expiração do token público');
+            
+            // Índices para performance
+            $table->index('public_token');
+            $table->index(['public_token', 'public_expires_at']);
             $table->timestamps();
         } );
 
