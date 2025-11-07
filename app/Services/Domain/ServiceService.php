@@ -13,8 +13,8 @@ use App\Models\ServiceItem;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ServiceService extends AbstractBaseService
 {
@@ -250,10 +250,10 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Verificar se pode editar
-                if ( !$service->status->canEdit() ) {
+                if ( !$service->serviceStatus->canEdit() ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
-                        "Serviço não pode ser editado no status {$service->status->value}",
+                        "Serviço não pode ser editado no status {$service->serviceStatus->value}",
                     );
                 }
 

@@ -6,7 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\ServiceStatusEnum;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\ServiceRequest;
+use App\Http\Controllers\ServiceStoreRequest as ServiceRequest;
+use App\Http\Requests\ServiceStoreRequest;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Product;
@@ -144,7 +145,7 @@ class ServiceController extends Controller
                 'token'   => $token
             ] );
 
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             Log::error( 'Error in viewServiceStatus', [
                 'code'  => $code,
                 'token' => $token,
@@ -262,7 +263,7 @@ class ServiceController extends Controller
                 'service' => $service
             ] );
 
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             Log::error( 'Error in service print', [
                 'code'  => $code,
                 'token' => $token,
@@ -306,11 +307,14 @@ class ServiceController extends Controller
     {
         try {
             $result = $this->serviceService->findByCode( $code, [
-                'category',
                 'budget.customer.commonData',
-                'serviceStatus',
+                'budget.customer.contacts',
+                'category',
                 'serviceItems.product',
-                'userConfirmationToken'
+                'serviceStatus',
+                'schedules' => function ( $q ) {
+                    $q->latest()->limit( 1 );
+                }
             ] );
 
             if ( !$result->isSuccess() ) {
@@ -329,6 +333,71 @@ class ServiceController extends Controller
                 'code'  => $code
             ] );
             abort( 500, 'Erro ao carregar serviço' );
+        }
+    }
+
+    /**
+     * Show the form for editing the specified service.
+     */
+    public function edit( string $code ): View
+    {
+        try {
+            $result = $this->serviceService->findByCode( $code, [
+                'serviceItems.product',
+                'budget'
+            ] );
+
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Serviço não encontrado' );
+            }
+
+            $service = $result->getData();
+
+            // Verificar se pode editar
+            if ( !$service->serviceStatus->canEdit() ) {
+                abort( 403, 'Serviço não pode ser editado no status atual' );
+            }
+
+            return view( 'services.edit', [
+                'service'       => $service,
+                'categories'    => $this->categoryService->getActive(),
+                'products'      => $this->productService->getActive(),
+                'budgets'       => $this->budgetService->getNotCompleted(),
+                'statusOptions' => ServiceStatusEnum::cases()
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar formulário de edição', [
+                'error' => $e->getMessage(),
+                'code'  => $code
+            ] );
+            abort( 500, 'Erro ao carregar formulário de edição' );
+        }
+    }
+
+    /**
+     * Update the specified service in storage.
+     */
+    public function update( ServiceStoreRequest $request, string $code ): RedirectResponse
+    {
+        try {
+            $result = $this->serviceService->updateServiceByCode( $code, $request->getValidatedData() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            $service = $result->getData();
+
+            return redirect()->route( 'services.show', $service->code )
+                ->with( 'success', 'Serviço atualizado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao atualizar serviço: ' . $e->getMessage() );
         }
     }
 
