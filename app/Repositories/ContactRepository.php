@@ -34,14 +34,25 @@ class ContactRepository extends AbstractTenantRepository
     }
 
     /**
-     * Remove contatos por ID do cliente dentro do tenant atual.
+     * Remove contato por ID do cliente (1:1).
      *
      * @param int $customerId ID do cliente
-     * @return int Número de contatos removidos
+     * @return bool
      */
-    public function deleteByCustomerId( int $customerId ): int
+    public function deleteByCustomerId( int $customerId ): bool
     {
-        return $this->model->where( 'customer_id', $customerId )->delete();
+        return $this->model->where( 'customer_id', $customerId )->delete() > 0;
+    }
+
+    /**
+     * Busca contato por cliente (1:1).
+     *
+     * @param int $customerId ID do cliente
+     * @return Contact|null
+     */
+    public function findByCustomerId( int $customerId ): ?Contact
+    {
+        return $this->model->where( 'customer_id', $customerId )->first();
     }
 
     /**
@@ -59,66 +70,45 @@ class ContactRepository extends AbstractTenantRepository
     }
 
     /**
-     * Atualiza contato para provider dentro do tenant atual.
+     * Atualiza contato para provider.
      *
      * @param array<string, mixed> $data Dados para atualização
      * @param int $providerId ID do provider
-     * @return bool True se atualizado com sucesso
+     * @return bool
      */
     public function updateForProvider( array $data, int $providerId ): bool
     {
         $contact = $this->model->where( 'provider_id', $providerId )->first();
+        
         if ( !$contact ) {
             return false;
         }
-
-        $contact->fill( $data );
-        $contact->save();
-        return true;
+        
+        return $contact->update( $data );
     }
 
     /**
-     * Remove contatos por ID do provider dentro do tenant atual.
+     * Remove contato por ID do provider (1:1).
      *
      * @param int $providerId ID do provider
-     * @return int Número de contatos removidos
+     * @return bool
      */
-    public function deleteByProviderId( int $providerId ): int
+    public function deleteByProviderId( int $providerId ): bool
     {
-        return $this->model->where( 'provider_id', $providerId )->delete();
+        return $this->model->where( 'provider_id', $providerId )->delete() > 0;
     }
 
     /**
-     * Busca contato por email dentro do tenant atual.
-     *
-     * @param string $email Email do contato
-     * @return Contact|null Contato encontrado
-     */
-    public function findByEmail( string $email ): ?Contact
-    {
-        return $this->model->where( 'email', $email )->first();
-    }
-
-    /**
-     * Lista contatos por cliente dentro do tenant atual.
-     *
-     * @param int $customerId ID do cliente
-     * @return \Illuminate\Database\Eloquent\Collection<int, Contact> Contatos do cliente
-     */
-    public function listByCustomerId( int $customerId ): \Illuminate\Database\Eloquent\Collection
-    {
-        return $this->model->where( 'customer_id', $customerId )->get();
-    }
-
-    /**
-     * Lista contatos por provider dentro do tenant atual.
+     * Busca contato por provider (1:1).
      *
      * @param int $providerId ID do provider
-     * @return \Illuminate\Database\Eloquent\Collection<int, Contact> Contatos do provider
+     * @return Contact|null
      */
-    public function listByProviderId( int $providerId ): \Illuminate\Database\Eloquent\Collection
+    public function findByProviderId( int $providerId ): ?Contact
     {
-        return $this->model->where( 'provider_id', $providerId )->get();
+        return $this->model->where( 'provider_id', $providerId )->first();
     }
+
+
 
 }

@@ -27,11 +27,11 @@ class BudgetFactory extends Factory
     public function definition(): array
     {
         return [
-            'code'               => $this->faker->unique()->regexify( 'BUD-[A-Z0-9]{6}' ),
-            'total'              => $this->faker->randomFloat( 2, 100, 10000 ),
-            'discount'           => $this->faker->randomFloat( 2, 0, 100 ),
-            'budget_statuses_id' => BudgetStatus::DRAFT->value,
-            'customer_id'        => Customer::factory(),
+            'code'        => $this->faker->unique()->regexify( 'BUD-[A-Z0-9]{6}' ),
+            'total'       => $this->faker->randomFloat( 2, 100, 10000 ),
+            'discount'    => $this->faker->randomFloat( 2, 0, 100 ),
+            'status'      => BudgetStatus::DRAFT->value,
+            'customer_id' => Customer::factory(),
         ];
     }
 
@@ -61,7 +61,7 @@ class BudgetFactory extends Factory
     public function withStatus( BudgetStatus $status ): static
     {
         return $this->state( fn( array $attributes ) => [
-            'budget_statuses_id' => $status->value,
+            'status' => $status->value,
         ] );
     }
 

@@ -30,6 +30,9 @@ enum OperationStatus: string
     /**   Conflito de dados   */
     case CONFLICT = 'conflict';
 
+    /**   Erro de validação   */
+    case VALIDATION_ERROR = 'validation_error';
+
     /**
      * Verifica se o status indica sucesso
      *
@@ -58,12 +61,13 @@ enum OperationStatus: string
     public function getMessage(): string
     {
         return match ( $this ) {
-            self::SUCCESS      => 'Operação realizada com sucesso',
-            self::NOT_FOUND    => 'Recurso não encontrado',
-            self::ERROR        => 'Erro interno do servidor',
-            self::FORBIDDEN    => 'Acesso negado',
-            self::INVALID_DATA => 'Dados inválidos',
-            self::CONFLICT     => 'Conflito de dados'
+            self::SUCCESS          => 'Operação realizada com sucesso',
+            self::NOT_FOUND        => 'Recurso não encontrado',
+            self::ERROR            => 'Erro interno do servidor',
+            self::FORBIDDEN        => 'Acesso negado',
+            self::INVALID_DATA     => 'Dados inválidos',
+            self::CONFLICT         => 'Conflito de dados',
+            self::VALIDATION_ERROR => 'Erro de validação'
         };
     }
 

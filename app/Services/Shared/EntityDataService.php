@@ -23,6 +23,18 @@ class EntityDataService
      */
     public function createCommonData(array $data, int $tenantId): CommonData
     {
+        // Limpar CPF/CNPJ se fornecidos
+        $cpf = null;
+        $cnpj = null;
+        
+        if (!empty($data['cpf'])) {
+            $cpf = preg_replace('/\D/', '', $data['cpf']);
+        }
+        
+        if (!empty($data['cnpj'])) {
+            $cnpj = preg_replace('/\D/', '', $data['cnpj']);
+        }
+        
         return CommonData::create([
             'tenant_id' => $tenantId,
             'first_name' => $data['first_name'] ?? null,
@@ -30,8 +42,8 @@ class EntityDataService
             'birth_date' => isset($data['birth_date']) 
                 ? DateHelper::parseBirthDate($data['birth_date']) 
                 : null,
-            'cpf' => isset($data['cpf']) ? clean_document_number($data['cpf']) : null,
-            'cnpj' => isset($data['cnpj']) ? clean_document_number($data['cnpj']) : null,
+            'cpf' => $cpf,
+            'cnpj' => $cnpj,
             'company_name' => $data['company_name'] ?? null,
             'description' => $data['description'] ?? null,
             'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
@@ -44,17 +56,17 @@ class EntityDataService
      */
     public function updateCommonData(CommonData $commonData, array $data): CommonData
     {
-        $updateData = array_filter([
-            'first_name' => $data['first_name'] ?? null,
-            'last_name' => $data['last_name'] ?? null,
-            'birth_date' => isset($data['birth_date']) ? DateHelper::parseBirthDate($data['birth_date']) : null,
-            'cpf' => isset($data['cpf']) ? clean_document_number($data['cpf']) : null,
-            'cnpj' => isset($data['cnpj']) ? clean_document_number($data['cnpj']) : null,
-            'company_name' => $data['company_name'] ?? null,
-            'description' => $data['description'] ?? null,
-            'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
-            'profession_id' => $data['profession_id'] ?? null,
-        ], fn($value) => $value !== null);
+        $updateData = [];
+        
+        if (isset($data['first_name'])) $updateData['first_name'] = $data['first_name'];
+        if (isset($data['last_name'])) $updateData['last_name'] = $data['last_name'];
+        if (isset($data['birth_date'])) $updateData['birth_date'] = DateHelper::parseBirthDate($data['birth_date']);
+        if (isset($data['cpf'])) $updateData['cpf'] = preg_replace('/\D/', '', $data['cpf']);
+        if (isset($data['cnpj'])) $updateData['cnpj'] = preg_replace('/\D/', '', $data['cnpj']);
+        if (isset($data['company_name'])) $updateData['company_name'] = $data['company_name'];
+        if (isset($data['description'])) $updateData['description'] = $data['description'];
+        if (isset($data['area_of_activity_id'])) $updateData['area_of_activity_id'] = $data['area_of_activity_id'];
+        if (isset($data['profession_id'])) $updateData['profession_id'] = $data['profession_id'];
 
         if (!empty($updateData)) {
             $commonData->update($updateData);

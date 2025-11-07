@@ -62,48 +62,48 @@ class FactoryIntegrityTest extends TestCase
 
     public function test_budget_factory_creates_valid_model_with_relationships(): void
     {
-        // Use BudgetStatus
-        $budgetStatus = BudgetStatus::DRAFT;
+        $tenant   = Tenant::factory()->create();
+        $customer = \App\Models\Customer::factory()->create( [ 'tenant_id' => $tenant->id ] );
 
-        $budget = Budget::factory()->create( [ 'budget_statuses_id' => $budgetStatus->value ] );
+        $budget = Budget::factory()->create( [
+            'tenant_id'   => $tenant->id,
+            'customer_id' => $customer->id
+        ] );
 
         $this->assertDatabaseHas( 'budgets', [ 'id' => $budget->id ] );
         $this->assertNotNull( $budget->tenant_id );
         $this->assertNotNull( $budget->customer_id );
-        $this->assertNotNull( $budget->budget_statuses_id );
+        $this->assertNotNull( $budget->status );
         $this->assertNotNull( $budget->code );
         $this->assertGreaterThan( 0, $budget->total );
 
         // Assert relationships
         $this->assertInstanceOf( Tenant::class, $budget->tenant );
         $this->assertEquals( $budget->tenant_id, $budget->tenant->id );
-        $this->assertInstanceOf( User::class, $budget->customer );
+        $this->assertInstanceOf( \App\Models\Customer::class, $budget->customer );
         $this->assertEquals( $budget->customer_id, $budget->customer->id );
-        $this->assertEquals( 'draft', $budget->budget_statuses_id );
+        $this->assertEquals( 'draft', $budget->status->value );
     }
 
     public function test_budget_factory_enforces_code_uniqueness_per_tenant(): void
     {
-        $tenant       = Tenant::factory()->create();
-        $budgetStatus = BudgetStatus::DRAFT;
-        $user         = User::factory()->create( [ 'tenant_id' => $tenant->id ] );
-        $code         = 'BUD-ABC123';
+        $tenant   = Tenant::factory()->create();
+        $customer = \App\Models\Customer::factory()->create( [ 'tenant_id' => $tenant->id ] );
+        $code     = 'BUD-ABC123';
 
         // Create first budget
         Budget::factory()->create( [
-            'tenant_id'          => $tenant->id,
-            'customer_id'        => $user->id,
-            'code'               => $code,
-            'budget_statuses_id' => $budgetStatus->value,
+            'tenant_id'   => $tenant->id,
+            'customer_id' => $customer->id,
+            'code'        => $code,
         ] );
 
         // Attempt duplicate
         $this->expectException( QueryException::class);
         Budget::factory()->create( [
-            'tenant_id'          => $tenant->id,
-            'customer_id'        => $user->id,
-            'code'               => $code,
-            'budget_statuses_id' => $budgetStatus->value,
+            'tenant_id'   => $tenant->id,
+            'customer_id' => $customer->id,
+            'code'        => $code,
         ] );
     }
 

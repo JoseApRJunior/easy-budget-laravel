@@ -1,7 +1,7 @@
 <div class="mb-3">
     <label for="cep" class="form-label">CEP</label>
     <input type="text" class="form-control @error( 'cep' ) is-invalid @enderror" id="cep" name="cep"
-        value="{{ old( 'cep', $customer->address->cep ?? '' ) }}" required>
+        value="{{ old( 'cep', $customer->address->cep ?? '' ) }}" data-cep-lookup required>
     @error( 'cep' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror

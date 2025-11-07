@@ -6,29 +6,179 @@ namespace App\Http\Controllers;
 
 use App\Enums\BudgetStatus;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\BudgetStoreRequest;
+use App\Http\Requests\BudgetUpdateRequest;
 use App\Models\Budget;
 use App\Models\BudgetItemCategory;
 use App\Models\BudgetTemplate;
 use App\Models\UserConfirmationToken;
-use App\Services\BudgetPdfService;
 use App\Services\BudgetTemplateService;
 use App\Services\Domain\BudgetService;
+use App\Services\Domain\BudgetTokenService;
+use App\Services\Infrastructure\BudgetPdfService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BudgetController extends Controller
 {
+    public function __construct(
+        private BudgetService $budgetService,
+        private BudgetPdfService $budgetPdfService,
+        private BudgetTokenService $budgetTokenService,
+    ) {}
+
     public function index( Request $request ): View
     {
         $user    = Auth::user();
-        $budgets = app( BudgetService::class)->getBudgetsForProvider( $user->id, $request->all() );
+        $budgets = $this->budgetService->getBudgetsForProvider( $user->id, $request->all() );
         return view( 'pages.budget.index', [
             'budgets' => $budgets
         ] );
+    }
+
+    public function create( Request $request ): View
+    {
+        // Buscar clientes ativos para o autocomplete
+        $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( [ 'status' => 'active' ] );
+
+        // Cliente pré-selecionado via URL (?customer_id=123)
+        $selectedCustomer = null;
+        if ( $request->has( 'customer_id' ) ) {
+            $customerService = app( \App\Services\Domain\CustomerService::class);
+            $result          = $customerService->findById( (int) $request->customer_id );
+            if ( $result->isSuccess() ) {
+                $selectedCustomer = $result->getData();
+            }
+        }
+
+        return view( 'pages.budget.create', [
+            'customers'        => $customers->isSuccess() ? $customers->getData() : collect(),
+            'selectedCustomer' => $selectedCustomer
+        ] );
+    }
+
+    public function store( BudgetStoreRequest $request ): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->create( $request->validated() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'provider.budgets.show', $result->getData()->code )
+                ->with( 'success', 'Orçamento criado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao criar orçamento: ' . $e->getMessage() );
+        }
+    }
+
+    public function update( string $code, BudgetUpdateRequest $request ): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->updateByCode( $code, $request->validated() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'provider.budgets.show', $code )
+                ->with( 'success', 'Orçamento atualizado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao atualizar orçamento: ' . $e->getMessage() );
+        }
+    }
+
+    public function show( string $code ): View
+    {
+        try {
+            $result = $this->budgetService->findByCode( $code, [
+                'customer.commonData',
+                'customer.contact'
+            ] );
+
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Orçamento não encontrado' );
+            }
+
+            return view( 'pages.budget.show', [
+                'budget' => $result->getData()
+            ] );
+
+        } catch ( Exception $e ) {
+            abort( 500, 'Erro ao carregar orçamento' );
+        }
+    }
+
+    public function edit( string $code ): View
+    {
+        try {
+            $result = $this->budgetService->findByCode( $code, [
+                'customer:id,name',
+                'items:id,budget_id,description,quantity,unit_price,total_price'
+            ] );
+
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Orçamento não encontrado' );
+            }
+
+            $budget = $result->getData();
+
+            // Verificar se pode editar
+            if ( !$budget->status->canBeEdited() ) {
+                abort( 403, 'Orçamento não pode ser editado no status atual' );
+            }
+
+            $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( [ 'status' => 'active' ] );
+
+            return view( 'budgets.edit', [
+                'budget'    => $budget,
+                'customers' => $customers->getData()
+            ] );
+
+        } catch ( Exception $e ) {
+            abort( 500, 'Erro ao carregar formulário de edição' );
+        }
+    }
+
+    public function update_store( string $code, BudgetUpdateRequest $request ): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->updateByCode( $code, $request->validated() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'budgets.show', $code )
+                ->with( 'success', 'Orçamento atualizado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao atualizar orçamento: ' . $e->getMessage() );
+        }
     }
 
     /**
@@ -37,23 +187,37 @@ class BudgetController extends Controller
     public function chooseBudgetStatus( string $code, string $token ): View|RedirectResponse
     {
         try {
-            // Find the budget by code and token
-            $budget = Budget::where( 'code', $code )
-                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
-                    $query->where( 'token', $token )
-                        ->where( 'expires_at', '>', now() );
-                } )
-                ->with( [ 'customer', 'budgetStatus', 'userConfirmationToken' ] )
-                ->first();
+            $validation = $this->budgetTokenService->validatePublicToken( $token, $code );
 
-            if ( !$budget ) {
-                Log::warning( 'Budget not found or token expired', [
-                    'code'  => $code,
-                    'token' => $token,
-                    'ip'    => request()->ip()
-                ] );
-                return redirect()->route( 'error.not-found' );
+            if ( !$validation->isSuccess() ) {
+                $errorMessage = $validation->getMessage();
+
+                // Check if token is expired
+                if ( str_contains( $errorMessage, 'expirado' ) || str_contains( $errorMessage, 'expired' ) ) {
+                    // Find the budget to regenerate token
+                    $budget = Budget::where( 'code', $code )->first();
+
+                    if ( $budget ) {
+                        // Regenerate token automatically
+                        $newTokenResult = $this->budgetTokenService->regenerateToken( $budget );
+
+                        if ( $newTokenResult->isSuccess() ) {
+                            $newToken = $newTokenResult->getData()[ 'token' ];
+
+                            // TODO: Send new token via email
+                            // $this->emailService->sendBudgetToken($budget, $newToken);
+
+                            return redirect()->back()
+                                ->with( 'info', 'Token expirado. Um novo token foi enviado por email.' );
+                        }
+                    }
+                }
+
+                return redirect()->back()
+                    ->with( 'error', 'Token inválido ou expirado.' );
             }
+
+            $budget = $validation->getData()[ 'budget' ];
 
             // Get available status options (only approved and rejected for public)
             $availableStatuses = collect( [ BudgetStatus::APPROVED, BudgetStatus::REJECTED ] )
@@ -66,14 +230,9 @@ class BudgetController extends Controller
                 'token'             => $token
             ] );
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Error in chooseBudgetStatus', [
-                'code'  => $code,
-                'token' => $token,
-                'error' => $e->getMessage(),
-                'ip'    => request()->ip()
-            ] );
-            return redirect()->route( 'error.internal' );
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->with( 'error', 'Erro ao validar token.' );
         }
     }
 
@@ -121,12 +280,12 @@ class BudgetController extends Controller
             // Update budget status
             $newStatusEnum = BudgetStatus::from( $request->budget_status_id );
             $budget->update( [
-                'budget_statuses_id' => $request->budget_status_id,
-                'history'            => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
+                'status'  => $request->budget_status_id,
+                'history' => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
             ] );
 
             // Log the action
-            $oldStatusEnum = BudgetStatus::from( $budget->budget_statuses_id );
+            $oldStatusEnum = $budget->status; // Use the enum directly from the model
             Log::info( 'Budget status updated via public link', [
                 'budget_id'   => $budget->id,
                 'budget_code' => $budget->code,
@@ -150,48 +309,80 @@ class BudgetController extends Controller
         }
     }
 
-    /**
-     * Print budget for public access.
-     */
-    public function print( string $code, string $token ): View|RedirectResponse
+    public function print( string $code ): Response
     {
         try {
-            // Find the budget by code and token
-            $budget = Budget::where( 'code', $code )
-                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
-                    $query->where( 'token', $token )
-                        ->where( 'expires_at', '>', now() );
-                } )
-                ->with( [
-                    'customer',
-                    'budgetStatus',
-                    'items.product',
-                    'userConfirmationToken',
-                    'tenant'
-                ] )
-                ->first();
+            $result = $this->budgetService->findByCode( $code, [
+                'customer:id,name,email,phone',
+                'items:id,budget_id,description,quantity,unit_price,total_price'
+            ] );
 
-            if ( !$budget ) {
-                Log::warning( 'Budget not found or token expired for print', [
-                    'code'  => $code,
-                    'token' => $token,
-                    'ip'    => request()->ip()
-                ] );
-                return redirect()->route( 'error.not-found' );
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Orçamento não encontrado' );
             }
 
-            return view( 'budgets.public.print', [
-                'budget' => $budget
+            $budget = $result->getData();
+
+            // Gerar PDF
+            $pdfPath = $this->budgetPdfService->generatePdf( $budget );
+            $hash    = $this->budgetPdfService->generateHash( $pdfPath );
+
+            // Atualizar hash no banco
+            $budget->update( [ 'pdf_verification_hash' => $hash ] );
+
+            // Retornar PDF
+            $pdfContent = Storage::get( $pdfPath );
+
+            return response( $pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => "inline; filename=\"orcamento_{$budget->code}.pdf\"",
+                'Cache-Control'       => 'public, max-age=86400' // 24h
             ] );
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Error in budget print', [
-                'code'  => $code,
-                'token' => $token,
-                'error' => $e->getMessage(),
-                'ip'    => request()->ip()
-            ] );
-            return redirect()->route( 'error.internal' );
+        } catch ( Exception $e ) {
+            abort( 500, 'Erro ao gerar PDF' );
+        }
+    }
+
+    public function change_status( string $code, Request $request ): RedirectResponse
+    {
+        $request->validate( [
+            'status' => [ 'required', 'string', Rule::in( array_map( fn( $status ) => $status->value, BudgetStatus::cases() ) ) ]
+        ] );
+
+        try {
+            $result = $this->budgetService->changeStatusByCode( $code, $request->status );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'budgets.show', $code )
+                ->with( 'success', 'Status alterado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->with( 'error', 'Erro ao alterar status: ' . $e->getMessage() );
+        }
+    }
+
+    public function delete_store( string $code ): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->deleteByCode( $code );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'budgets.index' )
+                ->with( 'success', 'Orçamento excluído com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->with( 'error', 'Erro ao excluir orçamento: ' . $e->getMessage() );
         }
     }
 

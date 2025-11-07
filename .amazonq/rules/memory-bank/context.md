@@ -8,12 +8,14 @@
 - **Modern Build Process**: Optimized asset compilation with tree shaking and minification
 - **Frontend Stack**: Tailwind CSS 3.1 + Alpine.js 3.15 + Bootstrap Icons 1.13
 
-### Current Active Development
-- **Provider Business Edit Page**: Advanced form with comprehensive validation
-- **Real-time Validation**: JavaScript-based form validation for better UX
-- **File Upload System**: Logo upload with preview functionality
-- **Address Integration**: CEP-based automatic address completion
-- **Multi-step Forms**: Complex business data management with multiple sections
+### Current Active Development (Updated 2025-01-02)
+- **Provider Business Edit Page**: ✅ COMPLETED - Advanced form with comprehensive validation
+- **Real-time Validation**: ✅ COMPLETED - JavaScript-based form validation for better UX
+- **File Upload System**: ✅ COMPLETED - Logo upload with preview functionality
+- **Address Integration**: ✅ COMPLETED - CEP-based automatic address completion
+- **Multi-step Forms**: ✅ COMPLETED - Complex business data management with multiple sections
+- **Database Schema Migration**: ✅ COMPLETED - Inverted FK relationships (1:1 pattern)
+- **PF/PJ Dynamic Forms**: ✅ COMPLETED - Toggle between individual and company fields
 
 ### Technology Stack Status
 - **Laravel**: 12.x with PHP 8.2+ support
@@ -34,14 +36,21 @@
 ### Current Form Patterns
 - **Three-tier Validation**: Server-side + Client-side + Real-time
 - **Modern JavaScript**: ES6+ with async/await and modern APIs
-- **File Handling**: Multi-format support with size validation
+- **File Handling**: Multi-format support with size validation (5MB max)
 - **User Experience**: Progressive enhancement with graceful degradation
+- **Dynamic Field Toggle**: PF/PJ fields show/hide based on person_type selection
+- **Mask Integration**: VanillaMask for CPF, CNPJ, phone, and CEP formatting
+- **Logo Preview**: Real-time image preview before upload
 
-### Recent Improvements
+### Recent Improvements (2025-01-02)
 - **Birth Date Validation**: Comprehensive age verification (18+ years)
-- **Document Formatting**: Real-time CPF/CNPJ formatting
+- **Document Formatting**: Real-time CPF/CNPJ formatting with VanillaMask
 - **Error Handling**: Improved user feedback with contextual messages
 - **Responsive Design**: Mobile-first approach with Bootstrap 5.3
+- **Database Architecture**: Inverted FK relationships for 1:1 patterns
+- **Type Detection**: Automatic PF/PJ detection based on CNPJ presence
+- **Business Data Management**: Conditional BusinessData creation for PJ only
+- **Contact Consolidation**: Single source of truth for all contact information
 
 ### Development Workflow
 - **Vite Development**: `npm run dev` for HMR-enabled development
@@ -50,13 +59,16 @@
 - **Code Quality**: PHPStan static analysis + Laravel Pint formatting
 
 ### Current Challenges & Solutions
-- **Complex Forms**: Multi-section forms with interdependent validation
-- **File Management**: Secure upload with preview and validation
-- **Real-time Feedback**: JavaScript validation without page refresh
-- **Multi-tenant Data**: Proper scoping and isolation across all operations
+- ✅ **Complex Forms**: SOLVED - Multi-section forms with interdependent validation
+- ✅ **File Management**: SOLVED - Secure upload with preview and validation
+- ✅ **Real-time Feedback**: SOLVED - JavaScript validation without page refresh
+- ✅ **Multi-tenant Data**: SOLVED - Proper scoping and isolation across all operations
+- ✅ **Database Relationships**: SOLVED - Inverted FK pattern for 1:1 relationships
+- ✅ **PF/PJ Handling**: SOLVED - Dynamic form fields with type detection
 
 ### Next Development Priorities
-- **Enhanced UX**: Further form validation improvements
+- **Testing**: Expanded test coverage for Provider Business Edit functionality
+- **Customer Management**: Apply same patterns to customer CRUD operations
 - **Performance**: Asset optimization and caching strategies
-- **Testing**: Expanded test coverage for new features
-- **Documentation**: Updated pattern documentation for new implementations
+- **Documentation**: ✅ Memory bank updated with latest implementations
+- **Code Review**: Validate all implementations against best practices

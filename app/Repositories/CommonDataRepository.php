@@ -24,16 +24,20 @@ class CommonDataRepository extends AbstractTenantRepository
      */
     public function createForCustomer( array $data, int $tenantId, int $customerId ): Model
     {
-        $commonData = new CommonData();
-        $commonData->fill( [
-            'tenant_id'   => $tenantId,
-            'customer_id' => $customerId,
-            'cpf_cnpj'    => $data[ 'cpf_cnpj' ] ?? null,
-            'rg'          => $data[ 'rg' ] ?? null,
-            // Outros campos de dados comuns como birth_date, etc.
+        return $this->create( [
+            'tenant_id'           => $tenantId,
+            'customer_id'         => $customerId,
+            'type'                => $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
+            'first_name'          => $data[ 'first_name' ] ?? null,
+            'last_name'           => $data[ 'last_name' ] ?? null,
+            'cpf'                 => $data[ 'cpf' ] ?? null,
+            'birth_date'          => $data[ 'birth_date' ] ?? null,
+            'company_name'        => $data[ 'company_name' ] ?? null,
+            'cnpj'                => $data[ 'cnpj' ] ?? null,
+            'description'         => $data[ 'description' ] ?? null,
+            'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
+            'profession_id'       => $data[ 'profession_id' ] ?? null,
         ] );
-        $commonData->save();
-        return $commonData;
     }
 
     /**
@@ -51,16 +55,20 @@ class CommonDataRepository extends AbstractTenantRepository
      */
     public function createForProvider( array $data, int $tenantId, int $providerId ): Model
     {
-        $commonData = new CommonData();
-        $commonData->fill( [
-            'tenant_id'   => $tenantId,
-            'provider_id' => $providerId,
-            'cpf_cnpj'    => $data[ 'cpf_cnpj' ] ?? null,
-            'rg'          => $data[ 'rg' ] ?? null,
-            // Outros campos de dados comuns
+        return $this->create( [
+            'tenant_id'           => $tenantId,
+            'provider_id'         => $providerId,
+            'type'                => $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
+            'first_name'          => $data[ 'first_name' ] ?? null,
+            'last_name'           => $data[ 'last_name' ] ?? null,
+            'cpf'                 => $data[ 'cpf' ] ?? null,
+            'birth_date'          => $data[ 'birth_date' ] ?? null,
+            'company_name'        => $data[ 'company_name' ] ?? null,
+            'cnpj'                => $data[ 'cnpj' ] ?? null,
+            'description'         => $data[ 'description' ] ?? null,
+            'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
+            'profession_id'       => $data[ 'profession_id' ] ?? null,
         ] );
-        $commonData->save();
-        return $commonData;
     }
 
     /**
@@ -68,13 +76,15 @@ class CommonDataRepository extends AbstractTenantRepository
      */
     public function updateForProvider( array $data, int $tenantId, int $providerId ): bool
     {
-        $commonData = $this->model->where( 'provider_id', $providerId )->first();
+        $commonData = $this->model->where( 'provider_id', $providerId )
+            ->where( 'tenant_id', $tenantId )
+            ->first();
+        
         if ( !$commonData ) {
             return false;
         }
-        $commonData->fill( $data );
-        $commonData->save();
-        return true;
+        
+        return $commonData->update( $data );
     }
 
     /**

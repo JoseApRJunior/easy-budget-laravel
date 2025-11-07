@@ -131,15 +131,16 @@ class AdminTenantSeeder extends Seeder
             ],
             [
                 'tenant_id'           => $tenant->id,
-                'first_name'          => 'Admin',
-                'last_name'           => 'Sistema',
-                'birth_date'          => '1980-01-01',
-                'cpf'                 => '00000000002',
+                'type'                => 'company',
+                'first_name'          => null,
+                'last_name'           => null,
+                'birth_date'          => null,
+                'cpf'                 => null,
                 'cnpj'                => '00000000000200',
                 'company_name'        => 'Easy Budget - Administração',
                 'description'         => 'Tenant administrativo para gerenciamento completo do sistema Easy Budget',
                 'area_of_activity_id' => $this->getOrCreateAreaOfActivity(),
-                'profession_id'       => $this->getOrCreateProfession(),
+                'profession_id'       => null,
             ],
         );
 
@@ -152,12 +153,14 @@ class AdminTenantSeeder extends Seeder
             [
                 'user_id'        => $user->id,
                 'tenant_id'      => $tenant->id,
-                'common_data_id' => $commonData->id,
-                'contact_id'     => $contact->id,
-                'address_id'     => $address->id,
                 'terms_accepted' => true,
             ],
         );
+
+        // Vincular dados relacionados ao provider
+        $commonData->update( [ 'provider_id' => $provider->id ] );
+        $contact->update( [ 'provider_id' => $provider->id ] );
+        $address->update( [ 'provider_id' => $provider->id ] );
 
         // 5. Criar roles necessárias
         $this->createAdminRoles( $tenant, $user );

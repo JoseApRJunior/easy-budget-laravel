@@ -39,6 +39,8 @@ class Contact extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'customer_id',
+        'provider_id',
         'email_personal',
         'phone_personal',
         'email_business',
@@ -66,6 +68,8 @@ class Contact extends Model
      */
     protected $casts = [
         'tenant_id'      => 'integer',
+        'customer_id'    => 'integer',
+        'provider_id'    => 'integer',
         'email_personal' => 'string',
         'phone_personal' => 'string',
         'email_business' => 'string',
@@ -82,9 +86,11 @@ class Contact extends Model
     {
         return [
             'tenant_id'      => 'required|integer|exists:tenants,id',
-            'email_personal' => 'nullable|email|max:255|unique:contacts,email_personal',
+            'customer_id'    => 'nullable|integer|exists:customers,id',
+            'provider_id'    => 'nullable|integer|exists:providers,id',
+            'email_personal' => 'nullable|email|max:255',
             'phone_personal' => 'nullable|string|max:20',
-            'email_business' => 'nullable|email|max:255|unique:contacts,email_business',
+            'email_business' => 'nullable|email|max:255',
             'phone_business' => 'nullable|string|max:20',
             'website'        => 'nullable|url|max:255',
         ];
@@ -101,17 +107,17 @@ class Contact extends Model
     /**
      * Get the customer associated with the Contact.
      */
-    public function customer(): HasOne
+    public function customer(): BelongsTo
     {
-        return $this->hasOne( Customer::class);
+        return $this->belongsTo( Customer::class);
     }
 
     /**
-     * Get the providers associated with the Contact.
+     * Get the provider associated with the Contact.
      */
-    public function providers(): HasMany
+    public function provider(): BelongsTo
     {
-        return $this->hasMany( Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
 }

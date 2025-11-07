@@ -26,12 +26,12 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
-        return [ 
-            'code'    => $this->faker->unique()->lexify( 'PROD-???' ),
-            'name'    => $this->faker->word,
-            'price'   => $this->faker->randomFloat( 2, 10, 1000 ),
-            'active'  => $this->faker->boolean( 80 ), // 80% chance de ativo
-            'unit_id' => null,
+        return [
+            'code'        => $this->faker->unique()->lexify( 'PROD-???' ),
+            'name'        => $this->faker->word,
+            'description' => $this->faker->sentence( 3 ),
+            'price'       => $this->faker->randomFloat( 2, 10, 1000 ),
+            'active'      => $this->faker->boolean( 80 ), // 80% chance de ativo
         ];
     }
 
@@ -43,7 +43,7 @@ class ProductFactory extends Factory
      */
     public function withTenant(): static
     {
-        return $this->state( fn( array $attributes ) => [ 
+        return $this->state( fn( array $attributes ) => [
             'tenant_id' => $attributes[ 'tenant_id' ] ?? Tenant::factory()->create()->id,
         ] );
     }
@@ -57,7 +57,7 @@ class ProductFactory extends Factory
      */
     public function withCategory(): static
     {
-        return $this->state( fn( array $attributes ) => [ 
+        return $this->state( fn( array $attributes ) => [
             'category_id' => $attributes[ 'category_id' ] ??
                 Category::factory()
                     ->forTenant( $attributes[ 'tenant_id' ] ?? Tenant::first()->id )

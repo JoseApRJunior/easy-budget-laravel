@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\CustomerPessoaFisicaRequest;
+use App\Http\Requests\CustomerPessoaJuridicaRequest;
 use App\Models\AreaOfActivity;
 use App\Models\Customer;
 use App\Models\Profession;
@@ -50,6 +52,8 @@ class CustomerController extends Controller
         ] );
     }
 
+
+
     /**
      * Formulário de criação de cliente
      */
@@ -66,90 +70,43 @@ class CustomerController extends Controller
     }
 
     /**
-     * Criar cliente (Pessoa Física ou Jurídica)
+     * Criar cliente (PF ou PJ baseado no tipo de documento)
      */
     public function store( Request $request ): RedirectResponse
     {
-        // Determinar tipo baseado nos dados enviados
-        $customerType = $this->determineCustomerType( $request );
+        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
+        $cnpj = $request->input( 'cnpj', '' );
+        $cpf = $request->input( 'cpf', '' );
+        $isPJ = !empty( $cnpj );
+        
+        $formRequest = $isPJ 
+            ? app( CustomerPessoaJuridicaRequest::class )
+            : app( CustomerPessoaFisicaRequest::class );
+        
+        $formRequest->setContainer( app() )
+            ->setRedirector( app( 'redirect' ) )
+            ->replace( $request->all() );
+        
+        $formRequest->validateResolved();
+        $validated = $formRequest->validated();
 
-        Log::info( 'Iniciando criação de cliente', [
-            'customer_type' => $customerType,
-            'data'          => $request->all(),
-            'user_id'       => Auth::id(),
-            'tenant_id'     => Auth::user()?->tenant_id,
-            'note'          => 'Preencha o campo CPF ou CNPJ.'
+        $result = $this->customerService->createCustomer( $validated );
+
+        if ( !$result->isSuccess() ) {
+            return back()->withInput()->with( 'error', $result->getMessage() );
+        }
+
+        $this->logOperation( 'customer_created', [
+            'customer_id' => $result->getData()->id,
+            'type'        => $isPJ ? 'pj' : 'pf'
         ] );
 
-        try {
-            $result = $this->customerService->createCustomer( $request->all() );
-
-            if ( !$result->isSuccess() ) {
-                Log::error( 'Erro ao criar cliente', [
-                    'customer_type' => $customerType,
-                    'error'         => $result->getMessage(),
-                    'data'          => $request->all(),
-                    'user_id'       => Auth::id()
-                ] );
-
-                return redirect()
-                    ->route( 'provider.customers.create' )
-                    ->with( 'error', $result->getMessage() );
-            }
-
-            Log::info( 'Cliente criado com sucesso', [
-                'customer_type' => $customerType,
-                'customer_id'   => $result->getData()->id,
-                'user_id'       => Auth::id()
-            ] );
-
-            $this->logOperation( 'customer_created', [
-                'customer_id' => $result->getData()->id,
-                'type'        => $customerType
-            ] );
-
-            return redirect()
-                ->route( 'provider.customers.show', $result->getData() )
-                ->with( 'success', $result->getMessage() );
-
-        } catch ( \Throwable $e ) {
-            Log::error( 'Exceção ao criar cliente', [
-                'customer_type' => $customerType,
-                'exception'     => $e->getMessage(),
-                'trace'         => $e->getTraceAsString(),
-                'data'          => $request->all(),
-                'user_id'       => Auth::id()
-            ] );
-
-            return redirect()
-                ->route( 'provider.customers.create' )
-                ->with( 'error', 'Erro interno do servidor. Tente novamente mais tarde.' );
-        }
+        return redirect()
+            ->route( 'provider.customers.show', $result->getData() )
+            ->with( 'success', $result->getMessage() );
     }
 
-    /**
-     * Determinar tipo de cliente baseado nos dados enviados
-     */
-    private function determineCustomerType( Request $request ): string
-    {
-        // Se tem CNPJ, é pessoa jurídica
-        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 14 ) {
-            return 'pessoa_juridica';
-        }
 
-        // Se tem CPF, é pessoa física
-        if ( $request->filled( 'document' ) && strlen( preg_replace( '/\D/', '', $request->document ) ) === 11 ) {
-            return 'pessoa_fisica';
-        }
-
-        // Fallback: verificar se tem dados empresariais
-        if ( $request->filled( [ 'company_name', 'company_email' ] ) ) {
-            return 'pessoa_juridica';
-        }
-
-        // Default: pessoa física
-        return 'pessoa_fisica';
-    }
 
     /**
      * Detalhes do cliente
@@ -190,46 +147,37 @@ class CustomerController extends Controller
     }
 
     /**
-     * Atualizar cliente
+     * Atualizar cliente (PF ou PJ baseado no documento existente)
      */
     public function update( Customer $customer, Request $request ): RedirectResponse
     {
-        // Verificar se o cliente pertence ao tenant do usuário
         if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
             abort( 403, 'Cliente não encontrado.' );
         }
 
-        // Usar validação apropriada baseada no tipo de cliente
-        if ( $customer->isCompany() ) {
-            $request->validate( [
-                // Regras para pessoa jurídica
-                'company_name'  => 'required|string|max:255',
-                'document'      => 'required|string|size:14|unique:customers,document,' . $customer->id,
-                'company_email' => 'required|email|unique:customers,email,' . $customer->id,
-                // ... outras regras
-            ] );
-        } else {
-            $request->validate( [
-                // Regras para pessoa física
-                'name'     => 'required|string|max:255',
-                'document' => 'required|string|size:11|unique:customers,document,' . $customer->id,
-                'email'    => 'required|email|unique:customers,email,' . $customer->id,
-                // ... outras regras
-            ] );
-        }
+        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
+        $cnpj = $request->input( 'cnpj', '' );
+        $cpf = $request->input( 'cpf', '' );
+        $isPJ = !empty( $cnpj );
+        
+        $formRequest = $isPJ 
+            ? app( CustomerPessoaJuridicaRequest::class )
+            : app( CustomerPessoaFisicaRequest::class );
+        
+        $formRequest->setContainer( app() )
+            ->setRedirector( app( 'redirect' ) )
+            ->replace( $request->all() );
+        
+        $formRequest->validateResolved();
+        $validated = $formRequest->validated();
 
-        $result = $this->customerService->updateCustomer( $customer->id, $request->all() );
+        $result = $this->customerService->updateCustomer( $customer->id, $validated );
 
         if ( !$result->isSuccess() ) {
-            return redirect()
-                ->route( 'provider.customers.edit', $customer )
-                ->with( 'error', $result->getMessage() );
+            return back()->withInput()->with( 'error', $result->getMessage() );
         }
 
-        $this->logOperation( 'customer_updated', [
-            'customer_id' => $customer->id,
-            'changes'     => $request->all()
-        ] );
+        $this->logOperation( 'customer_updated', [ 'customer_id' => $customer->id ] );
 
         return redirect()
             ->route( 'provider.customers.show', $customer )
@@ -400,6 +348,72 @@ class CustomerController extends Controller
         return view( 'pages.customer.dashboard', [
             'stats' => $stats,
         ] );
+    }
+
+    /**
+     * Busca AJAX de clientes
+     */
+    public function search(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $searchTerm = $request->input('search', '');
+            
+            // Busca direta no modelo para testar
+            $query = Customer::with(['commonData', 'contact'])
+                ->where('tenant_id', Auth::user()->tenant_id);
+            
+            if (!empty($searchTerm)) {
+                $query->where(function($q) use ($searchTerm) {
+                    $q->whereHas('commonData', function($subQ) use ($searchTerm) {
+                        $subQ->where('first_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('company_name', 'like', "%{$searchTerm}%")
+                             ->orWhere('cpf', 'like', "%{$searchTerm}%")
+                             ->orWhere('cnpj', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('contact', function($subQ) use ($searchTerm) {
+                        $subQ->where('email_personal', 'like', "%{$searchTerm}%")
+                             ->orWhere('email_business', 'like', "%{$searchTerm}%");
+                    });
+                });
+            }
+            
+            $customers = $query->limit(50)->get();
+
+            $result = $customers->map(function ($customer) {
+                $commonData = $customer->commonData;
+                $contact = $customer->contact;
+                
+                return [
+                    'id' => $customer->id,
+                    'customer_name' => $commonData ? 
+                        ($commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name)) : 
+                        'Nome não informado',
+                    'cpf' => $commonData?->cpf ?? '',
+                    'cnpj' => $commonData?->cnpj ?? '',
+                    'email' => $contact?->email_personal ?? '',
+                    'email_business' => $contact?->email_business ?? '',
+                    'phone' => $contact?->phone_personal ?? '',
+                    'phone_business' => $contact?->phone_business ?? '',
+                    'created_at' => $customer->created_at->toISOString(),
+                ];
+            });
+
+            return response()->json($result);
+            
+        } catch (\Exception $e) {
+            Log::error('Erro na busca de clientes', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'user_id' => Auth::id(),
+                'search_term' => $request->input('search')
+            ]);
+            
+            return response()->json([
+                'error' => 'Erro interno: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

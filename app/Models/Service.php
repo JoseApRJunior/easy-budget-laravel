@@ -11,6 +11,7 @@ use App\Models\ServiceItem;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,7 +19,7 @@ use Illuminate\Support\Carbon;
 
 class Service extends Model
 {
-    use TenantScoped;
+    use TenantScoped, HasFactory;
 
     /**
      * Boot the model.
@@ -55,6 +56,7 @@ class Service extends Model
         'discount',
         'total',
         'due_date',
+        'reason',
     ];
 
     /**
@@ -83,6 +85,7 @@ class Service extends Model
         'discount'                   => 'decimal:2',
         'total'                      => 'decimal:2',
         'due_date'                   => 'date',
+        'reason'                     => 'string',
         'pdf_verification_hash'      => 'string',
         'public_token'               => 'string',
         'public_expires_at'          => 'datetime',
@@ -106,6 +109,7 @@ class Service extends Model
             'discount'                   => 'required|numeric|min:0|max:999999.99',
             'total'                      => 'required|numeric|min:0|max:999999.99',
             'due_date'                   => 'nullable|date',
+            'reason'                     => 'nullable|string|max:500',
             'pdf_verification_hash'      => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
             'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
             'public_expires_at'          => 'nullable|date',

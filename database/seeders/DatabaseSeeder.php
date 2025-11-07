@@ -46,7 +46,7 @@ class DatabaseSeeder extends Seeder
             AdminTenantSeeder::class,
         ] );
 
-        // 4. Criar provedores de teste (opcional - apenas em desenvolvimento)
+        // 4. Criar Prestadores de teste (opcional - apenas em desenvolvimento)
         if ( app()->environment( [ 'local', 'testing' ] ) ) {
             $this->command->info( '🏢 Criando dados de teste...' );
             $this->call( [
@@ -65,10 +65,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info( '   • Senha admin: AdminPassword1@' );
 
         if ( app()->environment( [ 'local', 'testing' ] ) ) {
-            $this->command->info( '   • Provedores de teste criados' );
-            $this->command->info( '   • Provider 1: provider@easybudget.net.br' );
-            $this->command->info( '   • Provider 2: provider2@easybudget.net.br' );
-            $this->command->info( '   • Senha padrão: Password1@ (teste) / AdminPassword1@ (admin)' );
+            $this->command->info( '   • 10 Prestadores de teste criados (5 PJ + 5 PF)' );
+            $this->command->info( '   • 200 Clientes de teste criados (100 PF + 100 PJ)' );
+            $this->command->info( '   • Login: provider1@test.com até provider10@test.com' );
+            $this->command->info( '   • Senha padrão: Password1@' );
         }
 
         $this->command->info( '' );

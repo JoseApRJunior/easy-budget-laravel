@@ -55,6 +55,15 @@ class ProviderBusinessUpdateRequest extends FormRequest
 
             // Logo da empresa
             'logo'                => [ 'nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048' ],
+
+            // Dados empresariais (PJ)
+            'fantasy_name'           => [ 'nullable', 'string', 'max:255' ],
+            'state_registration'     => [ 'nullable', 'string', 'max:50' ],
+            'municipal_registration' => [ 'nullable', 'string', 'max:50' ],
+            'founding_date'          => [ 'nullable', 'date_format:d/m/Y' ],
+            'industry'               => [ 'nullable', 'string', 'max:255' ],
+            'company_size'           => [ 'nullable', 'in:micro,pequena,media,grande' ],
+            'notes'                  => [ 'nullable', 'string' ],
         ];
     }
 

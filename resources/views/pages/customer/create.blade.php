@@ -1,8 +1,9 @@
 @extends( 'layouts.app' )
 
+@section( 'title', 'Criar Novo Cliente' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">
@@ -10,358 +11,446 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider/customers' ) }}">Clientes</a></li>
-                    <li class="breadcrumb-item active">Novo</li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.customers.index' ) }}">Clientes</a></li>
+                    <li class="breadcrumb-item active">Novo Cliente</li>
                 </ol>
             </nav>
         </div>
 
-        <form id="createForm" action="{{ route( 'provider.customers.store' ) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route( 'provider.customers.store' ) }}" method="POST" id="customerForm">
             @csrf
 
             <div class="row g-4">
                 <!-- Dados Pessoais -->
-                <div class="col-12 col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent border-0">
-                            <h5 class="card-title mb-0">
-                                <i class="bi bi-person me-2"></i>Dados Pessoais
-                            </h5>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Dados Pessoais</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <!-- Campos pessoais aqui -->
-                                @include( 'partials.customer.personal_fields' )
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">Nome</label>
+                                <input type="text" class="form-control @error('first_name') is-invalid @enderror"
+                                       id="first_name" name="first_name" value="{{ old('first_name') }}" required>
+                                @error('first_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Sobrenome</label>
+                                <input type="text" class="form-control @error('last_name') is-invalid @enderror"
+                                       id="last_name" name="last_name" value="{{ old('last_name') }}" required>
+                                @error('last_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birth_date" class="form-label">Data de Nascimento</label>
+                                <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
+                                       id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
+                                       placeholder="DD/MM/AAAA">
+                                <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
+                                @error('birth_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email_personal" class="form-label">Email Pessoal</label>
+                                <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
+                                       id="email_personal" name="email_personal" value="{{ old('email_personal') }}" required>
+                                @error('email_personal')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone_personal" class="form-label">Telefone Pessoal</label>
+                                <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
+                                       id="phone_personal" name="phone_personal" value="{{ old('phone_personal') }}" required>
+                                @error('phone_personal')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Dados Profissionais -->
-                <div class="col-12 col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent border-0">
-                            <h5 class="card-title mb-0">
-                                <i class="bi bi-briefcase me-2"></i>Dados Profissionais
-                            </h5>
-                            <div class="alert alert-info py-2 mb-0">
-                                <small class="mb-0">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                    <strong>Obrigatório:</strong> Preencha o campo CPF ou CNPJ.
-                                </small>
-                            </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Dados Profissionais</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <!-- Campos profissionais aqui -->
-                                @include( 'partials.customer.professional_fields' )
+                            <div class="mb-3">
+                                <label for="person_type" class="form-label">Tipo de Pessoa</label>
+                                <select name="person_type" id="person_type"
+                                    class="form-select @error( 'person_type' ) is-invalid @enderror" required>
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="pf" {{ old('person_type') == 'pf' ? 'selected' : '' }}>Pessoa Física</option>
+                                    <option value="pj" {{ old('person_type') == 'pj' ? 'selected' : '' }}>Pessoa Jurídica</option>
+                                </select>
+                                @error( 'person_type' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Campos PF -->
+                            <div id="pf_fields">
+                                <div class="mb-3">
+                                    <label for="cpf" class="form-label">CPF</label>
+                                    <input type="text" class="form-control @error( 'cpf' ) is-invalid @enderror"
+                                           id="cpf" name="cpf" value="{{ old( 'cpf' ) }}">
+                                    @error( 'cpf' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Campos PJ -->
+                            <div id="pj_fields">
+                                <div class="mb-3">
+                                    <label for="company_name" class="form-label">Razão Social</label>
+                                    <input type="text" class="form-control @error( 'company_name' ) is-invalid @enderror"
+                                           id="company_name" name="company_name" value="{{ old( 'company_name' ) }}">
+                                    @error( 'company_name' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="cnpj" class="form-label">CNPJ</label>
+                                    <input type="text" class="form-control @error( 'cnpj' ) is-invalid @enderror"
+                                           id="cnpj" name="cnpj" value="{{ old( 'cnpj' ) }}">
+                                    @error( 'cnpj' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="area_of_activity_id" class="form-label">Área de Atuação</label>
+                                <select name="area_of_activity_id" class="form-select @error( 'area_of_activity_id' ) is-invalid @enderror"
+                                        id="area_of_activity_id">
+                                    <option value="">Selecione uma área</option>
+                                    @foreach ( $areas_of_activity as $area )
+                                        <option value="{{ $area->id }}"
+                                            {{ old( 'area_of_activity_id' ) == $area->id ? 'selected' : '' }}>
+                                            {{ $area->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error( 'area_of_activity_id' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="profession_id" class="form-label">Profissão</label>
+                                <select name="profession_id" class="form-select @error( 'profession_id' ) is-invalid @enderror"
+                                        id="profession_id">
+                                    <option value="">Selecione uma profissão</option>
+                                    @foreach ( $professions as $prof )
+                                        <option value="{{ $prof->id }}"
+                                            {{ old( 'profession_id' ) == $prof->id ? 'selected' : '' }}>
+                                            {{ $prof->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error( 'profession_id' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descrição</label>
+                                <textarea class="form-control @error( 'description' ) is-invalid @enderror"
+                                          id="description" name="description" rows="3" maxlength="250"
+                                          placeholder="Descrição do cliente...">{{ old( 'description' ) }}</textarea>
+                                @error( 'description' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contato -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Contato</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="email_business" class="form-label">Email Empresarial</label>
+                                <input type="email" class="form-control @error( 'email_business' ) is-invalid @enderror"
+                                       id="email_business" name="email_business" value="{{ old( 'email_business' ) }}">
+                                @error( 'email_business' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone_business" class="form-label">Telefone Empresarial</label>
+                                <input type="tel" class="form-control @error( 'phone_business' ) is-invalid @enderror"
+                                       id="phone_business" name="phone_business" value="{{ old( 'phone_business' ) }}">
+                                @error( 'phone_business' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="website" class="form-label">Website</label>
+                                <input type="url" class="form-control @error( 'website' ) is-invalid @enderror"
+                                       id="website" name="website" value="{{ old( 'website' ) }}">
+                                @error( 'website' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Endereço -->
-                <div class="col-12 col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent border-0">
-                            <h5 class="card-title mb-0">
-                                <i class="bi bi-geo-alt me-2"></i>Endereço
-                            </h5>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Endereço</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <!-- Campos de endereço aqui -->
-                                @include( 'partials.customer.address_fields' )
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cep" class="form-label">CEP</label>
+                                    <input type="text" class="form-control @error( 'cep' ) is-invalid @enderror"
+                                           id="cep" name="cep" data-cep-lookup value="{{ old( 'cep' ) }}" required>
+                                    @error( 'cep' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="address_number" class="form-label">Número</label>
+                                    <input type="text" class="form-control @error( 'address_number' ) is-invalid @enderror"
+                                           id="address_number" name="address_number" value="{{ old( 'address_number' ) }}">
+                                    @error( 'address_number' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Endereço</label>
+                                <input type="text" class="form-control @error( 'address' ) is-invalid @enderror"
+                                       id="address" name="address" value="{{ old( 'address' ) }}" required>
+                                @error( 'address' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="neighborhood" class="form-label">Bairro</label>
+                                <input type="text" class="form-control @error( 'neighborhood' ) is-invalid @enderror"
+                                       id="neighborhood" name="neighborhood" value="{{ old( 'neighborhood' ) }}" required>
+                                @error( 'neighborhood' )
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="city" class="form-label">Cidade</label>
+                                    <input type="text" class="form-control @error( 'city' ) is-invalid @enderror"
+                                           id="city" name="city" value="{{ old( 'city' ) }}" required>
+                                    @error( 'city' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="state" class="form-label">Estado</label>
+                                    <input type="text" class="form-control @error( 'state' ) is-invalid @enderror"
+                                           id="state" name="state" value="{{ old( 'state' ) }}" required>
+                                    @error( 'state' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Dados Empresariais Adicionais (PJ) -->
+                <div class="col-12" id="business-data-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0"><i class="bi bi-building-gear me-2"></i>Dados Empresariais Adicionais</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fantasy_name" class="form-label">Nome Fantasia</label>
+                                    <input type="text" class="form-control @error( 'fantasy_name' ) is-invalid @enderror"
+                                           id="fantasy_name" name="fantasy_name" value="{{ old( 'fantasy_name' ) }}">
+                                    @error( 'fantasy_name' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="founding_date" class="form-label">Data de Fundação</label>
+                                    <input type="text" class="form-control @error( 'founding_date' ) is-invalid @enderror"
+                                           id="founding_date" name="founding_date" value="{{ old( 'founding_date' ) }}"
+                                           placeholder="DD/MM/AAAA">
+                                    @error( 'founding_date' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="state_registration" class="form-label">Inscrição Estadual</label>
+                                    <input type="text" class="form-control @error( 'state_registration' ) is-invalid @enderror"
+                                           id="state_registration" name="state_registration" value="{{ old( 'state_registration' ) }}">
+                                    @error( 'state_registration' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="municipal_registration" class="form-label">Inscrição Municipal</label>
+                                    <input type="text" class="form-control @error( 'municipal_registration' ) is-invalid @enderror"
+                                           id="municipal_registration" name="municipal_registration" value="{{ old( 'municipal_registration' ) }}">
+                                    @error( 'municipal_registration' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="industry" class="form-label">Setor de Atuação</label>
+                                    <input type="text" class="form-control @error( 'industry' ) is-invalid @enderror"
+                                           id="industry" name="industry" value="{{ old( 'industry' ) }}">
+                                    @error( 'industry' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_size" class="form-label">Porte da Empresa</label>
+                                    <select name="company_size" class="form-select @error( 'company_size' ) is-invalid @enderror"
+                                            id="company_size">
+                                        <option value="">Selecione</option>
+                                        <option value="micro" {{ old( 'company_size' ) == 'micro' ? 'selected' : '' }}>Microempresa</option>
+                                        <option value="pequena" {{ old( 'company_size' ) == 'pequena' ? 'selected' : '' }}>Pequena Empresa</option>
+                                        <option value="media" {{ old( 'company_size' ) == 'media' ? 'selected' : '' }}>Média Empresa</option>
+                                        <option value="grande" {{ old( 'company_size' ) == 'grande' ? 'selected' : '' }}>Grande Empresa</option>
+                                    </select>
+                                    @error( 'company_size' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label for="notes" class="form-label">Observações</label>
+                                    <textarea class="form-control @error( 'notes' ) is-invalid @enderror"
+                                              id="notes" name="notes" rows="3"
+                                              placeholder="Informações adicionais sobre o cliente...">{{ old( 'notes' ) }}</textarea>
+                                    @error( 'notes' )
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Botões de Ação -->
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <a href="{{ url( '/provider/customers' ) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-2"></i>Cancelar
-                </a>
-                <button type="submit" class="btn btn-primary" id="createButton" disabled>
-                    <i class="bi bi-check-circle me-2"></i>Criar Cliente
-                </button>
+            <!-- Botões -->
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Criar Cliente
+                    </button>
+                    <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </a>
+                </div>
             </div>
         </form>
     </div>
 @endsection
 
 @push( 'scripts' )
-    <!-- Scripts específicos da página -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function togglePersonFields() {
+        const type = document.getElementById('person_type').value;
+        const pfFields = document.getElementById('pf_fields');
+        const pjFields = document.getElementById('pj_fields');
+        const businessSection = document.getElementById('business-data-section');
 
-    <script>
-        // ========================================
-        // VALIDAÇÃO EM TEMPO REAL
-        // ========================================
+        pfFields.style.display = type === 'pf' ? 'block' : 'none';
+        pjFields.style.display = type === 'pj' ? 'block' : 'none';
+        businessSection.style.display = type === 'pj' ? 'block' : 'none';
+    }
 
-        /**
-         * Valida campos obrigatórios
-         */
-        function validateRequiredField( input, fieldName ) {
-            const value = input.value.trim();
+    togglePersonFields();
 
-            if ( !value ) {
-                input.classList.add( 'is-invalid' );
-                let errorDiv = input.nextElementSibling;
-                if ( !errorDiv || !errorDiv.classList.contains( 'invalid-feedback' ) ) {
-                    errorDiv = document.createElement( 'div' );
-                    errorDiv.className = 'invalid-feedback';
-                    input.parentNode.insertBefore( errorDiv, input.nextSibling );
-                }
-                errorDiv.textContent = `O ${fieldName} é obrigatório.`;
-            } else {
-                input.classList.remove( 'is-invalid' );
-                const errorDiv = input.nextElementSibling;
-                if ( errorDiv && errorDiv.classList.contains( 'invalid-feedback' ) ) {
-                    errorDiv.textContent = '';
-                }
-            }
+    setTimeout(() => {
+        if (typeof VanillaMask !== 'undefined') {
+            ['phone_personal', 'phone_business', 'cep', 'cpf', 'cnpj'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) new VanillaMask(id, id === 'phone_personal' || id === 'phone_business' ? 'phone' : id);
+            });
         }
+    }, 100);
 
-        /**
-         * Valida formato da data (DD/MM/YYYY)
-         */
-        function isValidDateFormat( value ) {
-            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-            return dateRegex.test( value );
+    document.getElementById('person_type')?.addEventListener('change', function() {
+        togglePersonFields();
+        setTimeout(() => {
+            if (typeof VanillaMask !== 'undefined') {
+                const type = this.value;
+                if (type === 'pf') {
+                    new VanillaMask('cpf', 'cpf');
+                } else if (type === 'pj') {
+                    new VanillaMask('cnpj', 'cnpj');
+                }
+            }
+        }, 200);
+    });
+
+    // Validação de data de nascimento
+    function isValidBirthDate(value) {
+        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return false;
+        
+        const parts = value.split('/');
+        const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        const today = new Date();
+        
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
         }
+        
+        return age >= 18 && birthDate < today;
+    }
 
-        /**
-         * Valida se a data é válida, anterior a hoje e pessoa tem pelo menos 18 anos
-         */
-        function isValidBirthDate( value ) {
-            if ( !isValidDateFormat( value ) ) return false;
-
-            const parts = value.split( '/' );
-            const day = parseInt( parts[0], 10 );
-            const month = parseInt( parts[1], 10 ) - 1; // JavaScript months are 0-based
-            const year = parseInt( parts[2], 10 );
-
-            const birthDate = new Date( year, month, day );
-            const today = new Date();
-
-            // Verificar se a data é válida
-            if ( birthDate.getDate() !== day || birthDate.getMonth() !== month || birthDate.getFullYear() !== year ) {
-                return false;
-            }
-
-            // Verificar se é anterior a hoje
-            if ( birthDate >= today ) {
-                return false;
-            }
-
-            // Verificar se a pessoa tem pelo menos 18 anos
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-
-            // Ajustar idade se ainda não fez aniversário este ano
-            if ( monthDiff < 0 || ( monthDiff === 0 && today.getDate() < birthDate.getDate() ) ) age--;
-
-            return age >= 18;
+    document.getElementById('birth_date')?.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !isValidBirthDate(value)) {
+            this.classList.add('is-invalid');
+            document.getElementById('birth_date_js_error').textContent = 'Data inválida ou menor de 18 anos';
+            document.getElementById('birth_date_js_error').style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            document.getElementById('birth_date_js_error').style.display = 'none';
         }
-
-        /**
-         * Mostra erro de validação
-         */
-        function showBirthDateError( input, message ) {
-            input.classList.add( 'is-invalid' );
-            const errorDiv = document.getElementById( 'birth_date_js_error' );
-            if ( errorDiv ) {
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-            }
-        }
-
-        /**
-         * Remove erro de validação
-         */
-        function clearBirthDateError( input ) {
-            input.classList.remove( 'is-invalid' );
-            const errorDiv = document.getElementById( 'birth_date_js_error' );
-            if ( errorDiv ) {
-                errorDiv.textContent = '';
-                errorDiv.style.display = 'none';
-            }
-        }
-
-        // ========================================
-        // OUTRAS FUNCIONALIDADES
-        // ========================================
-
-        // Buscar CEP automático
-        document.addEventListener( 'DOMContentLoaded', function () {
-            // Formatar valores já carregados
-            const cpfInput = document.getElementById( 'cpf' );
-            const cnpjInput = document.getElementById( 'cnpj' );
-
-            if ( cpfInput && cpfInput.value ) {
-                cpfInput.value = formatCPF( cpfInput.value );
-            }
-            if ( cnpjInput && cnpjInput.value ) {
-                cnpjInput.value = formatCNPJ( cnpjInput.value );
-            }
-
-            // Validação no submit
-            const form = document.getElementById( 'createForm' );
-            if ( form ) {
-                form.addEventListener( 'submit', function ( e ) {
-                    const birthDateInput = document.getElementById( 'birth_date' );
-                    const value = birthDateInput.value.trim();
-
-                    if ( value && !isValidBirthDate( value ) ) {
-                        e.preventDefault();
-                        if ( !isValidDateFormat( value ) ) {
-                            showBirthDateError( birthDateInput, 'Formato inválido. Use DD/MM/YYYY' );
-                        } else {
-                            const parts = value.split( '/' );
-                            const day = parseInt( parts[0], 10 );
-                            const month = parseInt( parts[1], 10 ) - 1;
-                            const year = parseInt( parts[2], 10 );
-                            const birthDate = new Date( year, month, day );
-                            const today = new Date();
-
-                            if ( birthDate >= today ) {
-                                showBirthDateError( birthDateInput, 'Data não pode ser futura' );
-                            } else {
-                                showBirthDateError( birthDateInput, 'É necessário ter pelo menos 18 anos' );
-                            }
-                        }
-                        birthDateInput.focus();
-                        return false;
-                    }
-                } );
-            }
-
-            // Aguardar um pouco para garantir que todos os elementos estão carregados
-            setTimeout( function () {
-                // Inicializar validação de campos obrigatórios
-                const birthDateInput = document.getElementById( 'birth_date' );
-                if ( birthDateInput ) {
-                    birthDateInput.addEventListener( 'blur', function () {
-                        const value = this.value.trim();
-                        if ( value && !isValidBirthDate( value ) ) {
-                            if ( !isValidDateFormat( value ) ) {
-                                showBirthDateError( this, 'Formato inválido. Use DD/MM/YYYY' );
-                            } else {
-                                // Verificar se é data futura ou menor de 18 anos
-                                const parts = value.split( '/' );
-                                const day = parseInt( parts[0], 10 );
-                                const month = parseInt( parts[1], 10 ) - 1;
-                                const year = parseInt( parts[2], 10 );
-                                const birthDate = new Date( year, month, day );
-                                const today = new Date();
-
-                                if ( birthDate >= today ) {
-                                    showBirthDateError( this, 'Data não pode ser futura' );
-                                } else {
-                                    showBirthDateError( this, 'É necessário ter pelo menos 18 anos' );
-                                }
-                            }
-                        } else {
-                            clearBirthDateError( this );
-                        }
-                    } );
-
-                    // Limpar erro quando começar a digitar novamente
-                    birthDateInput.addEventListener( 'input', function () {
-                        if ( this.classList.contains( 'is-invalid' ) ) {
-                            clearBirthDateError( this );
-                        }
-                    } );
-                }
-
-                // Validação de campos obrigatórios
-                const firstName = document.getElementById( 'first_name' );
-                const lastName = document.getElementById( 'last_name' );
-
-                if ( firstName ) {
-                    firstName.addEventListener( 'blur', () => validateRequiredField( firstName, 'nome' ) );
-                }
-
-                if ( lastName ) {
-                    lastName.addEventListener( 'blur', () => validateRequiredField( lastName, 'sobrenome' ) );
-                }
-
-                // Contador de caracteres para descrição
-                const textarea = document.getElementById( 'description' );
-                const charCount = document.getElementById( 'char-count-value' );
-
-                if ( textarea && charCount ) {
-                    // Inicializar contador com valor atual
-                    const updateCharCount = () => {
-                        const charsLeft = textarea.maxLength - textarea.value.length;
-                        charCount.textContent = charsLeft;
-                    };
-
-                    // Atualizar contador inicial
-                    updateCharCount();
-
-                    // Atualizar contador em tempo real
-                    textarea.addEventListener( 'input', updateCharCount );
-                }
-
-                // Validação de CPF/CNPJ obrigatório
-                const cpfInput = document.getElementById( 'cpf' );
-                const cnpjInput = document.getElementById( 'cnpj' );
-                const createButton = document.getElementById( 'createButton' );
-
-                function validateDocumentFields() {
-                    const hasCpf = cpfInput && cpfInput.value.trim().length > 0;
-                    const hasCnpj = cnpjInput && cnpjInput.value.trim().length > 0;
-
-                    if ( hasCpf || hasCnpj ) {
-                        createButton.disabled = false;
-                        createButton.textContent = 'Criar Cliente';
-                    } else {
-                        createButton.disabled = true;
-                        createButton.textContent = 'Preencha CPF ou CNPJ';
-                    }
-                }
-
-                // Adicionar listeners para validação em tempo real
-                if ( cpfInput ) {
-                    cpfInput.addEventListener( 'input', validateDocumentFields );
-                    cpfInput.addEventListener( 'blur', validateDocumentFields );
-                }
-
-                if ( cnpjInput ) {
-                    cnpjInput.addEventListener( 'input', validateDocumentFields );
-                    cnpjInput.addEventListener( 'blur', validateDocumentFields );
-                }
-
-                // Validação inicial
-                validateDocumentFields();
-            }, 100 );
-
-            const cepInput = document.getElementById( 'cep' );
-            if ( cepInput ) {
-                cepInput.addEventListener( 'blur', function () {
-                    const cep = this.value.replace( /\D/g, '' );
-                    if ( cep.length === 8 ) {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open( 'GET', `https://viacep.com.br/ws/${cep}/json/`, true );
-                        xhr.onload = function () {
-                            if ( xhr.status === 200 ) {
-                                const data = JSON.parse( xhr.responseText );
-                                if ( !data.erro ) {
-                                    document.getElementById( 'address' ).value = data.logradouro || '';
-                                    document.getElementById( 'neighborhood' ).value = data.bairro || '';
-                                    document.getElementById( 'city' ).value = data.localidade || '';
-                                    document.getElementById( 'state' ).value = data.uf || '';
-                                }
-                            }
-                        };
-                        xhr.send();
-                    }
-                } );
-            }
-        } );
-    </script>
+    });
+});
+</script>
 @endpush

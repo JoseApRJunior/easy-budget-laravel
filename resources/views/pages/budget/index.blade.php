@@ -1,7 +1,4 @@
-@php
-    use App\Helpers\DateHelper;
-    use App\Helpers\StatusHelper;
-@endphp
+
 
 @extends( 'layouts.app' )
 
@@ -91,7 +88,11 @@
                         <div class="col-md-2">
                             <label for="filter_status" class="form-label">Status</label>
                             <select id="filter_status" name="filter_status" class="form-select">
-                                {!! StatusHelper::budget_status_options( request( 'filter_status' ) ) !!}
+                                <option value="">Todos os Status</option>
+                                <option value="DRAFT" {{ request('filter_status') == 'DRAFT' ? 'selected' : '' }}>Rascunho</option>
+                                <option value="SENT" {{ request('filter_status') == 'SENT' ? 'selected' : '' }}>Enviado</option>
+                                <option value="APPROVED" {{ request('filter_status') == 'APPROVED' ? 'selected' : '' }}>Aprovado</option>
+                                <option value="REJECTED" {{ request('filter_status') == 'REJECTED' ? 'selected' : '' }}>Rejeitado</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -131,25 +132,33 @@
                             @forelse( $budgets as $budget )
                                 <tr>
                                     <td>{{ $budget->code }}</td>
-                                    <td>{{ $budget->customer->first_name }} {{ $budget->customer->last_name }}</td>
-                                    <td>{{ DateHelper::formatBR( $budget->created_at ) }}</td>
-                                    <td>{{ DateHelper::formatBR( $budget->due_date ) }}</td>
+                                    <td>
+                                        @if($budget->customer && $budget->customer->commonData)
+                                            @if($budget->customer->commonData->company_name)
+                                                {{ $budget->customer->commonData->company_name }}
+                                            @else
+                                                {{ $budget->customer->commonData->first_name }} {{ $budget->customer->commonData->last_name }}
+                                            @endif
+                                        @else
+                                            Cliente não informado
+                                        @endif
+                                    </td>
+                                    <td>{{ $budget->created_at->format('d/m/Y') }}</td>
+                                    <td>{{ $budget->due_date ? $budget->due_date->format('d/m/Y') : '-' }}</td>
                                     <td>R$ {{ number_format( $budget->total, 2, ',', '.' ) }}</td>
                                     <td>
-                                        {!! StatusHelper::status_badge( $budget->status ) !!}
+                                        <span class="badge bg-secondary">{{ $budget->status->value }}</span>
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route( 'budget.show', $budget->code ) }}"
+                                        <a href="{{ route( 'provider.budgets.show', $budget->code ) }}"
                                             class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
                                             title="Ver Detalhes">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        @if ( StatusHelper::status_allows_edit( $budget->status->slug ) )
-                                            <a href="{{ route( 'budget.edit', $budget->code ) }}"
-                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        @endif
+                                        <a href="{{ route( 'provider.budgets.edit', $budget->code ) }}"
+                                            class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteBudgetModal" data-budget-code="{{ $budget->code }}"
                                             data-budget-id="{{ $budget->id }}" data-bs-toggle="tooltip" title="Excluir">

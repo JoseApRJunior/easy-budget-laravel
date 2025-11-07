@@ -113,11 +113,12 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::post( '/', [ CustomerController::class, 'store' ] )->name( 'store' );
         Route::get( '/{customer}', [ CustomerController::class, 'show' ] )->name( 'show' );
         Route::get( '/{customer}/edit', [ CustomerController::class, 'edit' ] )->name( 'edit' );
-        Route::post( '/{customer}', [ CustomerController::class, 'update' ] )->name( 'update' );
+        Route::put( '/{customer}', [ CustomerController::class, 'update' ] )->name( 'update' );
         Route::delete( '/{customer}', [ CustomerController::class, 'destroy' ] )->name( 'destroy' );
         Route::post( '/{customer}/restore', [ CustomerController::class, 'restore' ] )->name( 'restore' );
         Route::post( '/{customer}/duplicate', [ CustomerController::class, 'duplicate' ] )->name( 'duplicate' );
         Route::get( '/find-nearby', [ CustomerController::class, 'findNearby' ] )->name( 'find-nearby' );
+        Route::post( '/search', [ CustomerController::class, 'search' ] )->name( 'search' );
         Route::get( '/autocomplete', [ CustomerController::class, 'autocomplete' ] )->name( 'autocomplete' );
         Route::get( '/export', [ CustomerController::class, 'export' ] )->name( 'export' );
         Route::get( '/dashboard', [ CustomerController::class, 'dashboard' ] )->name( 'dashboard' );
@@ -159,7 +160,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/', [ BudgetController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ BudgetController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ BudgetController::class, 'store' ] )->name( 'store' );
-        Route::get( '/{budget}', [ BudgetController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{code}', [ BudgetController::class, 'show' ] )->name( 'show' );
         Route::get( '/{budget}/edit', [ BudgetController::class, 'edit' ] )->name( 'edit' );
         Route::post( '/{budget}', [ BudgetController::class, 'update' ] )->name( 'update' );
         Route::post( '/{budget}/change-status', [ BudgetController::class, 'changeStatus' ] )->name( 'change-status' );
@@ -185,13 +186,16 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
-        Route::get( '/', [ ProviderController::class, 'reports_index' ] )->name( 'index' );
-        Route::get( '/financial', [ ProviderController::class, 'financial_reports' ] )->name( 'financial' );
-        Route::get( '/budgets', [ ProviderController::class, 'budget_reports' ] )->name( 'budgets' );
-        Route::get( '/budgets/excel', [ ProviderController::class, 'budget_reports_excel' ] )->name( 'budgets.excel' );
-        Route::get( '/budgets/pdf', [ ProviderController::class, 'budget_reports_pdf' ] )->name( 'budgets.pdf' );
-        Route::get( '/services', [ ProviderController::class, 'service_reports' ] )->name( 'services' );
-        Route::get( '/customers', [ ProviderController::class, 'customer_reports' ] )->name( 'customers' );
+        Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
+        Route::get( '/financial', [ ReportController::class, 'financial' ] )->name( 'financial' );
+        Route::get( '/budgets', [ ReportController::class, 'budgets' ] )->name( 'budgets' );
+        Route::get( '/budgets/excel', [ ReportController::class, 'budgets_excel' ] )->name( 'budgets.excel' );
+        Route::get( '/budgets/pdf', [ ReportController::class, 'budgets_pdf' ] )->name( 'budgets.pdf' );
+        Route::get( '/services', [ ReportController::class, 'services' ] )->name( 'services' );
+        Route::get( '/customers', [ ReportController::class, 'customers' ] )->name( 'customers' );
+        Route::post( '/customers/search', [ ReportController::class, 'customersSearch' ] )->name( 'customers.search' );
+        Route::get( '/customers/pdf', [ ReportController::class, 'customersPdf' ] )->name( 'customers.pdf' );
+        Route::get( '/products', [ ReportController::class, 'products' ] )->name( 'products' );
     } );
 
     // Business

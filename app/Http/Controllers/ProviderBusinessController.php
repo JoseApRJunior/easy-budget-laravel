@@ -40,7 +40,7 @@ class ProviderBusinessController extends Controller
         }
 
         // Carregar relacionamentos necessários
-        $provider->load( [ 'commonData', 'contact', 'address' ] );
+        $provider->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
 
         return view( 'pages.provider.business.edit', [
             'provider'          => $provider,
@@ -58,16 +58,6 @@ class ProviderBusinessController extends Controller
     public function update( ProviderBusinessUpdateRequest $request ): RedirectResponse
     {
         $validated = $request->validated();
-        $user      = Auth::user();
-
-        // Carregar relacionamento provider para evitar N+1 queries
-        $user->load( 'provider' );
-
-        // Verificar se provider existe e tem common_data_id configurado
-        if ( !$user->provider || !$user->provider->common_data_id ) {
-            return redirect( '/provider/business/edit' )
-                ->with( 'error', 'Dados comuns não configurados para este usuário' );
-        }
 
         // Adicionar arquivo de logo aos dados validados se fornecido
         if ( $request->hasFile( 'logo' ) ) {

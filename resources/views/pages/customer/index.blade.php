@@ -125,15 +125,15 @@
                     {{-- Tabela de Resultados --}}
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table id="results-table" class="table table-hover align-middle mb-0">
-                                <thead>
+                            <table id="results-table" class="table table-hover align-middle mb-0 modern-table">
+                                <thead class="table-light">
                                     <tr>
-                                        <th scope="col" class="text-start px-4" style="width: 45%">Nome</th>
-                                        <th scope="col" style="width: 20%">CPF / CNPJ</th>
-                                        <th scope="col" style="width: 20%">E-mail / E-mail Comercial</th>
-                                        <th scope="col" style="width: 15%">Telefone / Telefone Comercial</th>
-                                        <th scope="col" style="width: 10%">Data de Cadastro</th>
-                                        <th scope="col" class="text-end px-4" style="width: 10%">Ações</th>
+                                        <th scope="col" class="px-4 py-3 fw-semibold border-0">Cliente</th>
+                                        <th scope="col" class="px-3 py-3 fw-semibold border-0">Documento</th>
+                                        <th scope="col" class="px-3 py-3 fw-semibold border-0">E-mail</th>
+                                        <th scope="col" class="px-3 py-3 fw-semibold border-0">Telefone</th>
+                                        <th scope="col" class="px-3 py-3 fw-semibold border-0">Cadastro</th>
+                                        <th scope="col" class="text-center px-4 py-3 fw-semibold border-0">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -170,7 +170,96 @@
     </div>
 @endsection
 
+@push( 'styles' )
+    <style>
+        .modern-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .modern-table thead th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .table-row-hover:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        .document-info,
+        .email-info,
+        .phone-info {
+            line-height: 1.4;
+        }
+
+        .date-info {
+            text-align: center;
+        }
+
+        .btn-group .btn {
+            border-radius: 6px;
+            margin: 0 2px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-group .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .search-wrapper:focus-within {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            border-radius: 0.375rem;
+        }
+
+        @media (max-width: 768px) {
+            .modern-table {
+                font-size: 0.875rem;
+            }
+
+            .btn-group .btn {
+                padding: 0.25rem 0.4rem;
+                min-width: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .btn-group .btn i {
+                font-size: 0.875rem;
+                line-height: 1;
+            }
+
+            .modern-table td {
+                vertical-align: middle !important;
+            }
+        }
+    </style>
+@endpush
+
 @push( 'scripts' )
     <script src="{{ asset( 'assets/js/modules/table-paginator.js' ) }}"></script>
-    <script src="{{ asset( 'assets/js/customer.js' ) }}"></script>
+    <script src="{{ asset( 'assets/js/customer.js' ) }}?v={{ time() }}"></script>
 @endpush

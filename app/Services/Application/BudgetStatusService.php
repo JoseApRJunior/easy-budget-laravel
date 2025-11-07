@@ -67,7 +67,7 @@ class BudgetStatusService
      */
     public function getStatusByName( string $name ): ServiceResult
     {
-        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getName() === $name );
+        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getDescription() === $name );
 
         if ( empty( $status ) ) {
             return $this->error( 'Status não encontrado', [ 'name' => $name ] );
@@ -112,7 +112,7 @@ class BudgetStatusService
     public function getStatusesByOrderIndexRange( int $min, int $max ): ServiceResult
     {
         $statuses = array_filter( BudgetStatus::cases(), function ( $status ) use ( $min, $max ) {
-            return $status->getOrderIndex() >= $min && $status->getOrderIndex() <= $max;
+            return $status->getPriorityOrder() >= $min && $status->getPriorityOrder() <= $max;
         } );
 
         return $this->success( array_values( $statuses ), 'Status por range recuperados com sucesso' );
@@ -123,7 +123,7 @@ class BudgetStatusService
      */
     public function getStatusById( int $id ): ServiceResult
     {
-        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getOrderIndex() === $id );
+        $status = array_filter( BudgetStatus::cases(), fn( $status ) => $status->getPriorityOrder() === $id );
 
         if ( empty( $status ) ) {
             return $this->error( 'Status não encontrado', [ 'id' => $id ] );
@@ -203,13 +203,15 @@ class BudgetStatusService
     private function getFieldValue( BudgetStatus $status, string $field ): mixed
     {
         return match ( $field ) {
-            'name'        => $status->getName(),
-            'color'       => $status->getColor(),
-            'icon'        => $status->getIcon(),
-            'order_index' => $status->getOrderIndex(),
-            'is_active'   => $status->isActive(),
-            'value'       => $status->value,
-            default       => null,
+            'name'           => $status->getDescription(),
+            'description'    => $status->getDescription(),
+            'color'          => $status->getColor(),
+            'icon'           => $status->getIcon(),
+            'order_index'    => $status->getPriorityOrder(),
+            'priority_order' => $status->getPriorityOrder(),
+            'is_active'      => $status->isActive(),
+            'value'          => $status->value,
+            default          => null,
         };
     }
 
@@ -239,12 +241,14 @@ class BudgetStatusService
         }
 
         $info = [
-            'slug'        => $status->value,
-            'name'        => $status->getName(),
-            'color'       => $status->getColor(),
-            'icon'        => $status->getIcon(),
-            'order_index' => $status->getOrderIndex(),
-            'is_active'   => $status->isActive(),
+            'slug'           => $status->value,
+            'name'           => $status->getDescription(),
+            'description'    => $status->getDescription(),
+            'color'          => $status->getColor(),
+            'icon'           => $status->getIcon(),
+            'order_index'    => $status->getPriorityOrder(),
+            'priority_order' => $status->getPriorityOrder(),
+            'is_active'      => $status->isActive(),
         ];
 
         return $this->success( $info, 'Informações do status recuperadas' );
@@ -309,6 +313,105 @@ class BudgetStatusService
     private function error( string $message, array $context = [] ): ServiceResult
     {
         return new ServiceResult( OperationStatus::ERROR, $message, $context );
+    }
+
+    /**
+     * Altera o status de um orçamento com validação de transições.
+     *
+     * @param \App\Models\Budget $budget Orçamentó para alterar status
+     * @param string $newStatus Novo status (string ou enum)
+     * @param string|null $comments Comentários da alteração
+     * @param int|null $userId ID do usuário que está alterando
+     * @return ServiceResult
+     */
+    public function changeStatus( \App\Models\Budget $budget, string $newStatus, ?string $comments = null, ?int $userId = null ): ServiceResult
+    {
+        try {
+            // 1. Validar se o novo status é válido
+            $validationResult = $this->validateStatus( $newStatus );
+            if ( !$validationResult->isSuccess() ) {
+                return $this->error( 'Status inválido', [ 'newStatus' => $newStatus ] );
+            }
+
+            $targetStatus = $validationResult->getData();
+
+            // 2. Verificar se o status atual é válido
+            $currentStatusString = $budget->status instanceof BudgetStatus ? $budget->status->value : $budget->status;
+            $currentStatus       = BudgetStatus::tryFrom( $currentStatusString );
+
+            if ( !$currentStatus ) {
+                return $this->error( 'Status atual inválido', [ 'currentStatus' => $currentStatusString ] );
+            }
+
+            // 3. Validar se a transição é permitida
+            $transitionResult = $this->canTransitionTo( $currentStatusString, $newStatus );
+            if ( !$transitionResult->isSuccess() || !$transitionResult->getData() ) {
+                return $this->error( 'Transição de status não permitida', [
+                    'from' => $currentStatusString,
+                    'to'   => $newStatus
+                ] );
+            }
+
+            // 4. Iniciar transação de banco
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            try {
+                // 5. Atualizar o status do orçamento
+                $budget->status = $targetStatus;
+
+                // Adicionar comentários se fornecidos
+                if ( $comments ) {
+                    $budget->history = $this->addHistoryEntry( $budget->history, [
+                        'action'     => 'status_change',
+                        'old_status' => $currentStatusString,
+                        'new_status' => $newStatus,
+                        'comments'   => $comments,
+                        'user_id'    => $userId,
+                        'timestamp'  => now()->toISOString(),
+                    ] );
+                }
+
+                // Salvar o orçamento
+                if ( !$budget->save() ) {
+                    throw new \Exception( 'Falha ao salvar orçamento' );
+                }
+
+                // 6. Confirmar transação
+                \Illuminate\Support\Facades\DB::commit();
+
+                return $this->success( $budget, sprintf(
+                    'Status alterado de %s para %s com sucesso',
+                    $currentStatus->getDescription(),
+                    $targetStatus->getDescription(),
+                ) );
+
+            } catch ( \Exception $e ) {
+                // 7. Rollback em caso de erro
+                \Illuminate\Support\Facades\DB::rollBack();
+                throw $e;
+            }
+
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro ao alterar status do orçamento', [
+                'message'   => $e->getMessage(),
+                'budget_id' => $budget->id,
+                'newStatus' => $newStatus
+            ] );
+        }
+    }
+
+    /**
+     * Adiciona entrada ao histórico do orçamento.
+     *
+     * @param string|null $currentHistory
+     * @param array $entry
+     * @return string
+     */
+    private function addHistoryEntry( ?string $currentHistory, array $entry ): string
+    {
+        $history   = $currentHistory ? json_decode( $currentHistory, true ) : [];
+        $history[] = $entry;
+        return json_encode( $history, JSON_UNESCAPED_UNICODE );
     }
 
 }

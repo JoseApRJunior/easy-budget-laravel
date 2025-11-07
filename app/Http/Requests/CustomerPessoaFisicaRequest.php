@@ -28,31 +28,49 @@ class CustomerPessoaFisicaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Dados básicos do cliente
-            'first_name'          => 'required|string|max:255|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'last_name'           => 'required|string|max:255|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'email_personal'      => 'required|email|max:255',
-            'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'document'            => 'required|string|size:11|regex:/^\d{11}$/',
-            'birth_date'          => 'nullable|date|before:today|after:1900-01-01',
+            // Regras estruturais do Customer (do Model)
+            'tenant_id'           => 'sometimes|integer|exists:tenants,id',
+            'status'              => 'sometimes|string|in:active,inactive,deleted',
+
+            // Dados básicos (CommonData)
+            'first_name'          => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'last_name'           => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'birth_date'          => 'nullable|date_format:d/m/Y|before:today|after:1900-01-01',
             'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id'       => 'nullable|integer|exists:professions,id',
             'description'         => 'nullable|string|max:250',
             'website'             => 'nullable|url|max:255',
-            'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+
+            // Dados de contato (Contact) - Sem validação de unicidade (compartilhado com Provider)
+            'email_personal'      => 'required|email|max:255',
+            'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
             'email_business'      => 'nullable|email|max:255',
+            'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // Tags
-            'tags'                => 'nullable|array',
-            'tags.*'              => 'integer|exists:customer_tags,id',
+            // CPF com validação customizada via Helper
+            'cpf'                 => [
+                'required',
+                'string',
+                'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/',
+                function ($attribute, $value, $fail) {
+                    $cleanCpf = preg_replace('/[^0-9]/', '', $value);
+                    if (strlen($cleanCpf) !== 11 || !\App\Helpers\ValidationHelper::isValidCpf($cleanCpf)) {
+                        $fail('CPF inválido.');
+                    }
+                },
+            ],
 
-            // Endereço (1 endereço obrigatório)
-            'cep'                 => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
+            // Endereço (Address)
+            'cep'                 => 'required|string|regex:/^\d{5}-?\d{3}$/',
             'address'             => 'required|string|max:255',
             'address_number'      => 'nullable|string|max:20',
             'neighborhood'        => 'required|string|max:100',
             'city'                => 'required|string|max:100',
             'state'               => 'required|string|size:2|alpha',
+
+            // Tags
+            'tags'                => 'nullable|array',
+            'tags.*'              => 'integer|exists:customer_tags,id',
         ];
     }
 
@@ -108,7 +126,6 @@ class CustomerPessoaFisicaRequest extends FormRequest
             'website.url'             => 'Digite uma URL válida.',
             'phone_business.regex'    => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
             'email_business.email'    => 'Digite um email comercial válido.',
-            'email_business.email'    => 'Digite um email comercial válido.',
             'cep.required'            => 'O CEP é obrigatório.',
             'cep.size'                => 'O CEP deve ter 9 caracteres (formato: 00000-000).',
             'cep.regex'               => 'Digite um CEP válido.',
@@ -119,92 +136,6 @@ class CustomerPessoaFisicaRequest extends FormRequest
             'state.size'              => 'O estado deve ter 2 caracteres.',
             'state.alpha'             => 'O estado deve conter apenas letras.',
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Formatar CPF removendo caracteres especiais
-        if ( $this->document ) {
-            $this->merge( [
-                'document' => preg_replace( '/\D/', '', $this->document ),
-            ] );
-        }
-
-        // Formatar CEP removendo caracteres especiais
-        if ( $this->cep ) {
-            $this->merge( [
-                'cep' => preg_replace( '/\D/', '', $this->cep ),
-            ] );
-        }
-
-        // Formatar telefones removendo caracteres especiais
-        $phoneFields = [ 'phone_personal', 'phone_business' ];
-        foreach ( $phoneFields as $field ) {
-            if ( $this->$field ) {
-                $this->merge( [
-                    $field => preg_replace( '/\D/', '', $this->$field ),
-                ] );
-            }
-        }
-    }
-
-    /**
-     * Configure the validator instance.
-     */
-    public function withValidator( $validator ): void
-    {
-        $validator->after( function ( $validator ) {
-            // Validação adicional: CPF deve ser válido
-            if ( $this->document && !$this->isValidCpf( $this->document ) ) {
-                $validator->errors()->add( 'document', 'O CPF informado não é válido.' );
-            }
-        } );
-    }
-
-    /**
-     * Validate Brazilian CPF.
-     */
-    private function isValidCpf( string $cpf ): bool
-    {
-        // Remove non-numeric characters
-        $cpf = preg_replace( '/\D/', '', $cpf );
-
-        // CPF must have 11 digits
-        if ( strlen( $cpf ) !== 11 ) {
-            return false;
-        }
-
-        // Check if all digits are the same
-        if ( preg_match( '/^(\d)\1+$/', $cpf ) ) {
-            return false;
-        }
-
-        // Calculate first check digit
-        $sum = 0;
-        for ( $i = 0; $i < 9; $i++ ) {
-            $sum  += (int) $cpf[ $i ] * ( 10 - $i );
-        }
-
-        $remainder = $sum % 11;
-        $digit1    = $remainder < 2 ? 0 : 11 - $remainder;
-
-        if ( (int) $cpf[ 9 ] !== $digit1 ) {
-            return false;
-        }
-
-        // Calculate second check digit
-        $sum = 0;
-        for ( $i = 0; $i < 10; $i++ ) {
-            $sum  += (int) $cpf[ $i ] * ( 11 - $i );
-        }
-
-        $remainder = $sum % 11;
-        $digit2    = $remainder < 2 ? 0 : 11 - $remainder;
-
-        return (int) $cpf[ 10 ] === $digit2;
     }
 
 }

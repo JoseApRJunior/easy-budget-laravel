@@ -153,9 +153,9 @@
     </div>
 @endsection
 
-@section( 'scripts' )
+@push( 'scripts' )
     <!-- Adicione a biblioteca SheetJS -->
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="{{ asset( 'assets/js/modules/table-paginator.js' ) }}"></script>
-    <script src="{{ asset( 'assets/js/customer_report.js' ) }}"></script>
-@endsection
+    <script src="{{ asset( 'assets/js/customer_report.js' ) }}?v={{ time() }}"></script>
+@endpush

@@ -39,6 +39,8 @@ class Address extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'customer_id',
+        'provider_id',
         'address',
         'address_number',
         'neighborhood',
@@ -68,6 +70,8 @@ class Address extends Model
      */
     protected $casts = [
         'tenant_id'      => 'integer',
+        'customer_id'    => 'integer',
+        'provider_id'    => 'integer',
         'address'        => 'string',
         'address_number' => 'string',
         'neighborhood'   => 'string',
@@ -90,6 +94,8 @@ class Address extends Model
             'neighborhood'   => 'nullable|string|max:100',
             'city'           => 'nullable|string|max:100',
             'state'          => 'nullable|string|max:2',
+            'customer_id'    => 'nullable|integer|exists:customers,id',
+            'provider_id'    => 'nullable|integer|exists:providers,id',
             'cep'            => 'nullable|string|max:9|regex:/^\d{5}-?\d{3}$/',
         ];
     }
@@ -105,17 +111,17 @@ class Address extends Model
     /**
      * Get the customer associated with the Address.
      */
-    public function customer(): HasOne
+    public function customer(): BelongsTo
     {
-        return $this->hasOne( Customer::class);
+        return $this->belongsTo( Customer::class);
     }
 
     /**
-     * Get the providers associated with the Address.
+     * Get the provider associated with the Address.
      */
-    public function providers(): HasMany
+    public function provider(): BelongsTo
     {
-        return $this->hasMany( Provider::class);
+        return $this->belongsTo( Provider::class);
     }
 
 }

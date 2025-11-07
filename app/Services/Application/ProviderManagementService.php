@@ -6,9 +6,13 @@ namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
 
+use App\Models\Address;
 use App\Models\AreaOfActivity;
+use App\Models\AuditLog;
 use App\Models\Budget;
+use App\Models\BusinessData;
 use App\Models\CommonData;
+use App\Models\Contact;
 use App\Models\Customer;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
@@ -21,15 +25,16 @@ use App\Models\User;
 use App\Repositories\CommonDataRepository;
 use App\Repositories\PlanRepository;
 use App\Repositories\ProviderRepository;
+
 use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
-
 use App\Services\Domain\ProviderService;
 use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -76,7 +81,7 @@ class ProviderManagementService
             ->get();
 
         // Buscar atividades recentes
-        $activities = \App\Models\AuditLog::where( 'tenant_id', $tenantId )
+        $activities = AuditLog::where( 'tenant_id', $tenantId )
             ->where( 'user_id', $user->id )
             ->latest()
             ->limit( 10 )
@@ -130,7 +135,7 @@ class ProviderManagementService
             }
 
             // Load relationships if not already loaded
-            $provider->load( [ 'commonData', 'contact', 'address' ] );
+            $provider->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
 
             // Transação garante rollback automático se qualquer operação falhar
             DB::transaction( function () use ($provider, $data, $user) {
@@ -147,34 +152,82 @@ class ProviderManagementService
                 ], fn( $value ) => $value !== null );
 
                 if ( !empty( $userUpdate ) ) {
-                    $user->update( $userUpdate ); // ✅ Usar método direto do model
-                    // ✅ Recarregar dados do banco para atualizar Auth::user()
-                    $user->refresh();
+                    $this->userRepository->update( $user->id, $userUpdate );
                 }
 
-                // Update CommonData, Contact, Address using EntityDataService
-                $entityData = $this->entityDataService->updateCompleteEntityData(
-                    $provider->commonData,
-                    $provider->contact,
-                    $provider->address,
-                    $data,
-                );
+                // Detectar tipo (PF ou PJ)
+                $type = !empty( $data[ 'cnpj' ] ) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
-                // Verificar se atualizou corretamente
-                if ( !$entityData[ 'common_data' ] || !$entityData[ 'contact' ] || !$entityData[ 'address' ] ) {
-                    throw new Exception( 'Erro ao atualizar dados da entidade' );
+                // Limpar máscaras e converter datas
+                $data[ 'cpf' ]        = !empty($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : null;
+                $data[ 'cnpj' ]       = !empty($data['cnpj']) ? preg_replace('/\D/', '', $data['cnpj']) : null;
+                $data[ 'birth_date' ] = !empty( $data[ 'birth_date' ] ) ? Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' ) : null;
+
+                // Atualizar CommonData (preserva dados de ambos os tipos)
+                if ( $provider->commonData ) {
+                    $provider->commonData->update( [
+                        'type'                => $type,
+                        'first_name'          => $data[ 'first_name' ] ?? null,
+                        'last_name'           => $data[ 'last_name' ] ?? null,
+                        'cpf'                 => $data[ 'cpf' ],
+                        'birth_date'          => $data[ 'birth_date' ],
+                        'company_name'        => $data[ 'company_name' ] ?? null,
+                        'cnpj'                => $data[ 'cnpj' ],
+                        'description'         => $data[ 'description' ] ?? null,
+                        'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
+                        'profession_id'       => $data[ 'profession_id' ] ?? null,
+                    ] );
                 }
 
-                // Atualizar relacionamentos do provider com dados atualizados
-                $provider->setRelation( 'commonData', $entityData[ 'common_data' ] );
-                $provider->setRelation( 'contact', $entityData[ 'contact' ] );
-                $provider->setRelation( 'address', $entityData[ 'address' ] );
+                // Atualizar Contact
+                if ( $provider->contact ) {
+                    $provider->contact->update( [
+                        'email_personal' => $data[ 'email_personal' ] ?? $data[ 'email' ] ?? null,
+                        'phone_personal' => $data[ 'phone_personal' ] ?? $data[ 'phone' ] ?? null,
+                        'email_business' => $data[ 'email_business' ] ?? null,
+                        'phone_business' => $data[ 'phone_business' ] ?? null,
+                        'website'        => $data[ 'website' ] ?? null,
+                    ] );
+                }
 
-                // Activity logged automatically by ProviderObserver
+                // Atualizar Address
+                if ( $provider->address ) {
+                    $provider->address->update( [
+                        'address'        => $data[ 'address' ] ?? null,
+                        'address_number' => $data[ 'address_number' ] ?? null,
+                        'neighborhood'   => $data[ 'neighborhood' ] ?? null,
+                        'city'           => $data[ 'city' ] ?? null,
+                        'state'          => $data[ 'state' ] ?? null,
+                        'cep'            => $data[ 'cep' ] ?? null,
+                    ] );
+                }
+
+                // Atualizar dados empresariais (sempre atualiza/cria se for PJ)
+                if ( $type === CommonData::TYPE_COMPANY ) {
+                    $businessData = [
+                        'fantasy_name'           => $data[ 'fantasy_name' ] ?? null,
+                        'state_registration'     => $data[ 'state_registration' ] ?? null,
+                        'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
+                        'founding_date'          => !empty( $data[ 'founding_date' ] ) ? Carbon::createFromFormat( 'd/m/Y', $data[ 'founding_date' ] )->format( 'Y-m-d' ) : null,
+                        'industry'               => $data[ 'industry' ] ?? null,
+                        'company_size'           => $data[ 'company_size' ] ?? null,
+                        'notes'                  => $data[ 'notes' ] ?? null,
+                    ];
+
+                    if ( $provider->businessData ) {
+                        $provider->businessData->update( $businessData );
+                    } else {
+                        BusinessData::create( array_merge( $businessData, [
+                            'tenant_id'   => $provider->tenant_id,
+                            'provider_id' => $provider->id,
+                        ] ) );
+                    }
+                }
             } );
 
-            // Retornar provider com dados já atualizados
+            $provider->refresh();
             return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
+
         } catch ( Exception $e ) {
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -190,7 +243,7 @@ class ProviderManagementService
     {
         $user = Auth::user();
 
-        $this->userRepository->update( $user, [
+        $this->userRepository->update( $user->id, [
             'password' => Hash::make( $newPassword )
         ] );
 
@@ -231,7 +284,7 @@ class ProviderManagementService
             ->where( 'status', 'approved' )
             ->whereMonth( 'created_at', now()->month )
             ->whereYear( 'created_at', now()->year )
-            ->sum( 'total_gross' );
+            ->sum( 'total' );
 
         // Buscar orçamentos pendentes
         $pendingBudgets = Budget::where( 'tenant_id', $tenantId )
@@ -245,7 +298,6 @@ class ProviderManagementService
         $overduePayments = Budget::where( 'tenant_id', $tenantId )
             ->where( 'status', 'approved' )
             ->where( 'due_date', '<', now() )
-            ->whereNull( 'paid_at' )
             ->with( [ 'customer' ] )
             ->latest()
             ->limit( 10 )
@@ -278,8 +330,8 @@ class ProviderManagementService
             'approved_budgets' => $budgets->where( 'status', 'approved' )->count(),
             'pending_budgets'  => $budgets->where( 'status', 'pending' )->count(),
             'rejected_budgets' => $budgets->where( 'status', 'rejected' )->count(),
-            'total_value'      => $budgets->sum( 'total_gross' ),
-            'average_value'    => $budgets->count() > 0 ? $budgets->avg( 'total_gross' ) : 0,
+            'total_value'      => $budgets->sum( 'total' ),
+            'average_value'    => $budgets->count() > 0 ? $budgets->avg( 'total' ) : 0,
         ];
 
         return [
@@ -308,8 +360,8 @@ class ProviderManagementService
             'completed_services' => $services->where( 'status', 'completed' )->count(),
             'pending_services'   => $services->where( 'status', 'pending' )->count(),
             'cancelled_services' => $services->where( 'status', 'cancelled' )->count(),
-            'total_value'        => $services->sum( 'total_gross' ),
-            'average_value'      => $services->count() > 0 ? $services->avg( 'total_gross' ) : 0,
+            'total_value'        => $services->sum( 'total' ),
+            'average_value'      => $services->count() > 0 ? $services->avg( 'total' ) : 0,
         ];
 
         return [
@@ -326,7 +378,7 @@ class ProviderManagementService
     {
         // Buscar clientes ativos
         $customers = Customer::where( 'tenant_id', $tenantId )
-            ->with( [ 'budgets', 'services' ] )
+            ->with( [ 'budgets', 'invoices', 'commonData', 'contact' ] )
             ->latest()
             ->limit( 50 )
             ->get();
@@ -334,15 +386,17 @@ class ProviderManagementService
         // Estatísticas dos clientes
         $customerStats = [
             'total_customers'     => $customers->count(),
-            'active_customers'    => $customers->where( 'is_active', true )->count(),
-            'inactive_customers'  => $customers->where( 'is_active', false )->count(),
-            'new_customers_month' => $customers->whereMonth( 'created_at', now()->month )
-                ->whereYear( 'created_at', now()->year )->count(),
+            'active_customers'    => $customers->where( 'status', 'active' )->count(),
+            'inactive_customers'  => $customers->where( 'status', 'inactive' )->count(),
+            'new_customers_month' => $customers->filter( function ( $customer ) {
+                return $customer->created_at->month === now()->month && 
+                       $customer->created_at->year === now()->year;
+            } )->count(),
             'total_budgets'       => $customers->sum( function ( $customer ) {
                 return $customer->budgets->count();
             } ),
-            'total_services'      => $customers->sum( function ( $customer ) {
-                return $customer->services->count();
+            'total_invoices'      => $customers->sum( function ( $customer ) {
+                return $customer->invoices->count();
             } ),
         ];
 
@@ -424,28 +478,42 @@ class ProviderManagementService
     private function createProviderWithRelatedData( array $userData, User $user, Tenant $tenant ): ServiceResult
     {
         try {
-            // Preparar dados para EntityDataService
-            $entityData = [
-                'first_name'     => $userData[ 'first_name' ],
-                'last_name'      => $userData[ 'last_name' ],
-                'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
-                'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
-            ];
-
-            // Usar EntityDataService para criar CommonData, Contact, Address
-            $createdEntities = $this->entityDataService->createCompleteEntityData( $entityData, $tenant->id );
-
-            // Create Provider usando IDs das entidades criadas
-            $provider = new Provider( [
+            // Criar Provider primeiro
+            $provider = Provider::create( [
                 'tenant_id'      => $tenant->id,
                 'user_id'        => $user->id,
-                'common_data_id' => $createdEntities[ 'common_data' ]->id,
-                'contact_id'     => $createdEntities[ 'contact' ]->id,
-                'address_id'     => $createdEntities[ 'address' ]->id,
                 'terms_accepted' => $userData[ 'terms_accepted' ],
             ] );
 
-            $savedProvider = $this->providerRepository->create( $provider->toArray() );
+            // Criar CommonData vinculado ao Provider
+            $commonData = CommonData::create( [
+                'tenant_id'    => $tenant->id,
+                'provider_id'  => $provider->id,
+                'type'         => CommonData::TYPE_INDIVIDUAL,
+                'first_name'   => $userData[ 'first_name' ],
+                'last_name'    => $userData[ 'last_name' ],
+                'cpf'          => null,
+                'birth_date'   => null,
+                'company_name' => null,
+                'cnpj'         => null,
+                'description'  => null,
+            ] );
+
+            // Criar Contact vinculado ao Provider
+            $contact = Contact::create( [
+                'tenant_id'      => $tenant->id,
+                'provider_id'    => $provider->id,
+                'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
+                'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
+            ] );
+
+            // Criar Address vinculado ao Provider (vazio inicialmente)
+            $address = Address::create( [
+                'tenant_id'   => $tenant->id,
+                'provider_id' => $provider->id,
+            ] );
+
+            $savedProvider = $provider;
 
             // Assign Provider Role
             $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
@@ -481,7 +549,6 @@ class ProviderManagementService
             $planSubscription = new PlanSubscription( [
                 'tenant_id'          => $tenant->id,
                 'plan_id'            => $plan->id,
-                'user_id'            => $user->id,
                 'provider_id'        => $savedProvider->id,
                 'status'             => SUBSCRIPTION_STATUS_ACTIVE,
                 'transaction_amount' => $plan->price ?? 0.00,

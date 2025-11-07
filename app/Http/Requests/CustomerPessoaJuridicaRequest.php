@@ -28,64 +28,63 @@ class CustomerPessoaJuridicaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Dados empresariais obrigatórios
-            'company_name'             => 'required|string|max:255|regex:/^[a-zA-ZÀ-ÿ0-9\s&\-\.]+$/',
-            'fantasy_name'             => 'nullable|string|max:255|regex:/^[a-zA-ZÀ-ÿ0-9\s&\-\.]+$/',
-            'document'                 => 'required|string|size:14|unique:customers,document|regex:/^\d{14}$/',
-            'state_registration'       => 'nullable|string|max:20|regex:/^[0-9]+$/',
-            'municipal_registration'   => 'nullable|string|max:20|regex:/^[0-9]+$/',
-            'founding_date'            => 'nullable|date|before:today|after:1800-01-01',
-            'company_email'            => 'required|email|max:255|unique:customers,email',
-            'company_phone'            => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'company_website'          => 'nullable|url|max:255',
-            'industry'                 => 'nullable|string|max:100',
-            'company_size'             => 'nullable|string|in:micro,pequena,media,grande',
-            'notes'                    => 'nullable|string|max:1000',
+            // Regras estruturais do Customer (do Model)
+            'tenant_id'              => 'sometimes|integer|exists:tenants,id',
+            'status'                 => 'sometimes|string|in:active,inactive,deleted',
 
-            // Dados do contato principal (opcional)
-            'contact_person_name'      => 'nullable|string|max:255|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'contact_person_role'      => 'nullable|string|max:100',
-            'contact_person_email'     => 'nullable|email|max:255',
-            'contact_person_phone'     => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            // Dados básicos (CommonData)
+            'first_name'             => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'last_name'              => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'company_name'           => 'required|string|max:255',
+            'cpf'                    => 'nullable', // PJ não precisa de CPF
+            'birth_date'             => 'nullable', // PJ não precisa de data de nascimento
+            'area_of_activity_id'    => 'nullable|integer|exists:areas_of_activity,id',
+            'profession_id'          => 'nullable|integer|exists:professions,id',
+            'description'            => 'nullable|string|max:250',
+            'website'                => 'nullable|url|max:255',
 
-            // Configurações do cliente
-            'customer_type'            => 'required|in:company',
-            'priority_level'           => 'required|in:normal,vip,premium',
-            'status'                   => 'required|in:active,inactive',
+            // Dados de contato (Contact) - Sem validação de unicidade (compartilhado com Provider)
+            'email_personal'         => 'required|email|max:255',
+            'phone_personal'         => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'email_business'         => 'nullable|email|max:255',
+            'phone_business'         => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // Área de atuação
-            'area_of_activity_id'      => 'nullable|integer|exists:area_of_activities,id',
+            // Dados específicos PJ
+            'fantasy_name'           => 'nullable|string|max:255',
+            'state_registration'     => 'nullable|string|max:50',
+            'municipal_registration' => 'nullable|string|max:50',
+            'founding_date'          => 'nullable|date_format:d/m/Y|before:today|after:1800-01-01',
+            'company_email'          => 'nullable|email|max:255',
+            'company_phone'          => 'nullable|string|regex:/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/',
+            'company_website'        => 'nullable|url|max:255',
+            'industry'               => 'nullable|string|max:255',
+            'company_size'           => 'nullable|string|in:micro,pequena,media,grande',
+            'notes'                  => 'nullable|string|max:1000',
+
+            // CNPJ com validação customizada via Helper
+            'cnpj'                   => [
+                'required',
+                'string',
+                'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/',
+                function ( $attribute, $value, $fail ) {
+                    $cleanCnpj = preg_replace( '/[^0-9]/', '', $value );
+                    if ( strlen( $cleanCnpj ) !== 14 || !\App\Helpers\ValidationHelper::isValidCnpj( $cleanCnpj ) ) {
+                        $fail( 'CNPJ inválido.' );
+                    }
+                },
+            ],
+
+            // Endereço (Address)
+            'cep'                    => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
+            'address'                => 'required|string|max:255',
+            'address_number'         => 'nullable|string|max:20',
+            'neighborhood'           => 'required|string|max:100',
+            'city'                   => 'required|string|max:100',
+            'state'                  => 'required|string|size:2|alpha|not_in:Selecione',
 
             // Tags
-            'tags'                     => 'nullable|array',
-            'tags.*'                   => 'integer|exists:customer_tags,id',
-
-            // Endereços (mínimo 1 endereço obrigatório)
-            'addresses'                => 'required|array|min:1|max:10',
-            'addresses.*.type'         => 'required|string|in:principal,trabalho,cobranca,entrega,outros',
-            'addresses.*.cep'          => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
-            'addresses.*.street'       => 'required|string|max:255',
-            'addresses.*.number'       => 'required|string|max:20',
-            'addresses.*.complement'   => 'nullable|string|max:100',
-            'addresses.*.neighborhood' => 'required|string|max:100',
-            'addresses.*.city'         => 'required|string|max:100',
-            'addresses.*.state'        => 'required|string|size:2|alpha',
-            'addresses.*.latitude'     => 'nullable|numeric|between:-90,90',
-            'addresses.*.longitude'    => 'nullable|numeric|between:-180,180',
-
-            // Contatos adicionais (mínimo 1 contato obrigatório)
-            'contacts'                 => 'required|array|min:1|max:10',
-            'contacts.*.type'          => 'required|string|in:email,phone,whatsapp,linkedin,site,skype,outros',
-            'contacts.*.label'         => 'nullable|string|max:100',
-            'contacts.*.value'         => 'required|string|max:255',
-            'contacts.*.is_primary'    => 'boolean',
-
-            // Validações condicionais para tipos específicos de contato
-            'contacts.*.value'         => 'required_if:contacts.*.type,email|email|unique:customer_contacts,value',
-            'contacts.*.value'         => 'required_if:contacts.*.type,phone|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'contacts.*.value'         => 'required_if:contacts.*.type,whatsapp|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'contacts.*.value'         => 'required_if:contacts.*.type,site|url',
-            'contacts.*.value'         => 'required_if:contacts.*.type,linkedin|url|regex:/^https:\/\/[www\.]?linkedin\.com/',
+            'tags'                   => 'nullable|array',
+            'tags.*'                 => 'integer|exists:customer_tags,id',
         ];
     }
 
@@ -97,7 +96,7 @@ class CustomerPessoaJuridicaRequest extends FormRequest
         return [
             'company_name'             => 'razão social',
             'fantasy_name'             => 'nome fantasia',
-            'document'                 => 'CNPJ',
+            'cnpj'                     => 'CNPJ',
             'state_registration'       => 'inscrição estadual',
             'municipal_registration'   => 'inscrição municipal',
             'founding_date'            => 'data de fundação',
@@ -159,6 +158,7 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'addresses.*.cep.regex'        => 'Digite um CEP válido.',
             'addresses.*.state.size'       => 'O estado deve ter 2 caracteres.',
             'addresses.*.state.alpha'      => 'O estado deve conter apenas letras.',
+            'state.not_in'                 => 'Por favor, selecione um estado válido.',
             'contacts.required'            => 'Pelo menos um contato deve ser informado.',
             'contacts.min'                 => 'Pelo menos um contato deve ser informado.',
             'contacts.*.value.required_if' => 'O valor do contato é obrigatório para este tipo.',
@@ -167,173 +167,6 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'contacts.*.value.regex'       => 'Digite um telefone válido no formato (00) 00000-0000.',
             'contacts.*.value.url'         => 'Digite uma URL válida.',
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Formatar CNPJ removendo caracteres especiais
-        if ( $this->document ) {
-            $this->merge( [
-                'document' => preg_replace( '/\D/', '', $this->document ),
-            ] );
-        }
-
-        // Formatar CEP removendo caracteres especiais
-        if ( $this->addresses ) {
-            foreach ( $this->addresses as $index => $address ) {
-                if ( isset( $address[ 'cep' ] ) ) {
-                    $this->addresses[ $index ][ 'cep' ] = preg_replace( '/\D/', '', $address[ 'cep' ] );
-                }
-            }
-        }
-
-        // Formatar telefones removendo caracteres especiais
-        $phoneFields = [ 'company_phone', 'contact_person_phone' ];
-        foreach ( $phoneFields as $field ) {
-            if ( $this->$field ) {
-                $this->merge( [
-                    $field => preg_replace( '/\D/', '', $this->$field ),
-                ] );
-            }
-        }
-
-        // Formatar telefones dos contatos
-        if ( $this->contacts ) {
-            foreach ( $this->contacts as $index => $contact ) {
-                if ( isset( $contact[ 'value' ] ) && in_array( $contact[ 'type' ], [ 'phone', 'whatsapp' ] ) ) {
-                    $this->contacts[ $index ][ 'value' ] = preg_replace( '/\D/', '', $contact[ 'value' ] );
-                }
-            }
-        }
-
-        // Garantir que pelo menos um endereço seja principal
-        if ( $this->addresses && !$this->hasPrimaryAddress() ) {
-            $this->addresses[ 0 ][ 'is_primary' ] = true;
-        }
-
-        // Garantir que pelo menos um contato seja principal
-        if ( $this->contacts && !$this->hasPrimaryContact() ) {
-            $this->contacts[ 0 ][ 'is_primary' ] = true;
-        }
-    }
-
-    /**
-     * Check if addresses has at least one primary address.
-     */
-    private function hasPrimaryAddress(): bool
-    {
-        if ( !$this->addresses ) {
-            return false;
-        }
-
-        foreach ( $this->addresses as $address ) {
-            if ( isset( $address[ 'is_primary' ] ) && $address[ 'is_primary' ] ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if contacts has at least one primary contact.
-     */
-    private function hasPrimaryContact(): bool
-    {
-        if ( !$this->contacts ) {
-            return false;
-        }
-
-        foreach ( $this->contacts as $contact ) {
-            if ( isset( $contact[ 'is_primary' ] ) && $contact[ 'is_primary' ] ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Configure the validator instance.
-     */
-    public function withValidator( $validator ): void
-    {
-        $validator->after( function ( $validator ) {
-            // Validação adicional: garantir que pelo menos um email seja informado
-            $hasEmail = false;
-            if ( $this->contacts ) {
-                foreach ( $this->contacts as $contact ) {
-                    if ( isset( $contact[ 'type' ] ) && $contact[ 'type' ] === 'email' ) {
-                        $hasEmail = true;
-                        break;
-                    }
-                }
-            }
-
-            if ( !$hasEmail ) {
-                $validator->errors()->add( 'contacts', 'Pelo menos um email deve ser informado.' );
-            }
-
-            // Validação adicional: CNPJ deve ser válido
-            if ( $this->document && !$this->isValidCnpj( $this->document ) ) {
-                $validator->errors()->add( 'document', 'O CNPJ informado não é válido.' );
-            }
-
-            // Validação adicional: se contato pessoal for informado, validar consistência
-            if ( $this->contact_person_email && $this->company_email === $this->contact_person_email ) {
-                $validator->errors()->add( 'contact_person_email', 'O email do contato deve ser diferente do email empresarial.' );
-            }
-        } );
-    }
-
-    /**
-     * Validate Brazilian CNPJ.
-     */
-    private function isValidCnpj( string $cnpj ): bool
-    {
-        // Remove non-numeric characters
-        $cnpj = preg_replace( '/\D/', '', $cnpj );
-
-        // CNPJ must have 14 digits
-        if ( strlen( $cnpj ) !== 14 ) {
-            return false;
-        }
-
-        // Check if all digits are the same
-        if ( preg_match( '/^(\d)\1+$/', $cnpj ) ) {
-            return false;
-        }
-
-        // Calculate first check digit
-        $sum        = 0;
-        $multiplier = 2;
-        for ( $i = 11; $i >= 0; $i-- ) {
-            $sum += (int) $cnpj[ $i ] * $multiplier;
-            $multiplier = $multiplier === 9 ? 2 : $multiplier + 1;
-        }
-
-        $remainder = $sum % 11;
-        $digit1    = $remainder < 2 ? 0 : 11 - $remainder;
-
-        if ( (int) $cnpj[ 12 ] !== $digit1 ) {
-            return false;
-        }
-
-        // Calculate second check digit
-        $sum        = 0;
-        $multiplier = 2;
-        for ( $i = 12; $i >= 0; $i-- ) {
-            $sum += (int) $cnpj[ $i ] * $multiplier;
-            $multiplier = $multiplier === 9 ? 2 : $multiplier + 1;
-        }
-
-        $remainder = $sum % 11;
-        $digit2    = $remainder < 2 ? 0 : 11 - $remainder;
-
-        return (int) $cnpj[ 13 ] === $digit2;
     }
 
 }

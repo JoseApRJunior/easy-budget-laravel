@@ -14,15 +14,11 @@ class CategoryFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-        $slug   = $this->faker->unique()->slug( 2 );
+        $slug = $this->faker->unique()->slug( 2 );
 
-        return [ 
-            'tenant_id'   => $tenant->id,
-            'name'        => $this->faker->word,
-            'slug'        => $slug,
-            'description' => $this->faker->sentence,
-            'is_active'   => $this->faker->boolean,
+        return [
+            'name' => $this->faker->word,
+            'slug' => $slug,
         ];
     }
 

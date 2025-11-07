@@ -54,7 +54,7 @@ class ProviderRepository extends AbstractTenantRepository
     {
         return Provider::where( 'user_id', $userId )
             ->where( 'tenant_id', $tenantId )
-            ->with( [ 'user', 'commonData', 'contact', 'address' ] )
+            ->with( [ 'user', 'commonData', 'contact', 'address', 'businessData' ] )
             ->first();
     }
 
