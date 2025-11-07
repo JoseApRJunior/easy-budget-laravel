@@ -7,13 +7,11 @@ use App\Enums\InvoiceStatusEnum;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use TenantScoped;
+    use TenantScoped, SoftDeletes; // Já está correto no contexto fornecido.
 
     /**
      * Boot the model.

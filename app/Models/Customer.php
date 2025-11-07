@@ -18,11 +18,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class Customer extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory, TenantScoped, SoftDeletes; // Já está correto no contexto fornecido.
 
     public const STATUS_ACTIVE   = 'active';
     public const STATUS_INACTIVE = 'inactive';
@@ -165,8 +166,6 @@ class Customer extends Model
     {
         return $this->hasMany( Invoice::class);
     }
-
-
 
     /**
      * Check if customer is a company (PJ).
@@ -485,8 +484,6 @@ class Customer extends Model
     {
         return $this->formatPhone( $this->contact?->phone_business ?? '' );
     }
-
-
 
     /**
      * Get the customer's age based on birth date.

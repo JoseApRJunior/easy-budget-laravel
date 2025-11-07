@@ -117,6 +117,7 @@ return new class extends Migration
             $table->text( 'extra_links' )->nullable(); // campo para links adicionais
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
 
             // Performance indexes for Google OAuth
             $table->index( 'google_id' );
@@ -145,6 +146,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->enum( 'status', [ 'active', 'inactive', 'deleted' ] )->default( 'active' );
+            $table->softDeletes();
             $table->timestamps();
         } );
 
@@ -153,6 +155,7 @@ return new class extends Migration
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
             $table->boolean( 'terms_accepted' )->default( false );
+            $table->softDeletes(); // Adiciona a coluna deleted_at
             $table->timestamps();
             $table->unique( [ 'tenant_id', 'user_id' ], 'uq_providers_tenant_user' );
         } );
@@ -432,6 +435,7 @@ return new class extends Migration
             $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
             $table->timestamp( 'public_expires_at' )->nullable();
             $table->text( 'notes' )->nullable();
+            $table->softDeletes();
             $table->timestamps();
         } );
 
@@ -475,6 +479,7 @@ return new class extends Migration
             $table->string( 'status', 20 );
             $table->string( 'payment_method', 50 );
             $table->decimal( 'transaction_amount', 10, 2 );
+            $table->softDeletes();
             $table->dateTime( 'transaction_date' )->nullable();
             $table->timestamps();
         } );
@@ -499,6 +504,7 @@ return new class extends Migration
             $table->string( 'status', 20 );
             $table->string( 'payment_method', 50 );
             $table->decimal( 'transaction_amount', 10, 2 );
+            $table->softDeletes();
             $table->dateTime( 'transaction_date' )->nullable();
             $table->timestamps();
         } );

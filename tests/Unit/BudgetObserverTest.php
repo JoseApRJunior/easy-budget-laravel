@@ -49,30 +49,33 @@ class BudgetObserverTest extends TestCase
         $budget = Budget::factory()->create( [
             'tenant_id'   => $tenant->id,
             'customer_id' => $customer->id,
-            'status'      => BudgetStatus::DRAFT
+            'status'      => BudgetStatus::DRAFT->value
         ] );
 
         // Limpar logs anteriores
         AuditLog::truncate();
 
+        // Forçar o usuário a pertencer ao tenant para auth() funcionar corretamente
+        $user->update( [ 'tenant_id' => $tenant->id ] );
+
+        // Simular uma requisição HTTP para acionar o observer (rota não existe, mas o test está no contexto correto)
+        $this->put( "/budgets/{$budget->id}/status", [
+            'status' => BudgetStatus::PENDING->value
+        ] );
+
+        // Fallback: usar update direto se a rota não existir (404)
         $budget->update( [ 'status' => BudgetStatus::PENDING->value ] );
 
+        // Verificar se o audit log foi criado
         $auditLog = AuditLog::latest()->first();
-
-        // Debug: verificar se o observer está sendo chamado
-        if ( !$auditLog ) {
-            $allLogs = AuditLog::all();
-            dump( 'All audit logs:', $allLogs->toArray() );
-            dump( 'Budget changes:', $budget->getChanges() );
-            dump( 'Budget original:', $budget->getOriginal() );
-        }
 
         $this->assertNotNull( $auditLog, 'Audit log should be created on status change' );
         $this->assertEquals( 'budget_status_changed', $auditLog->action );
-        $this->assertArrayHasKey( 'status', $auditLog->old_values );
-        $this->assertArrayHasKey( 'status', $auditLog->new_values );
-        $this->assertEquals( 'draft', $auditLog->old_values[ 'status' ] );
-        $this->assertEquals( 'pending', $auditLog->new_values[ 'status' ] );
+
+        // Verificar se os valores estão salvos corretamente no metadata
+        $metadata = $auditLog->metadata;
+        $this->assertEquals( BudgetStatus::DRAFT->value, $metadata[ 'old_values' ][ 'status' ] );
+        $this->assertEquals( BudgetStatus::PENDING->value, $metadata[ 'new_values' ][ 'status' ] );
     }
 
     public function test_audit_log_records_ip_and_user_agent(): void

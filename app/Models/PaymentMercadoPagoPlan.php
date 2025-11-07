@@ -8,10 +8,11 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentMercadoPagoPlan extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory, TenantScoped, SoftDeletes;
 
     /**
      * Boot the model.
@@ -88,8 +89,7 @@ class PaymentMercadoPagoPlan extends Model
         'updated_at'           => 'datetime',
     ];
 
-
-        /**
+    /**
      * Regras de validação para o modelo Plan.
      */
     public static function businessRules(): array
