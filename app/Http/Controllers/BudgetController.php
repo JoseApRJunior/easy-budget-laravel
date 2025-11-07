@@ -87,6 +87,27 @@ class BudgetController extends Controller
         }
     }
 
+    public function update( string $code, BudgetUpdateRequest $request ): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->updateByCode( $code, $request->validated() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'provider.budgets.show', $code )
+                ->with( 'success', 'Orçamento atualizado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao atualizar orçamento: ' . $e->getMessage() );
+        }
+    }
+
     public function show( string $code ): View
     {
         try {

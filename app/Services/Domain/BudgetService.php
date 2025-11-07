@@ -101,9 +101,9 @@ class BudgetService extends AbstractBaseService
             }
 
             // Define valores padrão para campos obrigatórios
-            $data['discount'] = $data['discount'] ?? 0.00;
-            $data['total'] = $data['total'] ?? 0.00;
-            
+            $data[ 'discount' ] = $data[ 'discount' ] ?? 0.00;
+            $data[ 'total' ]    = $data[ 'total' ] ?? 0.00;
+
             // Cria o orçamento
             $budget = $this->repository->create( $data );
 
@@ -266,7 +266,7 @@ class BudgetService extends AbstractBaseService
                 $oldStatus = $budget->status;
 
                 // Validar transição
-                if ( !$oldStatus->canTransitionTo( BudgetStatus::fromString( $newStatus ) ) ) {
+                if ( !$oldStatus->canTransitionTo( BudgetStatus::from( $newStatus ) ) ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Transição de {$oldStatus->value} para {$newStatus} não permitida",
@@ -301,9 +301,9 @@ class BudgetService extends AbstractBaseService
      */
     private function updateRelatedServices( Budget $budget, string $newStatus ): void
     {
-        $serviceStatus = match ( $newStatus ) {
-            'APPROVED'              => 'in_progress',
-            'REJECTED', 'CANCELLED' => 'cancelled',
+        $serviceStatus = match ( strtolower( $newStatus ) ) {
+            'approved'              => 'in-progress',
+            'rejected', 'cancelled' => 'cancelled',
             default                 => null
         };
 
@@ -821,7 +821,7 @@ class BudgetService extends AbstractBaseService
 
             // Extrair sequencial e incrementar
             $lastSequential = (int) substr( $lastBudget->code, -4 );
-            $newSequential  = str_pad( $lastSequential + 1, 4, '0', STR_PAD_LEFT );
+            $newSequential  = str_pad( (string) ( $lastSequential + 1 ), 4, '0', STR_PAD_LEFT );
 
             return "{$prefix}{$newSequential}";
         } );

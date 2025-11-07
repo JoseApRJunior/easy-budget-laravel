@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Budget;
-use App\Models\BudgetStatus;
 use App\Models\Permission;
 use App\Models\PlanSubscription;
 use App\Models\Product;
@@ -13,7 +12,6 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\User;
-use Database\Seeders\BudgetStatusSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Tests\TestCase;
 
@@ -23,7 +21,7 @@ class TenantScopingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed( [ RolePermissionSeeder::class, BudgetStatusSeeder::class] );
+        $this->seed( [ RolePermissionSeeder::class] );
     }
 
     public function test_scoped_models_filter_by_current_tenant(): void
@@ -53,18 +51,16 @@ class TenantScopingTest extends TestCase
         TenantScoped::setTestingTenantId( $tenant1->id );
 
         // Roles e Permissions já seedados no setUp, globais (sem tenant_id)
-        // BudgetStatus também seedado globalmente
+        // BudgetStatus agora é enum, não tabela
 
         $this->assertEquals( 3, Role::count() ); // admin, provider, user do seeder
         $this->assertEquals( 10, Permission::count() ); // permissions básicas do seeder
-        $this->assertEquals( 3, BudgetStatus::count() ); // pending, approved, rejected
 
         // Create another tenant and assert globals still visible
         $tenant2 = Tenant::factory()->create();
         TenantScoped::setTestingTenantId( $tenant2->id );
         $this->assertEquals( 3, Role::count() );
         $this->assertEquals( 10, Permission::count() );
-        $this->assertEquals( 3, BudgetStatus::count() );
     }
 
     /**
@@ -117,39 +113,31 @@ class TenantScopingTest extends TestCase
     }
 
     /**
-     * Teste integra com Budget usando BudgetStatus seeded (sem create manual).
-     * Verifica scoping em Budget (tenant-scoped) com status global.
+     * Teste integra com Budget usando status enum (sem tabela budget_statuses).
+     * Verifica scoping em Budget (tenant-scoped) com status como enum.
      */
-    public function test_budget_with_seeded_status_scoping(): void
+    public function test_budget_with_enum_status_scoping(): void
     {
-        $tenant1 = Tenant::factory()->create( [ 'name' => 'Tenant 1' ] );
-        $tenant2 = Tenant::factory()->create( [ 'name' => 'Tenant 2' ] );
-
-        // Status já seedado globalmente no setUp
-        $pendingStatus = BudgetStatus::where( 'slug', 'pending' )->first();
-        $this->assertNotNull( $pendingStatus );
+        $tenant1   = Tenant::factory()->create( [ 'name' => 'Tenant 1' ] );
+        $tenant2   = Tenant::factory()->create( [ 'name' => 'Tenant 2' ] );
+        $customer1 = \App\Models\Customer::factory()->create( [ 'tenant_id' => $tenant1->id ] );
 
         TenantScoped::setTestingTenantId( $tenant1->id );
-        $budget1 = Budget::factory()->create( [ 
-            'tenant_id'          => $tenant1->id,
-            'budget_statuses_id' => $pendingStatus->id,
+        $budget1 = Budget::factory()->create( [
+            'tenant_id'   => $tenant1->id,
+            'customer_id' => $customer1->id,
+            'status'      => 'pending',
         ] );
 
         // Budget scoped: visível em tenant1
-        $this->assertDatabaseHas( 'budgets', [ 
-            'id'                 => $budget1->id,
-            'budget_statuses_id' => $pendingStatus->id,
+        $this->assertDatabaseHas( 'budgets', [
+            'id'     => $budget1->id,
+            'status' => 'pending',
         ] );
 
         // Switch to tenant2: budget1 NÃO visível
         TenantScoped::setTestingTenantId( $tenant2->id );
         $this->assertDatabaseMissing( 'budgets', [ 'id' => $budget1->id ] );
-
-        // Status ainda global e visível
-        $this->assertDatabaseHas( 'budget_statuses', [ 
-            'slug'      => 'pending',
-            'tenant_id' => null,
-        ] );
     }
 
     public function test_plan_subscription_scoping(): void
@@ -159,7 +147,7 @@ class TenantScopingTest extends TestCase
 
         // Create for tenant1
         TenantScoped::setTestingTenantId( $tenant1->id );
-        $subscription = PlanSubscription::factory()->create( [ 
+        $subscription = PlanSubscription::factory()->create( [
             'tenant_id' => $tenant1->id
         ] );
 

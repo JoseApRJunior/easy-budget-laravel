@@ -22,10 +22,8 @@ class CustomerFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
-            'common_data_id' => CommonDataFactory::new(),
-            'contact_id' => null,
-            'address_id' => null,
-            'status' => 'active',
+            'status'    => 'active',
         ];
     }
+
 }

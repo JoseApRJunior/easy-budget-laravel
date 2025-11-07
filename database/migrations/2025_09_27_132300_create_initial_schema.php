@@ -315,14 +315,14 @@ return new class extends Migration
             $table->text( 'description' )->nullable();
             $table->text( 'payment_terms' )->nullable();
             $table->string( 'attachment', 255 )->nullable();
-            $table->longText( 'history' )->nullable()->comment('Histórico de mudanças em JSON');
-            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique()->comment('Hash SHA256 do PDF');
-            $table->string( 'public_token', 43 )->nullable()->unique()->comment('Token para acesso público');
-            $table->timestamp( 'public_expires_at' )->nullable()->comment('Expiração do token público');
-            
+            $table->longText( 'history' )->nullable()->comment( 'Histórico de mudanças em JSON' );
+            $table->string( 'pdf_verification_hash', 64 )->nullable()->unique()->comment( 'Hash SHA256 do PDF' );
+            $table->string( 'public_token', 43 )->nullable()->unique()->comment( 'Token para acesso público' );
+            $table->timestamp( 'public_expires_at' )->nullable()->comment( 'Expiração do token público' );
+
             // Índices para performance
-            $table->index('public_token');
-            $table->index(['public_token', 'public_expires_at']);
+            $table->index( 'public_token' );
+            $table->index( [ 'public_token', 'public_expires_at' ] );
             $table->timestamps();
         } );
 
@@ -340,6 +340,42 @@ return new class extends Migration
             $table->integer( 'access_count' )->default( 0 );
             $table->timestamp( 'last_accessed_at' )->nullable();
             $table->timestamps();
+        } );
+
+        Schema::create( 'budget_item_categories', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->string( 'name', 255 );
+            $table->string( 'slug', 100 )->unique();
+            $table->text( 'description' )->nullable();
+            $table->string( 'color', 7 )->nullable();
+            $table->string( 'icon', 50 )->nullable();
+            $table->boolean( 'is_active' )->default( true );
+            $table->timestamps();
+
+            $table->index( [ 'tenant_id', 'slug' ] );
+        } );
+
+        Schema::create( 'budget_items', function ( Blueprint $table ) {
+            $table->id();
+            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'budget_id' )->constrained( 'budgets' )->cascadeOnDelete();
+            $table->foreignId( 'budget_item_category_id' )->nullable()->constrained( 'budget_item_categories' )->nullOnDelete();
+            $table->string( 'title', 255 );
+            $table->text( 'description' )->nullable();
+            $table->decimal( 'quantity', 10, 2 )->default( 1 );
+            $table->string( 'unit', 20 );
+            $table->decimal( 'unit_price', 10, 2 );
+            $table->decimal( 'discount_percentage', 5, 2 )->default( 0 );
+            $table->decimal( 'tax_percentage', 5, 2 )->default( 0 );
+            $table->decimal( 'total_price', 10, 2 );
+            $table->decimal( 'net_total', 10, 2 );
+            $table->integer( 'order_index' )->default( 0 );
+            $table->json( 'metadata' )->nullable();
+            $table->timestamps();
+
+            $table->index( [ 'tenant_id', 'budget_id' ] );
+            $table->index( 'budget_item_category_id' );
         } );
 
         Schema::create( 'services', function ( Blueprint $table ) {
