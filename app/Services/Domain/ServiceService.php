@@ -259,14 +259,15 @@ class ServiceService extends AbstractBaseService
 
                 // Atualizar serviço
                 $service->update( [
+                    'category_id' => $data[ 'category_id' ] ?? $service->category_id,
                     'description' => $data[ 'description' ] ?? $service->description,
                     'due_date'    => $data[ 'due_date' ] ?? $service->due_date,
                     'status'      => $data[ 'status' ] ?? $service->status,
                 ] );
 
-                // Gerenciar itens se fornecidos
-                if ( isset( $data[ 'items' ] ) ) {
-                    $this->updateServiceItems( $service, $data[ 'items' ] );
+                // Gerenciar itens processados
+                if ( !empty( $data[ 'items_to_create' ] ) || !empty( $data[ 'items_to_update' ] ) || !empty( $data[ 'items_to_delete' ] ) ) {
+                    $this->updateServiceItems( $service, $data );
                 }
 
                 // Atualizar total do orçamento
@@ -291,36 +292,71 @@ class ServiceService extends AbstractBaseService
     /**
      * Atualiza itens do serviço (delete/update/create).
      */
-    private function updateServiceItems( Service $service, array $items ): void
+    private function updateServiceItems( Service $service, array $data ): void
     {
-        // Remover itens existentes
-        $service->serviceItems()->delete();
+        // Processar itens para deletar
+        if ( !empty( $data[ 'items_to_delete' ] ) ) {
+            ServiceItem::whereIn( 'id', $data[ 'items_to_delete' ] )
+                ->where( 'service_id', $service->id )
+                ->delete();
+        }
 
-        // Criar novos itens
-        foreach ( $items as $itemData ) {
-            // Validar produto
-            $product = Product::where( 'id', $itemData[ 'product_id' ] )
-                ->where( 'active', true )
-                ->first();
+        // Processar itens para atualizar
+        if ( !empty( $data[ 'items_to_update' ] ) ) {
+            foreach ( $data[ 'items_to_update' ] as $itemData ) {
+                // Validar produto
+                $product = Product::where( 'id', $itemData[ 'product_id' ] )
+                    ->where( 'active', true )
+                    ->first();
 
-            if ( !$product ) {
-                throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                if ( !$product ) {
+                    throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                }
+
+                // Calcular total do item
+                $quantity  = (float) $itemData[ 'quantity' ];
+                $unitValue = (float) $itemData[ 'unit_value' ];
+                $total     = $quantity * $unitValue;
+
+                // Atualizar item
+                ServiceItem::where( 'id', $itemData[ 'id' ] )
+                    ->where( 'service_id', $service->id )
+                    ->update( [
+                        'product_id' => $product->id,
+                        'unit_value' => $unitValue,
+                        'quantity'   => $quantity,
+                        'total'      => $total,
+                    ] );
             }
+        }
 
-            // Calcular total do item
-            $quantity  = (float) $itemData[ 'quantity' ];
-            $unitValue = (float) $itemData[ 'unit_value' ];
-            $total     = $quantity * $unitValue;
+        // Processar itens para criar
+        if ( !empty( $data[ 'items_to_create' ] ) ) {
+            foreach ( $data[ 'items_to_create' ] as $itemData ) {
+                // Validar produto
+                $product = Product::where( 'id', $itemData[ 'product_id' ] )
+                    ->where( 'active', true )
+                    ->first();
 
-            // Criar item
-            ServiceItem::create( [
-                'tenant_id'  => $service->tenant_id,
-                'service_id' => $service->id,
-                'product_id' => $product->id,
-                'unit_value' => $unitValue,
-                'quantity'   => $quantity,
-                'total'      => $total,
-            ] );
+                if ( !$product ) {
+                    throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                }
+
+                // Calcular total do item
+                $quantity  = (float) $itemData[ 'quantity' ];
+                $unitValue = (float) $itemData[ 'unit_value' ];
+                $total     = $quantity * $unitValue;
+
+                // Criar item
+                ServiceItem::create( [
+                    'tenant_id'  => $service->tenant_id,
+                    'service_id' => $service->id,
+                    'product_id' => $product->id,
+                    'unit_value' => $unitValue,
+                    'quantity'   => $quantity,
+                    'total'      => $total,
+                ] );
+            }
         }
 
         // Atualizar total do serviço
@@ -469,6 +505,74 @@ class ServiceService extends AbstractBaseService
         }
 
         return true;
+    }
+
+    /**
+     * Cancela um serviço alterando o status para CANCELLED.
+     */
+    public function cancelService( string $code, ?string $reason = null ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($code, $reason) {
+                $service = Service::where( 'code', $code )->first();
+
+                if ( !$service ) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        "Serviço {$code} não encontrado",
+                    );
+                }
+
+                $oldStatus = $service->status;
+
+                // Verificar se já está cancelado
+                if ( $oldStatus === ServiceStatusEnum::CANCELLED ) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        'Serviço já está cancelado',
+                    );
+                }
+
+                // Validar transições permitidas
+                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $oldStatus->value );
+                if ( !in_array( ServiceStatusEnum::CANCELLED->value, $allowedTransitions ) ) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        "Transição de {$oldStatus->value} para CANCELLED não permitida",
+                    );
+                }
+
+                // Atualizar status para CANCELLED
+                $service->update( [
+                    'status' => ServiceStatusEnum::CANCELLED->value,
+                    'reason' => $reason
+                ] );
+
+                // Log da ação
+                Log::info( 'Service cancelled', [
+                    'service_id'   => $service->id,
+                    'service_code' => $service->code,
+                    'old_status'   => $oldStatus->value,
+                    'new_status'   => ServiceStatusEnum::CANCELLED->value,
+                    'reason'       => $reason,
+                    'ip'           => request()->ip()
+                ] );
+
+                // Atualizar orçamento em cascata
+                $this->updateBudgetStatusIfNeeded( $service, ServiceStatusEnum::CANCELLED->value );
+
+                return $this->success( $service, 'Serviço cancelado com sucesso' );
+
+            } );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao cancelar serviço',
+                null,
+                $e,
+            );
+        }
     }
 
     /**
