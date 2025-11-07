@@ -11,8 +11,10 @@ use App\Models\User;
 use App\Repositories\BudgetRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -612,6 +614,31 @@ class BudgetService extends AbstractBaseService
                 null,
                 $e,
             );
+        }
+    }
+
+    /**
+     * Retorna orçamentos não completados para seleção
+     *
+     * @return Collection
+     */
+    public function getNotCompleted(): Collection
+    {
+        try {
+            $tenantId = $this->tenantId();
+            if ( !$tenantId ) {
+                return new Collection();
+            }
+
+            return Budget::where( 'tenant_id', $tenantId )
+                ->whereNotIn( 'status', [ BudgetStatus::COMPLETED->value ] )
+                ->orderBy( 'code' )
+                ->get( [ 'id', 'code', 'description', 'total' ] );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar orçamentos não completados', [
+                'error' => $e->getMessage()
+            ] );
+            return new Collection();
         }
     }
 

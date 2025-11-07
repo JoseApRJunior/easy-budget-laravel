@@ -100,4 +100,12 @@ enum ServiceStatusEnum: string
         return [ self::CANCELLED->value, self::ON_HOLD->value ];
     }
 
+    public function canEdit(): bool
+    {
+        return match ( $this ) {
+            self::SCHEDULED, self::PREPARING, self::ON_HOLD, self::IN_PROGRESS, self::PARTIALLY_COMPLETED => true,
+            self::APPROVED, self::REJECTED, self::COMPLETED, self::CANCELLED                              => false,
+        };
+    }
+
 }

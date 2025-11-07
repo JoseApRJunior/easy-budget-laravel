@@ -7,11 +7,16 @@ namespace App\Http\Controllers;
 use App\Enums\ServiceStatusEnum;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceRequest;
+use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\UserConfirmationToken;
-use App\Services\ServiceService;
+use App\Services\Domain\BudgetService;
+use App\Services\Domain\CategoryService;
+use App\Services\Domain\ProductService;
+use App\Services\Domain\ServiceService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +30,91 @@ use Illuminate\View\View;
  */
 class ServiceController extends Controller
 {
+    protected ServiceService  $serviceService;
+    protected CategoryService $categoryService;
+    protected BudgetService   $budgetService;
+    protected ProductService  $productService;
+
+    public function __construct(
+        ServiceService $serviceService,
+        CategoryService $categoryService,
+        BudgetService $budgetService,
+        ProductService $productService,
+    ) {
+        $this->serviceService  = $serviceService;
+        $this->categoryService = $categoryService;
+        $this->budgetService   = $budgetService;
+        $this->productService  = $productService;
+    }
+
+    /**
+     * Show the form for creating a new service.
+     */
+    public function create( ?string $budgetCode = null ): View
+    {
+        try {
+            $budget = null;
+
+            if ( $budgetCode ) {
+                $budgetResult = $this->budgetService->findByCode( $budgetCode );
+                if ( $budgetResult->isSuccess() ) {
+                    $budget = $budgetResult->getData();
+                }
+            }
+
+            return view( 'services.create', [
+                'budget'        => $budget,
+                'categories'    => $this->categoryService->getActive(),
+                'products'      => $this->productService->getActive(),
+                'budgets'       => $this->budgetService->getNotCompleted(),
+                'statusOptions' => ServiceStatusEnum::cases()
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar formulário de criação', [
+                'error'      => $e->getMessage(),
+                'budgetCode' => $budgetCode
+            ] );
+            abort( 500, 'Erro ao carregar formulário de criação' );
+        }
+    }
+
+    /**
+     * Display a listing of the services.
+     */
+    public function index( Request $request ): View
+    {
+        try {
+            $filters = $request->only( [ 'status', 'category_id', 'date_from', 'date_to', 'search' ] );
+
+            $result = $this->serviceService->getFilteredServices( $filters, [
+                'category:id,name',
+                'budget.customer.commonData',
+                'serviceStatus'
+            ] );
+
+            if ( !$result->isSuccess() ) {
+                abort( 500, 'Erro ao carregar lista de serviços' );
+            }
+
+            $services = $result->getData();
+
+            return view( 'services.index', [
+                'services'      => $services,
+                'filters'       => $filters,
+                'statusOptions' => ServiceStatusEnum::cases(),
+                'categories'    => $this->categoryService->getActive()
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar serviços', [
+                'error'   => $e->getMessage(),
+                'filters' => $request->only( [ 'status', 'category_id', 'date_from', 'date_to', 'search' ] )
+            ] );
+            abort( 500, 'Erro ao carregar serviços' );
+        }
+    }
+
     /**
      * Display the service status page for public access.
      */
@@ -180,6 +270,65 @@ class ServiceController extends Controller
                 'ip'    => request()->ip()
             ] );
             return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Store a newly created service in storage.
+     */
+    public function store( ServiceStoreRequest $request ): RedirectResponse
+    {
+        try {
+            $result = $this->serviceService->createService( $request->getValidatedData() );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            $service = $result->getData();
+
+            return redirect()->route( 'services.show', $service->code )
+                ->with( 'success', 'Serviço criado com sucesso!' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao criar serviço: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Display the specified service.
+     */
+    public function show( string $code ): View
+    {
+        try {
+            $result = $this->serviceService->findByCode( $code, [
+                'category',
+                'budget.customer.commonData',
+                'serviceStatus',
+                'serviceItems.product',
+                'userConfirmationToken'
+            ] );
+
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Serviço não encontrado' );
+            }
+
+            $service = $result->getData();
+
+            return view( 'services.show', [
+                'service' => $service
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar serviço', [
+                'error' => $e->getMessage(),
+                'code'  => $code
+            ] );
+            abort( 500, 'Erro ao carregar serviço' );
         }
     }
 

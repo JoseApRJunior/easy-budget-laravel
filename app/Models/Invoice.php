@@ -6,12 +6,13 @@ namespace App\Models;
 use App\Enums\InvoiceStatusEnum;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use TenantScoped, SoftDeletes; // Já está correto no contexto fornecido.
+    use TenantScoped, SoftDeletes, HasFactory;
 
     /**
      * Boot the model.
