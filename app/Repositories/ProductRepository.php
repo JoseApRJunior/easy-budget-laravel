@@ -19,9 +19,13 @@ class ProductRepository extends AbstractTenantRepository
         return new Product();
     }
 
-    public function getPaginated( array $filters = [], int $perPage = 15 ): LengthAwarePaginator
+    public function getPaginated( array $filters = [], int $perPage = 15, array $with = [] ): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->with( 'category' );
+        $query = $this->model->newQuery();
+
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
 
         if ( !empty( $filters[ 'search' ] ) ) {
             $query->where( function ( $q ) use ( $filters ) {
