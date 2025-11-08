@@ -148,7 +148,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/{service}', [ ServiceController::class, 'show' ] )->name( 'show' );
         Route::get( '/{service}/edit', [ ServiceController::class, 'edit' ] )->name( 'edit' );
         Route::post( '/{service}', [ ServiceController::class, 'update' ] )->name( 'update' );
-        Route::post( '/{service}/change-status', [ ServiceController::class, 'changeStatus' ] )->name( 'change-status' );
+        Route::post( '/{service}/change-status', [ ServiceController::class, 'change_status' ] )->name( 'change-status' );
         Route::post( '/{service}/cancel', [ ServiceController::class, 'cancel' ] )->name( 'cancel' );
         Route::delete( '/{service}', [ ServiceController::class, 'destroy' ] )->name( 'destroy' );
         Route::get( '/search/ajax', [ ServiceController::class, 'search' ] )->name( 'search' );
