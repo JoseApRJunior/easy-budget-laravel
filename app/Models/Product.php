@@ -39,11 +39,13 @@ class Product extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'category_id',
         'name',
         'description',
+        'sku',
         'price',
+        'unit',
         'active',
-        'code',
         'image',
     ];
 
@@ -54,11 +56,13 @@ class Product extends Model
      */
     protected $casts = [
         'tenant_id'   => 'integer',
+        'category_id' => 'integer',
         'name'        => 'string',
         'description' => 'string',
+        'sku'         => 'string',
         'price'       => 'decimal:2',
+        'unit'        => 'string',
         'active'      => 'boolean',
-        'code'        => 'string',
         'image'       => 'string',
         'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
@@ -73,33 +77,35 @@ class Product extends Model
     {
         return [
             'name'        => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+            'sku'         => 'nullable|string|max:255',
             'price'       => 'required|numeric|min:0',
-            'code'        => 'nullable|string|max:50',
+            'unit'        => 'nullable|string|max:20',
             'active'      => 'boolean',
             'image'       => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'tenant_id'   => 'required|exists:tenants,id',
         ];
     }
 
     /**
-     * Validação personalizada para code único por tenant.
+     * Validação personalizada para sku único por tenant.
      * Esta validação deve ser usada no contexto de um request onde o tenant_id está disponível.
      *
-     * @param  string|null  $code
+     * @param  string|null  $sku
      * @param  int|null  $excludeId
      * @return string
      */
-    public static function validateUniqueCodeRule( ?string $code, ?int $excludeId = null ): string
+    public static function validateUniqueSkuRule( ?string $sku, ?int $excludeId = null ): string
     {
-        if ( empty( $code ) ) {
-            return 'nullable|string|max:50';
+        if ( empty( $sku ) ) {
+            return 'nullable|string|max:255';
         }
 
-        $rule = 'unique:products,code';
+        $rule = 'unique:products,sku';
 
         if ( $excludeId ) {
-            $rule .= ',' . $excludeId . ',id';
+            $rule  .= ',' . $excludeId . ',id';
         }
 
         return $rule . ',tenant_id,' . request()->user()->tenant_id;
@@ -113,6 +119,16 @@ class Product extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo( Tenant::class);
+    }
+
+    /**
+     * Get the category that owns the Product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, \App\Models\Product>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo( Category::class);
     }
 
     /**

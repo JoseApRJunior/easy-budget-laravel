@@ -20,18 +20,19 @@ class ProductFactory extends Factory
      * Use states 'withTenant' e 'withCategory' para associações.
      * Preço aleatório entre 10 e 1000 com 2 casas decimais.
      * Campo 'active' com 80% de chance de true.
-     * Unit_id null até factory separada.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'code'        => $this->faker->unique()->lexify( 'PROD-???' ),
             'name'        => $this->faker->word,
-            'description' => $this->faker->sentence( 3 ),
-            'price'       => $this->faker->randomFloat( 2, 10, 1000 ),
-            'active'      => $this->faker->boolean( 80 ), // 80% chance de ativo
+            'description' => $this->faker->sentence,
+            'sku'         => $this->faker->unique()->ean8,
+            'price'       => $this->faker->randomFloat( 2, 10, 500 ),
+            'unit'        => $this->faker->randomElement( [ 'un', 'h', 'm²' ] ),
+            'active'      => true,
+            'image'       => null,
         ];
     }
 

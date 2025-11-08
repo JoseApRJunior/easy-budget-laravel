@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class ProductStoreRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return auth()->check();
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name'        => 'required|string|max:255',
+            'sku'         => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique( 'products' )->where( fn( $query ) => $query->where( 'tenant_id', tenant()->id ) )
+            ],
+            'price'       => 'required|numeric|min:0',
+            'category_id' => 'nullable|integer|exists:categories,id',
+            'unit'        => 'nullable|string|max:20',
+            'active'      => 'boolean',
+            'image'       => 'nullable|image|max:2048' // 2MB max
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required'      => 'O nome do produto é obrigatório.',
+            'sku.unique'         => 'O SKU informado já está em uso por outro produto.',
+            'price.required'     => 'O preço é obrigatório.',
+            'price.numeric'      => 'O preço deve ser um valor numérico.',
+            'price.min'          => 'O preço deve ser no mínimo 0.',
+            'category_id.exists' => 'A categoria selecionada é inválida.',
+            'image.image'        => 'O arquivo deve ser uma imagem.',
+            'image.max'          => 'A imagem não pode ter mais de 2MB.'
+        ];
+    }
+
+}

@@ -251,14 +251,17 @@ return new class extends Migration
         Schema::create( 'products', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
+            $table->foreignId( 'category_id' )->nullable()->constrained( 'categories' )->nullOnDelete();
             $table->string( 'name', 255 );
-            $table->string( 'description', 500 )->nullable();
-            $table->decimal( 'price', 10, 2 );
+            $table->text( 'description' )->nullable();
+            $table->string( 'sku' )->nullable();
+            $table->decimal( 'price', 10, 2 )->default( 0 );
+            $table->string( 'unit', 20 )->nullable()->comment( 'Ex: un, m², h' );
             $table->boolean( 'active' )->default( true );
-            $table->string( 'code', 50 )->nullable();
             $table->string( 'image', 255 )->nullable();
             $table->timestamps();
-            $table->unique( [ 'tenant_id', 'code' ] );
+            $table->softDeletes();
+            $table->unique( [ 'tenant_id', 'sku' ] );
         } );
 
         Schema::create( 'product_inventory', function ( Blueprint $table ) {
