@@ -14,16 +14,16 @@ use Illuminate\Support\Facades\Log;
 class CategoryService extends AbstractBaseService
 {
     /**
-     * Retorna categorias ativas
+     * Retorna todas as categorias ordenadas por nome
+     * Como a tabela categories não possui campo is_active, retornamos todas as categorias
      */
     public function getActive(): Collection
     {
         try {
-            return Category::where( 'is_active', true )
-                ->orderBy( 'name' )
+            return Category::orderBy( 'name' )
                 ->get();
         } catch ( Exception $e ) {
-            Log::error( 'Erro ao buscar categorias ativas', [
+            Log::error( 'Erro ao buscar categorias', [
                 'error' => $e->getMessage()
             ] );
             return new Collection();

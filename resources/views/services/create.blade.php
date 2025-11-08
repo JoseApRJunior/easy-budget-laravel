@@ -13,7 +13,7 @@
                         Criar Novo Serviço
                     </h3>
                     <div class="card-actions">
-                        <a href="{{ route('services.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-1"></i>
                             Voltar à Lista
                         </a>
@@ -26,13 +26,13 @@
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
                             {{ Str::limit($budget->description, 50) }}
-                            <a href="{{ route('services.create') }}" class="btn btn-sm btn-outline-info ms-2">
+                            <a href="{{ route('provider.services.create') }}" class="btn btn-sm btn-outline-info ms-2">
                                 <i class="fas fa-times"></i> Remover
                             </a>
                         </div>
                     @endif
 
-                    <form id="serviceForm" method="POST" action="{{ route('services.store') }}">
+                    <form id="serviceForm" method="POST" action="{{ route('provider.services.store') }}">
                         @csrf
 
                         <!-- Informações Básicas -->
@@ -216,7 +216,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('services.index') }}" class="btn btn-secondary">
+                                    <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-times me-1"></i>
                                         Cancelar
                                     </a>

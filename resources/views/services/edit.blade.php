@@ -13,11 +13,11 @@
                         Editar Serviço
                     </h3>
                     <div class="card-actions">
-                        <a href="{{ route('services.show', $service->code) }}" class="btn btn-info">
+                        <a href="{{ route('provider.services.show', $service->code) }}" class="btn btn-info">
                             <i class="fas fa-eye me-1"></i>
                             Visualizar
                         </a>
-                        <a href="{{ route('services.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-1"></i>
                             Voltar à Lista
                         </a>
@@ -35,7 +35,7 @@
                         </span>
                     </div>
 
-                    <form id="serviceForm" method="POST" action="{{ route('services.update', $service->code) }}">
+                    <form id="serviceForm" method="POST" action="{{ route('provider.services.update', $service->code) }}">
                         @csrf
                         @method('PUT')
 
@@ -278,7 +278,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('services.show', $service->code) }}" class="btn btn-secondary">
+                                    <a href="{{ route('provider.services.show', $service->code) }}" class="btn btn-secondary">
                                         <i class="fas fa-times me-1"></i>
                                         Cancelar
                                     </a>

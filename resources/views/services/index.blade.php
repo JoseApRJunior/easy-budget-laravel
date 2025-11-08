@@ -10,7 +10,7 @@
         <h1 class="h3 mb-1">Gestão de Serviços</h1>
         <p class="text-muted">Lista de todos os serviços registrados no sistema</p>
       </div>
-      <a href="{{ route( 'services.create' ) }}" class="btn btn-primary">
+      <a href="{{ route( 'provider.services.create' ) }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Novo Serviço
       </a>
     </div>
@@ -23,7 +23,7 @@
         </h5>
       </div>
       <div class="card-body">
-        <form method="GET" action="{{ route( 'services.index' ) }}" class="row g-3">
+        <form method="GET" action="{{ route( 'provider.services.index' ) }}" class="row g-3">
           <div class="col-md-3">
             <label for="status" class="form-label">Status</label>
             <select name="status" id="status" class="form-select">
@@ -68,7 +68,7 @@
             <button type="submit" class="btn btn-primary">
               <i class="fas fa-search"></i> Filtrar
             </button>
-            <a href="{{ route( 'services.index' ) }}" class="btn btn-secondary">
+            <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-secondary">
               <i class="fas fa-times"></i> Limpar
             </a>
           </div>
@@ -162,13 +162,13 @@
                     </td>
                     <td>
                       <div class="btn-group" role="group">
-                        <a href="{{ route( 'services.show', $service->code ) }}" class="btn btn-sm btn-outline-info"
+                        <a href="{{ route( 'provider.services.show', $service->code ) }}" class="btn btn-sm btn-outline-info"
                           title="Visualizar">
                           <i class="fas fa-eye"></i>
                         </a>
                         @if( $service->status->canEdit() )
-                          <a href="{{ route( 'services.edit', $service->code ) }}" class="btn btn-sm btn-outline-warning"
-                            title="Editar">
+                          <a href="{{ route( 'provider.services.edit', $service->code ) }}"
+                            class="btn btn-sm btn-outline-warning" title="Editar">
                             <i class="fas fa-edit"></i>
                           </a>
                         @endif
@@ -241,7 +241,7 @@
   <script>
     function confirmDelete( serviceCode ) {
       document.getElementById( 'deleteServiceCode' ).textContent = serviceCode;
-      document.getElementById( 'deleteForm' ).action = '{{ route( "services.destroy", "REPLACE_ID" ) }}'.replace( 'REPLACE_ID', serviceCode );
+      document.getElementById( 'deleteForm' ).action = '{{ route( "provider.services.destroy", "REPLACE_ID" ) }}'.replace( 'REPLACE_ID', serviceCode );
 
       const modal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
       modal.show();
