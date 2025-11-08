@@ -161,7 +161,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/create', [ BudgetController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ BudgetController::class, 'store' ] )->name( 'store' );
         Route::get( '/{code}', [ BudgetController::class, 'show' ] )->name( 'show' );
-        Route::get( '/{budget}/edit', [ BudgetController::class, 'edit' ] )->name( 'edit' );
+        Route::get( '/{code}/edit', [ BudgetController::class, 'edit' ] )->name( 'edit' );
         Route::post( '/{budget}', [ BudgetController::class, 'update' ] )->name( 'update' );
         Route::post( '/{budget}/change-status', [ BudgetController::class, 'changeStatus' ] )->name( 'change-status' );
         Route::delete( '/{budget}', [ BudgetController::class, 'destroy' ] )->name( 'destroy' );
