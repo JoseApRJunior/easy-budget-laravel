@@ -175,12 +175,12 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/create', [ InvoiceController::class, 'create' ] )->name( 'create' );
         Route::get( '/budgets/{budget}/create', [ InvoiceController::class, 'createFromBudget' ] )->name( 'create.from-budget' );
         Route::post( '/', [ InvoiceController::class, 'store' ] )->name( 'store' );
-        Route::get( '/{invoice}', [ InvoiceController::class, 'show' ] )->name( 'show' );
-        Route::get( '/{invoice}/edit', [ InvoiceController::class, 'edit' ] )->name( 'edit' );
-        Route::post( '/{invoice}', [ InvoiceController::class, 'update' ] )->name( 'update' );
-        Route::delete( '/{invoice}', [ InvoiceController::class, 'destroy' ] )->name( 'destroy' );
+        Route::get( '/{code}', [ InvoiceController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{code}/edit', [ InvoiceController::class, 'edit' ] )->name( 'edit' );
+        Route::put( '/{code}', [ InvoiceController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{code}', [ InvoiceController::class, 'destroy' ] )->name( 'destroy' );
         Route::get( '/search/ajax', [ InvoiceController::class, 'search' ] )->name( 'search' );
-        Route::get( '/{invoice}/print', [ InvoiceController::class, 'print' ] )->name( 'print' );
+        Route::get( '/{code}/print', [ InvoiceController::class, 'print' ] )->name( 'print' );
         Route::get( '/export', [ InvoiceController::class, 'export' ] )->name( 'export' );
     } );
 
