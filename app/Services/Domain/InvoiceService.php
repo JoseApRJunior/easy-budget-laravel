@@ -4,43 +4,50 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Enums\InvoiceStatusEnum;
 use App\Enums\OperationStatus;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Product;
+use App\Models\Service;
 use App\Repositories\InvoiceRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class InvoiceService extends AbstractBaseService
 {
     private InvoiceRepository $invoiceRepository;
 
-    public function __construct(InvoiceRepository $invoiceRepository)
+    public function __construct( InvoiceRepository $invoiceRepository )
     {
         $this->invoiceRepository = $invoiceRepository;
     }
 
-    public function findByCode(string $code, array $with = []): ServiceResult
+    public function findByCode( string $code, array $with = [] ): ServiceResult
     {
         try {
-            $query = Invoice::where('code', $code);
+            $query = Invoice::where( 'code', $code );
 
-            if (! empty($with)) {
-                $query->with($with);
+            if ( !empty( $with ) ) {
+                $query->with( $with );
             }
 
             $invoice = $query->first();
 
-            if (! $invoice) {
+            if ( !$invoice ) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
                     "Fatura com código {$code} não encontrada",
                 );
             }
 
-            return $this->success($invoice, 'Fatura encontrada');
+            return $this->success( $invoice, 'Fatura encontrada' );
 
-        } catch (Exception $e) {
+        } catch ( Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao buscar fatura',
@@ -50,14 +57,14 @@ class InvoiceService extends AbstractBaseService
         }
     }
 
-    public function getFilteredInvoices(array $filters = [], array $with = []): ServiceResult
+    public function getFilteredInvoices( array $filters = [], array $with = [] ): ServiceResult
     {
         try {
-            $invoices = $this->invoiceRepository->getFiltered($filters, ['due_date' => 'desc'], 15);
+            $invoices = $this->invoiceRepository->getFiltered( $filters, [ 'due_date' => 'desc' ], 15 );
 
-            return $this->success($invoices, 'Faturas filtradas');
+            return $this->success( $invoices, 'Faturas filtradas' );
 
-        } catch (Exception $e) {
+        } catch ( Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao filtrar faturas',
@@ -66,4 +73,450 @@ class InvoiceService extends AbstractBaseService
             );
         }
     }
+
+    public function createInvoice( array $data ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($data) {
+                // Buscar serviço
+                $service = Service::where( 'code', $data[ 'service_code' ] )->first();
+                if ( !$service ) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        'Serviço não encontrado',
+                    );
+                }
+
+                // Gerar código único
+                $invoiceCode = $this->generateUniqueInvoiceCode( $service->code );
+
+                // Calcular total da fatura
+                $totalAmount = $this->calculateInvoiceTotal( $data[ 'items' ] );
+
+                // Criar fatura
+                $invoice = Invoice::create( [
+                    'tenant_id'    => tenant()->id,
+                    'service_id'   => $service->id,
+                    'customer_id'  => $data[ 'customer_id' ],
+                    'code'         => $invoiceCode,
+                    'issue_date'   => $data[ 'issue_date' ],
+                    'due_date'     => $data[ 'due_date' ],
+                    'total_amount' => $totalAmount,
+                    'status'       => $data[ 'status' ] ?? InvoiceStatusEnum::PENDING->value,
+                ] );
+
+                // Criar itens da fatura
+                if ( !empty( $data[ 'items' ] ) ) {
+                    $this->createInvoiceItems( $invoice, $data[ 'items' ] );
+                }
+
+                return $this->success( $invoice->load( [
+                    'customer',
+                    'service',
+                    'invoiceItems.product',
+                    'invoiceStatus'
+                ] ), 'Fatura criada com sucesso' );
+
+            } );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao criar fatura',
+                null,
+                $e,
+            );
+        }
+    }
+
+    private function generateUniqueInvoiceCode( string $serviceCode ): string
+    {
+        $lastInvoice = Invoice::whereHas( 'service', function ( $query ) use ( $serviceCode ) {
+            $query->where( 'code', $serviceCode );
+        } )
+            ->orderBy( 'code', 'desc' )
+            ->first();
+
+        $sequential = 1;
+        if ( $lastInvoice && preg_match( '/-INV(\d{3})$/', $lastInvoice->code, $matches ) ) {
+            $sequential = (int) $matches[ 1 ] + 1;
+        }
+
+        return "{$serviceCode}-INV" . str_pad( $sequential, 3, '0', STR_PAD_LEFT );
+    }
+
+    private function calculateInvoiceTotal( array $items ): float
+    {
+        $total = 0;
+        foreach ( $items as $itemData ) {
+            $total  += ( (float) $itemData[ 'quantity' ] * (float) $itemData[ 'unit_value' ] );
+        }
+        return $total;
+    }
+
+    private function createInvoiceItems( Invoice $invoice, array $items ): void
+    {
+        foreach ( $items as $itemData ) {
+            // Validar produto
+            $product = Product::where( 'id', $itemData[ 'product_id' ] )
+                ->where( 'active', true )
+                ->first();
+
+            if ( !$product ) {
+                throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+            }
+
+            // Calcular total do item
+            $quantity  = (float) $itemData[ 'quantity' ];
+            $unitValue = (float) $itemData[ 'unit_value' ];
+            $total     = $quantity * $unitValue;
+
+            // Criar item
+            InvoiceItem::create( [
+                'tenant_id'  => $invoice->tenant_id,
+                'invoice_id' => $invoice->id,
+                'product_id' => $product->id,
+                'unit_value' => $unitValue,
+                'quantity'   => $quantity,
+                'total'      => $total
+            ] );
+        }
+    }
+
+    public function updateInvoiceByCode( string $code, array $data ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($code, $data) {
+                $invoice = Invoice::where( 'code', $code )->first();
+
+                if ( !$invoice ) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        "Fatura {$code} não encontrada",
+                    );
+                }
+
+                // Atualizar fatura
+                $invoice->update( [
+                    'customer_id' => $data[ 'customer_id' ] ?? $invoice->customer_id,
+                    'issue_date'  => $data[ 'issue_date' ] ?? $invoice->issue_date,
+                    'due_date'    => $data[ 'due_date' ] ?? $invoice->due_date,
+                    'status'      => $data[ 'status' ] ?? $invoice->status,
+                ] );
+
+                // Gerenciar itens se fornecidos
+                if ( isset( $data[ 'items' ] ) ) {
+                    $this->updateInvoiceItems( $invoice, $data[ 'items' ] );
+                }
+
+                // Recalcular total da fatura após gerenciar itens
+                $invoice->total_amount = $this->calculateInvoiceTotal( $invoice->invoiceItems->toArray() );
+                $invoice->save();
+
+                return $this->success( $invoice->fresh( [
+                    'invoiceItems.product',
+                    'invoiceStatus',
+                    'customer',
+                    'service'
+                ] ), 'Fatura atualizada' );
+
+            } );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao atualizar fatura',
+                null,
+                $e,
+            );
+        }
+    }
+
+    private function updateInvoiceItems( Invoice $invoice, array $itemsData ): void
+    {
+        $existingItemIds = $invoice->invoiceItems->pluck( 'id' )->toArray();
+        $itemsToKeep     = [];
+
+        foreach ( $itemsData as $itemData ) {
+            if ( isset( $itemData[ 'id' ] ) && in_array( $itemData[ 'id' ], $existingItemIds ) ) {
+                // Atualizar item existente
+                $item = $invoice->invoiceItems->firstWhere( 'id', $itemData[ 'id' ] );
+                if ( $item ) {
+                    if ( ( $itemData[ 'action' ] ?? 'update' ) === 'delete' ) {
+                        $item->delete();
+                    } else {
+                        $item->update( [
+                            'product_id' => $itemData[ 'product_id' ],
+                            'quantity'   => $itemData[ 'quantity' ],
+                            'unit_value' => $itemData[ 'unit_value' ],
+                            'total'      => (float) $itemData[ 'quantity' ] * (float) $itemData[ 'unit_value' ]
+                        ] );
+                        $itemsToKeep[] = $item->id;
+                    }
+                }
+            } elseif ( ( $itemData[ 'action' ] ?? 'create' ) === 'create' ) {
+                // Criar novo item
+                $product = Product::where( 'id', $itemData[ 'product_id' ] )
+                    ->where( 'active', true )
+                    ->first();
+
+                if ( !$product ) {
+                    throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                }
+
+                $newItem       = InvoiceItem::create( [
+                    'tenant_id'  => $invoice->tenant_id,
+                    'invoice_id' => $invoice->id,
+                    'product_id' => $product->id,
+                    'unit_value' => (float) $itemData[ 'unit_value' ],
+                    'quantity'   => (float) $itemData[ 'quantity' ],
+                    'total'      => (float) $itemData[ 'quantity' ] * (float) $itemData[ 'unit_value' ]
+                ] );
+                $itemsToKeep[] = $newItem->id;
+            }
+        }
+
+        // Deletar itens que não foram mantidos
+        $invoice->invoiceItems()->whereNotIn( 'id', $itemsToKeep )->delete();
+    }
+
+    public function changeStatus( string $code, string $newStatus ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($code, $newStatus) {
+                $invoice = Invoice::where( 'code', $code )->first();
+
+                if ( !$invoice ) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        "Fatura {$code} não encontrada",
+                    );
+                }
+
+                $oldStatus = $invoice->status;
+
+                // Validar transição
+                $allowedTransitions = InvoiceStatusEnum::getAllowedTransitions( $oldStatus );
+                if ( !in_array( $newStatus, $allowedTransitions ) ) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        "Transição de {$oldStatus} para {$newStatus} não permitida",
+                    );
+                }
+
+                // Atualizar fatura
+                $invoice->update( [ 'status' => $newStatus ] );
+
+                return $this->success( $invoice, 'Status alterado com sucesso' );
+
+            } );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao alterar status',
+                null,
+                $e,
+            );
+        }
+    }
+
+    public function deleteByCode( string $code ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($code) {
+                $invoice = Invoice::where( 'code', $code )->first();
+
+                if ( !$invoice ) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        "Fatura {$code} não encontrada",
+                    );
+                }
+
+                // Não pode deletar se tiver pagamentos
+                if ( $invoice->payments()->count() > 0 ) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        'Fatura possui pagamentos e não pode ser excluída',
+                    );
+                }
+
+                // Deletar itens da fatura
+                $invoice->invoiceItems()->delete();
+
+                // Deletar a fatura
+                $invoice->delete();
+
+                return $this->success( null, 'Fatura excluída com sucesso' );
+
+            } );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao excluir fatura',
+                null,
+                $e,
+            );
+        }
+    }
+
+    public function generateInvoicePdf( string $code ): ServiceResult
+    {
+        try {
+            $invoiceResult = $this->findByCode( $code, [ 'customer', 'service', 'invoiceItems.product' ] );
+
+            if ( !$invoiceResult->isSuccess() ) {
+                return $invoiceResult;
+            }
+
+            $invoice = $invoiceResult->getData();
+
+            // Renderizar view Blade para o PDF
+            $pdfContent = view( 'invoices.pdf', compact( 'invoice' ) )->render();
+
+            // Gerar PDF (placeholder - implementar com biblioteca real)
+            $path = 'storage/invoices/' . tenant()->id . '/invoice_' . $invoice->code . '.pdf';
+
+            return $this->success( $path, 'PDF da fatura gerado com sucesso' );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao gerar PDF da fatura',
+                null,
+                $e,
+            );
+        }
+    }
+
+    public function searchInvoices( array $filters = [], int $perPage = 15 ): ServiceResult
+    {
+        try {
+            $query = Invoice::query();
+
+            // Aplicar filtros avançados
+            if ( !empty( $filters[ 'status' ] ) ) {
+                $query->where( 'status', $filters[ 'status' ] );
+            }
+
+            if ( !empty( $filters[ 'customer_id' ] ) ) {
+                $query->where( 'customer_id', $filters[ 'customer_id' ] );
+            }
+
+            if ( !empty( $filters[ 'service_id' ] ) ) {
+                $query->where( 'service_id', $filters[ 'service_id' ] );
+            }
+
+            if ( !empty( $filters[ 'date_from' ] ) ) {
+                $query->whereDate( 'issue_date', '>=', $filters[ 'date_from' ] );
+            }
+
+            if ( !empty( $filters[ 'date_to' ] ) ) {
+                $query->whereDate( 'issue_date', '<=', $filters[ 'date_to' ] );
+            }
+
+            if ( !empty( $filters[ 'due_date_from' ] ) ) {
+                $query->whereDate( 'due_date', '>=', $filters[ 'due_date_from' ] );
+            }
+
+            if ( !empty( $filters[ 'due_date_to' ] ) ) {
+                $query->whereDate( 'due_date', '<=', $filters[ 'due_date_to' ] );
+            }
+
+            if ( !empty( $filters[ 'min_amount' ] ) ) {
+                $query->where( 'total_amount', '>=', $filters[ 'min_amount' ] );
+            }
+
+            if ( !empty( $filters[ 'max_amount' ] ) ) {
+                $query->where( 'total_amount', '<=', $filters[ 'max_amount' ] );
+            }
+
+            if ( !empty( $filters[ 'search' ] ) ) {
+                $query->where( function ( $q ) use ( $filters ) {
+                    $q->where( 'code', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhereHas( 'customer', function ( $sq ) use ( $filters ) {
+                            $sq->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' );
+                        } )
+                        ->orWhereHas( 'service', function ( $sq ) use ( $filters ) {
+                            $sq->where( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
+                        } );
+                } );
+            }
+
+            // Ordenação
+            $sortBy        = $filters[ 'sort_by' ] ?? 'issue_date';
+            $sortDirection = $filters[ 'sort_direction' ] ?? 'desc';
+            $query->orderBy( $sortBy, $sortDirection );
+
+            // Paginação
+            $invoices = $query->paginate( $perPage );
+
+            return $this->success( $invoices, 'Busca avançada realizada' );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro na busca avançada',
+                null,
+                $e,
+            );
+        }
+    }
+
+    public function exportInvoices( array $filters = [], string $format = 'xlsx' ): ServiceResult
+    {
+        try {
+            $searchResult = $this->searchInvoices( $filters, 1000 ); // Máximo 1000 registros para export
+
+            if ( !$searchResult->isSuccess() ) {
+                return $searchResult;
+            }
+
+            $invoices = $searchResult->getData();
+
+            if ( $format === 'xlsx' ) {
+                // Implementar export para Excel
+                $filename = 'invoices_' . now()->format( 'Y-m-d_H-i-s' ) . '.xlsx';
+                $path     = $this->exportToExcel( $invoices, $filename );
+            } elseif ( $format === 'csv' ) {
+                // Implementar export para CSV
+                $filename = 'invoices_' . now()->format( 'Y-m-d_H-i-s' ) . '.csv';
+                $path     = $this->exportToCsv( $invoices, $filename );
+            } else {
+                return $this->error(
+                    OperationStatus::VALIDATION_ERROR,
+                    'Formato de exportação não suportado',
+                );
+            }
+
+            return $this->success( $path, 'Exportação realizada com sucesso' );
+
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro na exportação',
+                null,
+                $e,
+            );
+        }
+    }
+
+    private function exportToExcel( $invoices, string $filename ): string
+    {
+        // Placeholder - implementar com biblioteca real (ex: Maatwebsite\Excel)
+        $path = 'storage/exports/' . tenant()->id . '/' . $filename;
+        // Implementar lógica de export para Excel
+        return $path;
+    }
+
+    private function exportToCsv( $invoices, string $filename ): string
+    {
+        // Placeholder - implementar export para CSV
+        $path = 'storage/exports/' . tenant()->id . '/' . $filename;
+        // Implementar lógica de export para CSV
+        return $path;
+    }
+
 }
