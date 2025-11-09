@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use App\Models\Customer;
 use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
@@ -38,7 +38,7 @@ class InvoiceStoreRequest extends FormRequest
             'status'             => [
                 'required',
                 'string',
-                'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatusEnum::cases() ) )
+                'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatus::cases() ) )
             ],
             'items'              => 'required|array|min:1',
             'items.*.product_id' => 'required|integer|exists:products,id',

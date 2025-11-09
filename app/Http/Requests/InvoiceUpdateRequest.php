@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\InvoiceStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\InvoiceStatusEnum;
 
 class InvoiceUpdateRequest extends FormRequest
 {
@@ -30,7 +30,7 @@ class InvoiceUpdateRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatusEnum::cases() ) )
+                'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatus::cases() ) )
             ],
             'items'              => 'sometimes|required|array|min:1',
             'items.*.id'         => 'nullable|integer|exists:invoice_items,id',

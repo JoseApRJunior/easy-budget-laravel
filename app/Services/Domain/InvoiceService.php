@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use App\Enums\OperationStatus;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -102,7 +102,7 @@ class InvoiceService extends AbstractBaseService
                     'issue_date'   => $data[ 'issue_date' ],
                     'due_date'     => $data[ 'due_date' ],
                     'total_amount' => $totalAmount,
-                    'status'       => $data[ 'status' ] ?? InvoiceStatusEnum::PENDING->value,
+                    'status'       => $data[ 'status' ] ?? InvoiceStatus::PENDING->value,
                 ] );
 
                 // Criar itens da fatura
@@ -296,7 +296,7 @@ class InvoiceService extends AbstractBaseService
                 $oldStatus = $invoice->status;
 
                 // Validar transição
-                $allowedTransitions = InvoiceStatusEnum::getAllowedTransitions( $oldStatus );
+                $allowedTransitions = $oldStatus->getNextStatus()( $oldStatus );
                 if ( !in_array( $newStatus, $allowedTransitions ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,

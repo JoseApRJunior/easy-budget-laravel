@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Traits;
 
 use App\Enums\BudgetStatus;
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
  * Trait HasEnums
  *
  * Fornece suporte para enums customizados em modelos Eloquent.
- * Agora usa os enums reais (BudgetStatus, ServiceStatusEnum, InvoiceStatusEnum)
+ * Agora usa os enums reais (BudgetStatus, ServiceStatusEnum, InvoiceStatus)
  * em vez de arrays estáticos, mantendo compatibilidade com código legado.
  */
 trait HasEnums
@@ -397,8 +397,8 @@ trait HasEnums
             $options[ $status->value ] = [
                 'value'       => $status->value,
                 'slug'        => $status->name,
-                'name'        => $status->getName(),
-                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'name'        => $status->getDescription(),
+                'description' => $status->getDescription(), // Usar nome como descrição por enquanto
                 'color'       => $status->getColor(),
                 'icon'        => $status->getIcon(),
                 'order_index' => $status->getOrderIndex(),
@@ -420,8 +420,8 @@ trait HasEnums
             $options[ $status->value ] = [
                 'value'       => $status->value,
                 'slug'        => $status->name,
-                'name'        => $status->getName(),
-                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'name'        => $status->getDescription(),
+                'description' => $status->getDescription(), // Usar nome como descrição por enquanto
                 'color'       => $status->getColor(),
                 'icon'        => $status->getIcon(),
                 'order_index' => $status->getOrderIndex(),
@@ -432,19 +432,19 @@ trait HasEnums
     }
 
     /**
-     * Obtém opções de status de fatura usando InvoiceStatusEnum real.
+     * Obtém opções de status de fatura usando InvoiceStatus real.
      *
      * @return array
      */
     private function getInvoiceStatusOptions(): array
     {
         $options = [];
-        foreach ( InvoiceStatusEnum::cases() as $status ) {
+        foreach ( InvoiceStatus::cases() as $status ) {
             $options[ $status->value ] = [
                 'value'       => $status->value,
                 'slug'        => $status->name,
-                'name'        => $status->getName(),
-                'description' => $status->getName(), // Usar nome como descrição por enquanto
+                'name'        => $status->getDescription(),
+                'description' => $status->getDescription(), // Usar nome como descrição por enquanto
                 'color'       => $status->getColor(),
                 'icon'        => $status->getIcon(),
                 'order_index' => $status->getOrderIndex(),

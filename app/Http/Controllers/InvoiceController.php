@@ -313,12 +313,9 @@ class InvoiceController extends Controller
                 return redirect()->route( 'error.not-found' );
             }
 
-            // Get the status enum using the repository
-            $invoiceStatus = $this->invoiceStatusRepository->findById( $invoice->invoice_statuses_id );
-
             return view( 'invoices.public.view-status', [
                 'invoice'       => $invoice,
-                'invoiceStatus' => $invoiceStatus,
+                'invoiceStatus' => $invoice->status,
                 'token'         => $token
             ] );
 
@@ -382,7 +379,7 @@ class InvoiceController extends Controller
 
             // Log the action
             $newStatusEnum = InvoiceStatus::from( $request->invoice_status_id );
-            $oldStatusEnum = $this->invoiceStatusRepository->findById( $invoice->getOriginal( 'invoice_statuses_id' ) );
+            $oldStatusEnum = $invoice->status;
 
             Log::info( 'Invoice status updated via public link', [
                 'invoice_id'   => $invoice->id,
