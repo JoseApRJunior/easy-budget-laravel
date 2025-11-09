@@ -69,18 +69,6 @@ return new class extends Migration
             $table->timestamps();
         } );
 
-        Schema::create( 'invoice_statuses', function ( Blueprint $table ) {
-            $table->id();
-            $table->string( 'name', 100 )->unique();
-            $table->string( 'slug', 50 )->unique();
-            $table->string( 'description', 500 )->nullable();
-            $table->string( 'color', 7 )->nullable();
-            $table->string( 'icon', 50 )->nullable();
-            $table->integer( 'order_index' )->nullable();
-            $table->boolean( 'is_active' )->default( true );
-            $table->timestamps();
-        } );
-
         Schema::create( 'plans', function ( Blueprint $table ) {
             $table->id();
             $table->string( 'name', 50 );
@@ -831,7 +819,7 @@ return new class extends Migration
         Schema::dropIfExists( 'users' );
         Schema::dropIfExists( 'categories' );
         Schema::dropIfExists( 'plans' );
-        Schema::dropIfExists( 'invoice_statuses' );
+
         Schema::dropIfExists( 'service_statuses' );
         Schema::dropIfExists( 'permissions' );
         Schema::dropIfExists( 'roles' );

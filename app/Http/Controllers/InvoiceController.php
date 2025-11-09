@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InvoiceStoreRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
@@ -72,7 +72,7 @@ class InvoiceController extends Controller
             return view( 'invoices.index', [
                 'invoices'      => $invoices,
                 'filters'       => $filters,
-                'statusOptions' => InvoiceStatusEnum::cases(),
+                'statusOptions' => InvoiceStatus::cases(),
                 'customers'     => $this->customerService->listCustomers()->isSuccess()
                     ? $this->customerService->listCustomers()->getData()
                     : []
@@ -107,7 +107,7 @@ class InvoiceController extends Controller
                     ? $this->customerService->listCustomers()->getData()
                     : [],
                 'services'      => [], // TODO: Implementar getNotBilledServices no ServiceService
-                'statusOptions' => InvoiceStatusEnum::cases()
+                'statusOptions' => InvoiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -198,7 +198,7 @@ class InvoiceController extends Controller
                     ? $this->customerService->listCustomers()->getData()
                     : [],
                 'services'      => [], // TODO: Implementar getNotBilledServices no ServiceService
-                'statusOptions' => InvoiceStatusEnum::cases()
+                'statusOptions' => InvoiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -269,7 +269,7 @@ class InvoiceController extends Controller
     public function change_status( Invoice $invoice, Request $request ): RedirectResponse
     {
         $request->validate( [
-            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatusEnum::cases() ) ) ]
+            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatus::cases() ) ) ]
         ] );
 
         try {
@@ -342,7 +342,7 @@ class InvoiceController extends Controller
             $request->validate( [
                 'invoice_code'      => 'required|string',
                 'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
-                'invoice_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, InvoiceStatusEnum::cases() ) ) ]
+                'invoice_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, InvoiceStatus::cases() ) ) ]
             ] );
 
             // Find the invoice by code and token
@@ -364,7 +364,7 @@ class InvoiceController extends Controller
             }
 
             // Validate that the selected status is allowed for public updates
-            $allowedStatuses = [ InvoiceStatusEnum::PAID->value, InvoiceStatusEnum::CANCELLED->value, InvoiceStatusEnum::OVERDUE->value ];
+            $allowedStatuses = [ InvoiceStatus::PAID->value, InvoiceStatus::CANCELLED->value, InvoiceStatus::OVERDUE->value ];
             if ( !in_array( $request->invoice_status_id, $allowedStatuses ) ) {
                 Log::warning( 'Invalid invoice status selected', [
                     'invoice_code' => $request->invoice_code,
@@ -381,14 +381,14 @@ class InvoiceController extends Controller
             ] );
 
             // Log the action
-            $newStatusEnum = InvoiceStatusEnum::tryFrom( $request->invoice_status_id );
+            $newStatusEnum = InvoiceStatus::from( $request->invoice_status_id );
             $oldStatusEnum = $this->invoiceStatusRepository->findById( $invoice->getOriginal( 'invoice_statuses_id' ) );
 
             Log::info( 'Invoice status updated via public link', [
                 'invoice_id'   => $invoice->id,
                 'invoice_code' => $invoice->code,
-                'old_status'   => $oldStatusEnum?->getName() ?? 'Unknown',
-                'new_status'   => $newStatusEnum?->getName() ?? 'Unknown',
+                'old_status'   => $oldStatusEnum?->getDescription() ?? 'Unknown',
+                'new_status'   => $newStatusEnum?->getDescription() ?? 'Unknown',
                 'ip'           => request()->ip()
             ] );
 
@@ -404,6 +404,36 @@ class InvoiceController extends Controller
                 'ip'      => request()->ip()
             ] );
             return redirect()->route( 'error.internal' );
+        }
+    }
+
+    /**
+     * Download PDF invoice.
+     *
+     * @param string $code
+     * @return Response
+     */
+    public function downloadPdf( string $code ): Response
+    {
+        try {
+            $result = $this->invoiceService->generateInvoicePdf( $code );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            $filePath = $result->getData(); // Ex: storage/invoices/tenant_id/invoice_CODE.pdf
+
+            if ( !Storage::disk( 'public' )->exists( Str::after( $filePath, 'storage/' ) ) ) {
+                abort( 404, 'PDF da fatura não encontrado.' );
+            }
+
+            return Storage::disk( 'public' )->download( Str::after( $filePath, 'storage/' ), 'fatura_' . $code . '.pdf' );
+
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->with( 'error', 'Erro ao baixar PDF da fatura: ' . $e->getMessage() );
         }
     }
 
@@ -454,7 +484,7 @@ class InvoiceController extends Controller
                 'customers'     => $this->customerService->listCustomers()->isSuccess()
                     ? $this->customerService->listCustomers()->getData()
                     : [],
-                'statusOptions' => InvoiceStatusEnum::cases()
+                'statusOptions' => InvoiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {

@@ -6,6 +6,7 @@
 **Status:** 0% implementado
 **Objetivo:** Implementar o módulo de faturas completo, seguindo a arquitetura moderna do novo sistema, com base na análise do `InvoiceController` do sistema legado.
 **Ordem:** Sequência lógica seguindo dependências técnicas (Repository → Form Requests → Service → Controller).
+**IMPORTANTE:** Sistema usa InvoiceStatus (igual ao BudgetStatus) - NÃO há tabela invoice_statuses, status é armazenado diretamente como string no campo 'status' da tabela invoices.
 
 ---
 
@@ -59,7 +60,7 @@ public function getFiltered(array $filters = [], ?array $orderBy = null, ?int $l
     }
 
     // Eager loading padrão
-    $query->with(['customer', 'service.budget', 'invoiceStatus']);
+    $query->with(['customer', 'service.budget']);
 
     // Ordenação
     if ($orderBy) {
@@ -175,7 +176,7 @@ TAREFA ESPECÍFICA:
 -  Validação: Relacionamentos (service_id, customer_id) existem
 -  Items: Array de produtos com product_id, quantity, unit_value
 -  Unicidade: Código de fatura único por tenant
--  Status: Apenas status válidos
+-  Status: Apenas status válidos do InvoiceStatus enum
 
 IMPLEMENTAÇÃO:
 
@@ -184,7 +185,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use App\Models\Service;
 use App\Models\Customer;
 
@@ -213,7 +214,7 @@ class InvoiceStoreRequest extends FormRequest
             'status' => [
                 'required',
                 'string',
-                'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatusEnum::cases()))
+                'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))
             ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|integer|exists:products,id',
@@ -285,7 +286,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 
 class InvoiceUpdateRequest extends FormRequest
 {
@@ -311,7 +312,7 @@ class InvoiceUpdateRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatusEnum::cases()))
+                'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))
             ],
             'items' => 'sometimes|required|array|min:1',
             'items.*.id' => 'nullable|integer|exists:invoice_items,id',
@@ -411,7 +412,7 @@ use Illuminate\Support\Str;
 use App\Models\Product;
 use App\Models\InvoiceItem;
 use App\Models\Service;
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 
 class InvoiceService extends AbstractService
 {
@@ -549,7 +550,7 @@ public function createInvoice(array $data): ServiceResult
                 'issue_date' => $data['issue_date'],
                 'due_date' => $data['due_date'],
                 'total_amount' => $totalAmount,
-                'status' => $data['status'] ?? InvoiceStatusEnum::PENDING->value,
+                'status' => $data['status'] ?? InvoiceStatus::PENDING->value,
             ]);
 
             // Criar itens da fatura
@@ -560,8 +561,7 @@ public function createInvoice(array $data): ServiceResult
             return $this->success($invoice->load([
                 'customer',
                 'service',
-                'invoiceItems.product',
-                'invoiceStatus'
+                'invoiceItems.product'
             ]), 'Fatura criada com sucesso');
 
         });
@@ -722,7 +722,6 @@ public function updateInvoiceByCode(string $code, array $data): ServiceResult
 
             return $this->success($invoice->fresh([
                 'invoiceItems.product',
-                'invoiceStatus',
                 'customer',
                 'service'
             ]), 'Fatura atualizada');
@@ -791,7 +790,7 @@ private function updateInvoiceItems(Invoice $invoice, array $itemsData): void
 ARQUIVOS:
 
 -  app/Services/Domain/InvoiceService.php (método updateInvoiceByCode, updateInvoiceItems)
--  app/Enums/InvoiceStatusEnum.php (método canEdit - a ser criado)
+-  app/Enums/InvoiceStatus.php (usar getAllowedTransitions)
 
 CRITÉRIO DE SUCESSO: Fatura atualizada com gerenciamento de itens
 
@@ -803,7 +802,7 @@ Implemente APENAS o método changeStatus() no InvoiceService:
 
 TAREFA ESPECÍFICA:
 
--  Validação: Transições permitidas via InvoiceStatusEnum
+-  Validação: Transições permitidas via InvoiceStatus
 -  Auditoria: Registrar mudança
 -  Transaction: Atomicidade
 
@@ -827,14 +826,14 @@ public function changeStatus(string $code, string $newStatus): ServiceResult
 
             $oldStatus = $invoice->status;
 
-            // Validar transição (assumindo método getAllowedTransitions no Enum)
-            // $allowedTransitions = InvoiceStatusEnum::getAllowedTransitions($oldStatus->value);
-            // if (!in_array($newStatus, $allowedTransitions)) {
-            //     return $this->error(
-            //         OperationStatus::VALIDATION_ERROR,
-            //         "Transição de {$oldStatus->value} para {$newStatus} não permitida"
-            //     );
-            // }
+            // Validar transição usando InvoiceStatus
+            $allowedTransitions = InvoiceStatus::getAllowedTransitions($oldStatus);
+            if (!in_array($newStatus, $allowedTransitions)) {
+                return $this->error(
+                    OperationStatus::VALIDATION_ERROR,
+                    "Transição de {$oldStatus} para {$newStatus} não permitida"
+                );
+            }
 
             // Atualizar fatura
             $invoice->update(['status' => $newStatus]);
@@ -857,7 +856,7 @@ public function changeStatus(string $code, string $newStatus): ServiceResult
 ARQUIVOS:
 
 -  app/Services/Domain/InvoiceService.php (método changeStatus)
--  app/Enums/InvoiceStatusEnum.php (método getAllowedTransitions - a ser criado)
+-  app/Enums/InvoiceStatus.php (método getAllowedTransitions - já implementado)
 
 CRITÉRIO DE SUCESSO: Status alterado com validação de transições
 
@@ -1025,7 +1024,7 @@ use App\Http\Requests\InvoiceUpdateRequest;
 use App\Services\Domain\CustomerService;
 use App\Services\Domain\InvoiceService;
 use App\Services\Domain\ServiceService;
-use App\Enums\InvoiceStatusEnum;
+use App\Enums\InvoiceStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -1051,8 +1050,7 @@ class InvoiceController extends Controller
 
             $result = $this->invoiceService->getFilteredInvoices($filters, [
                 'customer:id,name',
-                'service:id,code,description',
-                'invoiceStatus'
+                'service:id,code,description'
             ]);
 
             if (!$result->isSuccess()) {
@@ -1064,7 +1062,7 @@ class InvoiceController extends Controller
             return view('invoices.index', [
                 'invoices' => $invoices,
                 'filters' => $filters,
-                'statusOptions' => InvoiceStatusEnum::cases(),
+                'statusOptions' => InvoiceStatus::cases(),
                 'customers' => $this->customerService->getActiveCustomers()
             ]);
 
@@ -1117,7 +1115,7 @@ public function create(?string $serviceCode = null): View
             'service' => $service,
             'customers' => $this->customerService->getActiveCustomers(),
             'services' => $this->serviceService->getNotBilledServices(), // Assumindo um método para serviços não faturados
-            'statusOptions' => InvoiceStatusEnum::cases()
+            'statusOptions' => InvoiceStatus::cases()
         ]);
 
     } catch (Exception $e) {
@@ -1207,7 +1205,6 @@ public function show(string $code): View
             'customer.commonData',
             'service.budget',
             'invoiceItems.product',
-            'invoiceStatus',
             'payments'
         ]);
 
@@ -1267,16 +1264,27 @@ public function edit(string $code): View
 
         $invoice = $result->getData();
 
-        // Verificar se pode editar (assumindo um método canEdit no Enum ou Model)
-        // if (!$invoice->status->canEdit()) {
-        //     abort(403, 'Fatura não pode ser editada no status atual');
-        // }
+        // Verificar se pode editar (usando InvoiceStatus)
+        if (!in_array($invoice->status, ['pending'])) { // Apenas pending pode ser editado
+            abort(403, 'Fatura não pode ser editada no status atual');
+        }
+
+        if (!$result->isSuccess()) {
+            abort(404, 'Fatura não encontrada');
+        }
+
+        $invoice = $result->getData();
+
+        // Verificar se pode editar (usando InvoiceStatus)
+        if (!in_array($invoice->status, ['pending'])) { // Apenas pending pode ser editado
+            abort(403, 'Fatura não pode ser editada no status atual');
+        }
 
         return view('invoices.edit', [
             'invoice' => $invoice,
             'customers' => $this->customerService->getActiveCustomers(),
             'services' => $this->serviceService->getNotBilledServices(),
-            'statusOptions' => InvoiceStatusEnum::cases()
+            'statusOptions' => InvoiceStatus::cases()
         ]);
 
     } catch (Exception $e) {
@@ -1288,10 +1296,9 @@ public function edit(string $code): View
 ARQUIVOS:
 
 -  app/Http/Controllers/InvoiceController.php (método edit)
--  app/Enums/InvoiceStatusEnum.php (método canEdit - a ser criado)
 -  resources/views/invoices/edit.blade.php (criar)
 
-CRITÉRIO DE SUCESSO: Formulário de edição carregado apenas para status editáveis
+CRITÉRIO DE SUCESSO: Formulário de edição carregado apenas para status 'pending'
 
 ---
 
@@ -1362,7 +1369,7 @@ IMPLEMENTAÇÃO:
 public function change_status(string $code, Request $request): RedirectResponse
 {
     $request->validate([
-        'status' => ['required', 'string', 'in:' . implode(',', InvoiceStatusEnum::values())]
+        'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))]
     ]);
 
     try {
@@ -1495,6 +1502,7 @@ CRITÉRIO DE SUCESSO: Download do PDF da fatura funcionando
 **Ordem Correta:** Repository → FormRequests → Services → Controllers
 **Status Atual:** 0% implementado
 **Prioridade:** GRUPO 1 (Repository) - **PRIMEIRO**
+**IMPORTANTE:** Sistema usa InvoiceStatus (igual ao BudgetStatus) - Status armazenado como string no campo 'status' da tabela invoices. NÃO há tabela invoice_statuses nem modelo InvoiceStatus.
 
 ### **Fase 1: Repository (1.5 dias)**
 
@@ -1534,5 +1542,8 @@ CRITÉRIO DE SUCESSO: Download do PDF da fatura funcionando
 -  **Base sólida:** Repository implementado antes dos Services
 -  **Testabilidade:** Cada grupo pode ser testado independentemente
 -  **Zero dependências circulares:** Arquitetura clara e desacoplada
+-  **Status via Enum:** Usa InvoiceStatus igual ao BudgetStatus (sem tabela invoice_statuses). Status armazenado como string no campo 'status'.
+
+**NOTA IMPORTANTE - Schema do Banco:** A tabela `invoices` já está configurada corretamente na migration `2025_09_27_132300_create_initial_schema.php` (linha 427) usando `$table->string( 'status', 20 );` para armazenar o valor do enum. A tabela `invoice_statuses` (linhas 72-82) é desnecessária no novo sistema e pode ser removida em migrações futuras.
 
 **Total:** 20 prompts na ordem técnica correta para completar a migração do InvoiceController.

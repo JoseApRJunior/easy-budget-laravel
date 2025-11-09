@@ -52,6 +52,12 @@ class DatabaseSeeder extends Seeder
             $this->call( [
                 ProviderTestSeeder::class,
             ] );
+
+            // 5. Criar dados de teste de budgets (opcional - apenas em desenvolvimento)
+            $this->command->info( '📊 Criando dados de teste de budgets...' );
+            $this->call( [
+                BudgetTestSeeder::class,
+            ] );
         } else {
             $this->command->info( '⚠️  Dados de teste ignorados (ambiente: ' . app()->environment() . ')' );
         }
@@ -67,6 +73,10 @@ class DatabaseSeeder extends Seeder
         if ( app()->environment( [ 'local', 'testing' ] ) ) {
             $this->command->info( '   • 10 Prestadores de teste criados (5 PJ + 5 PF)' );
             $this->command->info( '   • 200 Clientes de teste criados (100 PF + 100 PJ)' );
+            $this->command->info( '   • 50 Orçamentos de teste criados (5 por provider)' );
+            $this->command->info( '   • 250 Serviços de teste criados (5 por orçamento, com status variados)' );
+            $this->command->info( '   • 1250 Itens de serviço criados (5 produtos por serviço)' );
+            $this->command->info( '   • Faturas geradas para serviços finalizados' );
             $this->command->info( '   • Login: provider1@test.com até provider10@test.com' );
             $this->command->info( '   • Senha padrão: Password1@' );
         }
