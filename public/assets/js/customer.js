@@ -8,11 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
    const resultsContainer = document.getElementById("results-container");
    const resultsCount = document.getElementById("results-count");
 
-
-
    // Verificação de elementos essenciais
    if (!searchInput) {
-      console.error('Elemento #search não encontrado!');
+      console.error("Elemento #search não encontrado!");
       return;
    }
 
@@ -27,10 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
    });
 
    async function performSearch() {
-      const searchTerm = searchInput?.value?.trim() || '';
+      const searchTerm = searchInput?.value?.trim() || "";
 
       if (!initialMessage || !loadingSpinner || !resultsContainer) {
-         console.error('Elementos da interface não encontrados');
+         console.error("Elementos da interface não encontrados");
          return;
       }
 
@@ -41,31 +39,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
       try {
          // Obtém o token CSRF
-         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+         const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content");
          if (!csrfToken) {
-            throw new Error('Token CSRF não encontrado');
+            throw new Error("Token CSRF não encontrado");
          }
 
-         // Configuração da requisição AJAX
-         const response = await fetch("/provider/customers/search", {
-            method: "POST",
+         console.log("Iniciando busca com termo:", searchTerm);
+
+         // Configuração da requisição AJAX (GET com query string)
+         const url = `/provider/customers/search?search=${encodeURIComponent(
+            searchTerm
+         )}`;
+         console.log("URL da requisição:", url);
+
+         const response = await fetch(url, {
+            method: "GET",
             headers: {
-               "Content-Type": "application/json",
                "X-Requested-With": "XMLHttpRequest",
-               "X-CSRF-TOKEN": csrfToken,
+               Accept: "application/json",
+               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-               search: searchTerm,
-            }),
          });
+         console.log(
+            "Resposta recebida:",
+            response.status,
+            response.statusText
+         );
 
          if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
          }
 
-         const data = await response.json();
+         const responseData = await response.json();
+         console.log("Dados recebidos:", responseData);
 
          // Atualiza a tabela com os resultados
+         const data = responseData.data || [];
          customerPaginator.updateTable(data);
 
          // Atualiza o contador de resultados
@@ -101,43 +112,93 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Função para formatar cada linha da tabela de clientes
    function formatCustomerRow(customer) {
-      const customerType = customer.cnpj ? 'PJ' : 'PF';
-      const customerTypeClass = customer.cnpj ? 'text-info' : 'text-success';
-      const customerTypeIcon = customer.cnpj ? 'bi-building' : 'bi-person';
-      
+      const customerType = customer.cnpj ? "PJ" : "PF";
+      const customerTypeClass = customer.cnpj ? "text-info" : "text-success";
+      const customerTypeIcon = customer.cnpj ? "bi-building" : "bi-person";
+
       return `
       <tr class="table-row-hover">
          <td class="px-4 py-3 align-middle">
             <div>
-               <div class="fw-semibold mb-1">${customer.customer_name || 'Nome não informado'}</div>
+               <div class="fw-semibold mb-1">${
+                  customer.customer_name || "Nome não informado"
+               }</div>
                <small class="badge bg-light ${customerTypeClass} border">${customerType}</small>
             </div>
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="document-info">
-               ${customer.cpf ? `<div class="text-dark"><i class="bi bi-person-vcard me-1"></i>${formatDocument(customer.cpf, 'cpf')}</div>` : ''}
-               ${customer.cnpj ? `<div class="text-dark"><i class="bi bi-building me-1"></i>${formatDocument(customer.cnpj, 'cnpj')}</div>` : ''}
-               ${!customer.cpf && !customer.cnpj ? '<span class="text-muted">Não informado</span>' : ''}
+               ${
+                  customer.cpf
+                     ? `<div class="text-dark"><i class="bi bi-person-vcard me-1"></i>${formatDocument(
+                          customer.cpf,
+                          "cpf"
+                       )}</div>`
+                     : ""
+               }
+               ${
+                  customer.cnpj
+                     ? `<div class="text-dark"><i class="bi bi-building me-1"></i>${formatDocument(
+                          customer.cnpj,
+                          "cnpj"
+                       )}</div>`
+                     : ""
+               }
+               ${
+                  !customer.cpf && !customer.cnpj
+                     ? '<span class="text-muted">Não informado</span>'
+                     : ""
+               }
             </div>
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="email-info">
-               ${customer.email ? `<div class="text-dark mb-1"><i class="bi bi-envelope me-1"></i>${customer.email}</div>` : ''}
-               ${customer.email_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${customer.email_business}</div>` : ''}
-               ${!customer.email && !customer.email_business ? '<span class="text-muted">Não informado</span>' : ''}
+               ${
+                  customer.email
+                     ? `<div class="text-dark mb-1"><i class="bi bi-envelope me-1"></i>${customer.email}</div>`
+                     : ""
+               }
+               ${
+                  customer.email_business
+                     ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${customer.email_business}</div>`
+                     : ""
+               }
+               ${
+                  !customer.email && !customer.email_business
+                     ? '<span class="text-muted">Não informado</span>'
+                     : ""
+               }
             </div>
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="phone-info">
-               ${customer.phone ? `<div class="text-dark mb-1"><i class="bi bi-telephone me-1"></i>${formatPhone(customer.phone)}</div>` : ''}
-               ${customer.phone_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${formatPhone(customer.phone_business)}</div>` : ''}
-               ${!customer.phone && !customer.phone_business ? '<span class="text-muted">Não informado</span>' : ''}
+               ${
+                  customer.phone
+                     ? `<div class="text-dark mb-1"><i class="bi bi-telephone me-1"></i>${formatPhone(
+                          customer.phone
+                       )}</div>`
+                     : ""
+               }
+               ${
+                  customer.phone_business
+                     ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${formatPhone(
+                          customer.phone_business
+                       )}</div>`
+                     : ""
+               }
+               ${
+                  !customer.phone && !customer.phone_business
+                     ? '<span class="text-muted">Não informado</span>'
+                     : ""
+               }
             </div>
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="date-info">
                <div class="text-dark">${formatDate(customer.created_at)}</div>
-               <small class="text-muted">${formatTimeAgo(customer.created_at)}</small>
+               <small class="text-muted">${formatTimeAgo(
+                  customer.created_at
+               )}</small>
             </div>
          </td>
          <td class="text-center align-middle">
@@ -168,10 +229,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Função para mostrar mensagens de erro
    function showError(message) {
-      const existingAlerts = document.querySelectorAll('.alert');
-      existingAlerts.forEach(alert => alert.remove());
+      const existingAlerts = document.querySelectorAll(".alert");
+      existingAlerts.forEach((alert) => alert.remove());
 
-      const alertContainer = document.createElement('div');
+      const alertContainer = document.createElement("div");
       alertContainer.innerHTML = `
          <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -180,15 +241,18 @@ document.addEventListener("DOMContentLoaded", function () {
          </div>
       `;
 
-      const container = document.querySelector('.container-fluid');
+      const container = document.querySelector(".container-fluid");
       if (container) {
-         container.insertBefore(alertContainer.firstElementChild, container.firstElementChild);
+         container.insertBefore(
+            alertContainer.firstElementChild,
+            container.firstElementChild
+         );
       }
 
       setTimeout(() => {
-         const alert = document.querySelector('.alert-danger');
+         const alert = document.querySelector(".alert-danger");
          if (alert) {
-            alert.classList.remove('show');
+            alert.classList.remove("show");
             setTimeout(() => alert.remove(), 150);
          }
       }, 5000);
@@ -202,26 +266,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Formata documento (CPF/CNPJ)
    function formatDocument(document, type) {
-      if (!document) return '';
-      const clean = document.replace(/\D/g, '');
-      if (type === 'cpf' && clean.length === 11) {
-         return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      if (!document) return "";
+      const clean = document.replace(/\D/g, "");
+      if (type === "cpf" && clean.length === 11) {
+         return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
       }
-      if (type === 'cnpj' && clean.length === 14) {
-         return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      if (type === "cnpj" && clean.length === 14) {
+         return clean.replace(
+            /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+            "$1.$2.$3/$4-$5"
+         );
       }
       return document;
    }
 
    // Formata telefone
    function formatPhone(phone) {
-      if (!phone) return '';
-      const clean = phone.replace(/\D/g, '');
+      if (!phone) return "";
+      const clean = phone.replace(/\D/g, "");
       if (clean.length === 11) {
-         return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+         return clean.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
       }
       if (clean.length === 10) {
-         return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+         return clean.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
       }
       return phone;
    }
@@ -232,8 +299,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const now = new Date();
       const diffTime = Math.abs(now - date);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) return 'Ontem';
+
+      if (diffDays === 1) return "Ontem";
       if (diffDays < 7) return `${diffDays} dias atrás`;
       if (diffDays < 30) return `${Math.floor(diffDays / 7)} semanas atrás`;
       if (diffDays < 365) return `${Math.floor(diffDays / 30)} meses atrás`;

@@ -108,17 +108,39 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Customers
     Route::prefix( 'customers' )->name( 'customers.' )->group( function () {
+        // Formulários específicos para criação
+        Route::get( '/pessoa-fisica/create', [ CustomerController::class, 'createPessoaFisica' ] )->name( 'create-pessoa-fisica' );
+        Route::get( '/pessoa-juridica/create', [ CustomerController::class, 'createPessoaJuridica' ] )->name( 'create-pessoa-juridica' );
         Route::get( '/', [ CustomerController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ CustomerController::class, 'create' ] )->name( 'create' );
+
+        // Métodos específicos com Form Requests
+        Route::post( '/pessoa-fisica', [ CustomerController::class, 'storePessoaFisica' ] )->name( 'store-pessoa-fisica' );
+        Route::post( '/pessoa-juridica', [ CustomerController::class, 'storePessoaJuridica' ] )->name( 'store-pessoa-juridica' );
+
+        // Método legado para compatibilidade
         Route::post( '/', [ CustomerController::class, 'store' ] )->name( 'store' );
+
         Route::get( '/{customer}', [ CustomerController::class, 'show' ] )->name( 'show' );
         Route::get( '/{customer}/edit', [ CustomerController::class, 'edit' ] )->name( 'edit' );
+
+        // Métodos específicos de atualização com Form Requests
+        // Formulários específicos para edição
+        Route::get( '/{customer}/pessoa-fisica/edit', [ CustomerController::class, 'editPessoaFisica' ] )->name( 'edit-pessoa-fisica' );
+        Route::get( '/{customer}/pessoa-juridica/edit', [ CustomerController::class, 'editPessoaJuridica' ] )->name( 'edit-pessoa-juridica' );
+        Route::put( '/{customer}/pessoa-fisica', [ CustomerController::class, 'updatePessoaFisica' ] )->name( 'update-pessoa-fisica' );
+        Route::put( '/{customer}/pessoa-juridica', [ CustomerController::class, 'updatePessoaJuridica' ] )->name( 'update-pessoa-juridica' );
+
+        // Alterar status
+        Route::post( '/{customer}/toggle-status', [ CustomerController::class, 'toggleStatus' ] )->name( 'toggle-status' );
+        // Método legado para compatibilidade
         Route::put( '/{customer}', [ CustomerController::class, 'update' ] )->name( 'update' );
+
         Route::delete( '/{customer}', [ CustomerController::class, 'destroy' ] )->name( 'destroy' );
         Route::post( '/{customer}/restore', [ CustomerController::class, 'restore' ] )->name( 'restore' );
         Route::post( '/{customer}/duplicate', [ CustomerController::class, 'duplicate' ] )->name( 'duplicate' );
         Route::get( '/find-nearby', [ CustomerController::class, 'findNearby' ] )->name( 'find-nearby' );
-        Route::post( '/search', [ CustomerController::class, 'search' ] )->name( 'search' );
+        Route::get( '/search', [ CustomerController::class, 'search' ] )->name( 'search' );
         Route::get( '/autocomplete', [ CustomerController::class, 'autocomplete' ] )->name( 'autocomplete' );
         Route::get( '/export', [ CustomerController::class, 'export' ] )->name( 'export' );
         Route::get( '/dashboard', [ CustomerController::class, 'dashboard' ] )->name( 'dashboard' );

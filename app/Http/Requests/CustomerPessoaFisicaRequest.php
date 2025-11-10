@@ -14,12 +14,23 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class CustomerPessoaFisicaRequest extends FormRequest
 {
+    private ?int $excludeCustomerId = null;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true; // Implementar lógica de autorização conforme necessidade
+        return auth()->check();
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Obter ID do customer se estiver em rota de atualização
+        $this->excludeCustomerId = $this->route( 'customer' )?->id;
     }
 
     /**
@@ -27,37 +38,65 @@ class CustomerPessoaFisicaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = auth()->user()->tenant_id;
+
         return [
             // Regras estruturais do Customer (do Model)
-            'tenant_id'           => 'sometimes|integer|exists:tenants,id',
-            'status'              => 'sometimes|string|in:active,inactive,deleted',
+            'status'              => 'sometimes|in:active,inactive,deleted',
 
             // Dados básicos (CommonData)
-            'first_name'          => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'last_name'           => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'birth_date'          => 'nullable|date_format:d/m/Y|before:today|after:1900-01-01',
+            'first_name'          => 'required|string|max:100',
+            'last_name'           => 'required|string|max:100',
+            'birth_date'          => 'nullable|date|before:today|after:1900-01-01',
             'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id'       => 'nullable|integer|exists:professions,id',
-            'description'         => 'nullable|string|max:250',
+            'description'         => 'nullable|string|max:500',
             'website'             => 'nullable|url|max:255',
 
-            // Dados de contato (Contact) - Sem validação de unicidade (compartilhado com Provider)
-            'email_personal'      => 'required|email|max:255',
-            'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            // Dados de contato (Contact) - COM VALIDAÇÃO DE UNICIDADE
+            'email'               => [
+                'required',
+                'email',
+                'max:255',
+                function ( $attribute, $value, $fail ) use ( $tenantId ) {
+                    $customerRepo = app( \App\Repositories\CustomerRepository::class);
+
+                    if ( !$customerRepo->isEmailUnique( $value, $tenantId, $this->excludeCustomerId ) ) {
+                        $fail( 'Este e-mail já está em uso por outro cliente.' );
+                    }
+                }
+            ],
+            'phone'               => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
             'email_business'      => 'nullable|email|max:255',
             'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // CPF com validação customizada via Helper
+            // CPF com validação customizada + UNICIDADE
             'cpf'                 => [
                 'required',
                 'string',
-                'regex:/^\d{3}\.\d{3}\.\d{3}-\d{2}$/',
-                function ($attribute, $value, $fail) {
-                    $cleanCpf = preg_replace('/[^0-9]/', '', $value);
-                    if (strlen($cleanCpf) !== 11 || !\App\Helpers\ValidationHelper::isValidCpf($cleanCpf)) {
-                        $fail('CPF inválido.');
+                'regex:/^\d{11}$/',
+                function ( $attribute, $value, $fail ) use ( $tenantId ) {
+                    // Limpar CPF (apenas números)
+                    $cleanCpf = preg_replace( '/[^0-9]/', '', $value );
+
+                    // Validar estrutura
+                    if ( strlen( $cleanCpf ) !== 11 ) {
+                        $fail( 'O CPF deve conter 11 dígitos.' );
+                        return;
                     }
-                },
+
+                    // Validar algoritmo
+                    if ( !\App\Helpers\ValidationHelper::isValidCpf( $cleanCpf ) ) {
+                        $fail( 'O CPF informado não é válido.' );
+                        return;
+                    }
+
+                    // Validar unicidade
+                    $customerRepo = app( \App\Repositories\CustomerRepository::class);
+                    if ( !$customerRepo->isCpfUnique( $cleanCpf, $tenantId, $this->excludeCustomerId ) ) {
+                        $fail( 'Este CPF já está em uso por outro cliente.' );
+                    }
+                }
             ],
 
             // Endereço (Address)
@@ -67,10 +106,6 @@ class CustomerPessoaFisicaRequest extends FormRequest
             'neighborhood'        => 'required|string|max:100',
             'city'                => 'required|string|max:100',
             'state'               => 'required|string|size:2|alpha',
-
-            // Tags
-            'tags'                => 'nullable|array',
-            'tags.*'              => 'integer|exists:customer_tags,id',
         ];
     }
 
@@ -107,34 +142,30 @@ class CustomerPessoaFisicaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'first_name.required'     => 'O nome é obrigatório.',
-            'first_name.regex'        => 'O nome deve conter apenas letras e espaços.',
-            'last_name.required'      => 'O sobrenome é obrigatório.',
-            'last_name.regex'         => 'O sobrenome deve conter apenas letras e espaços.',
-            'email.required'          => 'O email é obrigatório.',
-            'email.email'             => 'Digite um email válido.',
-            'email_personal.required' => 'O email pessoal é obrigatório.',
-            'email_personal.email'    => 'Digite um email pessoal válido.',
-            'phone_personal.required' => 'O telefone pessoal é obrigatório.',
-            'phone_personal.regex'    => 'Digite um telefone pessoal válido no formato (00) 00000-0000.',
-            'document.required'       => 'O CPF é obrigatório.',
-            'document.size'           => 'O CPF deve ter 11 dígitos.',
-            'document.regex'          => 'Digite um CPF válido (apenas números).',
-            'birth_date.before'       => 'A data de nascimento deve ser anterior a hoje.',
-            'birth_date.after'        => 'A data de nascimento deve ser posterior a 1900.',
-            'description.max'         => 'A descrição profissional deve ter no máximo 250 caracteres.',
-            'website.url'             => 'Digite uma URL válida.',
-            'phone_business.regex'    => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
-            'email_business.email'    => 'Digite um email comercial válido.',
-            'cep.required'            => 'O CEP é obrigatório.',
-            'cep.size'                => 'O CEP deve ter 9 caracteres (formato: 00000-000).',
-            'cep.regex'               => 'Digite um CEP válido.',
-            'address.required'        => 'O endereço é obrigatório.',
-            'neighborhood.required'   => 'O bairro é obrigatório.',
-            'city.required'           => 'A cidade é obrigatória.',
-            'state.required'          => 'O estado é obrigatório.',
-            'state.size'              => 'O estado deve ter 2 caracteres.',
-            'state.alpha'             => 'O estado deve conter apenas letras.',
+            'first_name.required'   => 'O nome é obrigatório.',
+            'last_name.required'    => 'O sobrenome é obrigatório.',
+            'email.required'        => 'O e-mail é obrigatório.',
+            'email.email'           => 'Digite um e-mail válido.',
+            'email.unique'          => 'Este e-mail já está em uso por outro cliente.',
+            'phone.required'        => 'O telefone é obrigatório.',
+            'phone.regex'           => 'Digite um telefone válido no formato (00) 00000-0000.',
+            'cpf.required'          => 'O CPF é obrigatório.',
+            'cpf.regex'             => 'O CPF deve conter apenas 11 dígitos numéricos.',
+            'cpf.unique'            => 'Este CPF já está em uso por outro cliente.',
+            'birth_date.before'     => 'A data de nascimento deve ser anterior a hoje.',
+            'birth_date.after'      => 'A data de nascimento deve ser posterior a 1900.',
+            'description.max'       => 'A descrição deve ter no máximo 500 caracteres.',
+            'website.url'           => 'Digite uma URL válida.',
+            'email_business.email'  => 'Digite um e-mail comercial válido.',
+            'phone_business.regex'  => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
+            'cep.required'          => 'O CEP é obrigatório.',
+            'cep.regex'             => 'Digite um CEP válido no formato 00000-000.',
+            'address.required'      => 'O endereço é obrigatório.',
+            'neighborhood.required' => 'O bairro é obrigatório.',
+            'city.required'         => 'A cidade é obrigatória.',
+            'state.required'        => 'O estado é obrigatório.',
+            'state.size'            => 'O estado deve ter 2 caracteres.',
+            'state.alpha'           => 'O estado deve conter apenas letras.',
         ];
     }
 

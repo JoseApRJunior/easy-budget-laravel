@@ -14,12 +14,23 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class CustomerPessoaJuridicaRequest extends FormRequest
 {
+    private ?int $excludeCustomerId = null;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true; // Implementar lógica de autorização conforme necessidade
+        return auth()->check();
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Obter ID do customer se estiver em rota de atualização
+        $this->excludeCustomerId = $this->route( 'customer' )?->id;
     }
 
     /**
@@ -27,64 +38,84 @@ class CustomerPessoaJuridicaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = auth()->user()->tenant_id;
+
         return [
             // Regras estruturais do Customer (do Model)
-            'tenant_id'              => 'sometimes|integer|exists:tenants,id',
-            'status'                 => 'sometimes|string|in:active,inactive,deleted',
+            'status'                 => 'sometimes|in:active,inactive,deleted',
 
             // Dados básicos (CommonData)
-            'first_name'             => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
-            'last_name'              => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'first_name'             => 'required|string|max:100',
+            'last_name'              => 'required|string|max:100',
             'company_name'           => 'required|string|max:255',
             'cpf'                    => 'nullable', // PJ não precisa de CPF
             'birth_date'             => 'nullable', // PJ não precisa de data de nascimento
-            'area_of_activity_id'    => 'nullable|integer|exists:areas_of_activity,id',
+            'area_of_activity_id'    => 'required|integer|exists:areas_of_activity,id',
             'profession_id'          => 'nullable|integer|exists:professions,id',
-            'description'            => 'nullable|string|max:250',
+            'description'            => 'nullable|string|max:500',
             'website'                => 'nullable|url|max:255',
 
-            // Dados de contato (Contact) - Sem validação de unicidade (compartilhado com Provider)
-            'email_personal'         => 'required|email|max:255',
-            'phone_personal'         => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'email_business'         => 'nullable|email|max:255',
+            // Dados de contato (Contact) - COM VALIDAÇÃO DE UNICIDADE
+            'email'                  => 'required|email|max:255',
+            'phone'                  => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'email_business'         => [
+                'required',
+                'email',
+                'max:255',
+                function ( $attribute, $value, $fail ) use ( $tenantId ) {
+                    $customerRepo = app( \App\Repositories\CustomerRepository::class);
+                    if ( !$customerRepo->isEmailUnique( $value, $tenantId, $this->excludeCustomerId ) ) {
+                        $fail( 'Este e-mail empresarial já está em uso por outro cliente.' );
+                    }
+                }
+            ],
             'phone_business'         => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
 
-            // Dados específicos PJ
-            'fantasy_name'           => 'nullable|string|max:255',
-            'state_registration'     => 'nullable|string|max:50',
-            'municipal_registration' => 'nullable|string|max:50',
-            'founding_date'          => 'nullable|date_format:d/m/Y|before:today|after:1800-01-01',
-            'company_email'          => 'nullable|email|max:255',
-            'company_phone'          => 'nullable|string|regex:/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/',
-            'company_website'        => 'nullable|url|max:255',
-            'industry'               => 'nullable|string|max:255',
-            'company_size'           => 'nullable|string|in:micro,pequena,media,grande',
-            'notes'                  => 'nullable|string|max:1000',
-
-            // CNPJ com validação customizada via Helper
+            // CNPJ com validação customizada + UNICIDADE
             'cnpj'                   => [
                 'required',
                 'string',
-                'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/',
-                function ( $attribute, $value, $fail ) {
+                'regex:/^\d{14}$/',
+                function ( $attribute, $value, $fail ) use ( $tenantId ) {
+                    // Limpar CNPJ (apenas números)
                     $cleanCnpj = preg_replace( '/[^0-9]/', '', $value );
-                    if ( strlen( $cleanCnpj ) !== 14 || !\App\Helpers\ValidationHelper::isValidCnpj( $cleanCnpj ) ) {
-                        $fail( 'CNPJ inválido.' );
+
+                    // Validar estrutura
+                    if ( strlen( $cleanCnpj ) !== 14 ) {
+                        $fail( 'O CNPJ deve conter 14 dígitos.' );
+                        return;
                     }
-                },
+
+                    // Validar algoritmo
+                    if ( !\App\Helpers\ValidationHelper::isValidCnpj( $cleanCnpj ) ) {
+                        $fail( 'O CNPJ informado não é válido.' );
+                        return;
+                    }
+
+                    // Validar unicidade
+                    $customerRepo = app( \App\Repositories\CustomerRepository::class);
+                    if ( !$customerRepo->isCnpjUnique( $cleanCnpj, $tenantId, $this->excludeCustomerId ) ) {
+                        $fail( 'Este CNPJ já está em uso por outro cliente.' );
+                    }
+                }
             ],
 
+            // Dados específicos PJ (BusinessData)
+            'fantasy_name'           => 'nullable|string|max:255',
+            'state_registration'     => 'nullable|string|max:50',
+            'municipal_registration' => 'nullable|string|max:50',
+            'founding_date'          => 'nullable|date|before:today|after:1800-01-01',
+            'industry'               => 'nullable|string|max:255',
+            'company_size'           => 'nullable|in:micro,pequena,media,grande',
+            'notes'                  => 'nullable|string|max:1000',
+
             // Endereço (Address)
-            'cep'                    => 'required|string|size:9|regex:/^\d{5}-?\d{3}$/',
+            'cep'                    => 'required|string|regex:/^\d{5}-?\d{3}$/',
             'address'                => 'required|string|max:255',
             'address_number'         => 'nullable|string|max:20',
             'neighborhood'           => 'required|string|max:100',
             'city'                   => 'required|string|max:100',
-            'state'                  => 'required|string|size:2|alpha|not_in:Selecione',
-
-            // Tags
-            'tags'                   => 'nullable|array',
-            'tags.*'                 => 'integer|exists:customer_tags,id',
+            'state'                  => 'required|string|size:2|alpha',
         ];
     }
 
@@ -135,37 +166,36 @@ class CustomerPessoaJuridicaRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'first_name.required'          => 'O nome do responsável é obrigatório.',
+            'last_name.required'           => 'O sobrenome do responsável é obrigatório.',
             'company_name.required'        => 'A razão social é obrigatória.',
-            'company_name.regex'           => 'A razão social deve conter apenas letras, números e símbolos comuns.',
-            'fantasy_name.regex'           => 'O nome fantasia deve conter apenas letras, números e símbolos comuns.',
-            'document.required'            => 'O CNPJ é obrigatório.',
-            'document.size'                => 'O CNPJ deve ter 14 dígitos.',
-            'document.regex'               => 'Digite um CNPJ válido (apenas números).',
-            'document.unique'              => 'Este CNPJ já está cadastrado.',
-            'company_email.required'       => 'O email empresarial é obrigatório.',
-            'company_email.email'          => 'Digite um email empresarial válido.',
-            'company_email.unique'         => 'Este email empresarial já está cadastrado.',
-            'company_phone.required'       => 'O telefone empresarial é obrigatório.',
-            'company_phone.regex'          => 'Digite um telefone empresarial válido no formato (00) 00000-0000.',
-            'company_website.url'          => 'Digite uma URL válida para o website.',
+            'cnpj.required'                => 'O CNPJ é obrigatório para pessoa jurídica.',
+            'cnpj.regex'                   => 'O CNPJ deve conter 14 dígitos numéricos.',
+            'cnpj.unique'                  => 'Este CNPJ já está em uso por outro cliente.',
+            'email.required'               => 'O e-mail é obrigatório.',
+            'email.email'                  => 'Digite um e-mail válido.',
+            'email.unique'                 => 'Este e-mail já está em uso por outro cliente.',
+            'email_business.required'      => 'O e-mail empresarial é obrigatório.',
+            'email_business.email'         => 'Digite um e-mail empresarial válido.',
+            'email_business.unique'        => 'Este e-mail empresarial já está em uso por outro cliente.',
+            'phone.required'               => 'O telefone é obrigatório.',
+            'phone.regex'                  => 'Digite um telefone válido no formato (00) 00000-0000.',
+            'phone_business.regex'         => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
+            'area_of_activity_id.required' => 'A área de atuação é obrigatória para pessoa jurídica.',
+            'area_of_activity_id.exists'   => 'A área de atuação selecionada não existe.',
             'founding_date.before'         => 'A data de fundação deve ser anterior a hoje.',
             'founding_date.after'          => 'A data de fundação deve ser posterior a 1800.',
-            'state_registration.regex'     => 'A inscrição estadual deve conter apenas números.',
-            'municipal_registration.regex' => 'A inscrição municipal deve conter apenas números.',
-            'addresses.required'           => 'Pelo menos um endereço deve ser informado.',
-            'addresses.min'                => 'Pelo menos um endereço deve ser informado.',
-            'addresses.*.cep.size'         => 'O CEP deve ter 9 caracteres (formato: 00000-000).',
-            'addresses.*.cep.regex'        => 'Digite um CEP válido.',
-            'addresses.*.state.size'       => 'O estado deve ter 2 caracteres.',
-            'addresses.*.state.alpha'      => 'O estado deve conter apenas letras.',
-            'state.not_in'                 => 'Por favor, selecione um estado válido.',
-            'contacts.required'            => 'Pelo menos um contato deve ser informado.',
-            'contacts.min'                 => 'Pelo menos um contato deve ser informado.',
-            'contacts.*.value.required_if' => 'O valor do contato é obrigatório para este tipo.',
-            'contacts.*.value.email'       => 'Digite um email válido.',
-            'contacts.*.value.unique'      => 'Este email já está cadastrado.',
-            'contacts.*.value.regex'       => 'Digite um telefone válido no formato (00) 00000-0000.',
-            'contacts.*.value.url'         => 'Digite uma URL válida.',
+            'company_size.in'              => 'O porte da empresa deve ser: micro, pequena, média ou grande.',
+            'notes.max'                    => 'As observações devem ter no máximo 1000 caracteres.',
+            'website.url'                  => 'Digite uma URL válida.',
+            'cep.required'                 => 'O CEP é obrigatório.',
+            'cep.regex'                    => 'Digite um CEP válido no formato 00000-000.',
+            'address.required'             => 'O endereço é obrigatório.',
+            'neighborhood.required'        => 'O bairro é obrigatório.',
+            'city.required'                => 'A cidade é obrigatória.',
+            'state.required'               => 'O estado é obrigatório.',
+            'state.size'                   => 'O estado deve ter 2 caracteres.',
+            'state.alpha'                  => 'O estado deve conter apenas letras.',
         ];
     }
 

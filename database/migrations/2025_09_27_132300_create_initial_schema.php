@@ -133,7 +133,7 @@ return new class extends Migration
         Schema::create( 'customers', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->enum( 'status', [ 'active', 'inactive', 'deleted' ] )->default( 'active' );
+            $table->string( 'status' )->default( \App\Enums\CustomerStatus::ACTIVE->value );
             $table->softDeletes();
             $table->timestamps();
         } );
