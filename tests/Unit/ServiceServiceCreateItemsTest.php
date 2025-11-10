@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Product;

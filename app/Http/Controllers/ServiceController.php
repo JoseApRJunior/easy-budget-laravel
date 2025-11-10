@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
@@ -68,7 +68,7 @@ class ServiceController extends Controller
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),
                 'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatusEnum::cases()
+                'statusOptions' => ServiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -103,7 +103,7 @@ class ServiceController extends Controller
             return view( 'services.index', [
                 'services'      => $services,
                 'filters'       => $filters,
-                'statusOptions' => ServiceStatusEnum::cases(),
+                'statusOptions' => ServiceStatus::cases(),
                 'categories'    => $this->categoryService->getActive()
             ] );
 
@@ -169,9 +169,9 @@ class ServiceController extends Controller
                     'required',
                     'string',
                     'in:' . implode( ',', [
-                        ServiceStatusEnum::APPROVED->value,
-                        ServiceStatusEnum::REJECTED->value,
-                        ServiceStatusEnum::CANCELLED->value
+                        ServiceStatus::APPROVED->value,
+                        ServiceStatus::REJECTED->value,
+                        ServiceStatus::CANCELLED->value
                     ] )
                 ],
                 'reason'            => 'nullable|string|max:500'
@@ -337,7 +337,7 @@ class ServiceController extends Controller
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),
                 'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatusEnum::cases()
+                'statusOptions' => ServiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -382,7 +382,7 @@ class ServiceController extends Controller
     public function change_status( string $code, Request $request ): RedirectResponse
     {
         $request->validate( [
-            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, ServiceStatusEnum::cases() ) ) ]
+            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, ServiceStatus::cases() ) ) ]
         ] );
 
         try {

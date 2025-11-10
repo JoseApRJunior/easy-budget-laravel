@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Enums\OperationStatus;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Customer;
@@ -52,7 +52,7 @@ class ServiceServiceDeleteTest extends TestCase
             'tenant_id'   => $this->tenant->id,
             'budget_id'   => $this->budget->id,
             'category_id' => $this->category->id,
-            'status'      => ServiceStatusEnum::SCHEDULED,
+            'status'      => ServiceStatus::SCHEDULED,
             'total'       => 100.0,
         ] );
 
@@ -84,7 +84,7 @@ class ServiceServiceDeleteTest extends TestCase
             'tenant_id'   => $this->tenant->id,
             'budget_id'   => $this->budget->id,
             'category_id' => $this->category->id,
-            'status'      => ServiceStatusEnum::SCHEDULED->value,
+            'status'      => ServiceStatus::SCHEDULED->value,
         ] );
 
         // Criar fatura associada ao serviço
@@ -111,7 +111,7 @@ class ServiceServiceDeleteTest extends TestCase
             'tenant_id'   => $this->tenant->id,
             'budget_id'   => $this->budget->id,
             'category_id' => $this->category->id,
-            'status'      => ServiceStatusEnum::COMPLETED, // Status final
+            'status'      => ServiceStatus::COMPLETED, // Status final
         ] );
 
         // Act
@@ -131,7 +131,7 @@ class ServiceServiceDeleteTest extends TestCase
             'tenant_id'   => $this->tenant->id,
             'budget_id'   => $this->budget->id,
             'category_id' => $this->category->id,
-            'status'      => ServiceStatusEnum::SCHEDULED->value,
+            'status'      => ServiceStatus::SCHEDULED->value,
         ] );
 
         // Criar agendamento futuro
@@ -159,7 +159,7 @@ class ServiceServiceDeleteTest extends TestCase
             'tenant_id'   => $this->tenant->id,
             'budget_id'   => $this->budget->id,
             'category_id' => $this->category->id,
-            'status'      => ServiceStatusEnum::SCHEDULED->value,
+            'status'      => ServiceStatus::SCHEDULED->value,
         ] );
 
         $serviceItem = ServiceItem::factory()->create( [

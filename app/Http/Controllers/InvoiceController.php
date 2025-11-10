@@ -373,8 +373,8 @@ class InvoiceController extends Controller
 
             // Update invoice status using enum value
             $invoice->update( [
-                'invoice_statuses_id' => $request->invoice_status_id,
-                'updated_at'          => now()
+                'status'     => $request->invoice_status_id,
+                'updated_at' => now()
             ] );
 
             // Log the action

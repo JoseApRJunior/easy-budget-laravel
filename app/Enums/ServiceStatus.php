@@ -4,47 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/**
- * Enum que representa os possíveis status de um serviço
- *
- * Este enum define todos os status disponíveis para os serviços
- * conforme especificado na estrutura da tabela services e service_statuses.
- *
- * Funcionalidades disponíveis:
- * - Descrições detalhadas de cada status
- * - Cores e ícones para interface
- * - Controle de fluxo e transições válidas
- * - Verificação de status ativo/finalizado
- * - Metadados completos para cada status
- *
- * @package App\Enums
- *
- * @example Uso básico:
- * ```php
- * $status = ServiceStatus::DRAFT;
- * echo $status->getDescription(); // "Serviço em elaboração, permite modificações"
- * echo $status->getColor(); // "#6c757d"
- * ```
- *
- * @example Controle de fluxo:
- * ```php
- * $currentStatus = ServiceStatus::SCHEDULING;
- * $nextStatus = $currentStatus->getNextStatus(); // ServiceStatus::SCHEDULED
- *
- * if ($currentStatus->canTransitionTo(ServiceStatus::IN_PROGRESS)) {
- *     // Realizar transição
- * }
- * ```
- *
- * @example Uso em collections/queries:
- * ```php
- * $activeServices = ServiceStatus::getActive();
- * $finishedServices = ServiceStatus::getFinished();
- *
- * $services = Service::whereIn('status', $activeServices)->get();
- * ```
- */
-enum ServiceStatus: string
+enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
     /** Serviço em elaboração, permite modificações */
     case DRAFT = 'DRAFT';
@@ -82,6 +42,10 @@ enum ServiceStatus: string
     /** Serviço expirado */
     case EXPIRED = 'EXPIRED';
 
+    /** Status de aprovação para clientes */
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+
     /**
      * Retorna uma descrição para cada status
      *
@@ -102,6 +66,8 @@ enum ServiceStatus: string
             self::CANCELLED     => 'Serviço cancelado',
             self::NOT_PERFORMED => 'Serviço não realizado',
             self::EXPIRED       => 'Serviço expirado',
+            self::APPROVED      => 'Aprovado',
+            self::REJECTED      => 'Rejeitado',
         };
     }
 
@@ -125,6 +91,8 @@ enum ServiceStatus: string
             self::CANCELLED     => '#dc3545', // Vermelho
             self::NOT_PERFORMED => '#dc3545', // Vermelho
             self::EXPIRED       => '#dc3545', // Vermelho
+            self::APPROVED      => '#10B981', // Verde
+            self::REJECTED      => '#DC2626', // Vermelho
         };
     }
 
@@ -148,6 +116,8 @@ enum ServiceStatus: string
             self::CANCELLED     => 'bi-x-circle',
             self::NOT_PERFORMED => 'bi-slash-circle',
             self::EXPIRED       => 'bi-calendar-x',
+            self::APPROVED      => 'bi-check-circle',
+            self::REJECTED      => 'bi-x-circle',
         };
     }
 
@@ -160,9 +130,9 @@ enum ServiceStatus: string
     {
         return match ( $this ) {
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
-            self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED => true,
+            self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED                  => true,
             self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED                => false,
+            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => false,
         };
     }
 
@@ -175,9 +145,9 @@ enum ServiceStatus: string
     {
         return match ( $this ) {
             self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED                => true,
+            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => true,
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
-            self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED => false,
+            self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED                  => false,
         };
     }
 
@@ -189,152 +159,35 @@ enum ServiceStatus: string
     public function isExecutable(): bool
     {
         return match ( $this ) {
-            self::SCHEDULED, self::IN_PROGRESS => true,
+            self::SCHEDULED, self::IN_PROGRESS                                 => true,
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
             self::ON_HOLD, self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED => false,
+            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => false,
         };
     }
 
     /**
-     * Retorna todos os status disponíveis como array
+     * Verifica se pode ser editado
      *
-     * @return array<string> Lista de todos os status
+     * @return bool
      */
-    public static function getAll(): array
-    {
-        return [
-            self::DRAFT,
-            self::PENDING,
-            self::SCHEDULING,
-            self::PREPARING,
-            self::IN_PROGRESS,
-            self::ON_HOLD,
-            self::SCHEDULED,
-            self::COMPLETED,
-            self::PARTIAL,
-            self::CANCELLED,
-            self::NOT_PERFORMED,
-            self::EXPIRED,
-        ];
-    }
-
-    /**
-     * Retorna apenas os status ativos
-     *
-     * @return array<string> Lista de status ativos
-     */
-    public static function getActive(): array
-    {
-        return [
-            self::DRAFT,
-            self::PENDING,
-            self::SCHEDULING,
-            self::PREPARING,
-            self::IN_PROGRESS,
-            self::ON_HOLD,
-            self::SCHEDULED,
-        ];
-    }
-
-    /**
-     * Retorna apenas os status finalizados
-     *
-     * @return array<string> Lista de status finalizados
-     */
-    public static function getFinished(): array
-    {
-        return [
-            self::COMPLETED,
-            self::PARTIAL,
-            self::CANCELLED,
-            self::NOT_PERFORMED,
-            self::EXPIRED,
-        ];
-    }
-
-    /**
-     * Retorna apenas os status executáveis
-     *
-     * @return array<string> Lista de status executáveis
-     */
-    public static function getExecutable(): array
-    {
-        return [
-            self::SCHEDULED,
-            self::IN_PROGRESS,
-        ];
-    }
-
-    /**
-     * Retorna o próximo status lógico na sequência de execução
-     *
-     * @return ServiceStatus|null Próximo status ou null se for final
-     */
-    public function getNextStatus(): ?ServiceStatus
+    public function canEdit(): bool
     {
         return match ( $this ) {
-            self::DRAFT       => self::PENDING,
-            self::PENDING     => self::SCHEDULING,
-            self::SCHEDULING  => self::SCHEDULED,
-            self::SCHEDULED   => self::PREPARING,
-            self::PREPARING   => self::IN_PROGRESS,
-            self::IN_PROGRESS => self::COMPLETED,
-            default           => null, // Status finais não têm próximo
+            self::SCHEDULED, self::PREPARING, self::ON_HOLD,
+            self::IN_PROGRESS, self::PARTIAL                     => true,
+            self::APPROVED, self::REJECTED, self::COMPLETED,
+            self::CANCELLED, self::DRAFT, self::PENDING,
+            self::SCHEDULING, self::NOT_PERFORMED, self::EXPIRED => false,
         };
     }
 
     /**
-     * Retorna o status anterior lógico na sequência
+     * Retorna o índice de ordem para classificação
      *
-     * @return ServiceStatus|null Status anterior ou null se for inicial
+     * @return int
      */
-    public function getPreviousStatus(): ?ServiceStatus
-    {
-        return match ( $this ) {
-            self::PENDING     => self::DRAFT,
-            self::SCHEDULING  => self::PENDING,
-            self::SCHEDULED   => self::SCHEDULING,
-            self::PREPARING   => self::SCHEDULED,
-            self::IN_PROGRESS => self::PREPARING,
-            self::COMPLETED   => self::IN_PROGRESS,
-            default           => null, // Status iniciais não têm anterior
-        };
-    }
-
-    /**
-     * Verifica se é possível transitar para um determinado status
-     *
-     * @param ServiceStatus $targetStatus Status alvo
-     * @return bool True se a transição for válida
-     */
-    public function canTransitionTo( ServiceStatus $targetStatus ): bool
-    {
-        // Define transições válidas usando strings como chaves
-        $validTransitions = [
-            self::DRAFT->value         => [ self::PENDING->value, self::CANCELLED->value ],
-            self::PENDING->value       => [ self::SCHEDULING->value, self::CANCELLED->value, self::EXPIRED->value ],
-            self::SCHEDULING->value    => [ self::SCHEDULED->value, self::CANCELLED->value, self::PENDING->value ],
-            self::SCHEDULED->value     => [ self::PREPARING->value, self::CANCELLED->value, self::ON_HOLD->value ],
-            self::PREPARING->value     => [ self::IN_PROGRESS->value, self::CANCELLED->value, self::ON_HOLD->value ],
-            self::IN_PROGRESS->value   => [ self::COMPLETED->value, self::PARTIAL->value, self::ON_HOLD->value, self::CANCELLED->value ],
-            self::ON_HOLD->value       => [ self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::CANCELLED->value ],
-            self::COMPLETED->value     => [], // Status final
-            self::PARTIAL->value       => [], // Status final
-            self::CANCELLED->value     => [], // Status final
-            self::NOT_PERFORMED->value => [], // Status final
-            self::EXPIRED->value       => [], // Status final
-        ];
-
-        return in_array( $targetStatus->value, $validTransitions[ $this->value ] ?? [] );
-    }
-
-    /**
-     * Retorna a ordem de prioridade para exibição
-     *
-     * @return int Ordem (menor número = maior prioridade)
-     */
-    public function getPriorityOrder(): int
+    public function getOrderIndex(): int
     {
         return match ( $this ) {
             self::DRAFT         => 1,
@@ -344,40 +197,33 @@ enum ServiceStatus: string
             self::PREPARING     => 5,
             self::IN_PROGRESS   => 6,
             self::ON_HOLD       => 7,
-            self::COMPLETED     => 8,
-            self::PARTIAL       => 9,
-            self::CANCELLED     => 10,
-            self::NOT_PERFORMED => 11,
-            self::EXPIRED       => 12,
+            self::PARTIAL       => 8,
+            self::COMPLETED     => 9,
+            self::APPROVED      => 10,
+            self::REJECTED      => 11,
+            self::CANCELLED     => 12,
+            self::NOT_PERFORMED => 13,
+            self::EXPIRED       => 14,
         };
     }
 
     /**
-     * Retorna metadados completos do status
+     * Retorna a prioridade do status para ordenação
      *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
+     * @return int
      */
-    public function getMetadata(): array
+    public function getPriorityOrder(): int
     {
-        return [
-            'value'          => $this->value,
-            'description'    => $this->getDescription(),
-            'color'          => $this->getColor(),
-            'icon'           => $this->getIcon(),
-            'is_active'      => $this->isActive(),
-            'is_finished'    => $this->isFinished(),
-            'is_executable'  => $this->isExecutable(),
-            'priority_order' => $this->getPriorityOrder(),
-        ];
+        return $this->getOrderIndex();
     }
 
     /**
      * Cria instância do enum a partir de string
      *
      * @param string $value Valor do status
-     * @return ServiceStatus|null Instância do enum ou null se inválido
+     * @return self|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?ServiceStatus
+    public static function fromString( string $value ): ?self
     {
         foreach ( self::cases() as $case ) {
             if ( $case->value === $value ) {
@@ -388,24 +234,74 @@ enum ServiceStatus: string
     }
 
     /**
+     * Retorna as transições permitidas para um status
+     *
+     * @param string $currentStatus Status atual
+     * @return array Array de status permitidos
+     */
+    public static function getAllowedTransitions( string $currentStatus ): array
+    {
+        return match ( $currentStatus ) {
+            self::DRAFT->value   => [ self::PENDING->value, self::CANCELLED->value ],
+            self::PENDING->value   => [ self::SCHEDULING->value, self::CANCELLED->value, self::EXPIRED->value ],
+            self::SCHEDULING->value   => [ self::SCHEDULED->value, self::CANCELLED->value, self::PENDING->value ],
+            self::SCHEDULED->value   => [ self::PREPARING->value, self::CANCELLED->value, self::ON_HOLD->value ],
+            self::PREPARING->value   => [ self::IN_PROGRESS->value, self::CANCELLED->value, self::ON_HOLD->value ],
+            self::IN_PROGRESS->value   => [ self::COMPLETED->value, self::PARTIAL->value, self::ON_HOLD->value, self::CANCELLED->value ],
+            self::ON_HOLD->value   => [ self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::CANCELLED->value ],
+            default => [], // Status finais não têm transições
+        };
+    }
+
+    /**
+     * Retorna todos os status finais
+     *
+     * @return array Array de status finais
+     */
+    public static function getFinalStatuses(): array
+    {
+        return [
+            self::COMPLETED->value,
+            self::PARTIAL->value,
+            self::CANCELLED->value,
+            self::NOT_PERFORMED->value,
+            self::EXPIRED->value,
+            self::APPROVED->value,
+            self::REJECTED->value,
+        ];
+    }
+
+    /**
+     * Retorna metadados completos do status
+     *
+     * @return array<string, mixed> Array com descrição, cor, ícone e flags
+     */
+    public function getMetadata(): array
+    {
+        return [
+            'description' => $this->getDescription(),
+            'color'       => $this->getColor(),
+            'icon'        => $this->getIcon(),
+            'isActive'    => $this->isActive(),
+            'isFinished'  => $this->isFinished(),
+        ];
+    }
+
+    /**
      * Retorna opções formatadas para uso em formulários/selects
      *
      * @param bool $includeFinished Incluir status finalizados
-     * @param bool $includeExecutable Incluir apenas status executáveis
      * @return array<string, string> Array associativo [valor => descrição]
      */
-    public static function getOptions( bool $includeFinished = true, bool $includeExecutable = false ): array
+    public static function getOptions( bool $includeFinished = true ): array
     {
         $options = [];
 
-        foreach ( self::cases() as $status ) {
-            if ( !$includeFinished && $status->isFinished() ) {
+        foreach ( self::cases() as $case ) {
+            if ( !$includeFinished && $case->isFinished() ) {
                 continue;
             }
-            if ( $includeExecutable && !$status->isExecutable() ) {
-                continue;
-            }
-            $options[ $status->value ] = $status->getDescription();
+            $options[ $case->value ] = $case->getDescription();
         }
 
         return $options;
@@ -415,19 +311,20 @@ enum ServiceStatus: string
      * Ordena status por prioridade para exibição
      *
      * @param bool $includeFinished Incluir status finalizados na ordenação
-     * @return array<ServiceStatus> Status ordenados por prioridade
+     * @return array<self> Status ordenados por prioridade
      */
     public static function getOrdered( bool $includeFinished = true ): array
     {
-        $statuses = self::cases();
-
-        usort( $statuses, function ( ServiceStatus $a, ServiceStatus $b ) {
-            return $a->getPriorityOrder() <=> $b->getPriorityOrder();
-        } );
+        $statuses = collect( self::cases() )
+            ->sortBy( function ( self $case ) {
+                return $case->getPriorityOrder();
+            } )
+            ->values()
+            ->toArray();
 
         if ( !$includeFinished ) {
-            $statuses = array_filter( $statuses, function ( ServiceStatus $status ) {
-                return !$status->isFinished();
+            $statuses = array_filter( $statuses, function ( self $case ) {
+                return !$case->isFinished();
             } );
         }
 
@@ -435,45 +332,17 @@ enum ServiceStatus: string
     }
 
     /**
-     * Valida se uma transição de status é permitida
-     *
-     * @param ServiceStatus $fromStatus Status atual
-     * @param ServiceStatus $toStatus Status alvo
-     * @return bool True se transição for válida
-     */
-    public static function isValidTransition( ServiceStatus $fromStatus, ServiceStatus $toStatus ): bool
-    {
-        // Define transições válidas usando strings como chaves
-        $validTransitions = [
-            self::DRAFT->value         => [ self::PENDING->value, self::CANCELLED->value ],
-            self::PENDING->value       => [ self::SCHEDULING->value, self::CANCELLED->value, self::EXPIRED->value ],
-            self::SCHEDULING->value    => [ self::SCHEDULED->value, self::CANCELLED->value, self::PENDING->value ],
-            self::SCHEDULED->value     => [ self::PREPARING->value, self::CANCELLED->value, self::ON_HOLD->value ],
-            self::PREPARING->value     => [ self::IN_PROGRESS->value, self::CANCELLED->value, self::ON_HOLD->value ],
-            self::IN_PROGRESS->value   => [ self::COMPLETED->value, self::PARTIAL->value, self::ON_HOLD->value, self::CANCELLED->value ],
-            self::ON_HOLD->value       => [ self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::CANCELLED->value ],
-            self::COMPLETED->value     => [], // Status final
-            self::PARTIAL->value       => [], // Status final
-            self::CANCELLED->value     => [], // Status final
-            self::NOT_PERFORMED->value => [], // Status final
-            self::EXPIRED->value       => [], // Status final
-        ];
-
-        return in_array( $toStatus->value, $validTransitions[ $fromStatus->value ] ?? [] );
-    }
-
-    /**
      * Calcula métricas de status para dashboards
      *
-     * @param array<ServiceStatus> $statuses Lista de status para análise
-     * @return array<string, int> Métricas [ativo, finalizado, executável, total]
+     * @param array<self> $statuses Lista de status para análise
+     * @return array<string, mixed> Métricas calculadas
      */
     public static function calculateMetrics( array $statuses ): array
     {
-        $total      = count( $statuses );
-        $active     = 0;
-        $finished   = 0;
-        $executable = 0;
+        $total        = count( $statuses );
+        $active       = 0;
+        $finished     = 0;
+        $statusCounts = [];
 
         foreach ( $statuses as $status ) {
             if ( $status->isActive() ) {
@@ -482,19 +351,16 @@ enum ServiceStatus: string
             if ( $status->isFinished() ) {
                 $finished++;
             }
-            if ( $status->isExecutable() ) {
-                $executable++;
-            }
+
+            $statusCounts[ $status->value ] = ( $statusCounts[ $status->value ] ?? 0 ) + 1;
         }
 
         return [
-            'total'                 => $total,
-            'active'                => $active,
-            'finished'              => $finished,
-            'executable'            => $executable,
-            'active_percentage'     => $total > 0 ? round( ( $active / $total ) * 100, 1 ) : 0,
-            'finished_percentage'   => $total > 0 ? round( ( $finished / $total ) * 100, 1 ) : 0,
-            'executable_percentage' => $total > 0 ? round( ( $executable / $total ) * 100, 1 ) : 0,
+            'total'               => $total,
+            'active'              => $active,
+            'finished'            => $finished,
+            'status_distribution' => $statusCounts,
+            'completion_rate'     => $total > 0 ? round( ( $finished / $total ) * 100, 2 ) : 0,
         ];
     }
 

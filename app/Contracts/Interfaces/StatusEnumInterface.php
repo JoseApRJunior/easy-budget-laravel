@@ -60,9 +60,9 @@ interface StatusEnumInterface
      * Cria instância do enum a partir de string
      *
      * @param string $value Valor do status
-     * @return static|null Instância do enum ou null se inválido
+     * @return self|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?static;
+    public static function fromString( string $value ): ?self;
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
@@ -76,14 +76,14 @@ interface StatusEnumInterface
      * Ordena status por prioridade para exibição
      *
      * @param bool $includeFinished Incluir status finalizados na ordenação
-     * @return array<static> Status ordenados por prioridade
+     * @return array<self> Status ordenados por prioridade
      */
     public static function getOrdered( bool $includeFinished = true ): array;
 
     /**
      * Calcula métricas de status para dashboards
      *
-     * @param array<static> $statuses Lista de status para análise
+     * @param array<self> $statuses Lista de status para análise
      * @return array<string, mixed> Métricas calculadas
      */
     public static function calculateMetrics( array $statuses ): array;

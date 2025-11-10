@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Service;
@@ -27,7 +27,7 @@ class ServiceFactory extends Factory
             'category_id' => $category->id,
             'code'        => $this->faker->unique()->numerify( 'SRV-####' ),
             'description' => $this->faker->sentence,
-            'status'      => ServiceStatusEnum::SCHEDULED->value,
+            'status'      => ServiceStatus::SCHEDULED->value,
             'discount'    => 0.0,
             'total'       => $this->faker->randomFloat( 2, 100, 1000 ),
             'due_date'    => $this->faker->dateTimeBetween( '+1 week', '+1 month' ),

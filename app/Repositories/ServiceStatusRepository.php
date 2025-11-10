@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Repositories\Contracts\GlobalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -16,9 +16,9 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     /**
      * Busca status por slug
      */
-    public function findBySlug( string $slug ): ?ServiceStatusEnum
+    public function findBySlug( string $slug ): ?ServiceStatus
     {
-        return ServiceStatusEnum::tryFrom( $slug );
+        return ServiceStatus::tryFrom( $slug );
     }
 
     /**
@@ -27,17 +27,17 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     public function findActive( ?array $orderBy = null, ?int $limit = null ): array
     {
         $activeStatuses = array_filter(
-            ServiceStatusEnum::cases(),
-            fn( ServiceStatusEnum $status ) => $status->isActive()
+            ServiceStatus::cases(),
+            fn( ServiceStatus $status ) => $status->isActive()
         );
 
         // Ordena por order_index se não especificado
         $orderBy = $orderBy ?? [ 'order_index' => 'asc' ];
 
         if ( $orderBy[ 'order_index' ] === 'asc' ) {
-            usort( $activeStatuses, fn( $a, $b ) => $a->getOrderIndex() <=> $b->getOrderIndex() );
+            // usort( $activeStatuses, fn( $a, $b ) => $a->getPriorityOrder() <=> $b->getPriorityOrder() );
         } else {
-            usort( $activeStatuses, fn( $a, $b ) => $b->getOrderIndex() <=> $a->getOrderIndex() );
+            // usort( $activeStatuses, fn( $a, $b ) => $b->getPriorityOrder() <=> $a->getPriorityOrder() );
         }
 
         if ( $limit ) {
@@ -52,19 +52,19 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
      */
     public function findOrderedBy( string $field, string $direction = 'asc', ?int $limit = null ): array
     {
-        $allStatuses = ServiceStatusEnum::cases();
+        $allStatuses = ServiceStatus::cases();
 
         if ( $field === 'order_index' ) {
             if ( $direction === 'asc' ) {
-                usort( $allStatuses, fn( $a, $b ) => $a->getOrderIndex() <=> $b->getOrderIndex() );
+                usort( $allStatuses, fn( $a, $b ) => 0 <=> $b->0 );
             } else {
-                usort( $allStatuses, fn( $a, $b ) => $b->getOrderIndex() <=> $a->getOrderIndex() );
+                usort( $allStatuses, fn( $a, $b ) => $b->0 <=> 0 );
             }
         } elseif ( $field === 'name' ) {
             if ( $direction === 'asc' ) {
-                usort( $allStatuses, fn( $a, $b ) => $a->getName() <=> $b->getName() );
+                usort( $allStatuses, fn( $a, $b ) => $a->getDescription() <=> $b->getDescription() );
             } else {
-                usort( $allStatuses, fn( $a, $b ) => $b->getName() <=> $a->getName() );
+                usort( $allStatuses, fn( $a, $b ) => $b->getDescription() <=> $a->getDescription() );
             }
         }
 
@@ -78,7 +78,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     /**
      * Busca status por ID (mantido para compatibilidade)
      */
-    public function findById( int $id ): ?ServiceStatusEnum
+    public function findById( int $id ): ?ServiceStatus
     {
         // Mapeia IDs antigos para enum values (compatibilidade com código legado)
         $idMapping = [
@@ -94,7 +94,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
         ];
 
         $slug = $idMapping[ $id ] ?? null;
-        return $slug ? ServiceStatusEnum::tryFrom( $slug ) : null;
+        return $slug ? ServiceStatus::tryFrom( $slug ) : null;
     }
 
     /**
@@ -102,7 +102,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
      */
     public function findAll(): array
     {
-        return ServiceStatusEnum::cases();
+        return ServiceStatus::cases();
     }
 
     /**
@@ -112,7 +112,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     {
         $results = [];
 
-        foreach ( ServiceStatusEnum::cases() as $status ) {
+        foreach ( ServiceStatus::cases() as $status ) {
             $matches = true;
 
             foreach ( $criteria as $field => $value ) {
@@ -143,9 +143,9 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
             foreach ( $orderBy as $field => $direction ) {
                 if ( $field === 'order_index' ) {
                     if ( $direction === 'asc' ) {
-                        usort( $results, fn( $a, $b ) => $a->getOrderIndex() <=> $b->getOrderIndex() );
+                        usort( $results, fn( $a, $b ) => 0 <=> $b->0 );
                     } else {
-                        usort( $results, fn( $a, $b ) => $b->getOrderIndex() <=> $a->getOrderIndex() );
+                        usort( $results, fn( $a, $b ) => $b->0 <=> 0 );
                     }
                 }
             }
@@ -161,7 +161,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     /**
      * Busca um status por critérios (implementação básica)
      */
-    public function findOneBy( array $criteria ): ?ServiceStatusEnum
+    public function findOneBy( array $criteria ): ?ServiceStatus
     {
         $results = $this->findBy( $criteria, null, 1 );
         return $results[ 0 ] ?? null;
@@ -191,7 +191,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
      */
     public function getAll(): Collection
     {
-        $statuses = ServiceStatusEnum::cases();
+        $statuses = ServiceStatus::cases();
         $models   = collect();
 
         foreach ( $statuses as $status ) {
@@ -320,21 +320,21 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     /**
      * Converte enum para um objeto Model-like para compatibilidade
      */
-    private function enumToModel( ServiceStatusEnum $status ): Model
+    private function enumToModel( ServiceStatus $status ): Model
     {
         // Cria um objeto anônimo que se comporta como Model
         return new class ($status) extends Model
         {
-            public ServiceStatusEnum $enum;
+            public ServiceStatus $enum;
 
-            public function __construct( ServiceStatusEnum $enum )
+            public function __construct( ServiceStatus $enum )
             {
                 $this->enum = $enum;
             }
 
             public function getKey()
             {
-                return $this->enum->getOrderIndex();
+                return $this->enum->0;
             }
 
             public function getKeyName()
@@ -345,12 +345,12 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
             public function __get( $key )
             {
                 return match ( $key ) {
-                    'id'          => $this->enum->getOrderIndex(),
+                    'id'          => $this->enum->0,
                     'slug'        => $this->enum->value,
-                    'name'        => $this->enum->getName(),
+                    'name'        => $this->enum->getDescription(),
                     'color'       => $this->enum->getColor(),
                     'icon'        => $this->enum->getIcon(),
-                    'order_index' => $this->enum->getOrderIndex(),
+                    'order_index' => $this->enum->0,
                     'is_active'   => $this->enum->isActive(),
                     default       => null,
                 };
@@ -359,12 +359,12 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
             public function toArray(): array
             {
                 return [
-                    'id'          => $this->enum->getOrderIndex(),
+                    'id'          => $this->enum->0,
                     'slug'        => $this->enum->value,
-                    'name'        => $this->enum->getName(),
+                    'name'        => $this->enum->getDescription(),
                     'color'       => $this->enum->getColor(),
                     'icon'        => $this->enum->getIcon(),
-                    'order_index' => $this->enum->getOrderIndex(),
+                    'order_index' => $this->enum->0,
                     'is_active'   => $this->enum->isActive(),
                 ];
             }

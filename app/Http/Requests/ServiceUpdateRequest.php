@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ServiceItem;
@@ -34,7 +34,7 @@ class ServiceUpdateRequest extends FormRequest
             'status'             => [
                 'required',
                 'string',
-                'in:' . implode( ',', array_map( fn( $case ) => $case->value, ServiceStatusEnum::cases() ) )
+                'in:' . implode( ',', array_map( fn( $case ) => $case->value, ServiceStatus::cases() ) )
             ],
             'description'        => 'nullable|string|max:1000',
             'due_date'           => 'nullable|date|after:today',

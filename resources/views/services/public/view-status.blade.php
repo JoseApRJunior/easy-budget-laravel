@@ -138,7 +138,7 @@
                                                         <select name="service_status_id" id="service_status_id"
                                                             class="form-select" required>
                                                             <option value="">Selecione o status...</option>
-                                                            @foreach( [ \App\Enums\ServiceStatusEnum::APPROVED, \App\Enums\ServiceStatusEnum::REJECTED, \App\Enums\ServiceStatusEnum::CANCELLED ] as $status )
+                                                            @foreach( [ \App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED ] as $status )
                                                                 <option value="{{ $status->value }}" {{ old( 'service_status_id' ) == $status->value ? 'selected' : '' }}>
                                                                     {{ $status->getName() }}
                                                                 </option>

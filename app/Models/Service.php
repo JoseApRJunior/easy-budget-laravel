@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\ServiceItem;
@@ -78,7 +78,7 @@ class Service extends Model
         'tenant_id'                  => 'integer',
         'budget_id'                  => 'integer',
         'category_id'                => 'integer',
-        'status'                     => ServiceStatusEnum::class,
+        'status'                     => ServiceStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'description'                => 'string',
@@ -102,7 +102,7 @@ class Service extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'budget_id'                  => 'required|integer|exists:budgets,id',
             'category_id'                => 'required|integer|exists:categories,id',
-            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
+            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatus::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:services,code',
             'description'                => 'nullable|string',
@@ -159,7 +159,7 @@ class Service extends Model
     /**
      * Get the service status enum.
      */
-    public function getServiceStatusAttribute(): ?ServiceStatusEnum
+    public function getServiceStatusAttribute(): ?ServiceStatus
     {
         return $this->status;
     }

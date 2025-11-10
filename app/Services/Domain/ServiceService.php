@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\Enums\OperationStatus;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Product;
 use App\Models\Service;
@@ -125,7 +125,7 @@ class ServiceService extends AbstractBaseService
                     'budget_id'   => $budget->id,
                     'category_id' => $data[ 'category_id' ] ?? null,
                     'code'        => $serviceCode,
-                    'status'      => $data[ 'status' ] ?? ServiceStatusEnum::SCHEDULED->value,
+                    'status'      => $data[ 'status' ] ?? ServiceStatus::SCHEDULED->value,
                     'description' => $data[ 'description' ] ?? null,
                     'due_date'    => $data[ 'due_date' ] ?? null,
                     'discount'    => $data[ 'discount' ] ?? 0.0,
@@ -382,7 +382,7 @@ class ServiceService extends AbstractBaseService
                 $oldStatus = $service->status;
 
                 // Validar transição
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $oldStatus->value );
+                $allowedTransitions = ServiceStatus::getAllowedTransitions( $oldStatus->value );
                 if ( !in_array( $newStatus, $allowedTransitions ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
@@ -416,9 +416,9 @@ class ServiceService extends AbstractBaseService
     private function updateBudgetStatusIfNeeded( Service $service, string $newStatus ): void
     {
         $budgetStatusMap = [
-            ServiceStatusEnum::APPROVED->value  => 'approved',
-            ServiceStatusEnum::REJECTED->value  => 'rejected',
-            ServiceStatusEnum::CANCELLED->value => 'cancelled'
+            ServiceStatus::APPROVED->value  => 'approved',
+            ServiceStatus::REJECTED->value  => 'rejected',
+            ServiceStatus::CANCELLED->value => 'cancelled'
         ];
 
         if ( isset( $budgetStatusMap[ $newStatus ] ) ) {
@@ -499,7 +499,7 @@ class ServiceService extends AbstractBaseService
         }
 
         // Não pode deletar se estiver em status final
-        $finalStatuses = ServiceStatusEnum::getFinalStatuses();
+        $finalStatuses = ServiceStatus::getFinalStatuses();
         if ( in_array( $service->status->value, $finalStatuses ) ) {
             return false;
         }
@@ -526,7 +526,7 @@ class ServiceService extends AbstractBaseService
                 $oldStatus = $service->status;
 
                 // Verificar se já está cancelado
-                if ( $oldStatus === ServiceStatusEnum::CANCELLED ) {
+                if ( $oldStatus === ServiceStatus::CANCELLED ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
                         'Serviço já está cancelado',
@@ -534,8 +534,8 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Validar transições permitidas
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $oldStatus->value );
-                if ( !in_array( ServiceStatusEnum::CANCELLED->value, $allowedTransitions ) ) {
+                $allowedTransitions = ServiceStatus::getAllowedTransitions( $oldStatus->value );
+                if ( !in_array( ServiceStatus::CANCELLED->value, $allowedTransitions ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
                         "Transição de {$oldStatus->value} para CANCELLED não permitida",
@@ -544,7 +544,7 @@ class ServiceService extends AbstractBaseService
 
                 // Atualizar status para CANCELLED
                 $service->update( [
-                    'status' => ServiceStatusEnum::CANCELLED->value,
+                    'status' => ServiceStatus::CANCELLED->value,
                     'reason' => $reason
                 ] );
 
@@ -553,13 +553,13 @@ class ServiceService extends AbstractBaseService
                     'service_id'   => $service->id,
                     'service_code' => $service->code,
                     'old_status'   => $oldStatus->value,
-                    'new_status'   => ServiceStatusEnum::CANCELLED->value,
+                    'new_status'   => ServiceStatus::CANCELLED->value,
                     'reason'       => $reason,
                     'ip'           => request()->ip()
                 ] );
 
                 // Atualizar orçamento em cascata
-                $this->updateBudgetStatusIfNeeded( $service, ServiceStatusEnum::CANCELLED->value );
+                $this->updateBudgetStatusIfNeeded( $service, ServiceStatus::CANCELLED->value );
 
                 return $this->success( $service, 'Serviço cancelado com sucesso' );
 
@@ -603,9 +603,9 @@ class ServiceService extends AbstractBaseService
 
                 // Validar que é status permitido para cliente
                 $allowedStatuses = [
-                    ServiceStatusEnum::APPROVED->value,
-                    ServiceStatusEnum::REJECTED->value,
-                    ServiceStatusEnum::CANCELLED->value
+                    ServiceStatus::APPROVED->value,
+                    ServiceStatus::REJECTED->value,
+                    ServiceStatus::CANCELLED->value
                 ];
 
                 if ( !in_array( $newStatus, $allowedStatuses ) ) {
@@ -616,7 +616,7 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Validar transições permitidas
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $service->status->value );
+                $allowedTransitions = ServiceStatus::getAllowedTransitions( $service->status->value );
                 if ( !in_array( $newStatus, $allowedTransitions ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,

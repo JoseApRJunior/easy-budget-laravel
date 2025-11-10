@@ -6,7 +6,7 @@ namespace Database\Seeders;
 
 use App\Enums\BudgetStatus;
 use App\Enums\InvoiceStatus;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Customer;
@@ -83,11 +83,11 @@ class BudgetTestSeeder extends Seeder
 
             // Criar 5 services com status diferentes
             $serviceStatuses = [
-                ServiceStatusEnum::SCHEDULED,
-                ServiceStatusEnum::IN_PROGRESS,
-                ServiceStatusEnum::COMPLETED,
-                ServiceStatusEnum::APPROVED,
-                ServiceStatusEnum::CANCELLED,
+                ServiceStatus::SCHEDULED,
+                ServiceStatus::IN_PROGRESS,
+                ServiceStatus::COMPLETED,
+                ServiceStatus::APPROVED,
+                ServiceStatus::CANCELLED,
             ];
 
             $categories = Category::all(); // Categorias são globais, não por tenant
@@ -105,7 +105,7 @@ class BudgetTestSeeder extends Seeder
                 $totalBudget  += $serviceTotal;
 
                 // Para services COMPLETED ou APPROVED, criar fatura
-                if ( in_array( $status, [ ServiceStatusEnum::COMPLETED, ServiceStatusEnum::APPROVED ] ) ) {
+                if ( in_array( $status, [ ServiceStatus::COMPLETED, ServiceStatus::APPROVED ] ) ) {
                     $this->createInvoiceForService( $budget, $tenant, $customer, $budget->services()->latest()->first() );
                 }
             }
@@ -115,7 +115,7 @@ class BudgetTestSeeder extends Seeder
         } );
     }
 
-    private function createServiceWithItems( Budget $budget, Tenant $tenant, Category $category, ServiceStatusEnum $status, int $serviceIndex ): float
+    private function createServiceWithItems( Budget $budget, Tenant $tenant, Category $category, ServiceStatus $status, int $serviceIndex ): float
     {
         // Criar service
         $service = Service::create( [

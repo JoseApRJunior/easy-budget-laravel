@@ -4,47 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/**
- * Enum que representa os possíveis status de uma fatura
- *
- * Este enum define todos os status disponíveis para as faturas
- * conforme especificado na estrutura da tabela invoices e invoice_statuses.
- *
- * Funcionalidades disponíveis:
- * - Descrições detalhadas de cada status
- * - Cores e ícones para interface
- * - Controle de fluxo e transições válidas
- * - Verificação de status ativo/finalizado
- * - Metadados completos para cada status
- *
- * @package App\Enums
- *
- * @example Uso básico:
- * ```php
- * $status = InvoiceStatus::PENDING;
- * echo $status->getDescription(); // "Fatura pendente de pagamento"
- * echo $status->getColor(); // "#ffc107"
- * ```
- *
- * @example Controle de fluxo:
- * ```php
- * $currentStatus = InvoiceStatus::PENDING;
- * $nextStatus = $currentStatus->getNextStatus(); // InvoiceStatus::PAID
- *
- * if ($currentStatus->canTransitionTo(InvoiceStatus::PAID)) {
- *     // Realizar transição
- * }
- * ```
- *
- * @example Uso em collections/queries:
- * ```php
- * $pendingInvoices = InvoiceStatus::getPending();
- * $paidInvoices = InvoiceStatus::getPaid();
- *
- * $invoices = Invoice::whereIn('status', $pendingInvoices)->get();
- * ```
- */
-enum InvoiceStatus: string
+enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
     /** Fatura pendente de pagamento */
     case PENDING = 'PENDING';
@@ -109,6 +69,19 @@ enum InvoiceStatus: string
      * @return bool True se a fatura estiver pendente
      */
     public function isPending(): bool
+    {
+        return match ( $this ) {
+            self::PENDING, self::OVERDUE => true,
+            self::PAID, self::CANCELLED  => false,
+        };
+    }
+
+    /**
+     * Verifica se o status indica atividade (fatura em processo)
+     *
+     * @return bool True se estiver ativo/em processo
+     */
+    public function isActive(): bool
     {
         return match ( $this ) {
             self::PENDING, self::OVERDUE => true,
