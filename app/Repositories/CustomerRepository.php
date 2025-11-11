@@ -283,7 +283,7 @@ class CustomerRepository extends AbstractTenantRepository
                 'commonData' => function ( $q ) {
                     $q->with( [ 'areaOfActivity', 'profession' ] );
                 },
-                'contact', 'address', 'businessData', 'budgets', 'services'
+                'contact', 'address', 'businessData', 'budgets' // REMOVIDO: 'services' - causava ambiguidade
             ] )
             ->first();
     }

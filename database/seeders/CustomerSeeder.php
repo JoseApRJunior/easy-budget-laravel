@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Helpers\DocumentGeneratorHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;

@@ -12,7 +12,6 @@ use App\Repositories\CommonDataRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\CustomerRepository;
 use App\Support\ServiceResult;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -172,7 +171,7 @@ class CustomerService
     /**
      * Listar clientes com filtros (alias para getFilteredCustomers)
      */
-    public function listCustomers( array $filters = [], int $tenantId ): ServiceResult
+    public function listCustomers( int $tenantId, array $filters = [] ): ServiceResult
     {
         return $this->getFilteredCustomers( $filters, $tenantId );
     }
@@ -180,7 +179,7 @@ class CustomerService
     /**
      * Obter clientes filtrados com paginação
      */
-    public function getFilteredCustomers( array $filters = [], int $tenantId ): ServiceResult
+    public function getFilteredCustomers( array $filters, int $tenantId ): ServiceResult
     {
         try {
             $customers = $this->customerRepository->getPaginated( $filters, 15 );

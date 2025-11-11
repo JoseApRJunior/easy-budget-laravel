@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerPessoaFisicaRequest;
 use App\Http\Requests\CustomerPessoaJuridicaRequest;
-use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\AreaOfActivity;
 use App\Models\Customer;
 use App\Models\Profession;
