@@ -103,6 +103,7 @@ Route::middleware( 'auth' )->group( function () {
 
         // Busca e filtros
         Route::get( '/search/autocomplete', [ CustomerApiController::class, 'autocomplete' ] )->name( 'autocomplete' );
+        Route::get( '/search/table', [ CustomerApiController::class, 'searchForTable' ] )->name( 'search-table' );
         Route::get( '/filter/by-tags', [ CustomerApiController::class, 'filterByTags' ] )->name( 'filter-by-tags' );
         Route::get( '/nearby/{latitude}/{longitude}', [ CustomerApiController::class, 'findNearby' ] )->name( 'find-nearby' );
 

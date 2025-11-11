@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="Content-Security-Policy"
-        content="script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net; object-src 'none';">
+        content="script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; object-src 'none';">
     <meta name="description" content="Easy Budget - Simplificando a gestão financeira para prestadores de serviços" />
 
     <title>Easy Budget - @yield( 'title', 'Página Inicial' )</title>

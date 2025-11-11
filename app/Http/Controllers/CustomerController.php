@@ -50,10 +50,22 @@ class CustomerController extends Controller
             ] );
         }
 
+        $customerCollection = $customers->getData();
+        // Verificar se é uma collection ou paginator
+        if ( method_exists( $customerCollection, 'total' ) ) {
+            // É um paginator
+            $customerData = $customerCollection->items();
+        } else {
+            // É uma collection simples
+            $customerData = $customerCollection;
+        }
+
         return view( 'pages.customer.index', [
-            'customers'         => $customers->getData(),
+            'customers'         => $customerData,
+            'customerPaginator' => method_exists( $customerCollection, 'total' ) ? $customerCollection : null,
             'filters'           => $filters,
             'areas_of_activity' => AreaOfActivity::active()->get(),
+            'totalCustomers'    => method_exists( $customerCollection, 'total' ) ? $customerCollection->total() : $customerCollection->count(),
         ] );
     }
 
@@ -65,7 +77,7 @@ class CustomerController extends Controller
         $areasOfActivity = AreaOfActivity::active()->get();
         $professions     = Profession::active()->get();
 
-        return view( 'customers.create-pessoa-fisica', [
+        return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
             'customer'          => new Customer(),
@@ -80,7 +92,7 @@ class CustomerController extends Controller
         $areasOfActivity = AreaOfActivity::active()->get();
         $professions     = Profession::active()->get();
 
-        return view( 'customers.create-pessoa-juridica', [
+        return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
             'customer'          => new Customer(),
@@ -223,7 +235,7 @@ class CustomerController extends Controller
         $areasOfActivity = AreaOfActivity::active()->get();
         $professions     = Profession::active()->get();
 
-        return view( 'customers.edit-pessoa-fisica', [
+        return view( 'pages.customer.edit', [
             'customer'          => $customer,
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
@@ -244,7 +256,7 @@ class CustomerController extends Controller
         $areasOfActivity = AreaOfActivity::active()->get();
         $professions     = Profession::active()->get();
 
-        return view( 'customers.edit-pessoa-juridica', [
+        return view( 'pages.customer.edit', [
             'customer'          => $customer,
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
@@ -487,22 +499,41 @@ class CustomerController extends Controller
     }
 
     /**
-     * Busca AJAX de clientes
+     * Busca AJAX avançada de clientes com múltiplos filtros
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Campos pesquisados:
+     * - ID do cliente
+     * - Dados pessoais (nome, sobrenome, empresa, CPF, CNPJ)
+     * - Dados de contato (emails, telefones)
+     *
+     * @example /provider/customers/search?search=joao
+     * @example /provider/customers/search?search=12345678901
+     * @example /provider/customers/search?search=empresa@email.com
      */
     public function search( Request $request ): \Illuminate\Http\JsonResponse
     {
-        Log::info( 'Método search foi chamado', [
-            'user_id'     => Auth::id(),
-            'tenant_id'   => Auth::user()->tenant_id,
-            'search_term' => $request->input( 'search', '' ),
-            'uri'         => $request->getUri()
-        ] );
-
         try {
-            $searchTerm = $request->input( 'search', '' );
+            $searchTerm = trim( $request->input( 'search', '' ) );
 
-            // Realiza a busca simplificada por ID
-            return $this->simpleSearch( $searchTerm );
+            Log::info( 'Busca de clientes realizada', [
+                'user_id'     => Auth::id(),
+                'tenant_id'   => Auth::user()->tenant_id,
+                'search_term' => $searchTerm,
+                'uri'         => $request->getUri()
+            ] );
+
+            // Se busca estiver vazia, retorna todos os clientes
+            if ( empty( $searchTerm ) || $searchTerm === '' ) {
+                Log::info( 'Executando busca vazia - retornando todos os clientes' );
+                return $this->getAllCustomers();
+            }
+
+            // Realiza busca avançada em múltiplos campos
+            Log::info( 'Executando busca avançada com termo', [ 'search_term' => $searchTerm ] );
+            return $this->advancedSearch( $searchTerm );
 
         } catch ( \Exception $e ) {
             Log::error( 'Erro na busca de clientes', [
@@ -520,38 +551,63 @@ class CustomerController extends Controller
     }
 
     /**
-     * Método de busca simplificado
+     * Busca avançada em múltiplos campos
      */
-    private function simpleSearch( string $searchTerm ): \Illuminate\Http\JsonResponse
+    private function advancedSearch( string $searchTerm ): \Illuminate\Http\JsonResponse
     {
-        // Busca por ID com dados relacionados
+        $tenantId = Auth::user()->tenant_id;
+
+        // Busca em múltiplos campos
         $customers = Customer::with( [ 'commonData', 'contact' ] )
-            ->where( 'tenant_id', Auth::user()->tenant_id )
-            ->when( !empty( $searchTerm ), function ( $query ) use ( $searchTerm ) {
+            ->where( 'tenant_id', $tenantId )
+            ->where( function ( $query ) use ( $searchTerm ) {
+                // Busca por ID do cliente
                 $query->where( 'id', 'like', "%{$searchTerm}%" );
+
+                // Busca nos dados pessoais (se existirem)
+                $query->orWhereHas( 'commonData', function ( $subQuery ) use ( $searchTerm ) {
+                    $subQuery->where( 'first_name', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'last_name', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'company_name', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'cpf', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'cnpj', 'like', "%{$searchTerm}%" );
+                } );
+
+                // Busca nos dados de contato (se existirem)
+                $query->orWhereHas( 'contact', function ( $subQuery ) use ( $searchTerm ) {
+                    $subQuery->where( 'email_personal', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'email_business', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'phone_personal', 'like', "%{$searchTerm}%" )
+                        ->orWhere( 'phone_business', 'like', "%{$searchTerm}%" );
+                } );
             } )
             ->limit( 20 )
             ->get();
 
         $result = $customers->map( function ( $customer ) {
             $name = 'Cliente #' . $customer->id;
-            if ( $customer->commonData ) {
-                if ( $customer->commonData->first_name || $customer->commonData->last_name ) {
-                    $name = trim( $customer->commonData->first_name . ' ' . $customer->commonData->last_name );
-                } elseif ( $customer->commonData->company_name ) {
-                    $name = $customer->commonData->company_name;
+
+            // Acessar os dados relacionados diretamente (hasOne)
+            $commonData = $customer->commonData;
+            $contact = $customer->contact;
+
+            if ( $commonData ) {
+                if ( $commonData->first_name || $commonData->last_name ) {
+                    $name = trim( $commonData->first_name . ' ' . $commonData->last_name );
+                } elseif ( $commonData->company_name ) {
+                    $name = $commonData->company_name;
                 }
             }
 
             return [
                 'id'             => $customer->id,
                 'customer_name'  => $name,
-                'email'          => $customer->contact?->email ?? '',
-                'email_business' => $customer->contact?->email_business ?? '',
-                'phone'          => $customer->contact?->phone ?? '',
-                'phone_business' => $customer->contact?->phone_business ?? '',
-                'cpf'            => $customer->commonData?->cpf ?? '',
-                'cnpj'           => $customer->commonData?->cnpj ?? '',
+                'email'          => $contact?->email_personal ?? '',
+                'email_business' => $contact?->email_business ?? '',
+                'phone'          => $contact?->phone_personal ?? '',
+                'phone_business' => $contact?->phone_business ?? '',
+                'cpf'            => $commonData?->cpf ?? '',
+                'cnpj'           => $commonData?->cnpj ?? '',
                 'created_at'     => $customer->created_at->toISOString(),
             ];
         } );
@@ -559,8 +615,88 @@ class CustomerController extends Controller
         return response()->json( [
             'success' => true,
             'data'    => $result,
-            'message' => 'Busca realizada com sucesso'
+            'message' => sprintf( 'Busca avançada realizada com sucesso (%d resultados)', count( $result ) )
         ] );
+    }
+
+    /**
+     * Busca todos os clientes (para busca vazia)
+     */
+    private function getAllCustomers(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $tenantId = Auth::user()->tenant_id;
+
+            Log::info( 'Iniciando busca vazia de todos os clientes', [
+                'tenant_id' => $tenantId,
+                'user_id'   => Auth::id()
+            ] );
+
+            // Carrega clientes com dados relacionados de forma segura
+            $customers = Customer::where( 'tenant_id', $tenantId )
+                ->with( [
+                    'commonData' => function ( $query ) {
+                        $query->select( 'id', 'tenant_id', 'customer_id', 'first_name', 'last_name', 'company_name', 'cpf', 'cnpj' );
+                    },
+                    'contact'    => function ( $query ) {
+                        $query->select( 'id', 'tenant_id', 'customer_id', 'email_personal', 'email_business', 'phone_personal', 'phone_business' );
+                    }
+                ] )
+                ->select( 'id', 'tenant_id', 'status', 'created_at' )
+                ->limit( 20 )
+                ->get();
+
+            Log::info( 'Clientes encontrados na busca vazia', [
+                'total_clientes' => $customers->count(),
+                'tenant_id'      => $tenantId
+            ] );
+
+            $result = $customers->map( function ( $customer ) {
+                $name = 'Cliente #' . $customer->id;
+
+                // Acessar os dados relacionados diretamente (hasOne)
+                $commonData = $customer->commonData;
+                $contact = $customer->contact;
+
+                if ( $commonData ) {
+                    if ( $commonData->first_name || $commonData->last_name ) {
+                        $name = trim( $commonData->first_name . ' ' . $commonData->last_name );
+                    } elseif ( $commonData->company_name ) {
+                        $name = $commonData->company_name;
+                    }
+                }
+
+                return [
+                    'id'             => $customer->id,
+                    'customer_name'  => $name,
+                    'email'          => $contact?->email_personal ?? '',
+                    'email_business' => $contact?->email_business ?? '',
+                    'phone'          => $contact?->phone_personal ?? '',
+                    'phone_business' => $contact?->phone_business ?? '',
+                    'cpf'            => $commonData?->cpf ?? '',
+                    'cnpj'           => $commonData?->cnpj ?? '',
+                    'created_at'     => $customer->created_at->toISOString(),
+                ];
+            } );
+
+            return response()->json( [
+                'success' => true,
+                'data'    => $result,
+                'message' => sprintf( 'Mostrando todos os clientes (%d resultados)', count( $result ) )
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro na busca de todos os clientes', [
+                'tenant_id' => Auth::user()->tenant_id,
+                'error'     => $e->getMessage()
+            ] );
+
+            return response()->json( [
+                'success' => false,
+                'message' => 'Erro ao carregar todos os clientes',
+                'error'   => config( 'app.debug' ) ? $e->getMessage() : 'Erro interno do servidor'
+            ], 500 );
+        }
     }
 
     /**

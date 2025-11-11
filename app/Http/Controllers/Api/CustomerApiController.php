@@ -66,7 +66,7 @@ class CustomerApiController extends Controller
 
             return response()->json( [
                 'message'  => 'Cliente pessoa física criado com sucesso',
-                'customer' => $customer->load( [ 'addresses', 'contacts', 'tags' ] ),
+                'customer' => $customer->load( [ 'address', 'contacts', 'tags' ] ),
             ], 201 );
 
         } catch ( \Exception $e ) {
@@ -87,7 +87,7 @@ class CustomerApiController extends Controller
 
             return response()->json( [
                 'message'  => 'Cliente pessoa jurídica criado com sucesso',
-                'customer' => $customer->load( [ 'addresses', 'contacts', 'tags' ] ),
+                'customer' => $customer->load( [ 'address', 'contacts', 'tags' ] ),
             ], 201 );
 
         } catch ( \Exception $e ) {
@@ -108,7 +108,7 @@ class CustomerApiController extends Controller
         }
 
         $customer->load( [
-            'addresses',
+            'address',
             'contacts',
             'tags',
             'interactions' => function ( $query ) {
@@ -468,7 +468,7 @@ class CustomerApiController extends Controller
 
         $customers = Customer::where( 'tenant_id', auth()->user()->tenant_id )
             ->withTags( $request->tags )
-            ->with( [ 'addresses', 'contacts', 'tags' ] )
+            ->with( [ 'address', 'contacts', 'tags' ] )
             ->paginate( 15 );
 
         return response()->json( [
@@ -540,6 +540,57 @@ class CustomerApiController extends Controller
         return response()->json( [
             'message' => 'Funcionalidade de importação será implementada em breve',
         ], 501 );
+    }
+
+    /**
+     * Busca clientes para tabela (retorna dados completos)
+     */
+    public function searchForTable( Request $request ): JsonResponse
+    {
+        $query   = $request->input( 'q', '' );
+        $page    = $request->input( 'page', 1 );
+        $perPage = 20;
+
+        $customers = Customer::with( [ 'commonData', 'contact' ] )
+            ->where( 'tenant_id', auth()->user()->tenant_id )
+            ->when( !empty( $query ), function ( $q ) use ( $query ) {
+                $q->where( 'id', 'like', "%{$query}%" )
+                    ->orWhereHas( 'commonData', function ( $subQuery ) use ( $query ) {
+                        $subQuery->where( 'first_name', 'like', "%{$query}%" )
+                            ->orWhere( 'last_name', 'like', "%{$query}%" )
+                            ->orWhere( 'company_name', 'like', "%{$query}%" );
+                    } );
+            } )
+            ->paginate( $perPage );
+
+        $result = $customers->getCollection()->map( function ( $customer ) {
+            $name = 'Cliente #' . $customer->id;
+            if ( $customer->commonData ) {
+                if ( $customer->commonData->first_name || $customer->commonData->last_name ) {
+                    $name = trim( $customer->commonData->first_name . ' ' . $customer->commonData->last_name );
+                } elseif ( $customer->commonData->company_name ) {
+                    $name = $customer->commonData->company_name;
+                }
+            }
+
+            return [
+                'id'             => $customer->id,
+                'customer_name'  => $name,
+                'email'          => $customer->contact?->email ?? '',
+                'email_business' => $customer->contact?->email_business ?? '',
+                'phone'          => $customer->contact?->phone ?? '',
+                'phone_business' => $customer->contact?->phone_business ?? '',
+                'cpf'            => $customer->commonData?->cpf ?? '',
+                'cnpj'           => $customer->commonData?->cnpj ?? '',
+                'created_at'     => $customer->created_at->toISOString(),
+            ];
+        } );
+
+        return response()->json( [
+            'success' => true,
+            'data'    => $result,
+            'message' => 'Busca realizada com sucesso'
+        ] );
     }
 
     /**

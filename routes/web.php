@@ -121,6 +121,13 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         // Método legado para compatibilidade
         Route::post( '/', [ CustomerController::class, 'store' ] )->name( 'store' );
 
+        Route::get( '/find-nearby', [ CustomerController::class, 'findNearby' ] )->name( 'find-nearby' );
+        Route::get( '/search', [ CustomerController::class, 'search' ] )->name( 'search' );
+        Route::get( '/autocomplete', [ CustomerController::class, 'autocomplete' ] )->name( 'autocomplete' );
+        Route::get( '/export', [ CustomerController::class, 'export' ] )->name( 'export' );
+        Route::get( '/dashboard', [ CustomerController::class, 'dashboard' ] )->name( 'dashboard' );
+
+        // Rotas genéricas de cliente (depois das rotas específicas)
         Route::get( '/{customer}', [ CustomerController::class, 'show' ] )->name( 'show' );
         Route::get( '/{customer}/edit', [ CustomerController::class, 'edit' ] )->name( 'edit' );
 
@@ -139,11 +146,6 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{customer}', [ CustomerController::class, 'destroy' ] )->name( 'destroy' );
         Route::post( '/{customer}/restore', [ CustomerController::class, 'restore' ] )->name( 'restore' );
         Route::post( '/{customer}/duplicate', [ CustomerController::class, 'duplicate' ] )->name( 'duplicate' );
-        Route::get( '/find-nearby', [ CustomerController::class, 'findNearby' ] )->name( 'find-nearby' );
-        Route::get( '/search', [ CustomerController::class, 'search' ] )->name( 'search' );
-        Route::get( '/autocomplete', [ CustomerController::class, 'autocomplete' ] )->name( 'autocomplete' );
-        Route::get( '/export', [ CustomerController::class, 'export' ] )->name( 'export' );
-        Route::get( '/dashboard', [ CustomerController::class, 'dashboard' ] )->name( 'dashboard' );
     } );
 
     // Products

@@ -39,7 +39,7 @@ class CustomerService
         try {
             return DB::transaction( function () use ($data, $tenantId) {
                 // 1. Validar unicidade (email, CPF) - exceção para próprio registro
-                if ( !$this->customerRepository->isEmailUnique( $data[ 'email' ], $tenantId ) ) {
+                if ( !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId ) ) {
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
                 }
 
@@ -62,8 +62,8 @@ class CustomerService
 
                 $contact = $this->contactRepository->create( [
                     'tenant_id'      => $tenantId,
-                    'email_personal' => $data[ 'email' ],
-                    'phone_personal' => $data[ 'phone' ],
+                    'email_personal' => $data[ 'email_personal' ],
+                    'phone_personal' => $data[ 'phone_personal' ],
                     'website'        => $data[ 'website' ] ?? null,
                 ] );
 
@@ -240,7 +240,7 @@ class CustomerService
     private function updatePessoaFisicaData( $customer, array $data, int $tenantId ): ServiceResult
     {
         // Validar unicidade (email, CPF) - exceção para próprio registro
-        if ( isset( $data[ 'email' ] ) && !$this->customerRepository->isEmailUnique( $data[ 'email' ], $tenantId, $customer->id ) ) {
+        if ( isset( $data[ 'email_personal' ] ) && !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId, $customer->id ) ) {
             return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
         }
 

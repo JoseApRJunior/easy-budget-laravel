@@ -120,16 +120,16 @@ document.addEventListener("DOMContentLoaded", function () {
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="email-info">
-               ${customer.email ? `<div class="text-dark mb-1"><i class="bi bi-envelope me-1"></i>${customer.email}</div>` : ''}
+               ${customer.email_personal ? `<div class="text-dark mb-1"><i class="bi bi-envelope me-1"></i>${customer.email_personal}</div>` : ''}
                ${customer.email_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${customer.email_business}</div>` : ''}
-               ${!customer.email && !customer.email_business ? '<span class="text-muted">Não informado</span>' : ''}
+               ${!customer.email_personal && !customer.email_business ? '<span class="text-muted">Não informado</span>' : ''}
             </div>
          </td>
          <td class="px-3 py-3 align-middle">
             <div class="phone-info">
-               ${customer.phone ? `<div class="text-dark mb-1"><i class="bi bi-telephone me-1"></i>${formatPhone(customer.phone)}</div>` : ''}
+               ${customer.phone_personal ? `<div class="text-dark mb-1"><i class="bi bi-telephone me-1"></i>${formatPhone(customer.phone_personal)}</div>` : ''}
                ${customer.phone_business ? `<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>${formatPhone(customer.phone_business)}</div>` : ''}
-               ${!customer.phone && !customer.phone_business ? '<span class="text-muted">Não informado</span>' : ''}
+               ${!customer.phone_personal && !customer.phone_business ? '<span class="text-muted">Não informado</span>' : ''}
             </div>
          </td>
          <td class="px-3 py-3 align-middle">

@@ -56,8 +56,8 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'website'                => 'nullable|url|max:255',
 
             // Dados de contato (Contact) - COM VALIDAÇÃO DE UNICIDADE
-            'email'                  => 'required|email|max:255',
-            'phone'                  => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'email_personal'         => 'required|email|max:255',
+            'phone_personal'         => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
             'email_business'         => [
                 'required',
                 'email',
@@ -75,20 +75,21 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'cnpj'                   => [
                 'required',
                 'string',
-                'regex:/^\d{14}$/',
+                'regex:/^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', // Permite CNPJ com ou sem máscara
                 function ( $attribute, $value, $fail ) use ( $tenantId ) {
                     // Limpar CNPJ (apenas números)
                     $cleanCnpj = preg_replace( '/[^0-9]/', '', $value );
 
-                    // Validar estrutura
+                    // Validar estrutura (apenas números)
                     if ( strlen( $cleanCnpj ) !== 14 ) {
-                        $fail( 'O CNPJ deve conter 14 dígitos.' );
+                        $digitsFound = strlen( $cleanCnpj );
+                        $fail( "O CNPJ deve conter exatamente 14 dígitos. Formato aceito: 00.000.000/0000-00 ou 14 dígitos. Digitados: {$digitsFound} dígitos." );
                         return;
                     }
 
                     // Validar algoritmo
                     if ( !\App\Helpers\ValidationHelper::isValidCnpj( $cleanCnpj ) ) {
-                        $fail( 'O CNPJ informado não é válido.' );
+                        $fail( 'O CNPJ informado não é válido matematicamente. Por favor, insira um CNPJ real (14 dígitos) ou use um CNPJ de teste válido.' );
                         return;
                     }
 
@@ -172,14 +173,14 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'cnpj.required'                => 'O CNPJ é obrigatório para pessoa jurídica.',
             'cnpj.regex'                   => 'O CNPJ deve conter 14 dígitos numéricos.',
             'cnpj.unique'                  => 'Este CNPJ já está em uso por outro cliente.',
-            'email.required'               => 'O e-mail é obrigatório.',
-            'email.email'                  => 'Digite um e-mail válido.',
-            'email.unique'                 => 'Este e-mail já está em uso por outro cliente.',
+            'email_personal.required'      => 'O e-mail é obrigatório.',
+            'email_personal.email'         => 'Digite um e-mail válido.',
+            'email_personal.unique'        => 'Este e-mail já está em uso por outro cliente.',
             'email_business.required'      => 'O e-mail empresarial é obrigatório.',
             'email_business.email'         => 'Digite um e-mail empresarial válido.',
             'email_business.unique'        => 'Este e-mail empresarial já está em uso por outro cliente.',
-            'phone.required'               => 'O telefone é obrigatório.',
-            'phone.regex'                  => 'Digite um telefone válido no formato (00) 00000-0000.',
+            'phone_personal.required'      => 'O telefone é obrigatório.',
+            'phone_personal.regex'         => 'Digite um telefone válido no formato (00) 00000-0000.',
             'phone_business.regex'         => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
             'area_of_activity_id.required' => 'A área de atuação é obrigatória para pessoa jurídica.',
             'area_of_activity_id.exists'   => 'A área de atuação selecionada não existe.',

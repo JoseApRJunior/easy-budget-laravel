@@ -401,8 +401,8 @@ class CustomerRepository extends AbstractTenantRepository
             // Atualizar Contact
             if ( $customer->contact ) {
                 $customer->contact->update( [
-                    'email_personal' => $data[ 'email' ] ?? $customer->contact->email_personal,
-                    'phone_personal' => $data[ 'phone' ] ?? $customer->contact->phone_personal,
+                    'email_personal' => $data[ 'email_personal' ] ?? $customer->contact->email_personal,
+                    'phone_personal' => $data[ 'phone_personal' ] ?? $customer->contact->phone_personal,
                     'email_business' => $data[ 'email_business' ] ?? $customer->contact->email_business,
                     'phone_business' => $data[ 'phone_business' ] ?? $customer->contact->phone_business,
                     'website'        => $data[ 'website' ] ?? $customer->contact->website,

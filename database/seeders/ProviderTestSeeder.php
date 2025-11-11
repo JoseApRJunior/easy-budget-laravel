@@ -15,11 +15,11 @@ use App\Models\PlanSubscription;
 use App\Models\Profession;
 use App\Models\Provider;
 use App\Models\Role;
+use App\Models\SystemSettings;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Models\UserSettings;
-use App\Models\SystemSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -298,8 +298,9 @@ class ProviderTestSeeder extends Seeder
     private function generateCPF( int $seed ): string
     {
         $unique = $seed * 1000000 + microtime( true ) * 1000 + rand( 100, 999 );
-        $base   = str_pad( (string) ( $unique % 99999999 ), 8, '0', STR_PAD_LEFT );
-        return substr( $base, 0, 3 ) . substr( $base, 3, 3 ) . substr( $base, 6, 2 ) . sprintf( '%02d', $unique % 100 );
+        $base   = str_pad( (string) ( $unique % 99999999999 ), 11, '0', STR_PAD_LEFT );
+        return substr( $base, 0, 3 ) . substr( $base, 3, 3 ) . substr( $base, 6, 3 ) . substr( $base, 9, 2 );
+        // Retorna apenas os 11 dígitos sem formatação para facilitar busca
     }
 
     private function generateCNPJ( int $seed ): string

@@ -53,8 +53,8 @@ elements.search.addEventListener("input", () => {
          elements.customer.value = customerInfo.textContent;
          elements.customerId.value = suggestion.id;
          elements.customerName.value = `${suggestion.first_name} ${suggestion.last_name}`;
-         elements.phone.value = suggestion.phone;
-         elements.email.value = suggestion.email;
+         elements.phone.value = suggestion.phone_personal;
+         elements.email.value = suggestion.email_personal;
          elements.search.value = "";
          elements.suggestions.innerHTML = "";
       });

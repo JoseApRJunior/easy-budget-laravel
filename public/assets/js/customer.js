@@ -49,9 +49,11 @@ document.addEventListener("DOMContentLoaded", function () {
          console.log("Iniciando busca com termo:", searchTerm);
 
          // Configuração da requisição AJAX (GET com query string)
-         const url = `/provider/customers/search?search=${encodeURIComponent(
-            searchTerm
-         )}`;
+         const url = searchTerm.trim()
+            ? `/provider/customers/search?search=${encodeURIComponent(
+                 searchTerm
+              )}`
+            : "/provider/customers/search";
          console.log("URL da requisição:", url);
 
          const response = await fetch(url, {
@@ -61,6 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
                Accept: "application/json",
                "Content-Type": "application/json",
             },
+            credentials: "include", // Envia cookies de sessão
          });
          console.log(
             "Resposta recebida:",
@@ -77,11 +80,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
          // Atualiza a tabela com os resultados
          const data = responseData.data || [];
-         customerPaginator.updateTable(data);
+         console.log("Dados para a tabela:", data);
+         console.log("customerPaginator disponível:", typeof customerPaginator);
+         console.log(
+            "Método updateTable disponível:",
+            typeof customerPaginator.updateTable
+         );
+
+         try {
+            customerPaginator.updateTable(data);
+            console.log("TablePaginator.updateTable executado com sucesso");
+         } catch (error) {
+            console.error("Erro ao atualizar tabela:", error);
+         }
 
          // Atualiza o contador de resultados
          if (resultsCount) {
             resultsCount.textContent = `${data.length} resultados encontrados`;
+            console.log("Contador atualizado:", resultsCount.textContent);
+         } else {
+            console.warn("Elemento resultsCount não encontrado");
          }
 
          // Mostra os resultados

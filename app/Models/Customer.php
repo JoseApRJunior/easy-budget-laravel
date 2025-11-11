@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
@@ -128,33 +129,33 @@ class Customer extends Model
     /**
      * Get the common data associated with the Customer.
      */
-    public function commonDatas(): HasMany
+    public function commonData(): HasOne
     {
-        return $this->hasMany( CommonData::class);
+        return $this->hasOne( CommonData::class);
     }
 
     /**
      * Get the contact associated with the Customer.
      */
-    public function contacts(): HasMany
+    public function contact(): HasOne
     {
-        return $this->hasMany( Contact::class);
+        return $this->hasOne( Contact::class);
     }
 
     /**
      * Get the address associated with the Customer.
      */
-    public function addresses(): HasMany
+    public function address(): HasOne
     {
-        return $this->hasMany( Address::class);
+        return $this->hasOne( Address::class);
     }
 
     /**
      * Get the business data associated with the Customer (PJ only).
      */
-    public function businessDatas(): HasMany
+    public function businessData(): HasOne
     {
-        return $this->hasMany( BusinessData::class);
+        return $this->hasOne( BusinessData::class);
     }
 
     /**
