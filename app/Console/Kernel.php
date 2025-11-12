@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ClearLogs::class,
         \App\Console\Commands\LogSizeMonitor::class,
         \App\Console\Commands\LimparCachesEFecharServicos::class,
+        \App\Console\Commands\ResetDevDatabase::class,
     ];
 
     protected function schedule( Schedule $schedule )

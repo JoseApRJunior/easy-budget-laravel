@@ -13,9 +13,6 @@ use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Service extends Model
 {
@@ -162,6 +159,38 @@ class Service extends Model
     public function getServiceStatusAttribute(): ?ServiceStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Get the name of the service status for backward compatibility with views.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->status?->getDescription();
+    }
+
+    /**
+     * Get the color of the service status for backward compatibility with views.
+     */
+    public function getColorAttribute(): string
+    {
+        return $this->status?->getColor() ?? '#6c757d';
+    }
+
+    /**
+     * Get the slug of the service status for backward compatibility with views.
+     */
+    public function getSlugAttribute(): string
+    {
+        return $this->status?->value ?? '';
+    }
+
+    /**
+     * Get the description of the service status for backward compatibility with views.
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->status?->getDescription();
     }
 
     /**

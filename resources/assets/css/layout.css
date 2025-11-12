@@ -498,11 +498,93 @@ input:-webkit-autofill:hover {
    border-bottom: 2px solid var(--form-border);
    text-align: center;
    font-weight: 600;
+   font-size: 0.95rem !important; /* Fonte maior para headers */
 }
 
 .table td {
    background-color: var(--surface-color);
    border-bottom: 1px solid var(--form-border);
+   font-size: 0.9rem !important; /* Fonte maior para células */
+}
+
+/* Melhoria adicional para melhor legibilidade */
+.table td,
+.table th {
+   line-height: 1.4; /* Melhor espaçamento de linha */
+   font-weight: 500; /* Fonte ligeiramente mais pesada */
+}
+
+/* Estilos para elementos de código (quando realmente necessário) */
+pre {
+   font-size: 0.8rem !important; /* Tamanho para blocos de código */
+   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace !important;
+   background-color: var(--bg-color) !important;
+   padding: 0.75rem !important;
+   border-radius: 0.25rem !important;
+   border: 1px solid var(--form-border) !important;
+   white-space: pre-wrap !important;
+   word-wrap: break-word !important;
+}
+
+/* Estilos para tags pre (blocos de código) */
+pre {
+   font-size: 0.8rem; /* Tamanho padrão para blocos de código */
+   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+   background-color: var(--bg-color);
+   padding: 0.75rem;
+   border-radius: 0.25rem;
+   border: 1px solid var(--form-border);
+   white-space: pre-wrap;
+   word-wrap: break-word;
+}
+
+/* Sobrescrever media queries problemáticas do Bootstrap */
+@media screen and (max-width: 1024px) {
+   .table th,
+   .table td {
+      font-size: 0.9rem !important; /* Força tamanho maior */
+   }
+
+   .table-responsive {
+      font-size: 0.85rem !important;
+   }
+
+   body {
+      font-size: 0.9rem !important;
+   }
+
+   html {
+      font-size: 13px !important; /* Força tamanho maior que 11px */
+   }
+}
+
+@media screen and (max-width: 1280px) {
+   .table th,
+   .table td {
+      font-size: 0.9rem !important; /* Força tamanho maior */
+   }
+
+   .table-responsive {
+      font-size: 0.85rem !important;
+   }
+
+   body {
+      font-size: 0.95rem !important;
+   }
+
+   html {
+      font-size: 14px !important; /* Força tamanho maior que 12px */
+   }
+}
+
+/* Estilos para textos de código (códigos de produto, slugs, etc.) */
+.text-code {
+   font-family: "Courier New", monospace;
+   background-color: var(--bg-color);
+   padding: 0.15rem 0.3rem;
+   border-radius: 0.2rem;
+   font-size: 0.9rem;
+   white-space: nowrap;
 }
 
 td .form-control {
@@ -1234,6 +1316,14 @@ main .main-container {
    .table-responsive td {
       white-space: nowrap;
       padding: 0.75rem 0.5rem;
+      font-size: 0.9rem; /* Fonte aumentada para tablets */
+      line-height: 1.4;
+   }
+
+   /* Headers das tabelas com fonte aumentada para tablets */
+   .table-responsive th {
+      font-size: 0.95rem; /* Headers ligeiramente maiores */
+      font-weight: 600;
    }
 
    /* Reduz o tamanho dos botões na tabela */
@@ -1289,7 +1379,14 @@ main .main-container {
    .table-responsive th,
    .table-responsive td {
       padding: 0.5rem 0.25rem;
-      font-size: 0.875rem;
+      font-size: 0.9rem; /* Fonte aumentada para melhor legibilidade */
+      line-height: 1.4;
+   }
+
+   /* Headers das tabelas com fonte aumentada em mobile */
+   .table-responsive th {
+      font-size: 0.95rem; /* Headers ligeiramente maiores */
+      font-weight: 600;
    }
 
    /* Reduz ainda mais o tamanho dos botões */

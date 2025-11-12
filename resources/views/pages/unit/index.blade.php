@@ -43,7 +43,7 @@
                                     <td class="ps-4">{{ $unit->id }}</td>
                                     <td>{{ $unit->name }}</td>
                                     <td><span class="badge bg-secondary">{{ $unit->abbreviation }}</span></td>
-                                    <td><code>{{ $unit->slug }}</code></td>
+                                    <td><span class="text-code">{{ $unit->slug }}</span></td>
                                     <td>{{ $unit->created_at->format( 'd/m/Y H:i' ) }}</td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group">

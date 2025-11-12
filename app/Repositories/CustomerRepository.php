@@ -462,22 +462,63 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function canDelete( int $id, int $tenantId ): array
     {
-        $customer = Customer::where( 'id', $id )
-            ->where( 'tenant_id', $tenantId )
-            ->withCount( [ 'budgets', 'services' ] )
+        $customer = Customer::select( 'customers.*' )
+            ->where( 'customers.id', $id )
+            ->where( 'customers.tenant_id', $tenantId )
+            ->where( 'customers.deleted_at', null )
+            ->addSelect( [
+                'budgets_count'  => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'budgets' )
+                        ->whereColumn( 'budgets.customer_id', 'customers.id' )
+                        ->where( 'budgets.tenant_id', $tenantId );
+                },
+                'services_count' => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'services' )
+                        ->join( 'budgets', 'services.budget_id', '=', 'budgets.id' )
+                        ->whereColumn( 'budgets.customer_id', 'customers.id' )
+                        ->where( 'budgets.tenant_id', $tenantId );
+                },
+                'invoices_count' => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'invoices' )
+                        ->whereColumn( 'invoices.customer_id', 'customers.id' )
+                        ->where( 'invoices.tenant_id', $tenantId )
+                        ->whereNull( 'invoices.deleted_at' );
+                }
+            ] )
             ->first();
 
         if ( !$customer ) {
             return [ 'canDelete' => false, 'reason' => 'Customer não encontrado' ];
         }
 
-        $totalRelations = $customer->budgets_count + $customer->services_count;
+        $budgetsCount   = (int) $customer->budgets_count;
+        $servicesCount  = (int) $customer->services_count;
+        $invoicesCount  = (int) $customer->invoices_count;
+        $totalRelations = $budgetsCount + $servicesCount + $invoicesCount;
+
+        $reasons = [];
+        if ( $budgetsCount > 0 ) {
+            $reasons[] = "{$budgetsCount} orçamento(s)";
+        }
+        if ( $servicesCount > 0 ) {
+            $reasons[] = "{$servicesCount} serviço(s)";
+        }
+        if ( $invoicesCount > 0 ) {
+            $reasons[] = "{$invoicesCount} fatura(s)";
+        }
 
         return [
-            'canDelete'     => $totalRelations === 0,
-            'reason'        => $totalRelations > 0 ? 'Customer possui orçamentos ou serviços associados' : null,
-            'budgetsCount'  => $customer->budgets_count,
-            'servicesCount' => $customer->services_count
+            'canDelete'           => $totalRelations === 0,
+            'reason'              => $totalRelations > 0
+                ? 'Cliente não pode ser excluído pois possui: ' . implode( ', ', $reasons )
+                : null,
+            'budgetsCount'        => $budgetsCount,
+            'servicesCount'       => $servicesCount,
+            'invoicesCount'       => $invoicesCount,
+            'totalRelationsCount' => $totalRelations
         ];
     }
 
@@ -527,7 +568,11 @@ class CustomerRepository extends AbstractTenantRepository
         return [
             'hasRelationships' => !$canDelete[ 'canDelete' ],
             'budgets'          => $canDelete[ 'budgetsCount' ] ?? 0,
-            'services'         => $canDelete[ 'servicesCount' ] ?? 0
+            'services'         => $canDelete[ 'servicesCount' ] ?? 0,
+            'invoices'         => $canDelete[ 'invoicesCount' ] ?? 0,
+            'interactions'     => $canDelete[ 'interactionsCount' ] ?? 0,
+            'totalRelations'   => $canDelete[ 'totalRelationsCount' ] ?? 0,
+            'reason'           => $canDelete[ 'reason' ] ?? null
         ];
     }
 

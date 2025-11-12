@@ -230,7 +230,8 @@
         <p><strong>Telefone:</strong> {{ auth()->user()->phone_business ?? auth()->user()->phone }}</p>
         <p>{{ auth()->user()->address ?? 'Endereço da empresa' }}, {{ auth()->user()->address_number ?? '' }}</p>
         <p>{{ auth()->user()->neighborhood ?? '' }}, {{ auth()->user()->city ?? '' }} -
-          {{ auth()->user()->state ?? '' }}</p>
+          {{ auth()->user()->state ?? '' }}
+        </p>
       </div>
       <div class="invoice-info">
         <h2>Fatura</h2>
@@ -238,7 +239,8 @@
           <p><strong>Código:</strong> #{{ $invoice->code }}</p>
           <p><strong>Emissão:</strong> {{ $invoice->issue_date?->format( 'd/m/Y' ) ?? 'N/A' }}</p>
           <p><strong>Vencimento:</strong> {{ $invoice->due_date?->format( 'd/m/Y' ) ?? 'N/A' }}</p>
-          <p><strong>Status:</strong> <span class="status {{ $invoice->status }}">{{ ucfirst( $invoice->status ) }}</span>
+          <p><strong>Status:</strong> <span
+              class="status {{ $invoice->status->value }}">{{ ucfirst( $invoice->status->value ) }}</span>
           </p>
         </div>
       </div>

@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
 class Budget extends Model
 {
     use HasFactory;
@@ -66,7 +65,7 @@ class Budget extends Model
     protected $casts = [
         'tenant_id'                  => 'integer',
         'customer_id'                => 'integer',
-        'status'                     => \App\Enums\BudgetStatus::class,
+        'status'                     => BudgetStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'discount'                   => 'decimal:2',

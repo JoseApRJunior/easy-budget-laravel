@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Helpers\DocumentGeneratorHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
@@ -116,18 +117,19 @@ class AdminTenantSeeder extends Seeder
             [
                 'tenant_id'      => $tenant->id,
                 'email_personal' => 'admin@easybudget.net.br',
-                'phone_personal' => '(11) 3000-1000',
+                'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
                 'email_business' => 'admin@easybudget.net.br',
-                'phone_business' => '(11) 3000-1001',
+                'phone_business' => DocumentGeneratorHelper::generateValidPhone(),
                 'website'        => 'https://admin.easybudget.com.br',
             ],
         );
 
         // 3. Criar dados da empresa admin
+        $validCnpj  = DocumentGeneratorHelper::generateValidCnpj();
         $commonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cnpj'      => '00000000000200',
+                'cnpj'      => $validCnpj,
             ],
             [
                 'tenant_id'           => $tenant->id,
@@ -136,7 +138,7 @@ class AdminTenantSeeder extends Seeder
                 'last_name'           => null,
                 'birth_date'          => null,
                 'cpf'                 => null,
-                'cnpj'                => '00000000000200',
+                'cnpj'                => $validCnpj,
                 'company_name'        => 'Easy Budget - Administração',
                 'description'         => 'Tenant administrativo para gerenciamento completo do sistema Easy Budget',
                 'area_of_activity_id' => $this->getOrCreateAreaOfActivity(),
@@ -367,7 +369,7 @@ class AdminTenantSeeder extends Seeder
                 'avatar'                    => null,
                 'full_name'                 => 'Administrador do Sistema',
                 'bio'                       => 'Administrador principal com acesso completo ao sistema Easy Budget',
-                'phone'                     => '(11) 3000-1000',
+                'phone'                     => DocumentGeneratorHelper::generateValidPhone(),
                 'birth_date'                => '1980-01-01',
                 'social_facebook'           => null,
                 'social_twitter'            => null,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Helpers\DocumentGeneratorHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
@@ -111,9 +112,9 @@ class PublicTenantSeeder extends Seeder
             [
                 'tenant_id'      => $tenant->id,
                 'email_personal' => 'contato@easybudget.net.br',
-                'phone_personal' => '(11) 3000-0000',
+                'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
                 'email_business' => 'suporte@easybudget.net.br',
-                'phone_business' => '(11) 3000-0001',
+                'phone_business' => DocumentGeneratorHelper::generateValidPhone(),
                 'website'        => 'https://easybudget.net.br',
             ],
         );
@@ -122,7 +123,7 @@ class PublicTenantSeeder extends Seeder
         $commonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cnpj'      => '00000000000100',
+                'cnpj'      => DocumentGeneratorHelper::generateValidCnpj(),
             ],
             [
                 'tenant_id'           => $tenant->id,
@@ -131,7 +132,7 @@ class PublicTenantSeeder extends Seeder
                 'last_name'           => null,
                 'birth_date'          => null,
                 'cpf'                 => null,
-                'cnpj'                => '00000000000100',
+                'cnpj'                => DocumentGeneratorHelper::generateValidCnpj(),
                 'company_name'        => 'Easy Budget - Sistema Público',
                 'description'         => 'Tenant público para mensagens de contato e dados não relacionados a empresas específicas',
                 'area_of_activity_id' => $this->getOrCreateAreaOfActivity(),
@@ -254,7 +255,7 @@ class PublicTenantSeeder extends Seeder
                 'avatar'                    => null,
                 'full_name'                 => 'Admin Padrão do Sistema',
                 'bio'                       => 'Administrador técnico do tenant público - usado apenas para organização de dados públicos, não para acesso ao sistema',
-                'phone'                     => '(11) 3000-0000',
+                'phone'                     => DocumentGeneratorHelper::generateValidPhone(),
                 'birth_date'                => null,
                 'social_facebook'           => 'https://facebook.com/easybudget',
                 'social_twitter'            => 'https://twitter.com/easybudget',

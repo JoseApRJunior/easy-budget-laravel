@@ -973,13 +973,13 @@ main .main-container {
    }
 
    .table-responsive {
-      font-size: 0.75rem; /* Reduzido de 0.875rem para 0.75rem */
+      font-size: 1rem; /* Reduzido de 0.875rem para 0.75rem */
    }
 
    .table th,
    .table td {
       padding: 0.4rem 0.3rem; /* Reduzido de 0.75rem 0.5rem para 0.4rem 0.3rem */
-      font-size: 0.8rem;
+      font-size: 1rem;
    }
 
    .btn {
@@ -1105,13 +1105,13 @@ main .main-container {
    }
 
    .table-responsive {
-      font-size: 0.7rem; /* Reduzido de 0.85rem para 0.7rem */
+      font-size: 1rem; /* Reduzido de 0.85rem para 0.7rem */
    }
 
    .table th,
    .table td {
       padding: 0.3rem 0.2rem; /* Reduzido de 0.5rem 0.4rem para 0.3rem 0.2rem */
-      font-size: 0.75rem;
+      font-size: 1rem;
    }
 
    .btn {
@@ -1234,13 +1234,13 @@ main .main-container {
    }
 
    .table-responsive {
-      font-size: 0.65rem; /* Reduzido de 0.8rem para 0.65rem */
+      font-size: 1rem; /* Reduzido de 0.8rem para 0.65rem */
    }
 
    .table th,
    .table td {
       padding: 0.2rem 0.15rem; /* Reduzido de 0.4rem 0.3rem para 0.2rem 0.15rem */
-      font-size: 0.7rem;
+      font-size: 1rem;
    }
 
    .btn {

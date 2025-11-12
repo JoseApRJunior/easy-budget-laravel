@@ -17,7 +17,7 @@
             @if( isset( $error ) && app()->environment( 'local' ) )
               <div class="alert alert-danger">
                 <h6>Detalhes do erro (apenas em desenvolvimento):</h6>
-                <code>{{ $error->getMessage() }}</code>
+                <pre class="text-error">{{ $error->getMessage() }}</pre>
               </div>
             @endif
 

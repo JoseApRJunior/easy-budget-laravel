@@ -18,7 +18,8 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Visualizador de Logs</h5>
-                <form id="log-date-filter" method="GET" action="{{ url( '/admin/logs' ) }}" class="d-flex align-items-center">
+                <form id="log-date-filter" method="GET" action="{{ url( '/admin/logs' ) }}"
+                    class="d-flex align-items-center">
                     <label for="log-date" class="form-label me-2 mb-0">Selecionar Data:</label>
                     <select name="date" id="log-date" class="form-select form-select-sm" style="width: auto;"
                         onchange="this.form.submit()">
@@ -29,7 +30,8 @@
                         @endforeach
                         @if ( !in_array( $selectedDate, $logDates ) )
                             <option value="{{ $selectedDate }}" selected>
-                                {{ \Carbon\Carbon::parse( $selectedDate )->format( 'd/m/Y' ) }} (Vazio)</option>
+                                {{ \Carbon\Carbon::parse( $selectedDate )->format( 'd/m/Y' ) }} (Vazio)
+                            </option>
                         @endif
                     </select>
                     <noscript><button type="submit" class="btn btn-primary btn-sm ms-2">Ver</button></noscript>
@@ -80,7 +82,7 @@
             </div>
             <div class="card-footer bg-transparent border-0">
                 <p class="text-muted small mb-0">Exibindo logs do arquivo:
-                    <code>storage/logs/app-{{ $selectedDate }}.log</code>
+                    <span class="text-code">storage/logs/app-{{ $selectedDate }}.log</span>
                 </p>
             </div>
         </div>

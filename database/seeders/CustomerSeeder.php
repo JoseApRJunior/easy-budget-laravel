@@ -28,11 +28,14 @@ class CustomerSeeder extends Seeder
                 'common_data' => [
                     'first_name' => 'João',
                     'last_name'  => 'Silva',
-                    'cpf'        => '12345678901',
+                    'cpf'        => DocumentGeneratorHelper::generateValidCpf(),
+                    'birth_date' => '1985-03-15',
                 ],
                 'contact'     => [
-                    'email' => 'joao.silva@email.com',
-                    'phone' => '11999998888',
+                    'email_personal' => 'joao.silva@email.com',
+                    'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
+                    'email_business' => null,
+                    'phone_business' => null,
                 ],
                 'address'     => [
                     'address'        => 'Rua das Flores',
@@ -46,11 +49,14 @@ class CustomerSeeder extends Seeder
             [
                 'common_data' => [
                     'company_name' => 'Empresa ABC Ltda',
-                    'cnpj'         => '12345678000195',
+                    'cnpj'         => DocumentGeneratorHelper::generateValidCnpj(),
+                    'description'  => 'Empresa de consultoria e tecnologia',
                 ],
                 'contact'     => [
+                    'email_personal' => null,
+                    'phone_personal' => null,
                     'email_business' => 'contato@empresaabc.com',
-                    'phone_business' => '1133334444',
+                    'phone_business' => DocumentGeneratorHelper::generateValidPhone(),
                 ],
                 'address'     => [
                     'address'        => 'Avenida Paulista',
@@ -65,11 +71,14 @@ class CustomerSeeder extends Seeder
                 'common_data' => [
                     'first_name' => 'Maria',
                     'last_name'  => 'Santos',
-                    'cpf'        => '98765432100',
+                    'cpf'        => DocumentGeneratorHelper::generateValidCpf(),
+                    'birth_date' => '1990-07-22',
                 ],
                 'contact'     => [
-                    'email' => 'maria.santos@email.com',
-                    'phone' => '11977776666',
+                    'email_personal' => 'maria.santos@email.com',
+                    'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
+                    'email_business' => null,
+                    'phone_business' => null,
                 ],
                 'address'     => [
                     'address'        => 'Rua do Comércio',
@@ -83,32 +92,39 @@ class CustomerSeeder extends Seeder
         ];
 
         foreach ( $customers as $customerData ) {
-            // Criar CommonData
+            // Criar Customer primeiro
+            $customer = Customer::create( [
+                'tenant_id' => $tenant->id,
+                'status'    => 'active',
+            ] );
+
+            // Criar CommonData com referência ao customer
             $commonData = CommonData::create( array_merge(
-                [ 'tenant_id' => $tenant->id ],
+                [
+                    'tenant_id'   => $tenant->id,
+                    'customer_id' => $customer->id,
+                    'type'        => !empty( $customerData[ 'common_data' ][ 'cnpj' ] ) ? 'company' : 'individual',
+                ],
                 $customerData[ 'common_data' ],
             ) );
 
-            // Criar Contact
+            // Criar Contact com referência ao customer
             $contact = Contact::create( array_merge(
-                [ 'tenant_id' => $tenant->id ],
+                [
+                    'tenant_id'   => $tenant->id,
+                    'customer_id' => $customer->id,
+                ],
                 $customerData[ 'contact' ],
             ) );
 
-            // Criar Address
+            // Criar Address com referência ao customer
             $address = Address::create( array_merge(
-                [ 'tenant_id' => $tenant->id ],
+                [
+                    'tenant_id'   => $tenant->id,
+                    'customer_id' => $customer->id,
+                ],
                 $customerData[ 'address' ],
             ) );
-
-            // Criar Customer
-            Customer::create( [
-                'tenant_id'      => $tenant->id,
-                'common_data_id' => $commonData->id,
-                'contact_id'     => $contact->id,
-                'address_id'     => $address->id,
-                'status'         => 'active',
-            ] );
         }
 
         $this->command->info( 'Test customers created successfully!' );

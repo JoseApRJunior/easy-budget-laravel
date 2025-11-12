@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Helpers\DocumentGeneratorHelper;
 use App\Models\Address;
 use App\Models\AreaOfActivity;
 use App\Models\BusinessData;
@@ -29,12 +30,12 @@ class ProviderTestSeeder extends Seeder
     {
         $this->command->info( '🏢 Criando prestadores de teste...' );
 
-        for ( $i = 1; $i <= 5; $i++ ) {
+        for ( $i = 1; $i <= 3; $i++ ) {
             $provider = $this->createProvider( 'company', $i );
             $this->createCustomersForProvider( $provider, $i );
         }
 
-        for ( $i = 6; $i <= 10; $i++ ) {
+        for ( $i = 4; $i <= 6; $i++ ) {
             $provider = $this->createProvider( 'individual', $i );
             $this->createCustomersForProvider( $provider, $i );
         }
@@ -92,9 +93,9 @@ class ProviderTestSeeder extends Seeder
             [
                 'tenant_id'      => $tenant->id,
                 'email_personal' => "provider{$index}@test.com",
-                'phone_personal' => "(11) 9999-{$index}000",
+                'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
                 'email_business' => $type === 'company' ? "comercial{$index}@test.com" : null,
-                'phone_business' => $type === 'company' ? "(11) 8888-{$index}000" : null,
+                'phone_business' => $type === 'company' ? DocumentGeneratorHelper::generateValidPhone() : null,
                 'website'        => $type === 'company' ? "https://empresa{$index}.com" : null,
             ],
         );
@@ -228,11 +229,11 @@ class ProviderTestSeeder extends Seeder
 
     private function createCustomersForProvider( Provider $provider, int $providerIndex ): void
     {
-        for ( $i = 1; $i <= 10; $i++ ) {
+        for ( $i = 1; $i <= 3; $i++ ) {
             $this->createCustomer( $provider, 'individual', $providerIndex, $i );
         }
 
-        for ( $i = 11; $i <= 20; $i++ ) {
+        for ( $i = 4; $i <= 6; $i++ ) {
             $this->createCustomer( $provider, 'company', $providerIndex, $i );
         }
     }
@@ -263,9 +264,9 @@ class ProviderTestSeeder extends Seeder
             'tenant_id'      => $provider->tenant_id,
             'customer_id'    => $customer->id,
             'email_personal' => "cliente{$providerIndex}_{$customerIndex}@test.com",
-            'phone_personal' => "(11) 7777-{$customerIndex}00",
+            'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
             'email_business' => $type === 'company' ? "empresa{$providerIndex}_{$customerIndex}@test.com" : null,
-            'phone_business' => $type === 'company' ? "(11) 6666-{$customerIndex}00" : null,
+            'phone_business' => $type === 'company' ? DocumentGeneratorHelper::generateValidPhone() : null,
             'website'        => $type === 'company' ? "https://cliente{$customerIndex}.com" : null,
         ] );
 
@@ -281,33 +282,51 @@ class ProviderTestSeeder extends Seeder
         ] );
 
         if ( $type === 'company' ) {
-            BusinessData::create( [
-                'tenant_id'              => $provider->tenant_id,
-                'customer_id'            => $customer->id,
-                'fantasy_name'           => "Cliente {$customerIndex}",
-                'founding_date'          => '2015-01-01',
-                'state_registration'     => "999{$customerIndex}{$providerIndex}",
-                'municipal_registration' => "888{$customerIndex}",
-                'industry'               => 'Comércio',
-                'company_size'           => 'micro',
-                'notes'                  => "Cliente empresa {$customerIndex}",
-            ] );
+            BusinessData::firstOrCreate(
+                [
+                    'tenant_id'   => $provider->tenant_id,
+                    'customer_id' => $customer->id,
+                ],
+                [
+                    'fantasy_name'           => "Cliente {$customerIndex}",
+                    'founding_date'          => '2015-01-01',
+                    'state_registration'     => "999{$customerIndex}{$providerIndex}",
+                    'municipal_registration' => "888{$customerIndex}",
+                    'industry'               => 'Comércio',
+                    'company_size'           => 'micro',
+                    'notes'                  => "Cliente empresa {$customerIndex}",
+                ],
+            );
         }
     }
 
     private function generateCPF( int $seed ): string
     {
-        $unique = $seed * 1000000 + microtime( true ) * 1000 + rand( 100, 999 );
-        $base   = str_pad( (string) ( $unique % 99999999999 ), 11, '0', STR_PAD_LEFT );
-        return substr( $base, 0, 3 ) . substr( $base, 3, 3 ) . substr( $base, 6, 3 ) . substr( $base, 9, 2 );
-        // Retorna apenas os 11 dígitos sem formatação para facilitar busca
+        // Gerar CPF único baseado no seed para evitar duplicatas
+        // Garantir que seja de 11 dígitos e único para cada combinação
+        $base = str_pad( (string) $seed, 9, '0', STR_PAD_LEFT );
+
+        // Adicionar dígitos verificadores simples
+        $cpf = substr( $base . '03', 0, 11 ); // Garantir 11 dígitos
+
+        // Validar que não seja um CPF inválido (todos iguais)
+        if ( substr_count( $cpf, $cpf[ 0 ] ) === 11 ) {
+            $cpf = '12345678901'; // CPF válido de fallback
+        }
+
+        return $cpf;
     }
 
     private function generateCNPJ( int $seed ): string
     {
-        $unique = $seed * 1000000 + microtime( true ) * 1000 + rand( 100, 999 );
-        $base   = str_pad( (string) ( $unique % 99999999 ), 8, '0', STR_PAD_LEFT );
-        return substr( $base, 0, 2 ) . substr( $base, 2, 3 ) . substr( $base, 5, 3 ) . '0001' . sprintf( '%02d', $unique % 100 );
+        // Gerar CNPJ único baseado no seed para evitar duplicatas
+        // Garantir que seja de 14 dígitos e único para cada combinação
+        $base = str_pad( (string) $seed, 12, '0', STR_PAD_LEFT );
+
+        // Adicionar dígitos verificadores simples
+        $cnpj = substr( $base . '91', 0, 14 ); // Garantir 14 dígitos
+
+        return $cnpj;
     }
 
 }

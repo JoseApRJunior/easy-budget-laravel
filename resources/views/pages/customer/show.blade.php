@@ -56,29 +56,31 @@
                         @endphp
 
                         @foreach ( $personal_info as $key => $info )
-                            @if($info['value'])
-                            <div class="info-item mb-3">
-                                <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
-                                <p class="mb-0 d-flex align-items-center">
-                                    <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
-                                    @if($key === 'Email' || $key === 'Email Comercial')
-                                        <a href="mailto:{{ $info['value'] }}" class="text-decoration-none">{{ $info['value'] }}</a>
-                                    @elseif($key === 'Telefone' || $key === 'Telefone Comercial')
-                                        <a href="tel:{{ preg_replace('/\D/', '', $info['value']) }}" class="text-decoration-none">{{ $info['value'] }}</a>
-                                    @else
-                                        <span>{{ $info[ 'value' ] }}</span>
-                                    @endif
-                                </p>
-                            </div>
+                            @if( $info[ 'value' ] )
+                                <div class="info-item mb-3">
+                                    <label class="text-muted small d-block mb-1">{{ str_replace( '_', ' ', $key ) }}</label>
+                                    <p class="mb-0 d-flex align-items-center">
+                                        <i class="bi bi-{{ $info[ 'icon' ] }} me-2 "></i>
+                                        @if( $key === 'Email' || $key === 'Email Comercial' )
+                                            <a href="mailto:{{ $info[ 'value' ] }}"
+                                                class="text-decoration-none">{{ $info[ 'value' ] }}</a>
+                                        @elseif( $key === 'Telefone' || $key === 'Telefone Comercial' )
+                                            <a href="tel:{{ preg_replace( '/\D/', '', $info[ 'value' ] ) }}"
+                                                class="text-decoration-none">{{ $info[ 'value' ] }}</a>
+                                        @else
+                                            <span>{{ $info[ 'value' ] }}</span>
+                                        @endif
+                                    </p>
+                                </div>
                             @endif
                         @endforeach
-                        
+
                         <!-- Data de cadastro -->
                         <div class="info-item mb-3">
                             <label class="text-muted small d-block mb-1">Cadastrado em</label>
                             <p class="mb-0 d-flex align-items-center">
                                 <i class="bi bi-calendar-plus me-2"></i>
-                                <span>{{ \Carbon\Carbon::parse($customer->created_at)->format('d/m/Y H:i') }}</span>
+                                <span>{{ \Carbon\Carbon::parse( $customer->created_at )->format( 'd/m/Y H:i' ) }}</span>
                             </p>
                         </div>
                     </div>
@@ -141,15 +143,15 @@
                                 </div>
                             @endif
                         @endforeach
-                        
-                        @if($customer->commonData?->description)
-                        <div class="info-item mb-3">
-                            <label class="text-muted small d-block mb-1">Descrição</label>
-                            <p class="mb-0">
-                                <i class="bi bi-info-circle me-2"></i>
-                                {{ $customer->commonData->description }}
-                            </p>
-                        </div>
+
+                        @if( $customer->commonData?->description )
+                            <div class="info-item mb-3">
+                                <label class="text-muted small d-block mb-1">Descrição</label>
+                                <p class="mb-0">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    {{ $customer->commonData->description }}
+                                </p>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -247,14 +249,18 @@
                                 <div class="text-center p-3 bg-light rounded">
                                     <i class="bi bi-currency-dollar text-warning mb-2" style="font-size: 2rem;"></i>
                                     <h6 class="mb-1">Total Faturado</h6>
-                                    <h4 class="text-warning mb-0">{{ money($customer->budgets->where('status', 'approved')->sum('total')) }}</h4>
+                                    <h4 class="text-warning mb-0">
+                                        {{ money( $customer->budgets->where( 'status', 'approved' )->sum( 'total' ) ) }}
+                                    </h4>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="text-center p-3 bg-light rounded">
                                     <i class="bi bi-calendar-check text-info mb-2" style="font-size: 2rem;"></i>
                                     <h6 class="mb-1">Cliente desde</h6>
-                                    <h4 class="text-info mb-0">{{ \Carbon\Carbon::parse($customer->created_at)->format('m/Y') }}</h4>
+                                    <h4 class="text-info mb-0">
+                                        {{ \Carbon\Carbon::parse( $customer->created_at )->format( 'm/Y' ) }}
+                                    </h4>
                                 </div>
                             </div>
                         </div>
@@ -264,62 +270,66 @@
         </div>
 
         <!-- Orçamentos Recentes -->
-        @if($customer->budgets->count() > 0)
-        <div class="row g-4 mt-2">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Orçamentos Recentes</h5>
-                        <a href="{{ route('provider.budgets.index', ['customer_id' => $customer->id]) }}" class="btn btn-sm btn-outline-primary">
-                            Ver todos
-                        </a>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Data</th>
-                                        <th>Status</th>
-                                        <th>Valor</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($customer->budgets->take(5) as $budget)
-                                    <tr>
-                                        <td><code>{{ $budget->code }}</code></td>
-                                        <td>{{ \Carbon\Carbon::parse($budget->created_at)->format('d/m/Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $budget->status === 'approved' ? 'success' : ($budget->status === 'pending' ? 'warning' : 'secondary') }}">
-                                                {{ ucfirst($budget->status) }}
-                                            </span>
-                                        </td>
-                                        <td>{{ money($budget->total) }}</td>
-                                        <td>
-                                            <a href="{{ route('provider.budgets.show', $budget) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+        @if( $customer->budgets->count() > 0 )
+            <div class="row g-4 mt-2">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Orçamentos Recentes</h5>
+                            <a href="{{ route( 'provider.budgets.index', [ 'customer_id' => $customer->id ] ) }}"
+                                class="btn btn-sm btn-outline-primary">
+                                Ver todos
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Data</th>
+                                            <th>Status</th>
+                                            <th>Valor</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach( $customer->budgets->take( 5 ) as $budget )
+                                            <tr>
+                                                <td><span class="text-code">{{ $budget->code }}</span></td>
+                                                <td>{{ \Carbon\Carbon::parse( $budget->created_at )->format( 'd/m/Y' ) }}</td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-{{ $budget->status->value === 'approved' ? 'success' : ( $budget->status->value === 'pending' ? 'warning' : 'secondary' ) }}">
+                                                        {{ ucfirst( $budget->status->value ) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ money( $budget->total ) }}</td>
+                                                <td>
+                                                    <a href="{{ route( 'provider.budgets.show', $budget ) }}"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
 
         <!-- Botões de Ação -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex gap-2">
-                <a href="{{ route('provider.customers.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-2"></i>Voltar
                 </a>
-                <a href="{{ route('provider.budgets.create', ['customer_id' => $customer->id]) }}" class="btn btn-success">
+                <a href="{{ route( 'provider.budgets.create', [ 'customer_id' => $customer->id ] ) }}"
+                    class="btn btn-success">
                     <i class="bi bi-plus-circle me-2"></i>Novo Orçamento
                 </a>
             </div>
@@ -327,9 +337,43 @@
                 Última atualização: {{ \Carbon\Carbon::parse( $customer->updated_at )->format( 'd/m/Y H:i' ) }}
             </small>
             <div class="d-flex gap-2">
-                <a href="{{ route('provider.customers.edit', $customer) }}" class="btn btn-primary">
+                <a href="{{ route( 'provider.customers.edit', $customer ) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash-fill me-2"></i>Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir o cliente <strong>{{ $customer->commonData?->first_name }}
+                            {{ $customer->commonData?->last_name }}</strong>?</p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Atenção:</strong> Esta ação não pode ser desfeita e pode afetar orçamentos e faturas
+                        associados.
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ route( 'provider.customers.destroy', $customer ) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method( 'DELETE' )
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-2"></i>Confirmar Exclusão
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

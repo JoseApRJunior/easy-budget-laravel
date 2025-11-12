@@ -27,7 +27,7 @@
                             <strong>Conectado!</strong> Sua conta Mercado Pago está vinculada com sucesso.
                         </div>
                     </div>
-                    <p class="text-muted">Sua chave pública é: <code>{{ $publicKey }}</code></p>
+                    <p class="text-muted">Sua chave pública é: <span class="text-code">{{ $publicKey }}</span></p>
                     <p>Agora você pode gerar faturas e receber pagamentos diretamente na sua conta.</p>
                     <form action="{{ url( '/provider/integrations/mercadopago/disconnect' ) }}" method="POST" class="d-inline">
                         @csrf

@@ -166,4 +166,36 @@ class Invoice extends Model
         return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
     }
 
+    /**
+     * Get the name of the invoice status for backward compatibility with views.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->status?->getDescription();
+    }
+
+    /**
+     * Get the color of the invoice status for backward compatibility with views.
+     */
+    public function getColorAttribute(): string
+    {
+        return $this->status?->getColor() ?? '#6c757d';
+    }
+
+    /**
+     * Get the slug of the invoice status for backward compatibility with views.
+     */
+    public function getSlugAttribute(): string
+    {
+        return $this->status?->value ?? '';
+    }
+
+    /**
+     * Get the description of the invoice status for backward compatibility with views.
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->status?->getDescription();
+    }
+
 }

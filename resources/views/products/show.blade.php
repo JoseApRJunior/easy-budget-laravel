@@ -51,7 +51,7 @@
                       <div class="info-box-content">
                         <span class="info-box-text">SKU</span>
                         <span class="info-box-number">
-                          <code>{{ $product->sku }}</code>
+                          <span class="text-code">{{ $product->sku }}</span>
                         </span>
                       </div>
                     </div>

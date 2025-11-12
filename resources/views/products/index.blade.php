@@ -110,7 +110,7 @@
                                             @endif
                                         </td>
                                         <td>{{ $product->name }}</td>
-                                        <td><code>{{ $product->sku }}</code></td>
+                                        <td><span class="text-code">{{ $product->sku }}</span></td>
                                         <td>{{ $product->category->name ?? 'N/A' }}</td>
                                         <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
                                         <td>

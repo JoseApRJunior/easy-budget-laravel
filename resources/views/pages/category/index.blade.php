@@ -41,7 +41,7 @@
                                 <tr>
                                     <td class="ps-4">{{ $category->id }}</td>
                                     <td>{{ $category->name }}</td>
-                                    <td><code>{{ $category->slug }}</code></td>
+                                    <td><span class="text-code">{{ $category->slug }}</span></td>
                                     <td>{{ $category->created_at->format( 'd/m/Y H:i' ) }}</td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group">

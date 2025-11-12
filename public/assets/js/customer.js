@@ -233,13 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   title="Editar">
                   <i class="bi bi-pencil"></i>
                </a>
-               <button type="button"
-                     class="btn btn-sm btn-outline-danger"
-                     data-bs-toggle="tooltip"
-                     onclick="confirmDelete('${customer.id}')"
-                     title="Excluir">
-                  <i class="bi bi-trash"></i>
-               </button>
+
             </div>
          </td>
       </tr>`;
@@ -351,6 +345,45 @@ document.addEventListener("DOMContentLoaded", function () {
 function confirmDelete(customerId) {
    const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
    const confirmBtn = document.getElementById("confirmDeleteBtn");
-   confirmBtn.href = `/provider/customers/delete/${customerId}`;
+   const csrfToken = document
+      .querySelector('meta[name="csrf-token"]')
+      .getAttribute("content");
+
+   // Criar formulário DELETE dinamicamente
+   const form = document.createElement("form");
+   form.method = "POST";
+   form.action = `/provider/customers/${customerId}`;
+   form.style.display = "none";
+
+   // Token CSRF
+   const csrfInput = document.createElement("input");
+   csrfInput.type = "hidden";
+   csrfInput.name = "_token";
+   csrfInput.value = csrfToken;
+   form.appendChild(csrfInput);
+
+   // Método DELETE
+   const methodInput = document.createElement("input");
+   methodInput.type = "hidden";
+   methodInput.name = "_method";
+   methodInput.value = "DELETE";
+   form.appendChild(methodInput);
+
+   document.body.appendChild(form);
+
+   // Configurar botão de confirmação
+   confirmBtn.onclick = function () {
+      form.submit();
+      modal.hide();
+   };
+
+   // Cleanup ao fechar modal
+   document
+      .getElementById("deleteModal")
+      .addEventListener("hidden.bs.modal", function () {
+         document.body.removeChild(form);
+         confirmBtn.onclick = null;
+      });
+
    modal.show();
 }

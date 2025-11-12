@@ -13,6 +13,7 @@ use App\Repositories\ContactRepository;
 use App\Repositories\CustomerRepository;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Serviço de Clientes - Lógica de negócio para gestão de clientes
@@ -363,23 +364,90 @@ class CustomerService
 
                 // Verificar se pode excluir (relacionamentos com orçamentos, faturas, etc.)
                 $canDelete = $this->customerRepository->canDelete( $id, $tenantId );
-                if ( !$canDelete[ 'can_delete' ] ) {
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, $canDelete[ 'reason' ] );
+                if ( !$canDelete[ 'canDelete' ] ) {
+                    $reason = $canDelete[ 'reason' ];
+
+                    // Construir mensagem mais detalhada
+                    if ( isset( $canDelete[ 'budgetsCount' ] ) && $canDelete[ 'budgetsCount' ] > 0 ) {
+                        $reason  .= " (Possui {$canDelete[ 'budgetsCount' ]} orçamento(s) associado(s))";
+                    }
+                    if ( isset( $canDelete[ 'servicesCount' ] ) && $canDelete[ 'servicesCount' ] > 0 ) {
+                        $reason  .= " (Possui {$canDelete[ 'servicesCount' ]} serviço(s) associado(s))";
+                    }
+                    if ( isset( $canDelete[ 'invoicesCount' ] ) && $canDelete[ 'invoicesCount' ] > 0 ) {
+                        $reason  .= " (Possui {$canDelete[ 'invoicesCount' ]} fatura(s) associada(s))";
+                    }
+
+                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, $reason );
                 }
+
+                // Verificar se há interações do cliente (tabela não existe no momento)
+                // TODO: Implementar verificação de interações quando a tabela for criada
+                // if ( method_exists( $customer, 'interactions' ) && $customer->interactions()->count() > 0 ) {
+                //     return ServiceResult::error(
+                //         OperationStatus::VALIDATION_ERROR,
+                //         'Cliente não pode ser excluído pois possui interações registradas no histórico',
+                //     );
+                // }
 
                 // Soft delete em cascata
                 $customer->delete();
-                $customer->commonData->each->delete();
-                $customer->contact->each->delete();
-                $customer->address->each->delete();
-                if ( $customer->businessData ) {
+
+                // Verificar e deletar dados relacionados se existirem
+                if ( $customer->commonData ) {
+                    $customer->commonData->delete();
+                }
+                if ( $customer->contact ) {
+                    $customer->contact->delete();
+                }
+                if ( $customer->address ) {
+                    $customer->address->delete();
+                }
+                if ( isset( $customer->businessData ) && $customer->businessData ) {
                     $customer->businessData->delete();
                 }
 
                 return ServiceResult::success( null, 'Cliente excluído com sucesso' );
             } );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao excluir cliente', null, $e );
+            // Log do erro para debug
+            Log::error( 'Erro ao excluir cliente', [
+                'customer_id' => $id,
+                'tenant_id'   => $tenantId,
+                'error'       => $e->getMessage(),
+                'trace'       => $e->getTraceAsString()
+            ] );
+
+            return ServiceResult::error( OperationStatus::ERROR,
+                'Erro ao excluir cliente: ' . $e->getMessage(), null, $e );
+        }
+    }
+
+    /**
+     * Verifica se cliente pode ser excluído e retorna detalhes dos impedimentos
+     */
+    public function canDeleteCustomer( int $id, int $tenantId ): ServiceResult
+    {
+        try {
+            $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
+            if ( !$customer ) {
+                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
+            }
+
+            $canDeleteInfo = $this->customerRepository->canDelete( $id, $tenantId );
+
+            return ServiceResult::success( [
+                'can_delete'      => $canDeleteInfo[ 'canDelete' ],
+                'reason'          => $canDeleteInfo[ 'reason' ],
+                'budgets_count'   => $canDeleteInfo[ 'budgetsCount' ] ?? 0,
+                'services_count'  => $canDeleteInfo[ 'servicesCount' ] ?? 0,
+                'invoices_count'  => $canDeleteInfo[ 'invoicesCount' ] ?? 0,
+                'total_relations' => $canDeleteInfo[ 'totalRelationsCount' ] ?? 0
+            ] );
+
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( OperationStatus::ERROR,
+                'Erro ao verificar se cliente pode ser excluído: ' . $e->getMessage(), null, $e );
         }
     }
 

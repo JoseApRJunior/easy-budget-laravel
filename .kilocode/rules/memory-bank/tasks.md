@@ -421,6 +421,73 @@ class NovoModeloService extends BaseTenantService
 -  ✅ Total: 8/8 testes passando (20 assertions)
 -  ✅ Duração total: ~9 segundos
 
+### **🔢 Corrigir Padrões de Códigos em Seeders**
+
+**Última execução:** 12/11/2025
+**Arquivos modificados:**
+
+-  `database/seeders/BudgetTestSeeder.php` - Padrões de códigos corrigidos
+-  `old-system/test-DoctrineORM/database/seeds/inserts/insert.sql` - Referência de padrões antigos
+-  `check_codes.php` - Script de verificação criado
+
+**Problema identificado:**
+
+-  BudgetTestSeeder estava usando padrões de códigos novos em vez dos padrões do sistema antigo
+-  Causando inconsistência entre sistema novo e antigo
+-  Faturas duplicando códigos
+
+**Padrões do sistema antigo identificados:**
+
+-  **Orçamento:** `ORC-YYYYMMDD-0001` (ORC + data + sequencial 4 dígitos)
+-  **Serviço:** `YYYYMMDD-0001-S001` (data + orçamento + sequencial S001, S002, etc.)
+-  **Fatura:** `FAT-YYYYMMDD-0001` (FAT + data + sequencial 4 dígitos)
+
+**Correções implementadas:**
+
+1. **Analisar SQL de produção antigo:**
+
+   ```sql
+   INSERT INTO `budgets` (code) VALUES ('ORC-20250630-0001')
+   INSERT INTO `services` (code) VALUES ('20250630-0001-S001')
+   INSERT INTO `invoices` (code) VALUES ('FAT-20250809-0001')
+   ```
+
+2. **Corrigir BudgetTestSeeder:**
+
+   -  Implementar contadores globais únicos ($globalBudgetCounter, $globalInvoiceCounter)
+   -  Usar data atual para gerar códigos (20251112)
+   -  Sequencial de 4 dígitos com padding zero
+   -  Para serviços, usar ORC-YYYYMMDD-0001-S001 (mais consistente)
+
+3. **Implementar padrões corretos:**
+
+   ```php
+   // Orçamentos
+   $budgetCode = "ORC-{$budgetDate}-{$budgetSequential}";
+
+   // Serviços
+   $serviceCode = "{$budgetCode}-S" . str_pad((string)$serviceIndex, 3, '0', STR_PAD_LEFT);
+
+   // Faturas
+   $invoiceCode = "FAT-{$budgetDate}-{$invoiceSequential}";
+   ```
+
+**Resultado verificado:**
+
+-  ✅ Orçamentos: ORC-20251112-0001, ORC-20251112-0002, ORC-20251112-0003...
+-  ✅ Serviços: ORC-20251112-0001-S001, ORC-20251112-0001-S002, ORC-20251112-0001-S003...
+-  ✅ Faturas: FAT-20251112-0001, FAT-20251112-0002, FAT-20251112-0003...
+-  ✅ Comando `php artisan migrate:fresh --seed` executa sem erros
+-  ✅ Nenhuma duplicação de códigos
+
+**Considerações importantes:**
+
+-  **Análise de dados antigos:** Sempre verificar SQL de produção para manter consistência
+-  **Padrões sequenciais:** Usar contadores globais para evitar duplicação entre diferentes providers
+-  **Data atual:** Usar `now()->format('Ymd')` para refletir data real do seeding
+-  **Validação:** Criar scripts de verificação para confirmar padrões corretos
+-  **Documentação:** Atualizar memory bank com novos padrões identificados
+
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
-**Última atualização:** 07/11/2025 - Melhorada tarefa "Adicionar Novo Modelo Eloquent" para incluir arquitetura completa Controller → Services → Repositories → Models e adicionada tarefa "Corrigir Testes Budget que Estão Falhando".
+**Última atualização:** 12/11/2025 - Adicionada tarefa "Corrigir Padrões de Códigos em Seeders" com solução completa para manter consistência com sistema antigo.
