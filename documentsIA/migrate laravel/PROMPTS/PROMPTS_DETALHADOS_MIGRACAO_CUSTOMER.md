@@ -14,11 +14,11 @@
 
 ## 📋 Contexto do Módulo
 
--  **Base:** Análise da implementação atual + RELATORIO_ANALISE_CUSTOMER_CONTROLLER.md
--  **Status:** ✅ **80% IMPLEMENTADO** - Módulo funcional com gaps a corrigir
--  **Objetivo:** Refinar e completar o módulo de clientes com arquitetura evoluída (5 tabelas)
--  **Ordem:** Sequência lógica para correções (Views → Controller → Repository → Otimizações)
--  **Complexidade:** ALTA - Estrutura multi-tabela com 5 models relacionados (Customer, CommonData, Contact, Address, BusinessData)
+-  **Base:** Análise da implementação atual + RELATORIO_ANALISE_CUSTOMER_CONTROLLER.md + código real (Controller/Service/Repository).
+-  **Status:** ✅ **NÚCLEO IMPLEMENTADO** - Arquitetura principal e regras críticas concluídas; restam ajustes pontuais.
+-  **Objetivo:** Manter o módulo de clientes alinhado à arquitetura evoluída, consolidando o que já foi entregue e guiando refinamentos finais.
+-  **Ordem recomendada (ajustes restantes):** Autocomplete → Dashboard → Views → Events/Policies → Testes.
+-  **Complexidade:** ALTA - Estrutura multi-tabela com CustomerService + CustomerRepository + validações avançadas + multi-tenant.
 
 -  **Tokens globais específicos:**
    -  **{{MODULE_NAME}}:** customer
@@ -30,8 +30,8 @@
    -  **{{TABLE_NAME}}:** customers
    -  **{{PRIMARY_KEY}}:** id
    -  **{{UNIQUE_CODE_FIELD}}:** status (com valores: 'active', 'inactive', 'deleted')
-   -  **{{FOREIGN_KEYS}}:** NENHUMA (tabela customers é independente, tabelas dependentes têm customer_id)
-   -  **{{RELATIONS}}:** ['commonDatas', 'contacts', 'addresses', 'businessDatas', 'budgets']
+   -  **{{FOREIGN_KEYS}}:** conforme migrations reais (tenant_id e relacionamentos indiretos)
+   -  **{{RELATIONS}}:** conforme models reais (Customer, CommonData, Contact, Address, BusinessData, Budgets)
    -  **{{TENANT_SCOPED_TRAIT}}:** TenantScoped
    -  **{{AUDITABLE_TRAIT}}:** Removido (não existe no modelo real)
    -  **{{SUPPORTED_TYPES}}:** 'pessoa_fisica', 'pessoa_juridica'
@@ -63,7 +63,7 @@
    -  **Reutilização:** A mesma tabela business_datas pode ser usada por providers e clientes
    -  **Escalabilidade:** Facilita adição de novos campos empresariais sem poluir common_datas
 
--  **Implementação Implementada:**
+-  **Implementação Implementada (resumo alinhado ao código atual):**
 
 ```php
 // ✅ ESTRUTURA REAL - Arquitetura mais simples e inteligente
@@ -140,7 +140,9 @@ enum CustomerStatus: string implements StatusEnumInterface
     // - options(), activeOptions() (compatibilidade)
 }
 
-// ✅ ESTRUTURA REAL - Tabelas dependentes (reutilizáveis para customers e providers)
+// ⚠️ Nota:
+// Os blocos de schema abaixo são referenciais e não devem ser tratados como cópia literal.
+// A fonte da verdade é `database/migrations/2025_09_27_132300_create_initial_schema.php`.
 Schema::create('addresses', function (Blueprint $table) {
     $table->id();
     $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
@@ -282,54 +284,9 @@ Schema::create('addresses', function (Blueprint $table) {
 // - Valores enum corretos: micro,pequena,media,grande
 // - Campos removidos: company_email, company_phone, company_website
 
-// Model Customer - ESTRUTURA REAL (Tabela simples)
-class Customer extends Model
-{
-    use HasFactory, SoftDeletes, TenantScoped;
-
-    protected $fillable = [
-        'tenant_id', 'status'
-    ];
-
-    protected $casts = [
-        'status' => 'string',
-    ];
-
-    // Relacionamentos - as tabelas dependentes apontam para customers (HasMany)
-    public function commonDatas(): HasMany
-    {
-        return $this->hasMany(CommonData::class);
-    }
-
-    public function contacts(): HasMany
-    {
-        return $this->hasMany(Contact::class);
-    }
-
-    public function addresses(): HasMany
-    {
-        return $this->hasMany(Address::class);
-    }
-
-    public function businessDatas(): HasMany
-    {
-        return $this->hasMany(BusinessData::class);
-    }
-
-    public function budgets(): HasMany
-    {
-        return $this->hasMany(Budget::class);
-    }
-
-    // Método para determinar tipo de pessoa baseado nos dados relacionados
-    public function isPersonType(): string
-    {
-        $commonData = $this->commonDatas->first();
-        if ($commonData?->cpf) return 'pessoa_fisica';
-        if ($commonData?->cnpj) return 'pessoa_juridica';
-        return 'unknown';
-    }
-}
+// Nota:
+// A definição exata de `Customer` deve ser consultada em `app/Models/Customer.php`.
+// Este trecho registra apenas a intenção arquitetural (tabela simples + relacionamentos auxiliares).
 ```
 
 -  **Arquivos:**
@@ -345,15 +302,15 @@ class Customer extends Model
 
 ---
 
-## 🎯 Prompt 1.2: CustomerRepository - ⚠️ PARCIALMENTE IMPLEMENTADO
+## 🎯 Prompt 1.2: CustomerRepository - ✅ IMPLEMENTADO
 
-**STATUS:** ⚠️ **PARCIALMENTE IMPLEMENTADO** - Referenciado no CustomerService mas precisa ser verificado/completo
+**STATUS:** ✅ **ALINHADO COM O CÓDIGO REAL**
 
--  **Problema Atual:**
-
-   -  CustomerRepository é referenciado no CustomerService mas implementação não verificada
-   -  Validações de unicidade não centralizadas no repository
-   -  Filtros não implementados no repository (estão no service)
+-  `CustomerRepository` existe em `app/Repositories/CustomerRepository.php` e:
+   -  Estende `AbstractTenantRepository` (tenant-aware).
+   -  Centraliza filtros avançados e paginação (`getPaginated` e derivados).
+   -  Implementa `isEmailUnique`, `isCpfUnique`, `isCnpjUnique` conforme usado pelo `CustomerService`.
+-  Este prompt passa a ser referência histórica; a implementação real é a fonte da verdade.
 
 -  **Objetivo:** Implementar Repository pattern completo com validações centralizadas para 5 tabelas
 
@@ -362,150 +319,7 @@ class Customer extends Model
    -  5 tabelas para melhor separação de responsabilidades
    -  business_datas para dados específicos de empresas (reutilizável)
 
--  **Implementação Crítica:**
-
-```php
-// app/Repositories/CustomerRepository.php - A VERIFICAR/COMPLETAR
-class CustomerRepository
-{
-    // Validações de unicidade centralizadas
-    public function isEmailUnique(string $email, int $tenantId, ?int $excludeCustomerId = null): bool
-    {
-        $query = Contact::where('email_personal', $email)
-            ->where('tenant_id', $tenantId);
-
-        if ($excludeCustomerId) {
-            $query->where('customer_id', '!=', $excludeCustomerId);
-        }
-
-        return !$query->exists();
-    }
-
-    public function isCpfUnique(string $cpf, int $tenantId, ?int $excludeCustomerId = null): bool
-    {
-        $query = CommonData::where('cpf', $cpf)
-            ->where('tenant_id', $tenantId);
-
-        if ($excludeCustomerId) {
-            $query->where('customer_id', '!=', $excludeCustomerId);
-        }
-
-        return !$query->exists();
-    }
-
-    public function isCnpjUnique(string $cnpj, int $tenantId, ?int $excludeCustomerId = null): bool
-    {
-        $query = CommonData::where('cnpj', $cnpj)
-            ->where('tenant_id', $tenantId);
-
-        if ($excludeCustomerId) {
-            $query->where('customer_id', '!=', $excludeCustomerId);
-        }
-
-        return !$query->exists();
-    }
-
-    // Filtros avançados centralizados
-    public function getPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $query = Customer::with([
-            'commonData' => function($q) {
-                $q->with(['areaOfActivity', 'profession']);
-            },
-            'contact', 'address', 'businessData'
-        ]);
-
-        // Aplicar filtros avançados
-        if (!empty($filters['search'])) {
-            $query->where(function($q) use ($filters) {
-                $q->whereHas('commonData', function($cq) use ($filters) {
-                    $cq->where('first_name', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('last_name', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('company_name', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('cpf', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('cnpj', 'like', '%' . $filters['search'] . '%');
-                })->orWhereHas('contact', function($cq) use ($filters) {
-                    $cq->where('email_personal', 'like', '%' . $filters['search'] . '%')
-                       ->orWhere('phone_personal', 'like', '%' . $filters['search'] . '%');
-                });
-            });
-        }
-
-        // Filtro por tipo (PF/PJ)
-        if (!empty($filters['type'])) {
-            $query->whereHas('commonData', function($q) use ($filters) {
-                if ($filters['type'] === 'pessoa_fisica') {
-                    $q->whereNotNull('cpf');
-                } else {
-                    $q->whereNotNull('cnpj');
-                }
-            });
-        }
-
-        // Filtro por status
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
-    }
-
-    public function findWithCompleteData(int $id, int $tenantId): ?Customer
-    {
-        return Customer::select([
-                'customers.id', 'customers.tenant_id', 'customers.status', 'customers.created_at', 'customers.updated_at'
-            ])
-            ->where('customers.id', $id)
-            ->where('customers.tenant_id', $tenantId)
-            ->with([
-                'commonData' => function($q) {
-                    $q->with(['areaOfActivity', 'profession']);
-                },
-                'contact', 'address', 'businessData'
-            ])
-            ->first();
-    }
-
-    // Operações de CRUD multi-tabela
-    public function createWithRelations(array $data): Customer
-    {
-        return DB::transaction(function() use ($data) {
-            $customer = Customer::create(['tenant_id' => $data['tenant_id']]);
-
-            // Criar CommonData
-            $commonData = CommonData::create([
-                'tenant_id' => $data['tenant_id'],
-                'customer_id' => $customer->id,
-                'type' => $data['type'],
-                // ... outros campos
-            ]);
-
-            // Criar Contact
-            $contact = Contact::create([
-                'tenant_id' => $data['tenant_id'],
-                'customer_id' => $customer->id,
-                // ... outros campos
-            ]);
-
-            // Criar Address
-            $address = Address::create([
-                'tenant_id' => $data['tenant_id'],
-                'customer_id' => $customer->id,
-                // ... outros campos
-            ]);
-
-            // Atualizar IDs no Customer
-            $customer->update([
-                'common_data_id' => $commonData->id,
-                'contact_id' => $contact->id,
-                'address_id' => $address->id,
-            ]);
-
-            return $customer->fresh();
-        });
-    }
-}
-```
+-  **Observação:** O bloco acima era um esqueleto. Hoje, utilizar exclusivamente `app/Repositories/CustomerRepository.php` como referência da implementação.
 
 -  **Benefícios do Repository Pattern:**
 
@@ -646,64 +460,12 @@ class CustomerRepository extends AbstractTenantRepository
 
 ---
 
-## 🎯 Prompt 1.3: Implementar {{Repository}} — Verificação de Email Único
+## 🎯 Prompt 1.3: Implementar {{Repository}} — Verificação de Email/CPF/CNPJ Único
 
-**CRÍTICO:** Validação de email único é regra fundamental do negócio.
+**STATUS:** ✅ **CONCLUÍDO**
 
--  **Implementação:**
-
-```php
-// Adicionar ao CustomerRepository
-public function isEmailUnique(string $email, int $tenantId, ?int $excludeCustomerId = null): bool
-{
-    $query = Contact::where('email', $email)
-        ->where('tenant_id', $tenantId);
-
-    if ($excludeCustomerId) {
-        // Excluir o customer atual na edição
-        $query->whereDoesntHave('customers', function($q) use ($excludeCustomerId) {
-            $q->where('id', $excludeCustomerId);
-        });
-    }
-
-    return !$query->exists();
-}
-
-public function isCpfUnique(string $cpf, int $tenantId, ?int $excludeCustomerId = null): bool
-{
-    if (strlen($cpf) !== 11) return false; // CPF deve ter 11 dígitos
-
-    $query = CommonData::where('cpf', $cpf)
-        ->where('tenant_id', $tenantId);
-
-    if ($excludeCustomerId) {
-        $query->whereDoesntHave('customer', function($q) use ($excludeCustomerId) {
-            $q->where('id', $excludeCustomerId);
-        });
-    }
-
-    return !$query->exists();
-}
-
-public function isCnpjUnique(string $cnpj, int $tenantId, ?int $excludeCustomerId = null): bool
-{
-    if (strlen($cnpj) !== 14) return false; // CNPJ deve ter 14 dígitos
-
-    $query = CommonData::where('cnpj', $cnpj)
-        ->where('tenant_id', $tenantId);
-
-    if ($excludeCustomerId) {
-        $query->whereDoesntHave('customer', function($q) use ($excludeCustomerId) {
-            $q->where('id', $excludeCustomerId);
-        });
-    }
-
-    return !$query->exists();
-}
-```
-
--  **Arquivo:** `app/Repositories/CustomerRepository.php`
--  **Critério de sucesso:** Validação de unicidade por tenant funcionando.
+-  Implementado em `CustomerRepository` (métodos `isEmailUnique`, `isCpfUnique`, `isCnpjUnique`).
+-  Utilizado por `CustomerService` para garantir unicidade por tenant na criação e atualização.
 
 ---
 

@@ -17,9 +17,9 @@ Implemente APENAS a atualização da Migration, Model e Factory para o módulo d
 
 TAREFA ESPECÍFICA:
 
--   **Migration:** **Atualizar** o schema inicial (`..._create_initial_schema.php`) para adicionar os campos `category_id`, `sku`, `unit` e `softDeletes` à tabela `products`. O campo `code` será substituído por `sku`.
--   **Model:** **Atualizar** `Product.php` para incluir os novos campos, relacionamentos e casts.
--   **Factory:** **Atualizar** `ProductFactory.php` para gerar dados para os novos campos.
+-  **Migration:** **Atualizar** o schema inicial (`..._create_initial_schema.php`) para adicionar os campos `category_id`, `sku`, `unit` e `softDeletes` à tabela `products`. O campo `code` será substituído por `sku`.
+-  **Model:** **Atualizar** `Product.php` para incluir os novos campos, relacionamentos e casts.
+-  **Factory:** **Atualizar** `ProductFactory.php` para gerar dados para os novos campos.
 
 IMPLEMENTAÇÃO:
 
@@ -94,9 +94,9 @@ IMPLEMENTAÇÃO:
 
 ARQUIVOS:
 
--   `database/migrations/..._create_initial_schema.php` (**alterar**)
--   `app/Models/Product.php` (**alterar**)
--   `database/factories/ProductFactory.php` (**alterar**)
+-  `database/migrations/..._create_initial_schema.php` (**alterar**)
+-  `app/Models/Product.php` (**alterar**)
+-  `database/factories/ProductFactory.php` (**alterar**)
 
 CRITÉRIO DE SUCESSO: Estrutura de banco de dados e modelo Eloquent atualizados e funcionais.
 
@@ -108,10 +108,10 @@ Implemente APENAS o método `getPaginated()` no `ProductRepository`:
 
 TAREFA ESPECÍFICA:
 
--   **Abstração:** Isolar as queries do banco de dados.
--   **Filtragem:** Implementar `getPaginated()` com filtros avançados e paginação.
--   **Tenant Scoping:** Garantir isolamento automático de dados via `AbstractTenantRepository`.
--   **Eager Loading:** Carregar relacionamento `category` para otimização.
+-  **Abstração:** Isolar as queries do banco de dados.
+-  **Filtragem:** Implementar `getPaginated()` com filtros avançados e paginação.
+-  **Tenant Scoping:** Garantir isolamento automático de dados via `AbstractTenantRepository`.
+-  **Eager Loading:** Carregar relacionamento `category` para otimização.
 
 IMPLEMENTAÇÃO:
 
@@ -164,7 +164,7 @@ class ProductRepository extends AbstractTenantRepository
 
 ARQUIVOS:
 
--   `app/Repositories/ProductRepository.php` (método `getPaginated`)
+-  `app/Repositories/ProductRepository.php` (método `getPaginated`)
 
 CRITÉRIO DE SUCESSO: Repository com paginação e filtros funcionais.
 
@@ -176,9 +176,9 @@ Implemente APENAS o método `findBySku()` no `ProductRepository`:
 
 TAREFA ESPECÍFICA:
 
--   Busca: Por SKU (string)
--   Eager loading: Relacionamentos opcionais
--   Tenant scoping: Automático via `AbstractTenantRepository`
+-  Busca: Por SKU (string)
+-  Eager loading: Relacionamentos opcionais
+-  Tenant scoping: Automático via `AbstractTenantRepository`
 
 IMPLEMENTAÇÃO:
 
@@ -199,7 +199,7 @@ public function findBySku(string $sku, array $with = []): ?Model
 
 ARQUIVOS:
 
--   `app/Repositories/ProductRepository.php` (método `findBySku`)
+-  `app/Repositories/ProductRepository.php` (método `findBySku`)
 
 CRITÉRIO DE SUCESSO: Repository com busca por SKU.
 
@@ -211,9 +211,9 @@ Implemente APENAS o método `countActive()` no `ProductRepository`:
 
 TAREFA ESPECÍFICA:
 
--   Contagem: Produtos ativos dentro do tenant
--   Return: Inteiro com a contagem
--   Performance: Query otimizada
+-  Contagem: Produtos ativos dentro do tenant
+-  Return: Inteiro com a contagem
+-  Performance: Query otimizada
 
 IMPLEMENTAÇÃO:
 
@@ -228,7 +228,7 @@ public function countActive(): int
 
 ARQUIVOS:
 
--   `app/Repositories/ProductRepository.php` (método `countActive`)
+-  `app/Repositories/ProductRepository.php` (método `countActive`)
 
 CRITÉRIO DE SUCESSO: Repository com métrica de produtos ativos.
 
@@ -240,9 +240,9 @@ Implemente APENAS o método `canBeDeactivatedOrDeleted()` no `ProductRepository`
 
 TAREFA ESPECÍFICA:
 
--   Verificação: Se o produto pode ser desativado ou deletado
--   Regra: Não pode ser desativado/deletado se estiver em `service_items`
--   Return: Booleano
+-  Verificação: Se o produto pode ser desativado ou deletado
+-  Regra: Não pode ser desativado/deletado se estiver em `service_items`
+-  Return: Booleano
 
 IMPLEMENTAÇÃO:
 
@@ -258,7 +258,7 @@ public function canBeDeactivatedOrDeleted(int $productId): bool
 
 ARQUIVOS:
 
--   `app/Repositories/ProductRepository.php` (método `canBeDeactivatedOrDeleted`)
+-  `app/Repositories/ProductRepository.php` (método `canBeDeactivatedOrDeleted`)
 
 CRITÉRIO DE SUCESSO: Validação de desativação/exclusão de produto.
 
@@ -272,9 +272,9 @@ Crie APENAS o `ProductStoreRequest`:
 
 TAREFA ESPECÍFICA:
 
--   Campos: `name`, `sku`, `price`, `category_id`, `unit`, `active`, `image`
--   Validação: `sku` único por tenant, `category_id` existe, `price` mínimo 0, `active` booleano.
--   Mensagens: Em português.
+-  Campos: `name`, `sku`, `price`, `category_id`, `unit`, `active`, `image`
+-  Validação: `sku` único por tenant, `category_id` existe, `price` mínimo 0, `active` booleano.
+-  Mensagens: Em português.
 
 IMPLEMENTAÇÃO:
 
@@ -327,7 +327,7 @@ class ProductStoreRequest extends FormRequest
 
 ARQUIVOS:
 
--   `app/Http/Requests/ProductStoreRequest.php` (criar)
+-  `app/Http/Requests/ProductStoreRequest.php` (criar)
 
 CRITÉRIO DE SUCESSO: Validação robusta para criação de produto com mensagens em português.
 
@@ -339,9 +339,9 @@ Crie APENAS o `ProductUpdateRequest`:
 
 TAREFA ESPECÍFICA:
 
--   Campos: `name`, `sku`, `price`, `category_id`, `unit`, `active`, `image` (todos opcionais para atualização parcial)
--   Validação: `sku` único por tenant (ignorando o produto atual), `category_id` existe, `price` mínimo 0, `active` booleano.
--   Mensagens: Em português.
+-  Campos: `name`, `sku`, `price`, `category_id`, `unit`, `active`, `image` (todos opcionais para atualização parcial)
+-  Validação: `sku` único por tenant (ignorando o produto atual), `category_id` existe, `price` mínimo 0, `active` booleano.
+-  Mensagens: Em português.
 
 IMPLEMENTAÇÃO:
 
@@ -398,7 +398,7 @@ class ProductUpdateRequest extends FormRequest
 
 ARQUIVOS:
 
--   `app/Http/Requests/ProductUpdateRequest.php` (criar)
+-  `app/Http/Requests/ProductUpdateRequest.php` (criar)
 
 CRITÉRIO DE SUCESSO: Validação robusta para edição de produto com mensagens em português.
 
@@ -412,10 +412,10 @@ Implemente APENAS o método `findBySku()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Busca: Por SKU (string)
--   Tenant scoping: Automático via `TenantScoped` (no Model)
--   Eager loading: Relacionamentos opcionais
--   Error handling: Produto não encontrado
+-  Busca: Por SKU (string)
+-  Tenant scoping: Automático via `TenantScoped` (no Model)
+-  Eager loading: Relacionamentos opcionais
+-  Error handling: Produto não encontrado
 
 IMPLEMENTAÇÃO:
 
@@ -469,7 +469,7 @@ class ProductService extends AbstractService
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (método `findBySku`)
+-  `app/Services/Domain/ProductService.php` (método `findBySku`)
 
 CRITÉRIO DE SUCESSO: Busca por SKU funcionando com eager loading opcional.
 
@@ -481,10 +481,10 @@ Implemente APENAS o método `getFilteredProducts()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Filtros: `search` (nome, SKU, descrição), `active`, `category_id`, `min_price`, `max_price`
--   Paginação: 15 registros por página
--   Ordenação: Por nome (asc)
--   Eager loading: Relacionamento `category`
+-  Filtros: `search` (nome, SKU, descrição), `active`, `category_id`, `min_price`, `max_price`
+-  Paginação: 15 registros por página
+-  Ordenação: Por nome (asc)
+-  Eager loading: Relacionamento `category`
 
 IMPLEMENTAÇÃO:
 
@@ -511,7 +511,7 @@ public function getFilteredProducts(array $filters = [], array $with = []): Serv
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (método `getFilteredProducts`)
+-  `app/Services/Domain/ProductService.php` (método `getFilteredProducts`)
 
 CRITÉRIO DE SUCESSO: Filtros funcionais com paginação.
 
@@ -523,10 +523,10 @@ Implemente APENAS o método `createProduct()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Geração: SKU único (se não fornecido)
--   Transaction: `DB::transaction` para atomicidade
--   Imagem: Upload e armazenamento (redimensionamento para 200px de largura)
--   Auditoria: Registrar criação
+-  Geração: SKU único (se não fornecido)
+-  Transaction: `DB::transaction` para atomicidade
+-  Imagem: Upload e armazenamento (redimensionamento para 200px de largura)
+-  Auditoria: Registrar criação
 
 IMPLEMENTAÇÃO:
 
@@ -590,8 +590,8 @@ private function uploadProductImage($imageFile): ?string
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (métodos `createProduct`, `generateUniqueSku`, `uploadProductImage`)
--   `app/Repositories/ProductRepository.php` (método `create`)
+-  `app/Services/Domain/ProductService.php` (métodos `createProduct`, `generateUniqueSku`, `uploadProductImage`)
+-  `app/Repositories/ProductRepository.php` (método `create`)
 
 CRITÉRIO DE SUCESSO: Produto criado com SKU único e imagem processada.
 
@@ -603,10 +603,10 @@ Implemente APENAS o método `updateProductBySku()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Busca: Por SKU + validação de existência
--   Transaction: Atomicidade completa
--   Imagem: Gerenciar imagem (upload nova, remover existente)
--   Auditoria: Registrar atualização
+-  Busca: Por SKU + validação de existência
+-  Transaction: Atomicidade completa
+-  Imagem: Gerenciar imagem (upload nova, remover existente)
+-  Auditoria: Registrar atualização
 
 IMPLEMENTAÇÃO:
 
@@ -668,8 +668,8 @@ public function updateProductBySku(string $sku, array $data): ServiceResult
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (método `updateProductBySku`)
--   `app/Repositories/ProductRepository.php` (método `update`)
+-  `app/Services/Domain/ProductService.php` (método `updateProductBySku`)
+-  `app/Repositories/ProductRepository.php` (método `update`)
 
 CRITÉRIO DE SUCESSO: Produto atualizado com gerenciamento de imagem.
 
@@ -681,10 +681,10 @@ Implemente APENAS o método `toggleProductStatus()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Busca: Por SKU + validação de existência
--   Validação: Se o produto pode ter o status alterado (não pode se estiver em `service_items`)
--   Ação: Alternar o status `active` (true/false)
--   Auditoria: Registrar mudança
+-  Busca: Por SKU + validação de existência
+-  Validação: Se o produto pode ter o status alterado (não pode se estiver em `service_items`)
+-  Ação: Alternar o status `active` (true/false)
+-  Auditoria: Registrar mudança
 
 IMPLEMENTAÇÃO:
 
@@ -730,8 +730,8 @@ public function toggleProductStatus(string $sku): ServiceResult
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (método `toggleProductStatus`)
--   `app/Repositories/ProductRepository.php` (método `canBeDeactivatedOrDeleted`)
+-  `app/Services/Domain/ProductService.php` (método `toggleProductStatus`)
+-  `app/Repositories/ProductRepository.php` (método `canBeDeactivatedOrDeleted`)
 
 CRITÉRIO DE SUCESSO: Status do produto alternado com validação.
 
@@ -743,10 +743,10 @@ Implemente APENAS o método `deleteProductBySku()` no `ProductService`:
 
 TAREFA ESPECÍFICA:
 
--   Busca: Por SKU + validação de deletabilidade
--   Verificação: Relacionamentos que impedem exclusão (`service_items`)
--   Cascata: Deletar imagem física
--   Transaction: Atomicidade
+-  Busca: Por SKU + validação de deletabilidade
+-  Verificação: Relacionamentos que impedem exclusão (`service_items`)
+-  Cascata: Deletar imagem física
+-  Transaction: Atomicidade
 
 IMPLEMENTAÇÃO:
 
@@ -795,8 +795,8 @@ public function deleteProductBySku(string $sku): ServiceResult
 
 ARQUIVOS:
 
--   `app/Services/Domain/ProductService.php` (método `deleteProductBySku`)
--   `app/Repositories/ProductRepository.php` (método `delete`, `canBeDeactivatedOrDeleted`)
+-  `app/Services/Domain/ProductService.php` (método `deleteProductBySku`)
+-  `app/Repositories/ProductRepository.php` (método `delete`, `canBeDeactivatedOrDeleted`)
 
 CRITÉRIO DE SUCESSO: Produto deletado com validação de dependências e imagem física.
 
@@ -810,10 +810,10 @@ Implemente APENAS o método `index()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function index(Request $request): View`
--   Filtros: `search`, `category_id`, `active`, `min_price`, `max_price`
--   Paginação: 15 registros por página
--   Eager loading: `category`
+-  Método: `public function index(Request $request): View`
+-  Filtros: `search`, `category_id`, `active`, `min_price`, `max_price`
+-  Paginação: 15 registros por página
+-  Eager loading: `category`
 
 IMPLEMENTAÇÃO:
 
@@ -868,9 +868,9 @@ class ProductController extends Controller
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `index`)
--   `app/Services/Domain/ProductService.php` (método `getFilteredProducts`)
--   `resources/views/products/index.blade.php` (criar)
+-  `app/Http/Controllers/ProductController.php` (método `index`)
+-  `app/Services/Domain/ProductService.php` (método `getFilteredProducts`)
+-  `resources/views/products/index.blade.php` (criar)
 
 CRITÉRIO DE SUCESSO: Lista de produtos com filtros funcionais e paginação.
 
@@ -882,9 +882,9 @@ Implemente APENAS o método `create()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function create(): View`
--   Dados: Categorias ativas
--   View: `products.create`
+-  Método: `public function create(): View`
+-  Dados: Categorias ativas
+-  View: `products.create`
 
 IMPLEMENTAÇÃO:
 
@@ -905,8 +905,8 @@ public function create(): View
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `create`)
--   `resources/views/products/create.blade.php` (criar)
+-  `app/Http/Controllers/ProductController.php` (método `create`)
+-  `resources/views/products/create.blade.php` (criar)
 
 CRITÉRIO DE SUCESSO: Formulário de criação carregado com dados necessários.
 
@@ -918,10 +918,10 @@ Implemente APENAS o método `store()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function store(ProductStoreRequest $request): RedirectResponse`
--   Validação: `ProductStoreRequest`
--   Lógica: Chamar `ProductService::createProduct()`
--   Redirecionamento: Para `products.show` em caso de sucesso, `back` em caso de erro.
+-  Método: `public function store(ProductStoreRequest $request): RedirectResponse`
+-  Validação: `ProductStoreRequest`
+-  Lógica: Chamar `ProductService::createProduct()`
+-  Redirecionamento: Para `products.show` em caso de sucesso, `back` em caso de erro.
 
 IMPLEMENTAÇÃO:
 
@@ -954,8 +954,8 @@ public function store(ProductStoreRequest $request): RedirectResponse
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `store`)
--   `app/Services/Domain/ProductService.php` (método `createProduct`)
+-  `app/Http/Controllers/ProductController.php` (método `store`)
+-  `app/Services/Domain/ProductService.php` (método `createProduct`)
 
 CRITÉRIO DE SUCESSO: Produto criado com sucesso e redirecionamento correto.
 
@@ -967,9 +967,9 @@ Implemente APENAS o método `show()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function show(string $sku): View`
--   Busca: Por SKU com relacionamento `category`
--   View: `products.show`
+-  Método: `public function show(string $sku): View`
+-  Busca: Por SKU com relacionamento `category`
+-  View: `products.show`
 
 IMPLEMENTAÇÃO:
 
@@ -999,8 +999,8 @@ public function show(string $sku): View
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `show`)
--   `resources/views/products/show.blade.php` (criar)
+-  `app/Http/Controllers/ProductController.php` (método `show`)
+-  `resources/views/products/show.blade.php` (criar)
 
 CRITÉRIO DE SUCESSO: Detalhes completos do produto com relacionamentos.
 
@@ -1012,10 +1012,10 @@ Implemente APENAS o método `edit()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function edit(string $sku): View`
--   Busca: Por SKU com relacionamento `category`
--   Dados: Categorias ativas
--   View: `products.edit`
+-  Método: `public function edit(string $sku): View`
+-  Busca: Por SKU com relacionamento `category`
+-  Dados: Categorias ativas
+-  View: `products.edit`
 
 IMPLEMENTAÇÃO:
 
@@ -1046,8 +1046,8 @@ public function edit(string $sku): View
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `edit`)
--   `resources/views/products/edit.blade.php` (criar)
+-  `app/Http/Controllers/ProductController.php` (método `edit`)
+-  `resources/views/products/edit.blade.php` (criar)
 
 CRITÉRIO DE SUCESSO: Formulário de edição carregado com dados do produto.
 
@@ -1059,10 +1059,10 @@ Implemente APENAS o método `update()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function update(string $sku, ProductUpdateRequest $request): RedirectResponse`
--   Validação: `ProductUpdateRequest`
--   Lógica: Chamar `ProductService::updateProductBySku()`
--   Redirecionamento: Para `products.show` em caso de sucesso, `back` em caso de erro.
+-  Método: `public function update(string $sku, ProductUpdateRequest $request): RedirectResponse`
+-  Validação: `ProductUpdateRequest`
+-  Lógica: Chamar `ProductService::updateProductBySku()`
+-  Redirecionamento: Para `products.show` em caso de sucesso, `back` em caso de erro.
 
 IMPLEMENTAÇÃO:
 
@@ -1095,8 +1095,8 @@ public function update(string $sku, ProductUpdateRequest $request): RedirectResp
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `update`)
--   `app/Services/Domain/ProductService.php` (método `updateProductBySku`)
+-  `app/Http/Controllers/ProductController.php` (método `update`)
+-  `app/Services/Domain/ProductService.php` (método `updateProductBySku`)
 
 CRITÉRIO DE SUCESSO: Produto atualizado com sucesso e redirecionamento correto.
 
@@ -1108,9 +1108,9 @@ Implemente APENAS o método `toggle_status()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function toggle_status(string $sku): JsonResponse`
--   Lógica: Chamar `ProductService::toggleProductStatus()`
--   Retorno: JSON com sucesso/erro
+-  Método: `public function toggle_status(string $sku): JsonResponse`
+-  Lógica: Chamar `ProductService::toggleProductStatus()`
+-  Retorno: JSON com sucesso/erro
 
 IMPLEMENTAÇÃO:
 
@@ -1148,8 +1148,8 @@ public function toggle_status(string $sku): JsonResponse
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `toggle_status`)
--   `app/Services/Domain/ProductService.php` (método `toggleProductStatus`)
+-  `app/Http/Controllers/ProductController.php` (método `toggle_status`)
+-  `app/Services/Domain/ProductService.php` (método `toggleProductStatus`)
 
 CRITÉRIO DE SUCESSO: Status do produto alternado via AJAX.
 
@@ -1161,9 +1161,9 @@ Implemente APENAS o método `delete_store()` no `ProductController`:
 
 TAREFA ESPECÍFICA:
 
--   Método: `public function delete_store(string $sku): RedirectResponse`
--   Lógica: Chamar `ProductService::deleteProductBySku()`
--   Redirecionamento: Para `products.index` em caso de sucesso, `back` em caso de erro.
+-  Método: `public function delete_store(string $sku): RedirectResponse`
+-  Lógica: Chamar `ProductService::deleteProductBySku()`
+-  Redirecionamento: Para `products.index` em caso de sucesso, `back` em caso de erro.
 
 IMPLEMENTAÇÃO:
 
@@ -1180,7 +1180,7 @@ public function delete_store(string $sku): RedirectResponse
                 ->with('error', $result->getMessage());
         }
 
-        return redirect()->route('products.index')
+        return redirect()->route('provider.products.index')
             ->with('success', 'Produto excluído com sucesso!');
 
     } catch (Exception $e) {
@@ -1192,8 +1192,8 @@ public function delete_store(string $sku): RedirectResponse
 
 ARQUIVOS:
 
--   `app/Http/Controllers/ProductController.php` (método `delete_store`)
--   `app/Services/Domain/ProductService.php` (método `deleteProductBySku`)
+-  `app/Http/Controllers/ProductController.php` (método `delete_store`)
+-  `app/Services/Domain/ProductService.php` (método `deleteProductBySku`)
 
 CRITÉRIO DE SUCESSO: Produto deletado com sucesso e redirecionamento correto.
 
@@ -1208,33 +1208,33 @@ CRITÉRIO DE SUCESSO: Produto deletado com sucesso e redirecionamento correto.
 
 ### **Fase 1: Database & Repository (1.5 dias)**
 
--   PROMPTS 1.1 a 1.5: Atualizar Migration, Model e Factory, getPaginated, findBySku, countActive, canBeDeactivatedOrDeleted
+-  PROMPTS 1.1 a 1.5: Atualizar Migration, Model e Factory, getPaginated, findBySku, countActive, canBeDeactivatedOrDeleted
 
 ### **Fase 2: Form Requests (1 dia)**
 
--   PROMPTS 2.1 a 2.2: ProductStoreRequest, ProductUpdateRequest
+-  PROMPTS 2.1 a 2.2: ProductStoreRequest, ProductUpdateRequest
 
 ### **Fase 3: Services (4 dias)**
 
--   PROMPTS 3.1 a 3.6: findBySku, getFilteredProducts, createProduct, updateProductBySku, toggleProductStatus, deleteProductBySku
+-  PROMPTS 3.1 a 3.6: findBySku, getFilteredProducts, createProduct, updateProductBySku, toggleProductStatus, deleteProductBySku
 
 ### **Fase 4: Controllers (4 dias)**
 
--   PROMPTS 4.1 a 4.8: index, create, store, show, edit, update, toggle_status, delete_store
+-  PROMPTS 4.1 a 4.8: index, create, store, show, edit, update, toggle_status, delete_store
 
 ## ✅ **CRITÉRIOS DE SUCESSO POR PROMPT**
 
--   **Database & Repository:** Estrutura de banco de dados e modelo Eloquent atualizados, queries otimizadas com eager loading e validações de dependência.
--   **FormRequest:** Validação robusta com mensagens em português.
--   **Service:** Lógica de negócio completa com transação, auditoria e gerenciamento de imagens.
--   **Controller:** Método funcionando com validação, error handling e redirecionamento/resposta JSON.
+-  **Database & Repository:** Estrutura de banco de dados e modelo Eloquent atualizados, queries otimizadas com eager loading e validações de dependência.
+-  **FormRequest:** Validação robusta com mensagens em português.
+-  **Service:** Lógica de negócio completa com transação, auditoria e gerenciamento de imagens.
+-  **Controller:** Método funcionando com validação, error handling e redirecionamento/resposta JSON.
 
 ## 🚀 **BENEFÍCIOS DA ORDEM CORRETA**
 
--   **Dependências respeitadas:** Database & Repository → Form Requests → Services → Controllers
--   **Validação primeiro:** Form Requests antes dos Controllers
--   **Base sólida:** Repository implementado antes dos Services
--   **Testabilidade:** Cada grupo pode ser testado independentemente
--   **Zero dependências circulares:** Arquitetura clara e desacoplada
+-  **Dependências respeitadas:** Database & Repository → Form Requests → Services → Controllers
+-  **Validação primeiro:** Form Requests antes dos Controllers
+-  **Base sólida:** Repository implementado antes dos Services
+-  **Testabilidade:** Cada grupo pode ser testado independentemente
+-  **Zero dependências circulares:** Arquitetura clara e desacoplada
 
 **Total:** 17 prompts na ordem técnica correta para completar a migração do Módulo de Produtos.

@@ -26,6 +26,42 @@ class ProductService extends AbstractBaseService
     }
 
     /**
+     * Retorna o total de produtos do tenant autenticado.
+     */
+    public function getTotalCount(): int
+    {
+        return Product::count();
+    }
+
+    /**
+     * Retorna o total de produtos ativos do tenant autenticado.
+     */
+    public function getActiveCount(): int
+    {
+        return $this->productRepository->countActive();
+    }
+
+    /**
+     * Retorna uma coleção de produtos recentes com relacionamentos opcionais.
+     *
+     * @param  int   $limit Quantidade de registros retornados
+     * @param  array $with  Relacionamentos para eager loading
+     */
+    public function getRecentProducts( int $limit = 5, array $with = [] ): Collection
+    {
+        $query = Product::query();
+
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        return $query
+            ->orderByDesc( 'created_at' )
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
      * Retorna produtos ativos
      */
     public function getActive(): Collection

@@ -48,6 +48,15 @@ Route::group( [], function () {
         Route::get( '/print/code/{code}/token/{token}', [ BudgetController::class, 'print' ] )->name( 'print' );
     } );
 
+    /**
+     * Customer Dashboard (Área autenticada / provider)
+     * Mantém compatibilidade com arquitetura atual e segue padrão de rotas provider.*
+     */
+    Route::middleware( [ 'auth' ] )->group( function () {
+        Route::get( '/provider/customers/dashboard', [ CustomerController::class, 'dashboard' ] )
+            ->name( 'provider.customers.dashboard' );
+    } );
+
     Route::prefix( 'services' )->name( 'services.public.' )->group( function () {
         Route::get( '/view-service-status/code/{code}/token/{token}', [ ServiceController::class, 'viewServiceStatus' ] )->name( 'view-status' );
         Route::post( '/choose-service-status', [ ServiceController::class, 'chooseServiceStatus' ] )->name( 'choose-status' );
@@ -148,20 +157,22 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::post( '/{customer}/duplicate', [ CustomerController::class, 'duplicate' ] )->name( 'duplicate' );
     } );
 
-    // Products
+    // Products (novo módulo baseado em SKU + Service Layer)
     Route::prefix( 'products' )->name( 'products.' )->group( function () {
+        // Dashboard de Produtos
+        Route::get( '/dashboard', [ ProductController::class, 'dashboard' ] )->name( 'dashboard' );
+
+        // CRUD principal
         Route::get( '/', [ ProductController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ ProductController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ ProductController::class, 'store' ] )->name( 'store' );
-        Route::get( '/{product}', [ ProductController::class, 'show' ] )->name( 'show' );
-        Route::get( '/{product}/edit', [ ProductController::class, 'edit' ] )->name( 'edit' );
-        Route::post( '/{product}', [ ProductController::class, 'update' ] )->name( 'update' );
-        Route::post( '/{product}/deactivate', [ ProductController::class, 'deactivate' ] )->name( 'deactivate' );
-        Route::post( '/{product}/activate', [ ProductController::class, 'activate' ] )->name( 'activate' );
-        Route::delete( '/{product}', [ ProductController::class, 'destroy' ] )->name( 'destroy' );
-        Route::get( '/search/ajax', [ ProductController::class, 'search' ] )->name( 'search' );
-        Route::get( '/export', [ ProductController::class, 'export' ] )->name( 'export' );
-        Route::get( '/{product}/print', [ ProductController::class, 'print' ] )->name( 'print' );
+        Route::get( '/{sku}', [ ProductController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{sku}/edit', [ ProductController::class, 'edit' ] )->name( 'edit' );
+        Route::put( '/{sku}', [ ProductController::class, 'update' ] )->name( 'update' );
+
+        // Status e exclusão via SKU
+        Route::patch( '/{sku}/toggle-status', [ ProductController::class, 'toggle_status' ] )->name( 'toggle-status' );
+        Route::delete( '/{sku}', [ ProductController::class, 'delete_store' ] )->name( 'destroy' );
     } );
 
     // Services

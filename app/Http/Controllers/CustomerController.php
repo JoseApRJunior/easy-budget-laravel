@@ -462,19 +462,51 @@ class CustomerController extends Controller
             'q' => 'required|string|min:2|max:50',
         ] );
 
-        $customers = $this->customerService->listCustomers( [
-            'search' => $request->q,
-            'limit'  => 10,
-        ] );
+        $tenantId = Auth::user()->tenant_id;
 
-        $results = $customers->isSuccess() ? $customers->getData()->map( function ( $customer ) {
+        // Usa getFilteredCustomers garantindo uso explícito do tenantId
+        $serviceResult = $this->customerService->getFilteredCustomers(
+            [ 'search' => $request->q, 'limit' => 10 ],
+            $tenantId,
+        );
+
+        if ( !$serviceResult->isSuccess() ) {
+            return response()->json( [
+                'results' => [],
+                'error'   => $serviceResult->getMessage(),
+            ], 422 );
+        }
+
+        $customers = $serviceResult->getData();
+
+        // Normaliza paginator/collection para iterável simples
+        if ( method_exists( $customers, 'items' ) ) {
+            $customers = collect( $customers->items() );
+        }
+
+        $results = $customers->map( function ( $customer ) {
+            $common  = $customer->commonData ?? $customer->common_data ?? null;
+            $contact = $customer->contact ?? null;
+
+            $name = $common?->first_name || $common?->last_name
+                ? trim( ( $common->first_name ?? '' ) . ' ' . ( $common->last_name ?? '' ) )
+                : ( $common->company_name ?? 'Cliente' );
+
+            $email = $contact->email_personal
+                ?? $contact->email_business
+                ?? null;
+
+            $phone = $contact->phone_personal
+                ?? $contact->phone_business
+                ?? null;
+
             return [
                 'id'    => $customer->id,
-                'text'  => $customer->full_name . ' (' . $customer->email . ')',
-                'email' => $customer->email,
-                'phone' => $customer->contact?->phone,
+                'text'  => $name . ( $email ? " ({$email})" : '' ),
+                'email' => $email,
+                'phone' => $phone,
             ];
-        } ) : collect();
+        } );
 
         return response()->json( [ 'results' => $results ] );
     }
@@ -484,13 +516,17 @@ class CustomerController extends Controller
      */
     public function dashboard(): View
     {
-        // Implementar métricas e estatísticas
-        $stats = [
-            'total_customers'          => 0,
-            'active_customers'         => 0,
-            'new_customers_this_month' => 0,
-            'top_customers'            => collect(),
-        ];
+        $tenantId    = Auth::user()->tenant_id;
+        $statsResult = $this->customerService->getCustomerStats( $tenantId );
+
+        $stats = $statsResult->isSuccess()
+            ? $statsResult->getData()
+            : [
+                'total_customers'    => 0,
+                'active_customers'   => 0,
+                'inactive_customers' => 0,
+                'recent_customers'   => collect(),
+            ];
 
         return view( 'pages.customer.dashboard', [
             'stats' => $stats,

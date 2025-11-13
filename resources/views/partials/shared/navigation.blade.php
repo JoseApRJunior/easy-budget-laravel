@@ -26,10 +26,11 @@
                 <span>Dashboard</span>
             </a>
         </li>
+
+
         <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="/ia">
-                <i class="bi bi-robot me-2">
-                </i>
+                <i class="bi bi-robot me-2"></i>
                 <span>IA</span>
             </a>
         </li>
