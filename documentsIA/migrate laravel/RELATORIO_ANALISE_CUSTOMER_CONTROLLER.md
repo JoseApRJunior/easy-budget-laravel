@@ -134,7 +134,7 @@ if ($existingContact) {
 
 ```php
 // Provider (CRUD completo)
-app/Http/Controllers/Provider/CustomerController.php
+app/Http/Controllers/CustomerController.php
 ```
 
 ### Services
