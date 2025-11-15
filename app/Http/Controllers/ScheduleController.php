@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Repositories\ScheduleRepository;
 use App\Services\Domain\ScheduleService;
-use App\Support\ServiceResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -29,9 +28,9 @@ class ScheduleController extends Controller
      * @param ScheduleService $scheduleService
      * @param ScheduleRepository $scheduleRepository
      */
-    public function __construct(ScheduleService $scheduleService, ScheduleRepository $scheduleRepository)
+    public function __construct( ScheduleService $scheduleService, ScheduleRepository $scheduleRepository )
     {
-        $this->scheduleService = $scheduleService;
+        $this->scheduleService    = $scheduleService;
         $this->scheduleRepository = $scheduleRepository;
     }
 
@@ -41,15 +40,15 @@ class ScheduleController extends Controller
      * @param Request $request
      * @return \Illuminate\View\View
      */
-    public function index(Request $request)
+    public function index( Request $request )
     {
-        $startDate = $request->get('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->get('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
-        
-        $schedules = $this->scheduleRepository->getByDateRange($startDate, $endDate);
-        $upcomingSchedules = $this->scheduleService->getUpcomingSchedules(5);
+        $startDate = $request->get( 'start_date', Carbon::now()->startOfMonth()->format( 'Y-m-d' ) );
+        $endDate   = $request->get( 'end_date', Carbon::now()->endOfMonth()->format( 'Y-m-d' ) );
 
-        return view('pages.schedule.index', compact('schedules', 'upcomingSchedules', 'startDate', 'endDate'));
+        $schedules         = $this->scheduleRepository->getByDateRange( $startDate, $endDate );
+        $upcomingSchedules = $this->scheduleService->getUpcomingSchedules( 5 );
+
+        return view( 'pages.schedule.index', compact( 'schedules', 'upcomingSchedules', 'startDate', 'endDate' ) );
     }
 
     /**
@@ -58,18 +57,18 @@ class ScheduleController extends Controller
      * @param Request $request
      * @return \Illuminate\View\View
      */
-    public function calendar(Request $request)
+    public function calendar( Request $request )
     {
-        $month = $request->get('month', Carbon::now()->format('Y-m'));
-        $startDate = Carbon::parse($month . '-01')->startOfMonth();
-        $endDate = Carbon::parse($month . '-01')->endOfMonth();
+        $month     = $request->get( 'month', Carbon::now()->format( 'Y-m' ) );
+        $startDate = Carbon::parse( $month . '-01' )->startOfMonth();
+        $endDate   = Carbon::parse( $month . '-01' )->endOfMonth();
 
         $schedules = $this->scheduleRepository->getByDateRange(
-            $startDate->format('Y-m-d'),
-            $endDate->format('Y-m-d')
+            $startDate->format( 'Y-m-d' ),
+            $endDate->format( 'Y-m-d' ),
         );
 
-        return view('pages.schedule.calendar', compact('schedules', 'month'));
+        return view( 'pages.schedule.calendar', compact( 'schedules', 'month' ) );
     }
 
     /**
@@ -78,9 +77,9 @@ class ScheduleController extends Controller
      * @param Service $service
      * @return \Illuminate\View\View
      */
-    public function create(Service $service)
+    public function create( Service $service )
     {
-        return view('pages.schedule.create', compact('service'));
+        return view( 'pages.schedule.create', compact( 'service' ) );
     }
 
     /**
@@ -90,24 +89,24 @@ class ScheduleController extends Controller
      * @param Service $service
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request, Service $service)
+    public function store( Request $request, Service $service )
     {
-        $validated = $request->validate([
+        $validated = $request->validate( [
             'start_date_time' => 'required|date|after:now',
-            'end_date_time' => 'required|date|after:start_date_time',
-            'location' => 'nullable|string|max:500',
-        ]);
+            'end_date_time'   => 'required|date|after:start_date_time',
+            'location'        => 'nullable|string|max:500',
+        ] );
 
-        $result = $this->scheduleService->handleScheduledStatus($service, $validated);
+        $result = $this->scheduleService->handleScheduledStatus( $service, $validated );
 
-        if ($result->isSuccess()) {
-            return redirect()->route('services.show', $service)
-                ->with('success', 'Agendamento criado com sucesso!');
+        if ( $result->isSuccess() ) {
+            return redirect()->route( 'services.show', $service )
+                ->with( 'success', 'Agendamento criado com sucesso!' );
         }
 
         return redirect()->back()
             ->withInput()
-            ->with('error', $result->getMessage());
+            ->with( 'error', $result->getMessage() );
     }
 
     /**
@@ -116,13 +115,13 @@ class ScheduleController extends Controller
      * @param Schedule $schedule
      * @return \Illuminate\View\View
      */
-    public function show(Schedule $schedule)
+    public function show( Schedule $schedule )
     {
-        $this->authorize('view', $schedule);
+        $this->authorize( 'view', $schedule );
 
-        $schedule->load(['service', 'service.customer', 'userConfirmationToken']);
+        $schedule->load( [ 'service', 'service.customer', 'userConfirmationToken' ] );
 
-        return view('pages.schedule.show', compact('schedule'));
+        return view( 'pages.schedule.show', compact( 'schedule' ) );
     }
 
     /**
@@ -131,13 +130,13 @@ class ScheduleController extends Controller
      * @param Schedule $schedule
      * @return \Illuminate\View\View
      */
-    public function edit(Schedule $schedule)
+    public function edit( Schedule $schedule )
     {
-        $this->authorize('update', $schedule);
+        $this->authorize( 'update', $schedule );
 
-        $schedule->load(['service', 'service.customer']);
+        $schedule->load( [ 'service', 'service.customer' ] );
 
-        return view('pages.schedule.edit', compact('schedule'));
+        return view( 'pages.schedule.edit', compact( 'schedule' ) );
     }
 
     /**
@@ -147,26 +146,26 @@ class ScheduleController extends Controller
      * @param Schedule $schedule
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Schedule $schedule)
+    public function update( Request $request, Schedule $schedule )
     {
-        $this->authorize('update', $schedule);
+        $this->authorize( 'update', $schedule );
 
-        $validated = $request->validate([
+        $validated = $request->validate( [
             'start_date_time' => 'required|date|after:now',
-            'end_date_time' => 'required|date|after:start_date_time',
-            'location' => 'nullable|string|max:500',
-        ]);
+            'end_date_time'   => 'required|date|after:start_date_time',
+            'location'        => 'nullable|string|max:500',
+        ] );
 
-        $result = $this->scheduleService->updateScheduledToken($schedule, $validated);
+        $result = $this->scheduleService->updateScheduledToken( $schedule, $validated );
 
-        if ($result->isSuccess()) {
-            return redirect()->route('schedules.show', $schedule)
-                ->with('success', 'Agendamento atualizado com sucesso!');
+        if ( $result->isSuccess() ) {
+            return redirect()->route( 'schedules.show', $schedule )
+                ->with( 'success', 'Agendamento atualizado com sucesso!' );
         }
 
         return redirect()->back()
             ->withInput()
-            ->with('error', $result->getMessage());
+            ->with( 'error', $result->getMessage() );
     }
 
     /**
@@ -175,19 +174,19 @@ class ScheduleController extends Controller
      * @param Schedule $schedule
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Schedule $schedule)
+    public function destroy( Schedule $schedule )
     {
-        $this->authorize('delete', $schedule);
+        $this->authorize( 'delete', $schedule );
 
-        $result = $this->scheduleService->deleteSchedule($schedule);
+        $result = $this->scheduleService->deleteSchedule( $schedule );
 
-        if ($result->isSuccess()) {
-            return redirect()->route('schedules.index')
-                ->with('success', 'Agendamento excluído com sucesso!');
+        if ( $result->isSuccess() ) {
+            return redirect()->route( 'provider.schedules.index' )
+                ->with( 'success', 'Agendamento excluído com sucesso!' );
         }
 
         return redirect()->back()
-            ->with('error', $result->getMessage());
+            ->with( 'error', $result->getMessage() );
     }
 
     /**
@@ -196,27 +195,27 @@ class ScheduleController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getCalendarData(Request $request)
+    public function getCalendarData( Request $request )
     {
-        $start = $request->get('start');
-        $end = $request->get('end');
+        $start = $request->get( 'start' );
+        $end   = $request->get( 'end' );
 
-        $schedules = $this->scheduleRepository->getByDateRange($start, $end);
+        $schedules = $this->scheduleRepository->getByDateRange( $start, $end );
 
-        $events = $schedules->map(function ($schedule) {
+        $events = $schedules->map( function ( $schedule ) {
             return [
-                'id' => $schedule->id,
-                'title' => $schedule->service->title . ' - ' . $schedule->service->customer->name,
-                'start' => $schedule->start_date_time->format('Y-m-d\TH:i:s'),
-                'end' => $schedule->end_date_time->format('Y-m-d\TH:i:s'),
-                'location' => $schedule->location,
-                'url' => route('schedules.show', $schedule->id),
+                'id'              => $schedule->id,
+                'title'           => $schedule->service->title . ' - ' . $schedule->service->customer->name,
+                'start'           => $schedule->start_date_time->format( 'Y-m-d\TH:i:s' ),
+                'end'             => $schedule->end_date_time->format( 'Y-m-d\TH:i:s' ),
+                'location'        => $schedule->location,
+                'url'             => route( 'schedules.show', $schedule->id ),
                 'backgroundColor' => '#007bff',
-                'borderColor' => '#0056b3',
+                'borderColor'     => '#0056b3',
             ];
-        });
+        } );
 
-        return response()->json($events);
+        return response()->json( $events );
     }
 
     /**
@@ -225,22 +224,23 @@ class ScheduleController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function checkConflicts(Request $request)
+    public function checkConflicts( Request $request )
     {
-        $serviceId = $request->get('service_id');
-        $startDateTime = $request->get('start_date_time');
-        $endDateTime = $request->get('end_date_time');
-        $excludeId = $request->get('exclude_id');
+        $serviceId     = $request->get( 'service_id' );
+        $startDateTime = $request->get( 'start_date_time' );
+        $endDateTime   = $request->get( 'end_date_time' );
+        $excludeId     = $request->get( 'exclude_id' );
 
         $hasConflict = $this->scheduleRepository->hasConflict(
             $serviceId,
             $startDateTime,
             $endDateTime,
-            $excludeId
+            $excludeId,
         );
 
-        return response()->json([
+        return response()->json( [
             'has_conflict' => $hasConflict,
-        ]);
+        ] );
     }
+
 }

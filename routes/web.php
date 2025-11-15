@@ -8,10 +8,12 @@ use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailtrapController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderBusinessController;
 use App\Http\Controllers\ProviderController;
@@ -40,6 +42,8 @@ Route::group( [], function () {
     Route::get( '/csrf-token', function () {
         return response()->json( [ 'csrf_token' => csrf_token() ] );
     } )->name( 'csrf-token' );
+    
+
     Route::get( '/support', [ SupportController::class, 'index' ] )->name( 'support' );
     Route::post( '/support', [ SupportController::class, 'store' ] )->name( 'support.store' );
     Route::get( '/terms-of-service', [ HomeController::class, 'terms' ] )->name( 'terms' );
@@ -185,6 +189,22 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{sku}', [ ProductController::class, 'delete_store' ] )->name( 'destroy' );
     } );
 
+    // Inventory
+    Route::prefix( 'inventory' )->name( 'inventory.' )->group( function () {
+        Route::get( '/', [ InventoryController::class, 'index' ] )->name( 'index' );
+        Route::get( '/dashboard', [ InventoryController::class, 'dashboard' ] )->name( 'dashboard' );
+        Route::get( '/movements', [ InventoryController::class, 'movements' ] )->name( 'movements' );
+        Route::get( '/export', [ InventoryController::class, 'export' ] )->name( 'export' );
+        Route::get( '/adjust', [ InventoryController::class, 'adjust' ] )->name( 'adjust' );
+        Route::post( '/adjust', [ InventoryController::class, 'storeAdjustment' ] )->name( 'adjust.store' );
+        Route::get( '/entry', [ InventoryController::class, 'entry' ] )->name( 'entry' );
+        Route::post( '/entry', [ InventoryController::class, 'storeEntry' ] )->name( 'entry.store' );
+        Route::get( '/exit', [ InventoryController::class, 'exit' ] )->name( 'exit' );
+        Route::post( '/exit', [ InventoryController::class, 'storeExit' ] )->name( 'exit.store' );
+        Route::post( '/parameters/{product}', [ InventoryController::class, 'setParameters' ] )->name( 'parameters' );
+        Route::get( '/data', [ InventoryController::class, 'getInventoryData' ] )->name( 'data' );
+    } );
+
     // Services
     Route::prefix( 'services' )->name( 'services.' )->group( function () {
         // Dashboard de Serviços
@@ -252,6 +272,15 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::post('/budgets/{budget}', [ InvoiceController::class, 'storeFromBudget' ])->name('store.from-budget');
     } );
 
+    // QR Code routes
+    Route::prefix( 'qrcode' )->name( 'qrcode.' )->group( function () {
+        Route::get( '/', [ QrCodeController::class, 'index' ] )->name( 'index' );
+        Route::post( '/generate', [ QrCodeController::class, 'generate' ] )->name( 'generate' );
+        Route::post( '/handle', [ QrCodeController::class, 'handle' ] )->name( 'handle' );
+        Route::post( '/budget', [ QrCodeController::class, 'generateForBudget' ] )->name( 'budget' );
+        Route::post( '/invoice', [ QrCodeController::class, 'generateForInvoice' ] )->name( 'invoice' );
+    } );
+
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
         Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
@@ -264,6 +293,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/customers', [ ReportController::class, 'customers' ] )->name( 'customers' );
         Route::post( '/customers/search', [ ReportController::class, 'customersSearch' ] )->name( 'customers.search' );
         Route::get( '/customers/pdf', [ ReportController::class, 'customersPdf' ] )->name( 'customers.pdf' );
+        Route::get( '/customers/excel', [ ReportController::class, 'customersExcel' ] )->name( 'customers.excel' );
         Route::get( '/products', [ ReportController::class, 'products' ] )->name( 'products' );
     } );
 

@@ -192,19 +192,191 @@ class ReportController extends Controller
     /**
      * Exportação PDF de orçamentos
      */
-    public function budgets_pdf()
+    public function budgets_pdf( Request $request )
     {
-        // Implementar lógica baseada no sistema legado
-        return response()->json( [ 'message' => 'PDF será implementado' ] );
+        try {
+            // Get filters from request
+            $filters = $request->only( [ 'code', 'start_date', 'end_date', 'customer_name', 'total', 'status' ] );
+
+            // Get budget data
+            $budgetService = app( \App\Services\Domain\BudgetService::class );
+            $result        = $budgetService->getFilteredBudgets( $filters );
+            
+            if ( !$result->isSuccess() ) {
+                return response()->json( [ 'error' => 'Erro ao buscar dados' ], 500 );
+            }
+
+            $budgets = $result->getData();
+            
+            if ( $budgets->isEmpty() ) {
+                return response()->json( [ 'error' => 'Nenhum orçamento encontrado' ], 404 );
+            }
+
+            // Calculate totals
+            $totals = $this->calculateTotals( $budgets );
+
+            // Generate HTML for PDF
+            $html = view( 'pages.report.budget.pdf_budget', [
+                'budgets' => $budgets,
+                'totals' => $totals,
+                'filters' => $filters,
+                'generated_at' => now()->format( 'd/m/Y H:i:s' ),
+                'generated_by' => auth()->user()->name
+            ] )->render();
+
+            // Create PDF using mPDF
+            $mpdf = new \Mpdf\Mpdf( [
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 12,
+                'margin_right' => 12,
+                'margin_top' => 14,
+                'margin_bottom' => 14,
+                'margin_header' => 8,
+                'margin_footer' => 8
+            ] );
+
+            // Add header and footer
+            $mpdf->SetHeader( 'Relatório de Orçamentos - ' . config( 'app.name' ) . '||Gerado em: ' . now()->format( 'd/m/Y' ) );
+            $mpdf->SetFooter( 'Página {PAGENO} de {nb}|Usuário: ' . auth()->user()->name . '|' . config( 'app.url' ) );
+
+            // Write HTML content
+            $mpdf->WriteHTML( $html );
+
+            // Generate filename
+            $count = $budgets->count();
+            $timestamp = now()->format( 'Ymd_His' );
+            $filename = "relatorio_orcamentos_{$timestamp}_{$count}_registros.pdf";
+
+            // Return PDF as download
+            $content = $mpdf->Output( '', 'S' );
+            
+            return response( $content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"'
+            ] );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao gerar PDF de orçamentos', [ 'error' => $e->getMessage() ] );
+            return response()->json( [ 'error' => 'Erro interno ao gerar PDF' ], 500 );
+        }
     }
 
     /**
      * Exportação Excel de orçamentos
      */
-    public function budgets_excel()
+    public function budgets_excel( Request $request )
     {
-        // Implementar lógica baseada no sistema legado
-        return response()->json( [ 'message' => 'Excel será implementado' ] );
+        try {
+            // Get filters from request
+            $filters = $request->only( [ 'code', 'start_date', 'end_date', 'customer_name', 'total', 'status' ] );
+
+            // Get budget data
+            $budgetService = app( \App\Services\Domain\BudgetService::class );
+            $result        = $budgetService->getFilteredBudgets( $filters );
+            
+            if ( !$result->isSuccess() ) {
+                return response()->json( [ 'error' => 'Erro ao buscar dados' ], 500 );
+            }
+
+            $budgets = $result->getData();
+            
+            if ( $budgets->isEmpty() ) {
+                return response()->json( [ 'error' => 'Nenhum orçamento encontrado' ], 404 );
+            }
+
+            // Prepare data for Excel
+            $excelData = [];
+            $excelData[] = [ 'Nº Orçamento', 'Cliente', 'Descrição', 'Data Criação', 'Data Vencimento', 'Valor Total', 'Status' ];
+            
+            foreach ( $budgets as $budget ) {
+                $customerName = 'Não informado';
+                if ( $budget->customer && $budget->customer->commonData ) {
+                    $commonData = $budget->customer->commonData;
+                    $customerName = $commonData->company_name ?: ( $commonData->first_name . ' ' . $commonData->last_name );
+                }
+                
+                $excelData[] = [
+                    $budget->code,
+                    $customerName,
+                    $budget->description ?: 'Sem descrição',
+                    $budget->created_at->format( 'd/m/Y' ),
+                    $budget->due_date ? \Carbon\Carbon::parse( $budget->due_date )->format( 'd/m/Y' ) : 'N/A',
+                    number_format( $budget->total, 2, ',', '.' ),
+                    $budget->status_label ?? $budget->status
+                ];
+            }
+
+            // Create Excel file using PhpSpreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set data
+            $sheet->fromArray( $excelData, null, 'A1' );
+            
+            // Format header row
+            $headerStyle = [
+                'font' => [
+                    'bold' => true,
+                    'color' => [ 'rgb' => 'FFFFFF' ]
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [ 'rgb' => '4472C4' ]
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ];
+            
+            $sheet->getStyle( 'A1:G1' )->applyFromArray( $headerStyle );
+            
+            // Auto-size columns
+            foreach ( range( 'A', 'G' ) as $column ) {
+                $sheet->getColumnDimension( $column )->setAutoSize( true );
+            }
+            
+            // Format currency column
+            $currencyStyle = [
+                'numberFormat' => [
+                    'formatCode' => '#,##0.00'
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT
+                ]
+            ];
+            
+            $lastRow = count( $excelData );
+            $sheet->getStyle( "F2:F{$lastRow}" )->applyFromArray( $currencyStyle );
+            
+            // Set title and metadata
+            $sheet->setTitle( 'Orçamentos' );
+            $spreadsheet->getProperties()
+                ->setCreator( auth()->user()->name )
+                ->setTitle( 'Relatório de Orçamentos' )
+                ->setDescription( 'Relatório de orçamentos gerado em ' . now()->format( 'd/m/Y H:i:s' ) );
+
+            // Create filename
+            $count = $budgets->count();
+            $timestamp = now()->format( 'Ymd_His' );
+            $filename = "relatorio_orcamentos_{$timestamp}_{$count}_registros.xlsx";
+
+            // Save to temporary file
+            $tempFile = tempnam( sys_get_temp_dir(), 'excel_' );
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx( $spreadsheet );
+            $writer->save( $tempFile );
+
+            // Return file as download
+            return response()->download( $tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ] )->deleteFileAfterSend( true );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao gerar Excel de orçamentos', [ 'error' => $e->getMessage() ] );
+            return response()->json( [ 'error' => 'Erro interno ao gerar Excel' ], 500 );
+        }
     }
 
     /**

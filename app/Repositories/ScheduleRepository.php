@@ -1,27 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repositories;
 
 use App\Models\Schedule;
-use App\Repositories\AbstractTenantRepository;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class ScheduleRepository extends AbstractTenantRepository
 {
     /**
-     * @var Schedule
+     * Define o Model a ser utilizado pelo Repositório.
      */
-    protected $model;
-
-    /**
-     * ScheduleRepository constructor.
-     *
-     * @param Schedule $model
-     */
-    public function __construct(Schedule $model)
+    protected function makeModel(): Model
     {
-        $this->model = $model;
+        return new Schedule();
     }
 
     /**
@@ -30,11 +26,11 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param int $serviceId
      * @return Schedule|null
      */
-    public function findLatestByServiceId(int $serviceId): ?Schedule
+    public function findLatestByServiceId( int $serviceId ): ?Schedule
     {
         return $this->model
-            ->where('service_id', $serviceId)
-            ->where('tenant_id', $this->getCurrentTenantId())
+            ->where( 'service_id', $serviceId )
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
             ->latest()
             ->first();
     }
@@ -46,13 +42,13 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getByServiceIdPaginated(int $serviceId, int $perPage = 15)
+    public function getByServiceIdPaginated( int $serviceId, int $perPage = 15 )
     {
         return $this->model
-            ->where('service_id', $serviceId)
-            ->where('tenant_id', $this->getCurrentTenantId())
+            ->where( 'service_id', $serviceId )
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
             ->latest()
-            ->paginate($perPage);
+            ->paginate( $perPage );
     }
 
     /**
@@ -61,14 +57,14 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param int $limit
      * @return Collection
      */
-    public function getUpcomingSchedules(int $limit = 10): Collection
+    public function getUpcomingSchedules( int $limit = 10 ): Collection
     {
         return $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
-            ->where('start_date_time', '>', now())
-            ->with(['service', 'service.customer'])
-            ->orderBy('start_date_time', 'asc')
-            ->limit($limit)
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where( 'start_date_time', '>', now() )
+            ->with( [ 'service', 'service.customer' ] )
+            ->orderBy( 'start_date_time', 'asc' )
+            ->limit( $limit )
             ->get();
     }
 
@@ -79,13 +75,13 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param string $endDate
      * @return Collection
      */
-    public function getByDateRange(string $startDate, string $endDate): Collection
+    public function getByDateRange( string $startDate, string $endDate ): Collection
     {
         return $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
-            ->whereBetween('start_date_time', [$startDate, $endDate])
-            ->with(['service', 'service.customer'])
-            ->orderBy('start_date_time', 'asc')
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->whereBetween( 'start_date_time', [ $startDate, $endDate ] )
+            ->with( [ 'service', 'service.customer' ] )
+            ->orderBy( 'start_date_time', 'asc' )
             ->get();
     }
 
@@ -98,20 +94,20 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param int|null $excludeId
      * @return bool
      */
-    public function hasConflict(int $serviceId, string $startDateTime, string $endDateTime, ?int $excludeId = null): bool
+    public function hasConflict( int $serviceId, string $startDateTime, string $endDateTime, ?int $excludeId = null ): bool
     {
         $query = $this->model
-            ->where('service_id', $serviceId)
-            ->where('tenant_id', $this->getCurrentTenantId())
-            ->where(function (Builder $query) use ($startDateTime, $endDateTime) {
-                $query->where(function (Builder $q) use ($startDateTime, $endDateTime) {
-                    $q->where('start_date_time', '<', $endDateTime)
-                      ->where('end_date_time', '>', $startDateTime);
-                });
-            });
+            ->where( 'service_id', $serviceId )
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where( function ( Builder $query ) use ( $startDateTime, $endDateTime ) {
+                $query->where( function ( Builder $q ) use ( $startDateTime, $endDateTime ) {
+                    $q->where( 'start_date_time', '<', $endDateTime )
+                        ->where( 'end_date_time', '>', $startDateTime );
+                } );
+            } );
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+        if ( $excludeId ) {
+            $query->where( 'id', '!=', $excludeId );
         }
 
         return $query->exists();
@@ -123,25 +119,10 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param array $data
      * @return Schedule
      */
-    public function create(array $data): Schedule
+    public function create( array $data ): Schedule
     {
-        $data['tenant_id'] = $this->getCurrentTenantId();
-        return $this->model->create($data);
-    }
-
-    /**
-     * Update a schedule.
-     *
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
-    public function update(int $id, array $data): bool
-    {
-        return $this->model
-            ->where('id', $id)
-            ->where('tenant_id', $this->getCurrentTenantId())
-            ->update($data);
+        $data[ 'tenant_id' ] = $this->getCurrentTenantId();
+        return $this->model->create( $data );
     }
 
     /**
@@ -150,11 +131,12 @@ class ScheduleRepository extends AbstractTenantRepository
      * @param int $id
      * @return bool
      */
-    public function delete(int $id): bool
+    public function delete( int $id ): bool
     {
         return $this->model
-            ->where('id', $id)
-            ->where('tenant_id', $this->getCurrentTenantId())
+            ->where( 'id', $id )
+            ->where( 'tenant_id', $this->getCurrentTenantId() )
             ->delete();
     }
+
 }
