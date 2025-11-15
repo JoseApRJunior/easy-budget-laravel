@@ -127,7 +127,11 @@ class ReportController extends Controller
      */
     public function budgets(): View
     {
-        return view( 'pages.report.budget.budget' );
+        return view( 'pages.report.budget.budget', [
+            'filters' => [
+                'status' => request( 'status', '' ),
+            ]
+        ] );
     }
 
     /**
@@ -272,7 +276,7 @@ class ReportController extends Controller
 
             $result = $customers->map( function ( $customer ) {
                 $commonData = $customer->commonData;
-                $contact = $customer->contact;
+                $contact    = $customer->contact;
 
                 return [
                     'id'             => $customer->id,
