@@ -15,6 +15,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderBusinessController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\Integrations\MercadoPagoController as IntegrationsMercadoPagoController;
 use App\Http\Controllers\PublicInvoiceController;
 use App\Http\Controllers\QueueManagementController;
 use App\Http\Controllers\ReportController;
@@ -23,6 +25,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\MercadoPagoWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes group
@@ -229,6 +232,9 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/search/ajax', [ InvoiceController::class, 'search' ] )->name( 'search' );
         Route::get( '/{code}/print', [ InvoiceController::class, 'print' ] )->name( 'print' );
         Route::get( '/export', [ InvoiceController::class, 'export' ] )->name( 'export' );
+
+        Route::get('/budgets/{budget}/create', [ InvoiceController::class, 'createFromBudget' ])->name('create.from-budget');
+        Route::post('/budgets/{budget}', [ InvoiceController::class, 'storeFromBudget' ])->name('store.from-budget');
     } );
 
     // Reports
@@ -363,9 +369,8 @@ Route::prefix( 'mailtrap' )->name( 'mailtrap.' )->middleware( [ 'auth', 'verifie
 // Webhooks routes group
 // Routes for webhooks with necessary security (no auth middleware for external access)
 Route::prefix( 'webhooks' )->name( 'webhooks.' )->group( function () {
-    Route::post( '/mercadopago/invoices', [ WebhookController::class, 'handleMercadoPagoInvoice' ] )->name( 'mercadopago.invoices' );
-    Route::post( '/mercadopago/plans', [ WebhookController::class, 'handleMercadoPagoPlan' ] )->name( 'mercadopago.plans' );
-    Route::post( '/', [ WebhookController::class, 'handleWebhookMercadoPago' ] )->name( 'mercadopago' );
+    Route::post( '/mercadopago/invoices', [ MercadoPagoWebhookController::class, 'handleInvoiceWebhook' ] )->name( 'mercadopago.invoices' );
+    Route::post( '/mercadopago/plans', [ MercadoPagoWebhookController::class, 'handlePlanWebhook' ] )->name( 'mercadopago.plans' );
 } );
 
 // Error routes group
@@ -386,3 +391,12 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
 } );
 
 require __DIR__ . '/auth.php';
+    Route::prefix('upload')->name('upload.')->group(function () {
+        Route::post('/image', [ UploadController::class, 'uploadImage' ])->name('image');
+    });
+
+    Route::prefix('integrations')->name('integrations.')->group(function () {
+        Route::get('/mercadopago', [ IntegrationsMercadoPagoController::class, 'index' ])->name('mercadopago.index');
+        Route::get('/mercadopago/callback', [ IntegrationsMercadoPagoController::class, 'callback' ])->name('mercadopago.callback');
+        Route::post('/mercadopago/disconnect', [ IntegrationsMercadoPagoController::class, 'disconnect' ])->name('mercadopago.disconnect');
+    });

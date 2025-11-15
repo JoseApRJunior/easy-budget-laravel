@@ -42,6 +42,8 @@ class ReportService extends AbstractBaseService
                 // TODO: Implement GenerateReportJob
                 // GenerateReportJob::dispatch( $report );
 
+                event(new \App\Events\ReportGenerated($report));
+
                 return $this->success( $report, 'Relatório solicitado com sucesso. Você será notificado quando estiver pronto.' );
             } );
         } catch ( Exception $e ) {

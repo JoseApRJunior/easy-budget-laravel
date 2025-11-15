@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BudgetApiController;
 use App\Http\Controllers\Api\ChartDataController;
 use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\EmailTemplateApiController;
+use App\Http\Controllers\Api\AjaxController;
 use App\Http\Controllers\Api\MetricsController;
 use App\Http\Controllers\Api\SettingsApiController;
 use App\Http\Controllers\BudgetController;
@@ -198,5 +199,14 @@ Route::middleware( 'auth' )->group( function () {
             return $controller->getPresets( request() );
         } )->name( 'presets.notifications' );
     } );
+
+    Route::prefix('ajax')->group(function () {
+        Route::post('/cep', [ AjaxController::class, 'cep' ])->name('api.ajax.cep');
+        Route::get('/budgets/filter', [ AjaxController::class, 'budgetsFilter' ])->name('api.ajax.budgets.filter');
+        Route::get('/services/filter', [ AjaxController::class, 'servicesFilter' ])->name('api.ajax.services.filter');
+        Route::get('/customers/search', [ AjaxController::class, 'customersSearch' ])->name('api.ajax.customers.search');
+        Route::get('/products/search', [ AjaxController::class, 'productsSearch' ])->name('api.ajax.products.search');
+        Route::get('/invoices/filter', [ AjaxController::class, 'invoicesFilter' ])->name('api.ajax.invoices.filter');
+    });
 
 } );

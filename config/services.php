@@ -39,7 +39,9 @@ return [
         'access_token'   => env( 'MERCADO_PAGO_ACCESS_TOKEN' ),
         'webhook_secret' => env( 'MERCADO_PAGO_WEBHOOK_SECRET' ),
         'app_id'         => env( 'MERCADOPAGO_APP_ID' ),
+        'client_id'      => env( 'MERCADOPAGO_CLIENT_ID' ),
         'client_secret'  => env( 'MERCADOPAGO_CLIENT_SECRET' ),
+        'redirect_uri'   => env( 'MERCADOPAGO_REDIRECT_URI' ),
     ],
 
     'google_maps' => [

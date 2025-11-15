@@ -12,6 +12,7 @@ use App\Events\SocialLoginWelcome;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
+use App\Events\ReportGenerated;
 use App\Events\UserRegistered;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
@@ -21,6 +22,7 @@ use App\Listeners\SendSocialLoginWelcomeNotification;
 use App\Listeners\SendStatusUpdateNotification;
 use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
+use App\Listeners\LogReportGeneration;
 use App\Listeners\SendWelcomeEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -83,6 +85,10 @@ class EventServiceProvider extends ServiceProvider
 
         SupportTicketResponded::class     => [
             SendSupportResponse::class,
+        ],
+
+        ReportGenerated::class            => [
+            LogReportGeneration::class,
         ],
     ];
 

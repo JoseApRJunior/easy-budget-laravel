@@ -149,7 +149,9 @@ class InvoiceService extends AbstractBaseService
     {
         $total = 0;
         foreach ( $items as $itemData ) {
-            $total  += ( (float) $itemData[ 'quantity' ] * (float) $itemData[ 'unit_value' ] );
+            $q = (float) ( $itemData[ 'quantity' ] ?? 0 );
+            $uv = (float) ( $itemData[ 'unit_value' ] ?? $itemData[ 'unit_price' ] ?? 0 );
+            $total += $q * $uv;
         }
         return $total;
     }
@@ -168,7 +170,7 @@ class InvoiceService extends AbstractBaseService
 
             // Calcular total do item
             $quantity  = (float) $itemData[ 'quantity' ];
-            $unitValue = (float) $itemData[ 'unit_value' ];
+            $unitValue = (float) ( $itemData[ 'unit_value' ] ?? $itemData[ 'unit_price' ] );
             $total     = $quantity * $unitValue;
 
             // Criar item
@@ -176,10 +178,85 @@ class InvoiceService extends AbstractBaseService
                 'tenant_id'  => $invoice->tenant_id,
                 'invoice_id' => $invoice->id,
                 'product_id' => $product->id,
-                'unit_value' => $unitValue,
+                'unit_price' => $unitValue,
                 'quantity'   => $quantity,
                 'total'      => $total
             ] );
+        }
+    }
+
+    public function createPartialInvoiceFromBudget( string $budgetCode, array $data ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($budgetCode, $data) {
+                $budget = \App\Models\Budget::where('code', $budgetCode)
+                    ->with(['services.serviceItems', 'customer'])
+                    ->first();
+
+                if (!$budget) {
+                    return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado');
+                }
+
+                $service = \App\Models\Service::where('id', $data['service_id'] ?? null)
+                    ->where('budget_id', $budget->id)
+                    ->first();
+
+                if (!$service) {
+                    return $this->error(OperationStatus::VALIDATION_ERROR, 'Serviço inválido para o orçamento');
+                }
+
+                $selectedItems = $data['items'] ?? [];
+                if (empty($selectedItems)) {
+                    return $this->error(OperationStatus::VALIDATION_ERROR, 'Selecione ao menos um item');
+                }
+
+                $subtotal = 0.0;
+                $preparedItems = [];
+                foreach ($selectedItems as $item) {
+                    $serviceItem = \App\Models\ServiceItem::where('id', $item['service_item_id'] ?? 0)
+                        ->where('service_id', $service->id)
+                        ->first();
+                    if (!$serviceItem) {
+                        return $this->error(OperationStatus::VALIDATION_ERROR, 'Item de serviço inválido');
+                    }
+                    $quantity = (float) ($item['quantity'] ?? $serviceItem->quantity);
+                    $unit = (float) ($item['unit_value'] ?? $serviceItem->unit_value);
+                    $subtotal += $quantity * $unit;
+                    $preparedItems[] = [
+                        'product_id' => $serviceItem->product_id,
+                        'quantity' => $quantity,
+                        'unit_value' => $unit,
+                    ];
+                }
+
+                $alreadyBilled = $this->invoiceRepository->sumTotalByBudgetId($budget->id, ['pending','approved','in_process','authorized']);
+                $budgetTotal = (float) ($budget->total ?? 0);
+                $remaining = max(0.0, $budgetTotal - $alreadyBilled);
+
+                if ($subtotal > $remaining) {
+                    return $this->error(OperationStatus::VALIDATION_ERROR, 'Total selecionado excede o saldo disponível do orçamento');
+                }
+
+                $invoiceCode = $this->generateUniqueInvoiceCode($service->code);
+
+                $invoice = Invoice::create([
+                    'tenant_id' => tenant()->id,
+                    'service_id' => $service->id,
+                    'customer_id' => $budget->customer_id,
+                    'code' => $invoiceCode,
+                    'due_date' => $data['due_date'] ?? now()->addDays(7),
+                    'subtotal' => $subtotal,
+                    'discount' => (float) ($data['discount'] ?? 0),
+                    'total' => $subtotal - (float) ($data['discount'] ?? 0),
+                    'status' => $data['status'] ?? InvoiceStatus::PENDING->value,
+                ]);
+
+                $this->createInvoiceItems($invoice, $preparedItems);
+
+                return $this->success($invoice->load(['invoiceItems.product','service.budget','customer']), 'Fatura parcial criada');
+            });
+        } catch (Exception $e) {
+            return $this->error(OperationStatus::ERROR, 'Erro ao criar fatura parcial', null, $e);
         }
     }
 
@@ -373,13 +450,40 @@ class InvoiceService extends AbstractBaseService
 
             $invoice = $invoiceResult->getData();
 
-            // Renderizar view Blade para o PDF
-            $pdfContent = view( 'invoices.pdf', compact( 'invoice' ) )->render();
+            $publicUrl = null;
+            if (!empty($invoice->public_hash)) {
+                $publicUrl = route('invoices.public.show', ['hash' => $invoice->public_hash]);
+            }
 
-            // Gerar PDF (placeholder - implementar com biblioteca real)
-            $path = 'storage/invoices/' . tenant()->id . '/invoice_' . $invoice->code . '.pdf';
+            $qrDataUri = null;
+            if ($publicUrl) {
+                $qrService = app(\App\Services\Infrastructure\QrCodeService::class);
+                $qrDataUri = $qrService->generateDataUri($publicUrl, 180);
+            }
 
-            return $this->success( $path, 'PDF da fatura gerado com sucesso' );
+            $html = view('invoices.pdf', [
+                'invoice' => $invoice,
+                'publicUrl' => $publicUrl,
+                'qrDataUri' => $qrDataUri,
+            ])->render();
+
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 15,
+                'margin_right' => 15,
+                'margin_top' => 16,
+                'margin_bottom' => 16,
+            ]);
+            $mpdf->WriteHTML($html);
+            $content = $mpdf->Output('', 'S');
+
+            $dir = 'invoices';
+            $filename = 'invoice_' . $invoice->code . '.pdf';
+            $path = $dir . '/' . $filename;
+            \Illuminate\Support\Facades\Storage::put($path, $content);
+
+            return $this->success($path, 'PDF da fatura gerado com sucesso');
 
         } catch ( Exception $e ) {
             return $this->error(

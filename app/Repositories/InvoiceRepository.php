@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -231,6 +232,20 @@ class InvoiceRepository extends AbstractTenantRepository
     public function getTotalRevenue(): float
     {
         return $this->model->where( 'status', 'paid' )->sum( 'total' );
+    }
+
+    public function sumTotalByBudgetId( int $budgetId, ?array $statusFilter = null ): float
+    {
+        $query = $this->model->newQuery()
+            ->whereHas('service', function ($q) use ($budgetId) {
+                $q->where('budget_id', $budgetId);
+            });
+
+        if ($statusFilter && count($statusFilter) > 0) {
+            $query->whereIn('status', $statusFilter);
+        }
+
+        return (float) ($query->sum('total') ?? 0);
     }
 
 }

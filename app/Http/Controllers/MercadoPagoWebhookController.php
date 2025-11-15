@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessMercadoPagoWebhook;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -58,6 +59,29 @@ class MercadoPagoWebhookController extends Controller
     private function processWebhook(Request $request, string $type): JsonResponse
     {
         $webhookData = $request->all();
+
+        $requestId = $request->header('X-Request-Id');
+        if (!$requestId) {
+            Log::warning('mp_webhook_missing_request_id');
+            return response()->json(['status' => 'error', 'message' => 'Missing X-Request-Id'], 400);
+        }
+
+        $signature = $request->header('X-Signature');
+        $secret = config('services.mercadopago.webhook_secret');
+        if ($signature && $secret) {
+            $computed = hash_hmac('sha256', $request->getContent(), $secret);
+            if (!hash_equals($computed, $signature)) {
+                Log::warning('mp_webhook_invalid_signature', ['request_id' => $requestId]);
+                return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 403);
+            }
+        }
+
+        $cacheKey = 'mp_webhook_req_' . $requestId;
+        if (Cache::has($cacheKey)) {
+            Log::info('mp_webhook_duplicate', ['request_id' => $requestId]);
+            return response()->json(['status' => 'ignored'], 200);
+        }
+        Cache::put($cacheKey, true, now()->addMinutes(10));
         
         Log::info("Mercado Pago webhook received", [
             'type' => $type,

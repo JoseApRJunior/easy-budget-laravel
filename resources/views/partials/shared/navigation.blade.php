@@ -27,14 +27,6 @@
             </a>
         </li>
 
-        {{-- Dashboard de Orçamentos - acesso específico --}}
-        <li class="nav-item">
-            <a class="nav-link d-flex align-items-center" href="{{ route( 'provider.budgets.dashboard' ) }}">
-                <i class="bi bi-file-earmark-text-fill me-2"></i>
-                <span>Orçamentos</span>
-            </a>
-        </li>
-
         <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="/ia">
                 <i class="bi bi-robot me-2"></i>

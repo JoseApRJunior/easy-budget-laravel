@@ -221,6 +221,11 @@
   <div class="footer">
     <p>Este orçamento foi gerado automaticamente em {{ now()->format( 'd/m/Y H:i' ) }}</p>
     <p>Código de verificação: {{ $budget->pdf_verification_hash ?? 'Não disponível' }}</p>
+    @if(isset($verificationUrl) && isset($qrDataUri) && $qrDataUri !== '')
+      <p>Verifique a autenticidade:</p>
+      <p><a href="{{ $verificationUrl }}">{{ $verificationUrl }}</a></p>
+      <p><img src="{{ $qrDataUri }}" alt="QR Code" width="140" height="140"></p>
+    @endif
   </div>
 </body>
 

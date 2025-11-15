@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InvoiceStoreRequest;
+use App\Http\Requests\InvoiceStoreFromBudgetRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
 use App\Models\Budget;
 use App\Models\Invoice;
@@ -486,6 +487,29 @@ class InvoiceController extends Controller
 
         } catch ( Exception $e ) {
             abort( 500, 'Erro ao carregar formulário de criação de fatura a partir do orçamento' );
+        }
+    }
+
+    public function storeFromBudget( Budget $budget, InvoiceStoreFromBudgetRequest $request ): RedirectResponse
+    {
+        try {
+            $payload = $request->validated();
+            $payload['service_id'] = $payload['service_id'];
+            $result = $this->invoiceService->createPartialInvoiceFromBudget($budget->code, $payload);
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result->getMessage());
+            }
+
+            $invoice = $result->getData();
+            return redirect()->route('invoices.show', $invoice->code)
+                ->with('success', 'Fatura criada a partir do orçamento!');
+        } catch ( Exception $e ) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erro ao criar fatura a partir do orçamento: ' . $e->getMessage());
         }
     }
 

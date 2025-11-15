@@ -339,6 +339,11 @@
   <div class="footer">
     <p>Documento gerado automaticamente pelo Easy Budget Laravel em {{ now()->format( 'd/m/Y H:i:s' ) }}</p>
     <p>Esta fatura foi gerada eletronicamente e é válida sem assinatura física.</p>
+    @if(isset($publicUrl) && isset($qrDataUri) && $qrDataUri)
+      <p>Acesse sua fatura:</p>
+      <p><a href="{{ $publicUrl }}">{{ $publicUrl }}</a></p>
+      <p><img src="{{ $qrDataUri }}" alt="QR Code" width="140" height="140"></p>
+    @endif
   </div>
 
   <script>

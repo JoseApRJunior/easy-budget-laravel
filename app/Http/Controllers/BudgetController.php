@@ -323,21 +323,25 @@ class BudgetController extends Controller
 
             $budget = $result->getData();
 
-            // Gerar PDF
-            $pdfPath = $this->budgetPdfService->generatePdf( $budget );
-            $hash    = $this->budgetPdfService->generateHash( $pdfPath );
+            $pdfPath = $this->budgetPdfService->generatePdf($budget);
+            $hash = $this->budgetPdfService->generateHash($pdfPath);
+            $budget->update(['pdf_verification_hash' => $hash]);
 
-            // Atualizar hash no banco
-            $budget->update( [ 'pdf_verification_hash' => $hash ] );
+            $verificationUrl = route('documents.verify', ['hash' => $hash]);
+            $qrService = app(\App\Services\Infrastructure\QrCodeService::class);
+            $qrDataUri = $qrService->generateDataUri($verificationUrl, 180);
 
-            // Retornar PDF
-            $pdfContent = Storage::get( $pdfPath );
+            $pdfPath = $this->budgetPdfService->generatePdf($budget->fresh(), [
+                'verificationUrl' => $verificationUrl,
+                'qrDataUri' => $qrDataUri,
+            ]);
+            $pdfContent = Storage::get($pdfPath);
 
-            return response( $pdfContent, 200, [
-                'Content-Type'        => 'application/pdf',
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
                 'Content-Disposition' => "inline; filename=\"orcamento_{$budget->code}.pdf\"",
-                'Cache-Control'       => 'public, max-age=86400' // 24h
-            ] );
+                'Cache-Control' => 'public, max-age=86400'
+            ]);
 
         } catch ( Exception $e ) {
             abort( 500, 'Erro ao gerar PDF' );
