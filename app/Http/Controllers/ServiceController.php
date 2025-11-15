@@ -16,6 +16,7 @@ use App\Models\UserConfirmationToken;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
+use App\Services\Domain\ScheduleService;
 use App\Services\Domain\ServiceService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +37,7 @@ class ServiceController extends Controller
     protected CategoryService $categoryService;
     protected BudgetService   $budgetService;
     protected ProductService  $productService;
+    protected ScheduleService $scheduleService;
 
     public function __construct(
         ServiceService $serviceService,
@@ -398,6 +400,7 @@ class ServiceController extends Controller
 
     /**
      * Altera o status do serviço com validação de transições permitidas.
+     * Quando o status for SCHEDULED, cria um agendamento.
      */
     public function change_status( string $code, Request $request ): RedirectResponse
     {
@@ -406,6 +409,37 @@ class ServiceController extends Controller
         ] );
 
         try {
+            // Se for agendamento, validar dados adicionais
+            if ($request->status === 'SCHEDULED') {
+                $request->validate( [
+                    'start_date_time' => 'required|date|after:now',
+                    'end_date_time' => 'required|date|after:start_date_time',
+                    'location' => 'nullable|string|max:500',
+                ] );
+
+                // Obter o serviço
+                $serviceResult = $this->serviceService->findByCode( $code );
+                if ( !$serviceResult->isSuccess() ) {
+                    return redirect()->back()
+                        ->with( 'error', 'Serviço não encontrado.' );
+                }
+                $service = $serviceResult->getData();
+
+                // Criar agendamento
+                $scheduleData = [
+                    'start_date_time' => $request->start_date_time,
+                    'end_date_time' => $request->end_date_time,
+                    'location' => $request->location,
+                ];
+
+                $scheduleResult = $this->scheduleService->handleScheduledStatus( $service, $scheduleData );
+                if ( !$scheduleResult->isSuccess() ) {
+                    return redirect()->back()
+                        ->with( 'error', $scheduleResult->getMessage() );
+                }
+            }
+
+            // Mudar status do serviço
             $result = $this->serviceService->changeStatus( $code, $request->status );
 
             if ( !$result->isSuccess() ) {

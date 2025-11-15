@@ -20,6 +20,7 @@ use App\Http\Controllers\Integrations\MercadoPagoController as IntegrationsMerca
 use App\Http\Controllers\PublicInvoiceController;
 use App\Http\Controllers\QueueManagementController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportController;
@@ -202,6 +203,20 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/{service}/print', [ ServiceController::class, 'print' ] )->name( 'print' );
     } );
 
+    // Schedules
+    Route::prefix( 'schedules' )->name( 'schedules.' )->group( function () {
+        Route::get( '/', [ ScheduleController::class, 'index' ] )->name( 'index' );
+        Route::get( '/calendar', [ ScheduleController::class, 'calendar' ] )->name( 'calendar' );
+        Route::get( '/create/{service}', [ ScheduleController::class, 'create' ] )->name( 'create' );
+        Route::post( '/{service}', [ ScheduleController::class, 'store' ] )->name( 'store' );
+        Route::get( '/{schedule}', [ ScheduleController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{schedule}/edit', [ ScheduleController::class, 'edit' ] )->name( 'edit' );
+        Route::put( '/{schedule}', [ ScheduleController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{schedule}', [ ScheduleController::class, 'destroy' ] )->name( 'destroy' );
+        Route::get( '/calendar/data', [ ScheduleController::class, 'getCalendarData' ] )->name( 'calendar.data' );
+        Route::get( '/check-conflicts', [ ScheduleController::class, 'checkConflicts' ] )->name( 'check-conflicts' );
+    } );
+
     // Budgets
     Route::prefix( 'budgets' )->name( 'budgets.' )->group( function () {
         // Dashboard de Orçamentos
@@ -240,6 +255,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
         Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
+        Route::get( '/download/{hash}', [ ReportController::class, 'download' ] )->name( 'download' );
         Route::get( '/financial', [ ReportController::class, 'financial' ] )->name( 'financial' );
         Route::get( '/budgets', [ ReportController::class, 'budgets' ] )->name( 'budgets' );
         Route::get( '/budgets/excel', [ ReportController::class, 'budgets_excel' ] )->name( 'budgets.excel' );
@@ -329,6 +345,11 @@ Route::prefix( 'reports' )->name( 'reports.' )->middleware( [ 'auth', 'verified'
     Route::post( '/{report}/schedule', [ ReportController::class, 'schedule' ] )->name( 'schedule' );
     Route::delete( '/{report}/schedule', [ ReportController::class, 'unschedule' ] )->name( 'unschedule' );
 } );
+
+// Public plan status routes
+Route::prefix('plans')->name('plans.public.')->group(function () {
+    Route::get('/status', [ \App\Http\Controllers\PlanController::class, 'paymentStatus' ])->name('status');
+});
 
 // Queues routes group
 // Routes for queue management with auth and verified middlewares

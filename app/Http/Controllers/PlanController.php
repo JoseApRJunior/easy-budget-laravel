@@ -256,13 +256,29 @@ class PlanController extends Controller
         try {
             $result = $this->planService->findBySlug( $slug );
             if ( !$result->isSuccess() ) abort( 404, $result->getMessage() );
+            $plan = $result->getData();
 
-            // Lógica para verificar status da assinatura
-            // TODO: Implementar verificação de status
+            $subscription = \App\Models\PlanSubscription::where('tenant_id', auth()->user()->tenant_id ?? null)
+                ->where('plan_id', (int)$plan->id)
+                ->orderByDesc('created_at')
+                ->first();
+
+            $payment = null;
+            if ($subscription) {
+                $payment = \App\Models\PaymentMercadoPagoPlan::where('plan_subscription_id', (int)$subscription->id)
+                    ->orderByDesc('created_at')
+                    ->first();
+            }
+
+            $payment = $payment ?: (object) [ 'status' => 'not_started' ];
 
             return view( 'pages.plan.status', [
-                'plan'   => $result->getData(),
-                'status' => 'pending', // TODO: Obter status real
+                'subscription' => (object) [
+                    'name' => $plan->name,
+                    'slug' => $slug,
+                    'transaction_amount' => (float) ($subscription->transaction_amount ?? $plan->price),
+                ],
+                'payment' => $payment,
             ] );
         } catch ( Exception $e ) {
             Log::error( 'Erro no PlanController@status', [ 'slug' => $slug, 'error' => $e->getMessage() ] );

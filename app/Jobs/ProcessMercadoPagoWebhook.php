@@ -46,8 +46,8 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
      * @param string $type Payment type (plan|invoice)
      */
     public function __construct(
-        private array $webhookData,
-        private string $type,
+        public array $webhookData,
+        public string $type,
         private ?string $requestId = null
     ) {}
 
@@ -60,7 +60,7 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
     public function handle(MercadoPagoWebhookService $webhookService): void
     {
         try {
-            $paymentId = $this->webhookData['data']['id'];
+            $paymentId = (string) ($this->webhookData['data']['id'] ?? '');
 
             Log::info("Processing Mercado Pago webhook", [
                 'type' => $this->type,

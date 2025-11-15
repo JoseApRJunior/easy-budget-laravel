@@ -68,7 +68,7 @@ class MercadoPagoController extends Controller
             return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar access token' );
         }
         if ( !$refresh->isSuccess() ) {
-            return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar refresh token' );
+            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar refresh token' );
         }
 
         ProviderCredential::updateOrCreate(
@@ -83,14 +83,14 @@ class MercadoPagoController extends Controller
             ],
         );
 
-        return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago conectada' );
+        return redirect()->route( 'integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago conectada' );
     }
 
     public function disconnect(): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
         ProviderCredential::where( 'tenant_id', $tenantId )->where( 'payment_gateway', 'mercadopago' )->delete();
-        return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago desconectada' );
+        return redirect()->route( 'integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago desconectada' );
     }
 
     public function refresh( EncryptionService $encryption, MercadoPagoOAuthService $oauth ): RedirectResponse
@@ -100,25 +100,25 @@ class MercadoPagoController extends Controller
             ->where('payment_gateway', 'mercadopago')
             ->first();
         if (!$cred) {
-            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Credenciais não encontradas');
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Credenciais não encontradas');
         }
 
         $dr = $encryption->decryptStringLaravel((string)$cred->refresh_token_encrypted);
         if (!$dr->isSuccess()) {
-            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao descriptografar refresh token');
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao descriptografar refresh token');
         }
 
         $refreshToken = (string)($dr->getData()['decrypted'] ?? '');
         $res = $oauth->refreshToken($refreshToken);
         if (!$res->isSuccess()) {
-            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao renovar token');
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao renovar token');
         }
 
         $data = $res->getData();
         $accessEnc = $encryption->encryptStringLaravel((string)($data['access_token'] ?? ''));
         $refreshEnc = $encryption->encryptStringLaravel((string)($data['refresh_token'] ?? ''));
         if (!$accessEnc->isSuccess() || !$refreshEnc->isSuccess()) {
-            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao criptografar novos tokens');
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao criptografar novos tokens');
         }
 
         $cred->update([
@@ -127,7 +127,7 @@ class MercadoPagoController extends Controller
             'expires_in' => (int)($data['expires_in'] ?? 0),
         ]);
 
-        return redirect()->route('provider.integrations.mercadopago.index')->with('success', 'Tokens renovados com sucesso');
+        return redirect()->route('integrations.mercadopago.index')->with('success', 'Tokens renovados com sucesso');
     }
 
 }

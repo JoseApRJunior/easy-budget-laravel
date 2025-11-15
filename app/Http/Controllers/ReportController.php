@@ -149,25 +149,21 @@ class ReportController extends Controller
             $budgets = $result->getData();
             $totals  = $this->calculateTotals( $budgets );
 
-            $html     = view( 'reports.budgets_pdf', compact( 'budgets', 'totals', 'filters' ) )->render();
+            $html     = view( 'pages.report.budget.pdf_budget', compact( 'budgets', 'totals', 'filters' ) )->render();
             $filename = $this->generateFileName( 'orcamentos', 'pdf', count( $budgets ) );
 
-            $pdfService = app( \App\Services\Infrastructure\ReportPdfService::class);
-            $pdfResult  = $pdfService->generateFromHtml( $html, $filename );
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 12,
+                'margin_right' => 12,
+                'margin_top' => 14,
+                'margin_bottom' => 14,
+            ]);
+            $mpdf->WriteHTML( $html );
+            $content = $mpdf->Output( '', 'S' );
 
-            if ( !$pdfResult->isSuccess() ) abort( 500, 'Erro ao gerar PDF' );
-
-            $this->service->create( [
-                'type'         => 'budget',
-                'format'       => 'pdf',
-                'status'       => 'completed',
-                'file_name'    => $filename,
-                'size'         => $pdfResult->getData()[ 'size' ],
-                'filters'      => $filters,
-                'generated_at' => now(),
-            ] );
-
-            return response( $pdfResult->getData()[ 'content' ], 200, [
+            return response( $content, 200, [
                 'Content-Type'        => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . $filename . '"'
             ] );

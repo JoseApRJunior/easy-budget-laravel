@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceItem;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\Domain\ScheduleService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,21 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceService extends AbstractBaseService
 {
+    /**
+     * @var ScheduleService
+     */
+    protected $scheduleService;
+
+    /**
+     * ServiceService constructor.
+     *
+     * @param ScheduleService $scheduleService
+     */
+    public function __construct(ScheduleService $scheduleService)
+    {
+        $this->scheduleService = $scheduleService;
+    }
+
     public function findByCode( string $code, array $with = [] ): ServiceResult
     {
         try {
@@ -396,6 +412,9 @@ class ServiceService extends AbstractBaseService
                 // Atualizar orçamento em cascata se necessário
                 $this->updateBudgetStatusIfNeeded( $service, $newStatus );
 
+                // Carregar relacionamentos para retorno completo
+                $service->load(['customer', 'category', 'serviceStatus']);
+
                 return $this->success( $service, 'Status alterado com sucesso' );
 
             } );
@@ -408,6 +427,14 @@ class ServiceService extends AbstractBaseService
                 $e,
             );
         }
+    }
+
+    /**
+     * Get the latest schedule for a service.
+     */
+    public function getLatestSchedule(Service $service): ?\App\Models\Schedule
+    {
+        return $this->scheduleService->getLatestScheduleByService($service->id);
     }
 
     /**
