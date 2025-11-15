@@ -147,13 +147,31 @@ class ProductService extends AbstractBaseService
         }
     }
 
+    /**
+     * Gera SKU único sequencial no padrão legado: PROD000001, PROD000002, ...
+     *
+     * - Busca o último SKU existente iniciando com "PROD"
+     * - Extrai a parte numérica e incrementa
+     * - Mantém 6 dígitos com zero à esquerda
+     *
+     * Compatível com comportamento do sistema antigo.
+     */
     private function generateUniqueSku(): string
     {
-        do {
-            $sku = 'PROD' . str_pad( (string) mt_rand( 1, 999999 ), 6, '0', STR_PAD_LEFT );
-        } while ( $this->productRepository->findBySku( $sku ) );
+        return DB::transaction( function () {
+            $lastProduct = Product::where( 'sku', 'LIKE', 'PROD%' )
+                ->orderByDesc( 'sku' )
+                ->lockForUpdate()
+                ->first();
 
-        return $sku;
+            if ( !$lastProduct || !preg_match( '/^PROD(\d{6})$/', $lastProduct->sku, $matches ) ) {
+                return 'PROD000001';
+            }
+
+            $nextNumber = (int) $matches[ 1 ] + 1;
+
+            return 'PROD' . str_pad( (string) $nextNumber, 6, '0', STR_PAD_LEFT );
+        } );
     }
 
     private function uploadProductImage( $imageFile ): ?string

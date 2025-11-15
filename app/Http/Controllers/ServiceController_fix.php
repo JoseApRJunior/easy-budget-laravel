@@ -265,7 +265,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'provider.services.show', $service->code )
+            return redirect()->route( 'service.show', $service->code )
                 ->with( 'success', 'Serviço criado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -367,7 +367,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'provider.services.show', $service->code )
+            return redirect()->route( 'service.show', $service->code )
                 ->with( 'success', 'Serviço atualizado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -394,7 +394,7 @@ class ServiceController extends Controller
                     ->with( 'error', $result->getMessage() );
             }
 
-            return redirect()->route( 'provider.services.show', $code )
+            return redirect()->route( 'service.show', $code )
                 ->with( 'success', 'Status alterado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -419,7 +419,7 @@ class ServiceController extends Controller
                     ->with( 'error', $result->getMessage() );
             }
 
-            return redirect()->route( 'provider.services.index' )
+            return redirect()->route( 'service.index' )
                 ->with( 'success', 'Serviço excluído com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -443,7 +443,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'provider.services.show', $service->code )
+            return redirect()->route( 'service.show', $service->code )
                 ->with( 'success', 'Serviço cancelado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -464,11 +464,22 @@ class ServiceController extends Controller
                 abort( 403, 'Acesso negado.' );
             }
 
-            // Buscar dados do dashboard através do ServiceService
-            $stats = $this->serviceService->getDashboardData( $user->tenant_id );
+            // Buscar estatísticas dos serviços
+            $stats = $this->getServiceStats( $user->tenant_id );
+
+            // Buscar serviços recentes (últimos 10)
+            $recentServices = $this->getRecentServices( $user->tenant_id );
 
             return view( 'pages.service.dashboard', [
-                'stats' => $stats
+                'stats' => [
+                    'total_services'      => $stats[ 'total' ],
+                    'approved_services'   => $stats[ 'approved' ],
+                    'pending_services'    => $stats[ 'pending' ],
+                    'cancelled_services'  => $stats[ 'cancelled' ],
+                    'rejected_services'   => $stats[ 'rejected' ],
+                    'total_service_value' => $stats[ 'total_value' ],
+                    'recent_services'     => $recentServices
+                ]
             ] );
 
         } catch ( Exception $e ) {
@@ -477,6 +488,84 @@ class ServiceController extends Controller
                 'user_id' => Auth::id()
             ] );
             abort( 500, 'Erro ao carregar dashboard' );
+        }
+    }
+
+    /**
+     * Calcula estatísticas dos serviços para um tenant.
+     */
+    private function getServiceStats( int $tenantId ): array
+    {
+        try {
+            // Total de serviços
+            $total = Service::where( 'tenant_id', $tenantId )->count();
+
+            // Serviços por status
+            $approved = Service::where( 'tenant_id', $tenantId )
+                ->where( 'service_status_id', ServiceStatus::APPROVED->value )->count();
+
+            $pending = Service::where( 'tenant_id', $tenantId )
+                ->where( 'service_status_id', ServiceStatus::DRAFT->value )
+                ->orWhere( 'service_status_id', ServiceStatus::PENDING->value )->count();
+
+            $cancelled = Service::where( 'tenant_id', $tenantId )
+                ->where( 'service_status_id', ServiceStatus::CANCELLED->value )->count();
+
+            $rejected = Service::where( 'tenant_id', $tenantId )
+                ->where( 'service_status_id', ServiceStatus::REJECTED->value )->count();
+
+            // Valor total dos serviços
+            $totalValue = Service::where( 'tenant_id', $tenantId )
+                ->sum( 'total' );
+
+            return [
+                'total'       => $total,
+                'approved'    => $approved,
+                'pending'     => $pending,
+                'cancelled'   => $cancelled,
+                'rejected'    => $rejected,
+                'total_value' => $totalValue
+            ];
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao calcular estatísticas de serviços', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ] );
+
+            return [
+                'total'       => 0,
+                'approved'    => 0,
+                'pending'     => 0,
+                'cancelled'   => 0,
+                'rejected'    => 0,
+                'total_value' => 0
+            ];
+        }
+    }
+
+    /**
+     * Busca serviços recentes para o dashboard.
+     */
+    private function getRecentServices( int $tenantId ): \Illuminate\Support\Collection
+    {
+        try {
+            return Service::where( 'tenant_id', $tenantId )
+                ->with( [
+                    'budget.customer.commonData',
+                    'category',
+                    'serviceStatus'
+                ] )
+                ->orderBy( 'created_at', 'desc' )
+                ->limit( 10 )
+                ->get();
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao buscar serviços recentes', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ] );
+            return collect();
         }
     }
 

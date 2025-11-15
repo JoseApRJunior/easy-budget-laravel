@@ -721,18 +721,28 @@ class BudgetService extends AbstractBaseService
      * Retorna estatísticas de orçamentos.
      *
      * @param int $tenantId ID do tenant
+     * @param array $filters Filtros opcionais (date_from, date_to, etc.)
      * @return ServiceResult
      */
-    public function getBudgetStats( int $tenantId ): ServiceResult
+    public function getBudgetStats( int $tenantId, array $filters = [] ): ServiceResult
     {
         try {
             // Busca estatísticas básicas
-            $stats = $this->repository->getConversionStats( $tenantId );
+            $stats = $this->repository->getConversionStats( $tenantId, $filters );
 
             // Busca breakdown por status
-            $statusBreakdown = $this->getStatusBreakdown( $tenantId );
+            $statusBreakdown = $this->getStatusBreakdown( $tenantId, $filters );
 
             $stats[ 'status_breakdown' ] = $statusBreakdown;
+
+            // Adiciona métricas adicionais
+            $stats[ 'pending_rate' ] = $stats[ 'total' ] > 0
+                ? round( ( $stats[ 'pending' ] / $stats[ 'total' ] ) * 100, 1 )
+                : 0;
+
+            $stats[ 'rejection_rate' ] = $stats[ 'total' ] > 0
+                ? round( ( $stats[ 'rejected' ] / $stats[ 'total' ] ) * 100, 1 )
+                : 0;
 
             return ServiceResult::success( $stats, 'Estatísticas obtidas com sucesso.' );
 
@@ -798,14 +808,15 @@ class BudgetService extends AbstractBaseService
      * Retorna breakdown de orçamentos por status.
      *
      * @param int $tenantId ID do tenant
+     * @param array $filters Filtros opcionais
      * @return array
      */
-    private function getStatusBreakdown( int $tenantId ): array
+    private function getStatusBreakdown( int $tenantId, array $filters = [] ): array
     {
         $breakdown = [];
 
         foreach ( BudgetStatus::cases() as $status ) {
-            $count                       = $this->repository->countByStatus( $status->value );
+            $count                       = $this->repository->countByStatus( $status->value, $filters );
             $breakdown[ $status->value ] = $count;
         }
 
@@ -852,6 +863,85 @@ class BudgetService extends AbstractBaseService
 
             return "{$prefix}{$newSequential}";
         } );
+    }
+
+    /**
+     * Retorna dados consolidados para o dashboard de orçamentos.
+     *
+     * @param int $tenantId ID do tenant
+     * @return array
+     */
+    public function getDashboardData( int $tenantId ): array
+    {
+        try {
+            // Buscar estatísticas dos orçamentos
+            $statsResult = $this->getBudgetStats( $tenantId );
+
+            if ( !$statsResult->isSuccess() ) {
+                return [
+                    'total_budgets'      => 0,
+                    'approved_budgets'   => 0,
+                    'pending_budgets'    => 0,
+                    'rejected_budgets'   => 0,
+                    'total_budget_value' => 0,
+                    'recent_budgets'     => collect()
+                ];
+            }
+
+            $stats = $statsResult->getData();
+
+            // Buscar orçamentos recentes (últimos 10)
+            $recentBudgets = $this->getRecentBudgetsForDashboard( $tenantId );
+
+            return [
+                'total_budgets'      => $stats[ 'total' ],
+                'approved_budgets'   => $stats[ 'approved' ],
+                'pending_budgets'    => $stats[ 'pending' ],
+                'rejected_budgets'   => $stats[ 'rejected' ],
+                'total_budget_value' => $stats[ 'total_value' ],
+                'status_breakdown'   => $stats[ 'status_breakdown' ] ?? [],
+                'recent_budgets'     => $recentBudgets
+            ];
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter dados do dashboard de orçamentos', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ] );
+
+            return [
+                'total_budgets'      => 0,
+                'approved_budgets'   => 0,
+                'pending_budgets'    => 0,
+                'rejected_budgets'   => 0,
+                'total_budget_value' => 0,
+                'recent_budgets'     => collect()
+            ];
+        }
+    }
+
+    /**
+     * Busca orçamentos recentes para o dashboard.
+     *
+     * @param int $tenantId ID do tenant
+     * @return Collection
+     */
+    public function getRecentBudgetsForDashboard( int $tenantId ): Collection
+    {
+        try {
+            return Budget::where( 'tenant_id', $tenantId )
+                ->with( [ 'customer.commonData' ] )
+                ->orderBy( 'created_at', 'desc' )
+                ->limit( 10 )
+                ->get();
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar orçamentos recentes para dashboard', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ] );
+            return collect();
+        }
     }
 
 }

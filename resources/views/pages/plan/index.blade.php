@@ -15,7 +15,7 @@ use App\Helpers\BladeHelper;
             <div class="row g-4 justify-content-center">
                 @foreach ( $plans as $plan )
                     @php
-                        $currentPlan   =  auth()->user()->activePlan();
+                        $currentPlan   =  auth()->check() ? auth()->user()->activePlan() : null;
                         $isCurrentPlan = $currentPlan && $currentPlan->slug == $plan->slug;
                     @endphp
 
@@ -93,7 +93,7 @@ use App\Helpers\BladeHelper;
                 <!-- Corpo do Modal -->
                 <div class="modal-body">
                     @php
-    $pendingPlan = auth()->user()->pendingPlan();
+    $pendingPlan = auth()->check() ? auth()->user()->pendingPlan() : null;
                     @endphp
                     @if ( $pendingPlan && $pendingPlan->status == 'pending' )
                         <p class="text-muted mb-3">

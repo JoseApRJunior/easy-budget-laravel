@@ -498,127 +498,22 @@ class ServiceService extends AbstractBaseService
             return false;
         }
 
+        // Não pode deletar se estiver em status final
+        $finalStatuses = ServiceStatus::getFinalStatuses();
+        if ( in_array( $service->status->value, $finalStatuses ) ) {
+            return false;
+        }
+
         return true;
-    }
-
-    /**
-     * Retorna dados estatísticos para o dashboard de serviços.
-     *
-     * @param int $tenantId ID do tenant
-     * @return array
-     */
-    public function getDashboardData( int $tenantId ): array
-    {
-        try {
-            // Buscar estatísticas dos serviços
-            $statsResult = $this->getServiceStats( $tenantId );
-
-            if ( !$statsResult->isSuccess() ) {
-                return [
-                    'total_services'      => 0,
-                    'active_services'     => 0,
-                    'completed_services'  => 0,
-                    'cancelled_services'  => 0,
-                    'total_service_value' => 0,
-                    'status_breakdown'    => [],
-                    'recent_services'     => collect()
-                ];
-            }
-
-            $stats = $statsResult->getData();
-
-            // Buscar serviços recentes (últimos 10)
-            $recentServices = $this->getRecentServicesForDashboard( $tenantId );
-
-            return [
-                'total_services'      => $stats[ 'total' ],
-                'active_services'     => $stats[ 'active' ],
-                'completed_services'  => $stats[ 'completed' ],
-                'cancelled_services'  => $stats[ 'cancelled' ],
-                'total_service_value' => $stats[ 'total_value' ],
-                'status_breakdown'    => $stats[ 'status_breakdown' ] ?? [],
-                'recent_services'     => $recentServices
-            ];
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao obter dados do dashboard de serviços', [
-                'error'     => $e->getMessage(),
-                'tenant_id' => $tenantId
-            ] );
-
-            return [
-                'total_services'      => 0,
-                'active_services'     => 0,
-                'completed_services'  => 0,
-                'cancelled_services'  => 0,
-                'total_service_value' => 0,
-                'status_breakdown'    => [],
-                'recent_services'     => collect()
-            ];
-        }
-    }
-
-    /**
-     * Retorna estatísticas básicas dos serviços para um tenant.
-     */
-    private function getServiceStats( int $tenantId ): ServiceResult
-    {
-        try {
-            $services = Service::where( 'tenant_id', $tenantId )->get();
-
-            $total      = $services->count();
-            $active     = $services->filter( fn( $s ) => $s->status->isActive() )->count();
-            $completed  = $services->filter( fn( $s ) => $s->status->value === ServiceStatus::COMPLETED->value )->count();
-            $cancelled  = $services->filter( fn( $s ) => $s->status->value === ServiceStatus::CANCELLED->value )->count();
-            $totalValue = $services->sum( 'total' );
-
-            // Agrupar por status com cores
-            $statusBreakdown = $services->groupBy( 'status' )->map( function ( $group, $status ) {
-                $serviceStatus = ServiceStatus::fromString( $status );
-                return [
-                    'count' => $group->count(),
-                    'color' => $serviceStatus?->getColor() ?? '#6c757d'
-                ];
-            } )->toArray();
-
-            return $this->success( [
-                'total'            => $total,
-                'active'           => $active,
-                'completed'        => $completed,
-                'cancelled'        => $cancelled,
-                'total_value'      => $totalValue,
-                'status_breakdown' => $statusBreakdown
-            ], 'Estatísticas calculadas' );
-
-        } catch ( \Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao calcular estatísticas',
-                null,
-                $e,
-            );
-        }
-    }
-
-    /**
-     * Retorna serviços recentes para exibição no dashboard.
-     */
-    private function getRecentServicesForDashboard( int $tenantId ): \Illuminate\Support\Collection
-    {
-        return Service::where( 'tenant_id', $tenantId )
-            ->with( [ 'budget.customer', 'category' ] )
-            ->orderBy( 'created_at', 'desc' )
-            ->limit( 10 )
-            ->get();
     }
 
     /**
      * Cancela um serviço alterando o status para CANCELLED.
      */
-    public function cancelService( string $code ): ServiceResult
+    public function cancelService( string $code, ?string $reason = null ): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($code) {
+            return DB::transaction( function () use ($code, $reason) {
                 $service = Service::where( 'code', $code )->first();
 
                 if ( !$service ) {
@@ -628,21 +523,45 @@ class ServiceService extends AbstractBaseService
                     );
                 }
 
-                // Verificar se pode ser cancelado
-                if ( !$service->serviceStatus->canEdit() ) {
+                $oldStatus = $service->status;
+
+                // Verificar se já está cancelado
+                if ( $oldStatus === ServiceStatus::CANCELLED ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        'Serviço não pode ser cancelado no status atual',
+                        'Serviço já está cancelado',
+                    );
+                }
+
+                // Validar transições permitidas
+                $allowedTransitions = ServiceStatus::getAllowedTransitions( $oldStatus->value );
+                if ( !in_array( ServiceStatus::CANCELLED->value, $allowedTransitions ) ) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        "Transição de {$oldStatus->value} para CANCELLED não permitida",
                     );
                 }
 
                 // Atualizar status para CANCELLED
-                $service->update( [ 'status' => ServiceStatus::CANCELLED->value ] );
+                $service->update( [
+                    'status' => ServiceStatus::CANCELLED->value,
+                    'reason' => $reason
+                ] );
 
-                // Atualizar total do orçamento
-                $this->updateBudgetTotal( $service->budget );
+                // Log da ação
+                Log::info( 'Service cancelled', [
+                    'service_id'   => $service->id,
+                    'service_code' => $service->code,
+                    'old_status'   => $oldStatus->value,
+                    'new_status'   => ServiceStatus::CANCELLED->value,
+                    'reason'       => $reason,
+                    'ip'           => request()->ip()
+                ] );
 
-                return $this->success( $service->fresh(), 'Serviço cancelado com sucesso' );
+                // Atualizar orçamento em cascata
+                $this->updateBudgetStatusIfNeeded( $service, ServiceStatus::CANCELLED->value );
+
+                return $this->success( $service, 'Serviço cancelado com sucesso' );
 
             } );
 
@@ -657,75 +576,122 @@ class ServiceService extends AbstractBaseService
     }
 
     /**
-     * Atualiza o status de um serviço usando token de confirmação.
+     * Atualiza status do serviço por token público com validação robusta.
      */
-    public function updateStatusByToken( string $serviceCode, string $token, string $newStatus, ?string $reason = null ): ServiceResult
-    {
+    public function updateStatusByToken(
+        string $serviceCode,
+        string $token,
+        string $newStatus,
+        ?string $reason = null,
+    ): ServiceResult {
         try {
             return DB::transaction( function () use ($serviceCode, $token, $newStatus, $reason) {
-                // Buscar serviço
-                $service = Service::where( 'code', $serviceCode )->first();
+                // Buscar serviço com token
+                $service = Service::where( 'code', $serviceCode )
+                    ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
+                        $query->where( 'token', $token )
+                            ->where( 'expires_at', '>', now() );
+                    } )
+                    ->first();
 
                 if ( !$service ) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
-                        "Serviço {$serviceCode} não encontrado",
+                        'Serviço ou token não encontrado/expirado',
                     );
                 }
 
-                // Verificar token de confirmação
-                $confirmationToken = $service->userConfirmationToken;
+                // Validar que é status permitido para cliente
+                $allowedStatuses = [
+                    ServiceStatus::APPROVED->value,
+                    ServiceStatus::REJECTED->value,
+                    ServiceStatus::CANCELLED->value
+                ];
 
-                if ( !$confirmationToken || $confirmationToken->token !== $token ) {
+                if ( !in_array( $newStatus, $allowedStatuses ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        'Token de confirmação inválido',
+                        'Status não permitido para alteração por cliente',
                     );
                 }
 
-                // Verificar se token não expirou
-                if ( $confirmationToken->expires_at->isPast() ) {
-                    return $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        'Token de confirmação expirado',
-                    );
-                }
-
-                // Validar transição de status
-                $allowedTransitions = ServiceStatus::getAllowedTransitions( $service->status );
+                // Validar transições permitidas
+                $allowedTransitions = ServiceStatus::getAllowedTransitions( $service->status->value );
                 if ( !in_array( $newStatus, $allowedTransitions ) ) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        "Transição de {$service->status} para {$newStatus} não permitida",
+                        "Transição de {$service->status->value} para {$newStatus} não permitida",
                     );
                 }
 
-                // Atualizar serviço
-                $updateData = [ 'status' => $newStatus ];
-                if ( $reason ) {
-                    $updateData[ 'reason' ] = $reason;
-                }
+                // Atualizar status
+                $service->update( [
+                    'status' => $newStatus,
+                    'reason' => $reason
+                ] );
 
-                $service->update( $updateData );
+                // Log da alteração
+                Log::info( 'Service status updated via public token', [
+                    'service_id'   => $service->id,
+                    'service_code' => $service->code,
+                    'old_status'   => $service->status->value,
+                    'new_status'   => $newStatus,
+                    'reason'       => $reason,
+                    'ip'           => request()->ip()
+                ] );
 
-                // Atualizar orçamento em cascata se necessário
-                $this->updateBudgetStatusIfNeeded( $service, $newStatus );
-
-                // Remover token usado
-                $confirmationToken->delete();
-
-                return $this->success( $service->fresh(), 'Status atualizado com sucesso' );
+                return $this->success( $service, 'Status atualizado com sucesso' );
 
             } );
 
         } catch ( Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
-                'Erro ao atualizar status do serviço',
+                'Erro ao atualizar status via token',
                 null,
                 $e,
             );
         }
     }
+        /**
+         * Retorna dados consolidados para o dashboard de serviços.
+         *
+         * @param int $tenantId ID do tenant
+         * @return array
+         */
+        public function getDashboardData( int $tenantId ): array
+        {
+            try {
+                // Buscar estatísticas dos serviços
+                $statsResult = $this->getServiceStats( $tenantId );
 
-}
+                if ( !$statsResult->isSuccess() ) {
+                    return [
+                        'total_services'      => 0,
+                        'completed_services'  => 0,
+                        'in_progress_services' => 0,
+                        'pending_services'    => 0,
+                        'cancelled_services'  => 0,
+                        'total_service_value' => 0,
+                        'recent_services'     => collect()
+                    ];
+                }
+
+                $stats = $statsResult->getData();
+
+                // Buscar serviços recentes (últimos 10)
+                $recentServices = $this->getRecentServicesForDashboard( $tenantId );
+
+                return [
+                    'total_services'      => $stats[ 'total' ],
+                    'completed_services'  => $stats[ 'completed' ],
+                    'in_progress_services' => $stats[ 'in_progress' ],
+                    'pending_services'    => $stats[ 'pending' ],
+                    'cancelled_services'  => $stats[ 'cancelled' ],
+                    'total_service_value' => $stats[ 'total_value' ],
+                    'status_breakdown'    => $stats[ 'status_breakdown' ] ?? [],
+                    'recent_services'     => $recentServices
+                ];
+
+            } catch ( \Exception $e ) {
+        }

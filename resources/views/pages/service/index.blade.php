@@ -1,163 +1,271 @@
 @extends( 'layouts.app' )
 
+@section( 'title', 'Gestão de Serviços' )
+
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Action cards -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="card-title mb-0">Gerenciamento de Serviços</h5>
-                            <small class="text-muted">Visualize, crie e gerencie os serviços prestados.</small>
-                        </div>
-                        <a href="{{ route( 'provider.services.create' ) }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle me-2"></i>Novo Serviço
+  <div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-1">Gestão de Serviços</h1>
+        <p class="text-muted">Lista de todos os serviços registrados no sistema</p>
+      </div>
+      <a href="{{ route( 'provider.services.create' ) }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Novo Serviço
+      </a>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-filter"></i> Filtros de Busca
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="GET" action="{{ route( 'provider.services.index' ) }}" class="row g-3">
+          <div class="col-md-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select">
+              <option value="">Todos os Status</option>
+              @foreach( $statusOptions as $status )
+                <option value="{{ $status->value }}" {{ ( request( 'status' ) == $status->value ) ? 'selected' : '' }}>
+                  {{ $status->getName() }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="category_id" class="form-label">Categoria</label>
+            <select name="category_id" id="category_id" class="form-select">
+              <option value="">Todas as Categorias</option>
+              @foreach( $categories as $category )
+                <option value="{{ $category->id }}" {{ ( request( 'category_id' ) == $category->id ) ? 'selected' : '' }}>
+                  {{ $category->name }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label for="date_from" class="form-label">Data Inicial</label>
+            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request( 'date_from' ) }}">
+          </div>
+
+          <div class="col-md-2">
+            <label for="date_to" class="form-label">Data Final</label>
+            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request( 'date_to' ) }}">
+          </div>
+
+          <div class="col-md-2">
+            <label for="search" class="form-label">Buscar por Código</label>
+            <input type="text" name="search" id="search" class="form-control" placeholder="Código do serviço"
+              value="{{ request( 'search' ) }}">
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search"></i> Filtrar
+            </button>
+            <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Limpar
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Results Card -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-list"></i>
+          Lista de Serviços
+          @if( $services instanceof \Illuminate\Pagination\LengthAwarePaginator )
+            ({{ $services->total() }} registros)
+          @else
+            ({{ $services->count() }} registros)
+          @endif
+        </h5>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportExcel()">
+            <i class="fas fa-file-excel"></i> Excel
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i> PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        @if( $services instanceof \Illuminate\Pagination\LengthAwarePaginator && $services->isEmpty() )
+          <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum serviço encontrado</h5>
+            <p class="text-muted">Tente ajustar os filtros ou cadastre um novo serviço.</p>
+          </div>
+        @else
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Código</th>
+                  <th>Orçamento</th>
+                  <th>Cliente</th>
+                  <th>Categoria</th>
+                  <th>Status</th>
+                  <th>Data Criação</th>
+                  <th>Valor Total</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse( $services as $service )
+                  <tr>
+                    <td>
+                      <strong>{{ $service->code }}</strong>
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ $service->budget?->code ?? 'N/A' }}</span>
+                    </td>
+                    <td>
+                      <div>
+                        <strong>{{ $service->budget?->customer?->commonData?->first_name ?? 'Cliente não informado' }}</strong>
+                        <br>
+                        <small class="text-muted">
+                          @if( $service->budget?->customer?->commonData?->cnpj )
+                            CNPJ: {{ $service->budget->customer->commonData->cnpj }}
+                          @elseif( $service->budget?->customer?->commonData?->cpf )
+                            CPF: {{ $service->budget->customer->commonData->cpf }}
+                          @endif
+                        </small>
+                      </div>
+                    </td>
+                    <td>
+                      @if( $service->category )
+                        <span class="badge bg-secondary">{{ $service->category->name }}</span>
+                      @else
+                        <span class="text-muted">Sem categoria</span>
+                      @endif
+                    </td>
+                    <td>
+                      <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}; color: white;">
+                        {{ $service->serviceStatus->getName() }}
+                      </span>
+                    </td>
+                    <td>
+                      <small>{{ $service->created_at->format( 'd/m/Y H:i' ) }}</small>
+                    </td>
+                    <td>
+                      <strong>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</strong>
+                    </td>
+                    <td>
+                      <div class="btn-group" role="group">
+                        <a href="{{ route( 'provider.services.show', $service->code ) }}" class="btn btn-sm btn-outline-info"
+                          title="Visualizar">
+                          <i class="fas fa-eye"></i>
                         </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        @if( $service->status->canEdit() )
+                          <a href="{{ route( 'provider.services.edit', $service->code ) }}"
+                            class="btn btn-sm btn-outline-warning" title="Editar">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                        @endif
+                        <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                          onclick="confirmDelete('{{ $service->code }}')">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="8" class="text-center py-4">
+                      <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                      <br>
+                      <span class="text-muted">Nenhum serviço encontrado</span>
+                    </td>
+                  </tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+        @endif
+      </div>
 
-        <!-- Filters -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <form id="filter-form" action="{{ route( 'provider.services.index' ) }}" method="GET">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="service_number" class="form-label">Número do Serviço</label>
-                            <input type="text" id="service_number" name="service_number" class="form-control"
-                                value="{{ request( 'service_number' ) }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="start_date" class="form-label">Data Inicial</label>
-                            <input type="date" id="start_date" name="start_date" class="form-control"
-                                value="{{ request( 'start_date' ) }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="end_date" class="form-label">Data Final</label>
-                            <input type="date" id="end_date" name="end_date" class="form-control"
-                                value="{{ request( 'end_date' ) }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="client" class="form-label">Cliente</label>
-                            <input type="text" id="client" name="client" class="form-control"
-                                value="{{ request( 'client' ) }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="min_value" class="form-label">Valor Mínimo</label>
-                            <input type="number" id="min_value" name="min_value" class="form-control"
-                                value="{{ request( 'min_value' ) }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select id="status" name="status" class="form-select">
-                                <option value="">Todos</option>
-                                @foreach ( StatusHelper::service_status_options() as $status )
-                                    <option value="{{ $status->id }}" {{ request( 'status' ) == $status->id ? 'selected' : '' }}>
-                                        {{ $status->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">Filtrar</button>
-                            <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-outline-secondary">Limpar</a>
-                        </div>
-                    </div>
-                </form>
+      @if( $services instanceof \Illuminate\Pagination\LengthAwarePaginator && !$services->isEmpty() )
+        <div class="card-footer">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <small class="text-muted">
+                Mostrando {{ $services->firstItem() }} a {{ $services->lastItem() }}
+                de {{ $services->total() }} resultados
+              </small>
             </div>
-        </div>
-
-        <!-- Results -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="results-table" class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Cliente</th>
-                                <th>Data</th>
-                                <th>Vencimento</th>
-                                <th>Valor</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ( $services as $service )
-                                <tr>
-                                    <td>{{ $service->code }}</td>
-                                    <td>{{ $service->customer_name }}</td>
-                                    <td>{{ DateHelper::formatBR( $service->created_at ) }}</td>
-                                    <td>{{ DateHelper::formatBR( $service->due_date ) }}</td>
-                                    <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
-                                    <td>{!! StatusHelper::status_badge( $service->status ) !!}</td>
-                                    <td>
-                                        <a href="{{ route( 'provider.services.show', $service->code ) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{{ route( 'provider.services.edit', $service->id ) }}"
-                                            class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal" data-id="{{ $service->id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center">Nenhum serviço encontrado.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @include( 'partials.components.table_paginator', [ 'data' => $services ] )
+            <div>
+              {{ $services->appends( request()->query() )->links() }}
             </div>
+          </div>
         </div>
+      @endif
     </div>
+  </div>
 
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza que deseja excluir este serviço?
-                </div>
-                <div class="modal-footer">
-                    <form id="delete-form" action="" method="POST">
-                        @csrf
-                        @method( 'DELETE' )
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </form>
-                </div>
-            </div>
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Exclusão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.</p>
+          <p><strong>Código:</strong> <span id="deleteServiceCode"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <form id="deleteForm" method="POST" style="display: inline;">
+            @csrf
+            @method( 'DELETE' )
+            <button type="submit" class="btn btn-danger">Excluir</button>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 @endsection
 
 @push( 'scripts' )
-    <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            var deleteModal = document.getElementById( 'deleteModal' );
-            deleteModal.addEventListener( 'show.bs.modal', function ( event ) {
-                var button = event.relatedTarget;
-                var serviceId = button.getAttribute( 'data-id' );
-                var form = document.getElementById( 'delete-form' );
-                var action = '{{ route( "provider.services.destroy", [ ":id" ] ) }}';
-                action = action.replace( ':id', serviceId );
-                form.action = action;
-            } );
-        } );
-    </script>
+  <script>
+    function confirmDelete( serviceCode ) {
+      document.getElementById( 'deleteServiceCode' ).textContent = serviceCode;
+      document.getElementById( 'deleteForm' ).action = '{{ route( "provider.services.destroy", "REPLACE_ID" ) }}'.replace( 'REPLACE_ID', serviceCode );
+
+      const modal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
+      modal.show();
+    }
+
+    function exportExcel() {
+      const currentUrl = new URL( window.location );
+      currentUrl.searchParams.set( 'export', 'excel' );
+      window.open( currentUrl.toString(), '_blank' );
+    }
+
+    function exportPDF() {
+      const currentUrl = new URL( window.location );
+      currentUrl.searchParams.set( 'export', 'pdf' );
+      window.open( currentUrl.toString(), '_blank' );
+    }
+
+    // Auto-submit form when filters change
+    document.getElementById( 'status' ).addEventListener( 'change', function () {
+      this.closest( 'form' ).submit();
+    } );
+
+    document.getElementById( 'category_id' ).addEventListener( 'change', function () {
+      this.closest( 'form' ).submit();
+    } );
+  </script>
 @endpush

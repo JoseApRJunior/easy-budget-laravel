@@ -113,6 +113,12 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{plan}', [ PlanController::class, 'destroy' ] )->name( 'destroy' );
         Route::post( '/{plan}/activate', [ PlanController::class, 'activate' ] )->name( 'activate' );
         Route::post( '/{plan}/deactivate', [ PlanController::class, 'deactivate' ] )->name( 'deactivate' );
+
+        // Métodos específicos para gestão de planos e pagamentos
+        Route::post( '/{plan}/redirect-to-payment', [ PlanController::class, 'redirectToPayment' ] )->name( 'redirect-to-payment' );
+        Route::post( '/{plan}/cancel-pending-subscription', [ PlanController::class, 'cancelPendingSubscription' ] )->name( 'cancel-pending-subscription' );
+        Route::get( '/{plan}/status', [ PlanController::class, 'status' ] )->name( 'status' );
+        Route::get( '/payment-status', [ PlanController::class, 'paymentStatus' ] )->name( 'payment-status' );
     } );
 
     // Customers
@@ -177,6 +183,9 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Services
     Route::prefix( 'services' )->name( 'services.' )->group( function () {
+        // Dashboard de Serviços
+        Route::get( '/dashboard', [ ServiceController::class, 'dashboard' ] )->name( 'dashboard' );
+
         Route::get( '/', [ ServiceController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ ServiceController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ ServiceController::class, 'store' ] )->name( 'store' );
@@ -192,6 +201,9 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Budgets
     Route::prefix( 'budgets' )->name( 'budgets.' )->group( function () {
+        // Dashboard de Orçamentos
+        Route::get( '/dashboard', [ BudgetController::class, 'dashboard' ] )->name( 'dashboard' );
+
         Route::get( '/', [ BudgetController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ BudgetController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ BudgetController::class, 'store' ] )->name( 'store' );

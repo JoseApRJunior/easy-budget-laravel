@@ -80,6 +80,7 @@ return new class extends Migration
             $table->integer( 'max_clients' );
             $table->json( 'features' )->nullable();
             $table->timestamps();
+            $table->softDeletes();
         } );
 
         Schema::create( 'categories', function ( Blueprint $table ) {

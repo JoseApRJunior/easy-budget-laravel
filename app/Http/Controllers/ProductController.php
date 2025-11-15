@@ -94,7 +94,7 @@ class ProductController extends Controller
             $product = $result->getData();
 
             return redirect()
-                ->route( 'products.show', $product->sku )
+                ->route( 'provider.products.show', $product->sku )
                 ->with( 'success', 'Produto criado com sucesso!' );
         } catch ( Exception $e ) {
             return redirect()
@@ -169,7 +169,7 @@ class ProductController extends Controller
             $product = $result->getData();
 
             return redirect()
-                ->route( 'products.show', $product->sku )
+                ->route( 'provider.products.show', $product->sku )
                 ->with( 'success', 'Produto atualizado com sucesso!' );
         } catch ( Exception $e ) {
             return redirect()
@@ -237,7 +237,7 @@ class ProductController extends Controller
     /**
      * Dashboard de Produtos.
      *
-     * Rota: products.dashboard
+     * Rota: provider.products.dashboard
      *
      * Exibe métricas e atalhos rápidos, seguindo o padrão do dashboard de clientes.
      */

@@ -19,6 +19,7 @@ class PlanFactory extends Factory
         return [
             'name'        => $this->faker->company,
             'slug'        => $this->faker->unique()->slug( 2 ), // Slug mais curto para evitar problemas de tamanho
+            'description' => $this->faker->sentence(),
             'price'       => $this->faker->randomFloat( 2, 0, 1000 ),
             'status'      => $this->faker->boolean( 90 ), // 90% de chance de estar ativo
             'max_budgets' => $this->faker->numberBetween( 10, 1000 ),

@@ -147,7 +147,7 @@
                                         </td>
                                         <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
                                         <td class="text-end">
-                                            <a href="{{ route( 'service.show', $service->code ) }}"
+                                            <a href="{{ route( 'provider.services.show', $service->code ) }}"
                                                 class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i>
                                             </a>

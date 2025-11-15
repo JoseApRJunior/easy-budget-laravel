@@ -151,4 +151,46 @@ class PlanRepository extends AbstractGlobalRepository
         return $subscription;
     }
 
+    /**
+     * Retorna planos paginados com filtros avançados
+     */
+    public function getPaginated( array $filters = [], int $perPage = 15 ): mixed
+    {
+        $query = $this->model->newQuery()->with( [] );
+
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $query->where( function ( $q ) use ( $filters ) {
+                $q->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' )
+                    ->orWhere( 'slug', 'like', '%' . $filters[ 'search' ] . '%' )
+                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
+            } );
+        }
+
+        if ( isset( $filters[ 'status' ] ) && $filters[ 'status' ] !== '' ) {
+            $query->where( 'status', (bool) $filters[ 'status' ] );
+        }
+
+        // Filtros adicionais para ranges
+        if ( !empty( $filters[ 'min_price' ] ) ) $query->where( 'price', '>=', $filters[ 'min_price' ] );
+        if ( !empty( $filters[ 'max_price' ] ) ) $query->where( 'price', '<=', $filters[ 'max_price' ] );
+
+        return $query->orderBy( 'price', 'asc' )->paginate( $perPage );
+    }
+
+    /**
+     * Conta planos ativos
+     */
+    public function countActive(): int
+    {
+        return $this->model->where( 'status', true )->count();
+    }
+
+    /**
+     * Verifica se plano pode ser desativado/deletado
+     */
+    public function canBeDeactivatedOrDeleted( int $id ): bool
+    {
+        return !$this->model->where( 'id', $id )->has( 'planSubscriptions' )->exists();
+    }
+
 }

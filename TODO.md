@@ -25,3 +25,7 @@ C:\xampp\htdocs\easy-budget-laravel\documentsIA\old-sistem\RELATORIO_ANALISE_PRO
 Forneça apenas o novo conteúdo completo para o ARQUIVO_PRODUTO, formatado em Markdown, sem explicações adicionais.
 
 Eu fiz umas mudanças C:\xampp\htdocs\easy-budget-laravel\documentsIA\migrate laravel\PROMPTS\PROMPTS_DETALHADOS_MIGRACAO_CUSTOMER.md de analisada e faça a correçao do Grupo 5
+
+continue com base no que foi criado em Product e Customer, gere dashboard para services, veja oque falta terminar, tem rotas tbm e menu para alterar, controllers
+
+      mova o arquivo C:\xampp\htdocs\easy-budget-laravel\documentsIA\old-sistem\RELATORIO_ANALISE_PLAN_CONTROLLER.md. para pasta migrate-laravel e gere  o PROMPT EM C:\xampp\htdocs\easy-budget-laravel\documentsIA\migrate laravel\PROMPTS SEGUINDO O MODELO DOS QUE JA EXISTEM, TEM MODELO PATTERN LA TBM

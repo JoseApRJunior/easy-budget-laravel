@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\PlanStoreRequest;
+use App\Http\Requests\PlanUpdateRequest;
 use App\Services\Domain\PlanService;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,457 +50,267 @@ class PlanController extends Controller
     }
 
     /**
-     * Lista todos os planos
-     *
-     * Exibe uma lista paginada de planos com opções de filtro e ordenação.
-     * Suporta respostas JSON para APIs e views Blade para interface web.
-     *
-     * @param Request $request
-     * @return View|JsonResponse
+     * Lista todos os planos com filtros
      */
-    public function index( Request $request ): View|JsonResponse
+    public function index( Request $request ): View
     {
         try {
-            $filters = $request->only( [ 'status', 'name' ] );
-            $orderBy = $request->get( 'order_by', [ 'name' => 'asc' ] );
-            $limit   = $request->get( 'limit', 15 );
-
-            $result = $this->planService->list( $filters );
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $result->getData(),
-                    'message' => 'Planos listados com sucesso.'
-                ] );
-            }
+            $filters = $request->only( [ 'search', 'status', 'min_price', 'max_price' ] );
+            $result  = $this->planService->getFilteredPlans( $filters, [] );
+            if ( !$result->isSuccess() ) abort( 500, 'Erro ao carregar lista' );
 
             return view( 'pages.plan.index', [
-                'plans' => $result->isSuccess() ? $result->getData() : []
+                'plans'   => $result->getData(),
+                'filters' => $filters,
             ] );
-
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao listar planos.' );
+            Log::error( 'Erro no PlanController@index', [ 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro interno do servidor' );
         }
     }
 
     /**
      * Exibe formulário para criação de plano
-     *
-     * @param Request $request
-     * @return View|JsonResponse
      */
-    public function create( Request $request ): View|JsonResponse
+    public function create(): View
     {
-        try {
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'message' => 'Formulário de criação disponível.'
-                ] );
-            }
-
-            return view( 'pages.plan.create' );
-
-        } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao exibir formulário de criação.' );
-        }
+        return view( 'pages.plan.create' );
     }
 
     /**
      * Cria um novo plano
-     *
-     * Processa a criação de um novo plano com validação completa e tratamento de erro.
-     * Implementa o padrão de resposta dupla (JSON para APIs, redirect para Web).
-     *
-     * Regras de validação aplicadas:
-     * - Nome único no sistema
-     * - Preço positivo obrigatório
-     * - Status válido (active, inactive, suspended)
-     * - Features como array opcional de strings
-     *
-     * @param Request $request Dados validados do formulário/API
-     * @return JsonResponse|RedirectResponse
      */
-    public function store( Request $request ): JsonResponse|RedirectResponse
+    public function store( PlanStoreRequest $request ): RedirectResponse
     {
         try {
-            // Validação robusta dos dados de entrada
-            $validatedData = $request->validate( [
-                'name'        => 'required|string|max:255|unique:plans,name',
-                'description' => 'nullable|string|max:1000',
-                'price'       => 'required|numeric|min:0|max:999999.99',
-                'status'      => 'required|in:active,inactive,suspended',
-                'features'    => 'nullable|array',
-                'features.*'  => 'string|max:255'
-            ] );
-
-            $result = $this->planService->create( $validatedData );
-
+            $result = $this->planService->createPlan( $request->validated() );
             if ( !$result->isSuccess() ) {
-                return $this->handleValidationError( $result, $request );
+                return redirect()->back()->withErrors( $result->getMessage() )->withInput();
             }
 
-            $message = 'Plano criado com sucesso.';
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $result->getData(),
-                    'message' => $message
-                ], 201 );
-            }
-
-            return redirect()->route( 'pages.plan.index' )
-                ->with( 'success', $message );
-
+            return redirect()->route( 'plans.index' )->with( 'success', 'Plano criado com sucesso' );
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao criar plano.' );
+            Log::error( 'Erro no PlanController@store', [ 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' )->withInput();
         }
     }
 
     /**
      * Exibe detalhes de um plano específico
-     *
-     * @param int $id
-     * @param Request $request
-     * @return View|JsonResponse
      */
-    public function show( int $id, Request $request ): View|JsonResponse
+    public function show( string $slug ): View
     {
         try {
-            $result = $this->planService->findById( $id );
-
-            if ( !$result->isSuccess() ) {
-                return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
-            }
-
-            $plan = $result->getData();
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $plan,
-                    'message' => 'Plano encontrado com sucesso.'
-                ] );
-            }
+            $result = $this->planService->findBySlug( $slug, [] );
+            if ( !$result->isSuccess() ) abort( 404, $result->getMessage() );
 
             return view( 'pages.plan.show', [
-                'plan' => $plan
+                'plan' => $result->getData(),
             ] );
-
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao exibir plano.' );
+            Log::error( 'Erro no PlanController@show', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro interno do servidor' );
         }
     }
 
     /**
      * Exibe formulário para edição de plano
-     *
-     * @param int $id
-     * @param Request $request
-     * @return View|JsonResponse
      */
-    public function edit( int $id, Request $request ): View|JsonResponse
+    public function edit( string $slug ): View
     {
         try {
-            $result = $this->planService->findById( $id );
-
-            if ( !$result->isSuccess() ) {
-                return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
-            }
-
-            $plan = $result->getData();
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $plan,
-                    'message' => 'Formulário de edição disponível.'
-                ] );
-            }
+            $result = $this->planService->findBySlug( $slug, [] );
+            if ( !$result->isSuccess() ) abort( 404, $result->getMessage() );
 
             return view( 'pages.plan.edit', [
-                'plan' => $plan
+                'plan' => $result->getData(),
             ] );
-
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao exibir formulário de edição.' );
+            Log::error( 'Erro no PlanController@edit', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro interno do servidor' );
         }
     }
 
     /**
      * Atualiza um plano específico
-     *
-     * Processa a atualização de um plano existente com validação completa.
-     * Implementa verificação de existência e tratamento robusto de erros.
-     *
-     * Regras de validação aplicadas:
-     * - Nome único no sistema (exceto para o próprio registro)
-     * - Preço positivo obrigatório com limite máximo
-     * - Status válido dentro das opções permitidas
-     * - Features como array opcional de strings
-     *
-     * @param Request $request Dados validados do formulário/API
-     * @param int $id ID único do plano a ser atualizado
-     * @return JsonResponse|RedirectResponse
      */
-    public function update( Request $request, int $id ): JsonResponse|RedirectResponse
+    public function update( PlanUpdateRequest $request, string $slug ): RedirectResponse
     {
         try {
-            // Validação robusta dos dados de entrada
-            $validatedData = $request->validate( [
-                'name'        => 'required|string|max:255|unique:plans,name,' . $id,
-                'description' => 'nullable|string|max:1000',
-                'price'       => 'required|numeric|min:0|max:999999.99',
-                'status'      => 'required|in:active,inactive,suspended',
-                'features'    => 'nullable|array',
-                'features.*'  => 'string|max:255'
-            ] );
-
-            $result = $this->planService->update( $id, $validatedData );
-
+            $result = $this->planService->updateBySlug( $slug, $request->validated() );
             if ( !$result->isSuccess() ) {
-                return $this->handleValidationError( $result, $request );
+                return redirect()->back()->withErrors( $result->getMessage() )->withInput();
             }
 
-            $message = 'Plano atualizado com sucesso.';
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $result->getData(),
-                    'message' => $message
-                ] );
-            }
-
-            return redirect()->route( 'pages.plan.index' )
-                ->with( 'success', $message );
-
+            return redirect()->route( 'plans.index' )->with( 'success', 'Plano atualizado com sucesso' );
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao atualizar plano.' );
+            Log::error( 'Erro no PlanController@update', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' )->withInput();
+        }
+    }
+
+    /**
+     * Alterna status do plano
+     */
+    public function toggleStatus( string $slug ): RedirectResponse
+    {
+        try {
+            $result = $this->planService->toggleStatus( $slug );
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()->withErrors( $result->getMessage() );
+            }
+
+            return redirect()->back()->with( 'success', $result->getData() );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no PlanController@toggleStatus', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
         }
     }
 
     /**
      * Remove um plano específico
-     *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse|RedirectResponse
      */
-    public function destroy( int $id, Request $request ): JsonResponse|RedirectResponse
+    public function destroy( string $slug ): RedirectResponse
     {
         try {
-            $result = $this->planService->findById( $id );
-
+            $result = $this->planService->deleteBySlug( $slug );
             if ( !$result->isSuccess() ) {
-                return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
+                return redirect()->back()->withErrors( $result->getMessage() );
             }
 
-            $deleteResult = $this->planService->delete( $id );
-
-            if ( !$deleteResult->isSuccess() ) {
-                return $this->handleError( new Exception( $deleteResult->getMessage() ?? 'Falha ao deletar plano.' ), $request, 'Erro ao deletar plano.' );
-            }
-
-            $message = 'Plano deletado com sucesso.';
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'message' => $message
-                ] );
-            }
-
-            return redirect()->route( 'pages.plan.index' )
-                ->with( 'success', $message );
-
+            return redirect()->route( 'plans.index' )->with( 'success', 'Plano removido com sucesso' );
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao deletar plano.' );
+            Log::error( 'Erro no PlanController@destroy', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
+        }
+    }
+
+    /**
+     * Processa seleção de plano e redireciona para pagamento
+     */
+    public function redirectToPayment( string $slug ): RedirectResponse
+    {
+        try {
+            $result = $this->planService->findBySlug( $slug );
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()->withErrors( $result->getMessage() ?? 'Plano não encontrado.' );
+            }
+
+            $plan = $result->getData();
+
+            // Lógica para redirecionar para pagamento (Mercado Pago)
+            // TODO: Implementar integração com serviço de pagamento
+
+            return redirect()->route( 'plans.show', $slug )->with( 'info', 'Redirecionando para pagamento...' );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no PlanController@redirectToPayment', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
+        }
+    }
+
+    /**
+     * Cancela assinatura pendente
+     */
+    public function cancelPendingSubscription( string $slug ): RedirectResponse
+    {
+        try {
+            // Lógica para cancelar assinatura pendente
+            // TODO: Implementar integração com serviço de assinaturas
+
+            return redirect()->route( 'plans.show', $slug )->with( 'success', 'Assinatura pendente cancelada.' );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no PlanController@cancelPendingSubscription', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
+        }
+    }
+
+    /**
+     * Verifica status de assinatura pendente
+     */
+    public function status( string $slug ): View
+    {
+        try {
+            $result = $this->planService->findBySlug( $slug );
+            if ( !$result->isSuccess() ) abort( 404, $result->getMessage() );
+
+            // Lógica para verificar status da assinatura
+            // TODO: Implementar verificação de status
+
+            return view( 'pages.plan.status', [
+                'plan'   => $result->getData(),
+                'status' => 'pending', // TODO: Obter status real
+            ] );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no PlanController@status', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro interno do servidor' );
+        }
+    }
+
+    /**
+     * Página de retorno após pagamento
+     */
+    public function paymentStatus( Request $request ): View
+    {
+        try {
+            // Lógica para processar retorno do pagamento
+            // TODO: Implementar processamento de webhook/retorno
+
+            $status   = $request->get( 'status', 'unknown' );
+            $planSlug = $request->get( 'plan_slug', '' );
+
+            return view( 'pages.plan.payment-status', [
+                'status'    => $status,
+                'plan_slug' => $planSlug,
+            ] );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no PlanController@paymentStatus', [ 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro interno do servidor' );
         }
     }
 
     /**
      * Ativa um plano
-     *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse|RedirectResponse
      */
-    public function activate( int $id, Request $request ): JsonResponse|RedirectResponse
+    public function activate( string $slug ): RedirectResponse
     {
         try {
-            $result = $this->planService->findById( $id );
-
+            $result = $this->planService->findBySlug( $slug );
             if ( !$result->isSuccess() ) {
-                return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
+                return redirect()->back()->withErrors( $result->getMessage() ?? 'Plano não encontrado.' );
             }
 
-            $updateResult = $this->planService->update( $id, [ 'status' => 'active' ] );
-
+            $updateResult = $this->planService->updateBySlug( $slug, [ 'status' => true ] );
             if ( !$updateResult->isSuccess() ) {
-                return $this->handleValidationError( $updateResult, $request );
+                return redirect()->back()->withErrors( $updateResult->getMessage() );
             }
 
-            $message = 'Plano ativado com sucesso.';
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $updateResult->getData(),
-                    'message' => $message
-                ] );
-            }
-
-            return redirect()->back()->with( 'success', $message );
-
+            return redirect()->back()->with( 'success', 'Plano ativado com sucesso.' );
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao ativar plano.' );
+            Log::error( 'Erro no PlanController@activate', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
         }
     }
 
     /**
      * Desativa um plano
-     *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse|RedirectResponse
      */
-    public function deactivate( int $id, Request $request ): JsonResponse|RedirectResponse
+    public function deactivate( string $slug ): RedirectResponse
     {
         try {
-            $result = $this->planService->findById( $id );
-
+            $result = $this->planService->findBySlug( $slug );
             if ( !$result->isSuccess() ) {
-                return $this->handleNotFound( $request, $result->getMessage() ?? 'Plano não encontrado.' );
+                return redirect()->back()->withErrors( $result->getMessage() ?? 'Plano não encontrado.' );
             }
 
-            $updateResult = $this->planService->update( $id, [ 'status' => 'inactive' ] );
-
+            $updateResult = $this->planService->updateBySlug( $slug, [ 'status' => false ] );
             if ( !$updateResult->isSuccess() ) {
-                return $this->handleValidationError( $updateResult, $request );
+                return redirect()->back()->withErrors( $updateResult->getMessage() );
             }
 
-            $message = 'Plano desativado com sucesso.';
-
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'data'    => $result->getData(),
-                    'message' => $message
-                ] );
-            }
-
-            return redirect()->back()->with( 'success', $message );
-
+            return redirect()->back()->with( 'success', 'Plano desativado com sucesso.' );
         } catch ( Exception $e ) {
-            return $this->handleError( $e, $request, 'Erro ao desativar plano.' );
-        }
-    }
-
-    /**
-     * Trata erros de validação seguindo padrões do sistema
-     *
-     * Centraliza o tratamento de erros de validação, garantindo consistência
-     * entre respostas JSON (API) e redirecionamentos (Web).
-     *
-     * @param mixed $result Objeto ServiceResult com dados de erro
-     * @param Request $request Requisição HTTP para determinar formato de resposta
-     * @return JsonResponse|RedirectResponse
-     */
-    private function handleValidationError( $result, Request $request )
-    {
-        if ( $request->expectsJson() ) {
-            return response()->json( [
-                'success' => false,
-                'message' => $result->getMessage() ?? 'Erro de validação.',
-                'errors'  => $result->getData() ?? []
-            ], 422 );
-        }
-
-        return redirect()->back()
-            ->withErrors( $result->getData() ?? [ $result->getMessage() ?? 'Erro de validação.' ] )
-            ->withInput();
-    }
-
-    /**
-     * Trata recurso não encontrado seguindo padrões do sistema
-     *
-     * Implementa tratamento consistente para recursos não encontrados,
-     * retornando lista de planos com mensagem de erro apropriada.
-     *
-     * @param Request $request Requisição HTTP para determinar formato de resposta
-     * @param string $message Mensagem descritiva do erro
-     * @return View|JsonResponse
-     */
-    private function handleNotFound( Request $request, string $message )
-    {
-        if ( $request->expectsJson() ) {
-            return response()->json( [
-                'success' => false,
-                'message' => $message
-            ], 404 );
-        }
-
-        // Retorna à listagem com mensagem de erro
-        try {
-            $result = $this->planService->list();
-            return view( 'pages.plan.index', [
-                'plans' => $result->isSuccess() ? $result->getData() : []
-            ] )->with( 'error', $message );
-        } catch ( Exception $e ) {
-            // Fallback para view de erro genérica
-            return view( 'errors.generic', [
-                'message' => $message,
-                'error'   => null
-            ] );
-        }
-    }
-
-    /**
-     * Trata erros genéricos seguindo padrões do sistema
-     *
-     * Implementa tratamento robusto de erros com fallback seguro,
-     * garantindo que o usuário sempre receba uma resposta adequada.
-     *
-     * @param Exception $e Exceção capturada durante execução
-     * @param Request $request Requisição HTTP para determinar formato de resposta
-     * @param string $defaultMessage Mensagem padrão caso exceção não tenha mensagem
-     * @return View|JsonResponse
-     */
-    private function handleError( Exception $e, Request $request, string $defaultMessage )
-    {
-        $message = $e->getMessage() ?: $defaultMessage;
-
-        // Log detalhado do erro para auditoria
-        Log::error( 'Erro no PlanController', [
-            'action'  => debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 2 )[ 1 ][ 'function' ] ?? 'unknown',
-            'message' => $message,
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-            'trace'   => $e->getTraceAsString()
-        ] );
-
-        if ( $request->expectsJson() ) {
-            return response()->json( [
-                'success' => false,
-                'message' => $message
-            ], 500 );
-        }
-
-        // Tenta retornar à listagem com erro
-        try {
-            $result = $this->planService->list();
-            return view( 'pages.plan.index', [
-                'plans' => $result->isSuccess() ? $result->getData() : []
-            ] )->with( 'error', $message );
-        } catch ( Exception $fallbackError ) {
-            // Fallback seguro para view de erro genérica
-            return view( 'errors.generic', [
-                'message' => $message,
-                'error'   => config( 'app.debug' ) ? $e : null
-            ] );
+            Log::error( 'Erro no PlanController@deactivate', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
+            return redirect()->back()->withErrors( 'Erro interno do servidor' );
         }
     }
 

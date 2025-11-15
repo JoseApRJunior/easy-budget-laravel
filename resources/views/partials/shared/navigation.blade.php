@@ -27,6 +27,13 @@
             </a>
         </li>
 
+        {{-- Dashboard de Orçamentos - acesso específico --}}
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center" href="{{ route( 'provider.budgets.dashboard' ) }}">
+                <i class="bi bi-file-earmark-text-fill me-2"></i>
+                <span>Orçamentos</span>
+            </a>
+        </li>
 
         <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="/ia">
@@ -101,16 +108,17 @@
                     <span>Gerenciar</span>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="managementDropdown">
-                    <li><a class="dropdown-item" href="{{ route( 'provider.budgets.index' ) }}">
+                    {{-- Entradas do menu Gerenciar apontando para os dashboards/listas principais de cada módulo --}}
+                    <li><a class="dropdown-item" href="{{ route( 'provider.customers.dashboard' ) }}">
+                            <i class="bi bi-people me-2"></i>Clientes</a></li>
+                    <li><a class="dropdown-item" href="{{ route( 'provider.products.dashboard' ) }}">
+                            <i class="bi bi-box me-2"></i>Produtos</a></li>
+                    <li><a class="dropdown-item" href="{{ route( 'provider.budgets.dashboard' ) }}">
                             <i class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
-                    <li><a class="dropdown-item" href="{{ route( 'provider.services.index' ) }}">
+                    <li><a class="dropdown-item" href="{{ route( 'provider.services.dashboard' ) }}">
                             <i class="bi bi-tools me-2"></i>Serviços</a></li>
                     <li><a class="dropdown-item" href="{{ route( 'provider.invoices.index' ) }}">
                             <i class="bi bi-receipt me-2"></i>Faturas</a></li>
-                    <li><a class="dropdown-item" href="{{ route( 'provider.customers.index' ) }}">
-                            <i class="bi bi-people me-2"></i>Clientes</a></li>
-                    <li><a class="dropdown-item" href="{{ route( 'provider.products.index' ) }}">
-                            <i class="bi bi-box me-2"></i>Produtos</a></li>
                     <li><a class="dropdown-item" href="{{ route( 'provider.reports.index' ) }}">
                             <i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
                 </ul>

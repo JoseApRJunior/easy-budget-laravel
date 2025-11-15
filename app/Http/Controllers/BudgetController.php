@@ -144,7 +144,7 @@ class BudgetController extends Controller
             $budget = $result->getData();
 
             // Verificar se pode editar
-            if ( !$budget->status->canBeEdited() ) {
+            if ( !$budget->status->canEdit() ) {
                 abort( 403, 'Orçamento não pode ser editado no status atual' );
             }
 
@@ -221,7 +221,7 @@ class BudgetController extends Controller
 
             // Get available status options (only approved and rejected for public)
             $availableStatuses = collect( [ BudgetStatus::APPROVED, BudgetStatus::REJECTED ] )
-                ->sortBy( fn( $status ) => $status->getOrderIndex() )
+                ->sortBy( fn( $status ) => $status->label() )
                 ->values();
 
             return view( 'budgets.public.choose-status', [
@@ -281,7 +281,7 @@ class BudgetController extends Controller
             $newStatusEnum = BudgetStatus::from( $request->budget_status_id );
             $budget->update( [
                 'status'  => $request->budget_status_id,
-                'history' => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->getName() . ' (via link público)'
+                'history' => $budget->history . "\n\n" . now()->format( 'd/m/Y H:i:s' ) . ' - Status alterado para: ' . $newStatusEnum->label() . ' (via link público)'
             ] );
 
             // Log the action
@@ -289,8 +289,8 @@ class BudgetController extends Controller
             Log::info( 'Budget status updated via public link', [
                 'budget_id'   => $budget->id,
                 'budget_code' => $budget->code,
-                'old_status'  => $oldStatusEnum->getName(),
-                'new_status'  => $newStatusEnum->getName(),
+                'old_status'  => $oldStatusEnum->label(),
+                'new_status'  => $newStatusEnum->label(),
                 'ip'          => request()->ip()
             ] );
 
@@ -383,6 +383,34 @@ class BudgetController extends Controller
         } catch ( Exception $e ) {
             return redirect()->back()
                 ->with( 'error', 'Erro ao excluir orçamento: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Dashboard de orçamentos com estatísticas e dados recentes.
+     */
+    public function dashboard(): View
+    {
+        try {
+            $user = Auth::user();
+
+            if ( !$user || !$user->tenant_id ) {
+                abort( 403, 'Acesso negado.' );
+            }
+
+            // Buscar dados consolidados do dashboard via BudgetService
+            $stats = $this->budgetService->getDashboardData( $user->tenant_id );
+
+            return view( 'pages.budget.dashboard', [
+                'stats' => $stats
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar dashboard de orçamentos', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id()
+            ] );
+            abort( 500, 'Erro ao carregar dashboard' );
         }
     }
 
