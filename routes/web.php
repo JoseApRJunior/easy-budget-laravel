@@ -399,4 +399,5 @@ require __DIR__ . '/auth.php';
         Route::get('/mercadopago', [ IntegrationsMercadoPagoController::class, 'index' ])->name('mercadopago.index');
         Route::get('/mercadopago/callback', [ IntegrationsMercadoPagoController::class, 'callback' ])->name('mercadopago.callback');
         Route::post('/mercadopago/disconnect', [ IntegrationsMercadoPagoController::class, 'disconnect' ])->name('mercadopago.disconnect');
+        Route::post('/mercadopago/refresh', [ IntegrationsMercadoPagoController::class, 'refresh' ])->name('mercadopago.refresh');
     });

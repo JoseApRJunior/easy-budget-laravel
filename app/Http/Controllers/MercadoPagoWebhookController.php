@@ -82,6 +82,20 @@ class MercadoPagoWebhookController extends Controller
             return response()->json(['status' => 'ignored'], 200);
         }
         Cache::put($cacheKey, true, now()->addMinutes(10));
+
+        $payloadHash = hash('sha256', $request->getContent());
+        $existing = \App\Models\WebhookRequest::where('request_id', $requestId)->where('type', $type)->first();
+        if ($existing) {
+            Log::info('mp_webhook_duplicate_db', ['request_id' => $requestId]);
+            return response()->json(['status' => 'ignored'], 200);
+        }
+        \App\Models\WebhookRequest::create([
+            'request_id' => $requestId,
+            'type' => $type,
+            'payload_hash' => $payloadHash,
+            'status' => 'received',
+            'received_at' => now(),
+        ]);
         
         Log::info("Mercado Pago webhook received", [
             'type' => $type,
@@ -102,7 +116,7 @@ class MercadoPagoWebhookController extends Controller
         }
 
         // Dispatch to queue for async processing
-        ProcessMercadoPagoWebhook::dispatch($webhookData, $type);
+        ProcessMercadoPagoWebhook::dispatch($webhookData, $type, $requestId);
 
         return response()->json(['status' => 'accepted'], 200);
     }

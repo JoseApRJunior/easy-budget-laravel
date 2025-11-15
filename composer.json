@@ -8,7 +8,7 @@
       "framework"
    ],
    "license": "MIT",
-   "require": {
+  "require": {
       "php": "^8.2",
       "doctrine/dbal": "^4.3",
       "doctrine/orm": "3.5",
@@ -19,6 +19,7 @@
       "laravel/tinker": "^2.10.1",
       "mercadopago/dx-php": "3",
       "mpdf/mpdf": "8.2",
+      "mpdf/qrcode": "^1.2",
       "phpoffice/phpspreadsheet": "4",
       "spatie/laravel-directory-cleanup": "^1.10",
       "stancl/tenancy": "^3.7"

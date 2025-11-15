@@ -70,12 +70,13 @@ class InvoiceController extends Controller
 
             $invoices = $result->getData();
 
+            $tenantId = auth()->user()->tenant_id;
             return view( 'invoices.index', [
                 'invoices'      => $invoices,
                 'filters'       => $filters,
                 'statusOptions' => InvoiceStatus::cases(),
-                'customers'     => $this->customerService->listCustomers()->isSuccess()
-                    ? $this->customerService->listCustomers()->getData()
+                'customers'     => $this->customerService->listCustomers( $tenantId )->isSuccess()
+                    ? $this->customerService->listCustomers( $tenantId )->getData()
                     : []
             ] );
 
@@ -102,10 +103,11 @@ class InvoiceController extends Controller
                 }
             }
 
+            $tenantId = auth()->user()->tenant_id;
             return view( 'invoices.create', [
                 'service'       => $service,
-                'customers'     => $this->customerService->listCustomers()->isSuccess()
-                    ? $this->customerService->listCustomers()->getData()
+                'customers'     => $this->customerService->listCustomers( $tenantId )->isSuccess()
+                    ? $this->customerService->listCustomers( $tenantId )->getData()
                     : [],
                 'services'      => [], // TODO: Implementar getNotBilledServices no ServiceService
                 'statusOptions' => InvoiceStatus::cases()
@@ -193,10 +195,11 @@ class InvoiceController extends Controller
             //     abort(403, 'Fatura não pode ser editada no status atual');
             // }
 
+            $tenantId = auth()->user()->tenant_id;
             return view( 'invoices.edit', [
                 'invoice'       => $invoice,
-                'customers'     => $this->customerService->listCustomers()->isSuccess()
-                    ? $this->customerService->listCustomers()->getData()
+                'customers'     => $this->customerService->listCustomers( $tenantId )->isSuccess()
+                    ? $this->customerService->listCustomers( $tenantId )->getData()
                     : [],
                 'services'      => [], // TODO: Implementar getNotBilledServices no ServiceService
                 'statusOptions' => InvoiceStatus::cases()
@@ -477,10 +480,11 @@ class InvoiceController extends Controller
                 'services.serviceItems.product'
             ] );
 
+            $tenantId = auth()->user()->tenant_id;
             return view( 'invoices.create-from-budget', [
                 'budget'        => $budget,
-                'customers'     => $this->customerService->listCustomers()->isSuccess()
-                    ? $this->customerService->listCustomers()->getData()
+                'customers'     => $this->customerService->listCustomers( $tenantId )->isSuccess()
+                    ? $this->customerService->listCustomers( $tenantId )->getData()
                     : [],
                 'statusOptions' => InvoiceStatus::cases()
             ] );
@@ -493,23 +497,23 @@ class InvoiceController extends Controller
     public function storeFromBudget( Budget $budget, InvoiceStoreFromBudgetRequest $request ): RedirectResponse
     {
         try {
-            $payload = $request->validated();
-            $payload['service_id'] = $payload['service_id'];
-            $result = $this->invoiceService->createPartialInvoiceFromBudget($budget->code, $payload);
+            $payload                 = $request->validated();
+            $payload[ 'service_id' ] = $payload[ 'service_id' ];
+            $result                  = $this->invoiceService->createPartialInvoiceFromBudget( $budget->code, $payload );
 
-            if (!$result->isSuccess()) {
+            if ( !$result->isSuccess() ) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', $result->getMessage());
+                    ->with( 'error', $result->getMessage() );
             }
 
             $invoice = $result->getData();
-            return redirect()->route('invoices.show', $invoice->code)
-                ->with('success', 'Fatura criada a partir do orçamento!');
+            return redirect()->route( 'invoices.show', $invoice->code )
+                ->with( 'success', 'Fatura criada a partir do orçamento!' );
         } catch ( Exception $e ) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar fatura a partir do orçamento: ' . $e->getMessage());
+                ->with( 'error', 'Erro ao criar fatura a partir do orçamento: ' . $e->getMessage() );
         }
     }
 

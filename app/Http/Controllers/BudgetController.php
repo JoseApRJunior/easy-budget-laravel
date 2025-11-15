@@ -48,7 +48,8 @@ class BudgetController extends Controller
     public function create( Request $request ): View
     {
         // Buscar clientes ativos para o autocomplete
-        $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( [ 'status' => 'active' ] );
+        $tenantId  = Auth::user()->tenant_id;
+        $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( $tenantId, [ 'status' => 'active' ] );
 
         // Cliente pré-selecionado via URL (?customer_id=123)
         $selectedCustomer = null;
@@ -148,7 +149,8 @@ class BudgetController extends Controller
                 abort( 403, 'Orçamento não pode ser editado no status atual' );
             }
 
-            $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( [ 'status' => 'active' ] );
+            $tenantId  = Auth::user()->tenant_id;
+            $customers = app( \App\Services\Domain\CustomerService::class)->listCustomers( $tenantId, [ 'status' => 'active' ] );
 
             return view( 'budgets.edit', [
                 'budget'    => $budget,
@@ -323,25 +325,25 @@ class BudgetController extends Controller
 
             $budget = $result->getData();
 
-            $pdfPath = $this->budgetPdfService->generatePdf($budget);
-            $hash = $this->budgetPdfService->generateHash($pdfPath);
-            $budget->update(['pdf_verification_hash' => $hash]);
+            $pdfPath = $this->budgetPdfService->generatePdf( $budget );
+            $hash    = $this->budgetPdfService->generateHash( $pdfPath );
+            $budget->update( [ 'pdf_verification_hash' => $hash ] );
 
-            $verificationUrl = route('documents.verify', ['hash' => $hash]);
-            $qrService = app(\App\Services\Infrastructure\QrCodeService::class);
-            $qrDataUri = $qrService->generateDataUri($verificationUrl, 180);
+            $verificationUrl = route( 'documents.verify', [ 'hash' => $hash ] );
+            $qrService       = app( \App\Services\Infrastructure\QrCodeService::class);
+            $qrDataUri       = $qrService->generateDataUri( $verificationUrl, 180 );
 
-            $pdfPath = $this->budgetPdfService->generatePdf($budget->fresh(), [
+            $pdfPath    = $this->budgetPdfService->generatePdf( $budget->fresh(), [
                 'verificationUrl' => $verificationUrl,
-                'qrDataUri' => $qrDataUri,
-            ]);
-            $pdfContent = Storage::get($pdfPath);
+                'qrDataUri'       => $qrDataUri,
+            ] );
+            $pdfContent = Storage::get( $pdfPath );
 
-            return response($pdfContent, 200, [
-                'Content-Type' => 'application/pdf',
+            return response( $pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
                 'Content-Disposition' => "inline; filename=\"orcamento_{$budget->code}.pdf\"",
-                'Cache-Control' => 'public, max-age=86400'
-            ]);
+                'Cache-Control'       => 'public, max-age=86400'
+            ] );
 
         } catch ( Exception $e ) {
             abort( 500, 'Erro ao gerar PDF' );

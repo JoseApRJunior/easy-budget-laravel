@@ -47,7 +47,8 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
      */
     public function __construct(
         private array $webhookData,
-        private string $type
+        private string $type,
+        private ?string $requestId = null
     ) {}
 
     /**
@@ -81,6 +82,15 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
                 'type' => $this->type,
                 'payment_id' => $paymentId,
             ]);
+
+            if ($this->requestId) {
+                \App\Models\WebhookRequest::where('request_id', $this->requestId)
+                    ->where('type', $this->type)
+                    ->update([
+                        'status' => 'processed',
+                        'processed_at' => now(),
+                    ]);
+            }
         } catch (\Exception $e) {
             Log::error("Webhook processing failed", [
                 'type' => $this->type,
@@ -107,5 +117,14 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
             'error' => $exception->getMessage(),
             'attempts' => $this->tries,
         ]);
+
+        if ($this->requestId) {
+            \App\Models\WebhookRequest::where('request_id', $this->requestId)
+                ->where('type', $this->type)
+                ->update([
+                    'status' => 'failed',
+                    'processed_at' => now(),
+                ]);
+        }
     }
 }

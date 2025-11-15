@@ -20,6 +20,18 @@
                 <h5 class="mb-0">Status da Conexão</h5>
             </div>
             <div class="card-body">
+                @if ( session('success') )
+                    <div class="alert alert-success d-flex align-items-center" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <div>{{ session('success') }}</div>
+                    </div>
+                @endif
+                @if ( session('error') )
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ session('error') }}</div>
+                    </div>
+                @endif
                 @if ( $isConnected )
                     <div class="alert alert-success d-flex align-items-center" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i>
@@ -28,11 +40,20 @@
                         </div>
                     </div>
                     <p class="text-muted">Sua chave pública é: <span class="text-code">{{ $publicKey }}</span></p>
+                    @if($expires_readable)
+                        <p class="text-muted">Token expira em {{ $expires_readable }}.</p>
+                    @endif
                     <p>Agora você pode gerar faturas e receber pagamentos diretamente na sua conta.</p>
-                    <form action="{{ url( '/provider/integrations/mercadopago/disconnect' ) }}" method="POST" class="d-inline">
+                    <form action="{{ route('integrations.mercadopago.disconnect') }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-x-lg me-2"></i>Desconectar Conta
+                        </button>
+                    </form>
+                    <form action="{{ route('integrations.mercadopago.refresh') }}" method="POST" class="d-inline ms-2">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary" @if(!$can_refresh) disabled @endif>
+                            <i class="bi bi-arrow-repeat me-2"></i>Renovar Tokens
                         </button>
                     </form>
                 @else
@@ -45,7 +66,7 @@
                     <p>Ao conectar sua conta, você autoriza o Easy Budget a criar cobranças em seu nome. Nós não temos acesso à
                         sua
                         senha ou dados financeiros.</p>
-                    <a href="{{ $mercadoPagoAuthUrl }}" class="btn btn-primary btn-lg">
+                    <a href="{{ $authorization_url }}" class="btn btn-primary btn-lg">
                         <i class="bi bi-link-45deg me-2"></i>Conectar com Mercado Pago
                     </a>
                 @endif

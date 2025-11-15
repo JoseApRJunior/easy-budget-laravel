@@ -103,7 +103,21 @@ class InvoiceService extends AbstractBaseService
                     'due_date'     => $data[ 'due_date' ],
                     'total_amount' => $totalAmount,
                     'status'       => $data[ 'status' ] ?? InvoiceStatus::PENDING->value,
+                    'public_hash'  => bin2hex(random_bytes(32)),
                 ] );
+
+                $user = $this->authUser();
+                if ($user) {
+                    $tokenService = app(\App\Services\Application\UserConfirmationTokenService::class);
+                    $tokenRes = $tokenService->createTokenWithGeneration($user, \App\Enums\TokenType::PAYMENT_VERIFICATION);
+                    if ($tokenRes->isSuccess()) {
+                        $tokenStr = (string)($tokenRes->getData()['token'] ?? '');
+                        $tokenRecord = \App\Models\UserConfirmationToken::where('token', $tokenStr)->first();
+                        if ($tokenRecord) {
+                            $invoice->update(['user_confirmation_token_id' => $tokenRecord->id]);
+                        }
+                    }
+                }
 
                 // Criar itens da fatura
                 if ( !empty( $data[ 'items' ] ) ) {
@@ -249,7 +263,21 @@ class InvoiceService extends AbstractBaseService
                     'discount' => (float) ($data['discount'] ?? 0),
                     'total' => $subtotal - (float) ($data['discount'] ?? 0),
                     'status' => $data['status'] ?? InvoiceStatus::PENDING->value,
+                    'public_hash' => bin2hex(random_bytes(32)),
                 ]);
+
+                $user = $this->authUser();
+                if ($user) {
+                    $tokenService = app(\App\Services\Application\UserConfirmationTokenService::class);
+                    $tokenRes = $tokenService->createTokenWithGeneration($user, \App\Enums\TokenType::PAYMENT_VERIFICATION);
+                    if ($tokenRes->isSuccess()) {
+                        $tokenStr = (string)($tokenRes->getData()['token'] ?? '');
+                        $tokenRecord = \App\Models\UserConfirmationToken::where('token', $tokenStr)->first();
+                        if ($tokenRecord) {
+                            $invoice->update(['user_confirmation_token_id' => $tokenRecord->id]);
+                        }
+                    }
+                }
 
                 $this->createInvoiceItems($invoice, $preparedItems);
 

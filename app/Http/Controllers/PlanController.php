@@ -197,11 +197,35 @@ class PlanController extends Controller
             }
 
             $plan = $result->getData();
+            $user = auth()->user();
+            $tenantId = (int)($user->tenant_id ?? 0);
+            $providerId = (int)($user->provider->id ?? 0);
 
-            // Lógica para redirecionar para pagamento (Mercado Pago)
-            // TODO: Implementar integração com serviço de pagamento
+            if (!$tenantId || !$providerId) {
+                return redirect()->back()->withErrors('Tenant ou provider não encontrado para o usuário atual');
+            }
 
-            return redirect()->route( 'plans.show', $slug )->with( 'info', 'Redirecionando para pagamento...' );
+            $subscription = \App\Models\PlanSubscription::create([
+                'tenant_id' => $tenantId,
+                'provider_id' => $providerId,
+                'plan_id' => (int)$plan->id,
+                'status' => \App\Models\PlanSubscription::STATUS_PENDING,
+                'transaction_amount' => (float)$plan->price,
+                'start_date' => now(),
+            ]);
+
+            $service = app(\App\Services\Infrastructure\PaymentMercadoPagoPlanService::class);
+            $pref = $service->createMercadoPagoPreference((int)$subscription->id);
+            if (!$pref->isSuccess()) {
+                return redirect()->route('plans.show', $slug)->withErrors($pref->getMessage());
+            }
+
+            $initPoint = $pref->getData()['init_point'] ?? null;
+            if (!$initPoint) {
+                return redirect()->route('plans.show', $slug)->withErrors('Link de pagamento indisponível');
+            }
+
+            return redirect()->away($initPoint);
         } catch ( Exception $e ) {
             Log::error( 'Erro no PlanController@redirectToPayment', [ 'slug' => $slug, 'error' => $e->getMessage() ] );
             return redirect()->back()->withErrors( 'Erro interno do servidor' );

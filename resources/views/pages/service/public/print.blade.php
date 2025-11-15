@@ -214,20 +214,27 @@
     @endif
 
     <!-- Rodapé -->
-    <div class="text-center mt-5 pt-4 border-top">
-      <p class="text-muted mb-1">
-        <strong>{{ $service->budget->tenant->name ?? 'Easy Budget' }}</strong>
-      </p>
+  <div class="text-center mt-5 pt-4 border-top">
+    <p class="text-muted mb-1">
+      <strong>{{ $service->budget->tenant->name ?? 'Easy Budget' }}</strong>
+    </p>
       @if( $service->budget->tenant->contact ?? false )
         <p class="text-muted mb-1">{{ $service->budget->tenant->contact->email }}</p>
         @if( $service->budget->tenant->contact->phone )
           <p class="text-muted mb-1">{{ $service->budget->tenant->contact->phone }}</p>
         @endif
       @endif
-      <p class="text-muted mb-0">
-        <small>Documento gerado em {{ date( 'd/m/Y \à\s H:i:s' ) }}</small>
-      </p>
-    </div>
+    <p class="text-muted mb-0">
+      <small>Documento gerado em {{ date( 'd/m/Y \à\s H:i:s' ) }}</small>
+    </p>
+    @if(isset($verificationUrl) && isset($qrDataUri) && $qrDataUri)
+      <div class="mt-3">
+        <p class="text-muted">Verifique a autenticidade:</p>
+        <p><a href="{{ $verificationUrl }}">{{ $verificationUrl }}</a></p>
+        <img src="{{ $qrDataUri }}" alt="QR Code de verificação" width="140" height="140">
+      </div>
+    @endif
+  </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

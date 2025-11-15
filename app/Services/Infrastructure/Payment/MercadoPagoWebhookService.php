@@ -10,6 +10,7 @@ use App\Models\ProviderCredential;
 use App\Services\Infrastructure\EncryptionService;
 use App\Models\PaymentMercadoPagoInvoice;
 use App\Models\PaymentMercadoPagoPlan;
+use App\Models\PlanSubscription;
 use Illuminate\Support\Facades\Log;
 use MercadoPago\Client\Payment\PaymentClient;
 
@@ -69,15 +70,36 @@ class MercadoPagoWebhookService
             $externalRef   = $payment->external_reference ?? '';
             $planSubId     = $this->parseExternalReference( $externalRef, 'plan_subscription_id' );
 
+            $subscription = $planSubId ? PlanSubscription::find( (int) $planSubId ) : null;
+            $mappedStatus = $this->mapMercadoPagoStatus( $status );
+
             PaymentMercadoPagoPlan::updateOrCreate(
                 [ 'payment_id' => (string) $paymentId, 'plan_subscription_id' => (int) ( $planSubId ?? 0 ) ],
                 [
-                    'status'             => $this->mapMercadoPagoStatus( $status ),
+                    'tenant_id'          => $subscription?->tenant_id,
+                    'provider_id'        => $subscription?->provider_id,
+                    'status'             => $mappedStatus,
                     'payment_method'     => (string) ( $payment->payment_method_id ?? 'ticket' ),
                     'transaction_amount' => $amount,
                     'transaction_date'   => $date,
                 ],
             );
+
+            if ( $subscription ) {
+                if ( $mappedStatus === PaymentMercadoPagoPlan::STATUS_APPROVED ) {
+                    $subscription->update( [
+                        'status'            => PlanSubscription::STATUS_ACTIVE,
+                        'transaction_amount'=> $amount,
+                        'payment_method'    => (string) ( $payment->payment_method_id ?? 'ticket' ),
+                        'payment_id'        => (string) $paymentId,
+                        'transaction_date'  => $date,
+                        'last_payment_date' => now(),
+                        'next_payment_date' => now()->addMonth(),
+                    ] );
+                } elseif ( in_array( $mappedStatus, [ PaymentMercadoPagoPlan::STATUS_REJECTED, PaymentMercadoPagoPlan::STATUS_CANCELLED, PaymentMercadoPagoPlan::STATUS_REFUNDED ], true ) ) {
+                    $subscription->update( [ 'status' => PlanSubscription::STATUS_CANCELLED ] );
+                }
+            }
 
             return [ 'success' => true ];
         } catch ( \Throwable $e ) {
@@ -142,8 +164,36 @@ class MercadoPagoWebhookService
 
     private function resolveAccessTokenForPlan( string $paymentId ): string
     {
-        // TODO: Implement global credentials resolution for plan payments
-        return env( 'MERCADOPAGO_GLOBAL_ACCESS_TOKEN', '' );
+        try {
+            // Attempt to parse plan_subscription_id from a previously stored payment or by external reference lookups
+            $planPayment = PaymentMercadoPagoPlan::where('payment_id', $paymentId)->first();
+            $planSubId = $planPayment?->plan_subscription_id;
+            if ($planSubId) {
+                $subscription = \App\Models\PlanSubscription::find($planSubId);
+                if ($subscription) {
+                    $cred = \App\Models\ProviderCredential::where('tenant_id', $subscription->tenant_id)
+                        ->where('payment_gateway', 'mercadopago')
+                        ->first();
+                    if ($cred) {
+                        $res = $this->encryption->decryptStringLaravel((string)$cred->access_token_encrypted);
+                        if ($res->isSuccess()) {
+                            $access = (string)($res->getData()['decrypted'] ?? '');
+                            if ($access !== '') {
+                                return $access;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch ( \Throwable $e ) {
+            Log::warning('resolve_token_plan_error', ['payment_id' => $paymentId, 'error' => $e->getMessage()]);
+        }
+
+        $token = (string) ( config('services.mercadopago.access_token') ?? '' );
+        if ($token !== '') {
+            return $token;
+        }
+        return (string) env('MERCADOPAGO_GLOBAL_ACCESS_TOKEN', '');
     }
 
 }

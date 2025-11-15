@@ -24,10 +24,23 @@ class MercadoPagoController extends Controller
         $state       = (string) auth()->user()->id . ':' . now()->timestamp;
         $authUrl     = $oauth->getAuthorizationUrl( $state );
 
+        $expiresReadable = null;
+        $expires = (int) ( $cred?->expires_in ?? 0 );
+        if ( $expires > 0 ) {
+            if ( $expires < 3600 ) {
+                $expiresReadable = ceil( $expires / 60 ) . ' min';
+            } else {
+                $expiresReadable = ceil( $expires / 3600 ) . ' h';
+            }
+        }
+
         return view( 'pages.mercadopago.index', [
             'isConnected'       => $isConnected,
             'authorization_url' => $authUrl,
             'public_key'        => $cred?->public_key,
+            'expires_in'        => (int) ( $cred?->expires_in ?? 0 ),
+            'expires_readable'  => $expiresReadable,
+            'can_refresh'       => $isConnected,
         ] );
     }
 
@@ -78,6 +91,43 @@ class MercadoPagoController extends Controller
         $tenantId = auth()->user()->tenant_id;
         ProviderCredential::where( 'tenant_id', $tenantId )->where( 'payment_gateway', 'mercadopago' )->delete();
         return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago desconectada' );
+    }
+
+    public function refresh( EncryptionService $encryption, MercadoPagoOAuthService $oauth ): RedirectResponse
+    {
+        $tenantId = auth()->user()->tenant_id;
+        $cred = ProviderCredential::where('tenant_id', $tenantId)
+            ->where('payment_gateway', 'mercadopago')
+            ->first();
+        if (!$cred) {
+            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Credenciais não encontradas');
+        }
+
+        $dr = $encryption->decryptStringLaravel((string)$cred->refresh_token_encrypted);
+        if (!$dr->isSuccess()) {
+            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao descriptografar refresh token');
+        }
+
+        $refreshToken = (string)($dr->getData()['decrypted'] ?? '');
+        $res = $oauth->refreshToken($refreshToken);
+        if (!$res->isSuccess()) {
+            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao renovar token');
+        }
+
+        $data = $res->getData();
+        $accessEnc = $encryption->encryptStringLaravel((string)($data['access_token'] ?? ''));
+        $refreshEnc = $encryption->encryptStringLaravel((string)($data['refresh_token'] ?? ''));
+        if (!$accessEnc->isSuccess() || !$refreshEnc->isSuccess()) {
+            return redirect()->route('provider.integrations.mercadopago.index')->with('error', 'Falha ao criptografar novos tokens');
+        }
+
+        $cred->update([
+            'access_token_encrypted' => (string)$accessEnc->getData()['encrypted'],
+            'refresh_token_encrypted' => (string)$refreshEnc->getData()['encrypted'],
+            'expires_in' => (int)($data['expires_in'] ?? 0),
+        ]);
+
+        return redirect()->route('provider.integrations.mercadopago.index')->with('success', 'Tokens renovados com sucesso');
     }
 
 }

@@ -207,7 +207,7 @@ class ServiceController extends Controller
     /**
      * Print service for public access.
      */
-    public function print( string $code, string $token ): View|RedirectResponse
+    public function print( string $code, string $token = '' ): View|RedirectResponse
     {
         try {
             // Find the service by code and token
@@ -234,9 +234,28 @@ class ServiceController extends Controller
                 return redirect()->route( 'error.not-found' );
             }
 
-            return view( 'service.public.print', [
-                'service' => $service
-            ] );
+            $pdfService = app(\App\Services\Infrastructure\ServicePdfService::class);
+
+            $verificationUrl = $service->pdf_verification_hash ? route('documents.verify', ['hash' => $service->pdf_verification_hash]) : null;
+            $qrDataUri = null;
+            if ($verificationUrl) {
+                $qrDataUri = app(\App\Services\Infrastructure\QrCodeService::class)->generateDataUri($verificationUrl, 160);
+            }
+
+            $pdfPath = $pdfService->generatePdf($service, [
+                'verificationUrl' => $verificationUrl,
+                'qrDataUri' => $qrDataUri,
+            ]);
+
+            $hash = $pdfService->generateHash($pdfPath);
+            $service->update(['pdf_verification_hash' => $hash]);
+
+            $pdfContent = \Illuminate\Support\Facades\Storage::get($pdfPath);
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "inline; filename=\"servico_{$service->code}.pdf\"",
+                'Cache-Control' => 'public, max-age=86400'
+            ]);
 
         } catch ( Exception $e ) {
             Log::error( 'Error in service print', [
