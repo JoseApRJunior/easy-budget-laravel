@@ -15,7 +15,7 @@
 
 -  **Framework:** Blade Templates
 -  **CSS:** Bootstrap 5.3
--  **JavaScript:** Vanilla JS + jQuery 3.7
+-  **JavaScript:** Vanilla JS (máscaras) + jQuery 3.7 (Bootstrap)
 -  **Gráficos:** Chart.js 4.4
 -  **Ícones:** Font Awesome 6.4
 
@@ -337,3 +337,5 @@ memory_get_usage()
 -  **Memory usage** monitorado
 
 Este documento detalha toda a stack tecnológica utilizada no Easy Budget Laravel, incluindo configurações, dependências e padrões de desenvolvimento estabelecidos.
+
+**Última atualização:** 15/11/2025 - ✅ **Atualização com migração parcial para Vanilla JS (máscaras)**
