@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\Enums\OperationStatus;
-use App\Repositories\Contracts\BaseRepositoryInterface;
+use App\Repositories\ReportRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
@@ -14,17 +14,14 @@ use Illuminate\Support\Facades\Storage;
 
 class ReportService extends AbstractBaseService
 {
-    protected BaseRepositoryInterface $repository;
-
-    public function __construct( BaseRepositoryInterface $repository )
+    public function __construct( ReportRepository $repository )
     {
-        $this->repository = $repository;
         parent::__construct( $repository );
     }
 
-    protected function getReportRepository(): \App\Repositories\ReportRepository
+    protected function getReportRepository(): ReportRepository
     {
-        /** @var \App\Repositories\ReportRepository $repository */
+        /** @var ReportRepository $repository */
         $repository = $this->repository;
         return $repository;
     }
@@ -100,6 +97,44 @@ class ReportService extends AbstractBaseService
         } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao calcular estatísticas', null, $e );
         }
+    }
+
+    public function getRecentReports( int $limit = 10 ): ServiceResult
+    {
+        try {
+            $reports = $this->getReportRepository()->getRecentReports( $limit );
+
+            // Formatar dados para a view
+            $formattedReports = $reports->map( function ( $report ) {
+                return (object) [
+                    'id'           => $report->id,
+                    'type'         => $report->getTypeLabel(),
+                    'description'  => $report->description ?: 'Sem descrição',
+                    'date'         => $report->generated_at ?: $report->created_at,
+                    'status'       => $report->getStatusLabel(),
+                    'status_color' => $this->getStatusColor( $report->status ),
+                    'size'         => $report->getFileSizeFormatted(),
+                    'view_url'     => $report->getDownloadUrl(),
+                    'download_url' => $report->getDownloadUrl(),
+                ];
+            } );
+
+            return $this->success( $formattedReports, 'Relatórios recentes obtidos com sucesso' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter relatórios recentes', null, $e );
+        }
+    }
+
+    private function getStatusColor( string $status ): string
+    {
+        return match ( $status ) {
+            'completed'  => 'success',
+            'processing' => 'warning',
+            'pending'    => 'secondary',
+            'failed'     => 'danger',
+            'expired'    => 'dark',
+            default      => 'secondary'
+        };
     }
 
     private function generateDescription( array $filters ): string

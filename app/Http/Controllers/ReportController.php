@@ -33,12 +33,14 @@ class ReportController extends Controller
             $result  = app( ReportService::class)->getFilteredReports( $filters, [ 'user' ] );
             if ( !$result->isSuccess() ) abort( 500, 'Erro ao carregar relatórios' );
 
-            $stats = app( ReportService::class)->getReportStats();
+            $stats         = app( ReportService::class)->getReportStats();
+            $recentReports = app( ReportService::class)->getRecentReports( 10 );
 
             return view( 'pages.report.index', [
-                'reports' => $result->getData(),
-                'filters' => $filters,
-                'stats'   => $stats->getData(),
+                'reports'        => $result->getData(),
+                'recent_reports' => $recentReports->getData(),
+                'filters'        => $filters,
+                'stats'          => $stats->getData(),
             ] );
         } catch ( Exception $e ) {
             Log::error( 'Erro ao carregar página de relatórios', [ 'error' => $e->getMessage() ] );
