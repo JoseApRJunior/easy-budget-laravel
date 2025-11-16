@@ -10,13 +10,13 @@
                         <i class="fas fa-sliders-h text-warning"></i> Ajuste de Estoque
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.index') }}" class="btn btn-secondary btn-sm">
+                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Voltar ao Inventário
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('inventory.store-adjustment') }}" id="adjustForm">
+                    <form method="POST" action="{{ route('provider.inventory.store-adjustment') }}" id="adjustForm">
                         @csrf
                         
                         <div class="row">
@@ -159,7 +159,7 @@
                                         </div>
 
                                         <div class="text-center">
-                                            <a href="{{ route('inventory.index') }}" class="btn btn-secondary btn-block">
+                                            <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary btn-block">
                                                 <i class="fas fa-times"></i> Cancelar
                                             </a>
                                         </div>

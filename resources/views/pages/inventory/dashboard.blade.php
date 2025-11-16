@@ -23,7 +23,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('inventory.index') }}" class="text-white">
+                    <a href="{{ route('provider.inventory.index') }}" class="text-white">
                         Ver Detalhes <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('inventory.index', ['status' => 'low']) }}" class="text-white">
+                    <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-white">
                         Ver Produtos <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('inventory.index', ['status' => 'out']) }}" class="text-white">
+                    <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-white">
                         Ver Produtos <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
@@ -77,7 +77,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('inventory.index') }}" class="text-white">
+                    <a href="{{ route('provider.inventory.index') }}" class="text-white">
                         Ver Inventário <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
@@ -92,7 +92,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Produtos com Estoque Baixo</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.index', ['status' => 'low']) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="btn btn-sm btn-outline-primary">
                             Ver Todos
                         </a>
                     </div>
@@ -125,11 +125,11 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.movements', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', $item->product) }}" 
                                                        class="btn btn-sm btn-info">
                                                         <i class="fas fa-list"></i> Movimentos
                                                     </a>
-                                                    <a href="{{ route('inventory.entry', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.entry', $item->product) }}" 
                                                        class="btn btn-sm btn-success">
                                                         <i class="fas fa-plus"></i> Entrada
                                                     </a>
@@ -158,7 +158,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Visão Geral do Inventário</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.index') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-sm btn-outline-primary">
                             Ver Inventário Completo
                         </a>
                     </div>
@@ -212,15 +212,15 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.movements', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', $item->product) }}" 
                                                        class="btn btn-sm btn-info">
                                                         <i class="fas fa-list"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.entry', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.entry', $item->product) }}" 
                                                        class="btn btn-sm btn-success">
                                                         <i class="fas fa-plus"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.exit', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.exit', $item->product) }}" 
                                                        class="btn btn-sm btn-warning">
                                                         <i class="fas fa-minus"></i>
                                                     </a>

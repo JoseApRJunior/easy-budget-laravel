@@ -8,10 +8,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">Movimentações de Inventário</h3>
                     <div class="card-tools">
-                        <a href="{{ route( 'inventory.dashboard' ) }}" class="btn btn-secondary btn-sm mr-2">
+                        <a href="{{ route( 'provider.inventory.dashboard' ) }}" class="btn btn-secondary btn-sm mr-2">
                             <i class="fas fa-chart-bar"></i> Dashboard
                         </a>
-                        <a href="{{ route( 'inventory.index' ) }}" class="btn btn-primary btn-sm mr-2">
+                        <a href="{{ route( 'provider.inventory.index' ) }}" class="btn btn-primary btn-sm mr-2">
                             <i class="fas fa-boxes"></i> Inventário
                         </a>
                         <div class="btn-group">
@@ -19,13 +19,13 @@
                                 <i class="fas fa-plus"></i> Nova Movimentação
                             </button>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route( 'inventory.entry' ) }}">
+                                <a class="dropdown-item" href="{{ route( 'provider.inventory.entry' ) }}">
                                     <i class="fas fa-arrow-down text-success"></i> Entrada
                                 </a>
-                                <a class="dropdown-item" href="{{ route( 'inventory.exit' ) }}">
+                                <a class="dropdown-item" href="{{ route( 'provider.inventory.exit' ) }}">
                                     <i class="fas fa-arrow-up text-danger"></i> Saída
                                 </a>
-                                <a class="dropdown-item" href="{{ route( 'inventory.adjust' ) }}">
+                                <a class="dropdown-item" href="{{ route( 'provider.inventory.adjust' ) }}">
                                     <i class="fas fa-sliders-h text-warning"></i> Ajuste
                                 </a>
                             </div>
@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route( 'inventory.movements' ) }}" class="mb-4">
+                    <form method="GET" action="{{ route( 'provider.inventory.movements' ) }}" class="mb-4">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -84,7 +84,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route( 'inventory.movements' ) }}" class="btn btn-secondary ml-2">
+                                        <a href="{{ route( 'provider.inventory.movements' ) }}" class="btn btn-secondary ml-2">
                                             <i class="fas fa-times"></i>
                                         </a>
                                         <button type="button" class="btn btn-success ml-2" onclick="exportMovements()">
@@ -299,7 +299,7 @@
 <script>
     function exportMovements() {
         const params = new URLSearchParams( window.location.search );
-        const exportUrl = '{{ route( "inventory.export" ) }}?' + params.toString();
+        const exportUrl = '{{ route( "provider.inventory.export" ) }}?' + params.toString();
 
         // Mostrar loading
         Swal.fire( {

@@ -13,7 +13,7 @@
                         Editar Produto: {{ $product->name }}
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('products.show', $product->sku) }}" class="btn btn-info btn-sm">
+                        <a href="{{ route('provider.products.show', $product->sku) }}" class="btn btn-info btn-sm">
                             <i class="fas fa-eye"></i> Visualizar
                         </a>
                         <a href="{{ route('provider.products.index') }}" class="btn btn-secondary btn-sm">
@@ -22,7 +22,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('products.update', $product->sku) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('provider.products.update', $product->sku) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 

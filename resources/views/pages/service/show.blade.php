@@ -10,21 +10,21 @@
             <nav aria-label="breadcrumb">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                  <a href="{{ route( 'dashboard.index' ) }}">Dashboard</a>
+                  <a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                  <a href="{{ route( 'services.index' ) }}">Serviços</a>
+                  <a href="{{ route( 'provider.services.index' ) }}">Serviços</a>
                 </li>
                 <li class="breadcrumb-item active">{{ $service->code }}</li>
               </ol>
             </nav>
           </div>
           <div class="d-flex gap-2">
-            <a href="{{ route( 'services.edit', $service->code ) }}" class="btn btn-outline-primary">
+            <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
               <i class="bi bi-pencil me-2"></i>
               Editar
             </a>
-            <a href="{{ route( 'services.index' ) }}" class="btn btn-outline-secondary">
+            <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-outline-secondary">
               <i class="bi bi-arrow-left me-2"></i>
               Voltar
             </a>
@@ -89,7 +89,7 @@
                 </div>
                 <div class="mb-2">
                   <strong>Orçamento:</strong>
-                  <a href="{{ route( 'budgets.show', $service->budget?->code ) }}" class="text-decoration-none">
+                  <a href="{{ route( 'provider.budgets.show', $service->budget?->code ) }}" class="text-decoration-none">
                     {{ $service->budget?->code ?? 'N/A' }}
                   </a>
                 </div>
@@ -281,12 +281,12 @@
           </div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              <a href="{{ route( 'services.edit', $service->code ) }}" class="btn btn-outline-primary">
+              <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil me-2"></i>
                 Editar Serviço
               </a>
               @if( $service->budget )
-                <a href="{{ route( 'budgets.show', $service->budget->code ) }}" class="btn btn-outline-info">
+                <a href="{{ route( 'provider.budgets.show', $service->budget->code ) }}" class="btn btn-outline-info">
                   <i class="bi bi-receipt me-2"></i>
                   Ver Orçamento
                 </a>

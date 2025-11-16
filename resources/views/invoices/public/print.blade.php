@@ -75,7 +75,7 @@
         <i class="bi bi-printer me-2"></i>
         Imprimir
       </button>
-      <a href="{{ route( 'invoices.public.view-status', [ 'code' => $invoice->code, 'token' => request( 'token' ) ] ) }}"
+      <a href="{{ route( 'provider.invoices.public.view-status', [ 'code' => $invoice->code, 'token' => request( 'token' ) ] ) }}"
         class="btn btn-outline-secondary ms-2">
         <i class="bi bi-arrow-left me-2"></i>
         Voltar

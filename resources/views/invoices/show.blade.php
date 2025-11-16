@@ -9,7 +9,7 @@
       </h1>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-          <li class="breadcrumb-item"><a href="{{ route( 'invoices.index' ) }}">Faturas</a></li>
+          <li class="breadcrumb-item"><a href="{{ route( 'provider.invoices.index' ) }}">Faturas</a></li>
           <li class="breadcrumb-item active">#{{ $invoice->code }}</li>
         </ol>
       </nav>
@@ -17,14 +17,14 @@
 
     <!-- Ações -->
     <div class="d-flex gap-2 mb-4">
-      <a href="{{ route( 'invoices.index' ) }}" class="btn btn-secondary">
+      <a href="{{ route( 'provider.invoices.index' ) }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left me-1"></i>Voltar à Lista
       </a>
-      <a href="{{ route( 'invoices.print', $invoice->code ) }}" class="btn btn-outline-secondary" target="_blank">
+      <a href="{{ route( 'provider.invoices.print', $invoice->code ) }}" class="btn btn-outline-secondary" target="_blank">
         <i class="bi bi-printer me-1"></i>Imprimir
       </a>
       @if( $invoice->status === 'pending' )
-        <a href="{{ route( 'invoices.edit', $invoice->code ) }}" class="btn btn-warning">
+        <a href="{{ route( 'provider.invoices.edit', $invoice->code ) }}" class="btn btn-warning">
           <i class="bi bi-pencil me-1"></i>Editar
         </a>
       @endif
@@ -357,7 +357,7 @@
 
       const form = document.createElement( 'form' );
       form.method = 'POST';
-      form.action = '{{ route( "invoices.change_status", $invoice->code ) }}';
+      form.action = '{{ route( "provider.invoices.change_status", $invoice->code ) }}';
 
       const csrfToken = document.createElement( 'input' );
       csrfToken.type = 'hidden';
@@ -387,7 +387,7 @@
       if ( confirm( 'Tem certeza que deseja excluir esta fatura? Esta ação não pode ser desfeita.' ) ) {
         const form = document.createElement( 'form' );
         form.method = 'POST';
-        form.action = '{{ route( "invoices.destroy", $invoice->code ) }}';
+        form.action = '{{ route( "provider.invoices.destroy", $invoice->code ) }}';
 
         const csrfToken = document.createElement( 'input' );
         csrfToken.type = 'hidden';

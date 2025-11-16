@@ -59,6 +59,7 @@ class ProviderController extends Controller
             'activities'        => $dashboardData[ 'activities' ],
             'financial_summary' => $dashboardData[ 'financial_summary' ],
             'total_activities'  => count( $dashboardData[ 'activities' ] ),
+            'events'            => $dashboardData[ 'events' ] ?? [],
         ] );
 
     }

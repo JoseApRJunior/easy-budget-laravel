@@ -11,6 +11,7 @@ use App\Models\AreaOfActivity;
 use App\Models\Customer;
 use App\Models\Profession;
 use App\Services\Domain\CustomerService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -746,6 +747,19 @@ class CustomerController extends Controller
             'user_agent' => request()->userAgent(),
             'context'    => $context,
         ] );
+    }
+
+    /**
+     * AJAX endpoint para buscar clientes com filtros.
+     */
+    public function ajaxSearch( Request $request ): JsonResponse
+    {
+        $filters = $request->only(['search','status','date_from','date_to']);
+        $tenantId = auth()->user()->tenant_id;
+        $result = $this->customerService->getFilteredCustomers($filters, $tenantId);
+        return $result->isSuccess()
+            ? response()->json(['success' => true, 'data' => $result->getData()])
+            : response()->json(['success' => false, 'message' => $result->getMessage()], 400);
     }
 
 }

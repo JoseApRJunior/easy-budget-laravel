@@ -202,11 +202,11 @@ Route::middleware( 'auth' )->group( function () {
 
     Route::prefix('ajax')->group(function () {
         Route::post('/cep', [ AjaxController::class, 'cep' ])->name('api.ajax.cep');
-        Route::get('/budgets/filter', [ AjaxController::class, 'budgetsFilter' ])->name('api.ajax.budgets.filter');
-        Route::get('/services/filter', [ AjaxController::class, 'servicesFilter' ])->name('api.ajax.services.filter');
-        Route::get('/customers/search', [ AjaxController::class, 'customersSearch' ])->name('api.ajax.customers.search');
-        Route::get('/products/search', [ AjaxController::class, 'productsSearch' ])->name('api.ajax.products.search');
-        Route::get('/invoices/filter', [ AjaxController::class, 'invoicesFilter' ])->name('api.ajax.invoices.filter');
+        Route::get('/budgets/filter', [ \App\Http\Controllers\BudgetController::class, 'ajaxFilter' ])->name('api.ajax.budgets.filter');
+        Route::get('/services/filter', [ \App\Http\Controllers\ServiceController::class, 'ajaxFilter' ])->name('api.ajax.services.filter');
+        Route::get('/customers/search', [ \App\Http\Controllers\CustomerController::class, 'ajaxSearch' ])->name('api.ajax.customers.search');
+        Route::get('/products/search', [ \App\Http\Controllers\ProductController::class, 'ajaxSearch' ])->name('api.ajax.products.search');
+        Route::get('/invoices/filter', [ \App\Http\Controllers\InvoiceController::class, 'ajaxFilter' ])->name('api.ajax.invoices.filter');
     });
 
 } );

@@ -20,13 +20,13 @@
                 @foreach( $events as $event )
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1">{{ $event->title }}</h6>
+                            <h6 class="mb-1">{{ $event->service->name ?? 'Serviço' }}</h6>
                             <small class="text-muted">
                                 <i class="bi bi-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse( $event->date )->format( 'd/m/Y H:i' ) }}
+                                {{ \Carbon\Carbon::parse( $event->start_date_time )->format( 'd/m/Y H:i' ) }}
                             </small>
                         </div>
-                        <span class="badge bg-primary">{{ $event->status ?? 'Agendado' }}</span>
+                        <span class="badge bg-primary">Agendado</span>
                     </li>
                 @endforeach
             </ul>
@@ -36,7 +36,7 @@
     @if( count( $events ) >= 5 )
         <div class="card-footer bg-light d-flex justify-content-between align-items-center">
             <small class="small-text">Mostrando {{ count( $events ) }} de {{ $total ?? count( $events ) }}</small>
-            <a href="{{ route( 'events.index' ) }}" class="btn btn-sm btn-outline-warning">
+            <a href="{{ route( 'provider.schedules.index' ) }}" class="btn btn-sm btn-outline-warning">
                 <i class="bi bi-calendar-week me-1"></i>Ver Todos
             </a>
         </div>

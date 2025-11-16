@@ -95,10 +95,27 @@ class ProviderManagementService
             $financialSummary = $financialResult->getData();
         }
 
+        // Buscar compromissos do dia
+        $events = [];
+        if (class_exists('App\Models\Schedule')) {
+            $events = \App\Models\Schedule::where( 'tenant_id', $tenantId )
+                ->with( 'service' ) // Carregar o relacionamento com o serviço
+                ->whereDate( 'start_date_time', today() )
+                ->where(function($query) {
+                    // Verificar se end_date_time é nulo ou no futuro (compromissos não concluídos)
+                    $query->whereNull('end_date_time')
+                          ->orWhere('end_date_time', '>', now());
+                })
+                ->orderBy( 'start_date_time' )
+                ->limit( 5 )
+                ->get();
+        }
+
         return [
             'budgets'           => $budgets,
             'activities'        => $activities,
             'financial_summary' => $financialSummary,
+            'events'            => $events,
         ];
     }
 

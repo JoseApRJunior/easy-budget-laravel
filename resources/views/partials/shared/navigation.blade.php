@@ -28,9 +28,9 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link d-flex align-items-center" href="/ia">
+            <a class="nav-link d-flex align-items-center" href="{{ route('provider.analytics.index') }}">
                 <i class="bi bi-robot me-2"></i>
-                <span>IA</span>
+                <span>IA Analytics</span>
             </a>
         </li>
 
@@ -115,7 +115,7 @@
                             <i class="bi bi-receipt me-2"></i>Faturas</a></li>
                     <li><a class="dropdown-item" href="{{ route( 'provider.reports.index' ) }}">
                             <i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
-                    <li><a class="dropdown-item" href="{{ route( 'qrcode.index' ) }}">
+                    <li><a class="dropdown-item" href="{{ route( 'provider.qrcode.index' ) }}">
                             <i class="bi bi-qr-code me-2"></i>Gerador QR Code</a></li>
                 </ul>
         @endif

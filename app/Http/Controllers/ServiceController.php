@@ -19,6 +19,7 @@ use App\Services\Domain\ProductService;
 use App\Services\Domain\ScheduleService;
 use App\Services\Domain\ServiceService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -531,6 +532,18 @@ class ServiceController extends Controller
             ] );
             abort( 500, 'Erro ao carregar dashboard' );
         }
+    }
+
+    /**
+     * AJAX endpoint para filtrar serviços.
+     */
+    public function ajaxFilter( Request $request ): JsonResponse
+    {
+        $filters = $request->only(['status','category_id','date_from','date_to','search']);
+        $result = $this->serviceService->getFilteredServices($filters);
+        return $result->isSuccess()
+            ? response()->json(['success' => true, 'data' => $result->getData()])
+            : response()->json(['success' => false, 'message' => $result->getMessage()], 400);
     }
 
 }

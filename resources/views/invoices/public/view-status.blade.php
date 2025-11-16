@@ -149,7 +149,7 @@
                                             </h6>
                                             <p class="mb-3">Por favor, informe o status atual desta fatura:</p>
 
-                                            <form method="POST" action="{{ route( 'invoices.public.choose-status' ) }}">
+                                            <form method="POST" action="{{ route( 'provider.invoices.public.choose-status' ) }}">
                                                 @csrf
                                                 <input type="hidden" name="invoice_code" value="{{ $invoice->code }}">
                                                 <input type="hidden" name="token" value="{{ $token }}">
@@ -188,7 +188,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route( 'invoices.public.print', [ 'code' => $invoice->code, 'token' => $token ] ) }}"
+                                    <a href="{{ route( 'provider.invoices.public.print', [ 'code' => $invoice->code, 'token' => $token ] ) }}"
                                         class="btn btn-outline-secondary" target="_blank">
                                         <i class="bi bi-printer me-2"></i>
                                         Imprimir

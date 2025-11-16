@@ -11,7 +11,7 @@
                     <h3 class="card-title">Criar Agendamento - {{ $service->title }}</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('schedules.store', $service) }}" id="scheduleForm">
+                    <form method="POST" action="{{ route('provider.schedules.store', $service) }}" id="scheduleForm">
                         @csrf
                         
                         <div class="row">

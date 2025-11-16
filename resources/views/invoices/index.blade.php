@@ -8,7 +8,7 @@
             <i class="bi bi-receipt me-2"></i>Faturas
         </h1>
         <div class="d-flex gap-2">
-            <a href="{{ route('invoices.create') }}" class="btn btn-primary">
+            <a href="{{ route('provider.invoices.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>Nova Fatura
             </a>
         </div>
@@ -25,7 +25,7 @@
     <!-- Filtros -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('invoices.index') }}" class="row g-3">
+            <form method="GET" action="{{ route('provider.invoices.index') }}" class="row g-3">
                 <div class="col-md-3">
                     <label for="search" class="form-label">Buscar</label>
                     <input type="text"
@@ -209,19 +209,19 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ route('invoices.show', $invoice->code) }}"
+                                            <a href="{{ route('provider.invoices.show', $invoice->code) }}"
                                                class="btn btn-outline-primary"
                                                title="Visualizar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('invoices.print', $invoice) }}"
+                                            <a href="{{ route('provider.invoices.print', $invoice) }}"
                                                class="btn btn-outline-secondary"
                                                title="Imprimir"
                                                target="_blank">
                                                 <i class="bi bi-printer"></i>
                                             </a>
                                             @if($invoice->status === 'pending')
-                                                <a href="{{ route('invoices.edit', $invoice->code) }}"
+                                                <a href="{{ route('provider.invoices.edit', $invoice->code) }}"
                                                    class="btn btn-outline-warning"
                                                    title="Editar">
                                                     <i class="bi bi-pencil"></i>
@@ -252,7 +252,7 @@
                             Comece criando sua primeira fatura.
                         @endif
                     </p>
-                    <a href="{{ route('invoices.create') }}" class="btn btn-primary">
+                    <a href="{{ route('provider.invoices.create') }}" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-1"></i>Criar Primeira Fatura
                     </a>
                 </div>

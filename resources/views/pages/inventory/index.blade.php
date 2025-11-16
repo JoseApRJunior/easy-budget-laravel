@@ -8,10 +8,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">Inventário de Produtos</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.dashboard') }}" class="btn btn-secondary btn-sm mr-2">
+                        <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-secondary btn-sm mr-2">
                             <i class="fas fa-chart-bar"></i> Dashboard
                         </a>
-                        <a href="{{ route('inventory.movements') }}" class="btn btn-info btn-sm mr-2">
+                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-info btn-sm mr-2">
                             <i class="fas fa-exchange-alt"></i> Movimentações
                         </a>
                         <div class="btn-group">
@@ -19,13 +19,13 @@
                                 <i class="fas fa-plus"></i> Novo Movimento
                             </button>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('inventory.entry') }}">
+                                <a class="dropdown-item" href="{{ route('provider.inventory.entry') }}">
                                     <i class="fas fa-arrow-down text-success"></i> Entrada
                                 </a>
-                                <a class="dropdown-item" href="{{ route('inventory.exit') }}">
+                                <a class="dropdown-item" href="{{ route('provider.inventory.exit') }}">
                                     <i class="fas fa-arrow-up text-danger"></i> Saída
                                 </a>
-                                <a class="dropdown-item" href="{{ route('inventory.adjust') }}">
+                                <a class="dropdown-item" href="{{ route('provider.inventory.adjust') }}">
                                     <i class="fas fa-sliders-h text-warning"></i> Ajuste
                                 </a>
                             </div>
@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('inventory.index') }}" class="mb-4">
+                    <form method="GET" action="{{ route('provider.inventory.index') }}" class="mb-4">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -80,7 +80,7 @@
                                         <button type="submit" class="btn btn-primary btn-block">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route('inventory.index') }}" class="btn btn-secondary ml-2">
+                                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary ml-2">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     </div>
@@ -163,11 +163,11 @@
                                                         title="Ver Movimentações">
                                                     <i class="fas fa-list"></i>
                                                 </button>
-                                                <a href="{{ route('inventory.adjust', ['product_id' => $product->id]) }}"
+                                                <a href="{{ route('provider.inventory.adjust', ['product_id' => $product->id]) }}"
                                                    class="btn btn-warning btn-sm" title="Ajustar Estoque">
                                                     <i class="fas fa-sliders-h"></i>
                                                 </a>
-                                                <a href="{{ route('products.show', $product->id) }}"
+                                                <a href="{{ route('provider.products.show', $product->id) }}"
                                                    class="btn btn-info btn-sm" title="Ver Produto">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
@@ -246,7 +246,7 @@
         $('#movementsModal').modal('show');
 
         $.ajax({
-            url: '{{ route("inventory.movements") }}',
+            url: '{{ route("provider.inventory.movements") }}',
             method: 'GET',
             data: { inventory_id: inventoryId },
             success: function(response) {

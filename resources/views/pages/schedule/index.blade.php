@@ -11,7 +11,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <h3 class="card-title">Agendamentos</h3>
                             <div class="btn-group">
-                                <a href="{{ route( 'schedules.calendar' ) }}" class="btn btn-outline-primary">
+                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-calendar-alt"></i> Calendário
                                 </a>
                             </div>
@@ -80,15 +80,15 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route( 'schedules.show', $schedule ) }}"
+                                                    <a href="{{ route( 'provider.schedules.show', $schedule ) }}"
                                                         class="btn btn-sm btn-info">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route( 'schedules.edit', $schedule ) }}"
+                                                    <a href="{{ route( 'provider.schedules.edit', $schedule ) }}"
                                                         class="btn btn-sm btn-warning">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <form action="{{ route( 'schedules.destroy', $schedule ) }}" method="POST"
+                                                    <form action="{{ route( 'provider.schedules.destroy', $schedule ) }}" method="POST"
                                                         class="d-inline">
                                                         @csrf
                                                         @method( 'DELETE' )
@@ -123,7 +123,7 @@
                         <div class="card-body">
                             <div class="list-group">
                                 @foreach( $upcomingSchedules as $schedule )
-                                    <a href="{{ route( 'schedules.show', $schedule ) }}"
+                                    <a href="{{ route( 'provider.schedules.show', $schedule ) }}"
                                         class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h5 class="mb-1">{{ $schedule->service->title }}</h5>

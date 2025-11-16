@@ -1,364 +1,478 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Domain;
 
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductInventory;
-use App\Repositories\InventoryRepository;
+use App\Repositories\InventoryMovementRepository;
+use App\Repositories\ProductInventoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
+use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InventoryService extends AbstractBaseService
 {
     /**
-     * @var InventoryRepository
+     * @var ProductInventoryRepository
      */
-    protected $inventoryRepository;
+    protected ProductInventoryRepository $productInventoryRepository;
+
+    /**
+     * @var InventoryMovementRepository
+     */
+    protected InventoryMovementRepository $inventoryMovementRepository;
 
     /**
      * InventoryService constructor.
-     *
-     * @param InventoryRepository $inventoryRepository
      */
-    public function __construct(InventoryRepository $inventoryRepository)
-    {
-        $this->inventoryRepository = $inventoryRepository;
+    public function __construct(
+        ProductInventoryRepository $productInventoryRepository,
+        InventoryMovementRepository $inventoryMovementRepository
+    ) {
+        $this->productInventoryRepository = $productInventoryRepository;
+        $this->inventoryMovementRepository = $inventoryMovementRepository;
     }
 
     /**
-     * Get inventory for a product.
-     *
-     * @param int $productId
-     * @return ServiceResult
+     * Ajusta inventário de um produto
      */
-    public function getProductInventory(int $productId): ServiceResult
-    {
-        try {
-            $inventory = $this->inventoryRepository->findByProductId($productId);
-            
-            if (!$inventory) {
-                return $this->success(null, 'Produto sem registro de inventário');
+    public function adjustInventory(
+        Product $product,
+        string $type,
+        int $quantity,
+        string $reason = '',
+        ?int $referenceId = null,
+        ?string $referenceType = null
+    ): InventoryMovement {
+        return DB::transaction(function () use ($product, $type, $quantity, $reason, $referenceId, $referenceType) {
+            // Valida quantidade
+            if ($quantity <= 0) {
+                throw new Exception('Quantidade deve ser maior que zero');
             }
 
-            return $this->success($inventory, 'Inventário encontrado');
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao buscar inventário',
-                null,
-                $e
-            );
-        }
-    }
+            // Busca ou cria inventário
+            $inventory = $this->productInventoryRepository->findByProduct($product->id);
+            if (!$inventory) {
+                $inventory = $this->productInventoryRepository->updateOrCreate($product->id, [
+                    'quantity' => 0,
+                    'min_quantity' => 0,
+                    'max_quantity' => null,
+                ]);
+            }
 
-    /**
-     * Get inventory movements for a product.
-     *
-     * @param int $productId
-     * @param int $perPage
-     * @return ServiceResult
-     */
-    public function getProductMovements(int $productId, int $perPage = 15): ServiceResult
-    {
-        try {
-            $movements = $this->inventoryRepository->getMovementsByProductId($productId, $perPage);
-            
-            return $this->success($movements, 'Movimentações encontradas');
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao buscar movimentações',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Get low stock products.
-     *
-     * @param int $limit
-     * @return ServiceResult
-     */
-    public function getLowStockProducts(int $limit = 10): ServiceResult
-    {
-        try {
-            $products = $this->inventoryRepository->getLowStockProducts($limit);
-            
-            return $this->success($products, 'Produtos com estoque baixo encontrados');
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao buscar produtos com estoque baixo',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Get inventory summary.
-     *
-     * @return ServiceResult
-     */
-    public function getInventorySummary(): ServiceResult
-    {
-        try {
-            $summary = $this->inventoryRepository->getInventorySummary();
-            
-            return $this->success($summary, 'Resumo de inventário obtido');
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao obter resumo de inventário',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Register inventory entry.
-     *
-     * @param int $productId
-     * @param int $quantity
-     * @param string $reason
-     * @param array $additionalData
-     * @return ServiceResult
-     */
-    public function registerEntry(int $productId, int $quantity, string $reason = '', array $additionalData = []): ServiceResult
-    {
-        try {
-            return DB::transaction(function () use ($productId, $quantity, $reason, $additionalData) {
-                if ($quantity <= 0) {
-                    return $this->error(
-                        'validation_error',
-                        'Quantidade deve ser maior que zero'
-                    );
+            // Calcula nova quantidade
+            $currentQuantity = $inventory->quantity;
+            if ($type === 'in') {
+                $newQuantity = $currentQuantity + $quantity;
+            } elseif ($type === 'out') {
+                if ($currentQuantity < $quantity) {
+                    throw new Exception('Estoque insuficiente para esta operação');
                 }
+                $newQuantity = $currentQuantity - $quantity;
+            } else {
+                throw new Exception('Tipo de movimento inválido. Use "in" ou "out"');
+            }
 
-                $inventory = $this->inventoryRepository->adjustQuantity(
-                    $productId,
-                    $quantity,
-                    'in',
-                    $reason ?: 'Entrada de estoque',
-                    $additionalData
-                );
+            // Atualiza inventário
+            $inventory->update(['quantity' => $newQuantity]);
 
-                return $this->success($inventory, 'Entrada de estoque registrada com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao registrar entrada de estoque',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Register inventory exit.
-     *
-     * @param int $productId
-     * @param int $quantity
-     * @param string $reason
-     * @param array $additionalData
-     * @return ServiceResult
-     */
-    public function registerExit(int $productId, int $quantity, string $reason = '', array $additionalData = []): ServiceResult
-    {
-        try {
-            return DB::transaction(function () use ($productId, $quantity, $reason, $additionalData) {
-                if ($quantity <= 0) {
-                    return $this->error(
-                        'validation_error',
-                        'Quantidade deve ser maior que zero'
-                    );
-                }
-
-                // Check if there's enough stock
-                $inventory = $this->inventoryRepository->findByProductId($productId);
-                if (!$inventory || $inventory->quantity < $quantity) {
-                    return $this->error(
-                        'validation_error',
-                        'Estoque insuficiente para esta operação'
-                    );
-                }
-
-                $inventory = $this->inventoryRepository->adjustQuantity(
-                    $productId,
-                    $quantity,
-                    'out',
-                    $reason ?: 'Saída de estoque',
-                    $additionalData
-                );
-
-                return $this->success($inventory, 'Saída de estoque registrada com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao registrar saída de estoque',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Adjust inventory quantity.
-     *
-     * @param int $productId
-     * @param int $newQuantity
-     * @param string $reason
-     * @return ServiceResult
-     */
-    public function adjustQuantity(int $productId, int $newQuantity, string $reason = ''): ServiceResult
-    {
-        try {
-            return DB::transaction(function () use ($productId, $newQuantity, $reason) {
-                if ($newQuantity < 0) {
-                    return $this->error(
-                        'validation_error',
-                        'Quantidade não pode ser negativa'
-                    );
-                }
-
-                $inventory = $this->inventoryRepository->findByProductId($productId);
-                $currentQuantity = $inventory ? $inventory->quantity : 0;
-                $difference = $newQuantity - $currentQuantity;
-
-                if ($difference === 0) {
-                    return $this->success($inventory, 'Quantidade já está correta');
-                }
-
-                $type = $difference > 0 ? 'in' : 'out';
-                $quantity = abs($difference);
-
-                $inventory = $this->inventoryRepository->adjustQuantity(
-                    $productId,
-                    $quantity,
-                    $type,
-                    $reason ?: 'Ajuste de inventário'
-                );
-
-                return $this->success($inventory, 'Quantidade ajustada com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao ajustar quantidade',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Set inventory parameters.
-     *
-     * @param int $productId
-     * @param int $minQuantity
-     * @param int|null $maxQuantity
-     * @return ServiceResult
-     */
-    public function setInventoryParameters(int $productId, int $minQuantity, ?int $maxQuantity = null): ServiceResult
-    {
-        try {
-            $data = [
-                'min_quantity' => $minQuantity,
-                'max_quantity' => $maxQuantity,
+            // Cria movimentação
+            $movementData = [
+                'tenant_id' => tenant()->id,
+                'product_id' => $product->id,
+                'type' => $type,
+                'quantity' => $quantity,
+                'previous_quantity' => $currentQuantity,
+                'new_quantity' => $newQuantity,
+                'reason' => $reason ?: 'Ajuste manual de inventário',
+                'reference_id' => $referenceId,
+                'reference_type' => $referenceType,
             ];
 
-            $inventory = $this->inventoryRepository->createOrUpdateInventory($productId, $data);
-
-            return $this->success($inventory, 'Parâmetros de inventário definidos com sucesso');
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao definir parâmetros de inventário',
-                null,
-                $e
-            );
-        }
+            return $this->inventoryMovementRepository->create($movementData);
+        });
     }
 
     /**
-     * Check if product can be deleted.
-     *
-     * @param int $productId
-     * @return ServiceResult
+     * Calcula valor total do inventário
      */
-    public function canDeleteProduct(int $productId): ServiceResult
+    public function calculateTotalInventoryValue(): float
     {
         try {
-            $canDelete = $this->inventoryRepository->canDeleteProduct($productId);
-            
-            if ($canDelete) {
-                return $this->success(true, 'Produto pode ser excluído');
-            } else {
-                return $this->error(
-                    'validation_error',
-                    'Produto não pode ser excluído pois possui movimentações de inventário'
-                );
+            $inventories = $this->productInventoryRepository->getPaginated(1000);
+            $totalValue = 0;
+
+            foreach ($inventories as $inventory) {
+                if ($inventory->product && $inventory->product->price) {
+                    $totalValue += $inventory->quantity * $inventory->product->price;
+                }
             }
+
+            return $totalValue;
         } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao verificar se produto pode ser excluído',
-                null,
-                $e
-            );
+            Log::error('Erro ao calcular valor total do inventário', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return 0;
         }
     }
 
     /**
-     * Process inventory for service items.
-     *
-     * @param array $items
-     * @param string $type
-     * @param string $reason
-     * @return ServiceResult
+     * Gera relatório de resumo
      */
-    public function processServiceItems(array $items, string $type, string $reason = ''): ServiceResult
+    public function generateSummaryReport(): array
     {
         try {
-            return DB::transaction(function () use ($items, $type, $reason) {
-                foreach ($items as $item) {
-                    if (isset($item['product_id']) && isset($item['quantity'])) {
-                        if ($type === 'out') {
-                            $result = $this->registerExit(
-                                $item['product_id'],
-                                $item['quantity'],
-                                $reason ?: 'Utilização em serviço'
-                            );
-                        } elseif ($type === 'in') {
-                            $result = $this->registerEntry(
-                                $item['product_id'],
-                                $item['quantity'],
-                                $reason ?: 'Devolução de serviço'
-                            );
-                        }
+            $statistics = $this->productInventoryRepository->getStatistics();
+            $totalValue = $this->calculateTotalInventoryValue();
+            $recentMovements = $this->inventoryMovementRepository->getRecentMovements(10);
 
-                        if (!$result->isSuccess()) {
-                            return $result;
-                        }
+            return [
+                'statistics' => array_merge($statistics, ['total_value' => $totalValue]),
+                'recent_movements' => $recentMovements,
+                'low_stock_items' => $this->productInventoryRepository->getLowStockItems(),
+                'report_date' => now(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar relatório de resumo', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'statistics' => [],
+                'recent_movements' => collect(),
+                'low_stock_items' => collect(),
+                'report_date' => now(),
+                'error' => 'Erro ao gerar relatório',
+            ];
+        }
+    }
+
+    /**
+     * Gera relatório de movimentações
+     */
+    public function generateMovementReport(?string $startDate = null, ?string $endDate = null): array
+    {
+        try {
+            $statistics = $this->inventoryMovementRepository->getStatisticsByPeriod($startDate, $endDate);
+            $summaryByType = $this->inventoryMovementRepository->getSummaryByType($startDate, $endDate);
+            $mostMovedProducts = $this->inventoryMovementRepository->getMostMovedProducts(10, $startDate, $endDate);
+
+            return [
+                'statistics' => $statistics,
+                'summary_by_type' => $summaryByType,
+                'most_moved_products' => $mostMovedProducts,
+                'report_period' => [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ],
+                'report_date' => now(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar relatório de movimentações', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'statistics' => [],
+                'summary_by_type' => [],
+                'most_moved_products' => collect(),
+                'report_period' => [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ],
+                'report_date' => now(),
+                'error' => 'Erro ao gerar relatório',
+            ];
+        }
+    }
+
+    /**
+     * Gera relatório de avaliação
+     */
+    public function generateValuationReport(): array
+    {
+        try {
+            $inventories = $this->productInventoryRepository->getPaginated(1000);
+            $valuationData = [];
+            $totalValue = 0;
+
+            foreach ($inventories as $inventory) {
+                if ($inventory->product && $inventory->product->price) {
+                    $value = $inventory->quantity * $inventory->product->price;
+                    $totalValue += $value;
+
+                    $valuationData[] = [
+                        'product' => $inventory->product,
+                        'quantity' => $inventory->quantity,
+                        'unit_price' => $inventory->product->price,
+                        'total_value' => $value,
+                        'stock_percentage' => $inventory->max_quantity > 0 
+                            ? round(($inventory->quantity / $inventory->max_quantity) * 100, 2)
+                            : null,
+                    ];
+                }
+            }
+
+            // Ordena por valor total
+            usort($valuationData, function ($a, $b) {
+                return $b['total_value'] <=> $a['total_value'];
+            });
+
+            return [
+                'valuation_data' => $valuationData,
+                'total_value' => $totalValue,
+                'total_items' => count($valuationData),
+                'report_date' => now(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar relatório de avaliação', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'valuation_data' => [],
+                'total_value' => 0,
+                'total_items' => 0,
+                'report_date' => now(),
+                'error' => 'Erro ao gerar relatório',
+            ];
+        }
+    }
+
+    /**
+     * Gera relatório de estoque baixo
+     */
+    public function generateLowStockReport(): array
+    {
+        try {
+            $lowStockItems = $this->productInventoryRepository->getLowStockItems();
+            $urgentItems = [];
+            $warningItems = [];
+
+            foreach ($lowStockItems as $item) {
+                if ($item->quantity == 0) {
+                    $urgentItems[] = $item;
+                } elseif ($item->min_quantity > 0) {
+                    $percentage = ($item->quantity / $item->min_quantity) * 100;
+                    if ($percentage <= 50) {
+                        $urgentItems[] = $item;
+                    } else {
+                        $warningItems[] = $item;
+                    }
+                } else {
+                    $warningItems[] = $item;
+                }
+            }
+
+            return [
+                'urgent_items' => collect($urgentItems),
+                'warning_items' => collect($warningItems),
+                'total_urgent' => count($urgentItems),
+                'total_warning' => count($warningItems),
+                'report_date' => now(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar relatório de estoque baixo', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'urgent_items' => collect(),
+                'warning_items' => collect(),
+                'total_urgent' => 0,
+                'total_warning' => 0,
+                'report_date' => now(),
+                'error' => 'Erro ao gerar relatório',
+            ];
+        }
+    }
+
+    /**
+     * Exporta relatório
+     */
+    public function exportReport(string $reportType, string $format)
+    {
+        try {
+            $reportData = match ($reportType) {
+                'movements' => $this->generateMovementReport(),
+                'valuation' => $this->generateValuationReport(),
+                'low-stock' => $this->generateLowStockReport(),
+                default => $this->generateSummaryReport(),
+            };
+
+            if ($format === 'pdf') {
+                return $this->exportToPdf($reportData, $reportType);
+            } elseif ($format === 'csv') {
+                return $this->exportToCsv($reportData, $reportType);
+            } elseif ($format === 'xlsx') {
+                return $this->exportToExcel($reportData, $reportType);
+            }
+
+            throw new Exception('Formato de exportação não suportado');
+        } catch (Exception $e) {
+            Log::error('Erro ao exportar relatório', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'report_type' => $reportType,
+                'format' => $format,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao exportar relatório: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Exporta para PDF
+     */
+    private function exportToPdf(array $reportData, string $reportType)
+    {
+        // Implementação básica - pode ser estendida com bibliotecas como DomPDF
+        $view = view('reports.inventory.pdf.' . $reportType, compact('reportData'));
+        
+        return response($view->render())
+            ->header('Content-Type', 'text/html')
+            ->header('Content-Disposition', 'attachment; filename="relatorio-inventario-' . $reportType . '-' . date('Y-m-d') . '.pdf"');
+    }
+
+    /**
+     * Exporta para CSV
+     */
+    private function exportToCsv(array $reportData, string $reportType)
+    {
+        $filename = 'relatorio-inventario-' . $reportType . '-' . date('Y-m-d') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        return response()->stream(function () use ($reportData, $reportType) {
+            $handle = fopen('php://output', 'w');
+            
+            // Cabeçalhos baseados no tipo de relatório
+            $this->writeCsvHeaders($handle, $reportType);
+            
+            // Dados baseados no tipo de relatório
+            $this->writeCsvData($handle, $reportData, $reportType);
+            
+            fclose($handle);
+        }, 200, $headers);
+    }
+
+    /**
+     * Exporta para Excel
+     */
+    private function exportToExcel(array $reportData, string $reportType)
+    {
+        // Implementação básica - pode ser estendida com bibliotecas como PhpSpreadsheet
+        // Por enquanto, retorna CSV com extensão xlsx
+        return $this->exportToCsv($reportData, $reportType);
+    }
+
+    /**
+     * Escreve cabeçalhos CSV
+     */
+    private function writeCsvHeaders($handle, string $reportType): void
+    {
+        $headers = match ($reportType) {
+            'summary' => ['Período', 'Total de Itens', 'Valor Total', 'Estoque Baixo', 'Data'],
+            'movements' => ['Data', 'Produto', 'Tipo', 'Quantidade', 'Quantidade Anterior', 'Quantidade Nova', 'Motivo'],
+            'valuation' => ['Produto', 'SKU', 'Quantidade', 'Preço Unitário', 'Valor Total', '% Estoque'],
+            'low-stock' => ['Produto', 'SKU', 'Quantidade Atual', 'Quantidade Mínima', 'Situação'],
+            default => ['Dados'],
+        };
+        
+        fputcsv($handle, $headers);
+    }
+
+    /**
+     * Escreve dados CSV
+     */
+    private function writeCsvData($handle, array $reportData, string $reportType): void
+    {
+        switch ($reportType) {
+            case 'summary':
+                fputcsv($handle, [
+                    'Resumo',
+                    $reportData['statistics']['total_items'] ?? 0,
+                    'R$ ' . number_format($reportData['statistics']['total_value'] ?? 0, 2, ',', '.'),
+                    $reportData['statistics']['low_stock_items'] ?? 0,
+                    $reportData['report_date']->format('d/m/Y H:i'),
+                ]);
+                break;
+                
+            case 'movements':
+                if (isset($reportData['most_moved_products'])) {
+                    foreach ($reportData['most_moved_products'] as $item) {
+                        fputcsv($handle, [
+                            $item->created_at->format('d/m/Y H:i'),
+                            $item->product->name ?? '',
+                            strtoupper($item->type ?? ''),
+                            $item->total_quantity ?? 0,
+                            '', // quantidade anterior não disponível neste relatório
+                            '', // quantidade nova não disponível neste relatório
+                            'Produto mais movimentado',
+                        ]);
                     }
                 }
-
-                return $this->success(null, 'Itens do serviço processados com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                'error',
-                'Erro ao processar itens do serviço',
-                null,
-                $e
-            );
+                break;
+                
+            case 'valuation':
+                if (isset($reportData['valuation_data'])) {
+                    foreach ($reportData['valuation_data'] as $item) {
+                        fputcsv($handle, [
+                            $item['product']->name ?? '',
+                            $item['product']->sku ?? '',
+                            $item['quantity'] ?? 0,
+                            'R$ ' . number_format($item['unit_price'] ?? 0, 2, ',', '.'),
+                            'R$ ' . number_format($item['total_value'] ?? 0, 2, ',', '.'),
+                            ($item['stock_percentage'] ?? 0) . '%',
+                        ]);
+                    }
+                }
+                break;
+                
+            case 'low-stock':
+                if (isset($reportData['urgent_items'])) {
+                    foreach ($reportData['urgent_items'] as $item) {
+                        fputcsv($handle, [
+                            $item->product->name ?? '',
+                            $item->product->sku ?? '',
+                            $item->quantity ?? 0,
+                            $item->min_quantity ?? 0,
+                            'URGENTE',
+                        ]);
+                    }
+                }
+                if (isset($reportData['warning_items'])) {
+                    foreach ($reportData['warning_items'] as $item) {
+                        fputcsv($handle, [
+                            $item->product->name ?? '',
+                            $item->product->sku ?? '',
+                            $item->quantity ?? 0,
+                            $item->min_quantity ?? 0,
+                            'ALERTA',
+                        ]);
+                    }
+                }
+                break;
         }
     }
 }

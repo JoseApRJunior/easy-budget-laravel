@@ -9,13 +9,13 @@
         </h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('invoices.index') }}">Faturas</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
                 <li class="breadcrumb-item active">Nova</li>
             </ol>
         </nav>
     </div>
 
-    <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm">
+    <form action="{{ route('provider.invoices.store') }}" method="POST" id="invoiceForm">
         @csrf
 
         <div class="row g-4">
@@ -237,7 +237,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-circle me-1"></i>Criar Fatura
                     </button>
-                    <a href="{{ route('invoices.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('provider.invoices.index') }}" class="btn btn-secondary">
                         <i class="bi bi-x-circle me-1"></i>Cancelar
                     </a>
                 </div>

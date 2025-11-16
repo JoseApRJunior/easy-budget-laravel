@@ -480,13 +480,20 @@ class InvoiceController extends Controller
                 'services.serviceItems.product'
             ] );
 
+            // Calculate budget balance and remaining amount
+            $alreadyBilled = $this->invoiceRepository->sumTotalByBudgetId($budget->id, ['pending','approved','in_process','authorized','paid']);
+            $budgetTotal = (float) ($budget->total ?? 0);
+            $remainingBalance = max(0.0, $budgetTotal - $alreadyBilled);
+
             $tenantId = auth()->user()->tenant_id;
             return view( 'invoices.create-from-budget', [
-                'budget'        => $budget,
-                'customers'     => $this->customerService->listCustomers( $tenantId )->isSuccess()
+                'budget'           => $budget,
+                'alreadyBilled'    => $alreadyBilled,
+                'remainingBalance' => $remainingBalance,
+                'customers'        => $this->customerService->listCustomers( $tenantId )->isSuccess()
                     ? $this->customerService->listCustomers( $tenantId )->getData()
                     : [],
-                'statusOptions' => InvoiceStatus::cases()
+                'statusOptions'    => InvoiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -583,6 +590,18 @@ class InvoiceController extends Controller
                 'message' => 'Erro ao exportar faturas'
             ], 500 );
         }
+    }
+
+    /**
+     * AJAX endpoint para filtrar faturas.
+     */
+    public function ajaxFilter( Request $request ): JsonResponse
+    {
+        $filters = $request->only(['status','customer_id','service_id','date_from','date_to','due_date_from','due_date_to','min_amount','max_amount','search','sort_by','sort_direction']);
+        $result = $this->invoiceService->getFilteredInvoices($filters, ['customer:id,name','service:id,code,description','invoiceStatus']);
+        return $result->isSuccess()
+            ? response()->json(['success' => true, 'data' => $result->getData()])
+            : response()->json(['success' => false, 'message' => $result->getMessage()], 400);
     }
 
 }

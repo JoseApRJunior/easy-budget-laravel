@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\ProviderCredential;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
@@ -456,17 +457,44 @@ class SettingsController extends Controller
      */
     private function getIntegrations(): array
     {
-        // Dados mockados - implementar conforme necessidade
+        $tenant = auth()->user()->tenant ?? null;
+        
+        if (!$tenant) {
+            return [
+                'mercadopago' => [
+                    'name'      => 'Mercado Pago',
+                    'status'    => 'disconnected',
+                    'last_sync' => null,
+                ],
+            ];
+        }
+
+        // Busca credenciais do Mercado Pago para o tenant atual
+        $mercadoPagoCredential = ProviderCredential::where('tenant_id', $tenant->id)
+            ->where('payment_gateway', 'mercadopago')
+            ->first();
+
+        $mercadoPagoStatus = 'disconnected';
+        $lastSync = null;
+
+        if ($mercadoPagoCredential) {
+            $mercadoPagoStatus = 'connected';
+            $lastSync = $mercadoPagoCredential->updated_at;
+            
+            // Verifica se o token está expirado (considerando 6 horas de margem)
+            if ($mercadoPagoCredential->expires_in) {
+                $expirationTime = $mercadoPagoCredential->updated_at->addSeconds($mercadoPagoCredential->expires_in - 21600); // 6 horas de margem
+                if (now()->greaterThan($expirationTime)) {
+                    $mercadoPagoStatus = 'expired';
+                }
+            }
+        }
+
         return [
-            'mercadopago'      => [
+            'mercadopago' => [
                 'name'      => 'Mercado Pago',
-                'status'    => 'connected',
-                'last_sync' => now()->subHours( 2 ),
-            ],
-            'google_analytics' => [
-                'name'      => 'Google Analytics',
-                'status'    => 'disconnected',
-                'last_sync' => null,
+                'status'    => $mercadoPagoStatus,
+                'last_sync' => $lastSync,
             ],
         ];
     }

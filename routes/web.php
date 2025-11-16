@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\AIAnalyticsController;
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BudgetController;
@@ -34,9 +35,14 @@ use Illuminate\Support\Facades\Route;
 // Public routes group
 // Routes accessible without authentication for public pages and token-based access
 Route::group( [], function () {
-    // Public pages
+    // Public pages - HomeController
     Route::get( '/', [ HomeController::class, 'index' ] )->name( 'home' );
-    Route::get( '/about', [ HomeController::class, 'about' ] )->name( 'about' );
+    Route::get( '/home', [ HomeController::class, 'index' ] )->name( 'home.index' );
+    Route::get( '/features', [ HomeController::class, 'features' ] )->name( 'home.features' );
+    Route::get( '/pricing', [ HomeController::class, 'pricing' ] )->name( 'home.pricing' );
+    Route::get( '/about', [ HomeController::class, 'about' ] )->name( 'home.about' );
+    Route::get( '/contact', [ HomeController::class, 'contact' ] )->name( 'home.contact' );
+    Route::post( '/contact', [ HomeController::class, 'contactSubmit' ] )->name( 'home.contact.submit' );
 
     // Temporary CSRF token route
     Route::get( '/csrf-token', function () {
@@ -109,6 +115,18 @@ Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAc
 Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
     // Dashboard
     Route::get( '/dashboard', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
+
+    // AI Analytics
+    Route::prefix( 'analytics' )->name( 'analytics.' )->group( function () {
+        Route::get( '/', [ AIAnalyticsController::class, 'index' ] )->name( 'index' );
+        Route::get( '/trends', [ AIAnalyticsController::class, 'trends' ] )->name( 'trends' );
+        Route::get( '/predictions', [ AIAnalyticsController::class, 'predictions' ] )->name( 'predictions' );
+        Route::get( '/suggestions', [ AIAnalyticsController::class, 'suggestions' ] )->name( 'suggestions' );
+        Route::get( '/performance', [ AIAnalyticsController::class, 'performance' ] )->name( 'performance' );
+        Route::get( '/customers', [ AIAnalyticsController::class, 'customers' ] )->name( 'customers' );
+        Route::get( '/financial', [ AIAnalyticsController::class, 'financial' ] )->name( 'financial' );
+        Route::get( '/efficiency', [ AIAnalyticsController::class, 'efficiency' ] )->name( 'efficiency' );
+    } );
 
     // Plans
     Route::prefix( 'plans' )->name( 'plans.' )->group( function () {
@@ -192,17 +210,19 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Inventory
     Route::prefix( 'inventory' )->name( 'inventory.' )->group( function () {
         Route::get( '/', [ InventoryController::class, 'index' ] )->name( 'index' );
-        Route::get( '/dashboard', [ InventoryController::class, 'dashboard' ] )->name( 'dashboard' );
-        Route::get( '/movements', [ InventoryController::class, 'movements' ] )->name( 'movements' );
+        Route::get( '/report', [ InventoryController::class, 'report' ] )->name( 'report' );
         Route::get( '/export', [ InventoryController::class, 'export' ] )->name( 'export' );
-        Route::get( '/adjust', [ InventoryController::class, 'adjust' ] )->name( 'adjust' );
-        Route::post( '/adjust', [ InventoryController::class, 'storeAdjustment' ] )->name( 'adjust.store' );
-        Route::get( '/entry', [ InventoryController::class, 'entry' ] )->name( 'entry' );
-        Route::post( '/entry', [ InventoryController::class, 'storeEntry' ] )->name( 'entry.store' );
-        Route::get( '/exit', [ InventoryController::class, 'exit' ] )->name( 'exit' );
-        Route::post( '/exit', [ InventoryController::class, 'storeExit' ] )->name( 'exit.store' );
-        Route::post( '/parameters/{product}', [ InventoryController::class, 'setParameters' ] )->name( 'parameters' );
-        Route::get( '/data', [ InventoryController::class, 'getInventoryData' ] )->name( 'data' );
+        Route::get( '/{product}', [ InventoryController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{product}/adjust', [ InventoryController::class, 'adjust' ] )->name( 'adjust' );
+        Route::post( '/{product}/adjust', [ InventoryController::class, 'storeAdjustment' ] )->name( 'adjust.store' );
+        
+        // API routes
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::get('/low-stock', [ InventoryController::class, 'lowStock' ])->name('low-stock');
+            Route::post('/{product}/min-quantity', [ InventoryController::class, 'updateMinQuantity' ])->name('min-quantity');
+            Route::post('/{product}/max-quantity', [ InventoryController::class, 'updateMaxQuantity' ])->name('max-quantity');
+            Route::get('/search', [ InventoryController::class, 'search' ])->name('search');
+        });
     } );
 
     // Services
@@ -272,7 +292,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::post('/budgets/{budget}', [ InvoiceController::class, 'storeFromBudget' ])->name('store.from-budget');
     } );
 
-    // QR Code routes
+    // QR Code routes - MOVIDO PARA DENTRO DO GRUPO PROVIDER
     Route::prefix( 'qrcode' )->name( 'qrcode.' )->group( function () {
         Route::get( '/', [ QrCodeController::class, 'index' ] )->name( 'index' );
         Route::post( '/generate', [ QrCodeController::class, 'generate' ] )->name( 'generate' );
@@ -442,9 +462,15 @@ Route::middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
 } );
 
 require __DIR__ . '/auth.php';
+
+// Upload routes (require provider authentication)
+Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     Route::prefix('upload')->name('upload.')->group(function () {
         Route::post('/image', [ UploadController::class, 'uploadImage' ])->name('image');
+        Route::delete('/image', [ UploadController::class, 'deleteImage' ])->name('image.delete');
+        Route::post('/image/optimize', [ UploadController::class, 'optimizeImage' ])->name('image.optimize');
     });
+});
 
     Route::prefix('integrations')->name('integrations.')->group(function () {
         Route::get('/mercadopago', [ IntegrationsMercadoPagoController::class, 'index' ])->name('mercadopago.index');

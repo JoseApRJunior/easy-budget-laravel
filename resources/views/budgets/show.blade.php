@@ -17,12 +17,12 @@
         </p>
       </div>
       <div class="d-flex gap-2">
-        <a href="{{ route( 'budgets.print', $budget->code ) }}" class="btn btn-outline-primary" target="_blank"
+        <a href="{{ route( 'provider.budgets.print', $budget->code ) }}" class="btn btn-outline-primary" target="_blank"
           title="Download PDF">
           <i class="bi bi-file-pdf me-2"></i>PDF
         </a>
         @if( $budget->status->canEdit() )
-          <a href="{{ route( 'budgets.edit', $budget->code ) }}" class="btn btn-primary" title="Editar orçamento">
+          <a href="{{ route( 'provider.budgets.edit', $budget->code ) }}" class="btn btn-primary" title="Editar orçamento">
             <i class="bi bi-pencil me-2"></i>Editar
           </a>
         @endif
@@ -132,7 +132,7 @@
           </h5>
         </div>
         <div class="card-body">
-          <form method="POST" action="{{ route( 'budgets.change-status', $budget->code ) }}" class="d-inline me-2">
+          <form method="POST" action="{{ route( 'provider.budgets.change-status', $budget->code ) }}" class="d-inline me-2">
             @csrf
             <input type="hidden" name="status" value="approved">
             <button type="submit" class="btn btn-success"
@@ -141,7 +141,7 @@
             </button>
           </form>
 
-          <form method="POST" action="{{ route( 'budgets.change-status', $budget->code ) }}" class="d-inline">
+          <form method="POST" action="{{ route( 'provider.budgets.change-status', $budget->code ) }}" class="d-inline">
             @csrf
             <input type="hidden" name="status" value="rejected">
             <button type="submit" class="btn btn-danger"

@@ -420,4 +420,41 @@ class BudgetController extends Controller
         }
     }
 
+    /**
+     * AJAX endpoint para filtrar orçamentos.
+     */
+    public function ajaxFilter( Request $request ): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'filter_code',
+                'filter_start_date',
+                'filter_end_date',
+                'filter_customer',
+                'filter_min_value',
+                'filter_status',
+                'filter_order_by',
+                'per_page'
+            ]);
+
+            $result = $this->budgetService->getBudgetsForProvider(auth()->id(), $filters);
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro no AJAX de filtro de orçamentos', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ] );
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao filtrar orçamentos'
+            ], 500);
+        }
+    }
+
 }

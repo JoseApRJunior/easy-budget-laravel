@@ -131,7 +131,7 @@
             <!-- Action Buttons for SENT status -->
             @if( $budget->budgetStatus->slug === 'sent' )
               <div class="d-grid gap-2 mt-4">
-                <form action="{{ route( 'budgets.public.choose-status.store' ) }}" method="POST">
+                <form action="{{ route( 'provider.budgets.public.choose-status.store' ) }}" method="POST">
                   @csrf
                   <input type="hidden" name="budget_code" value="{{ $budget->code }}">
                   <input type="hidden" name="token" value="{{ $token }}">

@@ -49,7 +49,7 @@
                     day: 'Dia'
                 },
                 events: {
-                    url: '{{ route( "schedules.calendar.data" ) }}',
+                    url: '{{ route( "provider.schedules.calendar.data" ) }}',
                     method: 'GET',
                     failure: function () {
                         alert( 'Erro ao carregar agendamentos!' );

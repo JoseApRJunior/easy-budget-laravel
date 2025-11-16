@@ -13,10 +13,10 @@
               {{ $product->name }}
             </h3>
             <div class="card-tools">
-              <a href="{{ route( 'products.edit', $product->sku ) }}" class="btn btn-warning btn-sm">
+              <a href="{{ route( 'provider.products.edit', $product->sku ) }}" class="btn btn-warning btn-sm">
                 <i class="fas fa-edit"></i> Editar
               </a>
-              <a href="{{ route( 'products.index' ) }}" class="btn btn-secondary btn-sm">
+              <a href="{{ route( 'provider.products.index' ) }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Voltar
               </a>
             </div>
@@ -171,10 +171,10 @@
 
           <div class="card-footer">
             <div class="btn-group">
-              <a href="{{ route( 'products.edit', $product->sku ) }}" class="btn btn-warning">
+              <a href="{{ route( 'provider.products.edit', $product->sku ) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Editar Produto
               </a>
-              <form action="{{ route( 'products.toggle', $product->sku ) }}" method="POST" class="d-inline"
+              <form action="{{ route( 'provider.products.toggle', $product->sku ) }}" method="POST" class="d-inline"
                 onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
                 @csrf
                 @method( 'PATCH' )
@@ -183,7 +183,7 @@
                   {{ $product->active ? 'Desativar' : 'Ativar' }}
                 </button>
               </form>
-              <form action="{{ route( 'products.destroy', $product->sku ) }}" method="POST" class="d-inline"
+              <form action="{{ route( 'provider.products.destroy', $product->sku ) }}" method="POST" class="d-inline"
                 onsubmit="return confirm('Excluir este produto permanentemente?')">
                 @csrf
                 @method( 'DELETE' )
@@ -193,7 +193,7 @@
               </form>
             </div>
             <div class="float-right">
-              <a href="{{ route( 'products.index' ) }}" class="btn btn-secondary">
+              <a href="{{ route( 'provider.products.index' ) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar à Lista
               </a>
             </div>

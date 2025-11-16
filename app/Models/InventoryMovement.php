@@ -38,7 +38,11 @@ class InventoryMovement extends Model
         'product_id',
         'type',
         'quantity',
+        'previous_quantity',
+        'new_quantity',
         'reason',
+        'reference_id',
+        'reference_type',
     ];
 
     /**
@@ -51,7 +55,11 @@ class InventoryMovement extends Model
         'product_id' => 'integer',
         'type'       => 'string', // enum('in', 'out')
         'quantity'   => 'integer',
+        'previous_quantity' => 'integer',
+        'new_quantity' => 'integer',
         'reason'     => 'string',
+        'reference_id' => 'integer',
+        'reference_type' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];

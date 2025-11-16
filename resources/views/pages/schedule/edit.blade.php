@@ -11,7 +11,7 @@
                     <h3 class="card-title">Editar Agendamento #{{ $schedule->id }}</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('schedules.update', $schedule) }}" id="scheduleForm">
+                    <form method="POST" action="{{ route('provider.schedules.update', $schedule) }}" id="scheduleForm">
                         @csrf
                         @method('PUT')
                         
@@ -102,7 +102,7 @@
                                 <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <i class="fas fa-save"></i> Atualizar Agendamento
                                 </button>
-                                <a href="{{ route('schedules.show', $schedule) }}" class="btn btn-secondary">
+                                <a href="{{ route('provider.schedules.show', $schedule) }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left"></i> Voltar
                                 </a>
                             </div>
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const endDateTime = endDateTimeInput.value;
 
         if (startDateTime && endDateTime) {
-            fetch('{{ route("schedules.check-conflicts") }}?' + new URLSearchParams({
+            fetch('{{ route("provider.schedules.check-conflicts") }}?' + new URLSearchParams({
                 service_id: {{ $schedule->service->id }},
                 start_date_time: startDateTime,
                 end_date_time: endDateTime,

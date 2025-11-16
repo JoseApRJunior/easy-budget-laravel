@@ -532,4 +532,137 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Exportação Excel de clientes
+     */
+    public function customersExcel( Request $request )
+    {
+        try {
+            $name      = $request->input( 'name', '' );
+            $document  = $request->input( 'document', '' );
+            $startDate = $request->input( 'start_date' );
+            $endDate   = $request->input( 'end_date' );
+
+            $query = Customer::with( [ 'commonData', 'contact' ] )
+                ->where( 'tenant_id', auth()->user()->tenant_id );
+
+            // Aplicar mesmos filtros da busca
+            if ( !empty( $name ) ) {
+                $query->whereHas( 'commonData', function ( $subQ ) use ( $name ) {
+                    $subQ->where( 'first_name', 'like', "%{$name}%" )
+                        ->orWhere( 'last_name', 'like', "%{$name}%" )
+                        ->orWhere( 'company_name', 'like', "%{$name}%" );
+                } );
+            }
+
+            if ( !empty( $document ) ) {
+                $cleanDocument = clean_document_partial( $document, 1 );
+                if ( !empty( $cleanDocument ) ) {
+                    $query->whereHas( 'commonData', function ( $subQ ) use ( $cleanDocument ) {
+                        $subQ->where( 'cpf', 'like', "%{$cleanDocument}%" )
+                            ->orWhere( 'cnpj', 'like', "%{$cleanDocument}%" );
+                    } );
+                }
+            }
+
+            if ( !empty( $startDate ) ) {
+                $query->where( 'created_at', '>=', $startDate . ' 00:00:00' );
+            }
+
+            if ( !empty( $endDate ) ) {
+                $query->where( 'created_at', '<=', $endDate . ' 23:59:59' );
+            }
+
+            $customers = $query->get();
+
+            if ( $customers->isEmpty() ) {
+                return response()->json( [ 'error' => 'Nenhum cliente encontrado' ], 404 );
+            }
+
+            // Prepare data for Excel
+            $excelData = [];
+            $excelData[] = [ 'Nome/Razão Social', 'CPF/CNPJ', 'E-mail Pessoal', 'E-mail Comercial', 'Telefone Pessoal', 'Telefone Comercial', 'Data Cadastro' ];
+            
+            foreach ( $customers as $customer ) {
+                $commonData = $customer->commonData;
+                $contact    = $customer->contact;
+                
+                $customerName = 'Não informado';
+                $documentNumber = '';
+                
+                if ( $commonData ) {
+                    $customerName = $commonData->company_name ?: ( $commonData->first_name . ' ' . $commonData->last_name );
+                    $documentNumber = $commonData->cpf ?: $commonData->cnpj ?: '';
+                }
+                
+                $excelData[] = [
+                    $customerName,
+                    $documentNumber,
+                    $contact?->email_personal ?: 'N/A',
+                    $contact?->email_business ?: 'N/A',
+                    $contact?->phone_personal ?: 'N/A',
+                    $contact?->phone_business ?: 'N/A',
+                    $customer->created_at->format( 'd/m/Y' )
+                ];
+            }
+
+            // Create Excel file using PhpSpreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set data
+            $sheet->fromArray( $excelData, null, 'A1' );
+            
+            // Format header row
+            $headerStyle = [
+                'font' => [
+                    'bold' => true,
+                    'color' => [ 'rgb' => 'FFFFFF' ]
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [ 'rgb' => '4472C4' ]
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ];
+            
+            $sheet->getStyle( 'A1:G1' )->applyFromArray( $headerStyle );
+            
+            // Auto-size columns
+            foreach ( range( 'A', 'G' ) as $column ) {
+                $sheet->getColumnDimension( $column )->setAutoSize( true );
+            }
+            
+            // Set title and metadata
+            $sheet->setTitle( 'Clientes' );
+            $spreadsheet->getProperties()
+                ->setCreator( auth()->user()->name )
+                ->setTitle( 'Relatório de Clientes' )
+                ->setDescription( 'Relatório de clientes gerado em ' . now()->format( 'd/m/Y H:i:s' ) );
+
+            // Create filename
+            $count = $customers->count();
+            $timestamp = now()->format( 'Ymd_His' );
+            $filename = "relatorio_clientes_{$timestamp}_{$count}_registros.xlsx";
+
+            // Save to temporary file
+            $tempFile = tempnam( sys_get_temp_dir(), 'excel_' );
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx( $spreadsheet );
+            $writer->save( $tempFile );
+
+            // Return file as download
+            return response()->download( $tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ] )->deleteFileAfterSend( true );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao gerar Excel de clientes', [ 'error' => $e->getMessage() ] );
+            return response()->json( [ 'error' => 'Erro interno ao gerar Excel' ], 500 );
+        }
+    }
+
 }

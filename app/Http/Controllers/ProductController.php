@@ -268,4 +268,16 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * AJAX endpoint para buscar produtos com filtros.
+     */
+    public function ajaxSearch( Request $request ): JsonResponse
+    {
+        $filters = $request->only(['search','active','min_price','max_price','category_id']);
+        $result = $this->productService->getFilteredProducts($filters, ['category']);
+        return $result->isSuccess()
+            ? response()->json(['success' => true, 'data' => $result->getData()])
+            : response()->json(['success' => false, 'message' => $result->getMessage()], 400);
+    }
+
 }

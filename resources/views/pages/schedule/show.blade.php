@@ -14,7 +14,7 @@
                                 <a href="{{ route( 'provider.schedules.index' ) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-list"></i> Lista
                                 </a>
-                                <a href="{{ route( 'schedules.calendar' ) }}" class="btn btn-outline-primary">
+                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-calendar-alt"></i> Calendário
                                 </a>
                             </div>
