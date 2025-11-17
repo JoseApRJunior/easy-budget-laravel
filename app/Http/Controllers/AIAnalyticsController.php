@@ -21,14 +21,14 @@ class AIAnalyticsController extends Controller
         $user      = Auth::user();
         $analytics = $this->aiAnalyticsService->getBusinessOverview();
 
-        return view( 'pages.provider.analytics.index', compact( 'analytics' ) );
+        return view( 'pages.analytics.index', compact( 'analytics' ) );
     }
 
     public function trends( Request $request )
     {
         $user   = Auth::user();
         $period = $request->get( 'period', '6months' );
-        $trends = $this->aiAnalyticsService->getBusinessTrends();
+        $trends = $this->aiAnalyticsService->getBusinessTrends($period);
 
         return response()->json( $trends );
     }
@@ -53,7 +53,7 @@ class AIAnalyticsController extends Controller
     {
         $user        = Auth::user();
         $metrics     = $request->get( 'metrics', [ 'conversion_rate', 'average_ticket', 'customer_lifetime_value' ] );
-        $performance = $this->aiAnalyticsService->getPerformanceMetrics();
+        $performance = $this->aiAnalyticsService->getPerformanceMetrics($metrics);
 
         return response()->json( $performance );
     }

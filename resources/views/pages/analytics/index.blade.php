@@ -235,6 +235,7 @@
         </div>
     </div>
 </div>
+@endsection
 
 @push('styles')
 <style>
@@ -277,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSuggestions();
     loadCustomerAnalysis();
     loadFinancialAnalysis();
-    
+
     // Event listeners
     document.getElementById('refreshAnalytics').addEventListener('click', function() {
         loadAnalyticsData();
@@ -285,9 +286,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loadCustomerAnalysis();
         loadFinancialAnalysis();
     });
-    
+
     document.getElementById('refreshSuggestions').addEventListener('click', loadSuggestions);
-    
+
     // Period dropdown
     document.querySelectorAll('[data-period]').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -297,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadTrends(period);
         });
     });
-    
+
     function loadAnalyticsData() {
         fetch('{{ route("provider.analytics.index") }}')
             .then(response => response.json())
@@ -308,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar analytics:', error));
     }
-    
+
     function updateMetrics(data) {
         document.getElementById('totalRevenue').textContent = formatCurrency(data.revenue?.total || 0);
         document.getElementById('revenueGrowth').textContent = (data.revenue?.growth || 0) + '%';
@@ -319,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('averageTicket').textContent = formatCurrency(data.ticket?.average || 0);
         document.getElementById('ticketGrowth').textContent = (data.ticket?.growth || 0) + '%';
     }
-    
+
     function loadTrends(period = '6months') {
         fetch(`{{ route("provider.analytics.trends") }}?period=${period}`)
             .then(response => response.json())
@@ -328,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar tendências:', error));
     }
-    
+
     function updateRevenueChart(data) {
         const ctx = document.getElementById('revenueChart').getContext('2d');
         new Chart(ctx, {
@@ -364,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     function loadServicesChart() {
         // Dados mock para demonstração - substituir com dados reais
         const ctx = document.getElementById('servicesChart').getContext('2d');
@@ -388,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     function loadSuggestions() {
         fetch('{{ route("provider.analytics.suggestions") }}')
             .then(response => response.json())
@@ -397,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar sugestões:', error));
     }
-    
+
     function updateSuggestions(data) {
         const container = document.getElementById('suggestionsContainer');
         if (data.suggestions && data.suggestions.length > 0) {
@@ -426,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '<p class="text-muted text-center">Nenhuma sugestão disponível no momento.</p>';
         }
     }
-    
+
     function loadCustomerAnalysis() {
         fetch('{{ route("provider.analytics.customers") }}')
             .then(response => response.json())
@@ -435,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar análise de clientes:', error));
     }
-    
+
     function updateCustomerAnalysis(data) {
         const container = document.getElementById('customerAnalysis');
         container.innerHTML = `
@@ -464,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
     }
-    
+
     function loadFinancialAnalysis() {
         fetch('{{ route("provider.analytics.financial") }}')
             .then(response => response.json())
@@ -473,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar análise financeira:', error));
     }
-    
+
     function updateFinancialAnalysis(data) {
         const container = document.getElementById('financialAnalysis');
         container.innerHTML = `
@@ -501,21 +502,21 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="mt-3">
                 <h6>Saúde Financeira:</h6>
                 <div class="progress mb-2">
-                    <div class="progress-bar bg-${data.health_score >= 70 ? 'success' : data.health_score >= 40 ? 'warning' : 'danger'}" 
+                    <div class="progress-bar bg-${data.health_score >= 70 ? 'success' : data.health_score >= 40 ? 'warning' : 'danger'}"
                          style="width: ${data.health_score || 0}%"></div>
                 </div>
                 <small class="text-muted">${data.health_score || 0}% de saúde financeira</small>
             </div>
         `;
     }
-    
+
     function formatCurrency(value) {
         return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL'
         }).format(value);
     }
-    
+
     window.implementSuggestion = function(suggestionId) {
         alert('Implementação da sugestão ID: ' + suggestionId + ' - Esta funcionalidade será desenvolvida em breve.');
     };

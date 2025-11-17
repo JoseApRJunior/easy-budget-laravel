@@ -87,7 +87,7 @@ class AIAnalyticsService
     /**
      * Tendências de negócio
      */
-    public function getBusinessTrends(): array
+    public function getBusinessTrends(string $period = '6months'): array
     {
         $last6Months = collect(range(0, 5))->map(function ($i) {
             $date = Carbon::now()->subMonths($i);
@@ -209,7 +209,7 @@ class AIAnalyticsService
     /**
      * Métricas de performance
      */
-    public function getPerformanceMetrics(): array
+    public function getPerformanceMetrics(array $metrics = ['conversion_rate', 'average_ticket', 'customer_lifetime_value']): array
     {
         $currentMonth = Carbon::now();
 

@@ -110,7 +110,7 @@
                                     <h6 class="alert-heading mb-2">
                                         <i class="bi bi-info-circle me-2"></i>Credenciais de Teste
                                     </h6>
-                                    <p class="mb-1"><strong>Prestador:</strong> provider@easybudget.net.br / Password1@</p>
+                                    <p class="mb-1"><strong>Prestador:</strong> provider1@test.com / Password1@</p>
                                 </div>
                             </div>
                         @endif
