@@ -408,7 +408,7 @@ class CustomerService
                 }
 
                 return ServiceResult::success( null, 'Cliente excluído com sucesso' );
-            } );
+            } ); // Closing DB::transaction
         } catch ( \Exception $e ) {
             // Log do erro para debug
             Log::error( 'Erro ao excluir cliente', [

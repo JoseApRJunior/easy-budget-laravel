@@ -121,6 +121,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // AI Analytics
     Route::prefix( 'analytics' )->name( 'analytics.' )->group( function () {
         Route::get( '/', [ AIAnalyticsController::class, 'index' ] )->name( 'index' );
+        Route::get( '/overview', [ AIAnalyticsController::class, 'overview' ] )->name( 'overview' );
         Route::get( '/trends', [ AIAnalyticsController::class, 'trends' ] )->name( 'trends' );
         Route::get( '/predictions', [ AIAnalyticsController::class, 'predictions' ] )->name( 'predictions' );
         Route::get( '/suggestions', [ AIAnalyticsController::class, 'suggestions' ] )->name( 'suggestions' );

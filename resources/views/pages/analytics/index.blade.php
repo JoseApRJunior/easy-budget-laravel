@@ -43,6 +43,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Faturamento Total
+                                <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Somatório das faturas com status 'PAGO' (PAID) no mês corrente">?</span>
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">
                                 R$ 0,00
@@ -67,6 +68,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Taxa de Conversão
+                                <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Orçamentos aprovados / orçamentos criados no mês">?</span>
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="conversionRate">
                                 0%
@@ -91,6 +93,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 Clientes Ativos
+                                <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Clientes existentes até o fim do mês e com atividade recente">?</span>
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeCustomers">
                                 0
@@ -115,6 +118,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Ticket Médio
+                                <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Média do valor total dos orçamentos aprovados no mês">?</span>
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="averageTicket">
                                 R$ 0,00
@@ -141,6 +145,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="bi bi-graph-up me-2"></i>
                         Tendências de Faturamento
+                        <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Linha do tempo com receita mensal, baseada em faturas pagas">?</span>
                     </h6>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="periodDropdown" data-bs-toggle="dropdown">
@@ -165,6 +170,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="bi bi-pie-chart me-2"></i>
                         Distribuição de Serviços
+                        <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Participação de cada tipo de serviço nas vendas">?</span>
                     </h6>
                 </div>
                 <div class="card-body">
@@ -182,6 +188,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="bi bi-lightbulb me-2"></i>
                         Sugestões de Melhorias (IA)
+                        <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Recomendações geradas por análise de dados e regras heurísticas">?</span>
                     </h6>
                     <button class="btn btn-sm btn-outline-primary" id="refreshSuggestions">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -208,6 +215,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="bi bi-people me-2"></i>
                         Análise de Clientes
+                        <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Totais, novos clientes, ativos e taxa de cancelamento (churn)">?</span>
                     </h6>
                 </div>
                 <div class="card-body" id="customerAnalysis">
@@ -224,6 +232,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="bi bi-cash-stack me-2"></i>
                         Saúde Financeira
+                        <span class="ms-1 text-muted" data-bs-toggle="tooltip" title="Receitas, despesas, margem de lucro e fluxo de caixa">?</span>
                     </h6>
                 </div>
                 <div class="card-body" id="financialAnalysis">
@@ -270,7 +279,7 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Carregar dados iniciais
@@ -300,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadAnalyticsData() {
-        fetch('{{ route("provider.analytics.index") }}')
+        fetch('{{ route("provider.analytics.overview") }}')
             .then(response => response.json())
             .then(data => {
                 updateMetrics(data);
@@ -520,6 +529,11 @@ document.addEventListener('DOMContentLoaded', function() {
     window.implementSuggestion = function(suggestionId) {
         alert('Implementação da sugestão ID: ' + suggestionId + ' - Esta funcionalidade será desenvolvida em breve.');
     };
+});
+// Inicializar tooltips do Bootstrap
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
 });
 </script>
 @endpush

@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 4
     paths:
     - app
     - bootstrap
@@ -17,6 +17,6 @@ parameters:
         - app/Support
         - app/Models
     excludePaths:
-        - old-system/
+        - old-system (?)
         - node_modules
         - vendor

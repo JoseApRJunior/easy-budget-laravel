@@ -5,8 +5,8 @@ namespace App\Services\Application;
 use App\Models\User;
 use App\Models\Budget;
 use App\Models\Invoice;
+use App\Enums\InvoiceStatus;
 use App\Models\Customer;
-use App\Models\Product;
 use App\Models\Service;
 use App\Models\Schedule;
 use Carbon\Carbon;
@@ -15,13 +15,12 @@ use Illuminate\Support\Facades\Log;
 
 class AIAnalyticsService
 {
-    private $user;
     private $tenantId;
 
-    public function __construct(User $user)
+    public function __construct()
     {
-        $this->user = $user;
-        $this->tenantId = $user->tenant_id;
+        $user = auth()->user();
+        $this->tenantId = (int) ($user->tenant_id ?? 0);
     }
 
     /**
@@ -121,7 +120,7 @@ class AIAnalyticsService
     public function getPredictions(): array
     {
         $historicalData = $this->getHistoricalData(12); // 12 meses
-        
+
         return [
             'next_month_revenue' => $this->predictNextMonthRevenue($historicalData),
             'next_month_budgets' => $this->predictNextMonthBudgets($historicalData),
@@ -137,9 +136,15 @@ class AIAnalyticsService
     public function getBusinessSuggestions(): array
     {
         $suggestions = [];
+        $totalStartTime = microtime(true);
+        Log::info('getBusinessSuggestions started');
 
         // Análise de produtos/serviços
+        $lpStart = microtime(true);
         $lowPerformance = $this->getLowPerformanceServices();
+        $lpEnd = microtime(true);
+        Log::info('getLowPerformanceServices took: ' . round(($lpEnd - $lpStart) * 1000, 2) . 'ms');
+
         if (!empty($lowPerformance)) {
             $suggestions[] = [
                 'type' => 'service_improvement',
@@ -147,25 +152,33 @@ class AIAnalyticsService
                 'title' => 'Melhore seus serviços de baixo desempenho',
                 'description' => 'Os seguintes serviços têm baixa procura: ' . implode(', ', $lowPerformance),
                 'action' => 'Considere revisar preços, melhorar descrições ou oferecer pacotes promocionais',
-                'potential_impact' => '+15% em vendas'
+                'impact' => '+15% em vendas'
             ];
         }
 
         // Análise de preços
+        $paStart = microtime(true);
         $pricingAnalysis = $this->analyzePricing();
+        $paEnd = microtime(true);
+        Log::info('analyzePricing took: ' . round(($paEnd - $paStart) * 1000, 2) . 'ms');
+
         if ($pricingAnalysis['underpriced']) {
             $suggestions[] = [
                 'type' => 'pricing_optimization',
                 'priority' => 'medium',
                 'title' => 'Oportunidade de aumentar preços',
-                'description' => 'Seus serviços estão 15% abaixo da média do mercado',
-                'action' => 'Considere aumentar preços em 5-10% para maximizar lucros',
-                'potential_impact' => '+20% em margem de lucro'
+                'description' => 'Serviços abaixo do patamar de preço recomendado',
+                'action' => 'Ajuste preços em 5-10% nos serviços abaixo do patamar',
+                'impact' => '+20% em margem de lucro'
             ];
         }
 
         // Análise de horários
+        $saStart = microtime(true);
         $scheduleAnalysis = $this->analyzeScheduleEfficiency();
+        $saEnd = microtime(true);
+        Log::info('analyzeScheduleEfficiency took: ' . round(($saEnd - $saStart) * 1000, 2) . 'ms');
+
         if ($scheduleAnalysis['has_gaps']) {
             $suggestions[] = [
                 'type' => 'schedule_optimization',
@@ -173,33 +186,56 @@ class AIAnalyticsService
                 'title' => 'Otimizar agenda de atendimento',
                 'description' => 'Você tem ' . $scheduleAnalysis['empty_slots'] . ' horários vazios esta semana',
                 'action' => 'Ofereça descontos para horários específicos ou crie campanhas',
-                'potential_impact' => '+25% em ocupação'
+                'impact' => '+25% em ocupação'
             ];
         }
 
         // Análise de clientes
+        $crStart = microtime(true);
         $customerAnalysis = $this->analyzeCustomerRetention();
-        if ($customerAnalysis['churn_rate'] > 20) {
+        $crEnd = microtime(true);
+        Log::info('analyzeCustomerRetention took: ' . round(($crEnd - $crStart) * 1000, 2) . 'ms');
+
+        if (($customerAnalysis['churn_rate'] ?? 0) > 20) {
             $suggestions[] = [
                 'type' => 'customer_retention',
                 'priority' => 'high',
                 'title' => 'Melhore a retenção de clientes',
                 'description' => 'Sua taxa de churn está em ' . $customerAnalysis['churn_rate'] . '%',
                 'action' => 'Implemente programa de fidelidade e follow-up pós-serviço',
-                'potential_impact' => '-30% em churn rate'
+                'impact' => '-30% em churn rate'
             ];
         }
 
         // Análise financeira
+        $fhStart = microtime(true);
         $financialAnalysis = $this->analyzeFinancialHealth();
-        if ($financialAnalysis['cash_flow_risk']) {
+        $fhEnd = microtime(true);
+        Log::info('analyzeFinancialHealth took: ' . round(($fhEnd - $fhStart) * 1000, 2) . 'ms');
+
+        if (($financialAnalysis['cash_flow_risk'] ?? false)) {
+            $overdueAmount = $financialAnalysis['overdue_invoices'] ?? 0;
             $suggestions[] = [
                 'type' => 'financial_management',
                 'priority' => 'critical',
                 'title' => 'Gerencie melhor seu fluxo de caixa',
-                'description' => 'Você tem R$ ' . number_format($financialAnalysis['overdue_invoices'], 2, ',', '.') . ' em faturas vencidas',
+                'description' => 'Você tem R$ ' . number_format($overdueAmount, 2, ',', '.') . ' em faturas vencidas',
                 'action' => 'Intensifique cobranças e ofereça desconto para pagamento antecipado',
-                'potential_impact' => '+40% em fluxo de caixa'
+                'impact' => '+40% em fluxo de caixa'
+            ];
+        }
+
+        $totalEndTime = microtime(true);
+        Log::info('getBusinessSuggestions total time: ' . round(($totalEndTime - $totalStartTime) * 1000, 2) . 'ms');
+
+        if (empty($suggestions)) {
+            $suggestions[] = [
+                'type' => 'getting_started',
+                'priority' => 'low',
+                'title' => 'Sem sugestões automáticas no momento',
+                'description' => 'Cadastre serviços, clientes e orçamentos para ativar recomendações personalizadas',
+                'action' => 'Crie ao menos 3 serviços, 5 clientes e 2 orçamentos este mês',
+                'impact' => 'Melhor organização e dados acionáveis'
             ];
         }
 
@@ -272,7 +308,7 @@ class AIAnalyticsService
         return Invoice::where('tenant_id', $this->tenantId)
             ->whereMonth('created_at', $date->month)
             ->whereYear('created_at', $date->year)
-            ->where('status', 'paid')
+            ->where('status', InvoiceStatus::PAID->value)
             ->sum('total') ?? 0;
     }
 
@@ -302,26 +338,26 @@ class AIAnalyticsService
     private function calculateBusinessHealthScore(float $revenue, int $budgets, int $customers): int
     {
         $score = 0;
-        
+
         if ($revenue > 5000) $score += 25;
         if ($budgets > 10) $score += 25;
         if ($customers > 20) $score += 25;
         if ($revenue > 0 && $budgets > 0) $score += 25;
-        
+
         return $score;
     }
 
     private function identifyTrend(array $data): string
     {
         if (count($data) < 2) return 'stable';
-        
+
         $recent = array_slice($data, -3);
         $average = array_sum($recent) / count($recent);
         $last = end($recent);
-        
+
         if ($last > $average * 1.1) return 'growing';
         if ($last < $average * 0.9) return 'declining';
-        
+
         return 'stable';
     }
 
@@ -359,13 +395,13 @@ class AIAnalyticsService
         // Média móvel simples
         $recentRevenues = array_slice(array_column($historicalData, 'revenue'), -3);
         $average = array_sum($recentRevenues) / count($recentRevenues);
-        
+
         // Ajuste sazonal simples
         $trend = $this->identifyTrend(array_column($historicalData, 'revenue'));
         $adjustment = $trend === 'growing' ? 1.1 : ($trend === 'declining' ? 0.9 : 1.0);
-        
+
         $predicted = $average * $adjustment;
-        
+
         return [
             'predicted' => round($predicted, 2),
             'confidence' => 75,
@@ -378,7 +414,7 @@ class AIAnalyticsService
     {
         $recentBudgets = array_slice(array_column($historicalData, 'budgets'), -3);
         $average = array_sum($recentBudgets) / count($recentBudgets);
-        
+
         return [
             'predicted' => round($average),
             'confidence' => 70,
@@ -399,7 +435,7 @@ class AIAnalyticsService
     private function predictBestSellers(): array
     {
         $services = Service::where('tenant_id', $this->tenantId)
-            ->withCount(['budgetItems as total_sales' => function ($query) {
+            ->withCount(['serviceItems as total_sales' => function ($query) {
                 $query->select(DB::raw('count(*)'));
             }])
             ->orderBy('total_sales', 'desc')
@@ -428,7 +464,7 @@ class AIAnalyticsService
     private function getLowPerformanceServices(): array
     {
         return Service::where('tenant_id', $this->tenantId)
-            ->withCount(['budgetItems as total_sales' => function ($query) {
+            ->withCount(['serviceItems as total_sales' => function ($query) {
                 $query->whereMonth('created_at', Carbon::now()->month);
             }])
             ->having('total_sales', '<', 3)
@@ -439,18 +475,25 @@ class AIAnalyticsService
     private function analyzePricing(): array
     {
         // Implementar análise de preços vs mercado
-        return ['underpriced' => false, 'overpriced' => false];
+        $avgPrice = Service::where('tenant_id', $this->tenantId)->avg('base_price') ?? 0;
+        $lowCount = Service::where('tenant_id', $this->tenantId)
+            ->where('base_price', '<', ($avgPrice * 0.7))
+            ->count();
+        $total = Service::where('tenant_id', $this->tenantId)->count();
+        $underpriced = $total > 0 ? ($lowCount / $total) >= 0.3 : false;
+        return ['underpriced' => $underpriced, 'overpriced' => false];
     }
 
     private function analyzeScheduleEfficiency(): array
     {
+        // Check for schedules that are not associated with a service that has a customer
         $emptySlots = Schedule::where('tenant_id', $this->tenantId)
             ->whereDate('start_date_time', '>=', Carbon::today())
             ->whereDate('start_date_time', '<=', Carbon::today()->addWeek())
-            ->whereNull('customer_id')
+            ->whereDoesntHave('service.budget.customer')
             ->count();
 
-        return ['has_gaps' => $emptySlots > 10, 'empty_slots' => $emptySlots];
+        return ['has_gaps' => $emptySlots > 0, 'empty_slots' => $emptySlots];
     }
 
     private function analyzeCustomerRetention(): array
@@ -470,12 +513,12 @@ class AIAnalyticsService
     private function analyzeFinancialHealth(): array
     {
         $overdueInvoices = Invoice::where('tenant_id', $this->tenantId)
-            ->where('status', 'overdue')
+            ->where('status', InvoiceStatus::OVERDUE->value)
             ->sum('total');
 
         return [
-            'overdue_invoices' => $overdueInvoices,
-            'cash_flow_risk' => $overdueInvoices > 1000
+            'overdue_invoices' => $overdueInvoices ?? 0,
+            'cash_flow_risk' => ($overdueInvoices ?? 0) > 1000
         ];
     }
 
