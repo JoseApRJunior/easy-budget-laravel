@@ -46,6 +46,10 @@
                 {{-- Rotas implementadas --}}
                 <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">
                         <i class="bi bi-house me-2"></i>Home Admin</a></li>
+                <li><a class="dropdown-item" href="{{ route( 'admin.enterprises.index' ) }}">
+                        <i class="bi bi-building me-2"></i>Gestão de Empresas</a></li>
+                <li><a class="dropdown-item" href="{{ route( 'admin.financial.index' ) }}">
+                        <i class="bi bi-currency-dollar me-2"></i>Controle Financeiro</a></li>
                 <li><a class="dropdown-item" href="{{ route( 'admin.settings' ) }}">
                         <i class="bi bi-speedometer2 me-2"></i>Dashboard Executivo</a></li>
                 <li><a class="dropdown-item" href="{{ route( 'admin.users.index' ) }}">

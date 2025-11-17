@@ -1,0 +1,9 @@
+
+In NeonAdapter.php line 57:
+                                                                               
+  Error while loading C:\xampp\htdocs\easy-budget-laravel\phpstan-max.neon: D  
+  uplicated key 'checkMissingCallableSignature' on line 51, column 5.          
+                                                                               
+
+analyse [-c|--configuration CONFIGURATION] [-l|--level LEVEL] [--no-progress] [--debug] [-a|--autoload-file AUTOLOAD-FILE] [--error-format ERROR-FORMAT] [-b|--generate-baseline [GENERATE-BASELINE]] [--allow-empty-baseline] [--memory-limit MEMORY-LIMIT] [--xdebug] [--tmp-file TMP-FILE] [--instead-of INSTEAD-OF] [--fix] [--watch] [--pro] [--fail-without-result-cache] [--] [<paths>...]
+

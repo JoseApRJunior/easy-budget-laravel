@@ -6,11 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Infrastructure\QueueService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
 
 /**
  * Controller para gerenciamento e monitoramento de filas de e-mail.

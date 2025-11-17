@@ -6,16 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InventoryMovementStoreRequest;
-use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\ProductInventory;
 use App\Repositories\InventoryMovementRepository;
 use App\Repositories\ProductInventoryRepository;
 use App\Services\Domain\InventoryService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 /**
  * Controller para gerenciamento de inventário

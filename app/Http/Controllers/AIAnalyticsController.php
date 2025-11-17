@@ -19,7 +19,7 @@ class AIAnalyticsController extends Controller
     public function index( Request $request )
     {
         $user      = Auth::user();
-        $analytics = $this->aiAnalyticsService->getBusinessOverview( $user );
+        $analytics = $this->aiAnalyticsService->getBusinessOverview();
 
         return view( 'pages.provider.analytics.index', compact( 'analytics' ) );
     }
@@ -28,7 +28,7 @@ class AIAnalyticsController extends Controller
     {
         $user   = Auth::user();
         $period = $request->get( 'period', '6months' );
-        $trends = $this->aiAnalyticsService->getBusinessTrends( $user, $period );
+        $trends = $this->aiAnalyticsService->getBusinessTrends();
 
         return response()->json( $trends );
     }
@@ -36,7 +36,7 @@ class AIAnalyticsController extends Controller
     public function predictions( Request $request )
     {
         $user        = Auth::user();
-        $predictions = $this->aiAnalyticsService->getPredictions( $user );
+        $predictions = $this->aiAnalyticsService->getPredictions();
 
         return response()->json( $predictions );
     }
@@ -44,7 +44,7 @@ class AIAnalyticsController extends Controller
     public function suggestions( Request $request )
     {
         $user        = Auth::user();
-        $suggestions = $this->aiAnalyticsService->getSuggestions( $user );
+        $suggestions = $this->aiAnalyticsService->getBusinessSuggestions();
 
         return response()->json( $suggestions );
     }
@@ -53,7 +53,7 @@ class AIAnalyticsController extends Controller
     {
         $user        = Auth::user();
         $metrics     = $request->get( 'metrics', [ 'conversion_rate', 'average_ticket', 'customer_lifetime_value' ] );
-        $performance = $this->aiAnalyticsService->getPerformanceMetrics( $user, $metrics );
+        $performance = $this->aiAnalyticsService->getPerformanceMetrics();
 
         return response()->json( $performance );
     }
@@ -61,7 +61,7 @@ class AIAnalyticsController extends Controller
     public function customers( Request $request )
     {
         $user     = Auth::user();
-        $insights = $this->aiAnalyticsService->getCustomerInsights( $user );
+        $insights = $this->aiAnalyticsService->getCustomerInsights();
 
         return response()->json( $insights );
     }
@@ -69,7 +69,7 @@ class AIAnalyticsController extends Controller
     public function financial( Request $request )
     {
         $user      = Auth::user();
-        $financial = $this->aiAnalyticsService->getFinancialHealth( $user );
+        $financial = $this->aiAnalyticsService->getFinancialHealth();
 
         return response()->json( $financial );
     }
@@ -77,7 +77,7 @@ class AIAnalyticsController extends Controller
     public function efficiency( Request $request )
     {
         $user       = Auth::user();
-        $efficiency = $this->aiAnalyticsService->getOperationalEfficiency( $user );
+        $efficiency = $this->aiAnalyticsService->getOperationalEfficiency();
 
         return response()->json( $efficiency );
     }

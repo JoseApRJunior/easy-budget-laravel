@@ -47,6 +47,66 @@ class EnterpriseController extends Controller
     }
 
     /**
+     * Dados JSON para tabela de empresas (AJAX)
+     */
+    public function data(Request $request)
+    {
+        try {
+            $filters = [
+                'status' => $request->get('status'),
+                'plan' => $request->get('plan'),
+                'search' => $request->get('search'),
+                'date_from' => $request->get('date_from'),
+                'date_to' => $request->get('date_to')
+            ];
+
+            $enterprises = $this->enterpriseService->getEnterprises($filters, 100);
+            
+            return response()->json([
+                'success' => true,
+                'enterprises' => $enterprises
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar dados de empresas: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao carregar dados das empresas',
+                'enterprises' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Dados financeiros de uma empresa específica (AJAX)
+     */
+    public function financialData($tenantId)
+    {
+        try {
+            $financialData = $this->enterpriseService->getMonthlyFinancialData($tenantId);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $financialData
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar dados financeiros da empresa ' . $tenantId . ': ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao carregar dados financeiros',
+                'data' => [
+                    'monthly_revenue' => 0,
+                    'last_month_revenue' => 0,
+                    'monthly_costs' => 0,
+                    'last_month_costs' => 0,
+                    'customer_count' => 0,
+                    'profit_margin' => 0,
+                    'revenue_growth' => 0,
+                ]
+            ], 500);
+        }
+    }
+
+    /**
      * Detalhes de uma empresa específica
      */
     public function show($id)

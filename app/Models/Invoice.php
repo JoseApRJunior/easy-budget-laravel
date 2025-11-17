@@ -7,9 +7,33 @@ use App\Enums\InvoiceStatus;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property int $service_id
+ * @property int $customer_id
+ * @property InvoiceStatus $status
+ * @property int|null $user_confirmation_token_id
+ * @property string $code
+ * @property string|null $public_hash
+ * @property float $subtotal
+ * @property float $discount
+ * @property float $total
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property string|null $payment_method
+ * @property string|null $payment_id
+ * @property float|null $transaction_amount
+ * @property \Illuminate\Support\Carbon|null $transaction_date
+ * @property string|null $public_token
+ * @property \Illuminate\Support\Carbon|null $public_expires_at
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Invoice extends Model
 {
     use TenantScoped, SoftDeletes, HasFactory;

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 class AlertSetting extends Model
 {

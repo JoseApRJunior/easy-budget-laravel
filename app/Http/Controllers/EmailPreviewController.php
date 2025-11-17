@@ -18,11 +18,11 @@ use App\Services\Infrastructure\EmailPreviewService;
 use App\Services\Infrastructure\QueueService;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
+
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Controller avançado para preview de e-mails com funcionalidades completas.

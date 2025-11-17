@@ -3,8 +3,10 @@
 namespace App\Repositories;
 
 use App\Models\ProductInventory;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
@@ -13,16 +15,19 @@ use Illuminate\Support\Collection;
 class ProductInventoryRepository extends AbstractTenantRepository
 {
     /**
-     * @var ProductInventory
-     */
-    protected $model;
-
-    /**
      * Create a new repository instance.
      */
     public function __construct( ProductInventory $model )
     {
         $this->model = $model;
+    }
+
+    /**
+     * Create a new model instance.
+     */
+    protected function makeModel(): Model
+    {
+        return new ProductInventory();
     }
 
     /**

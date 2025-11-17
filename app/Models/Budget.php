@@ -10,9 +10,22 @@ use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property int $customer_id
+ * @property BudgetStatus $status
+ * @property int|null $user_confirmation_token_id
+ * @property string $code
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property float $discount
+ * @property float $total
+ * @property string|null $description
+ * @property string|null $payment_terms
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ */
 class Budget extends Model
 {
     use HasFactory;

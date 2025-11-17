@@ -1,0 +1,21 @@
+parameters:
+    level: 6
+    paths:
+        - app/Http/Controllers
+        - app/Models
+        - app/Services  
+        - app/Mail
+        - app/Support
+    excludePaths:
+        - old-system/
+        - storage/
+        - node_modules/
+        - vendor/
+    ignoreErrors:
+        # Laravel specific
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\.*::.*\(\)#'
+        - '#Access to an undefined property Illuminate\\Support\\Facades\\.*::\$.*#'
+        - '#Call to static method .*\(\) on an unknown class Illuminate\\Support\\Facades\\.*#'
+        - '#Mixed assignment#'
+        - '#Method .*::.*\(\) has parameter \$.* with no type specified#'
+        - '#Method .*::.*\(\) has no return type specified#'

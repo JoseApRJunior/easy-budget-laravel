@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Address;
-use App\Models\AuditLog;
 use App\Models\Budget;
 use App\Models\BusinessData;
 use App\Models\CommonData;
@@ -18,10 +17,7 @@ use App\Models\Traits\TenantScoped;
 use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 

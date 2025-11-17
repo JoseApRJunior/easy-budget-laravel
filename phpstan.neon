@@ -2,16 +2,21 @@ parameters:
     level: 5
     paths:
     - app
+    - bootstrap
     - config
     - database
     - routes
-    - bootstrap
+    - public
+    - resources
+    - routes
     bootstrapFiles:
         - bootstrap/app.php
     scanDirectories:
-        - app/Interfaces
+        - app/Contracts/Interfaces
         - app/Enums
         - app/Support
         - app/Models
     excludePaths:
         - old-system/
+        - node_modules
+        - vendor

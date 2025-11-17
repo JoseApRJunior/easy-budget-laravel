@@ -9,7 +9,6 @@ use App\Http\Requests\SupportContactRequest;
 use App\Services\Domain\SupportService;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
 
 /**
  * Controller para gerenciamento da página de suporte

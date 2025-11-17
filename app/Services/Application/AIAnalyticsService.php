@@ -44,7 +44,7 @@ class AIAnalyticsService
     /**
      * Visão geral do negócio
      */
-    private function getBusinessOverview(): array
+    public function getBusinessOverview(): array
     {
         $currentMonth = Carbon::now();
         $lastMonth = Carbon::now()->subMonth();
@@ -87,7 +87,7 @@ class AIAnalyticsService
     /**
      * Tendências de negócio
      */
-    private function getBusinessTrends(): array
+    public function getBusinessTrends(): array
     {
         $last6Months = collect(range(0, 5))->map(function ($i) {
             $date = Carbon::now()->subMonths($i);
@@ -118,7 +118,7 @@ class AIAnalyticsService
     /**
      * Previsões baseadas em IA
      */
-    private function getPredictions(): array
+    public function getPredictions(): array
     {
         $historicalData = $this->getHistoricalData(12); // 12 meses
         
@@ -134,7 +134,7 @@ class AIAnalyticsService
     /**
      * Sugestões de melhorias para o negócio
      */
-    private function getBusinessSuggestions(): array
+    public function getBusinessSuggestions(): array
     {
         $suggestions = [];
 
@@ -209,7 +209,7 @@ class AIAnalyticsService
     /**
      * Métricas de performance
      */
-    private function getPerformanceMetrics(): array
+    public function getPerformanceMetrics(): array
     {
         $currentMonth = Carbon::now();
 
@@ -226,7 +226,7 @@ class AIAnalyticsService
     /**
      * Insights sobre clientes
      */
-    private function getCustomerInsights(): array
+    public function getCustomerInsights(): array
     {
         return [
             'demographics' => $this->analyzeCustomerDemographics(),
@@ -240,7 +240,7 @@ class AIAnalyticsService
     /**
      * Saúde financeira
      */
-    private function getFinancialHealth(): array
+    public function getFinancialHealth(): array
     {
         return [
             'cash_flow' => $this->analyzeCashFlow(),
@@ -254,7 +254,7 @@ class AIAnalyticsService
     /**
      * Eficiência operacional
      */
-    private function getOperationalEfficiency(): array
+    public function getOperationalEfficiency(): array
     {
         return [
             'resource_utilization' => $this->analyzeResourceUtilization(),

@@ -7,7 +7,6 @@ namespace App\Mail;
 use App\Mail\Concerns\AbstractBaseConfirmationEmail;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\Infrastructure\LinkService;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 

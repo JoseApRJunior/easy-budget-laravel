@@ -9,8 +9,6 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\Application\FileUploadService;
 use App\Services\Domain\SettingsService;
 use App\Services\Domain\UserService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 

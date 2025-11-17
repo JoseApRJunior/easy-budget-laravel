@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\PlanSubscription;
 use App\Models\Provider;
@@ -12,8 +13,8 @@ use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use App\Models\UserRole;
+use App\Models\UserSettings;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,6 +24,24 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property string $name
+ * @property string $email
+ * @property string|null $password
+ * @property string|null $google_id
+ * @property string|null $avatar
+ * @property array|null $google_data
+ * @property bool $is_active
+ * @property string|null $logo
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property array|null $extra_links
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, TenantScoped, Notifiable, SoftDeletes;

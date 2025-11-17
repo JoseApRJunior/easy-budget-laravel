@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\DocumentVerificationService;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\View;
 
 class DocumentVerificationController extends Controller
 {

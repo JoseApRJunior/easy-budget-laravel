@@ -30,6 +30,8 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\MercadoPagoWebhookController;
+use App\Http\Controllers\Admin\FinancialControlController;
+use App\Http\Controllers\Admin\EnterpriseController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes group
@@ -356,6 +358,26 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin' ] )->g
 
     // Settings
     Route::get( '/settings', [ SettingsController::class, 'admin' ] )->name( 'settings' );
+
+    // Enterprise Management
+    Route::prefix( 'enterprises' )->name( 'enterprises.' )->group( function () {
+        Route::get( '/', [ EnterpriseController::class, 'index' ] )->name( 'index' );
+        Route::get( '/data', [ EnterpriseController::class, 'data' ] )->name( 'data' );
+        Route::get( '/{tenant}', [ EnterpriseController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{tenant}/edit', [ EnterpriseController::class, 'edit' ] )->name( 'edit' );
+        Route::get( '/{tenant}/financial-data', [ EnterpriseController::class, 'financialData' ] )->name( 'financial-data' );
+        Route::post( '/{tenant}', [ EnterpriseController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{tenant}', [ EnterpriseController::class, 'destroy' ] )->name( 'destroy' );
+    } );
+
+    // Financial Control
+    Route::prefix( 'financial' )->name( 'financial.' )->group( function () {
+        Route::get( '/', [ FinancialControlController::class, 'index' ] )->name( 'index' );
+        Route::get( '/reports', [ FinancialControlController::class, 'reports' ] )->name( 'reports' );
+        Route::get( '/reports/export', [ FinancialControlController::class, 'exportReports' ] )->name( 'reports.export' );
+        Route::get( '/providers/{tenant}/details', [ FinancialControlController::class, 'providerDetails' ] )->name( 'providers.details' );
+        Route::get( '/budget-alerts', [ FinancialControlController::class, 'budgetAlerts' ] )->name( 'budget-alerts' );
+    } );
 } );
 
 // Settings routes group

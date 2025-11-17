@@ -1,0 +1,110 @@
+parameters:
+    level: 8
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - bootstrap
+    bootstrapFiles:
+        - bootstrap/app.php
+        - bootstrap/cache/packages.php
+        - bootstrap/cache/services.php
+    excludePaths:
+        - old-system/
+        - storage/
+        - node_modules/
+        - vendor/
+    
+    # Configurações básicas de nível 8
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    checkMissingCallableSignature: true
+    checkExplicitMixed: true
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    checkUninitializedProperties: true
+    checkMissingVarTagTypehint: true
+    checkMissingTypehints: true
+    checkUnusedThrows: true
+    checkNullables: true
+    checkThisOnly: true
+    checkUnionTypes: true
+    checkExplicitMixedMissingReturn: true
+    checkImplicitMixedMissingReturn: true
+    checkMissingReturn: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false
+    tipsOfTheDay: false
+    
+    # Configurações avançadas
+    reportMagicMethods: true
+    reportMagicProperties: true
+    reportStaticMethodSignatures: true
+    checkClassCaseSensitivity: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    requireParentConstructorCall: true
+    checkArgumentTypes: true
+    checkArgumentsPassedByReference: true
+    checkAstBug: true
+    checkClassConstant: true
+    checkComparisonOfDisparateTypes: true
+    checkConstantTypes: true
+    checkDivisionByZero: true
+    checkDynamicProperties: true
+    checkExtraArguments: true
+    checkFunctionArgumentTypes: true
+    checkIntegerRanges: true
+    checkLogicalAndChainedComparison: true
+    checkLogicalAndOfDisparateTypes: true
+    checkLogicalOrChainedComparison: true
+    checkLogicalOrOfDisparateTypes: true
+    checkPregMatch: true
+    checkReturnTypes: true
+    checkUnusedClassConstant: true
+    checkUnusedClosureUse: true
+    checkUnusedIgnoredError: true
+    checkVariableTypes: true
+    inferPrivatePropertyTypeFromConstructor: true
+    polluteScopeWithAlwaysIterableForeach: false
+    polluteScopeWithLoopInitialAssignments: false
+    reportMaybes: true
+    reportMaybesInPropertyPhpDocTypes: true
+    reportWrongPhpDocTypeInVarTag: true
+    
+    scanFiles:
+        - app/Support/helpers.php
+    
+    ignoreErrors:
+        # Laravel specific ignores
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\.*::.*\(\)#'
+        - '#Access to an undefined property Illuminate\\Support\\Facades\\.*::\$.*#'
+        - '#Call to static method .*\(\) on an unknown class Illuminate\\Support\\Facades\\.*#'
+        - '#Instantiated class Illuminate\\Support\\Facades\\.* not found#'
+        - '#Parameter \$.* of method .*::.*\(\) has invalid type Illuminate\\Support\\Facades\\.*#'
+        - '#Property .*::\$.* has unknown class Illuminate\\Support\\Facades\\.* as its type#'
+        - '#Return type of method .*::.*\(\) has invalid type Illuminate\\Support\\Facades\\.*#'
+        - '#Unable to resolve the template type .* in call to method Illuminate\\Support\\Facades\\.*::.*\(\)#'
+        
+        # Model specific ignores
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\.*::.*\(\)#'
+        - '#Call to undefined method Illuminate\\Database\\Eloquent\\Builder::.*\(\)#'
+        - '#Method App\\Models\\.*::.*\(\) has no return type specified#'
+        - '#Method App\\Models\\.*::.*\(\) has parameter \$.* with no type specified#'
+        
+        # Service container specific
+        - '#Call to method .*\(\) on an unknown class App\\Services\\.*#'
+        - '#Parameter \$.* of method .*::.*\(\) has invalid type App\\Services\\.*#'
+        
+        # Dynamic properties
+        - '#Access to an undefined property#'
+        - '#Call to an undefined method#'
+        
+        # Mixed types (for now)
+        - '#Mixed assignment#'
+        - '#Method .*::.*\(\) has parameter \$.* with no type specified#'
+        - '#Method .*::.*\(\) has no return type specified#'
+        - '#Property .*::\$.* has no type specified#'
+        - '#Unable to resolve the template type .*#'

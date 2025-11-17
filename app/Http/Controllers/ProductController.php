@@ -10,10 +10,7 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
 use Exception;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 /**
  * Controller para gestão de produtos - Interface Web
