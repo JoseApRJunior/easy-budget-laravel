@@ -18,6 +18,8 @@
                     @include( 'partials.settings.tabs.notifications' )
                     @include( 'partials.settings.tabs.security' )
                     @include( 'partials.settings.tabs.integration' )
+                    @include( 'partials.settings.tabs.customization' )
+                    @include( 'partials.settings.tabs.provider' )
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Admin\EnterpriseService;
 use App\Models\Tenant;
 use App\Models\User;

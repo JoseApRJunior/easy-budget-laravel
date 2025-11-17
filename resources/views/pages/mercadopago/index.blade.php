@@ -9,7 +9,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/settings#integracao') }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Integração Mercado Pago</li>
                 </ol>
             </nav>
@@ -20,26 +21,17 @@
                 <h5 class="mb-0">Status da Conexão</h5>
             </div>
             <div class="card-body">
-                @if ( session('success') )
-                    <div class="alert alert-success d-flex align-items-center" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <div>{{ session('success') }}</div>
-                    </div>
-                @endif
-                @if ( session('error') )
-                    <div class="alert alert-danger d-flex align-items-center" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>{{ session('error') }}</div>
-                    </div>
-                @endif
+
                 @if ( $isConnected )
                     <div class="alert alert-success d-flex align-items-center" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i>
                         <div>
-                            <strong>Conectado!</strong> Sua conta Mercado Pago está vinculada com sucesso.
+                            <strong>Conta Mercado Pago conectada</strong>
                         </div>
                     </div>
-                    <p class="text-muted">Sua chave pública é: <span class="text-code">{{ $publicKey }}</span></p>
+                    @if(!empty($public_key))
+                        <p class="text-muted">Sua chave pública é: <span class="text-code">{{ $public_key }}</span></p>
+                    @endif
                     @if($expires_readable)
                         <p class="text-muted">Token expira em {{ $expires_readable }}.</p>
                     @endif

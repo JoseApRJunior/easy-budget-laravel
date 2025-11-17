@@ -26,8 +26,8 @@
             </a>
         @endif
         
-        <a href="{{ url( '/provider/change-password' ) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-key me-2"></i>Alterar Senha
+        <a href="{{ route('settings.index') }}?tab=seguranca" class="btn btn-outline-secondary">
+            <i class="bi bi-shield-lock me-2"></i>Configurações de Segurança
         </a>
     </div>
 </div>

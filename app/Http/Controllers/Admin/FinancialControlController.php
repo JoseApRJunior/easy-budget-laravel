@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Admin\FinancialControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +21,7 @@ class FinancialControlController extends Controller
         try {
             $financialOverview = $this->financialControlService->getFinancialOverview();
             $budgetAlerts = $this->financialControlService->getBudgetAlerts();
-            
+
             return view('admin.financial.index', compact('financialOverview', 'budgetAlerts'));
         } catch (\Exception $e) {
             Log::error('Error loading financial control dashboard: ' . $e->getMessage());
@@ -36,7 +36,7 @@ class FinancialControlController extends Controller
     {
         try {
             $providerFinancialDetails = $this->financialControlService->getProviderFinancialDetails($tenantId);
-            
+
             return view('admin.financial.provider-details', compact('providerFinancialDetails'));
         } catch (\Exception $e) {
             Log::error('Error loading provider financial details for tenant ' . $tenantId . ': ' . $e->getMessage());
@@ -57,7 +57,7 @@ class FinancialControlController extends Controller
 
             $reports = $this->financialControlService->getFinancialReports($filters);
             $tenants = \App\Models\Tenant::all();
-            
+
             return view('admin.financial.reports', compact('reports', 'filters', 'tenants'));
         } catch (\Exception $e) {
             Log::error('Error loading financial reports: ' . $e->getMessage());
@@ -73,7 +73,7 @@ class FinancialControlController extends Controller
     {
         try {
             $budgetAlerts = $this->financialControlService->getBudgetAlerts();
-            
+
             return response()->json([
                 'success' => true,
                 'alerts' => $budgetAlerts
@@ -98,10 +98,10 @@ class FinancialControlController extends Controller
             ];
 
             $reports = $this->financialControlService->getFinancialReports($filters);
-            
+
             // Generate CSV content
             $csvContent = $this->generateCsvReport($reports);
-            
+
             return response($csvContent, 200, [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="financial_report_' . date('Y-m-d') . '.csv"'
@@ -118,26 +118,26 @@ class FinancialControlController extends Controller
     private function generateCsvReport(array $reports): string
     {
         $csv = "Relatório Financeiro - " . date('d/m/Y') . "\n\n";
-        
+
         // Revenue by period
         $csv .= "Receita por Período\n";
         $csv .= "Data;Total\n";
         foreach ($reports['revenue_by_period'] as $revenue) {
             $csv .= $revenue['date'] . ";" . number_format($revenue['total'], 2, ',', '.') . "\n";
         }
-        
+
         $csv .= "\nCustos por Categoria\n";
         $csv .= "Categoria;Total\n";
         foreach ($reports['costs_by_category'] as $category => $amount) {
             $csv .= ucfirst($category) . ";" . number_format($amount, 2, ',', '.') . "\n";
         }
-        
+
         $csv .= "\nMétodos de Pagamento\n";
         $csv .= "Método;Quantidade;Total\n";
         foreach ($reports['payment_method_analysis'] as $method) {
             $csv .= $method['payment_method'] . ";" . $method['count'] . ";" . number_format($method['total'], 2, ',', '.') . "\n";
         }
-        
+
         return $csv;
     }
 

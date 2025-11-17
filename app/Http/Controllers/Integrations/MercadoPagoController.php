@@ -50,14 +50,14 @@ class MercadoPagoController extends Controller
         $state = (string) $request->get( 'state' );
 
         if ( empty( $code ) ) {
-            return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'error', 'Código de autorização inválido' );
+            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Código de autorização inválido' );
         }
 
         $tenantId = auth()->user()->tenant_id;
 
         $exchange = $oauth->exchangeCode( $code );
         if ( !$exchange->isSuccess() ) {
-            return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'error', 'Falha na troca de tokens' );
+            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha na troca de tokens' );
         }
 
         $data    = $exchange->getData();
@@ -65,7 +65,7 @@ class MercadoPagoController extends Controller
         $refresh = $encryption->encryptStringLaravel( (string) ( $data[ 'refresh_token' ] ?? '' ) );
 
         if ( !$access->isSuccess() ) {
-            return redirect()->route( 'provider.integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar access token' );
+            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar access token' );
         }
         if ( !$refresh->isSuccess() ) {
             return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar refresh token' );
@@ -130,4 +130,38 @@ class MercadoPagoController extends Controller
         return redirect()->route('integrations.mercadopago.index')->with('success', 'Tokens renovados com sucesso');
     }
 
+    public function testConnection( EncryptionService $encryption ): \Illuminate\Http\JsonResponse
+    {
+        $tenantId = auth()->user()->tenant_id;
+        $cred = ProviderCredential::where('tenant_id', $tenantId)->where('payment_gateway', 'mercadopago')->first();
+
+        $accessToken = '';
+        if ($cred && $cred->access_token_encrypted) {
+            $dr = $encryption->decryptStringLaravel((string)$cred->access_token_encrypted);
+            if ($dr->isSuccess()) {
+                $accessToken = (string)($dr->getData()['decrypted'] ?? '');
+            }
+        }
+        if ($accessToken === '') {
+            $accessToken = (string) (config('services.mercadopago.access_token') ?? env('MERCADO_PAGO_ACCESS_TOKEN', ''));
+        }
+
+        if ($accessToken === '') {
+            return response()->json([
+                'success' => false,
+                'error' => 'Access token não encontrado nas credenciais do provider nem no .env',
+            ], 400);
+        }
+
+        $me = \Illuminate\Support\Facades\Http::withToken($accessToken)->get('https://api.mercadopago.com/users/me');
+        $pm = \Illuminate\Support\Facades\Http::withToken($accessToken)->get('https://api.mercadopago.com/payment_methods');
+
+        $result = [
+            'success' => $me->ok() && $pm->ok(),
+            'users_me' => $me->ok() ? $me->json() : ['status' => $me->status(), 'error' => $me->body()],
+            'payment_methods' => $pm->ok() ? $pm->json() : ['status' => $pm->status(), 'error' => $pm->body()],
+        ];
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
 }

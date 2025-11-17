@@ -45,7 +45,7 @@
 -  Access Token -- APP_USR-8033813323717594-012808-61400e3663ecf4a3531ef36a0348f0a4-2168782349
 -  Client ID -- 8033813323717594
 -  Client Secret -- 2YbPmVE5CRdCdmCD54xjMos3SGhm2zRN
-
+- MERCADO_PAGO_WEBHOOK_SECRET=36be9ecebf504cddcd78b2a8025d4a8f1eab4784e2bca5d6b07f59183b0fbfba
 
 ### Usuário 2
 
@@ -64,23 +64,3 @@
 -  Senha: 4jHJnroEr1
 -  Data de Nascimento: 20/12/2024
 -  País: Brasil
-
-# Public Key
-
--  APP_USR-6c185a87-38d1-4c82-996b-25cf50290a62
-
-# Access Token
-
--  APP_USR-8033813323717594-012808-61400e3663ecf4a3531ef36a0348f0a4-2168782349
-
-# Assinatura secreta
-
--  e6a600602bd0fd40f10c9fe2674a4fe80bdc91b17ae460f803cf1d4a918849f4
-
-# Client ID
-
--  8033813323717594
-
-# Client Secret
-
--  2YbPmVE5CRdCdmCD54xjMos3SGhm2zRN

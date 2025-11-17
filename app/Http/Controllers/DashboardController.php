@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\AuditLog;
 use App\Services\ChartService;
 use App\Services\MetricsService;

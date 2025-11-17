@@ -38,6 +38,12 @@ class MercadoPagoWebhookService
             $mappedStatus = $this->mapMercadoPagoStatus( $status );
             $method       = $payment->payment_method_id ?? 'ticket';
 
+            $existingInv = PaymentMercadoPagoInvoice::where('payment_id', (string)$paymentId)->first();
+            if ( $existingInv && $existingInv->status === $mappedStatus ) {
+                Log::info('mp_invoice_webhook_no_change', ['payment_id' => $paymentId, 'status' => $mappedStatus]);
+                return [ 'success' => true ];
+            }
+
             PaymentMercadoPagoInvoice::updateOrCreate(
                 [ 'payment_id' => (string) $paymentId, 'tenant_id' => $invoice->tenant_id, 'invoice_id' => $invoice->id ],
                 [
@@ -72,6 +78,12 @@ class MercadoPagoWebhookService
 
             $subscription = $planSubId ? PlanSubscription::find( (int) $planSubId ) : null;
             $mappedStatus = $this->mapMercadoPagoStatus( $status );
+
+            $existingPlan = PaymentMercadoPagoPlan::where('payment_id', (string)$paymentId)->first();
+            if ( $existingPlan && $existingPlan->status === $mappedStatus ) {
+                Log::info('mp_plan_webhook_no_change', ['payment_id' => $paymentId, 'status' => $mappedStatus]);
+                return [ 'success' => true ];
+            }
 
             PaymentMercadoPagoPlan::updateOrCreate(
                 [ 'payment_id' => (string) $paymentId, 'plan_subscription_id' => (int) ( $planSubId ?? 0 ) ],

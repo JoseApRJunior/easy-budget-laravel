@@ -1,7 +1,7 @@
 @props( [ 'type', 'message' ] )
 
 @php
-    $baseClasses = 'alert alert-dismissible fade show';
+    $baseClasses = 'alert alert-dismissible fade show py-1 px-2';
 
     $typeClasses = [
         'error'   => 'alert-danger',
@@ -25,9 +25,8 @@
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" {{ $attributes->merge( [ 'class' => $baseClasses . ' ' . $alertClass ] ) }} role="alert">
         <div class="d-flex align-items-center">
             <i class="bi {{ $iconClass }} me-2"></i>
-            <div class="flex-grow-1">{!! $message !!}</div>
-            <button @click="show = false" type="button" class="btn-close" data-bs-dismiss="alert"
-                aria-label="Fechar"></button>
+            <div class="flex-grow-1 small">{!! $message !!}</div>
+            <button @click="show = false" type="button" data-bs-dismiss="alert" class="m-0 p-0 ms-2 align-self-center" style="line-height:1; font-size:.875rem; cursor:pointer; color:#dc3545; background:transparent; border:0; outline:0; box-shadow:none;" aria-label="Fechar">×</button>
         </div>
     </div>
 </div>

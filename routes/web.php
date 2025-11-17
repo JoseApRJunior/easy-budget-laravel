@@ -500,4 +500,5 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
         Route::get('/mercadopago/callback', [ IntegrationsMercadoPagoController::class, 'callback' ])->name('mercadopago.callback');
         Route::post('/mercadopago/disconnect', [ IntegrationsMercadoPagoController::class, 'disconnect' ])->name('mercadopago.disconnect');
         Route::post('/mercadopago/refresh', [ IntegrationsMercadoPagoController::class, 'refresh' ])->name('mercadopago.refresh');
+        Route::get('/mercadopago/test', [ IntegrationsMercadoPagoController::class, 'testConnection' ])->name('mercadopago.test');
     });

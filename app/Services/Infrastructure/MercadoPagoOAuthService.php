@@ -17,7 +17,7 @@ class MercadoPagoOAuthService
         $clientId = config( 'services.mercadopago.client_id' );
         $redirect = urlencode( config( 'services.mercadopago.redirect_uri' ) );
         $base     = 'https://auth.mercadopago.com/authorization';
-        $params   = "?client_id={$clientId}&response_type=code&platform_id=mp&redirect_uri={$redirect}&state={$state}";
+        $params   = "?client_id={$clientId}&response_type=code&redirect_uri={$redirect}&state={$state}";
         return $base . $params;
     }
 
