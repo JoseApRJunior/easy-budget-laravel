@@ -23,6 +23,7 @@ return Application::configure( basePath: dirname( __DIR__ ) )
             'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
             'provider'        => \App\Http\Middleware\ProviderMiddleware::class,
             'admin'           => \App\Http\Middleware\AdminMiddleware::class,
+            'monitoring'    => \App\Http\Middleware\MonitoringMiddleware::class,
         ] );
 
         // Trust Cloudflare proxies for correct URL generation

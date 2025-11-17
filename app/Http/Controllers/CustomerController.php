@@ -14,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Controller para gestão de clientes - Interface Web
@@ -94,5 +95,41 @@ class CustomerController extends Controller
         return view('pages.customer.show', [
             'customer' => $customer->load(['commonData', 'contact', 'address']),
         ]);
+    }
+
+    /**
+     * Dashboard de clientes
+     */
+    public function dashboard(Request $request): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $tenantId = (int) ($user->tenant_id ?? 0);
+
+        $total = Customer::where('tenant_id', $tenantId)->count();
+
+        $activeQuery = Customer::where('tenant_id', $tenantId);
+        if (Schema::hasColumn('customers', 'is_active')) {
+            $activeQuery->where('is_active', true);
+        } elseif (Schema::hasColumn('customers', 'status')) {
+            $activeQuery->where('status', 'active');
+        }
+        $active = $activeQuery->count();
+        $inactive = $total > 0 ? max(0, $total - $active) : 0;
+
+        $recent = Customer::where('tenant_id', $tenantId)
+            ->latest()
+            ->limit(10)
+            ->with(['commonData', 'contact'])
+            ->get();
+
+        $stats = [
+            'total_customers' => $total,
+            'active_customers' => $active,
+            'inactive_customers' => $inactive,
+            'recent_customers' => $recent,
+        ];
+
+        return view('pages.customer.dashboard', compact('stats'));
     }
 }

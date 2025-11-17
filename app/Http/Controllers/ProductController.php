@@ -238,7 +238,7 @@ class ProductController extends Controller
      *
      * Exibe métricas e atalhos rápidos, seguindo o padrão do dashboard de clientes.
      */
-    public function dashboard(): View
+    public function dashboard()
     {
         try {
             // Total de produtos

@@ -10,7 +10,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url('/settings#integracao') }}">Configurações</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/settings') }}">Configurações</a></li>
                     <li class="breadcrumb-item active">Integração Mercado Pago</li>
                 </ol>
             </nav>

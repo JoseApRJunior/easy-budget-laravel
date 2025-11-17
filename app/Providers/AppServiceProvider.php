@@ -23,8 +23,9 @@ use App\Policies\SchedulePolicy;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Services\Application\Auth\SocialAuthenticationService;
-use App\Services\Application\UserRegistrationService;
 use App\Services\Infrastructure\OAuth\GoogleOAuthClient;
+use App\Services\AlertService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -77,6 +78,13 @@ class AppServiceProvider extends ServiceProvider
 
             };
         } );
+
+        // Bindings para serviços de alertas e notificações
+        $this->app->singleton(AlertService::class, function ($app) {
+            return new AlertService($app->make(NotificationService::class));
+        });
+
+        $this->app->singleton(NotificationService::class);
     }
 
     public function boot()

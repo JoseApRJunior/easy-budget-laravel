@@ -114,7 +114,7 @@ Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAc
 
 // Provider routes group
 // Routes for provider users with auth, verified, and provider middlewares
-Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider' ] )->group( function () {
+Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider', 'monitoring' ] )->group( function () {
     // Dashboard
     Route::get( '/dashboard', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
 
@@ -335,7 +335,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
 // Admin routes group
 // Routes for admin users with auth and admin middlewares
-Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin' ] )->group( function () {
+Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'monitoring' ] )->group( function () {
     // Dashboard
     Route::get( '/', [ HomeController::class, 'admin' ] )->name( 'index' );
     Route::get( '/dashboard', [ DashboardController::class, 'index' ] )->name( 'dashboard' );

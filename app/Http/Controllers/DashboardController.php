@@ -24,10 +24,10 @@ class DashboardController extends Controller
     /**
      * Dashboard principal
      */
-    public function index(): \Illuminate\View\View
+    public function index(Request $request): View
     {
         $userId = Auth::id();
-        $period = $request->get( 'period', 'month' );
+        $period = $request->get('period', 'month');
 
         // Obter dados iniciais com cache curto para boa UX
         $cacheKey = "dashboard.initial.{$userId}.{$period}";
@@ -42,7 +42,7 @@ class DashboardController extends Controller
             ];
         } );
 
-        return view( 'dashboard.index', [
+        return view('dashboard.index', [
             'metrics'            => $dashboardData[ 'metrics' ],
             'charts'             => $dashboardData[ 'charts' ],
             'recentTransactions' => $dashboardData[ 'recent_activities' ],

@@ -73,7 +73,7 @@ class PublicTenantSeeder extends Seeder
             [
                 'id'                => self::PUBLIC_TENANT_ID,
                 'tenant_id'         => $tenant->id,
-                'email'             => 'tenantpublic@easybudget.com.br',
+                'email'             => 'tenantpublic@easybudget.net.br',
                 'password'          => Hash::make( 'AdminPassword1@' ),
                 'is_active'         => true,
                 'email_verified_at' => now(),
