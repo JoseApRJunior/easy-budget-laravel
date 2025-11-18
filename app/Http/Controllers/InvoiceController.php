@@ -11,6 +11,7 @@ use App\Http\Requests\InvoiceStoreFromBudgetRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
 use App\Models\Budget;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\Domain\CustomerService;
 use App\Services\Domain\InvoiceService;
@@ -53,8 +54,8 @@ class InvoiceController extends Controller
         }
 
         $invoices = $result->getData();
-        
-        return view('invoices.index', [
+
+        return view('pages.invoice.index', [
             'invoices'      => $invoices,
             'filters'       => $filters,
             'statusOptions' => InvoiceStatus::cases(),
@@ -64,6 +65,51 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function dashboard(Request $request): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $tenantId = (int)($user->tenant_id ?? 0);
+
+        $total = Invoice::where('tenant_id', $tenantId)->count();
+        $paid = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PAID->value)->count();
+        $pending = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PENDING->value)->count();
+        $overdue = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::OVERDUE->value)->count();
+        $cancelled = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::CANCELLED->value)->count();
+
+        $totalBilled = (float) Invoice::where('tenant_id', $tenantId)->sum('total');
+        $totalReceived = (float) Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PAID->value)->sum('transaction_amount');
+        $totalPending = (float) Invoice::where('tenant_id', $tenantId)->whereIn('status', [InvoiceStatus::PENDING->value, InvoiceStatus::OVERDUE->value])->sum('total');
+
+        $statusBreakdown = [
+            'PENDENTE' => [ 'count' => $pending, 'color' => InvoiceStatus::PENDING->getColor() ],
+            'VENCIDA' => [ 'count' => $overdue, 'color' => InvoiceStatus::OVERDUE->getColor() ],
+            'PAGA' => [ 'count' => $paid, 'color' => InvoiceStatus::PAID->getColor() ],
+            'CANCELADA' => [ 'count' => $cancelled, 'color' => InvoiceStatus::CANCELLED->getColor() ],
+        ];
+
+        $recent = Invoice::where('tenant_id', $tenantId)
+            ->latest('created_at')
+            ->limit(10)
+            ->with(['customer.commonData','service'])
+            ->get();
+
+        $stats = [
+            'total_invoices' => $total,
+            'paid_invoices' => $paid,
+            'pending_invoices' => $pending,
+            'overdue_invoices' => $overdue,
+            'cancelled_invoices' => $cancelled,
+            'total_billed' => $totalBilled,
+            'total_received' => $totalReceived,
+            'total_pending' => $totalPending,
+            'status_breakdown' => $statusBreakdown,
+            'recent_invoices' => $recent,
+        ];
+
+        return view('pages.invoice.dashboard', compact('stats'));
+    }
+
     /**
      * Exibe formulário de criação de fatura.
      */
@@ -71,13 +117,14 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
-        return view('invoices.create', [
+        $products = Product::byTenant((int)($user->tenant_id ?? 0))->active()->orderBy('name')->get();
+        return view('pages.invoice.create', [
             'service'       => null,
             'customers'     => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
                 ? $this->customerService->listCustomers($user->tenant_id)->getData()
                 : [],
             'services'      => [],
+            'products'      => $products,
             'statusOptions' => InvoiceStatus::cases()
         ]);
     }
@@ -97,7 +144,7 @@ class InvoiceController extends Controller
 
         $invoice = $result->getData();
 
-        return redirect()->route('invoices.show', $invoice->code)
+        return redirect()->route('provider.invoices.show', $invoice->code)
             ->with('success', 'Fatura criada com sucesso!');
     }
 
@@ -114,7 +161,7 @@ class InvoiceController extends Controller
             'payments'
         ]);
 
-        return view('invoices.show', [
+        return view('pages.invoice.show', [
             'invoice' => $invoice
         ]);
     }
@@ -126,14 +173,14 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $invoice->load([
             'invoiceItems.product',
             'customer',
             'service'
         ]);
 
-        return view('invoices.edit', [
+        return view('pages.invoice.edit', [
             'invoice'       => $invoice,
             'customers'     => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
                 ? $this->customerService->listCustomers($user->tenant_id)->getData()
@@ -151,7 +198,7 @@ class InvoiceController extends Controller
         $data = $request->validated();
         $invoice->update($data);
 
-        return redirect()->route('invoices.show', $invoice->code)
+        return redirect()->route('provider.invoices.show', $invoice->code)
             ->with('success', 'Fatura atualizada com sucesso!');
     }
 
@@ -162,7 +209,7 @@ class InvoiceController extends Controller
     {
         $invoice->delete();
 
-        return redirect()->route('invoices.index')
+        return redirect()->route('provider.invoices.index')
             ->with('success', 'Fatura excluída com sucesso!');
     }
 
@@ -177,7 +224,7 @@ class InvoiceController extends Controller
 
         $invoice->update(['status' => $request->input('status')]);
 
-        return redirect()->route('invoices.show', $invoice->code)
+        return redirect()->route('provider.invoices.show', $invoice->code)
             ->with('success', 'Status da fatura alterado com sucesso!');
     }
 
@@ -188,13 +235,13 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $budget->load([
             'customer.commonData',
             'services.serviceItems.product'
         ]);
 
-        return view('invoices.create-from-budget', [
+        return view('pages.invoice.create-from-budget', [
             'budget'           => $budget,
             'alreadyBilled'    => 0,
             'remainingBalance' => 0,
@@ -203,6 +250,91 @@ class InvoiceController extends Controller
                 : [],
             'statusOptions'    => InvoiceStatus::cases()
         ]);
+    }
+
+    /**
+     * Create invoice from service (Nova funcionalidade do sistema antigo)
+     */
+    public function createFromService(string $serviceCode): View|RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        try {
+            // Gerar dados da fatura a partir do serviço
+            $result = $this->invoiceService->generateInvoiceDataFromService($serviceCode);
+            
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->with('error', $result->getMessage());
+            }
+
+            $invoiceData = $result->getData();
+
+            // Verificar se já existe fatura para este serviço
+            if ($this->invoiceService->checkExistingInvoiceForService($invoiceData['service_id'])) {
+                return redirect()->route('provider.invoices.index')
+                    ->with('error', 'Já existe uma fatura para este serviço.');
+            }
+
+            return view('pages.invoice.create-from-service', [
+                'invoiceData' => $invoiceData,
+                'serviceCode' => $serviceCode,
+                'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
+                    ? $this->customerService->listCustomers($user->tenant_id)->getData()
+                    : [],
+                'statusOptions' => InvoiceStatus::cases()
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Erro ao criar fatura a partir do serviço', [
+                'service_code' => $serviceCode,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erro ao processar solicitação. Tente novamente.');
+        }
+    }
+
+    /**
+     * Store invoice from service (Nova funcionalidade do sistema antigo)
+     */
+    public function storeFromService(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'service_code' => 'required|string|exists:services,code',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+        ]);
+
+        try {
+            $result = $this->invoiceService->createInvoiceFromService(
+                $request->input('service_code'),
+                $request->only(['issue_date', 'due_date'])
+            );
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result->getMessage());
+            }
+
+            $invoice = $result->getData();
+
+            return redirect()->route('provider.invoices.show', $invoice->code)
+                ->with('success', 'Fatura gerada com sucesso a partir do serviço!');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao salvar fatura a partir do serviço', [
+                'service_code' => $request->input('service_code'),
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erro ao processar fatura. Tente novamente.');
+        }
     }
 
     /**
@@ -220,7 +352,7 @@ class InvoiceController extends Controller
         }
 
         $invoice = $result->getData();
-        return redirect()->route('invoices.show', $invoice->code)
+        return redirect()->route('provider.invoices.show', $invoice->code)
             ->with('success', 'Fatura criada a partir do orçamento!');
     }
 

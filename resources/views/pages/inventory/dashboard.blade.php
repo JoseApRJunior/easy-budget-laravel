@@ -241,5 +241,26 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="bi bi-link-45deg me-2"></i>Atalhos</h3>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <a href="{{ route('provider.inventory.index') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-archive me-2"></i>Listar Estoque
+                    </a>
+                    <a href="{{ route('provider.inventory.index', ['low_stock' => 1]) }}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Baixo Estoque
+                    </a>
+                    <a href="{{ route('provider.inventory.report') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-clipboard-data me-2"></i>Relatório de Inventário
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

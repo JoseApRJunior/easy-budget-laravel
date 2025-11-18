@@ -11,25 +11,12 @@
                         <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-secondary btn-sm mr-2">
                             <i class="fas fa-chart-bar"></i> Dashboard
                         </a>
-                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-info btn-sm mr-2">
+                        <a href="{{ route('provider.inventory.report', ['type' => 'movements']) }}" class="btn btn-info btn-sm mr-2">
                             <i class="fas fa-exchange-alt"></i> Movimentações
                         </a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown">
-                                <i class="fas fa-plus"></i> Novo Movimento
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('provider.inventory.entry') }}">
-                                    <i class="fas fa-arrow-down text-success"></i> Entrada
-                                </a>
-                                <a class="dropdown-item" href="{{ route('provider.inventory.exit') }}">
-                                    <i class="fas fa-arrow-up text-danger"></i> Saída
-                                </a>
-                                <a class="dropdown-item" href="{{ route('provider.inventory.adjust') }}">
-                                    <i class="fas fa-sliders-h text-warning"></i> Ajuste
-                                </a>
-                            </div>
-                        </div>
+                        <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus"></i> Novo Movimento
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -159,12 +146,20 @@
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <button type="button" class="btn btn-primary btn-sm"
-                                                        onclick="showMovements({{ $inventory->id }})"
+                                                        onclick="showMovements({{ $product->id }})"
                                                         title="Ver Movimentações">
                                                     <i class="fas fa-list"></i>
                                                 </button>
-                                                <a href="{{ route('provider.inventory.adjust', ['product_id' => $product->id]) }}"
-                                                   class="btn btn-warning btn-sm" title="Ajustar Estoque">
+                                                <a href="{{ route('provider.inventory.entry', $product->id) }}"
+                                                   class="btn btn-success btn-sm" title="Entrada de Estoque">
+                                                    <i class="fas fa-arrow-down"></i>
+                                                </a>
+                                                <a href="{{ route('provider.inventory.exit', $product->id) }}"
+                                                   class="btn btn-warning btn-sm" title="Saída de Estoque">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                </a>
+                                                <a href="{{ route('provider.inventory.adjust', $product->id) }}"
+                                                   class="btn btn-secondary btn-sm" title="Ajustar Estoque">
                                                     <i class="fas fa-sliders-h"></i>
                                                 </a>
                                                 <a href="{{ route('provider.products.show', $product->id) }}"
@@ -246,15 +241,10 @@
         $('#movementsModal').modal('show');
 
         $.ajax({
-            url: '{{ route("provider.inventory.movements") }}',
+            url: '{{ url('/provider/inventory') }}/' + inventoryId + '/movements',
             method: 'GET',
-            data: { inventory_id: inventoryId },
             success: function(response) {
-                if (response.html) {
-                    $('#movementsContent').html(response.html);
-                } else {
-                    $('#movementsContent').html('<div class="alert alert-info">Nenhuma movimentação encontrada.</div>');
-                }
+                $('#movementsContent').html(response);
             },
             error: function() {
                 $('#movementsContent').html('<div class="alert alert-danger">Erro ao carregar movimentações.</div>');

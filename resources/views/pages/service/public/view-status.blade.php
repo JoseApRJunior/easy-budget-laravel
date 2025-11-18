@@ -126,7 +126,7 @@
                                             </h6>
                                             <p class="mb-3">Por favor, informe o status atual deste serviço:</p>
 
-                                            <form method="POST" action="{{ route( 'provider.services.public.choose-status' ) }}">
+                                            <form method="POST" action="{{ route( 'services.public.choose-status' ) }}">
                                                 @csrf
                                                 <input type="hidden" name="service_code" value="{{ $service->code }}">
                                                 <input type="hidden" name="token" value="{{ $token }}">
@@ -140,7 +140,7 @@
                                                             <option value="">Selecione o status...</option>
                                                             @foreach( [ \App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED ] as $status )
                                                                 <option value="{{ $status->value }}" {{ old( 'service_status_id' ) == $status->value ? 'selected' : '' }}>
-                                                                    {{ $status->getName() }}
+                                                                    {{ $status->getDescription() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
@@ -165,7 +165,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route( 'provider.services.public.print', [ 'code' => $service->code, 'token' => $token ] ) }}"
+                                    <a href="{{ route( 'services.public.print', [ 'code' => $service->code, 'token' => $token ] ) }}"
                                         class="btn btn-outline-secondary" target="_blank">
                                         <i class="bi bi-printer me-2"></i>
                                         Imprimir

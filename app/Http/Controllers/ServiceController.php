@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
@@ -49,6 +49,40 @@ class ServiceController extends Controller
     }
 
     /**
+     * Dashboard de serviços
+     */
+    public function dashboard(Request $request): View
+    {
+        $tenantId = (int) (auth()->user()->tenant_id ?? 0);
+
+        $total = Service::where('tenant_id', $tenantId)->count();
+        $approved = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::APPROVED->value)->count();
+        $pending = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::PENDING->value)->count();
+        $cancelled = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::CANCELLED->value)->count();
+        $rejected = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::REJECTED->value)->count();
+        $completed = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::COMPLETED->value)->count();
+
+        $statusBreakdown = compact('pending','approved','rejected','cancelled','completed');
+
+        $recent = Service::where('tenant_id', $tenantId)
+            ->latest('created_at')
+            ->limit(10)
+            ->with(['budget.customer.commonData','category'])
+            ->get();
+
+        $stats = [
+            'total_services' => $total,
+            'approved_services' => $approved,
+            'pending_services' => $pending,
+            'rejected_services' => $rejected,
+            'status_breakdown' => $statusBreakdown,
+            'recent_services' => $recent,
+        ];
+
+        return view('pages.service.dashboard', compact('stats'));
+    }
+
+    /**
      * Show the form for creating a new service.
      */
     public function create( ?string $budgetCode = null ): View
@@ -68,7 +102,7 @@ class ServiceController extends Controller
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),
                 'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatusEnum::cases()
+                'statusOptions' => ServiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -103,7 +137,7 @@ class ServiceController extends Controller
             return view( 'services.index', [
                 'services'      => $services,
                 'filters'       => $filters,
-                'statusOptions' => ServiceStatusEnum::cases(),
+                'statusOptions' => ServiceStatus::cases(),
                 'categories'    => $this->categoryService->getActive()
             ] );
 
@@ -169,9 +203,9 @@ class ServiceController extends Controller
                     'required',
                     'string',
                     'in:' . implode( ',', [
-                        ServiceStatusEnum::APPROVED->value,
-                        ServiceStatusEnum::REJECTED->value,
-                        ServiceStatusEnum::CANCELLED->value
+                        ServiceStatus::APPROVED->value,
+                        ServiceStatus::REJECTED->value,
+                        ServiceStatus::CANCELLED->value
                     ] )
                 ],
                 'reason'            => 'nullable|string|max:500'
@@ -337,7 +371,7 @@ class ServiceController extends Controller
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),
                 'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatusEnum::cases()
+                'statusOptions' => ServiceStatus::cases()
             ] );
 
         } catch ( Exception $e ) {
@@ -382,7 +416,7 @@ class ServiceController extends Controller
     public function change_status( string $code, Request $request ): RedirectResponse
     {
         $request->validate( [
-            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, ServiceStatusEnum::cases() ) ) ]
+            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, ServiceStatus::cases() ) ) ]
         ] );
 
         try {

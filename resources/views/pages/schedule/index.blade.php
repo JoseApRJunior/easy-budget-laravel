@@ -1,4 +1,4 @@
-@extends( 'layouts.admin' )
+@extends( 'layouts.app' )
 
 @section( 'title', 'Agendamentos' )
 
@@ -22,13 +22,13 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <label for="start_date">Data Inicial:</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control"
-                                        value="{{ $startDate ?? date( 'Y-m-d' ) }}">
+                                    <input type="date" name="date_from" id="start_date" class="form-control"
+                                        value="{{ request('date_from', date('Y-m-d')) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="end_date">Data Final:</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control"
-                                        value="{{ $endDate ?? date( 'Y-m-d', strtotime( '+30 days' ) ) }}">
+                                    <input type="date" name="date_to" id="end_date" class="form-control"
+                                        value="{{ request('date_to', date('Y-m-d', strtotime('+30 days'))) }}">
                                 </div>
                                 <div class="col-md-4 d-flex align-items-end">
                                     <button type="submit" class="btn btn-primary">
@@ -57,46 +57,27 @@
                                         <tr>
                                             <td>{{ $schedule->id }}</td>
                                             <td>
-                                                <a href="{{ route( 'services.show', $schedule->service ) }}">
-                                                    {{ $schedule->service->title }}
+                                                <a href="{{ route( 'provider.services.show', $schedule->service->code ) }}">
+                                                    {{ $schedule->service->description ?? $schedule->service->code }}
                                                 </a>
                                             </td>
                                             <td>
-                                                <a href="{{ route( 'customers.show', $schedule->service->customer ) }}">
-                                                    {{ $schedule->service->customer->name }}
+                                                <a href="{{ route( 'provider.customers.show', $schedule->service->customer->id ) }}">
+                                                    {{ $schedule->service->customer->commonData->first_name ?? $schedule->service->customer->name ?? 'N/A' }}
                                                 </a>
                                             </td>
-                                            <td>{{ $schedule->start_date_time->format( 'd/m/Y H:i' ) }}</td>
-                                            <td>{{ $schedule->end_date_time->format( 'd/m/Y H:i' ) }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($schedule->end_date_time)->format('d/m/Y H:i') }}</td>
                                             <td>{{ $schedule->location ?? 'Não definido' }}</td>
                                             <td>
-                                                @if( $schedule->start_date_time > now() )
-                                                    <span class="badge badge-primary">Agendado</span>
-                                                @elseif( $schedule->end_date_time < now() )
-                                                    <span class="badge badge-success">Concluído</span>
-                                                @else
-                                                    <span class="badge badge-warning">Em Andamento</span>
-                                                @endif
+                                                <span class="badge bg-secondary">{{ ucfirst(str_replace('_',' ', $schedule->status ?? 'scheduled')) }}</span>
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route( 'provider.schedules.show', $schedule ) }}"
+                                                    <a href="{{ route( 'provider.schedules.show', $schedule->id ) }}"
                                                         class="btn btn-sm btn-info">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route( 'provider.schedules.edit', $schedule ) }}"
-                                                        class="btn btn-sm btn-warning">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <form action="{{ route( 'provider.schedules.destroy', $schedule ) }}" method="POST"
-                                                        class="d-inline">
-                                                        @csrf
-                                                        @method( 'DELETE' )
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

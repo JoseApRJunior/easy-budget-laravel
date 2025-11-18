@@ -42,8 +42,10 @@ class BudgetShare extends Model
         'permissions',
         'expires_at',
         'is_active',
+        'status',
         'access_count',
         'last_accessed_at',
+        'rejected_at',
     ];
 
     /**
@@ -56,8 +58,10 @@ class BudgetShare extends Model
         'permissions'      => 'array',
         'expires_at'       => 'datetime',
         'is_active'        => 'boolean',
+        'status'           => 'string',
         'access_count'     => 'integer',
         'last_accessed_at' => 'datetime',
+        'rejected_at'      => 'datetime',
         'created_at'       => 'immutable_datetime',
         'updated_at'       => 'datetime',
     ];
@@ -77,6 +81,7 @@ class BudgetShare extends Model
             'permissions'     => 'nullable|array',
             'expires_at'      => 'nullable|date|after:now',
             'is_active'       => 'required|boolean',
+            'status'          => 'required|string|in:active,rejected,expired',
             'access_count'    => 'required|integer|min:0',
         ];
     }

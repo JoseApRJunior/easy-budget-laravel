@@ -106,29 +106,20 @@ class CustomerController extends Controller
         $user = Auth::user();
         $tenantId = (int) ($user->tenant_id ?? 0);
 
-        $total = Customer::where('tenant_id', $tenantId)->count();
-
-        $activeQuery = Customer::where('tenant_id', $tenantId);
-        if (Schema::hasColumn('customers', 'is_active')) {
-            $activeQuery->where('is_active', true);
-        } elseif (Schema::hasColumn('customers', 'status')) {
-            $activeQuery->where('status', 'active');
+        // Usa o CustomerService para obter estatísticas de forma consistente
+        $result = $this->customerService->getCustomerStats($tenantId);
+        
+        if (!$result->isSuccess()) {
+            // Em caso de erro, retorna estatísticas vazias
+            $stats = [
+                'total_customers' => 0,
+                'active_customers' => 0,
+                'inactive_customers' => 0,
+                'recent_customers' => collect(),
+            ];
+        } else {
+            $stats = $result->getData();
         }
-        $active = $activeQuery->count();
-        $inactive = $total > 0 ? max(0, $total - $active) : 0;
-
-        $recent = Customer::where('tenant_id', $tenantId)
-            ->latest()
-            ->limit(10)
-            ->with(['commonData', 'contact'])
-            ->get();
-
-        $stats = [
-            'total_customers' => $total,
-            'active_customers' => $active,
-            'inactive_customers' => $inactive,
-            'recent_customers' => $recent,
-        ];
 
         return view('pages.customer.dashboard', compact('stats'));
     }

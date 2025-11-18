@@ -1,246 +1,328 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\ScheduleRequest;
 use App\Models\Schedule;
-use App\Models\Service;
-use App\Repositories\ScheduleRepository;
+use App\Models\User;
 use App\Services\Domain\ScheduleService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
+/**
+ * Controller para gerenciamento de agendamentos
+ * 
+ * Este controller gerencia o sistema de agendamentos de serviços,
+ * permitindo que prestadores gerenciem seus horários disponíveis
+ * e clientes agendem serviços.
+ */
 class ScheduleController extends Controller
 {
-    /**
-     * @var ScheduleService
-     */
-    protected $scheduleService;
+    public function __construct(
+        private ScheduleService $scheduleService,
+    ) {}
 
     /**
-     * @var ScheduleRepository
+     * Lista os agendamentos do usuário logado
      */
-    protected $scheduleRepository;
-
-    /**
-     * ScheduleController constructor.
-     *
-     * @param ScheduleService $scheduleService
-     * @param ScheduleRepository $scheduleRepository
-     */
-    public function __construct( ScheduleService $scheduleService, ScheduleRepository $scheduleRepository )
+    public function index(Request $request): View
     {
-        $this->scheduleService    = $scheduleService;
-        $this->scheduleRepository = $scheduleRepository;
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $filters = [
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'status' => $request->input('status'),
+            'provider_id' => $user->isProvider() ? $user->id : $request->input('provider_id'),
+            'customer_id' => $user->isCustomer() ? $user->id : $request->input('customer_id'),
+        ];
+
+        $result = $this->scheduleService->getSchedules($filters);
+        
+        return view('pages.schedule.index', [
+            'schedules' => $this->getServiceData($result, collect()),
+            'filters' => $filters
+        ]);
+    }
+
+    public function dashboard(Request $request): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $tenantId = (int) ($user->tenant_id ?? 0);
+
+        $total = Schedule::where('tenant_id', $tenantId)->count();
+
+        $hasStatus = Schema::hasColumn('schedules', 'status');
+
+        $pending = $hasStatus
+            ? Schedule::where('tenant_id', $tenantId)->where('status', 'pending')->count()
+            : Schedule::where('tenant_id', $tenantId)->where('start_date_time', '>', now())->count();
+
+        $confirmed = $hasStatus
+            ? Schedule::where('tenant_id', $tenantId)->where('status', 'confirmed')->count()
+            : 0;
+
+        $completed = $hasStatus
+            ? Schedule::where('tenant_id', $tenantId)->where('status', 'completed')->count()
+            : Schedule::where('tenant_id', $tenantId)->where('end_date_time', '<', now())->count();
+
+        $cancelled = $hasStatus
+            ? Schedule::where('tenant_id', $tenantId)->where('status', 'cancelled')->count()
+            : 0;
+
+        $noShow = $hasStatus
+            ? Schedule::where('tenant_id', $tenantId)->where('status', 'no_show')->count()
+            : 0;
+
+        $upcomingCount = Schedule::where('tenant_id', $tenantId)
+            ->when($hasStatus, function($q){
+                $q->where('status', '!=', 'cancelled');
+            })
+            ->where('start_date_time', '>=', now())
+            ->count();
+
+        $recentUpcoming = Schedule::where('tenant_id', $tenantId)
+            ->when($hasStatus, function($q){
+                $q->where('status', '!=', 'cancelled');
+            })
+            ->where('start_date_time', '>=', now()->subDays(1))
+            ->orderBy('start_date_time')
+            ->limit(10)
+            ->with(['service.customer', 'service'])
+            ->get();
+
+        $statusBreakdown = [
+            'pending' => [ 'count' => $pending, 'color' => '#F59E0B' ],
+            'confirmed' => [ 'count' => $confirmed, 'color' => '#3B82F6' ],
+            'completed' => [ 'count' => $completed, 'color' => '#10B981' ],
+            'cancelled' => [ 'count' => $cancelled, 'color' => '#EF4444' ],
+            'no_show' => [ 'count' => $noShow, 'color' => '#6B7280' ],
+        ];
+
+        $stats = [
+            'total_schedules' => $total,
+            'pending_schedules' => $pending,
+            'confirmed_schedules' => $confirmed,
+            'completed_schedules' => $completed,
+            'cancelled_schedules' => $cancelled,
+            'no_show_schedules' => $noShow,
+            'upcoming_schedules' => $upcomingCount,
+            'status_breakdown' => $statusBreakdown,
+            'recent_upcoming' => $recentUpcoming,
+        ];
+
+        return view('pages.schedule.dashboard', compact('stats'));
     }
 
     /**
-     * Display a listing of schedules.
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * Exibe o calendário de disponibilidade de um prestador
      */
-    public function index( Request $request )
+    public function calendar(Request $request, ?string $providerId = null): View
     {
-        $startDate = $request->get( 'start_date', Carbon::now()->startOfMonth()->format( 'Y-m-d' ) );
-        $endDate   = $request->get( 'end_date', Carbon::now()->endOfMonth()->format( 'Y-m-d' ) );
-
-        $schedules         = $this->scheduleRepository->getByDateRange( $startDate, $endDate );
-        $upcomingSchedules = $this->scheduleService->getUpcomingSchedules( 5 );
-
-        return view( 'pages.schedule.index', compact( 'schedules', 'upcomingSchedules', 'startDate', 'endDate' ) );
-    }
-
-    /**
-     * Display schedules in calendar format.
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     */
-    public function calendar( Request $request )
-    {
-        $month     = $request->get( 'month', Carbon::now()->format( 'Y-m' ) );
-        $startDate = Carbon::parse( $month . '-01' )->startOfMonth();
-        $endDate   = Carbon::parse( $month . '-01' )->endOfMonth();
-
-        $schedules = $this->scheduleRepository->getByDateRange(
-            $startDate->format( 'Y-m-d' ),
-            $endDate->format( 'Y-m-d' ),
-        );
-
-        return view( 'pages.schedule.calendar', compact( 'schedules', 'month' ) );
-    }
-
-    /**
-     * Show the form for creating a new schedule.
-     *
-     * @param Service $service
-     * @return \Illuminate\View\View
-     */
-    public function create( Service $service )
-    {
-        return view( 'pages.schedule.create', compact( 'service' ) );
-    }
-
-    /**
-     * Store a newly created schedule.
-     *
-     * @param Request $request
-     * @param Service $service
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store( Request $request, Service $service )
-    {
-        $validated = $request->validate( [
-            'start_date_time' => 'required|date|after:now',
-            'end_date_time'   => 'required|date|after:start_date_time',
-            'location'        => 'nullable|string|max:500',
-        ] );
-
-        $result = $this->scheduleService->handleScheduledStatus( $service, $validated );
-
-        if ( $result->isSuccess() ) {
-            return redirect()->route( 'services.show', $service )
-                ->with( 'success', 'Agendamento criado com sucesso!' );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        // Se não for especificado um prestador, usa o usuário logado (se for prestador)
+        $targetProviderId = $providerId ?? ($user->isProvider() ? $user->id : null);
+        
+        if (!$targetProviderId) {
+            abort(404, 'Prestador não encontrado');
         }
 
-        return redirect()->back()
-            ->withInput()
-            ->with( 'error', $result->getMessage() );
+        $month = $request->input('month', now()->format('Y-m'));
+        
+        $result = $this->scheduleService->getAvailabilityCalendar($targetProviderId, $month);
+        
+        return view('pages.schedule.calendar', [
+            'calendar' => $this->getServiceData($result, []),
+            'providerId' => $targetProviderId,
+            'month' => $month
+        ]);
     }
 
     /**
-     * Display the specified schedule.
-     *
-     * @param Schedule $schedule
-     * @return \Illuminate\View\View
+     * Exibe o formulário de criação de agendamento
      */
-    public function show( Schedule $schedule )
+    public function create(Request $request): View
     {
-        $this->authorize( 'view', $schedule );
-
-        $schedule->load( [ 'service', 'service.customer', 'userConfirmationToken' ] );
-
-        return view( 'pages.schedule.show', compact( 'schedule' ) );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $providers = $this->scheduleService->getAvailableProviders();
+        
+        return view('pages.schedule.create', [
+            'providers' => $this->getServiceData($providers, collect()),
+            'selectedProvider' => $request->input('provider_id'),
+            'selectedDate' => $request->input('date'),
+            'selectedTime' => $request->input('time')
+        ]);
     }
 
     /**
-     * Show the form for editing the specified schedule.
-     *
-     * @param Schedule $schedule
-     * @return \Illuminate\View\View
+     * Cria um novo agendamento
      */
-    public function edit( Schedule $schedule )
+    public function store(ScheduleRequest $request): RedirectResponse
     {
-        $this->authorize( 'update', $schedule );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        try {
+            $data = array_merge($request->validated(), [
+                'customer_id' => $user->isCustomer() ? $user->id : $request->input('customer_id'),
+                'created_by' => $user->id
+            ]);
 
-        $schedule->load( [ 'service', 'service.customer' ] );
+            $result = $this->scheduleService->createSchedule($data);
 
-        return view( 'pages.schedule.edit', compact( 'schedule' ) );
+            if ($result->isSuccess()) {
+                return $this->redirectSuccess(
+                    'schedules.index',
+                    'Agendamento criado com sucesso!'
+                );
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $this->getServiceErrorMessage($result, 'Erro ao criar agendamento'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erro ao criar agendamento: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Update the specified schedule in storage.
-     *
-     * @param Request $request
-     * @param Schedule $schedule
-     * @return \Illuminate\Http\RedirectResponse
+     * Exibe os detalhes de um agendamento
      */
-    public function update( Request $request, Schedule $schedule )
+    public function show(string $id): View
     {
-        $this->authorize( 'update', $schedule );
-
-        $validated = $request->validate( [
-            'start_date_time' => 'required|date|after:now',
-            'end_date_time'   => 'required|date|after:start_date_time',
-            'location'        => 'nullable|string|max:500',
-        ] );
-
-        $result = $this->scheduleService->updateScheduledToken( $schedule, $validated );
-
-        if ( $result->isSuccess() ) {
-            return redirect()->route( 'schedules.show', $schedule )
-                ->with( 'success', 'Agendamento atualizado com sucesso!' );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $result = $this->scheduleService->getSchedule($id);
+        
+        if (!$result->isSuccess()) {
+            abort(404, 'Agendamento não encontrado');
         }
 
-        return redirect()->back()
-            ->withInput()
-            ->with( 'error', $result->getMessage() );
-    }
-
-    /**
-     * Remove the specified schedule from storage.
-     *
-     * @param Schedule $schedule
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy( Schedule $schedule )
-    {
-        $this->authorize( 'delete', $schedule );
-
-        $result = $this->scheduleService->deleteSchedule( $schedule );
-
-        if ( $result->isSuccess() ) {
-            return redirect()->route( 'provider.schedules.index' )
-                ->with( 'success', 'Agendamento excluído com sucesso!' );
+        $schedule = $result->getData();
+        
+        // Verifica se o usuário tem permissão para ver este agendamento
+        if (!$user->isAdmin() && 
+            $schedule->customer_id !== $user->id && 
+            $schedule->provider_id !== $user->id) {
+            abort(403, 'Acesso não autorizado');
         }
 
-        return redirect()->back()
-            ->with( 'error', $result->getMessage() );
+        return view('pages.schedule.show', [
+            'schedule' => $schedule
+        ]);
     }
 
     /**
-     * Get schedule data for AJAX calendar.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Atualiza o status de um agendamento
      */
-    public function getCalendarData( Request $request )
+    public function updateStatus(Request $request, string $id): JsonResponse
     {
-        $start = $request->get( 'start' );
-        $end   = $request->get( 'end' );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $request->validate([
+            'status' => 'required|in:confirmed,cancelled,completed,no_show'
+        ]);
 
-        $schedules = $this->scheduleRepository->getByDateRange( $start, $end );
+        try {
+            $result = $this->scheduleService->updateScheduleStatus(
+                $id,
+                $request->input('status'),
+                $user->id
+            );
+            
+            return $this->jsonResponse($result);
 
-        $events = $schedules->map( function ( $schedule ) {
-            return [
-                'id'              => $schedule->id,
-                'title'           => $schedule->service->title . ' - ' . $schedule->service->customer->name,
-                'start'           => $schedule->start_date_time->format( 'Y-m-d\TH:i:s' ),
-                'end'             => $schedule->end_date_time->format( 'Y-m-d\TH:i:s' ),
-                'location'        => $schedule->location,
-                'url'             => route( 'schedules.show', $schedule->id ),
-                'backgroundColor' => '#007bff',
-                'borderColor'     => '#0056b3',
-            ];
-        } );
-
-        return response()->json( $events );
+        } catch (\Exception $e) {
+            return $this->jsonError('Erro ao atualizar status: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Check for scheduling conflicts.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Cancela um agendamento
      */
-    public function checkConflicts( Request $request )
+    public function cancel(string $id): RedirectResponse
     {
-        $serviceId     = $request->get( 'service_id' );
-        $startDateTime = $request->get( 'start_date_time' );
-        $endDateTime   = $request->get( 'end_date_time' );
-        $excludeId     = $request->get( 'exclude_id' );
+        /** @var User $user */
+        $user = Auth::user();
+        
+        try {
+            $result = $this->scheduleService->cancelSchedule($id, $user->id);
+            
+            return $this->redirectWithServiceResult(
+                'schedules.index',
+                $result,
+                'Agendamento cancelado com sucesso!'
+            );
 
-        $hasConflict = $this->scheduleRepository->hasConflict(
-            $serviceId,
-            $startDateTime,
-            $endDateTime,
-            $excludeId,
-        );
-
-        return response()->json( [
-            'has_conflict' => $hasConflict,
-        ] );
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erro ao cancelar agendamento: ' . $e->getMessage());
+        }
     }
 
+    /**
+     * Verifica disponibilidade de horários para agendamento
+     */
+    public function checkAvailability(Request $request): JsonResponse
+    {
+        $request->validate([
+            'provider_id' => 'required|exists:users,id',
+            'date' => 'required|date|after:today',
+            'duration' => 'nullable|integer|min:30|max:480', // 30 minutos a 8 horas
+        ]);
+
+        try {
+            $result = $this->scheduleService->checkAvailability(
+                $request->input('provider_id'),
+                $request->input('date'),
+                $request->input('duration', 60)
+            );
+            
+            return $this->jsonResponse($result);
+
+        } catch (\Exception $e) {
+            return $this->jsonError('Erro ao verificar disponibilidade: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtém os horários disponíveis de um prestador em uma data específica
+     */
+    public function getAvailableSlots(Request $request): JsonResponse
+    {
+        $request->validate([
+            'provider_id' => 'required|exists:users,id',
+            'date' => 'required|date|after:today',
+            'service_duration' => 'nullable|integer|min:30|max:480',
+        ]);
+
+        try {
+            $result = $this->scheduleService->getAvailableTimeSlots(
+                $request->input('provider_id'),
+                $request->input('date'),
+                $request->input('service_duration', 60)
+            );
+            
+            return $this->jsonResponse($result);
+
+        } catch (\Exception $e) {
+            return $this->jsonError('Erro ao obter horários disponíveis: ' . $e->getMessage());
+        }
+    }
 }

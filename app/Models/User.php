@@ -16,6 +16,7 @@ use App\Models\UserRole;
 use App\Models\UserSettings;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -192,8 +193,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->where( 'is_active', true );
     }
 
-    public function hasRole( string $role ): bool
+    public function hasRole( $role ): bool
     {
+        if ( is_array( $role ) ) {
+            return $this->hasAnyRole( $role );
+        }
         return $this->getTenantScopedRoles()->where( 'name', $role )->exists();
     }
 
@@ -213,6 +217,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasAnyRole( array $roles ): bool
     {
         return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole( 'admin' );
+    }
+
+    public function isProvider(): bool
+    {
+        return $this->hasRole( 'provider' );
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->hasRole( 'customer' );
     }
 
     public function getEmailForVerification(): string

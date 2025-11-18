@@ -225,7 +225,7 @@
             <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-sm btn-outline-primary">
               <i class="bi bi-people me-2"></i>Listar Clientes
             </a>
-            <a href="{{ url( '/provider/reports/customers' ) }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route( 'provider.reports.customers' ) }}" class="btn btn-sm btn-outline-secondary">
               <i class="bi bi-file-earmark-text me-2"></i>Relatório de Clientes
             </a>
           </div>

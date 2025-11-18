@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Infrastructure;
+namespace App\Services\Shared;
 
 use App\Enums\OperationStatus;
 use App\Support\ServiceResult;

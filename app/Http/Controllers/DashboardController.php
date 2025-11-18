@@ -94,8 +94,8 @@ class DashboardController extends Controller
                 'description' => 'Registrar nova entrada financeira',
                 'icon'        => 'plus-circle',
                 'color'       => 'green',
-                'route'       => 'transactions.create',
-                'params'      => [ 'type' => 'receita' ]
+                'route'       => 'provider.invoices.create',
+                'params'      => []
             ],
             [
                 'id'          => 'nova_despesa',
@@ -103,8 +103,8 @@ class DashboardController extends Controller
                 'description' => 'Registrar nova saída financeira',
                 'icon'        => 'dash-circle',
                 'color'       => 'red',
-                'route'       => 'transactions.create',
-                'params'      => [ 'type' => 'despesa' ]
+                'route'       => 'provider.invoices.create',
+                'params'      => []
             ],
             [
                 'id'          => 'ver_relatorios',

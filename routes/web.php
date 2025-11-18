@@ -3,6 +3,7 @@ use App\Http\Controllers\AIAnalyticsController;
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\BudgetShareController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentVerificationController;
@@ -32,6 +33,18 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\Admin\FinancialControlController;
 use App\Http\Controllers\Admin\EnterpriseController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\GlobalSettingsController;
+use App\Http\Controllers\Admin\PlanManagementController;
+use App\Http\Controllers\Admin\TenantManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\CategoryManagementController;
+use App\Http\Controllers\Admin\ActivityManagementController;
+use App\Http\Controllers\Admin\ProfessionManagementController;
+use App\Http\Controllers\Admin\CustomerManagementController;
+use App\Http\Controllers\Admin\ProviderManagementController;
+use App\Http\Controllers\Admin\SystemReportsController;
+use App\Http\Controllers\Admin\AIMetricsController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes group
@@ -62,6 +75,11 @@ Route::group( [], function () {
         Route::get( '/choose-budget-status/code/{code}/token/{token}', [ BudgetController::class, 'chooseBudgetStatus' ] )->name( 'choose-status' );
         Route::post( '/choose-budget-status', [ BudgetController::class, 'chooseBudgetStatusStore' ] )->name( 'choose-status.store' );
         Route::get( '/print/code/{code}/token/{token}', [ BudgetController::class, 'print' ] )->name( 'print' );
+        
+        // Budget sharing public routes
+        Route::get( '/shared/{token}', [ BudgetShareController::class, 'access' ] )->name( 'shared.view' );
+        Route::post( '/shared/{token}/accept', [ BudgetShareController::class, 'approve' ] )->name( 'shared.accept' );
+        Route::post( '/shared/{token}/reject', [ BudgetShareController::class, 'rejectShare' ] )->name( 'shared.reject' );
     } );
 
     /**
@@ -212,13 +230,17 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Inventory
     Route::prefix( 'inventory' )->name( 'inventory.' )->group( function () {
+        Route::get( '/dashboard', [ InventoryController::class, 'dashboard' ] )->name( 'dashboard' );
         Route::get( '/', [ InventoryController::class, 'index' ] )->name( 'index' );
         Route::get( '/report', [ InventoryController::class, 'report' ] )->name( 'report' );
         Route::get( '/export', [ InventoryController::class, 'export' ] )->name( 'export' );
         Route::get( '/{product}', [ InventoryController::class, 'show' ] )->name( 'show' );
         Route::get( '/{product}/adjust', [ InventoryController::class, 'adjust' ] )->name( 'adjust' );
         Route::post( '/{product}/adjust', [ InventoryController::class, 'storeAdjustment' ] )->name( 'adjust.store' );
-        
+        Route::get( '/{product}/movements', [ InventoryController::class, 'movements' ] )->name( 'movements' );
+        Route::get( '/{product}/entry', [ InventoryController::class, 'entry' ] )->name( 'entry' );
+        Route::get( '/{product}/exit', [ InventoryController::class, 'exit' ] )->name( 'exit' );
+
         // API routes
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/low-stock', [ InventoryController::class, 'lowStock' ])->name('low-stock');
@@ -248,6 +270,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Schedules
     Route::prefix( 'schedules' )->name( 'schedules.' )->group( function () {
+        Route::get( '/dashboard', [ ScheduleController::class, 'dashboard' ] )->name( 'dashboard' );
         Route::get( '/', [ ScheduleController::class, 'index' ] )->name( 'index' );
         Route::get( '/calendar', [ ScheduleController::class, 'calendar' ] )->name( 'calendar' );
         Route::get( '/create/{service}', [ ScheduleController::class, 'create' ] )->name( 'create' );
@@ -275,14 +298,29 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{budget}', [ BudgetController::class, 'destroy' ] )->name( 'destroy' );
         Route::get( '/{budget}/print', [ BudgetController::class, 'print' ] )->name( 'print' );
         Route::get( '/{budget}/services/create', [ ServiceController::class, 'create' ] )->name( 'services.create' );
+        
+        // Budget Sharing Routes
+        Route::prefix( 'shares' )->name( 'shares.' )->group( function () {
+            Route::get( '/dashboard', [ BudgetShareController::class, 'dashboard' ] )->name( 'dashboard' );
+            Route::get( '/', [ BudgetShareController::class, 'index' ] )->name( 'index' );
+            Route::post( '/', [ BudgetShareController::class, 'store' ] )->name( 'store' );
+            Route::get( '/{share}', [ BudgetShareController::class, 'show' ] )->name( 'show' );
+            Route::put( '/{share}', [ BudgetShareController::class, 'update' ] )->name( 'update' );
+            Route::delete( '/{share}', [ BudgetShareController::class, 'destroy' ] )->name( 'destroy' );
+            Route::post( '/{share}/regenerate', [ BudgetShareController::class, 'regenerateToken' ] )->name( 'regenerate' );
+            Route::post( '/{share}/revoke', [ BudgetShareController::class, 'revoke' ] )->name( 'revoke' );
+        } );
     } );
 
     // Invoices
     Route::prefix( 'invoices' )->name( 'invoices.' )->group( function () {
+        Route::get( '/dashboard', [ InvoiceController::class, 'dashboard' ] )->name( 'dashboard' );
         Route::get( '/', [ InvoiceController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ InvoiceController::class, 'create' ] )->name( 'create' );
         Route::get( '/budgets/{budget}/create', [ InvoiceController::class, 'createFromBudget' ] )->name( 'create.from-budget' );
+        Route::get( '/services/{serviceCode}/create', [ InvoiceController::class, 'createFromService' ] )->name( 'create.from-service' );
         Route::post( '/', [ InvoiceController::class, 'store' ] )->name( 'store' );
+        Route::post( '/store-from-service', [ InvoiceController::class, 'storeFromService' ] )->name( 'store.from-service' );
         Route::get( '/{code}', [ InvoiceController::class, 'show' ] )->name( 'show' );
         Route::get( '/{code}/edit', [ InvoiceController::class, 'edit' ] )->name( 'edit' );
         Route::put( '/{code}', [ InvoiceController::class, 'update' ] )->name( 'update' );
@@ -307,6 +345,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     // Reports
     Route::prefix( 'reports' )->name( 'reports.' )->group( function () {
         Route::get( '/', [ ReportController::class, 'index' ] )->name( 'index' );
+        Route::get( '/dashboard', [ ReportController::class, 'index' ] )->name( 'dashboard' );
         Route::get( '/download/{hash}', [ ReportController::class, 'download' ] )->name( 'download' );
         Route::get( '/financial', [ ReportController::class, 'financial' ] )->name( 'financial' );
         Route::get( '/budgets', [ ReportController::class, 'budgets' ] )->name( 'budgets' );
@@ -337,8 +376,8 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 // Routes for admin users with auth and admin middlewares
 Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'monitoring' ] )->group( function () {
     // Dashboard
-    Route::get( '/', [ HomeController::class, 'admin' ] )->name( 'index' );
-    Route::get( '/dashboard', [ DashboardController::class, 'index' ] )->name( 'dashboard' );
+    Route::get( '/', [ AdminDashboardController::class, 'index' ] )->name( 'index' );
+    Route::get( '/dashboard', [ AdminDashboardController::class, 'index' ] )->name( 'dashboard' );
 
     // Users
     Route::prefix( 'users' )->name( 'users.' )->group( function () {
@@ -379,6 +418,191 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'moni
         Route::get( '/providers/{tenant}/details', [ FinancialControlController::class, 'providerDetails' ] )->name( 'providers.details' );
         Route::get( '/budget-alerts', [ FinancialControlController::class, 'budgetAlerts' ] )->name( 'budget-alerts' );
     } );
+
+    // Monitoring (Admin)
+    Route::prefix('monitoring')->name('monitoring.')->group(function(){
+        Route::get('/', [ \App\Http\Controllers\Admin\MonitoringController::class, 'dashboard' ])->name('dashboard');
+        Route::get('/metrics', [ \App\Http\Controllers\Admin\MonitoringController::class, 'metrics' ])->name('metrics');
+        Route::get('/middleware', [ \App\Http\Controllers\Admin\MonitoringController::class, 'middlewareMetrics' ])->name('middleware');
+        Route::get('/api/metrics', [ \App\Http\Controllers\Admin\MonitoringController::class, 'apiMetrics' ])->name('api.metrics');
+    });
+
+    // Global Settings Management
+    Route::prefix('settings')->name('settings.')->group(function() {
+        Route::get('/global', [ GlobalSettingsController::class, 'index' ])->name('global');
+        Route::post('/general/update', [ GlobalSettingsController::class, 'updateGeneral' ])->name('general.update');
+        Route::post('/configuration/update', [ GlobalSettingsController::class, 'updateConfiguration' ])->name('configuration.update');
+        Route::post('/email/update', [ GlobalSettingsController::class, 'updateEmail' ])->name('email.update');
+        Route::post('/payment/update', [ GlobalSettingsController::class, 'updatePayment' ])->name('payment.update');
+        Route::post('/notifications/update', [ GlobalSettingsController::class, 'updateNotifications' ])->name('notifications.update');
+        Route::post('/ai/update', [ GlobalSettingsController::class, 'updateAIAnalytics' ])->name('ai.update');
+        Route::post('/backup/update', [ GlobalSettingsController::class, 'updateBackup' ])->name('backup.update');
+        Route::post('/email/test', [ GlobalSettingsController::class, 'testEmail' ])->name('email.test');
+        Route::post('/payment/test', [ GlobalSettingsController::class, 'testPayment' ])->name('payment.test');
+        Route::post('/clear-cache', [ GlobalSettingsController::class, 'clearCache' ])->name('clear-cache');
+        Route::get('/export', [ GlobalSettingsController::class, 'export' ])->name('export');
+        Route::post('/import', [ GlobalSettingsController::class, 'import' ])->name('import');
+    });
+
+    // Plan Management
+    Route::prefix('plans')->name('plans.')->group(function() {
+        Route::get('/', [ PlanManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ PlanManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ PlanManagementController::class, 'store' ])->name('store');
+        Route::get('/{plan}', [ PlanManagementController::class, 'show' ])->name('show');
+        Route::get('/{plan}/edit', [ PlanManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{plan}', [ PlanManagementController::class, 'update' ])->name('update');
+        Route::delete('/{plan}', [ PlanManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{plan}/toggle-status', [ PlanManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::post('/{plan}/duplicate', [ PlanManagementController::class, 'duplicate' ])->name('duplicate');
+        Route::get('/{plan}/subscribers', [ PlanManagementController::class, 'subscribers' ])->name('subscribers');
+        Route::get('/{plan}/history', [ PlanManagementController::class, 'history' ])->name('history');
+        Route::get('/{plan}/analytics', [ PlanManagementController::class, 'analytics' ])->name('analytics');
+        Route::get('/export/{format}', [ PlanManagementController::class, 'export' ])->name('export');
+    });
+
+    // Tenant Management
+    Route::prefix('tenants')->name('tenants.')->group(function() {
+        Route::get('/', [ TenantManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ TenantManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ TenantManagementController::class, 'store' ])->name('store');
+        Route::get('/{tenant}', [ TenantManagementController::class, 'show' ])->name('show');
+        Route::get('/{tenant}/edit', [ TenantManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{tenant}', [ TenantManagementController::class, 'update' ])->name('update');
+        Route::delete('/{tenant}', [ TenantManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{tenant}/suspend', [ TenantManagementController::class, 'suspend' ])->name('suspend');
+        Route::post('/{tenant}/activate', [ TenantManagementController::class, 'activate' ])->name('activate');
+        Route::post('/{tenant}/impersonate', [ TenantManagementController::class, 'impersonate' ])->name('impersonate');
+        Route::get('/{tenant}/analytics', [ TenantManagementController::class, 'analytics' ])->name('analytics');
+        Route::get('/{tenant}/billing', [ TenantManagementController::class, 'billing' ])->name('billing');
+    });
+
+    // User Management
+    Route::prefix('users')->name('users.')->group(function() {
+        Route::get('/', [ UserManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ UserManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ UserManagementController::class, 'store' ])->name('store');
+        Route::get('/{user}', [ UserManagementController::class, 'show' ])->name('show');
+        Route::get('/{user}/edit', [ UserManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{user}', [ UserManagementController::class, 'update' ])->name('update');
+        Route::delete('/{user}', [ UserManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{user}/block', [ UserManagementController::class, 'block' ])->name('block');
+        Route::post('/{user}/unblock', [ UserManagementController::class, 'unblock' ])->name('unblock');
+        Route::post('/{user}/impersonate', [ UserManagementController::class, 'impersonate' ])->name('impersonate');
+        Route::get('/{user}/activity', [ UserManagementController::class, 'activity' ])->name('activity');
+    });
+
+    // Category Management
+    Route::prefix('categories')->name('categories.')->group(function() {
+        Route::get('/', [ CategoryManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ CategoryManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ CategoryManagementController::class, 'store' ])->name('store');
+        Route::get('/{category}', [ CategoryManagementController::class, 'show' ])->name('show');
+        Route::get('/{category}/edit', [ CategoryManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{category}', [ CategoryManagementController::class, 'update' ])->name('update');
+        Route::delete('/{category}', [ CategoryManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{category}/toggle-status', [ CategoryManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::post('/{category}/duplicate', [ CategoryManagementController::class, 'duplicate' ])->name('duplicate');
+        Route::get('/export/{format}', [ CategoryManagementController::class, 'export' ])->name('export');
+        Route::get('/ajax/subcategories', [ CategoryManagementController::class, 'getSubcategories' ])->name('ajax.subcategories');
+    });
+
+    // Activity Management
+    Route::prefix('activities')->name('activities.')->group(function() {
+        Route::get('/', [ ActivityManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ ActivityManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ ActivityManagementController::class, 'store' ])->name('store');
+        Route::get('/{activity}', [ ActivityManagementController::class, 'show' ])->name('show');
+        Route::get('/{activity}/edit', [ ActivityManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{activity}', [ ActivityManagementController::class, 'update' ])->name('update');
+        Route::delete('/{activity}', [ ActivityManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{activity}/toggle-status', [ ActivityManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::post('/{activity}/duplicate', [ ActivityManagementController::class, 'duplicate' ])->name('duplicate');
+        Route::get('/export/{format}', [ ActivityManagementController::class, 'export' ])->name('export');
+        Route::get('/ajax/by-category', [ ActivityManagementController::class, 'getActivitiesByCategory' ])->name('ajax.by-category');
+        Route::get('/ajax/price', [ ActivityManagementController::class, 'getActivityPrice' ])->name('ajax.price');
+    });
+
+    // Profession Management
+    Route::prefix('professions')->name('professions.')->group(function() {
+        Route::get('/', [ ProfessionManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ ProfessionManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ ProfessionManagementController::class, 'store' ])->name('store');
+        Route::get('/{profession}', [ ProfessionManagementController::class, 'show' ])->name('show');
+        Route::get('/{profession}/edit', [ ProfessionManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{profession}', [ ProfessionManagementController::class, 'update' ])->name('update');
+        Route::delete('/{profession}', [ ProfessionManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{profession}/toggle-status', [ ProfessionManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::post('/{profession}/duplicate', [ ProfessionManagementController::class, 'duplicate' ])->name('duplicate');
+        Route::get('/export/{format}', [ ProfessionManagementController::class, 'export' ])->name('export');
+        Route::get('/ajax/by-type', [ ProfessionManagementController::class, 'getProfessionsByType' ])->name('ajax.by-type');
+    });
+
+    // Customer Management
+    Route::prefix('customers')->name('customers.')->group(function() {
+        Route::get('/', [ CustomerManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ CustomerManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ CustomerManagementController::class, 'store' ])->name('store');
+        Route::get('/{customer}', [ CustomerManagementController::class, 'show' ])->name('show');
+        Route::get('/{customer}/edit', [ CustomerManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{customer}', [ CustomerManagementController::class, 'update' ])->name('update');
+        Route::delete('/{customer}', [ CustomerManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{customer}/toggle-status', [ CustomerManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::get('/export/{format}', [ CustomerManagementController::class, 'export' ])->name('export');
+        Route::get('/ajax/by-tenant', [ CustomerManagementController::class, 'getCustomersByTenant' ])->name('ajax.by-tenant');
+    });
+
+    // Provider Management
+    Route::prefix('providers')->name('providers.')->group(function() {
+        Route::get('/', [ ProviderManagementController::class, 'index' ])->name('index');
+        Route::get('/create', [ ProviderManagementController::class, 'create' ])->name('create');
+        Route::post('/', [ ProviderManagementController::class, 'store' ])->name('store');
+        Route::get('/{provider}', [ ProviderManagementController::class, 'show' ])->name('show');
+        Route::get('/{provider}/edit', [ ProviderManagementController::class, 'edit' ])->name('edit');
+        Route::put('/{provider}', [ ProviderManagementController::class, 'update' ])->name('update');
+        Route::delete('/{provider}', [ ProviderManagementController::class, 'destroy' ])->name('destroy');
+        Route::post('/{provider}/toggle-status', [ ProviderManagementController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::get('/export/{format}', [ ProviderManagementController::class, 'export' ])->name('export');
+        Route::get('/ajax/by-tenant', [ ProviderManagementController::class, 'getProvidersByTenant' ])->name('ajax.by-tenant');
+    });
+
+    // System Reports
+    Route::prefix('reports')->name('reports.')->group(function() {
+        Route::get('/', [ SystemReportsController::class, 'index' ])->name('index');
+        Route::get('/financial', [ SystemReportsController::class, 'financial' ])->name('financial');
+        Route::get('/users', [ SystemReportsController::class, 'users' ])->name('users');
+        Route::get('/tenants', [ SystemReportsController::class, 'tenants' ])->name('tenants');
+        Route::get('/plans', [ SystemReportsController::class, 'plans' ])->name('plans');
+        Route::get('/system', [ SystemReportsController::class, 'system' ])->name('system');
+        Route::get('/export/{type}/{format}', [ SystemReportsController::class, 'export' ])->name('export');
+        Route::post('/generate', [ SystemReportsController::class, 'generate' ])->name('generate');
+    });
+
+    // Advanced Metrics Dashboard
+    Route::prefix('metrics')->name('metrics.')->group(function() {
+        Route::get('/', [ AdvancedMetricsController::class, 'index' ])->name('index');
+        Route::get('/realtime', [ AdvancedMetricsController::class, 'realtime' ])->name('realtime');
+        Route::get('/export', [ AdvancedMetricsController::class, 'export' ])->name('export');
+    });
+
+    // AI Metrics and Analytics
+    Route::prefix('ai')->name('ai.')->group(function() {
+        Route::get('/metrics', [ AIMetricsController::class, 'index' ])->name('metrics');
+        Route::get('/analytics', [ AIMetricsController::class, 'analytics' ])->name('analytics');
+        Route::get('/predictions', [ AIMetricsController::class, 'predictions' ])->name('predictions');
+        Route::get('/anomalies', [ AIMetricsController::class, 'anomalies' ])->name('anomalies');
+        Route::get('/insights', [ AIMetricsController::class, 'insights' ])->name('insights');
+        Route::post('/retrain', [ AIMetricsController::class, 'retrain' ])->name('retrain');
+        Route::get('/export/{type}', [ AIMetricsController::class, 'export' ])->name('export');
+    });
+
+    // Audit Logs
+    Route::prefix('audit')->name('audit.')->group(function() {
+        Route::get('/logs', [ \App\Http\Controllers\Admin\AuditController::class, 'index' ])->name('logs');
+        Route::get('/logs/{log}', [ \App\Http\Controllers\Admin\AuditController::class, 'show' ])->name('logs.show');
+        Route::get('/export', [ \App\Http\Controllers\Admin\AuditController::class, 'export' ])->name('logs.export');
+        Route::delete('/logs/{log}', [ \App\Http\Controllers\Admin\AuditController::class, 'destroy' ])->name('logs.destroy');
+    });
 } );
 
 // Settings routes group

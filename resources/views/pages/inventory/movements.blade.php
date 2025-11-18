@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route( 'provider.inventory.movements' ) }}" class="mb-4">
+                    <form method="GET" action="{{ route( 'provider.inventory.report', ['type' => 'movements'] ) }}" class="mb-4">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -84,7 +84,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route( 'provider.inventory.movements' ) }}" class="btn btn-secondary ml-2">
+                                        <a href="{{ route( 'provider.inventory.report', ['type' => 'movements'] ) }}" class="btn btn-secondary ml-2">
                                             <i class="fas fa-times"></i>
                                         </a>
                                         <button type="button" class="btn btn-success ml-2" onclick="exportMovements()">

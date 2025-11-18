@@ -10,8 +10,11 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\Customer;
+use App\Models\ServiceItem;
 use App\Repositories\InvoiceRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\NotificationService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +24,12 @@ use Illuminate\Support\Str;
 class InvoiceService extends AbstractBaseService
 {
     private InvoiceRepository $invoiceRepository;
+    private NotificationService $notificationService;
 
-    public function __construct( InvoiceRepository $invoiceRepository )
+    public function __construct( InvoiceRepository $invoiceRepository, NotificationService $notificationService )
     {
         $this->invoiceRepository = $invoiceRepository;
+        $this->notificationService = $notificationService;
     }
 
     public function findByCode( string $code, array $with = [] ): ServiceResult
@@ -649,6 +654,204 @@ class InvoiceService extends AbstractBaseService
         $path = 'storage/exports/' . tenant()->id . '/' . $filename;
         // Implementar lógica de export para CSV
         return $path;
+    }
+
+    /**
+     * Gera dados da fatura a partir de um serviço concluído (Lógica do Sistema Antigo)
+     */
+    public function generateInvoiceDataFromService(string $serviceCode): ServiceResult
+    {
+        try {
+            $service = Service::where('code', $serviceCode)
+                ->where('tenant_id', tenant()->id)
+                ->first();
+
+            if (!$service) {
+                return $this->error(
+                    OperationStatus::NOT_FOUND,
+                    'Serviço não encontrado.',
+                );
+            }
+
+            $customer = Customer::where('id', $service->customer_id)
+                ->where('tenant_id', tenant()->id)
+                ->first();
+
+            if (!$customer) {
+                return $this->error(
+                    OperationStatus::NOT_FOUND,
+                    'Cliente não encontrado.',
+                );
+            }
+
+            $serviceItems = ServiceItem::where('service_id', $service->id)
+                ->where('tenant_id', tenant()->id)
+                ->get();
+
+            $invoiceData = [
+                'customer_name'    => $customer->name,
+                'customer_details' => $customer,
+                'service_id'       => $service->id,
+                'service_code'     => $service->code,
+                'service_description' => $service->description,
+                'due_date'         => $service->due_date,
+                'items'            => $serviceItems,
+                'subtotal'         => (float) $service->total,
+                'discount'         => (float) $service->discount,
+                'total'            => (float) $service->total - (float) $service->discount,
+                'status'           => $service->status->value, // 'completed' ou 'partial'
+            ];
+
+            // Lógica para desconto em serviços parciais (do sistema antigo)
+            if ($service->status->value === 'partial') {
+                $partialDiscountPercentage = 0.90; // 10% de desconto
+                $invoiceData['discount'] += $invoiceData['total'] * (1 - $partialDiscountPercentage);
+                $invoiceData['total'] *= $partialDiscountPercentage;
+                $invoiceData['notes'] = "Fatura gerada com base na conclusão parcial do serviço. Valor ajustado.";
+            }
+
+            return $this->success($invoiceData, 'Dados da fatura gerados com sucesso');
+
+        } catch (Exception $e) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Falha ao gerar dados da fatura: ' . $e->getMessage(),
+                null,
+                $e,
+            );
+        }
+    }
+
+    /**
+     * Cria fatura a partir de um serviço concluído com validações do sistema antigo
+     */
+    public function createInvoiceFromService(string $serviceCode, array $additionalData = []): ServiceResult
+    {
+        return DB::transaction(function () use ($serviceCode, $additionalData) {
+            try {
+                // Verificar se o serviço existe
+                $service = Service::where('code', $serviceCode)
+                    ->where('tenant_id', tenant()->id)
+                    ->first();
+
+                if (!$service) {
+                    return $this->error(
+                        OperationStatus::NOT_FOUND,
+                        'Serviço de referência não encontrado para criar a fatura.',
+                    );
+                }
+
+                // Verificar se já existe fatura para este serviço
+                $existingInvoice = Invoice::where('tenant_id', tenant()->id)
+                    ->where('service_id', $service->id)
+                    ->first();
+
+                if ($existingInvoice) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        'Já existe uma fatura para este serviço.',
+                    );
+                }
+
+                // Gerar dados da fatura
+                $invoiceDataResult = $this->generateInvoiceDataFromService($serviceCode);
+                if (!$invoiceDataResult->isSuccess()) {
+                    return $invoiceDataResult;
+                }
+
+                $invoiceData = $invoiceDataResult->getData();
+
+                // Gerar código único seguindo padrão antigo
+                $lastCode = Invoice::where('tenant_id', tenant()->id)
+                    ->where('code', 'like', 'FAT-' . date('Ymd') . '%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+
+                $sequential = 1;
+                if ($lastCode && preg_match('/FAT-(\d{8})(\d{4})/', $lastCode->code, $matches)) {
+                    $sequential = (int) $matches[2] + 1;
+                }
+
+                $invoiceCode = 'FAT-' . date('Ymd') . str_pad((string) $sequential, 4, '0', STR_PAD_LEFT);
+
+                // Criar fatura
+                $invoice = Invoice::create([
+                    'tenant_id'     => tenant()->id,
+                    'service_id'    => $service->id,
+                    'customer_id'   => $service->customer_id,
+                    'code'          => $invoiceCode,
+                    'issue_date'    => $additionalData['issue_date'] ?? now(),
+                    'due_date'      => $invoiceData['due_date'] ?? now()->addDays(30),
+                    'total_amount'  => $invoiceData['total'],
+                    'status'        => InvoiceStatus::PENDING->value,
+                    'public_hash'   => bin2hex(random_bytes(32)), // 64 caracteres hexadecimais
+                    'notes'         => $invoiceData['notes'] ?? null,
+                ]);
+
+                // Criar itens da fatura a partir dos itens do serviço
+                foreach ($invoiceData['items'] as $serviceItem) {
+                    InvoiceItem::create([
+                        'tenant_id'  => tenant()->id,
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $serviceItem->product_id,
+                        'unit_price' => (float) $serviceItem->unit_value,
+                        'quantity'   => (float) $serviceItem->quantity,
+                        'total'      => (float) $serviceItem->total,
+                    ]);
+                }
+
+                // Criar token de confirmação
+                $user = $this->authUser();
+                if ($user) {
+                    $tokenService = app(\App\Services\Application\UserConfirmationTokenService::class);
+                    $tokenRes = $tokenService->createTokenWithGeneration($user, \App\Enums\TokenType::PAYMENT_VERIFICATION);
+                    if ($tokenRes->isSuccess()) {
+                        $tokenStr = (string)($tokenRes->getData()['token'] ?? '');
+                        $tokenRecord = \App\Models\UserConfirmationToken::where('token', $tokenStr)->first();
+                        if ($tokenRecord) {
+                            $invoice->update(['user_confirmation_token_id' => $tokenRecord->id]);
+                        }
+                    }
+                }
+
+                // Enviar notificação por email (se implementado)
+                try {
+                    $customer = Customer::find($service->customer_id);
+                    if ($customer && $customer->email) {
+                        // Aqui você pode implementar o envio de email
+                        // $this->notificationService->sendNewInvoiceNotification($invoice, $customer);
+                    }
+                } catch (Exception $e) {
+                    Log::warning('Falha ao enviar notificação de fatura', [
+                        'invoice_id' => $invoice->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+
+                return $this->success(
+                    $invoice->load(['customer', 'service', 'invoiceItems.product']),
+                    'Fatura gerada com sucesso a partir do serviço'
+                );
+
+            } catch (Exception $e) {
+                return $this->error(
+                    OperationStatus::ERROR,
+                    'Erro ao criar fatura a partir do serviço: ' . $e->getMessage(),
+                    null,
+                    $e,
+                );
+            }
+        });
+    }
+
+    /**
+     * Verifica se existe fatura para um serviço específico
+     */
+    public function checkExistingInvoiceForService(int $serviceId): bool
+    {
+        return Invoice::where('tenant_id', tenant()->id)
+            ->where('service_id', $serviceId)
+            ->exists();
     }
 
 }
