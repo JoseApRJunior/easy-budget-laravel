@@ -1,348 +1,332 @@
-@extends( 'layouts.app' )
+@extends('layouts.admin')
 
-@section( 'content' )
+@section('title', 'Movimentações de Estoque')
+
+@section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
+            <h1 class="mb-4">Movimentações de Estoque</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Inventário</a></li>
+                    <li class="breadcrumb-item active">Movimentações</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row">
+        <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">Movimentações de Inventário</h3>
+                <div class="card-header">
+                    <h3 class="card-title">Filtros</h3>
                     <div class="card-tools">
-                        <a href="{{ route( 'provider.inventory.dashboard' ) }}" class="btn btn-secondary btn-sm mr-2">
-                            <i class="fas fa-chart-bar"></i> Dashboard
-                        </a>
-                        <a href="{{ route( 'provider.inventory.index' ) }}" class="btn btn-primary btn-sm mr-2">
-                            <i class="fas fa-boxes"></i> Inventário
-                        </a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown">
-                                <i class="fas fa-plus"></i> Nova Movimentação
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route( 'provider.inventory.entry' ) }}">
-                                    <i class="fas fa-arrow-down text-success"></i> Entrada
-                                </a>
-                                <a class="dropdown-item" href="{{ route( 'provider.inventory.exit' ) }}">
-                                    <i class="fas fa-arrow-up text-danger"></i> Saída
-                                </a>
-                                <a class="dropdown-item" href="{{ route( 'provider.inventory.adjust' ) }}">
-                                    <i class="fas fa-sliders-h text-warning"></i> Ajuste
-                                </a>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route( 'provider.inventory.report', ['type' => 'movements'] ) }}" class="mb-4">
+                    <form method="GET" action="{{ route('inventory.movements') }}">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="product_search">Buscar Produto</label>
-                                    <input type="text" name="product_search" id="product_search" class="form-control"
-                                        value="{{ request( 'product_search' ) }}"
-                                        placeholder="Nome ou código do produto...">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="type">Tipo de Movimento</label>
-                                    <select name="type" id="type" class="form-control">
-                                        <option value="">Todos os Tipos</option>
-                                        <option value="entry" {{ request( 'type' ) == 'entry' ? 'selected' : '' }}>
-                                            Entrada
-                                        </option>
-                                        <option value="exit" {{ request( 'type' ) == 'exit' ? 'selected' : '' }}>
-                                            Saída
-                                        </option>
-                                        <option value="adjustment" {{ request( 'type' ) == 'adjustment' ? 'selected' : '' }}>
-                                            Ajuste
-                                        </option>
-                                        <option value="service" {{ request( 'type' ) == 'service' ? 'selected' : '' }}>
-                                            Serviço
-                                        </option>
+                                    <label for="product_id">Produto</label>
+                                    <select name="product_id" id="product_id" class="form-control select2">
+                                        <option value="">Todos os Produtos</option>
+                                        @foreach($products as $product)
+                                            <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
+                                                {{ $product->sku }} - {{ $product->name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="date_from">Data Inicial</label>
-                                    <input type="date" name="date_from" id="date_from" class="form-control"
-                                        value="{{ request( 'date_from' ) }}">
+                                    <label for="type">Tipo</label>
+                                    <select name="type" id="type" class="form-control">
+                                        <option value="">Todos</option>
+                                        <option value="entry" {{ request('type') == 'entry' ? 'selected' : '' }}>Entrada</option>
+                                        <option value="exit" {{ request('type') == 'exit' ? 'selected' : '' }}>Saída</option>
+                                        <option value="adjustment" {{ request('type') == 'adjustment' ? 'selected' : '' }}>Ajuste</option>
+                                        <option value="reservation" {{ request('type') == 'reservation' ? 'selected' : '' }}>Reserva</option>
+                                        <option value="cancellation" {{ request('type') == 'cancellation' ? 'selected' : '' }}>Cancelamento</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="date_to">Data Final</label>
-                                    <input type="date" name="date_to" id="date_to" class="form-control"
-                                        value="{{ request( 'date_to' ) }}">
+                                    <label for="start_date">Data Inicial</label>
+                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="end_date">Data Final</label>
+                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>&nbsp;</label>
-                                    <div class="d-flex">
-                                        <button type="submit" class="btn btn-primary">
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary btn-block">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route( 'provider.inventory.report', ['type' => 'movements'] ) }}" class="btn btn-secondary ml-2">
-                                            <i class="fas fa-times"></i>
+                                        <a href="{{ route('inventory.movements') }}" class="btn btn-secondary btn-block">
+                                            <i class="fas fa-times"></i> Limpar
                                         </a>
-                                        <button type="button" class="btn btn-success ml-2" onclick="exportMovements()">
-                                            <i class="fas fa-file-excel"></i> Exportar
-                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row text-center">
-                                        <div class="col-md-3">
-                                            <h5 class="text-success">
-                                                <i class="fas fa-arrow-down"></i> Total Entradas
-                                            </h5>
-                                            <h3 class="font-weight-bold text-success">
-                                                {{ $summary[ 'total_entries' ] }}
-                                            </h3>
-                                            <small class="text-muted">R$
-                                                {{ number_format( $summary[ 'total_entry_value' ], 2, ',', '.' ) }}</small>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h5 class="text-danger">
-                                                <i class="fas fa-arrow-up"></i> Total Saídas
-                                            </h5>
-                                            <h3 class="font-weight-bold text-danger">
-                                                {{ $summary[ 'total_exits' ] }}
-                                            </h3>
-                                            <small class="text-muted">R$
-                                                {{ number_format( $summary[ 'total_exit_value' ], 2, ',', '.' ) }}</small>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h5 class="text-warning">
-                                                <i class="fas fa-sliders-h"></i> Total Ajustes
-                                            </h5>
-                                            <h3 class="font-weight-bold text-warning">
-                                                {{ $summary[ 'total_adjustments' ] }}
-                                            </h3>
-                                            <small class="text-muted">R$
-                                                {{ number_format( $summary[ 'total_adjustment_value' ], 2, ',', '.' ) }}</small>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h5 class="text-info">
-                                                <i class="fas fa-cogs"></i> Total Serviços
-                                            </h5>
-                                            <h3 class="font-weight-bold text-info">
-                                                {{ $summary[ 'total_services' ] }}
-                                            </h3>
-                                            <small class="text-muted">R$
-                                                {{ number_format( $summary[ 'total_service_value' ], 2, ',', '.' ) }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- Resumo -->
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="card bg-success">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>{{ number_format($summary['total_entries'], 2, ',', '.') }}</h4>
+                            <p>Total de Entradas</p>
                         </div>
                     </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Data/Hora</th>
-                                    <th>Produto</th>
-                                    <th>Tipo</th>
-                                    <th>Quantidade</th>
-                                    <th>Valor Unitário</th>
-                                    <th>Valor Total</th>
-                                    <th>Saldo Anterior</th>
-                                    <th>Saldo Atual</th>
-                                    <th>Motivo/Referência</th>
-                                    <th>Responsável</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse( $movements as $movement )
-                                    @php
-                                        $product    = $movement->product;
-                                        $quantity   = $movement->quantity;
-                                        $unitValue  = $movement->unit_value;
-                                        $totalValue = $quantity * $unitValue;
-
-                                        // Definir cores e ícones baseado no tipo
-                                        switch ( $movement->type ) {
-                                            case 'entry':
-                                                $typeLabel = 'Entrada';
-                                                $typeClass = 'success';
-                                                $icon = 'fa-arrow-down';
-                                                break;
-                                            case 'exit':
-                                                $typeLabel = 'Saída';
-                                                $typeClass = 'danger';
-                                                $icon = 'fa-arrow-up';
-                                                break;
-                                            case 'adjustment':
-                                                $typeLabel = 'Ajuste';
-                                                $typeClass = 'warning';
-                                                $icon = 'fa-sliders-h';
-                                                break;
-                                            case 'service':
-                                                $typeLabel = 'Serviço';
-                                                $typeClass = 'info';
-                                                $icon = 'fa-cogs';
-                                                break;
-                                            default:
-                                                $typeLabel = 'Desconhecido';
-                                                $typeClass = 'secondary';
-                                                $icon = 'fa-question';
-                                        }
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse( $movement->created_at )->format( 'd/m/Y H:i' ) }}
-                                        </td>
-                                        <td>
-                                            <strong>{{ $product->name }}</strong><br>
-                                            <small class="text-muted">Código: {{ $product->code }}</small>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge badge-{{ $typeClass }}">
-                                                <i class="fas {{ $icon }}"></i> {{ $typeLabel }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="{{ $movement->type == 'exit' ? 'text-danger' : 'text-success' }}">
-                                                {{ $movement->type == 'exit' ? '-' : '+' }}{{ $quantity }}
-                                            </span>
-                                        </td>
-                                        <td class="text-right">R$ {{ number_format( $unitValue, 2, ',', '.' ) }}</td>
-                                        <td class="text-right">
-                                            <strong>R$ {{ number_format( $totalValue, 2, ',', '.' ) }}</strong>
-                                        </td>
-                                        <td class="text-center">{{ $movement->previous_quantity }}</td>
-                                        <td class="text-center">
-                                            <strong>{{ $movement->current_quantity }}</strong>
-                                        </td>
-                                        <td>
-                                            <small>{{ $movement->reason }}</small>
-                                            @if( $movement->reference_id && $movement->reference_type )
-                                                <br><small class="text-muted">
-                                                    Ref: {{ ucfirst( $movement->reference_type ) }} #{{ $movement->reference_id }}
-                                                </small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if( $movement->user )
-                                                {{ $movement->user->name }}
-                                            @else
-                                                <span class="text-muted">Sistema</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="10" class="text-center text-muted">
-                                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                                            <p>Nenhuma movimentação encontrada</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="card bg-danger">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>{{ number_format($summary['total_exits'], 2, ',', '.') }}</h4>
+                            <p>Total de Saídas</p>
+                        </div>
                     </div>
-
-                    <div class="d-flex justify-content-center">
-                        {{ $movements->appends( request()->query() )->links() }}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="card bg-info">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>{{ $movements->total() }}</h4>
+                            <p>Total de Movimentações</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="card bg-warning">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>{{ number_format($summary['balance'], 2, ',', '.') }}</h4>
+                            <p>Saldo do Período</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Tabela de Movimentações -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Movimentações de Estoque</h3>
+                    <div class="card-tools">
+                        <a href="{{ route('inventory.export-movements') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if($movements->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>Produto</th>
+                                        <th>SKU</th>
+                                        <th>Tipo</th>
+                                        <th>Quantidade</th>
+                                        <th>Saldo Anterior</th>
+                                        <th>Saldo Atual</th>
+                                        <th>Motivo</th>
+                                        <th>Referência</th>
+                                        <th>Usuário</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($movements as $movement)
+                                        <tr>
+                                            <td>{{ $movement->created_at->format('d/m/Y H:i') }}</td>
+                                            <td>
+                                                <a href="{{ route('inventory.show', $movement->product) }}">
+                                                    {{ $movement->product->name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ $movement->product->sku }}</td>
+                                            <td>
+                                                @if($movement->type === 'entry')
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-plus"></i> Entrada
+                                                    </span>
+                                                @elseif($movement->type === 'exit')
+                                                    <span class="badge badge-danger">
+                                                        <i class="fas fa-minus"></i> Saída
+                                                    </span>
+                                                @elseif($movement->type === 'adjustment')
+                                                    <span class="badge badge-warning">
+                                                        <i class="fas fa-tools"></i> Ajuste
+                                                    </span>
+                                                @elseif($movement->type === 'reservation')
+                                                    <span class="badge badge-info">
+                                                        <i class="fas fa-lock"></i> Reserva
+                                                    </span>
+                                                @elseif($movement->type === 'cancellation')
+                                                    <span class="badge badge-secondary">
+                                                        <i class="fas fa-undo"></i> Cancelamento
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-light">
+                                                        {{ ucfirst($movement->type) }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($movement->type === 'entry')
+                                                    <span class="text-success">+{{ number_format($movement->quantity, 2, ',', '.') }}</span>
+                                                @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
+                                                    <span class="text-danger">-{{ number_format($movement->quantity, 2, ',', '.') }}</span>
+                                                @else
+                                                    {{ number_format($movement->quantity, 2, ',', '.') }}
+                                                @endif
+                                            </td>
+                                            <td>{{ number_format($movement->previous_quantity, 2, ',', '.') }}</td>
+                                            <td>
+                                                @php
+                                                    $currentQuantity = $movement->previous_quantity;
+                                                    if ($movement->type === 'entry') {
+                                                        $currentQuantity += $movement->quantity;
+                                                    } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
+                                                        $currentQuantity -= $movement->quantity;
+                                                    }
+                                                @endphp
+                                                {{ number_format($currentQuantity, 2, ',', '.') }}
+                                            </td>
+                                            <td>
+                                                <small>{{ Str::limit($movement->reason, 50) }}</small>
+                                                @if(strlen($movement->reason) > 50)
+                                                    <button type="button" class="btn btn-xs btn-link" data-toggle="modal" data-target="#reasonModal{{ $movement->id }}">
+                                                        Ver mais
+                                                    </button>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($movement->reference_type && $movement->reference_id)
+                                                    @if($movement->reference_type === 'budget')
+                                                        <a href="{{ route('budgets.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
+                                                            Orçamento #{{ $movement->reference_id }}
+                                                        </a>
+                                                    @elseif($movement->reference_type === 'service')
+                                                        <a href="{{ route('services.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
+                                                            Serviço #{{ $movement->reference_id }}
+                                                        </a>
+                                                    @else
+                                                        {{ ucfirst($movement->reference_type) }} #{{ $movement->reference_id }}
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <small>{{ $movement->user->name ?? 'Sistema' }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ route('inventory.movements', ['product_id' => $movement->product_id]) }}" 
+                                                       class="btn btn-sm btn-info" 
+                                                       title="Ver movimentações do produto">
+                                                        <i class="fas fa-list"></i>
+                                                    </a>
+                                                    @if($movement->product)
+                                                        <a href="{{ route('inventory.adjustStockForm', $movement->product) }}" 
+                                                           class="btn btn-sm btn-success" 
+                                                           title="Ajustar estoque">
+                                                            <i class="fas fa-plus"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Modal para motivo completo -->
+                                        @if(strlen($movement->reason) > 50)
+                                            <div class="modal fade" id="reasonModal{{ $movement->id }}" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Motivo Completo</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>{{ $movement->reason }}</p>
+                                                            <small class="text-muted">
+                                                                Registrado em: {{ $movement->created_at->format('d/m/Y H:i') }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center">
+                            {{ $movements->appends(request()->except('page'))->links() }}
+                        </div>
+                    @else
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Nenhuma movimentação encontrada com os filtros aplicados.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-@stop
+@endsection
 
-@section( 'css' )
-<style>
-    .badge {
-        font-size: 0.9em;
-        padding: 0.5em 0.75em;
-    }
-
-    .table th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-    }
-
-    .card-tools .btn-group {
-        margin-left: 10px;
-    }
-
-    .summary-card .card-body {
-        padding: 1rem;
-    }
-
-    .summary-card h3 {
-        margin: 0.5rem 0;
-        font-size: 2rem;
-    }
-
-    .summary-card small {
-        display: block;
-        margin-top: 0.25rem;
-    }
-</style>
-@stop
-
-@section( 'js' )
+@section('scripts')
 <script>
-    function exportMovements() {
-        const params = new URLSearchParams( window.location.search );
-        const exportUrl = '{{ route( "provider.inventory.export" ) }}?' + params.toString();
-
-        // Mostrar loading
-        Swal.fire( {
-            title: 'Preparando exportação...',
-            text: 'Aguarde enquanto preparamos o arquivo Excel.',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            willOpen: () => {
-                Swal.showLoading();
-            }
-        } );
-
-        // Fazer download
-        window.location.href = exportUrl;
-
-        // Fechar loading após 2 segundos
-        setTimeout( () => {
-            Swal.close();
-        }, 2000 );
-    }
-
-    // Auto-submit form após 1 segundo de inatividade na busca
-    let searchTimeout;
-    $( '#product_search' ).on( 'input', function () {
-        clearTimeout( searchTimeout );
-        searchTimeout = setTimeout( function () {
-            $( 'form' ).submit();
-        }, 1000 );
-    } );
-
-    // Validar datas
-    $( '#date_from, #date_to' ).on( 'change', function () {
-        const dateFrom = $( '#date_from' ).val();
-        const dateTo = $( '#date_to' ).val();
-
-        if ( dateFrom && dateTo && dateFrom > dateTo ) {
-            Swal.fire( {
-                icon: 'warning',
-                title: 'Atenção',
-                text: 'A data inicial não pode ser maior que a data final.'
-            } );
-            $( '#date_to' ).val( '' );
-        }
-    } );
+$(document).ready(function() {
+    $('.select2').select2({
+        placeholder: 'Selecione um produto',
+        allowClear: true
+    });
+});
 </script>
-@stop
+@endsection

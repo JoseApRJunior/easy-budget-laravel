@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\BudgetShareRequest;
 use App\Models\Budget;
+use App\Models\BudgetShare;
 use App\Models\User;
 use App\Services\Domain\BudgetShareService;
 use Illuminate\Contracts\View\View;
@@ -86,11 +87,18 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Obtém todos os compartilhamentos do tenant
-        $result = $this->budgetShareService->list(['tenant_id' => $user->tenant_id]);
+        // Obtém todos os compartilhamentos do tenant com paginação
+        $shares = BudgetShare::with(['budget' => function($query) {
+            $query->select('id', 'code', 'customer_id', 'title');
+        }, 'budget.customer' => function($query) {
+            $query->select('id', 'name');
+        }])
+            ->where('tenant_id', $user->tenant_id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
         return view('pages.budget-share.index', [
-            'shares' => $this->getServiceData($result, collect())
+            'shares' => $shares
         ]);
     }
 

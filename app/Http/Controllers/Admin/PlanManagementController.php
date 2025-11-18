@@ -225,7 +225,7 @@ class PlanManagementController extends Controller
      */
     public function destroy(Plan $plan): RedirectResponse
     {
-        if ($plan->subscriptions()->exists()) {
+        if ($plan->planSubscriptions()->exists()) {
             return redirect()->back()
                            ->with('error', 'Não é possível excluir um plano com assinaturas ativas.');
         }
@@ -396,15 +396,15 @@ class PlanManagementController extends Controller
     private function getPlanDetailedStats(Plan $plan): array
     {
         return [
-            'total_subscriptions' => $plan->subscriptions()->count(),
-            'active_subscriptions' => $plan->subscriptions()->where('status', 'active')->count(),
-            'cancelled_subscriptions' => $plan->subscriptions()->where('status', 'cancelled')->count(),
-            'trial_subscriptions' => $plan->subscriptions()->where('status', 'trial')->count(),
-            'total_revenue' => $plan->subscriptions()->sum('amount'),
-            'monthly_revenue' => $plan->subscriptions()
+            'total_subscriptions' => $plan->planSubscriptions()->count(),
+            'active_subscriptions' => $plan->planSubscriptions()->where('status', 'active')->count(),
+            'cancelled_subscriptions' => $plan->planSubscriptions()->where('status', 'cancelled')->count(),
+            'trial_subscriptions' => $plan->planSubscriptions()->where('status', 'trial')->count(),
+            'total_revenue' => $plan->planSubscriptions()->sum('transaction_amount'),
+            'monthly_revenue' => $plan->planSubscriptions()
                                     ->where('status', 'active')
                                     ->where('billing_cycle', 'monthly')
-                                    ->sum('amount'),
+                                    ->sum('transaction_amount'),
             'churn_rate' => $this->calculateChurnRate($plan),
             'conversion_rate' => $this->calculateConversionRate($plan),
         ];
@@ -415,7 +415,7 @@ class PlanManagementController extends Controller
      */
     private function getPlanAnalytics(Plan $plan): array
     {
-        $subscriptions = $plan->subscriptions()
+        $subscriptions = $plan->planSubscriptions()
                             ->where('created_at', '>=', now()->subYear())
                             ->get();
 
@@ -451,8 +451,8 @@ class PlanManagementController extends Controller
      */
     private function calculateChurnRate(Plan $plan): float
     {
-        $totalSubscriptions = $plan->subscriptions()->count();
-        $cancelledSubscriptions = $plan->subscriptions()->where('status', 'cancelled')->count();
+        $totalSubscriptions = $plan->planSubscriptions()->count();
+        $cancelledSubscriptions = $plan->planSubscriptions()->where('status', 'cancelled')->count();
 
         return $totalSubscriptions > 0 ? ($cancelledSubscriptions / $totalSubscriptions) * 100 : 0;
     }
@@ -462,8 +462,8 @@ class PlanManagementController extends Controller
      */
     private function calculateConversionRate(Plan $plan): float
     {
-        $trialSubscriptions = $plan->subscriptions()->where('status', 'trial')->count();
-        $activeSubscriptions = $plan->subscriptions()->where('status', 'active')->count();
+        $trialSubscriptions = $plan->planSubscriptions()->where('status', 'trial')->count();
+        $activeSubscriptions = $plan->planSubscriptions()->where('status', 'active')->count();
 
         return $trialSubscriptions > 0 ? ($activeSubscriptions / $trialSubscriptions) * 100 : 0;
     }
@@ -473,14 +473,14 @@ class PlanManagementController extends Controller
      */
     private function calculateGrowthRate(Plan $plan): float
     {
-        $lastMonth = $plan->subscriptions()
+        $lastMonth = $plan->planSubscriptions()
                           ->whereBetween('created_at', [
                               now()->subMonths(2)->startOfMonth(),
                               now()->subMonth()->endOfMonth()
                           ])
                           ->count();
 
-        $thisMonth = $plan->subscriptions()
+        $thisMonth = $plan->planSubscriptions()
                           ->whereBetween('created_at', [
                               now()->startOfMonth(),
                               now()->endOfMonth()
@@ -495,8 +495,8 @@ class PlanManagementController extends Controller
      */
     private function calculateRetentionRate(Plan $plan): float
     {
-        $totalSubscriptions = $plan->subscriptions()->count();
-        $activeSubscriptions = $plan->subscriptions()->where('status', 'active')->count();
+        $totalSubscriptions = $plan->planSubscriptions()->count();
+        $activeSubscriptions = $plan->planSubscriptions()->where('status', 'active')->count();
 
         return $totalSubscriptions > 0 ? ($activeSubscriptions / $totalSubscriptions) * 100 : 0;
     }
@@ -548,8 +548,8 @@ class PlanManagementController extends Controller
                     $plan->price,
                     $plan->billing_cycle,
                     $plan->status,
-                    $plan->subscriptions()->where('status', 'active')->count(),
-                    $plan->subscriptions()->sum('amount'),
+                    $plan->planSubscriptions()->where('status', 'active')->count(),
+                    $plan->planSubscriptions()->sum('transaction_amount'),
                 ]);
             }
 

@@ -3,17 +3,33 @@
 @section('title', 'Editar Compartilhamento')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-1">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-pencil me-2"></i>
+            Editar Compartilhamento
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Editar</li>
+            </ol>
+        </nav>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title mb-0">
-                        <i class="bi bi-pencil me-2"></i>Editar Compartilhamento
+                        <i class="bi bi-pencil me-2"></i>Configurações do Compartilhamento
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('budget-share.update', $share->id) }}" method="POST" id="editShareForm">
+                    <form action="{{ route('provider.budgets.shares.update', $share->id) }}" method="POST" id="editShareForm">
                         @csrf
                         @method('PUT')
                         
@@ -217,7 +233,7 @@
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('budget-share.show', $share->id) }}" class="btn btn-outline-secondary">
+                                        <a href="{{ route('provider.budgets.shares.show', $share->id) }}" class="btn btn-outline-secondary">
                                             <i class="bi bi-arrow-left me-1"></i>Voltar
                                         </a>
                                         <button type="button" class="btn btn-outline-warning" onclick="regenerateToken()">
@@ -356,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function regenerateToken() {
     const form = document.getElementById('regenerateForm');
-    form.action = `/budget-share/{{ $share->id }}/regenerate-token`;
+    form.action = `/provider/budgets/shares/{{ $share->id }}/regenerate`;
     
     const modal = new bootstrap.Modal(document.getElementById('regenerateTokenModal'));
     modal.show();
@@ -364,7 +380,7 @@ function regenerateToken() {
 
 function confirmDelete() {
     const form = document.getElementById('deleteForm');
-    form.action = `/budget-share/{{ $share->id }}`;
+    form.action = `/provider/budgets/shares/{{ $share->id }}`;
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();

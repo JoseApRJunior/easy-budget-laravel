@@ -290,7 +290,7 @@ class BudgetShareService extends AbstractBaseService
             );
         } catch (\Exception $e) {
             // Log do erro mas não falha a operação
-            \Log::error('Erro ao enviar notificação de compartilhamento', [
+            Log::error('Erro ao enviar notificação de compartilhamento', [
                 'share_id' => $share->id,
                 'error' => $e->getMessage(),
             ]);

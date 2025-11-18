@@ -30,6 +30,13 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Models\Service;
+use App\Observers\ServiceObserver;
+use App\Models\Budget;
+use App\Models\BudgetItem;
+use App\Models\ServiceItem;
+use App\Observers\InventoryObserver;
+use App\Observers\BudgetObserver;
 
 /**
  * Event Service Provider para registro de eventos e listeners customizados.
@@ -110,6 +117,20 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // Registrar observer para geração automática de faturas
+        Service::observe(ServiceObserver::class);
+
+        // Registrar observer para controle de estoque
+        $inventoryObserver = new InventoryObserver(
+            app(\App\Services\Shared\CacheService::class),
+            app(\App\Services\AlertService::class)
+        );
+        
+        Budget::observe([BudgetObserver::class, $inventoryObserver]);
+        Service::observe([$inventoryObserver]);
+        BudgetItem::observe([$inventoryObserver]);
+        ServiceItem::observe([$inventoryObserver]);
 
         // Registra observers adicionais se necessário
         $this->registerAdditionalEventListeners();

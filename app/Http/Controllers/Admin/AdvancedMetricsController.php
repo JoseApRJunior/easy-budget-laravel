@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Tenant;
 use App\Models\Plan;
 use App\Models\User;
@@ -11,7 +11,7 @@ use App\Models\Customer;
 use App\Models\Category;
 use App\Models\Activity;
 use App\Models\Profession;
-use App\Models\Subscription;
+use App\Models\PlanSubscription;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,6 +20,18 @@ use Illuminate\Http\JsonResponse;
 
 class AdvancedMetricsController extends Controller
 {
+    /**
+     * Get trial tenants count.
+     */
+    protected function getTrialTenantsCount(): int
+    {
+        return PlanSubscription::where('status', 'active')
+            ->where('payment_method', 'trial')
+            ->where('end_date', '>=', now())
+            ->distinct('tenant_id')
+            ->count('tenant_id');
+    }
+
     /**
      * Display the advanced metrics dashboard.
      */
@@ -81,9 +93,9 @@ class AdvancedMetricsController extends Controller
         return [
             // Tenant Metrics
             'total_tenants' => Tenant::count(),
-            'active_tenants' => Tenant::where('status', 'active')->count(),
-            'trial_tenants' => Tenant::where('status', 'trial')->count(),
-            'suspended_tenants' => Tenant::where('status', 'suspended')->count(),
+            'active_tenants' => Tenant::where('is_active', true)->count(),
+            'trial_tenants' => $this->getTrialTenantsCount(),
+            'suspended_tenants' => Tenant::where('is_active', false)->count(),
             'new_tenants_period' => Tenant::whereBetween('created_at', [$start, $end])->count(),
             
             // Plan Metrics
@@ -101,7 +113,7 @@ class AdvancedMetricsController extends Controller
             
             // Provider Metrics
             'total_providers' => Provider::count(),
-            'active_providers' => Provider::where('status', 'active')->count(),
+            'active_providers' => Provider::count(),
             'providers_by_plan' => $this->getProvidersByPlan(),
             'provider_retention_rate' => $this->calculateProviderRetention($start, $end),
             'avg_provider_customers' => Provider::withCount('customers')->avg('customers_count') ?? 0,
@@ -119,10 +131,10 @@ class AdvancedMetricsController extends Controller
             'top_revenue_providers' => $this->getTopRevenueProviders($start, $end, 10),
             
             // Subscription Metrics
-            'total_subscriptions' => Subscription::count(),
-            'active_subscriptions' => Subscription::where('status', 'active')->count(),
+            'total_subscriptions' => PlanSubscription::count(),
+            'active_subscriptions' => PlanSubscription::where('status', 'active')->count(),
             'subscription_churn_rate' => $this->calculateChurnRate($start, $end),
-            'avg_subscription_value' => Subscription::avg('amount') ?? 0,
+            'avg_subscription_value' => PlanSubscription::avg('transaction_amount') ?? 0,
             
             // Content Metrics
             'total_categories' => Category::count(),
@@ -175,9 +187,9 @@ class AdvancedMetricsController extends Controller
      */
     protected function getPlanUpgrades($start, $end): int
     {
-        return Subscription::whereBetween('updated_at', [$start, $end])
+        return PlanSubscription::whereBetween('updated_at', [$start, $end])
             ->where('status', 'active')
-            ->whereRaw('plan_id != (SELECT plan_id FROM subscription_history WHERE subscription_id = subscriptions.id ORDER BY created_at DESC LIMIT 1 OFFSET 1)')
+            ->whereRaw('plan_id != (SELECT plan_id FROM plan_subscription_history WHERE plan_subscription_id = plan_subscriptions.id ORDER BY created_at DESC LIMIT 1 OFFSET 1)')
             ->count();
     }
 
@@ -186,9 +198,9 @@ class AdvancedMetricsController extends Controller
      */
     protected function getPlanDowngrades($start, $end): int
     {
-        return Subscription::whereBetween('updated_at', [$start, $end])
+        return PlanSubscription::whereBetween('updated_at', [$start, $end])
             ->where('status', 'active')
-            ->whereRaw('plan_id != (SELECT plan_id FROM subscription_history WHERE subscription_id = subscriptions.id ORDER BY created_at DESC LIMIT 1 OFFSET 1)')
+            ->whereRaw('plan_id != (SELECT plan_id FROM plan_subscription_history WHERE plan_subscription_id = plan_subscriptions.id ORDER BY created_at DESC LIMIT 1 OFFSET 1)')
             ->count();
     }
 
@@ -311,8 +323,10 @@ class AdvancedMetricsController extends Controller
      */
     protected function calculateChurnRate($start, $end): float
     {
-        $subscriptionsAtStart = Subscription::where('created_at', '<', $start)->count();
-        $cancelledSubscriptions = Subscription::whereBetween('cancelled_at', [$start, $end])->count();
+        $subscriptionsAtStart = PlanSubscription::where('created_at', '<', $start)->count();
+        $cancelledSubscriptions = PlanSubscription::whereBetween('end_date', [$start, $end])
+            ->where('status', 'cancelled')
+            ->count();
         
         if ($subscriptionsAtStart === 0) {
             return 0;
@@ -356,7 +370,7 @@ class AdvancedMetricsController extends Controller
         $alerts = [];
 
         // Check for suspended tenants
-        $suspendedTenants = Tenant::where('status', 'suspended')->count();
+        $suspendedTenants = Tenant::where('is_active', false)->count();
         if ($suspendedTenants > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -489,10 +503,13 @@ class AdvancedMetricsController extends Controller
         $current = $start->copy();
         
         while ($current <= $end) {
-            $active = Subscription::whereDate('created_at', '<=', $current)
+            $active = PlanSubscription::whereDate('created_at', '<=', $current)
                 ->where(function($query) use ($current) {
-                    $query->whereNull('cancelled_at')
-                          ->orWhereDate('cancelled_at', '>', $current);
+                    $query->where('status', 'active')
+                          ->orWhere(function($q) use ($current) {
+                              $q->where('status', 'pending')
+                                ->whereDate('end_date', '>', $current);
+                          });
                 })
                 ->count();
             
@@ -597,11 +614,16 @@ class AdvancedMetricsController extends Controller
         $current = $start->copy();
         
         while ($current <= $end) {
-            $cancelled = Subscription::whereDate('cancelled_at', $current)->count();
-            $active = Subscription::whereDate('created_at', '<=', $current)
+            $cancelled = PlanSubscription::whereDate('end_date', $current)
+                ->where('status', 'cancelled')
+                ->count();
+            $active = PlanSubscription::whereDate('created_at', '<=', $current)
                 ->where(function($query) use ($current) {
-                    $query->whereNull('cancelled_at')
-                          ->orWhereDate('cancelled_at', '>', $current);
+                    $query->where('status', 'active')
+                          ->orWhere(function($q) use ($current) {
+                              $q->where('status', 'pending')
+                                ->whereDate('end_date', '>', $current);
+                          });
                 })
                 ->count();
             
@@ -665,7 +687,7 @@ class AdvancedMetricsController extends Controller
     protected function calculateTenantHealth(): float
     {
         $total = Tenant::count();
-        $active = Tenant::where('status', 'active')->count();
+        $active = Tenant::where('is_active', true)->count();
         
         return $total > 0 ? ($active / $total) * 100 : 0;
     }
@@ -675,10 +697,8 @@ class AdvancedMetricsController extends Controller
      */
     protected function calculateProviderHealth(): float
     {
-        $total = Provider::count();
-        $active = Provider::where('status', 'active')->count();
-        
-        return $total > 0 ? ($active / $total) * 100 : 0;
+        // Como providers não têm campo status, consideramos todos como ativos
+        return 100;
     }
 
     /**
@@ -711,8 +731,8 @@ class AdvancedMetricsController extends Controller
      */
     protected function calculateSubscriptionHealth(): float
     {
-        $total = Subscription::count();
-        $active = Subscription::where('status', 'active')->count();
+        $total = PlanSubscription::count();
+        $active = PlanSubscription::where('status', 'active')->count();
         
         return $total > 0 ? ($active / $total) * 100 : 0;
     }
@@ -728,6 +748,7 @@ class AdvancedMetricsController extends Controller
             'active_users' => User::where('last_login_at', '>', Carbon::now()->subMinutes(15))->count(),
             'new_signups_today' => User::whereDate('created_at', Carbon::today())->count(),
             'revenue_today' => Invoice::whereDate('created_at', Carbon::today())->where('status', 'paid')->sum('amount') ?? 0,
+            'active_subscriptions' => PlanSubscription::where('status', 'active')->count(),
             'system_load' => $this->getSystemLoad(),
             'memory_usage' => $this->getMemoryUsage(),
             'disk_usage' => $this->getDiskUsage(),

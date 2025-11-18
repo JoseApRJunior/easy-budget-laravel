@@ -47,7 +47,7 @@ class TenantService extends AbstractBaseService
                 'tenant' => $tenant,
                 'total_revenue' => 0, // Implementar lógica de receita
                 'total_expenses' => 0, // Implementar lógica de despesas
-                'active_subscriptions' => $tenant->subscriptions()->where('status', 'active')->count(),
+                'active_subscriptions' => $tenant->planSubscriptions()->where('status', 'active')->count(),
                 'total_users' => $tenant->users()->count(),
             ];
 
@@ -101,8 +101,8 @@ class TenantService extends AbstractBaseService
             // Dados de cobrança básicos - pode ser expandido conforme necessário
             $billingData = [
                 'tenant' => $tenant,
-                'current_plan' => $tenant->subscriptions()->where('status', 'active')->first()?->plan,
-                'subscription_history' => $tenant->subscriptions()->with('plan')->latest()->get(),
+                'current_plan' => $tenant->planSubscriptions()->where('status', 'active')->first()?->plan,
+                'subscription_history' => $tenant->planSubscriptions()->with('plan')->latest()->get(),
                 'payment_history' => [], // Implementar histórico de pagamentos
                 'next_billing_date' => null, // Implementar próxima data de cobrança
             ];

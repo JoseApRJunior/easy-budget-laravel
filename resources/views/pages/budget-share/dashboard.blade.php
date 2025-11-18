@@ -20,7 +20,10 @@
             <a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a>
           </li>
           <li class="breadcrumb-item">
-            <a href="{{ route( 'provider.budget-shares.index' ) }}">Compartilhamentos</a>
+            <a href="{{ route( 'provider.budgets.index' ) }}">Orçamentos</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{{ route( 'provider.budgets.shares.index' ) }}">Compartilhamentos</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
             Dashboard

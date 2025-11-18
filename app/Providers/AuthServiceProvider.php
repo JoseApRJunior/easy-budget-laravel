@@ -23,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Category::class => \App\Policies\CategoryPolicy::class,
         \App\Models\Activity::class => \App\Policies\ActivityPolicy::class,
         \App\Models\Profession::class => \App\Policies\ProfessionPolicy::class,
+        \App\Models\Product::class => \App\Policies\ProductPolicy::class,
     ];
 
     /**
@@ -57,6 +58,9 @@ class AuthServiceProvider extends ServiceProvider
         
         // Report and Analytics Gates
         $this->registerReportGates();
+        
+        // Inventory Management Gates
+        $this->registerInventoryGates();
     }
 
     /**
@@ -86,6 +90,23 @@ class AuthServiceProvider extends ServiceProvider
 
         // Cache Management
         Gate::define('manage-cache', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        // Alerts Management
+        Gate::define('manage-alerts', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('create-alert', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('update-alert', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('delete-alert', function (User $user) {
             return $user->isAdmin();
         });
     }
@@ -385,6 +406,37 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('view-realtime-metrics', function (User $user) {
             return $user->isAdmin();
+        });
+    }
+
+    /**
+     * Register inventory management gates
+     */
+    protected function registerInventoryGates(): void
+    {
+        // Inventory Management
+        Gate::define('manage-inventory', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('view-inventory', function (User $user) {
+            return $user->isAdmin() || $user->hasPermission('view-inventory');
+        });
+
+        Gate::define('view-inventory-reports', function (User $user) {
+            return $user->isAdmin() || $user->hasPermission('view-inventory-reports');
+        });
+
+        Gate::define('view-inventory-alerts', function (User $user) {
+            return $user->isAdmin() || $user->hasPermission('view-inventory-alerts');
+        });
+
+        Gate::define('adjust-inventory', function (User $user) {
+            return $user->isAdmin() || $user->hasPermission('adjust-inventory');
+        });
+
+        Gate::define('export-inventory-reports', function (User $user) {
+            return $user->isAdmin() || $user->hasPermission('export-inventory-reports');
         });
     }
 }

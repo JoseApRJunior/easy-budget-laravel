@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AlertSeverityEnum;
 use App\Enums\AlertTypeEnum;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Abstracts\Controller;
 use App\Models\AlertSetting;
 use App\Models\MonitoringAlertsHistory;
 use App\Services\AlertService;

@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $public_token
  * @property \Illuminate\Support\Carbon|null $public_expires_at
  * @property string|null $notes
+ * @property bool $is_automatic
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -78,6 +79,7 @@ class Invoice extends Model
         'public_token',
         'public_expires_at',
         'notes',
+        'is_automatic',
     ];
 
     /**
@@ -104,6 +106,7 @@ class Invoice extends Model
         'public_expires_at'          => 'datetime',
         'discount'                   => 'decimal:2',
         'notes'                      => 'string',
+        'is_automatic'               => 'boolean',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'datetime',
     ];
@@ -131,6 +134,7 @@ class Invoice extends Model
             'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
             'public_expires_at'          => 'nullable|date',
             'notes'                      => 'nullable|string|max:65535',
+            'is_automatic'               => 'boolean',
         ];
     }
 

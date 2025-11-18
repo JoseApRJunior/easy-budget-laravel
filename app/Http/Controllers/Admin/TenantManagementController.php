@@ -63,23 +63,13 @@ class TenantManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'domain' => 'required|string|max:255|unique:tenants',
-            'email' => 'required|string|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'status' => 'required|string|in:active,inactive,suspended',
+            'name' => 'required|string|max:255|unique:tenants',
         ]);
 
         DB::beginTransaction();
         try {
             $tenant = Tenant::create([
                 'name' => $validated['name'],
-                'domain' => $validated['domain'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'] ?? null,
-                'address' => $validated['address'] ?? null,
-                'status' => $validated['status'],
             ]);
 
             DB::commit();
@@ -115,22 +105,12 @@ class TenantManagementController extends Controller
     public function update(Request $request, Tenant $tenant): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'domain' => 'required|string|max:255|unique:tenants,domain,' . $tenant->id,
-            'email' => 'required|string|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'status' => 'required|string|in:active,inactive,suspended',
+            'name' => 'required|string|max:255|unique:tenants,name,' . $tenant->id,
         ]);
 
         DB::beginTransaction();
         try {
             $tenant->name = $validated['name'];
-            $tenant->domain = $validated['domain'];
-            $tenant->email = $validated['email'];
-            $tenant->phone = $validated['phone'] ?? null;
-            $tenant->address = $validated['address'] ?? null;
-            $tenant->status = $validated['status'];
             $tenant->save();
 
             DB::commit();
@@ -148,7 +128,7 @@ class TenantManagementController extends Controller
      */
     public function suspend(Tenant $tenant): RedirectResponse
     {
-        $tenant->update(['status' => 'suspended']);
+        $tenant->update(['is_active' => false]);
 
         return back()->with('success', 'Tenant suspenso com sucesso!');
     }
@@ -158,7 +138,7 @@ class TenantManagementController extends Controller
      */
     public function activate(Tenant $tenant): RedirectResponse
     {
-        $tenant->update(['status' => 'active']);
+        $tenant->update(['is_active' => true]);
 
         return back()->with('success', 'Tenant ativado com sucesso!');
     }

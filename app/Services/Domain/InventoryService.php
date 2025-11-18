@@ -4,475 +4,624 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductInventory;
-use App\Repositories\InventoryMovementRepository;
-use App\Repositories\ProductInventoryRepository;
-use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Models\InventoryMovement;
+use App\Services\Shared\CacheService;
 use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use App\Models\AlertSetting;
+use App\Services\AlertService;
+use App\Models\Notification;
+use App\Models\User;
 
-class InventoryService extends AbstractBaseService
+class InventoryService
 {
-    /**
-     * @var ProductInventoryRepository
-     */
-    protected ProductInventoryRepository $productInventoryRepository;
+    protected CacheService $cacheService;
+    protected AlertService $alertService;
 
-    /**
-     * @var InventoryMovementRepository
-     */
-    protected InventoryMovementRepository $inventoryMovementRepository;
-
-    /**
-     * InventoryService constructor.
-     */
-    public function __construct(
-        ProductInventoryRepository $productInventoryRepository,
-        InventoryMovementRepository $inventoryMovementRepository
-    ) {
-        $this->productInventoryRepository = $productInventoryRepository;
-        $this->inventoryMovementRepository = $inventoryMovementRepository;
-    }
-
-    /**
-     * Ajusta inventário de um produto
-     */
-    public function adjustInventory(
-        Product $product,
-        string $type,
-        int $quantity,
-        string $reason = '',
-        ?int $referenceId = null,
-        ?string $referenceType = null
-    ): InventoryMovement {
-        return DB::transaction(function () use ($product, $type, $quantity, $reason, $referenceId, $referenceType) {
-            // Valida quantidade
-            if ($quantity <= 0) {
-                throw new Exception('Quantidade deve ser maior que zero');
-            }
-
-            // Busca ou cria inventário
-            $inventory = $this->productInventoryRepository->findByProduct($product->id);
-            if (!$inventory) {
-                $inventory = $this->productInventoryRepository->updateOrCreate($product->id, [
-                    'quantity' => 0,
-                    'min_quantity' => 0,
-                    'max_quantity' => null,
-                ]);
-            }
-
-            // Calcula nova quantidade
-            $currentQuantity = $inventory->quantity;
-            if ($type === 'in') {
-                $newQuantity = $currentQuantity + $quantity;
-            } elseif ($type === 'out') {
-                if ($currentQuantity < $quantity) {
-                    throw new Exception('Estoque insuficiente para esta operação');
-                }
-                $newQuantity = $currentQuantity - $quantity;
-            } else {
-                throw new Exception('Tipo de movimento inválido. Use "in" ou "out"');
-            }
-
-            // Atualiza inventário
-            $inventory->update(['quantity' => $newQuantity]);
-
-            // Cria movimentação
-            $movementData = [
-                'tenant_id' => tenant()->id,
-                'product_id' => $product->id,
-                'type' => $type,
-                'quantity' => $quantity,
-                'previous_quantity' => $currentQuantity,
-                'new_quantity' => $newQuantity,
-                'reason' => $reason ?: 'Ajuste manual de inventário',
-                'reference_id' => $referenceId,
-                'reference_type' => $referenceType,
-            ];
-
-            return $this->inventoryMovementRepository->create($movementData);
-        });
-    }
-
-    /**
-     * Calcula valor total do inventário
-     */
-    public function calculateTotalInventoryValue(): float
+    public function __construct(CacheService $cacheService, AlertService $alertService)
     {
+        $this->cacheService = $cacheService;
+        $this->alertService = $alertService;
+    }
+
+    /**
+     * Consome produto do estoque
+     */
+    public function consumeProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): ServiceResult {
+        return $this->processInventoryMovement(
+            $productId,
+            -abs($quantity),
+            'out',
+            $reason,
+            $referenceType,
+            $referenceId,
+            $tenantId,
+            true // Validar estoque negativo
+        );
+    }
+
+    /**
+     * Adiciona produto ao estoque
+     */
+    public function addProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): ServiceResult {
+        return $this->processInventoryMovement(
+            $productId,
+            abs($quantity),
+            'in',
+            $reason,
+            $referenceType,
+            $referenceId,
+            $tenantId
+        );
+    }
+
+    /**
+     * Reserva produto no estoque (não consome, apenas marca como reservado)
+     */
+    public function reserveProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): ServiceResult {
+        return $this->processInventoryMovement(
+            $productId,
+            -abs($quantity),
+            'reserve',
+            $reason,
+            $referenceType,
+            $referenceId,
+            $tenantId,
+            true // Validar disponibilidade
+        );
+    }
+
+    /**
+     * Libera reserva de produto
+     */
+    public function releaseReservation(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): ServiceResult {
+        return $this->processInventoryMovement(
+            $productId,
+            abs($quantity),
+            'release',
+            $reason,
+            $referenceType,
+            $referenceId,
+            $tenantId
+        );
+    }
+
+    /**
+     * Devolve produto ao estoque (reverte consumo)
+     */
+    public function returnProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): ServiceResult {
+        return $this->processInventoryMovement(
+            $productId,
+            abs($quantity),
+            'return',
+            $reason,
+            $referenceType,
+            $referenceId,
+            $tenantId
+        );
+    }
+
+    /**
+     * Processa movimentação de estoque genérica
+     */
+    protected function processInventoryMovement(
+        int $productId,
+        float $quantity,
+        string $type,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId,
+        bool $validateAvailability = false
+    ): ServiceResult {
         try {
-            $inventories = $this->productInventoryRepository->getPaginated(1000);
-            $totalValue = 0;
-
-            foreach ($inventories as $inventory) {
-                if ($inventory->product && $inventory->product->price) {
-                    $totalValue += $inventory->quantity * $inventory->product->price;
+            return DB::transaction(function () use (
+                $productId,
+                $quantity,
+                $type,
+                $reason,
+                $referenceType,
+                $referenceId,
+                $tenantId,
+                $validateAvailability
+            ) {
+                // Validar produto
+                $product = Product::find($productId);
+                if (!$product) {
+                    return ServiceResult::error('Produto não encontrado');
                 }
-            }
 
-            return $totalValue;
-        } catch (Exception $e) {
-            Log::error('Erro ao calcular valor total do inventário', [
+                // Obter inventário atual
+                $inventory = $this->getOrCreateInventory($productId, $tenantId);
+                $previousQuantity = $inventory->quantity;
+                $newQuantity = $previousQuantity + $quantity;
+
+                // Validar estoque negativo se necessário
+                if ($validateAvailability && $newQuantity < 0) {
+                    return ServiceResult::error(
+                        'Estoque insuficiente. Disponível: ' . $previousQuantity . ', Solicitado: ' . abs($quantity)
+                    );
+                }
+
+                // Atualizar inventário
+                $inventory->quantity = $newQuantity;
+                $inventory->save();
+
+                // Registrar movimentação
+                $movement = $this->createInventoryMovement(
+                    $productId,
+                    $type,
+                    abs($quantity),
+                    $previousQuantity,
+                    $newQuantity,
+                    $reason,
+                    $referenceType,
+                    $referenceId,
+                    $tenantId
+                );
+
+                // Limpar cache
+                $this->clearInventoryCache($productId, $tenantId);
+
+                // Verificar alertas de estoque
+                $this->checkStockAlerts($inventory, $product);
+
+                return ServiceResult::success([
+                    'inventory' => $inventory,
+                    'movement' => $movement,
+                    'previous_quantity' => $previousQuantity,
+                    'new_quantity' => $newQuantity,
+                ]);
+            });
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar movimentação de estoque', [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'type' => $type,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'tenant_id' => $tenantId
             ]);
 
+            return ServiceResult::error('Erro ao processar movimentação: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtém ou cria registro de inventário para o produto
+     */
+    protected function getOrCreateInventory(int $productId, int $tenantId): ProductInventory
+    {
+        $inventory = ProductInventory::where('product_id', $productId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
+        if (!$inventory) {
+            $inventory = ProductInventory::create([
+                'product_id' => $productId,
+                'tenant_id' => $tenantId,
+                'quantity' => 0,
+                'min_quantity' => 0,
+                'max_quantity' => null,
+            ]);
+        }
+
+        return $inventory;
+    }
+
+    /**
+     * Cria registro de movimentação de inventário
+     */
+    protected function createInventoryMovement(
+        int $productId,
+        string $type,
+        float $quantity,
+        float $previousQuantity,
+        float $newQuantity,
+        string $reason,
+        string $referenceType,
+        int $referenceId,
+        int $tenantId
+    ): InventoryMovement {
+        return InventoryMovement::create([
+            'tenant_id' => $tenantId,
+            'product_id' => $productId,
+            'type' => $type,
+            'quantity' => $quantity,
+            'previous_quantity' => $previousQuantity,
+            'new_quantity' => $newQuantity,
+            'reason' => $reason,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+        ]);
+    }
+
+    /**
+     * Verifica e envia alertas de estoque
+     */
+    protected function checkStockAlerts(ProductInventory $inventory, Product $product): void
+    {
+        try {
+            // Verificar estoque baixo
+            if ($inventory->isLowStock()) {
+                $this->sendLowStockAlert($inventory, $product);
+            }
+
+            // Verificar estoque alto
+            if ($inventory->isHighStock()) {
+                $this->sendHighStockAlert($inventory, $product);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao verificar alertas de estoque', [
+                'inventory_id' => $inventory->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Envia alerta de estoque baixo
+     */
+    protected function sendLowStockAlert(ProductInventory $inventory, Product $product): void
+    {
+        $alertSetting = AlertSetting::where('tenant_id', $inventory->tenant_id)
+            ->where('type', 'low_stock')
+            ->first();
+
+        if (!$alertSetting || !$alertSetting->is_active) {
+            return;
+        }
+
+        $users = User::where('tenant_id', $inventory->tenant_id)
+            ->whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'manage_inventory');
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            $notification = Notification::create([
+                'tenant_id' => $inventory->tenant_id,
+                'user_id' => $user->id,
+                'type' => 'low_stock',
+                'title' => 'Estoque Baixo: ' . $product->name,
+                'message' => "O produto {$product->name} está com estoque baixo. Quantidade atual: {$inventory->quantity}, Mínimo: {$inventory->min_quantity}",
+                'data' => [
+                    'product_id' => $product->id,
+                    'current_quantity' => $inventory->quantity,
+                    'min_quantity' => $inventory->min_quantity,
+                ],
+                'read' => false,
+            ]);
+
+            // Enviar email se configurado
+            if ($alertSetting->send_email && $user->email) {
+                $this->alertService->sendLowStockEmail($user, $product, $inventory);
+            }
+        }
+    }
+
+    /**
+     * Envia alerta de estoque alto
+     */
+    protected function sendHighStockAlert(ProductInventory $inventory, Product $product): void
+    {
+        $alertSetting = AlertSetting::where('tenant_id', $inventory->tenant_id)
+            ->where('type', 'high_stock')
+            ->first();
+
+        if (!$alertSetting || !$alertSetting->is_active) {
+            return;
+        }
+
+        $users = User::where('tenant_id', $inventory->tenant_id)
+            ->whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'manage_inventory');
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            $notification = Notification::create([
+                'tenant_id' => $inventory->tenant_id,
+                'user_id' => $user->id,
+                'type' => 'high_stock',
+                'title' => 'Estoque Alto: ' . $product->name,
+                'message' => "O produto {$product->name} está com estoque alto. Quantidade atual: {$inventory->quantity}, Máximo: {$inventory->max_quantity}",
+                'data' => [
+                    'product_id' => $product->id,
+                    'current_quantity' => $inventory->quantity,
+                    'max_quantity' => $inventory->max_quantity,
+                ],
+                'read' => false,
+            ]);
+
+            // Enviar email se configurado
+            if ($alertSetting->send_email && $user->email) {
+                $this->alertService->sendHighStockEmail($user, $product, $inventory);
+            }
+        }
+    }
+
+    /**
+     * Limpa cache do inventário
+     */
+    protected function clearInventoryCache(int $productId, int $tenantId): void
+    {
+        $cacheKey = "inventory_product_{$productId}_tenant_{$tenantId}";
+        $this->cacheService->forget($cacheKey);
+    }
+
+    /**
+     * Obtém relatório de giro de estoque
+     */
+    public function getStockTurnoverReport(int $tenantId, array $filters = []): array
+    {
+        $startDate = $filters['start_date'] ?? now()->subDays(30);
+        $endDate = $filters['end_date'] ?? now();
+        $productId = $filters['product_id'] ?? null;
+
+        $movements = InventoryMovement::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($productId, function ($query) use ($productId) {
+                return $query->where('product_id', $productId);
+            })
+            ->with(['product'])
+            ->get();
+
+        $report = [];
+        foreach ($movements->groupBy('product_id') as $productId => $productMovements) {
+            $product = $productMovements->first()->product;
+            
+            $totalIn = $productMovements->where('type', 'in')->sum('quantity');
+            $totalOut = $productMovements->where('type', 'out')->sum('quantity');
+            $totalReserved = $productMovements->where('type', 'reserve')->sum('quantity');
+            $totalReturned = $productMovements->where('type', 'return')->sum('quantity');
+
+            $averageStock = $this->calculateAverageStock($productId, $tenantId, $startDate, $endDate);
+            $turnoverRate = $averageStock > 0 ? ($totalOut / $averageStock) : 0;
+
+            $report[] = [
+                'product' => $product,
+                'total_in' => $totalIn,
+                'total_out' => $totalOut,
+                'total_reserved' => $totalReserved,
+                'total_returned' => $totalReturned,
+                'average_stock' => $averageStock,
+                'turnover_rate' => $turnoverRate,
+                'turnover_classification' => $this->classifyTurnover($turnoverRate),
+            ];
+        }
+
+        return $report;
+    }
+
+    /**
+     * Calcula estoque médio no período
+     */
+    protected function calculateAverageStock(int $productId, int $tenantId, $startDate, $endDate): float
+    {
+        $movements = InventoryMovement::where('product_id', $productId)
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        if ($movements->isEmpty()) {
             return 0;
         }
-    }
 
-    /**
-     * Gera relatório de resumo
-     */
-    public function generateSummaryReport(): array
-    {
-        try {
-            $statistics = $this->productInventoryRepository->getStatistics();
-            $totalValue = $this->calculateTotalInventoryValue();
-            $recentMovements = $this->inventoryMovementRepository->getRecentMovements(10);
+        $totalStock = 0;
+        $daysCount = 0;
+        $currentStock = $movements->first()->previous_quantity;
+        $currentDate = $startDate->copy();
 
-            return [
-                'statistics' => array_merge($statistics, ['total_value' => $totalValue]),
-                'recent_movements' => $recentMovements,
-                'low_stock_items' => $this->productInventoryRepository->getLowStockItems(),
-                'report_date' => now(),
-            ];
-        } catch (Exception $e) {
-            Log::error('Erro ao gerar relatório de resumo', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return [
-                'statistics' => [],
-                'recent_movements' => collect(),
-                'low_stock_items' => collect(),
-                'report_date' => now(),
-                'error' => 'Erro ao gerar relatório',
-            ];
-        }
-    }
-
-    /**
-     * Gera relatório de movimentações
-     */
-    public function generateMovementReport(?string $startDate = null, ?string $endDate = null): array
-    {
-        try {
-            $statistics = $this->inventoryMovementRepository->getStatisticsByPeriod($startDate, $endDate);
-            $summaryByType = $this->inventoryMovementRepository->getSummaryByType($startDate, $endDate);
-            $mostMovedProducts = $this->inventoryMovementRepository->getMostMovedProducts(10, $startDate, $endDate);
-
-            return [
-                'statistics' => $statistics,
-                'summary_by_type' => $summaryByType,
-                'most_moved_products' => $mostMovedProducts,
-                'report_period' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                ],
-                'report_date' => now(),
-            ];
-        } catch (Exception $e) {
-            Log::error('Erro ao gerar relatório de movimentações', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return [
-                'statistics' => [],
-                'summary_by_type' => [],
-                'most_moved_products' => collect(),
-                'report_period' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                ],
-                'report_date' => now(),
-                'error' => 'Erro ao gerar relatório',
-            ];
-        }
-    }
-
-    /**
-     * Gera relatório de avaliação
-     */
-    public function generateValuationReport(): array
-    {
-        try {
-            $inventories = $this->productInventoryRepository->getPaginated(1000);
-            $valuationData = [];
-            $totalValue = 0;
-
-            foreach ($inventories as $inventory) {
-                if ($inventory->product && $inventory->product->price) {
-                    $value = $inventory->quantity * $inventory->product->price;
-                    $totalValue += $value;
-
-                    $valuationData[] = [
-                        'product' => $inventory->product,
-                        'quantity' => $inventory->quantity,
-                        'unit_price' => $inventory->product->price,
-                        'total_value' => $value,
-                        'stock_percentage' => $inventory->max_quantity > 0 
-                            ? round(($inventory->quantity / $inventory->max_quantity) * 100, 2)
-                            : null,
-                    ];
-                }
-            }
-
-            // Ordena por valor total
-            usort($valuationData, function ($a, $b) {
-                return $b['total_value'] <=> $a['total_value'];
+        while ($currentDate <= $endDate) {
+            $dayMovements = $movements->filter(function ($movement) use ($currentDate) {
+                return $movement->created_at->format('Y-m-d') === $currentDate->format('Y-m-d');
             });
 
-            return [
-                'valuation_data' => $valuationData,
-                'total_value' => $totalValue,
-                'total_items' => count($valuationData),
-                'report_date' => now(),
-            ];
-        } catch (Exception $e) {
-            Log::error('Erro ao gerar relatório de avaliação', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            foreach ($dayMovements as $movement) {
+                $currentStock = $movement->new_quantity;
+            }
 
-            return [
-                'valuation_data' => [],
-                'total_value' => 0,
-                'total_items' => 0,
-                'report_date' => now(),
-                'error' => 'Erro ao gerar relatório',
-            ];
+            $totalStock += $currentStock;
+            $daysCount++;
+            $currentDate->addDay();
+        }
+
+        return $daysCount > 0 ? ($totalStock / $daysCount) : 0;
+    }
+
+    /**
+     * Classifica o giro de estoque
+     */
+    protected function classifyTurnover(float $turnoverRate): string
+    {
+        if ($turnoverRate >= 12) {
+            return 'Muito Alto';
+        } elseif ($turnoverRate >= 6) {
+            return 'Alto';
+        } elseif ($turnoverRate >= 3) {
+            return 'Médio';
+        } elseif ($turnoverRate >= 1) {
+            return 'Baixo';
+        } else {
+            return 'Muito Baixo';
         }
     }
 
     /**
-     * Gera relatório de estoque baixo
+     * Obtém produtos mais utilizados
      */
-    public function generateLowStockReport(): array
+    public function getMostUsedProducts(int $tenantId, int $limit = 10, array $filters = []): array
     {
-        try {
-            $lowStockItems = $this->productInventoryRepository->getLowStockItems();
-            $urgentItems = [];
-            $warningItems = [];
+        $startDate = $filters['start_date'] ?? now()->subDays(30);
+        $endDate = $filters['end_date'] ?? now();
 
-            foreach ($lowStockItems as $item) {
-                if ($item->quantity == 0) {
-                    $urgentItems[] = $item;
-                } elseif ($item->min_quantity > 0) {
-                    $percentage = ($item->quantity / $item->min_quantity) * 100;
-                    if ($percentage <= 50) {
-                        $urgentItems[] = $item;
-                    } else {
-                        $warningItems[] = $item;
-                    }
-                } else {
-                    $warningItems[] = $item;
+        $movements = InventoryMovement::where('tenant_id', $tenantId)
+            ->where('type', 'out')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->with(['product'])
+            ->get();
+
+        $productUsage = $movements->groupBy('product_id')->map(function ($productMovements) {
+            return [
+                'product' => $productMovements->first()->product,
+                'total_quantity' => $productMovements->sum('quantity'),
+                'movement_count' => $productMovements->count(),
+                'average_quantity' => $productMovements->avg('quantity'),
+            ];
+        })->sortByDesc('total_quantity')->take($limit)->values();
+
+        return $productUsage->toArray();
+    }
+
+    /**
+     * Realiza ajuste manual de estoque
+     */
+    public function adjustStock(
+        int $productId,
+        float $newQuantity,
+        string $reason,
+        int $userId,
+        int $tenantId
+    ): ServiceResult {
+        try {
+            return DB::transaction(function () use ($productId, $newQuantity, $reason, $userId, $tenantId) {
+                // Validar produto
+                $product = Product::find($productId);
+                if (!$product) {
+                    return ServiceResult::error('Produto não encontrado');
                 }
-            }
 
-            return [
-                'urgent_items' => collect($urgentItems),
-                'warning_items' => collect($warningItems),
-                'total_urgent' => count($urgentItems),
-                'total_warning' => count($warningItems),
-                'report_date' => now(),
-            ];
-        } catch (Exception $e) {
-            Log::error('Erro ao gerar relatório de estoque baixo', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+                // Obter inventário atual
+                $inventory = $this->getOrCreateInventory($productId, $tenantId);
+                $previousQuantity = $inventory->quantity;
+                $adjustment = $newQuantity - $previousQuantity;
 
-            return [
-                'urgent_items' => collect(),
-                'warning_items' => collect(),
-                'total_urgent' => 0,
-                'total_warning' => 0,
-                'report_date' => now(),
-                'error' => 'Erro ao gerar relatório',
-            ];
-        }
-    }
+                // Validar razão do ajuste
+                if (empty(trim($reason))) {
+                    return ServiceResult::error('Razão do ajuste é obrigatória');
+                }
 
-    /**
-     * Exporta relatório
-     */
-    public function exportReport(string $reportType, string $format)
-    {
-        try {
-            $reportData = match ($reportType) {
-                'movements' => $this->generateMovementReport(),
-                'valuation' => $this->generateValuationReport(),
-                'low-stock' => $this->generateLowStockReport(),
-                default => $this->generateSummaryReport(),
-            };
+                // Criar movimentação de ajuste
+                $movement = $this->createInventoryMovement(
+                    $productId,
+                    'adjustment',
+                    abs($adjustment),
+                    $previousQuantity,
+                    $newQuantity,
+                    "AJUSTE MANUAL: {$reason}",
+                    'User',
+                    $userId,
+                    $tenantId
+                );
 
-            if ($format === 'pdf') {
-                return $this->exportToPdf($reportData, $reportType);
-            } elseif ($format === 'csv') {
-                return $this->exportToCsv($reportData, $reportType);
-            } elseif ($format === 'xlsx') {
-                return $this->exportToExcel($reportData, $reportType);
-            }
+                // Atualizar inventário
+                $inventory->quantity = $newQuantity;
+                $inventory->save();
 
-            throw new Exception('Formato de exportação não suportado');
-        } catch (Exception $e) {
-            Log::error('Erro ao exportar relatório', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'report_type' => $reportType,
-                'format' => $format,
-            ]);
+                // Limpar cache
+                $this->clearInventoryCache($productId, $tenantId);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao exportar relatório: ' . $e->getMessage(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+                // Verificar alertas de estoque
+                $this->checkStockAlerts($inventory, $product);
 
-    /**
-     * Exporta para PDF
-     */
-    private function exportToPdf(array $reportData, string $reportType)
-    {
-        // Implementação básica - pode ser estendida com bibliotecas como DomPDF
-        $view = view('reports.inventory.pdf.' . $reportType, compact('reportData'));
-        
-        return response($view->render())
-            ->header('Content-Type', 'text/html')
-            ->header('Content-Disposition', 'attachment; filename="relatorio-inventario-' . $reportType . '-' . date('Y-m-d') . '.pdf"');
-    }
-
-    /**
-     * Exporta para CSV
-     */
-    private function exportToCsv(array $reportData, string $reportType)
-    {
-        $filename = 'relatorio-inventario-' . $reportType . '-' . date('Y-m-d') . '.csv';
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        return response()->stream(function () use ($reportData, $reportType) {
-            $handle = fopen('php://output', 'w');
-            
-            // Cabeçalhos baseados no tipo de relatório
-            $this->writeCsvHeaders($handle, $reportType);
-            
-            // Dados baseados no tipo de relatório
-            $this->writeCsvData($handle, $reportData, $reportType);
-            
-            fclose($handle);
-        }, 200, $headers);
-    }
-
-    /**
-     * Exporta para Excel
-     */
-    private function exportToExcel(array $reportData, string $reportType)
-    {
-        // Implementação básica - pode ser estendida com bibliotecas como PhpSpreadsheet
-        // Por enquanto, retorna CSV com extensão xlsx
-        return $this->exportToCsv($reportData, $reportType);
-    }
-
-    /**
-     * Escreve cabeçalhos CSV
-     */
-    private function writeCsvHeaders($handle, string $reportType): void
-    {
-        $headers = match ($reportType) {
-            'summary' => ['Período', 'Total de Itens', 'Valor Total', 'Estoque Baixo', 'Data'],
-            'movements' => ['Data', 'Produto', 'Tipo', 'Quantidade', 'Quantidade Anterior', 'Quantidade Nova', 'Motivo'],
-            'valuation' => ['Produto', 'SKU', 'Quantidade', 'Preço Unitário', 'Valor Total', '% Estoque'],
-            'low-stock' => ['Produto', 'SKU', 'Quantidade Atual', 'Quantidade Mínima', 'Situação'],
-            default => ['Dados'],
-        };
-        
-        fputcsv($handle, $headers);
-    }
-
-    /**
-     * Escreve dados CSV
-     */
-    private function writeCsvData($handle, array $reportData, string $reportType): void
-    {
-        switch ($reportType) {
-            case 'summary':
-                fputcsv($handle, [
-                    'Resumo',
-                    $reportData['statistics']['total_items'] ?? 0,
-                    'R$ ' . number_format($reportData['statistics']['total_value'] ?? 0, 2, ',', '.'),
-                    $reportData['statistics']['low_stock_items'] ?? 0,
-                    $reportData['report_date']->format('d/m/Y H:i'),
+                // Registrar auditoria
+                Log::info('Ajuste manual de estoque realizado', [
+                    'product_id' => $productId,
+                    'previous_quantity' => $previousQuantity,
+                    'new_quantity' => $newQuantity,
+                    'adjustment' => $adjustment,
+                    'reason' => $reason,
+                    'user_id' => $userId,
+                    'tenant_id' => $tenantId
                 ]);
-                break;
-                
-            case 'movements':
-                if (isset($reportData['most_moved_products'])) {
-                    foreach ($reportData['most_moved_products'] as $item) {
-                        fputcsv($handle, [
-                            $item->created_at->format('d/m/Y H:i'),
-                            $item->product->name ?? '',
-                            strtoupper($item->type ?? ''),
-                            $item->total_quantity ?? 0,
-                            '', // quantidade anterior não disponível neste relatório
-                            '', // quantidade nova não disponível neste relatório
-                            'Produto mais movimentado',
-                        ]);
-                    }
-                }
-                break;
-                
-            case 'valuation':
-                if (isset($reportData['valuation_data'])) {
-                    foreach ($reportData['valuation_data'] as $item) {
-                        fputcsv($handle, [
-                            $item['product']->name ?? '',
-                            $item['product']->sku ?? '',
-                            $item['quantity'] ?? 0,
-                            'R$ ' . number_format($item['unit_price'] ?? 0, 2, ',', '.'),
-                            'R$ ' . number_format($item['total_value'] ?? 0, 2, ',', '.'),
-                            ($item['stock_percentage'] ?? 0) . '%',
-                        ]);
-                    }
-                }
-                break;
-                
-            case 'low-stock':
-                if (isset($reportData['urgent_items'])) {
-                    foreach ($reportData['urgent_items'] as $item) {
-                        fputcsv($handle, [
-                            $item->product->name ?? '',
-                            $item->product->sku ?? '',
-                            $item->quantity ?? 0,
-                            $item->min_quantity ?? 0,
-                            'URGENTE',
-                        ]);
-                    }
-                }
-                if (isset($reportData['warning_items'])) {
-                    foreach ($reportData['warning_items'] as $item) {
-                        fputcsv($handle, [
-                            $item->product->name ?? '',
-                            $item->product->sku ?? '',
-                            $item->quantity ?? 0,
-                            $item->min_quantity ?? 0,
-                            'ALERTA',
-                        ]);
-                    }
-                }
-                break;
+
+                return ServiceResult::success([
+                    'inventory' => $inventory,
+                    'movement' => $movement,
+                    'previous_quantity' => $previousQuantity,
+                    'new_quantity' => $newQuantity,
+                    'adjustment' => $adjustment,
+                ]);
+            });
+        } catch (\Exception $e) {
+            Log::error('Erro ao realizar ajuste manual de estoque', [
+                'product_id' => $productId,
+                'new_quantity' => $newQuantity,
+                'error' => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ]);
+
+            return ServiceResult::error('Erro ao realizar ajuste: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Valida ajuste de estoque
+     */
+    public function validateStockAdjustment(int $productId, float $newQuantity, int $tenantId): array
+    {
+        $errors = [];
+
+        // Validar produto
+        $product = Product::find($productId);
+        if (!$product) {
+            $errors[] = 'Produto não encontrado';
+            return $errors;
+        }
+
+        // Validar quantidade
+        if ($newQuantity < 0) {
+            $errors[] = 'Quantidade não pode ser negativa';
+        }
+
+        // Obter inventário atual
+        $inventory = $this->getOrCreateInventory($productId, $tenantId);
+
+        // Validar limite máximo se definido
+        if ($inventory->max_quantity && $newQuantity > $inventory->max_quantity) {
+            $errors[] = "Quantidade excede o limite máximo de {$inventory->max_quantity}";
+        }
+
+        return $errors;
     }
 }

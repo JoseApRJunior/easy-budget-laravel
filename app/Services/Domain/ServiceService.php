@@ -37,7 +37,8 @@ class ServiceService extends AbstractBaseService
     public function findByCode( string $code, array $with = [] ): ServiceResult
     {
         try {
-            $query = Service::where( 'code', $code );
+            // Usar withoutGlobalScopes para debug - o tenant scoping será aplicado no controller
+            $query = Service::withoutGlobalScopes()->where( 'code', $code );
 
             if ( !empty( $with ) ) {
                 $query->with( $with );

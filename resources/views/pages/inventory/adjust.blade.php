@@ -1,414 +1,223 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Ajustar Estoque - ' . $product->name)
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
+            <h1 class="mb-4">Ajustar Estoque</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('inventory.index') }}">Inventário</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('inventory.show', $product) }}">{{ $product->name }}</a></li>
+                    <li class="breadcrumb-item active">Ajustar Estoque</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-sliders-h text-warning"></i> Ajuste de Estoque
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Voltar ao Inventário
-                        </a>
-                    </div>
+                    <h3 class="card-title">Informações do Produto</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('provider.inventory.store-adjustment') }}" id="adjustForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>SKU:</strong> {{ $product->sku }}</p>
+                            <p><strong>Nome:</strong> {{ $product->name }}</p>
+                            <p><strong>Categoria:</strong> {{ $product->category->name ?? 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Estoque Atual:</strong> 
+                                <span class="badge badge-primary">{{ $inventory->quantity ?? 0 }}</span>
+                            </p>
+                            <p><strong>Estoque Mínimo:</strong> 
+                                <span class="badge badge-warning">{{ $inventory->min_quantity ?? 0 }}</span>
+                            </p>
+                            @if($inventory && $inventory->max_quantity)
+                                <p><strong>Estoque Máximo:</strong> 
+                                    <span class="badge badge-info">{{ $inventory->max_quantity }}</span>
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Ajuste de Estoque</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('inventory.adjust', $product) }}" method="POST">
                         @csrf
                         
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h5 class="mb-0">Dados do Ajuste</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="product_id">Produto *</label>
-                                                    <select name="product_id" id="product_id" class="form-control @error('product_id') is-invalid @enderror" required>
-                                                        <option value="">Selecione um produto...</option>
-                                                        @foreach($products as $product)
-                                                            <option value="{{ $product->id }}" 
-                                                                    data-current-quantity="{{ $product->inventory ? $product->inventory->current_quantity : 0 }}"
-                                                                    data-unit-value="{{ $product->inventory ? $product->inventory->unit_value : $product->sale_price }}"
-                                                                    data-min-quantity="{{ $product->inventory ? $product->inventory->minimum_quantity : 0 }}"
-                                                                    {{ request('product_id') == $product->id || old('product_id') == $product->id ? 'selected' : '' }}>
-                                                                {{ $product->name }} ({{ $product->code }})
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('product_id')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="adjustment_type">Tipo de Ajuste *</label>
-                                                    <select name="adjustment_type" id="adjustment_type" class="form-control @error('adjustment_type') is-invalid @enderror" required>
-                                                        <option value="">Selecione o tipo...</option>
-                                                        <option value="positive" {{ old('adjustment_type') == 'positive' ? 'selected' : '' }}>
-                                                            Ajuste Positivo (+)
-                                                        </option>
-                                                        <option value="negative" {{ old('adjustment_type') == 'negative' ? 'selected' : '' }}>
-                                                            Ajuste Negativo (-)
-                                                        </option>
-                                                        <option value="value" {{ old('adjustment_type') == 'value' ? 'selected' : '' }}>
-                                                            Ajuste de Valor Unitário
-                                                        </option>
-                                                    </select>
-                                                    @error('adjustment_type')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="form-group">
+                            <label for="current_quantity">Quantidade Atual</label>
+                            <input type="number" class="form-control" value="{{ $inventory->quantity ?? 0 }}" disabled>
+                        </div>
 
-                                        <div class="row" id="quantityAdjustmentRow" style="display: none;">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="quantity_adjustment">Quantidade de Ajuste *</label>
-                                                    <input type="number" name="quantity_adjustment" id="quantity_adjustment" 
-                                                           class="form-control @error('quantity_adjustment') is-invalid @enderror" 
-                                                           value="{{ old('quantity_adjustment', 1) }}" min="1">
-                                                    <small class="form-text text-muted" id="quantityAdjustmentHelp"></small>
-                                                    @error('quantity_adjustment')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="new_quantity">Novo Estoque</label>
-                                                    <input type="number" name="new_quantity" id="new_quantity" 
-                                                           class="form-control" value="{{ old('new_quantity') }}" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="form-group">
+                            <label for="new_quantity">Nova Quantidade <span class="text-danger">*</span></label>
+                            <input type="number" 
+                                   class="form-control @error('new_quantity') is-invalid @enderror" 
+                                   id="new_quantity" 
+                                   name="new_quantity" 
+                                   value="{{ old('new_quantity', $inventory->quantity ?? 0) }}"
+                                   min="0"
+                                   required>
+                            @error('new_quantity')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">
+                                Digite a quantidade que deseja definir como estoque atual
+                            </small>
+                        </div>
 
-                                        <div class="row" id="valueAdjustmentRow" style="display: none;">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="new_unit_value">Novo Valor Unitário (R$) *</label>
-                                                    <input type="number" name="new_unit_value" id="new_unit_value" 
-                                                           class="form-control @error('new_unit_value') is-invalid @enderror" 
-                                                           value="{{ old('new_unit_value') }}" step="0.01" min="0.01">
-                                                    @error('new_unit_value')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="current_unit_value">Valor Unitário Atual</label>
-                                                    <input type="number" name="current_unit_value" id="current_unit_value" 
-                                                           class="form-control" value="{{ old('current_unit_value') }}" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="form-group">
+                            <label for="reason">Motivo do Ajuste <span class="text-danger">*</span></label>
+                            <textarea class="form-control @error('reason') is-invalid @enderror" 
+                                      id="reason" 
+                                      name="reason" 
+                                      rows="3"
+                                      minlength="10"
+                                      maxlength="500"
+                                      required
+                                      placeholder="Descreva detalhadamente o motivo deste ajuste de estoque...">{{ old('reason') }}</textarea>
+                            @error('reason')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">
+                                Mínimo 10 caracteres. Este motivo será registrado no histórico de movimentações.
+                            </small>
+                        </div>
 
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="reason">Motivo do Ajuste *</label>
-                                                    <textarea name="reason" id="reason" rows="3" 
-                                                              class="form-control @error('reason') is-invalid @enderror" 
-                                                              placeholder="Descreva detalhadamente o motivo do ajuste (ex: Correção de inventário, Perda de estoque, Encontrado em auditoria, etc.)" required>{{ old('reason') }}</textarea>
-                                                    @error('reason')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Importante:</strong> Este ajuste irá alterar a quantidade atual do produto no estoque. 
+                            A diferença entre a quantidade atual e a nova quantidade será registrada como uma movimentação de estoque.
+                        </div>
 
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-header bg-info text-white">
-                                        <h5 class="mb-0">Resumo do Ajuste</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="alert alert-info">
-                                            <h6><i class="fas fa-info-circle"></i> Informações Atuais</h6>
-                                            <div id="currentInfo" class="mt-2">
-                                                <p><strong>Produto:</strong> <span id="selectedProductName">Nenhum produto selecionado</span></p>
-                                                <p><strong>Estoque Atual:</strong> <span id="currentQuantity" class="badge badge-secondary">0</span></p>
-                                                <p><strong>Estoque Mínimo:</strong> <span id="minimumQuantity" class="badge badge-warning">0</span></p>
-                                                <p><strong>Valor Unitário:</strong> <span id="currentUnitValue">R$ 0,00</span></p>
-                                            </div>
-                                        </div>
-
-                                        <div class="alert alert-warning" id="adjustmentPreview" style="display: none;">
-                                            <h6><i class="fas fa-chart-line"></i> Previsão do Ajuste</h6>
-                                            <div class="mt-2" id="adjustmentDetails">
-                                                <!-- Conteúdo será preenchido dinamicamente -->
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <button type="submit" class="btn btn-warning btn-block btn-lg" id="submitBtn" disabled>
-                                                <i class="fas fa-save"></i> Confirmar Ajuste
-                                            </button>
-                                        </div>
-
-                                        <div class="text-center">
-                                            <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary btn-block">
-                                                <i class="fas fa-times"></i> Cancelar
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Confirmar Ajuste
+                            </button>
+                            <a href="{{ route('inventory.show', $product) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Resumo da Operação</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Produto:</strong> {{ $product->name }}</p>
+                    <p><strong>Quantidade Atual:</strong> <span id="current-qty">{{ $inventory->quantity ?? 0 }}</span></p>
+                    <p><strong>Nova Quantidade:</strong> <span id="new-qty">{{ old('new_quantity', $inventory->quantity ?? 0) }}</span></p>
+                    <hr>
+                    <p><strong>Diferença:</strong> <span id="difference" class="badge">0</span></p>
+                    
+                    <div id="difference-info" class="mt-3">
+                        <!-- JavaScript will populate this -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Últimas Movimentações</h3>
+                </div>
+                <div class="card-body">
+                    @php
+                        $recentMovements = \App\Models\InventoryMovement::where('product_id', $product->id)
+                            ->where('tenant_id', auth()->user()->tenant_id)
+                            ->orderBy('created_at', 'desc')
+                            ->limit(5)
+                            ->get();
+                    @endphp
+                    
+                    @if($recentMovements->count() > 0)
+                        <div class="timeline">
+                            @foreach($recentMovements as $movement)
+                                <div class="timeline-item">
+                                    <div class="timeline-item-marker">
+                                        <div class="timeline-item-marker-text">{{ $movement->created_at->format('d/m') }}</div>
+                                        <div class="timeline-item-marker-indicator 
+                                            {{ $movement->type === 'entry' ? 'bg-success' : 'bg-warning' }}"></div>
+                                    </div>
+                                    <div class="timeline-item-content">
+                                        {{ ucfirst($movement->type) }}: {{ $movement->quantity }}
+                                        <br>
+                                        <small class="text-muted">{{ $movement->reason }}</small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted">Nenhuma movimentação recente.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-@stop
+@endsection
 
-@section('css')
-<style>
-    .card-header.bg-warning {
-        background-color: #ffc107 !important;
-        color: #212529 !important;
-    }
-    .card-header.bg-info {
-        background-color: #17a2b8 !important;
-    }
-    .alert {
-        margin-bottom: 1rem;
-    }
-    .badge {
-        font-size: 1em;
-        padding: 0.5em 0.75em;
-    }
-    #submitBtn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    .form-text.text-muted {
-        font-size: 0.8em;
-        margin-top: 0.25rem;
-    }
-</style>
-@stop
-
-@section('js')
+@section('scripts')
 <script>
-    $(document).ready(function() {
-        // Inicializar select2 para melhor usabilidade
-        $('#product_id').select2({
-            theme: 'bootstrap4',
-            placeholder: 'Selecione um produto...',
-            allowClear: true
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const currentQty = {{ $inventory->quantity ?? 0 }};
+    const newQtyInput = document.getElementById('new_quantity');
+    const newQtySpan = document.getElementById('new-qty');
+    const differenceSpan = document.getElementById('difference');
+    const differenceInfo = document.getElementById('difference-info');
 
-        // Atualizar informações quando produto for selecionado
-        $('#product_id').on('change', function() {
-            updateProductInfo();
-            updateAdjustmentPreview();
-        });
-
-        // Mostrar/ocultar campos baseado no tipo de ajuste
-        $('#adjustment_type').on('change', function() {
-            const adjustmentType = $(this).val();
-            showAdjustmentFields(adjustmentType);
-            updateAdjustmentPreview();
-        });
-
-        // Atualizar preview quando valores mudarem
-        $('#quantity_adjustment, #new_unit_value').on('input', function() {
-            updateAdjustmentPreview();
-        });
-
-        // Validação do formulário
-        $('#adjustForm').on('submit', function(e) {
-            if (!validateForm()) {
-                e.preventDefault();
-                return false;
-            }
-
-            $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
-        });
-    });
-
-    function updateProductInfo() {
-        const selectedOption = $('#product_id option:selected');
-        const productName = selectedOption.text().split(' (')[0];
-        const currentQuantity = parseInt(selectedOption.data('current-quantity')) || 0;
-        const unitValue = parseFloat(selectedOption.data('unit-value')) || 0;
-        const minQuantity = parseInt(selectedOption.data('min-quantity')) || 0;
-
-        $('#selectedProductName').text(productName);
-        $('#currentQuantity').text(currentQuantity).removeClass('badge-secondary badge-warning badge-danger')
-            .addClass(currentQuantity <= 0 ? 'badge-danger' : currentQuantity <= minQuantity ? 'badge-warning' : 'badge-secondary');
-        $('#minimumQuantity').text(minQuantity);
-        $('#currentUnitValue').text('R$ ' + unitValue.toFixed(2).replace('.', ','));
-        $('#current_unit_value').val(unitValue.toFixed(2));
-        $('#new_unit_value').val(unitValue.toFixed(2));
-
-        updateAdjustmentPreview();
-    }
-
-    function showAdjustmentFields(type) {
-        $('#quantityAdjustmentRow, #valueAdjustmentRow').hide();
+    function updateSummary() {
+        const newQty = parseFloat(newQtyInput.value) || 0;
+        const difference = newQty - currentQty;
         
-        if (type === 'positive' || type === 'negative') {
-            $('#quantityAdjustmentRow').show();
-            const label = type === 'positive' ? 'Quantidade a Adicionar' : 'Quantidade a Remover';
-            $('#quantity_adjustment').prev('label').text(label + ' *');
-            $('#quantityAdjustmentHelp').text(type === 'positive' ? 
-                'Estoque será aumentado' : 'Estoque será diminuído');
-        } else if (type === 'value') {
-            $('#valueAdjustmentRow').show();
-        }
-    }
-
-    function updateAdjustmentPreview() {
-        const productId = $('#product_id').val();
-        const adjustmentType = $('#adjustment_type').val();
-        const currentQuantity = parseInt($('#currentQuantity').text()) || 0;
-        const currentUnitValue = parseFloat($('#currentUnitValue').text().replace('R$ ', '').replace(',', '.')) || 0;
-
-        if (!productId || !adjustmentType) {
-            $('#adjustmentPreview').hide();
-            $('#submitBtn').prop('disabled', true);
-            return;
-        }
-
-        let previewHtml = '';
-        let isValid = false;
-
-        if (adjustmentType === 'positive' || adjustmentType === 'negative') {
-            const quantityAdjustment = parseInt($('#quantity_adjustment').val()) || 0;
-            
-            if (quantityAdjustment > 0) {
-                const newQuantity = adjustmentType === 'positive' ? 
-                    currentQuantity + quantityAdjustment : 
-                    currentQuantity - quantityAdjustment;
-                
-                const adjustmentLabel = adjustmentType === 'positive' ? 'Adicionar' : 'Remover';
-                
-                previewHtml = `
-                    <p><strong>Tipo:</strong> Ajuste ${adjustmentLabel === 'Adicionar' ? 'Positivo' : 'Negativo'}</p>
-                    <p><strong>Quantidade:</strong> ${quantityAdjustment}</p>
-                    <p><strong>Estoque Atual:</strong> <span class="badge badge-secondary">${currentQuantity}</span></p>
-                    <p><strong>Novo Estoque:</strong> <span class="badge badge-${newQuantity < 0 ? 'danger' : 'success'}">${newQuantity}</span></p>
-                `;
-                
-                isValid = newQuantity >= 0; // Não permitir estoque negativo
-            }
-        } else if (adjustmentType === 'value') {
-            const newUnitValue = parseFloat($('#new_unit_value').val()) || 0;
-            
-            if (newUnitValue > 0) {
-                const valueDifference = newUnitValue - currentUnitValue;
-                const differenceLabel = valueDifference >= 0 ? 'Aumento' : 'Redução';
-                
-                previewHtml = `
-                    <p><strong>Tipo:</strong> Ajuste de Valor Unitário</p>
-                    <p><strong>Valor Atual:</strong> R$ ${currentUnitValue.toFixed(2).replace('.', ',')}</p>
-                    <p><strong>Novo Valor:</strong> R$ ${newUnitValue.toFixed(2).replace('.', ',')}</p>
-                    <p><strong>${differenceLabel}:</strong> R$ ${Math.abs(valueDifference).toFixed(2).replace('.', ',')}</p>
-                `;
-                
-                isValid = true;
-            }
-        }
-
-        if (previewHtml) {
-            $('#adjustmentDetails').html(previewHtml);
-            $('#adjustmentPreview').show();
-            $('#submitBtn').prop('disabled', !isValid);
+        newQtySpan.textContent = newQty;
+        differenceSpan.textContent = difference > 0 ? `+${difference}` : difference;
+        
+        if (difference > 0) {
+            differenceSpan.className = 'badge badge-success';
+            differenceInfo.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-arrow-up"></i> 
+                    <strong>Entrada de Estoque:</strong> ${difference} unidades serão adicionadas ao estoque.
+                </div>
+            `;
+        } else if (difference < 0) {
+            differenceSpan.className = 'badge badge-danger';
+            differenceInfo.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-arrow-down"></i> 
+                    <strong>Saída de Estoque:</strong> ${Math.abs(difference)} unidades serão removidas do estoque.
+                </div>
+            `;
         } else {
-            $('#adjustmentPreview').hide();
-            $('#submitBtn').prop('disabled', true);
+            differenceSpan.className = 'badge badge-secondary';
+            differenceInfo.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-minus"></i> 
+                    <strong>Sem Alteração:</strong> O estoque permanecerá inalterado.
+                </div>
+            `;
         }
     }
 
-    function validateForm() {
-        const productId = $('#product_id').val();
-        const adjustmentType = $('#adjustment_type').val();
-        const reason = $('#reason').val().trim();
-
-        if (!productId) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atenção',
-                text: 'Por favor, selecione um produto.'
-            });
-            $('#product_id').focus();
-            return false;
-        }
-
-        if (!adjustmentType) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atenção',
-                text: 'Por favor, selecione o tipo de ajuste.'
-            });
-            $('#adjustment_type').focus();
-            return false;
-        }
-
-        if (adjustmentType === 'positive' || adjustmentType === 'negative') {
-            const quantityAdjustment = parseInt($('#quantity_adjustment').val());
-            if (!quantityAdjustment || quantityAdjustment <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Atenção',
-                    text: 'Por favor, informe uma quantidade de ajuste válida.'
-                });
-                $('#quantity_adjustment').focus();
-                return false;
-            }
-
-            // Validar estoque negativo para ajuste negativo
-            if (adjustmentType === 'negative') {
-                const currentQuantity = parseInt($('#currentQuantity').text()) || 0;
-                if (quantityAdjustment > currentQuantity) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Atenção',
-                        text: 'Quantidade de ajuste maior que o estoque disponível.'
-                    });
-                    $('#quantity_adjustment').focus();
-                    return false;
-                }
-            }
-        } else if (adjustmentType === 'value') {
-            const newUnitValue = parseFloat($('#new_unit_value').val());
-            if (!newUnitValue || newUnitValue <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Atenção',
-                    text: 'Por favor, informe um valor unitário válido.'
-                });
-                $('#new_unit_value').focus();
-                return false;
-            }
-        }
-
-        if (!reason) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atenção',
-                text: 'Por favor, informe o motivo do ajuste.'
-            });
-            $('#reason').focus();
-            return false;
-        }
-
-        return true;
-    }
+    newQtyInput.addEventListener('input', updateSummary);
+    updateSummary(); // Initial update
+});
 </script>
-@stop
+@endsection

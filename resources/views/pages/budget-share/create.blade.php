@@ -3,17 +3,33 @@
 @section('title', 'Criar Compartilhamento')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-1">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-share me-2"></i>
+            Criar Novo Compartilhamento
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Criar</li>
+            </ol>
+        </nav>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title mb-0">
-                        <i class="bi bi-share me-2"></i>Criar Novo Compartilhamento
+                        <i class="bi bi-share me-2"></i>Configurações do Compartilhamento
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('budget-share.store') }}" method="POST" id="createShareForm">
+                    <form action="{{ route('provider.budgets.shares.store') }}" method="POST" id="createShareForm">
                         @csrf
                         
                         <div class="row">
@@ -146,7 +162,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route('budget-share.index') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ route('provider.budgets.shares.index') }}" class="btn btn-outline-secondary">
                                         <i class="bi bi-arrow-left me-1"></i>Cancelar
                                     </a>
                                     <button type="submit" class="btn btn-primary">

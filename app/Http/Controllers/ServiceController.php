@@ -314,31 +314,63 @@ class ServiceController extends Controller
     public function show( string $code ): View
     {
         try {
+            // Verificar se o código do serviço segue o padrão esperado
+            if ( empty( $code ) || strlen( $code ) < 3 ) {
+                Log::warning( 'Código de serviço inválido', [
+                    'code' => $code,
+                    'user_id' => auth()->id(),
+                    'tenant_id' => auth()->user()->tenant_id ?? null
+                ] );
+                abort( 404, 'Código de serviço inválido' );
+            }
+
             $result = $this->serviceService->findByCode( $code, [
                 'budget.customer.commonData',
                 'budget.customer.contacts',
                 'category',
                 'serviceItems.product',
-                'serviceStatus',
                 'schedules' => function ( $q ) {
                     $q->latest()->limit( 1 );
                 }
             ] );
 
             if ( !$result->isSuccess() ) {
+                Log::warning( 'Serviço não encontrado', [
+                    'code' => $code,
+                    'user_id' => auth()->id(),
+                    'tenant_id' => auth()->user()->tenant_id ?? null,
+                    'message' => $result->getMessage()
+                ] );
                 abort( 404, 'Serviço não encontrado' );
             }
 
             $service = $result->getData();
 
+            // Verificar se o serviço pertence ao tenant do usuário
+            $userTenantId = auth()->user()->tenant_id ?? null;
+            if ( $service->tenant_id !== $userTenantId ) {
+                Log::warning( 'Tentativa de acessar serviço de outro tenant', [
+                    'code' => $code,
+                    'service_tenant_id' => $service->tenant_id,
+                    'user_tenant_id' => $userTenantId,
+                    'user_id' => auth()->id()
+                ] );
+                abort( 404, 'Serviço não encontrado' );
+            }
+
             return view( 'services.show', [
                 'service' => $service
             ] );
 
+        } catch ( \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e ) {
+            // Re-throw 404 exceptions
+            throw $e;
         } catch ( Exception $e ) {
             Log::error( 'Erro ao carregar serviço', [
                 'error' => $e->getMessage(),
-                'code'  => $code
+                'code'  => $code,
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id ?? null
             ] );
             abort( 500, 'Erro ao carregar serviço' );
         }

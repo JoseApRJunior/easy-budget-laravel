@@ -71,9 +71,9 @@ class AdminDashboardController extends Controller
 
         return [
             'total_tenants' => Tenant::count(),
-            'active_tenants' => Tenant::where('status', 'active')->count(),
-            'trial_tenants' => Tenant::where('status', 'trial')->count(),
-            'suspended_tenants' => Tenant::where('status', 'suspended')->count(),
+            'active_tenants' => Tenant::where('is_active', true)->count(),
+            'trial_tenants' => $this->getTrialTenantsCount(),
+            'suspended_tenants' => Tenant::where('is_active', false)->count(),
             'new_tenants_period' => Tenant::where('created_at', '>=', $startDate)->count(),
             'system_uptime' => $this->getSystemUptime(),
             'database_size' => $this->getDatabaseSize(),
@@ -90,12 +90,12 @@ class AdminDashboardController extends Controller
 
         $monthlyRevenue = PlanSubscription::where('status', 'active')
             ->where('created_at', '>=', $startDate)
-            ->sum('amount');
+            ->sum('transaction_amount');
 
         $projectedRevenue = $this->calculateProjectedRevenue();
 
         $totalInvoices = Invoice::where('created_at', '>=', $startDate)->count();
-        $totalInvoiceValue = Invoice::where('created_at', '>=', $startDate)->sum('total_amount');
+        $totalInvoiceValue = Invoice::where('created_at', '>=', $startDate)->sum('total');
 
         return [
             'monthly_revenue' => $monthlyRevenue,
@@ -149,8 +149,8 @@ class AdminDashboardController extends Controller
 
         $planDowngrades = PlanSubscription::where('created_at', '>=', $startDate)
             ->where('previous_plan_id', '!=', null)
-            ->where('amount', '<', function ($query) {
-                $query->selectRaw('amount from plan_subscriptions as ps2
+            ->where('transaction_amount', '<', function ($query) {
+                $query->selectRaw('transaction_amount from plan_subscriptions as ps2
                     where ps2.tenant_id = plan_subscriptions.tenant_id
                     and ps2.created_at < plan_subscriptions.created_at
                     order by created_at desc limit 1');
@@ -202,15 +202,17 @@ class AdminDashboardController extends Controller
         $alerts = [];
 
         // Check for tenants with expired trials
-        $expiredTrials = Tenant::where('status', 'trial')
-            ->where('trial_ends_at', '<', Carbon::now())
-            ->count();
+        $expiredTrials = PlanSubscription::where('status', 'active')
+            ->where('payment_method', 'trial')
+            ->where('end_date', '<', Carbon::now())
+            ->distinct('tenant_id')
+            ->count('tenant_id');
 
         if ($expiredTrials > 0) {
             $alerts[] = [
                 'type' => 'warning',
                 'message' => "{$expiredTrials} tenants com trial expirado",
-                'link' => route('admin.tenants.index', ['status' => 'trial_expired']),
+                'link' => route('admin.tenants.index', ['filter' => 'trial_expired']),
             ];
         }
 
@@ -259,8 +261,32 @@ class AdminDashboardController extends Controller
 
     private function getDatabaseSize(): string
     {
-        $size = DB::select('SELECT pg_database_size(current_database()) as size')[0]->size ?? 0;
-        return $this->formatBytes($size);
+        try {
+            // Detectar o tipo de banco e usar a função apropriada
+            $driver = DB::getDriverName();
+            
+            if ($driver === 'pgsql') {
+                // PostgreSQL
+                $size = (int) (DB::select('SELECT pg_database_size(current_database()) as size')[0]->size ?? 0);
+            } elseif ($driver === 'mysql') {
+                // MySQL/MariaDB
+                $databaseName = DB::getDatabaseName();
+                $result = DB::select("
+                    SELECT SUM(data_length + index_length) as size 
+                    FROM information_schema.tables 
+                    WHERE table_schema = ?
+                ", [$databaseName]);
+                $size = (int) ($result[0]->size ?? 0);
+            } else {
+                // Para outros bancos, retornar 0
+                $size = 0;
+            }
+            
+            return $this->formatBytes($size);
+        } catch (\Exception $e) {
+            // Em caso de erro, retornar 0 bytes
+            return $this->formatBytes(0);
+        }
     }
 
     private function getTotalStorageUsed(): string
@@ -277,7 +303,7 @@ class AdminDashboardController extends Controller
         $projected = 0;
 
         foreach ($activeSubscriptions as $subscription) {
-            $projected += $subscription->amount;
+            $projected += $subscription->transaction_amount;
         }
 
         return $projected;
@@ -291,11 +317,11 @@ class AdminDashboardController extends Controller
 
         $currentRevenue = PlanSubscription::where('status', 'active')
             ->where('created_at', '>=', $startDate)
-            ->sum('amount');
+            ->sum('transaction_amount');
 
         $previousRevenue = PlanSubscription::where('status', 'active')
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
-            ->sum('amount');
+            ->sum('transaction_amount');
 
         if ($previousRevenue == 0) {
             return 0;
@@ -308,10 +334,9 @@ class AdminDashboardController extends Controller
     {
         $startDate = $this->getPeriodStartDate($period);
 
+        // Como providers não têm campo status, consideramos todos como ativos
         $providersAtStart = Provider::where('created_at', '<', $startDate)->count();
-        $providersStillActive = Provider::where('created_at', '<', $startDate)
-            ->where('status', 'active')
-            ->count();
+        $providersStillActive = Provider::where('created_at', '<', $startDate)->count();
 
         if ($providersAtStart == 0) {
             return 100;
@@ -360,7 +385,7 @@ class AdminDashboardController extends Controller
         while ($currentDate <= Carbon::now()) {
             $revenue = PlanSubscription::where('status', 'active')
                 ->whereDate('created_at', $currentDate->toDateString())
-                ->sum('amount');
+                ->sum('transaction_amount');
 
             $data[] = [
                 'date' => $currentDate->toDateString(),
@@ -397,22 +422,32 @@ class AdminDashboardController extends Controller
 
     private function getPlanDistributionChartData(): array
     {
-        return Plan::withCount(['subscriptions' => function ($query) {
+        return Plan::withCount(['planSubscriptions' => function ($query) {
             $query->where('status', 'active');
         }])->get()->map(function ($plan) {
             return [
                 'name' => $plan->name,
-                'value' => $plan->subscriptions_count,
+                'value' => $plan->plan_subscriptions_count,
             ];
         })->toArray();
+    }
+
+    private function getTrialTenantsCount(): int
+    {
+        // Contar tenants que têm subscriptions em trial
+        return PlanSubscription::where('status', 'active')
+            ->where('payment_method', 'trial')
+            ->where('end_date', '>=', now())
+            ->distinct('tenant_id')
+            ->count('tenant_id');
     }
 
     private function getTenantStatusChartData(): array
     {
         return [
-            ['name' => 'Active', 'value' => Tenant::where('status', 'active')->count()],
-            ['name' => 'Trial', 'value' => Tenant::where('status', 'trial')->count()],
-            ['name' => 'Suspended', 'value' => Tenant::where('status', 'suspended')->count()],
+            ['name' => 'Active', 'value' => Tenant::where('is_active', true)->count()],
+            ['name' => 'Trial', 'value' => $this->getTrialTenantsCount()],
+            ['name' => 'Inactive', 'value' => Tenant::where('is_active', false)->count()],
         ];
     }
 

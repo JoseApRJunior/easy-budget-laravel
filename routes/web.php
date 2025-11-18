@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\CustomerManagementController;
 use App\Http\Controllers\Admin\ProviderManagementController;
 use App\Http\Controllers\Admin\SystemReportsController;
 use App\Http\Controllers\Admin\AIMetricsController;
+use App\Http\Controllers\Admin\AdvancedMetricsController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes group
@@ -133,6 +134,9 @@ Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAc
 // Provider routes group
 // Routes for provider users with auth, verified, and provider middlewares
 Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider', 'monitoring' ] )->group( function () {
+    // Debug Tenant Access
+    Route::get( '/debug-tenant', [ \App\Http\Controllers\DebugTenantController::class, 'index' ] )->name( 'debug-tenant' );
+    
     // Dashboard
     Route::get( '/dashboard', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
 
@@ -228,28 +232,6 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{sku}', [ ProductController::class, 'delete_store' ] )->name( 'destroy' );
     } );
 
-    // Inventory
-    Route::prefix( 'inventory' )->name( 'inventory.' )->group( function () {
-        Route::get( '/dashboard', [ InventoryController::class, 'dashboard' ] )->name( 'dashboard' );
-        Route::get( '/', [ InventoryController::class, 'index' ] )->name( 'index' );
-        Route::get( '/report', [ InventoryController::class, 'report' ] )->name( 'report' );
-        Route::get( '/export', [ InventoryController::class, 'export' ] )->name( 'export' );
-        Route::get( '/{product}', [ InventoryController::class, 'show' ] )->name( 'show' );
-        Route::get( '/{product}/adjust', [ InventoryController::class, 'adjust' ] )->name( 'adjust' );
-        Route::post( '/{product}/adjust', [ InventoryController::class, 'storeAdjustment' ] )->name( 'adjust.store' );
-        Route::get( '/{product}/movements', [ InventoryController::class, 'movements' ] )->name( 'movements' );
-        Route::get( '/{product}/entry', [ InventoryController::class, 'entry' ] )->name( 'entry' );
-        Route::get( '/{product}/exit', [ InventoryController::class, 'exit' ] )->name( 'exit' );
-
-        // API routes
-        Route::prefix('api')->name('api.')->group(function () {
-            Route::get('/low-stock', [ InventoryController::class, 'lowStock' ])->name('low-stock');
-            Route::post('/{product}/min-quantity', [ InventoryController::class, 'updateMinQuantity' ])->name('min-quantity');
-            Route::post('/{product}/max-quantity', [ InventoryController::class, 'updateMaxQuantity' ])->name('max-quantity');
-            Route::get('/search', [ InventoryController::class, 'search' ])->name('search');
-        });
-    } );
-
     // Services
     Route::prefix( 'services' )->name( 'services.' )->group( function () {
         // Dashboard de Serviços
@@ -291,6 +273,22 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/', [ BudgetController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ BudgetController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ BudgetController::class, 'store' ] )->name( 'store' );
+        
+        // Budget Sharing Routes - MOVIDAS PARA ANTES das rotas com parâmetros
+        Route::prefix( 'shares' )->name( 'shares.' )->group( function () {
+            Route::get( '/dashboard', [ BudgetShareController::class, 'dashboard' ] )->name( 'dashboard' );
+            Route::get( '/', [ BudgetShareController::class, 'index' ] )->name( 'index' );
+            Route::get( '/create', [ BudgetShareController::class, 'create' ] )->name( 'create' );
+            Route::post( '/', [ BudgetShareController::class, 'store' ] )->name( 'store' );
+            Route::get( '/{share}', [ BudgetShareController::class, 'show' ] )->name( 'show' );
+            Route::get( '/{share}/edit', [ BudgetShareController::class, 'edit' ] )->name( 'edit' );
+            Route::put( '/{share}', [ BudgetShareController::class, 'update' ] )->name( 'update' );
+            Route::delete( '/{share}', [ BudgetShareController::class, 'destroy' ] )->name( 'destroy' );
+            Route::post( '/{share}/regenerate', [ BudgetShareController::class, 'regenerateToken' ] )->name( 'regenerate' );
+            Route::post( '/{share}/revoke', [ BudgetShareController::class, 'revoke' ] )->name( 'revoke' );
+        } );
+        
+        // Rotas com parâmetros devem vir DEPOIS das rotas específicas
         Route::get( '/{code}', [ BudgetController::class, 'show' ] )->name( 'show' );
         Route::get( '/{code}/edit', [ BudgetController::class, 'edit' ] )->name( 'edit' );
         Route::post( '/{budget}', [ BudgetController::class, 'update' ] )->name( 'update' );
@@ -298,18 +296,6 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::delete( '/{budget}', [ BudgetController::class, 'destroy' ] )->name( 'destroy' );
         Route::get( '/{budget}/print', [ BudgetController::class, 'print' ] )->name( 'print' );
         Route::get( '/{budget}/services/create', [ ServiceController::class, 'create' ] )->name( 'services.create' );
-        
-        // Budget Sharing Routes
-        Route::prefix( 'shares' )->name( 'shares.' )->group( function () {
-            Route::get( '/dashboard', [ BudgetShareController::class, 'dashboard' ] )->name( 'dashboard' );
-            Route::get( '/', [ BudgetShareController::class, 'index' ] )->name( 'index' );
-            Route::post( '/', [ BudgetShareController::class, 'store' ] )->name( 'store' );
-            Route::get( '/{share}', [ BudgetShareController::class, 'show' ] )->name( 'show' );
-            Route::put( '/{share}', [ BudgetShareController::class, 'update' ] )->name( 'update' );
-            Route::delete( '/{share}', [ BudgetShareController::class, 'destroy' ] )->name( 'destroy' );
-            Route::post( '/{share}/regenerate', [ BudgetShareController::class, 'regenerateToken' ] )->name( 'regenerate' );
-            Route::post( '/{share}/revoke', [ BudgetShareController::class, 'revoke' ] )->name( 'revoke' );
-        } );
     } );
 
     // Invoices
@@ -319,6 +305,8 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/create', [ InvoiceController::class, 'create' ] )->name( 'create' );
         Route::get( '/budgets/{budget}/create', [ InvoiceController::class, 'createFromBudget' ] )->name( 'create.from-budget' );
         Route::get( '/services/{serviceCode}/create', [ InvoiceController::class, 'createFromService' ] )->name( 'create.from-service' );
+        Route::get( '/services/{serviceCode}/create-partial', [ InvoiceController::class, 'createPartialFromService' ] )->name( 'create.partial-from-service' );
+        Route::post( '/services/{serviceCode}/manual', [ InvoiceController::class, 'storeManualFromService' ] )->name( 'store.manual-from-service' );
         Route::post( '/', [ InvoiceController::class, 'store' ] )->name( 'store' );
         Route::post( '/store-from-service', [ InvoiceController::class, 'storeFromService' ] )->name( 'store.from-service' );
         Route::get( '/{code}', [ InvoiceController::class, 'show' ] )->name( 'show' );
@@ -370,6 +358,24 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
     Route::match( [ 'post', 'put' ], '/update', [ ProviderController::class, 'update_store' ] )->name( 'update_store' );
     Route::get( '/change-password', [ ProviderController::class, 'change_password' ] )->name( 'change_password' );
     Route::post( '/change-password', [ ProviderController::class, 'change_password_store' ] )->name( 'change_password_store' );
+
+    // Inventory Management (Provider Access)
+    Route::prefix('inventory')->name('inventory.')->group(function() {
+        Route::get('/dashboard', [ InventoryController::class, 'dashboard' ])->name('dashboard');
+        Route::get('/', [ InventoryController::class, 'index' ])->name('index');
+        Route::get('/movements', [ InventoryController::class, 'movements' ])->name('movements');
+        Route::get('/stock-turnover', [ InventoryController::class, 'stockTurnover' ])->name('stock-turnover');
+        Route::get('/most-used', [ InventoryController::class, 'mostUsedProducts' ])->name('most-used');
+        Route::get('/alerts', [ InventoryController::class, 'alerts' ])->name('alerts');
+        Route::get('/{product}', [ InventoryController::class, 'show' ])->name('show');
+        Route::get('/{product}/adjust', [ InventoryController::class, 'adjustStockForm' ])->name('adjust');
+        Route::post('/{product}/adjust', [ InventoryController::class, 'adjustStock' ])->name('adjust.store');
+        
+        // API routes
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::post('/check-availability', [ InventoryController::class, 'checkAvailability' ])->name('check-availability');
+        });
+    });
 } );
 
 // Admin routes group
@@ -428,8 +434,8 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'moni
     });
 
     // Global Settings Management
-    Route::prefix('settings')->name('settings.')->group(function() {
-        Route::get('/global', [ GlobalSettingsController::class, 'index' ])->name('global');
+    Route::prefix('global-settings')->name('global-settings.')->group(function() {
+        Route::get('/', [ GlobalSettingsController::class, 'index' ])->name('index');
         Route::post('/general/update', [ GlobalSettingsController::class, 'updateGeneral' ])->name('general.update');
         Route::post('/configuration/update', [ GlobalSettingsController::class, 'updateConfiguration' ])->name('configuration.update');
         Route::post('/email/update', [ GlobalSettingsController::class, 'updateEmail' ])->name('email.update');
@@ -442,6 +448,19 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'moni
         Route::post('/clear-cache', [ GlobalSettingsController::class, 'clearCache' ])->name('clear-cache');
         Route::get('/export', [ GlobalSettingsController::class, 'export' ])->name('export');
         Route::post('/import', [ GlobalSettingsController::class, 'import' ])->name('import');
+    });
+
+    // Alerts Management
+    Route::prefix('alerts')->name('alerts.')->group(function() {
+        Route::get('/', [ \App\Http\Controllers\Admin\AlertsController::class, 'index' ])->name('index');
+        Route::get('/create', [ \App\Http\Controllers\Admin\AlertsController::class, 'create' ])->name('create');
+        Route::post('/', [ \App\Http\Controllers\Admin\AlertsController::class, 'store' ])->name('store');
+        Route::get('/{alert}', [ \App\Http\Controllers\Admin\AlertsController::class, 'show' ])->name('show');
+        Route::get('/{alert}/edit', [ \App\Http\Controllers\Admin\AlertsController::class, 'edit' ])->name('edit');
+        Route::put('/{alert}', [ \App\Http\Controllers\Admin\AlertsController::class, 'update' ])->name('update');
+        Route::delete('/{alert}', [ \App\Http\Controllers\Admin\AlertsController::class, 'destroy' ])->name('destroy');
+        Route::post('/{alert}/toggle-status', [ \App\Http\Controllers\Admin\AlertsController::class, 'toggleStatus' ])->name('toggle-status');
+        Route::get('/export/{format}', [ \App\Http\Controllers\Admin\AlertsController::class, 'export' ])->name('export');
     });
 
     // Plan Management
@@ -603,6 +622,7 @@ Route::prefix( 'admin' )->name( 'admin.' )->middleware( [ 'auth', 'admin', 'moni
         Route::get('/export', [ \App\Http\Controllers\Admin\AuditController::class, 'export' ])->name('logs.export');
         Route::delete('/logs/{log}', [ \App\Http\Controllers\Admin\AuditController::class, 'destroy' ])->name('logs.destroy');
     });
+
 } );
 
 // Settings routes group

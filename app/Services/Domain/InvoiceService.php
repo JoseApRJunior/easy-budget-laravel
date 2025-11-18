@@ -786,6 +786,7 @@ class InvoiceService extends AbstractBaseService
                     'status'        => InvoiceStatus::PENDING->value,
                     'public_hash'   => bin2hex(random_bytes(32)), // 64 caracteres hexadecimais
                     'notes'         => $invoiceData['notes'] ?? null,
+                    'is_automatic'  => $additionalData['is_automatic'] ?? false,
                 ]);
 
                 // Criar itens da fatura a partir dos itens do serviço

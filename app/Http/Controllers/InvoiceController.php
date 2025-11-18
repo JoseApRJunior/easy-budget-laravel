@@ -253,6 +253,45 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Create partial invoice from service (Interface para faturas parciais)
+     */
+    public function createPartialFromService(string $serviceCode): View|RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        try {
+            // Gerar dados da fatura a partir do serviço
+            $result = $this->invoiceService->generateInvoiceDataFromService($serviceCode);
+            
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->with('error', $result->getMessage());
+            }
+
+            $invoiceData = $result->getData();
+
+            return view('pages.invoice.create-partial-from-service', [
+                'invoiceData' => $invoiceData,
+                'serviceCode' => $serviceCode,
+                'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
+                    ? $this->customerService->listCustomers($user->tenant_id)->getData()
+                    : [],
+                'statusOptions' => InvoiceStatus::cases()
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Erro ao criar interface de fatura parcial a partir do serviço', [
+                'service_code' => $serviceCode,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erro ao processar solicitação. Tente novamente.');
+        }
+    }
+
+    /**
      * Create invoice from service (Nova funcionalidade do sistema antigo)
      */
     public function createFromService(string $serviceCode): View|RedirectResponse
@@ -294,6 +333,58 @@ class InvoiceController extends Controller
 
             return redirect()->back()
                 ->with('error', 'Erro ao processar solicitação. Tente novamente.');
+        }
+    }
+
+    /**
+     * Store manual invoice from service (Nova funcionalidade para faturas manuais)
+     */
+    public function storeManualFromService(Request $request, string $serviceCode): RedirectResponse
+    {
+        $request->validate([
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array',
+            'items.*.product_id' => 'required|integer|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit_value' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            // Preparar dados adicionais para fatura manual
+            $additionalData = array_merge(
+                $request->only(['issue_date', 'due_date', 'notes']),
+                ['is_automatic' => false] // Marcar como fatura manual
+            );
+
+            // Se houver itens específicos, incluir
+            if ($request->has('items')) {
+                $additionalData['items'] = $request->input('items');
+            }
+
+            $result = $this->invoiceService->createInvoiceFromService($serviceCode, $additionalData);
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result->getMessage());
+            }
+
+            $invoice = $result->getData();
+
+            return redirect()->route('provider.invoices.show', $invoice->code)
+                ->with('success', 'Fatura manual criada com sucesso!');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao criar fatura manual a partir do serviço', [
+                'service_code' => $serviceCode,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erro ao processar fatura manual. Tente novamente.');
         }
     }
 
