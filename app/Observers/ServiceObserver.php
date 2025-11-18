@@ -19,13 +19,25 @@ class ServiceObserver
     }
 
     /**
-     * Handle the Service "updated" event.
-     * Gera fatura automaticamente quando o serviço muda para status "completed"
+     * Handle the Service \"updated\" event.
+     * Gera fatura automaticamente quando o serviço muda para status \"completed\"
      */
     public function updated(Service $service): void
     {
-        // Verificar se o status mudou para "completed"
+        Log::info('ServiceObserver updated method called', [
+            'service_id' => $service->id,
+            'service_code' => $service->code,
+            'status' => $service->status->value,
+            'is_dirty' => $service->isDirty('status'),
+            'original_status' => $service->getOriginal('status')
+        ]);
+        
+        // Verificar se o status mudou para \"completed\"
         if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
+            Log::info('Service status changed to completed, generating automatic invoice', [
+                'service_id' => $service->id,
+                'service_code' => $service->code
+            ]);
             $this->generateAutomaticInvoice($service);
         }
     }

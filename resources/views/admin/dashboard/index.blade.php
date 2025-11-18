@@ -272,7 +272,7 @@
                         <a href="{{ route('admin.tenants.index') }}" class="btn btn-outline-success btn-sm">
                             <i class="bi bi-building me-1"></i> Gerenciar Tenants
                         </a>
-                        <a href="{{ route('admin.settings.global') }}" class="btn btn-outline-info btn-sm">
+                        <a href="{{ route('admin.global-settings.index') }}" class="btn btn-outline-info btn-sm">
                             <i class="bi bi-sliders me-1"></i> Configurações Globais
                         </a>
                         <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-warning btn-sm">
@@ -312,11 +312,11 @@
                                     <td>{{ \Carbon\Carbon::parse($activity->created_at)->format('d/m/Y H:i') }}</td>
                                     <td>{{ $activity->user_name ?? 'Sistema' }}</td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ $activity->action_type }}</span>
+                                        <span class="badge bg-secondary">{{ $activity->action ?? 'sistema' }}</span>
                                     </td>
                                     <td>{{ Str::limit($activity->description, 50) }}</td>
                                     <td>
-                                        <span class="badge bg-light text-dark">{{ class_basename($activity->entity_type) }}</span>
+                                        <span class="badge bg-light text-dark">{{ class_basename($activity->model_type ?? 'sistema') }}</span>
                                     </td>
                                 </tr>
                                 @empty

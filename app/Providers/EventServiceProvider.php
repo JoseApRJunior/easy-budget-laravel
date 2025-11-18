@@ -118,17 +118,16 @@ class EventServiceProvider extends ServiceProvider
     {
         parent::boot();
 
-        // Registrar observer para geração automática de faturas
-        Service::observe(ServiceObserver::class);
-
         // Registrar observer para controle de estoque
         $inventoryObserver = new InventoryObserver(
             app(\App\Services\Shared\CacheService::class),
             app(\App\Services\AlertService::class)
         );
         
+        // Registrar observers para o modelo Service (geração automática de faturas + controle de estoque)
+        Service::observe([ServiceObserver::class, $inventoryObserver]);
+        
         Budget::observe([BudgetObserver::class, $inventoryObserver]);
-        Service::observe([$inventoryObserver]);
         BudgetItem::observe([$inventoryObserver]);
         ServiceItem::observe([$inventoryObserver]);
 

@@ -9,7 +9,7 @@
             <h1 class="mb-4">Produtos Mais Utilizados</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Produtos Mais Utilizados</li>
                 </ol>
             </nav>
@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('inventory.most-used') }}">
+                    <form method="GET" action="{{ route('provider.inventory.most-used') }}">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -128,7 +128,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Produtos Mais Utilizados</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.dashboard') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-arrow-left"></i> Voltar
                         </a>
                     </div>
@@ -205,12 +205,12 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.show', $product['id']) }}" 
+                                                    <a href="{{ route('provider.inventory.show', $product['id']) }}" 
                                                        class="btn btn-sm btn-info" 
                                                        title="Ver Produto">
                                                         <i class="fas fa-box"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.movements', ['product_id' => $product['id']]) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $product['id']]) }}" 
                                                        class="btn btn-sm btn-primary" 
                                                        title="Ver Movimentações">
                                                         <i class="fas fa-list"></i>

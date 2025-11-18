@@ -50,7 +50,7 @@ class PlanManagementController extends Controller
 
         $stats = $this->getPlanStats();
 
-        return view('admin.plans.index', [
+        return view('pages.admin.plan.index', [
             'plans' => $plans,
             'stats' => $stats,
             'search' => $search,
@@ -65,7 +65,7 @@ class PlanManagementController extends Controller
      */
     public function create(): View
     {
-        return view('admin.plans.create', [
+        return view('pages.admin.plan.create', [
             'features' => $this->getAvailableFeatures(),
         ]);
     }
@@ -76,45 +76,25 @@ class PlanManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:plans',
-            'description' => 'required|string|max:1000',
+            'name' => 'required|string|max:50|unique:plans',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'billing_cycle' => 'required|string|in:monthly,quarterly,yearly',
-            'trial_days' => 'required|integer|min:0|max:365',
-            'max_customers' => 'required|integer|min:1',
-            'max_invoices' => 'required|integer|min:1',
+            'status' => 'required|boolean',
             'max_budgets' => 'required|integer|min:1',
-            'max_products' => 'required|integer|min:1',
-            'max_services' => 'required|integer|min:1',
-            'storage_limit' => 'required|integer|min:1',
-            'features' => 'array',
-            'features.*' => 'string',
-            'is_featured' => 'boolean',
-            'sort_order' => 'integer|min:0',
-            'status' => 'required|string|in:active,inactive,draft',
-            'color' => 'nullable|string|max:7',
-            'icon' => 'nullable|string|max:50',
+            'max_clients' => 'required|integer|min:1',
+            'features' => 'nullable|array',
         ]);
 
         DB::transaction(function () use ($validated) {
             $plan = Plan::create([
                 'name' => $validated['name'],
-                'description' => $validated['description'],
+                'slug' => \Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
                 'price' => $validated['price'],
-                'billing_cycle' => $validated['billing_cycle'],
-                'trial_days' => $validated['trial_days'],
-                'max_customers' => $validated['max_customers'],
-                'max_invoices' => $validated['max_invoices'],
-                'max_budgets' => $validated['max_budgets'],
-                'max_products' => $validated['max_products'],
-                'max_services' => $validated['max_services'],
-                'storage_limit' => $validated['storage_limit'],
-                'features' => json_encode($validated['features'] ?? []),
-                'is_featured' => $validated['is_featured'] ?? false,
-                'sort_order' => $validated['sort_order'] ?? 0,
                 'status' => $validated['status'],
-                'color' => $validated['color'] ?? '#4e73df',
-                'icon' => $validated['icon'] ?? 'bi-box',
+                'max_budgets' => $validated['max_budgets'],
+                'max_clients' => $validated['max_clients'],
+                'features' => $validated['features'] ?? null,
             ]);
 
             // Log activity
@@ -142,7 +122,7 @@ class PlanManagementController extends Controller
 
         $stats = $this->getPlanDetailedStats($plan);
 
-        return view('admin.plans.show', [
+        return view('pages.admin.plan.show', [
             'plan' => $plan,
             'subscriptions' => $subscriptions,
             'stats' => $stats,
@@ -154,7 +134,7 @@ class PlanManagementController extends Controller
      */
     public function edit(Plan $plan): View
     {
-        return view('admin.plans.edit', [
+        return view('pages.admin.plan.edit', [
             'plan' => $plan,
             'features' => $this->getAvailableFeatures(),
         ]);
@@ -166,45 +146,25 @@ class PlanManagementController extends Controller
     public function update(Request $request, Plan $plan): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:plans,name,' . $plan->id,
-            'description' => 'required|string|max:1000',
+            'name' => 'required|string|max:50|unique:plans,name,' . $plan->id,
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'billing_cycle' => 'required|string|in:monthly,quarterly,yearly',
-            'trial_days' => 'required|integer|min:0|max:365',
-            'max_customers' => 'required|integer|min:1',
-            'max_invoices' => 'required|integer|min:1',
+            'status' => 'required|boolean',
             'max_budgets' => 'required|integer|min:1',
-            'max_products' => 'required|integer|min:1',
-            'max_services' => 'required|integer|min:1',
-            'storage_limit' => 'required|integer|min:1',
-            'features' => 'array',
-            'features.*' => 'string',
-            'is_featured' => 'boolean',
-            'sort_order' => 'integer|min:0',
-            'status' => 'required|string|in:active,inactive,draft',
-            'color' => 'nullable|string|max:7',
-            'icon' => 'nullable|string|max:50',
+            'max_clients' => 'required|integer|min:1',
+            'features' => 'nullable|array',
         ]);
 
         DB::transaction(function () use ($validated, $plan) {
             $plan->update([
                 'name' => $validated['name'],
-                'description' => $validated['description'],
+                'slug' => \Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
                 'price' => $validated['price'],
-                'billing_cycle' => $validated['billing_cycle'],
-                'trial_days' => $validated['trial_days'],
-                'max_customers' => $validated['max_customers'],
-                'max_invoices' => $validated['max_invoices'],
-                'max_budgets' => $validated['max_budgets'],
-                'max_products' => $validated['max_products'],
-                'max_services' => $validated['max_services'],
-                'storage_limit' => $validated['storage_limit'],
-                'features' => json_encode($validated['features'] ?? []),
-                'is_featured' => $validated['is_featured'] ?? false,
-                'sort_order' => $validated['sort_order'] ?? 0,
                 'status' => $validated['status'],
-                'color' => $validated['color'] ?? '#4e73df',
-                'icon' => $validated['icon'] ?? 'bi-box',
+                'max_budgets' => $validated['max_budgets'],
+                'max_clients' => $validated['max_clients'],
+                'features' => $validated['features'] ?? null,
             ]);
 
             // Log activity
@@ -314,7 +274,7 @@ class PlanManagementController extends Controller
 
         $subscribers = $query->latest()->paginate(20);
 
-        return view('admin.plans.subscribers', [
+        return view('pages.admin.plan.subscribers', [
             'plan' => $plan,
             'subscribers' => $subscribers,
             'search' => $search,
@@ -329,11 +289,10 @@ class PlanManagementController extends Controller
     {
         $history = PlanSubscription::with(['tenant', 'user'])
                                   ->where('plan_id', $plan->id)
-                                  ->whereNotNull('previous_plan_id')
                                   ->latest()
                                   ->paginate(20);
 
-        return view('admin.plans.history', [
+        return view('pages.admin.plan.history', [
             'plan' => $plan,
             'history' => $history,
         ]);
@@ -346,7 +305,7 @@ class PlanManagementController extends Controller
     {
         $analytics = $this->getPlanAnalytics($plan);
 
-        return view('admin.plans.analytics', [
+        return view('pages.admin.plan.analytics', [
             'plan' => $plan,
             'analytics' => $analytics,
         ]);
@@ -358,7 +317,7 @@ class PlanManagementController extends Controller
     public function export(Request $request)
     {
         $format = $request->get('format', 'csv');
-        $plans = Plan::with(['subscriptions'])->get();
+        $plans = Plan::with(['planSubscriptions'])->get();
 
         return match($format) {
             'csv' => $this->exportCsv($plans),
@@ -378,15 +337,15 @@ class PlanManagementController extends Controller
             'active' => Plan::where('status', 'active')->count(),
             'inactive' => Plan::where('status', 'inactive')->count(),
             'draft' => Plan::where('status', 'draft')->count(),
-            'featured' => Plan::where('is_featured', true)->count(),
+            'featured' => 0, // Não há campo is_featured na tabela plans
             'total_subscriptions' => PlanSubscription::count(),
             'active_subscriptions' => PlanSubscription::where('status', 'active')->count(),
             'monthly_revenue' => PlanSubscription::where('status', 'active')
-                                              ->where('billing_cycle', 'monthly')
-                                              ->sum('amount'),
+                                              ->whereMonth('created_at', now()->month)
+                                              ->sum('transaction_amount'),
             'yearly_revenue' => PlanSubscription::where('status', 'active')
-                                               ->where('billing_cycle', 'yearly')
-                                               ->sum('amount'),
+                                               ->whereYear('created_at', now()->year)
+                                               ->sum('transaction_amount'),
         ];
     }
 
@@ -403,7 +362,7 @@ class PlanManagementController extends Controller
             'total_revenue' => $plan->planSubscriptions()->sum('transaction_amount'),
             'monthly_revenue' => $plan->planSubscriptions()
                                     ->where('status', 'active')
-                                    ->where('billing_cycle', 'monthly')
+                                    ->whereMonth('created_at', now()->month)
                                     ->sum('transaction_amount'),
             'churn_rate' => $this->calculateChurnRate($plan),
             'conversion_rate' => $this->calculateConversionRate($plan),
@@ -435,7 +394,7 @@ class PlanManagementController extends Controller
                 'revenue' => $subscriptions->whereBetween('created_at', [
                     $date->copy(),
                     $date->copy()->endOfMonth()
-                ])->sum('amount'),
+                ])->sum('transaction_amount'),
             ];
         }
 
@@ -546,7 +505,7 @@ class PlanManagementController extends Controller
                     $plan->name,
                     $plan->description,
                     $plan->price,
-                    $plan->billing_cycle,
+                    'N/A', // Não há campo billing_cycle no plano
                     $plan->status,
                     $plan->planSubscriptions()->where('status', 'active')->count(),
                     $plan->planSubscriptions()->sum('transaction_amount'),

@@ -139,23 +139,37 @@ class AdminDashboardController extends Controller
     {
         $startDate = $this->getPeriodStartDate($period);
 
-        $planDistribution = Plan::withCount(['subscriptions' => function ($query) {
+        $planDistribution = Plan::withCount(['planSubscriptions' => function ($query) {
             $query->where('status', 'active');
         }])->get();
 
-        $planUpgrades = PlanSubscription::where('created_at', '>=', $startDate)
-            ->where('previous_plan_id', '!=', null)
-            ->count();
-
-        $planDowngrades = PlanSubscription::where('created_at', '>=', $startDate)
-            ->where('previous_plan_id', '!=', null)
-            ->where('transaction_amount', '<', function ($query) {
-                $query->selectRaw('transaction_amount from plan_subscriptions as ps2
-                    where ps2.tenant_id = plan_subscriptions.tenant_id
-                    and ps2.created_at < plan_subscriptions.created_at
-                    order by created_at desc limit 1');
-            })
-            ->count();
+        // Calcular upgrades/downgrades baseado em mudanças de plano por tenant
+        $planUpgrades = 0;
+        $planDowngrades = 0;
+        
+        $recentSubscriptions = PlanSubscription::where('created_at', '>=', $startDate)
+            ->where('status', 'active')
+            ->get();
+            
+        foreach ($recentSubscriptions->groupBy('tenant_id') as $tenantId => $subscriptions) {
+            if ($subscriptions->count() > 1) {
+                $latest = $subscriptions->sortByDesc('created_at')->first();
+                $previous = $subscriptions->sortByDesc('created_at')->skip(1)->first();
+                
+                if ($latest && $previous && $latest->plan_id !== $previous->plan_id) {
+                    $latestPlan = Plan::find($latest->plan_id);
+                    $previousPlan = Plan::find($previous->plan_id);
+                    
+                    if ($latestPlan && $previousPlan) {
+                        if ($latestPlan->price > $previousPlan->price) {
+                            $planUpgrades++;
+                        } elseif ($latestPlan->price < $previousPlan->price) {
+                            $planDowngrades++;
+                        }
+                    }
+                }
+            }
+        }
 
         return [
             'total_plans' => Plan::count(),
@@ -264,7 +278,7 @@ class AdminDashboardController extends Controller
         try {
             // Detectar o tipo de banco e usar a função apropriada
             $driver = DB::getDriverName();
-            
+
             if ($driver === 'pgsql') {
                 // PostgreSQL
                 $size = (int) (DB::select('SELECT pg_database_size(current_database()) as size')[0]->size ?? 0);
@@ -272,8 +286,8 @@ class AdminDashboardController extends Controller
                 // MySQL/MariaDB
                 $databaseName = DB::getDatabaseName();
                 $result = DB::select("
-                    SELECT SUM(data_length + index_length) as size 
-                    FROM information_schema.tables 
+                    SELECT SUM(data_length + index_length) as size
+                    FROM information_schema.tables
                     WHERE table_schema = ?
                 ", [$databaseName]);
                 $size = (int) ($result[0]->size ?? 0);
@@ -281,7 +295,7 @@ class AdminDashboardController extends Controller
                 // Para outros bancos, retornar 0
                 $size = 0;
             }
-            
+
             return $this->formatBytes($size);
         } catch (\Exception $e) {
             // Em caso de erro, retornar 0 bytes

@@ -9,7 +9,7 @@
             <h1 class="mb-4">Produtos Mais Usados</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Inventário</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
                     <li class="breadcrumb-item active">Produtos Mais Usados</li>
                 </ol>
             </nav>
@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('inventory.most-used') }}">
+                    <form method="GET" action="{{ route('provider.inventory.most-used') }}">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -82,7 +82,7 @@
                                         <button type="submit" class="btn btn-primary btn-block">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route('inventory.most-used') }}" class="btn btn-secondary btn-block">
+                                        <a href="{{ route('provider.inventory.most-used') }}" class="btn btn-secondary btn-block">
                                             <i class="fas fa-times"></i> Limpar
                                         </a>
                                     </div>
@@ -180,7 +180,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Produtos Mais Usados</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.export-most-used') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
+                        <a href="{{ route('provider.inventory.export-most-used') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
                             <i class="fas fa-file-excel"></i> Exportar
                         </a>
                     </div>
@@ -213,7 +213,7 @@
                                             </td>
                                             <td>{{ $product->sku }}</td>
                                             <td>
-                                                <a href="{{ route('inventory.show', $product->id) }}">
+                                                <a href="{{ route('provider.inventory.show', $product->id) }}">
                                                     {{ $product->name }}
                                                 </a>
                                             </td>
@@ -251,13 +251,13 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.movements', ['product_id' => $product->id]) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $product->id]) }}" 
                                                        class="btn btn-sm btn-info" 
                                                        title="Ver movimentações">
                                                         <i class="fas fa-list"></i>
                                                     </a>
                                                     @if($product->inventory)
-                                                        <a href="{{ route('inventory.adjustStockForm', $product->id) }}" 
+                                                        <a href="{{ route('provider.inventory.adjust', $product->id) }}" 
                                                            class="btn btn-sm btn-success" 
                                                            title="Ajustar estoque">
                                                             <i class="fas fa-plus"></i>

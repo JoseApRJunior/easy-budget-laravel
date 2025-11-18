@@ -9,7 +9,7 @@
             <h1 class="mb-4">Relatório de Giro de Estoque</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Inventário</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
                     <li class="breadcrumb-item active">Giro de Estoque</li>
                 </ol>
             </nav>
@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('inventory.stock-turnover') }}">
+                    <form method="GET" action="{{ route('provider.inventory.stock-turnover') }}">
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -63,7 +63,7 @@
                                         <button type="submit" class="btn btn-primary btn-block">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
-                                        <a href="{{ route('inventory.stock-turnover') }}" class="btn btn-secondary btn-block">
+                                        <a href="{{ route('provider.inventory.stock-turnover') }}" class="btn btn-secondary btn-block">
                                             <i class="fas fa-times"></i> Limpar
                                         </a>
                                     </div>
@@ -135,7 +135,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Análise de Giro de Estoque</h3>
                     <div class="card-tools">
-                        <a href="{{ route('inventory.export-stock-turnover') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
+                        <a href="{{ route('provider.inventory.export-stock-turnover') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn sucesso">
                             <i class="fas fa-file-excel"></i> Exportar
                         </a>
                     </div>
@@ -186,7 +186,7 @@
                                         <tr>
                                             <td>{{ $item->sku }}</td>
                                             <td>
-                                                <a href="{{ route('inventory.show', $item->id) }}">
+                                                <a href="{{ route('provider.inventory.show', $item->id) }}">
                                                     {{ $item->name }}
                                                 </a>
                                             </td>
@@ -245,12 +245,12 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.movements', ['product_id' => $item->id]) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $item->id]) }}" 
                                                        class="btn btn-sm btn-info" 
                                                        title="Ver movimentações">
                                                         <i class="fas fa-list"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.adjustStockForm', $item->id) }}" 
+                                                    <a href="{{ route('provider.inventory.adjust', $item->id) }}" 
                                                        class="btn btn-sm btn-success" 
                                                        title="Ajustar estoque">
                                                         <i class="fas fa-plus"></i>

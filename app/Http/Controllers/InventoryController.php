@@ -8,6 +8,7 @@ use App\Services\Domain\InventoryService;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\InventoryMovement;
+use App\Models\Category;
 use App\Support\ServiceResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,20 @@ class InventoryController extends Controller
                 ->limit(10)
                 ->get();
 
+            // Produtos sem estoque
+            $outOfStockProducts = Product::where('tenant_id', $tenantId)
+                ->whereHas('productInventory', function ($query) {
+                    $query->where('quantity', 0);
+                })
+                ->count();
+
+            // Produtos com estoque alto
+            $highStockItems = ProductInventory::where('tenant_id', $tenantId)
+                ->whereRaw('quantity >= max_quantity')
+                ->with(['product'])
+                ->limit(10)
+                ->get();
+
             // Valor total do estoque
             $totalInventoryValue = Product::where('tenant_id', $tenantId)
                 ->with(['productInventory'])
@@ -69,7 +84,9 @@ class InventoryController extends Controller
                 'productsWithInventory',
                 'lowStockProducts',
                 'highStockProducts',
+                'outOfStockProducts',
                 'lowStockItems',
+                'highStockItems',
                 'recentMovements',
                 'totalInventoryValue'
             ));
@@ -91,13 +108,14 @@ class InventoryController extends Controller
     {
         $tenantId = Auth::user()->tenant_id;
         
-        $query = Product::where('tenant_id', $tenantId)
-            ->with(['productInventory', 'category']);
+        // Query ProductInventory instead of Product to match view expectations
+        $query = ProductInventory::where('tenant_id', $tenantId)
+            ->with(['product', 'product.category']);
 
         // Filtros
         if ($request->filled('search')) {
             $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
+            $query->whereHas('product', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
@@ -105,37 +123,35 @@ class InventoryController extends Controller
         }
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->get('category_id'));
+            $categoryId = $request->get('category_id');
+            $query->whereHas('product', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
         }
 
         if ($request->filled('stock_status')) {
             switch ($request->get('stock_status')) {
                 case 'low':
-                    $query->whereHas('productInventory', function ($q) {
-                        $q->whereRaw('quantity <= min_quantity');
-                    });
+                    $query->whereRaw('quantity <= min_quantity');
                     break;
                 case 'high':
-                    $query->whereHas('productInventory', function ($q) {
-                        $q->whereRaw('quantity >= max_quantity');
-                    });
+                    $query->whereRaw('quantity >= max_quantity');
                     break;
                 case 'out':
-                    $query->whereHas('productInventory', function ($q) {
-                        $q->where('quantity', 0);
-                    });
+                    $query->where('quantity', 0);
                     break;
                 case 'available':
-                    $query->whereHas('productInventory', function ($q) {
-                        $q->where('quantity', '>', 0);
-                    });
+                    $query->where('quantity', '>', 0);
                     break;
             }
         }
 
-        $products = $query->orderBy('name')->paginate(20);
+        $inventories = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        return view('pages.inventory.index', compact('products'));
+        // Get all categories for the filter dropdown
+        $categories = Category::orderBy('name')->get();
+
+        return view('pages.inventory.index', compact('inventories', 'categories'));
     }
 
     /**
@@ -260,7 +276,7 @@ class InventoryController extends Controller
             }
 
             if ($result->isSuccess()) {
-                return redirect()->route('inventory.show', $product)
+                return redirect()->route('provider.inventory.show', $product)
                     ->with('success', 'Estoque ajustado com sucesso!');
             } else {
                 return back()->with('error', $result->getMessage())->withInput();
@@ -346,6 +362,70 @@ class InventoryController extends Controller
     }
 
     /**
+     * Exportar movimentações de estoque
+     */
+    public function exportMovements(Request $request)
+    {
+        $tenantId = Auth::user()->tenant_id;
+        
+        $query = InventoryMovement::where('tenant_id', $tenantId)
+            ->with(['product', 'user']);
+
+        // Aplicar os mesmos filtros do método movements
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->get('product_id'));
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->get('type'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->get('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->get('end_date'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                    ->orWhere('reference_type', 'like', "%{$search}%");
+            });
+        }
+
+        $movements = $query->orderBy('created_at', 'desc')->get();
+
+        // Preparar dados para exportação
+        $exportData = $movements->map(function ($movement) {
+            return [
+                'Data' => $movement->created_at->format('d/m/Y H:i'),
+                'Produto' => $movement->product->name,
+                'SKU' => $movement->product->sku,
+                'Tipo' => $movement->type === 'entry' ? 'Entrada' : 'Saída',
+                'Quantidade' => $movement->quantity,
+                'Valor Unitário' => number_format($movement->unit_price, 2, ',', '.'),
+                'Valor Total' => number_format($movement->total_value, 2, ',', '.'),
+                'Motivo' => $movement->reason,
+                'Referência' => $movement->reference_type . ' #' . $movement->reference_id,
+                'Usuário' => $movement->user->name,
+                'Saldo Anterior' => $movement->previous_balance,
+                'Saldo Atual' => $movement->current_balance,
+            ];
+        });
+
+        // Por enquanto, retornar como JSON (pode ser adaptado para Excel/PDF posteriormente)
+        return response()->json([
+            'success' => true,
+            'message' => 'Dados de movimentações exportados com sucesso',
+            'data' => $exportData,
+            'total_records' => $exportData->count()
+        ]);
+    }
+
+    /**
      * Relatório de giro de estoque
      */
     public function stockTurnover(Request $request)
@@ -359,12 +439,26 @@ class InventoryController extends Controller
         ];
 
         try {
-            $stockTurnover = $this->inventoryService->getStockTurnoverReport($tenantId, $filters);
+            $stockTurnoverData = $this->inventoryService->getStockTurnoverReport($tenantId, $filters);
             
-            // Get categories for filter dropdown
-            $categories = \App\Models\Category::where('tenant_id', $tenantId)
-                ->orderBy('name')
-                ->get();
+            // Transform data to match view expectations
+            $stockTurnover = collect($stockTurnoverData)->map(function ($item) {
+                return (object) [
+                    'id' => $item['product']->id,
+                    'sku' => $item['product']->sku,
+                    'name' => $item['product']->name,
+                    'category' => $item['product']->category,
+                    'unit' => $item['product']->unit,
+                    'current_stock' => $item['product']->productInventory->quantity ?? 0,
+                    'min_quantity' => $item['product']->productInventory->min_quantity ?? 0,
+                    'total_entries' => $item['total_in'],
+                    'total_exits' => $item['total_out'],
+                    'average_stock' => $item['average_stock'],
+                ];
+            });
+            
+            // Get categories for filter dropdown (categories are global, not tenant-specific)
+            $categories = \App\Models\Category::orderBy('name')->get();
 
             // Calculate summary data
             $reportData = [
@@ -382,10 +476,11 @@ class InventoryController extends Controller
             Log::error('Erro ao gerar relatório de giro de estoque', [
                 'tenant_id' => $tenantId,
                 'filters' => $filters,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->with('error', 'Erro ao gerar relatório de giro de estoque');
+            return back()->with('error', 'Erro ao gerar relatório de giro de estoque: ' . $e->getMessage());
         }
     }
 
@@ -405,12 +500,25 @@ class InventoryController extends Controller
         ];
 
         try {
-            $mostUsedProducts = $this->inventoryService->getMostUsedProducts($tenantId, $filters['limit'], $filters);
+            $mostUsedProductsData = $this->inventoryService->getMostUsedProducts($tenantId, $filters['limit'], $filters);
             
-            // Get categories for filter dropdown
-            $categories = \App\Models\Category::where('tenant_id', $tenantId)
-                ->orderBy('name')
-                ->get();
+            // Transform data to match view expectations
+            $mostUsedProducts = collect($mostUsedProductsData)->map(function ($item) {
+                $product = $item['product'];
+                return (object) [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'category' => $product->category,
+                    'unit' => $product->unit,
+                    'inventory' => $product->productInventory,
+                    'total_quantity_used' => $item['total_quantity'],
+                    'total_value_used' => $item['total_quantity'] * $product->price,
+                ];
+            });
+            
+            // Get categories for filter dropdown (categories are global, not tenant-specific)
+            $categories = \App\Models\Category::orderBy('name')->get();
 
             // Calculate report data
             $reportData = [
@@ -452,6 +560,115 @@ class InventoryController extends Controller
             ->paginate(20);
 
         return view('pages.inventory.alerts', compact('lowStockProducts', 'highStockProducts'));
+    }
+
+    /**
+     * Relatórios de inventário
+     */
+    public function report(Request $request)
+    {
+        $tenantId = Auth::user()->tenant_id;
+        $type = $request->get('type', 'summary');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        $query = InventoryMovement::where('tenant_id', $tenantId)
+            ->with(['product']);
+
+        // Aplicar filtros de data se fornecidos
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $reportData = [];
+
+        switch ($type) {
+            case 'movements':
+                $reportData = $query->orderBy('created_at', 'desc')->get()->map(function ($movement) {
+                    return [
+                        'data' => $movement->created_at->format('d/m/Y H:i'),
+                        'produto' => $movement->product->name,
+                        'tipo' => $movement->type,
+                        'quantidade' => $movement->quantity,
+                        'valor_unitario' => $movement->unit_price,
+                        'valor_total' => $movement->total_value,
+                        'saldo_anterior' => $movement->previous_balance,
+                        'saldo_atual' => $movement->current_balance,
+                    ];
+                })->toArray();
+                break;
+
+            case 'valuation':
+                $reportData = Product::where('tenant_id', $tenantId)
+                    ->with(['productInventory'])
+                    ->get()
+                    ->filter(function ($product) {
+                        return $product->productInventory && $product->productInventory->quantity > 0;
+                    })
+                    ->map(function ($product) {
+                        return [
+                            'produto' => $product->name,
+                            'quantidade' => $product->productInventory->quantity,
+                            'valor_unitario' => $product->price,
+                            'valor_total' => $product->price * $product->productInventory->quantity,
+                            'categoria' => $product->category ?? 'Sem categoria',
+                        ];
+                    })
+                    ->toArray();
+                break;
+
+            case 'low-stock':
+                $reportData = ProductInventory::where('tenant_id', $tenantId)
+                    ->whereRaw('quantity <= min_quantity')
+                    ->with(['product'])
+                    ->get()
+                    ->map(function ($inventory) {
+                        return [
+                            'produto' => $inventory->product->name,
+                            'quantidade_atual' => $inventory->quantity,
+                            'estoque_minimo' => $inventory->min_quantity,
+                            'estoque_maximo' => $inventory->max_quantity,
+                            'diferenca' => $inventory->min_quantity - $inventory->quantity,
+                            'categoria' => $inventory->product->category ?? 'Sem categoria',
+                        ];
+                    })
+                    ->toArray();
+                break;
+
+            case 'summary':
+            default:
+                $reportData = [
+                    ['metrica' => 'Total de Produtos', 'valor' => Product::where('tenant_id', $tenantId)->count()],
+                    ['metrica' => 'Produtos com Estoque', 'valor' => ProductInventory::where('tenant_id', $tenantId)->count()],
+                    ['metrica' => 'Produtos em Baixa', 'valor' => ProductInventory::where('tenant_id', $tenantId)->whereRaw('quantity <= min_quantity')->count()],
+                    ['metrica' => 'Produtos em Alta', 'valor' => ProductInventory::where('tenant_id', $tenantId)->whereRaw('quantity >= max_quantity')->count()],
+                    ['metrica' => 'Movimentações no Período', 'valor' => $query->count()],
+                ];
+                break;
+        }
+
+        return view('pages.inventory.report', compact('type', 'startDate', 'endDate', 'reportData'));
+    }
+
+    /**
+     * Exportar relatórios de inventário
+     */
+    public function export(Request $request)
+    {
+        $type = $request->get('type', 'pdf');
+        $reportType = $request->get('report_type', 'summary');
+        
+        // For now, return a simple response with the export functionality
+        // In a real implementation, you would use a library like Laravel Excel or DomPDF
+        return response()->json([
+            'success' => true,
+            'message' => 'Funcionalidade de exportação será implementada em breve',
+            'type' => $type,
+            'report_type' => $reportType
+        ]);
     }
 
     /**

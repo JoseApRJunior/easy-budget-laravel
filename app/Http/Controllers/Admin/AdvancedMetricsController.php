@@ -52,7 +52,7 @@ class AdvancedMetricsController extends Controller
     protected function getDateRange(Request $request): array
     {
         $range = $request->get('range', '30days');
-        
+
         switch ($range) {
             case '7days':
                 $start = Carbon::now()->subDays(7);
@@ -97,52 +97,52 @@ class AdvancedMetricsController extends Controller
             'trial_tenants' => $this->getTrialTenantsCount(),
             'suspended_tenants' => Tenant::where('is_active', false)->count(),
             'new_tenants_period' => Tenant::whereBetween('created_at', [$start, $end])->count(),
-            
+
             // Plan Metrics
             'total_plans' => Plan::count(),
             'active_plans' => Plan::where('status', 'active')->count(),
             'most_popular_plan' => $this->getMostPopularPlan(),
             'plan_upgrades_period' => $this->getPlanUpgrades($start, $end),
             'plan_downgrades_period' => $this->getPlanDowngrades($start, $end),
-            
+
             // User Metrics
             'total_users' => User::count(),
             'active_users_period' => User::whereBetween('last_login_at', [$start, $end])->count(),
             'new_users_period' => User::whereBetween('created_at', [$start, $end])->count(),
             'users_by_role' => $this->getUsersByRole(),
-            
+
             // Provider Metrics
             'total_providers' => Provider::count(),
             'active_providers' => Provider::count(),
             'providers_by_plan' => $this->getProvidersByPlan(),
             'provider_retention_rate' => $this->calculateProviderRetention($start, $end),
             'avg_provider_customers' => Provider::withCount('customers')->avg('customers_count') ?? 0,
-            
+
             // Customer Metrics
             'total_customers' => Customer::count(),
             'active_customers' => Customer::where('status', 'active')->count(),
             'new_customers_period' => Customer::whereBetween('created_at', [$start, $end])->count(),
             'customer_growth_rate' => $this->calculateCustomerGrowthRate($start, $end),
-            
+
             // Revenue Metrics
             'total_revenue_period' => $this->calculateRevenue($start, $end),
             'avg_monthly_revenue' => $this->calculateAvgMonthlyRevenue($start, $end),
             'revenue_growth_rate' => $this->calculateRevenueGrowthRate($start, $end),
             'top_revenue_providers' => $this->getTopRevenueProviders($start, $end, 10),
-            
+
             // Subscription Metrics
             'total_subscriptions' => PlanSubscription::count(),
             'active_subscriptions' => PlanSubscription::where('status', 'active')->count(),
             'subscription_churn_rate' => $this->calculateChurnRate($start, $end),
             'avg_subscription_value' => PlanSubscription::avg('transaction_amount') ?? 0,
-            
+
             // Content Metrics
             'total_categories' => Category::count(),
             'total_activities' => Activity::count(),
             'total_professions' => Profession::count(),
             'categories_with_activities' => Category::has('activities')->count(),
             'activities_by_category' => $this->getActivitiesByCategory(),
-            
+
             // System Health
             'system_health_score' => $this->calculateSystemHealthScore(),
             'critical_alerts' => $this->getCriticalAlerts(),
@@ -177,8 +177,8 @@ class AdvancedMetricsController extends Controller
      */
     protected function getMostPopularPlan(): ?Plan
     {
-        return Plan::withCount('subscriptions')
-            ->orderBy('subscriptions_count', 'desc')
+        return Plan::withCount('planSubscriptions')
+            ->orderBy('planSubscriptions_count', 'desc')
             ->first();
     }
 
@@ -234,7 +234,7 @@ class AdvancedMetricsController extends Controller
     {
         $providersAtStart = Provider::where('created_at', '<', $start)->count();
         $providersAtEnd = Provider::where('created_at', '<', $end)->count();
-        
+
         if ($providersAtStart === 0) {
             return 0;
         }
@@ -249,7 +249,7 @@ class AdvancedMetricsController extends Controller
     {
         $customersAtStart = Customer::where('created_at', '<', $start)->count();
         $newCustomers = Customer::whereBetween('created_at', [$start, $end])->count();
-        
+
         if ($customersAtStart === 0) {
             return $newCustomers > 0 ? 100 : 0;
         }
@@ -274,7 +274,7 @@ class AdvancedMetricsController extends Controller
     {
         $months = $start->diffInMonths($end) ?: 1;
         $totalRevenue = $this->calculateRevenue($start, $end);
-        
+
         return $totalRevenue / $months;
     }
 
@@ -285,10 +285,10 @@ class AdvancedMetricsController extends Controller
     {
         $previousPeriodStart = $start->copy()->subDays($start->diffInDays($end));
         $previousPeriodEnd = $start->copy();
-        
+
         $currentRevenue = $this->calculateRevenue($start, $end);
         $previousRevenue = $this->calculateRevenue($previousPeriodStart, $previousPeriodEnd);
-        
+
         if ($previousRevenue === 0) {
             return $currentRevenue > 0 ? 100 : 0;
         }
@@ -327,7 +327,7 @@ class AdvancedMetricsController extends Controller
         $cancelledSubscriptions = PlanSubscription::whereBetween('end_date', [$start, $end])
             ->where('status', 'cancelled')
             ->count();
-        
+
         if ($subscriptionsAtStart === 0) {
             return 0;
         }
@@ -390,7 +390,7 @@ class AdvancedMetricsController extends Controller
         }
 
         // Check for providers without subscriptions
-        $providersWithoutSubscriptions = Provider::doesntHave('subscriptions')->count();
+        $providersWithoutSubscriptions = Provider::doesntHave('planSubscriptions')->count();
         if ($providersWithoutSubscriptions > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -411,15 +411,15 @@ class AdvancedMetricsController extends Controller
         // For now, return a placeholder based on system metrics
         $responseTime = $this->getAverageResponseTime();
         $uptime = $this->getSystemUptime();
-        
+
         $score = 100;
-        
+
         if ($responseTime > 1000) $score -= 20;
         elseif ($responseTime > 500) $score -= 10;
-        
+
         if ($uptime < 99) $score -= 30;
         elseif ($uptime < 99.9) $score -= 15;
-        
+
         return max(0, $score);
     }
 
@@ -430,23 +430,23 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $periodStart = $current->copy();
             $periodEnd = $current->copy()->addDay();
-            
+
             $revenue = Invoice::whereBetween('created_at', [$periodStart, $periodEnd])
                 ->where('status', 'paid')
                 ->sum('amount') ?? 0;
-            
+
             $data[] = [
                 'date' => $periodStart->format('Y-m-d'),
                 'revenue' => $revenue
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -457,18 +457,18 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $count = User::whereDate('created_at', '<=', $current)->count();
-            
+
             $data[] = [
                 'date' => $current->format('Y-m-d'),
                 'count' => $count
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -479,18 +479,18 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $count = Provider::whereDate('created_at', '<=', $current)->count();
-            
+
             $data[] = [
                 'date' => $current->format('Y-m-d'),
                 'count' => $count
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -501,7 +501,7 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $active = PlanSubscription::whereDate('created_at', '<=', $current)
                 ->where(function($query) use ($current) {
@@ -512,15 +512,15 @@ class AdvancedMetricsController extends Controller
                           });
                 })
                 ->count();
-            
+
             $data[] = [
                 'date' => $current->format('Y-m-d'),
                 'count' => $active
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -529,9 +529,9 @@ class AdvancedMetricsController extends Controller
      */
     protected function getPlanDistribution(): array
     {
-        return Plan::withCount('subscriptions')
-            ->having('subscriptions_count', '>', 0)
-            ->orderByDesc('subscriptions_count')
+        return Plan::withCount('planSubscriptions')
+            ->having('planSubscriptions_count', '>', 0)
+            ->orderByDesc('planSubscriptions_count')
             ->get()
             ->map(function ($plan) {
                 return [
@@ -590,18 +590,18 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $newCustomers = Customer::whereDate('created_at', $current)->count();
-            
+
             $data[] = [
                 'date' => $current->format('Y-m-d'),
                 'new_customers' => $newCustomers
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -612,7 +612,7 @@ class AdvancedMetricsController extends Controller
     {
         $data = [];
         $current = $start->copy();
-        
+
         while ($current <= $end) {
             $cancelled = PlanSubscription::whereDate('end_date', $current)
                 ->where('status', 'cancelled')
@@ -626,18 +626,18 @@ class AdvancedMetricsController extends Controller
                           });
                 })
                 ->count();
-            
+
             $churnRate = $active > 0 ? ($cancelled / $active) * 100 : 0;
-            
+
             $data[] = [
                 'date' => $current->format('Y-m-d'),
                 'cancelled' => $cancelled,
                 'churn_rate' => round($churnRate, 2)
             ];
-            
+
             $current->addDay();
         }
-        
+
         return $data;
     }
 
@@ -688,7 +688,7 @@ class AdvancedMetricsController extends Controller
     {
         $total = Tenant::count();
         $active = Tenant::where('is_active', true)->count();
-        
+
         return $total > 0 ? ($active / $total) * 100 : 0;
     }
 
@@ -708,21 +708,21 @@ class AdvancedMetricsController extends Controller
     {
         $currentMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
-        
+
         $currentRevenue = Invoice::where('status', 'paid')
             ->whereMonth('created_at', $currentMonth)
             ->sum('amount') ?? 0;
-            
+
         $lastRevenue = Invoice::where('status', 'paid')
             ->whereMonth('created_at', $lastMonth)
             ->sum('amount') ?? 0;
-        
+
         if ($lastRevenue === 0) {
             return $currentRevenue > 0 ? 100 : 0;
         }
-        
+
         $growth = (($currentRevenue - $lastRevenue) / $lastRevenue) * 100;
-        
+
         return min(100, max(0, 50 + ($growth / 2)));
     }
 
@@ -733,7 +733,7 @@ class AdvancedMetricsController extends Controller
     {
         $total = PlanSubscription::count();
         $active = PlanSubscription::where('status', 'active')->count();
-        
+
         return $total > 0 ? ($active / $total) * 100 : 0;
     }
 
@@ -807,10 +807,10 @@ class AdvancedMetricsController extends Controller
 
         return response()->stream(function() use ($metrics) {
             $handle = fopen('php://output', 'w');
-            
+
             // Headers
             fputcsv($handle, ['Metric', 'Value']);
-            
+
             // Data
             foreach ($metrics as $key => $value) {
                 if (is_array($value)) {
@@ -818,7 +818,7 @@ class AdvancedMetricsController extends Controller
                 }
                 fputcsv($handle, [str_replace('_', ' ', ucfirst($key)), $value]);
             }
-            
+
             fclose($handle);
         }, 200, $headers);
     }

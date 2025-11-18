@@ -97,7 +97,7 @@ class ServiceController extends Controller
                 }
             }
 
-            return view( 'services.create', [
+            return view( 'pages.service.create', [
                 'budget'        => $budget,
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),
@@ -125,7 +125,7 @@ class ServiceController extends Controller
             $result = $this->serviceService->getFilteredServices( $filters, [
                 'category:id,name',
                 'budget.customer.commonData',
-                'serviceStatus'
+                'status'
             ] );
 
             if ( !$result->isSuccess() ) {
@@ -134,7 +134,7 @@ class ServiceController extends Controller
 
             $services = $result->getData();
 
-            return view( 'services.index', [
+            return view( 'pages.service.index', [
                 'services'      => $services,
                 'filters'       => $filters,
                 'statusOptions' => ServiceStatus::cases(),
@@ -162,7 +162,7 @@ class ServiceController extends Controller
                     $query->where( 'token', $token )
                         ->where( 'expires_at', '>', now() );
                 } )
-                ->with( [ 'customer', 'serviceStatus', 'userConfirmationToken', 'budget' ] )
+                ->with( [ 'customer', 'status', 'userConfirmationToken', 'budget' ] )
                 ->first();
 
             if ( !$service ) {
@@ -174,7 +174,7 @@ class ServiceController extends Controller
                 return redirect()->route( 'error.not-found' );
             }
 
-            return view( 'services.public.view-status', [
+            return view( 'pages.service.public.view-status', [
                 'service' => $service,
                 'token'   => $token
             ] );
@@ -267,7 +267,7 @@ class ServiceController extends Controller
                 return redirect()->route( 'error.not-found' );
             }
 
-            return view( 'services.public.print', [
+            return view( 'pages.service.public.print', [
                 'service' => $service
             ] );
 
@@ -326,7 +326,7 @@ class ServiceController extends Controller
 
             $result = $this->serviceService->findByCode( $code, [
                 'budget.customer.commonData',
-                'budget.customer.contacts',
+                'budget.customer.contact',
                 'category',
                 'serviceItems.product',
                 'schedules' => function ( $q ) {
@@ -358,7 +358,7 @@ class ServiceController extends Controller
                 abort( 404, 'Serviço não encontrado' );
             }
 
-            return view( 'services.show', [
+            return view( 'pages.service.show', [
                 'service' => $service
             ] );
 
@@ -394,11 +394,11 @@ class ServiceController extends Controller
             $service = $result->getData();
 
             // Verificar se pode editar
-            if ( !$service->serviceStatus->canEdit() ) {
+            if ( !$service->status->canEdit() ) {
                 abort( 403, 'Serviço não pode ser editado no status atual' );
             }
 
-            return view( 'services.edit', [
+            return view( 'pages.service.edit', [
                 'service'       => $service,
                 'categories'    => $this->categoryService->getActive(),
                 'products'      => $this->productService->getActive(),

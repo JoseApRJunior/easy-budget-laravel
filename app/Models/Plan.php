@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Modelo Plan para gerenciar planos de assinatura do sistema.
@@ -108,7 +109,7 @@ class Plan extends Model
     /**
      * Assinaturas deste plano.
      */
-    public function planSubscriptions(): HasMany
+    public function planSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany( PlanSubscription::class);
     }

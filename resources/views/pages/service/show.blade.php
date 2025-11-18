@@ -20,10 +20,12 @@
             </nav>
           </div>
           <div class="d-flex gap-2">
-            <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
-              <i class="bi bi-pencil me-2"></i>
-              Editar
-            </a>
+            @if( $service->status->canEdit() )
+              <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-2"></i>
+                Editar
+              </a>
+            @endif
             <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-outline-secondary">
               <i class="bi bi-arrow-left me-2"></i>
               Voltar
@@ -47,6 +49,18 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         @endif
+
+        {{-- Alerta de Faturas Existentes --}}
+        @if( $service->invoices && $service->invoices->count() > 0 )
+          <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            Este serviço já possui {{ $service->invoices->count() }} fatura(s). 
+            <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">
+              Ver faturas
+            </a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        @endif
       </div>
     </div>
 
@@ -61,10 +75,10 @@
                 <small class="text-muted">Criado em {{ $service->created_at->format( 'd/m/Y H:i' ) }}</small>
               </div>
               <div>
-                @if( $service->serviceStatus )
-                  <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }} fs-6 px-3 py-2">
-                    <i class="bi bi-{{ $service->serviceStatus->icon ?? 'circle' }} me-1"></i>
-                    {{ $service->serviceStatus->name }}
+                @if( $service->status )
+                  <span class="badge bg-{{ $service->status->color ?? 'secondary' }} fs-6 px-3 py-2">
+                    <i class="bi bi-{{ $service->status->icon ?? 'circle' }} me-1"></i>
+                    {{ $service->status->name }}
                   </span>
                 @else
                   <span class="badge bg-secondary fs-6 px-3 py-2">
@@ -241,26 +255,26 @@
                 @endif
               </div>
 
-              @if( $service->budget->customer->contacts )
+              @if( $service->budget->customer->contact )
                 <div class="mb-2">
                   <i class="bi bi-envelope me-2 text-muted"></i>
-                  <a href="mailto:{{ $service->budget->customer->contacts->email }}" class="text-decoration-none">
-                    {{ $service->budget->customer->contacts->email }}
+                  <a href="mailto:{{ $service->budget->customer->contact->email }}" class="text-decoration-none">
+                    {{ $service->budget->customer->contact->email }}
                   </a>
                 </div>
-                @if( $service->budget->customer->contacts->phone )
+                @if( $service->budget->customer->contact->phone )
                   <div class="mb-2">
                     <i class="bi bi-telephone me-2 text-muted"></i>
-                    <a href="tel:{{ $service->budget->customer->contacts->phone }}" class="text-decoration-none">
-                      {{ $service->budget->customer->contacts->phone }}
+                    <a href="tel:{{ $service->budget->customer->contact->phone }}" class="text-decoration-none">
+                      {{ $service->budget->customer->contact->phone }}
                     </a>
                   </div>
                 @endif
-                @if( $service->budget->customer->contacts->phone_business )
+                @if( $service->budget->customer->contact->phone_business )
                   <div class="mb-2">
                     <i class="bi bi-building me-2 text-muted"></i>
-                    <a href="tel:{{ $service->budget->customer->contacts->phone_business }}" class="text-decoration-none">
-                      {{ $service->budget->customer->contacts->phone_business }}
+                    <a href="tel:{{ $service->budget->customer->contact->phone_business }}" class="text-decoration-none">
+                      {{ $service->budget->customer->contact->phone_business }}
                     </a>
                   </div>
                 @endif
@@ -281,14 +295,31 @@
           </div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil me-2"></i>
-                Editar Serviço
-              </a>
+              @if( $service->status->canEdit() )
+                <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
+                  <i class="bi bi-pencil me-2"></i>
+                  Editar Serviço
+                </a>
+              @endif
               @if( $service->budget )
                 <a href="{{ route( 'provider.budgets.show', $service->budget->code ) }}" class="btn btn-outline-info">
                   <i class="bi bi-receipt me-2"></i>
                   Ver Orçamento
+                </a>
+              @endif
+              
+              {{-- Botões de Fatura --}}
+              @if( $service->status->isFinished() || $service->status->value === 'COMPLETED' )
+                {{-- Serviço finalizado - pode criar fatura completa --}}
+                <a href="{{ route( 'provider.invoices.create.from-service', $service->code ) }}" class="btn btn-outline-success">
+                  <i class="bi bi-receipt me-2"></i>
+                  Criar Fatura
+                </a>
+              @elseif( $service->status->isActive() && $service->serviceItems && $service->serviceItems->count() > 0 )
+                {{-- Serviço ativo com itens - pode criar fatura parcial --}}
+                <a href="{{ route( 'provider.invoices.create.partial-from-service', $service->code ) }}" class="btn btn-outline-warning">
+                  <i class="bi bi-receipt me-2"></i>
+                  Criar Fatura Parcial
                 </a>
               @endif
               <button type="button" class="btn btn-outline-success" onclick="window.print()">

@@ -70,6 +70,49 @@ class BudgetController extends Controller
         ]);
     }
 
+    public function edit(string $code): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        // Busca o orçamento por código
+        $budget = Budget::query()
+            ->where('code', $code)
+            ->where('tenant_id', $user->tenant_id)
+            ->firstOrFail();
+            
+        return view('pages.budget.edit', [
+            'budget' => $budget
+        ]);
+    }
+
+    public function update(BudgetStoreRequest $request, string $code): RedirectResponse
+    {
+        try {
+            // Prepara os dados para atualização
+            $data = $request->validated();
+            
+            // Força o status para "pending" após edição
+            $data['status'] = 'pending';
+            
+            $result = $this->budgetService->updateByCode($code, $data);
+            
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $result->getMessage());
+            }
+            
+            return redirect()->route('provider.budgets.show', $code)
+                ->with('success', 'Orçamento atualizado com sucesso! Status alterado para Pendente.');
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Dashboard de orçamentos
      */

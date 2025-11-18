@@ -673,14 +673,14 @@ class InvoiceService extends AbstractBaseService
                 );
             }
 
-            $customer = Customer::where('id', $service->customer_id)
-                ->where('tenant_id', tenant()->id)
-                ->first();
-
+            // Load budget and customer relationships
+            $service->load(['budget.customer']);
+            $customer = $service->budget->customer ?? null;
+            
             if (!$customer) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
-                    'Cliente não encontrado.',
+                    'Cliente não encontrado para o serviço.',
                 );
             }
 
@@ -774,11 +774,22 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = 'FAT-' . date('Ymd') . str_pad((string) $sequential, 4, '0', STR_PAD_LEFT);
 
+                // Load budget and customer relationships
+                $service->load(['budget.customer']);
+                $customerId = $service->budget->customer->id ?? null;
+                
+                if (!$customerId) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        'Cliente não encontrado para o serviço.',
+                    );
+                }
+
                 // Criar fatura
                 $invoice = Invoice::create([
                     'tenant_id'     => tenant()->id,
                     'service_id'    => $service->id,
-                    'customer_id'   => $service->customer_id,
+                    'customer_id'   => $customerId,
                     'code'          => $invoiceCode,
                     'issue_date'    => $additionalData['issue_date'] ?? now(),
                     'due_date'      => $invoiceData['due_date'] ?? now()->addDays(30),
@@ -817,7 +828,7 @@ class InvoiceService extends AbstractBaseService
 
                 // Enviar notificação por email (se implementado)
                 try {
-                    $customer = Customer::find($service->customer_id);
+                    $customer = $service->budget->customer;
                     if ($customer && $customer->email) {
                         // Aqui você pode implementar o envio de email
                         // $this->notificationService->sendNewInvoiceNotification($invoice, $customer);

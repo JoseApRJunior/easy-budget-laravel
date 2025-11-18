@@ -9,7 +9,7 @@
             <h1 class="mb-4">Alertas de Estoque</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Alertas</li>
                 </ol>
             </nav>
@@ -145,17 +145,17 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.show', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.show', $item->product) }}" 
                                                        class="btn btn-sm btn-info" 
                                                        title="Ver Produto">
                                                         <i class="fas fa-box"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.movements', ['product_id' => $item->product_id]) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $item->product_id]) }}" 
                                                        class="btn btn-sm btn-primary" 
                                                        title="Ver Movimentações">
                                                         <i class="fas fa-list"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.adjust', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.adjust', $item->product) }}" 
                                                        class="btn btn-sm btn-success" 
                                                        title="Ajustar Estoque">
                                                         <i class="fas fa-plus"></i>
@@ -266,17 +266,17 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('inventory.show', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.show', $item->product) }}" 
                                                        class="btn btn-sm btn-info" 
                                                        title="Ver Produto">
                                                         <i class="fas fa-box"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.movements', ['product_id' => $item->product_id]) }}" 
+                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $item->product_id]) }}" 
                                                        class="btn btn-sm btn-primary" 
                                                        title="Ver Movimentações">
                                                         <i class="fas fa-list"></i>
                                                     </a>
-                                                    <a href="{{ route('inventory.adjust', $item->product) }}" 
+                                                    <a href="{{ route('provider.inventory.adjust', $item->product) }}" 
                                                        class="btn btn-sm btn-warning" 
                                                        title="Ajustar Estoque">
                                                         <i class="fas fa-minus"></i>
@@ -317,7 +317,7 @@
                         <div class="col-md-6">
                             <h5>Produtos com Estoque Baixo</h5>
                             <div class="d-grid gap-2">
-                                <a href="{{ route('inventory.index', ['status' => 'low']) }}" class="btn btn-warning">
+                                <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="btn btn-warning">
                                     <i class="fas fa-list"></i> Ver Todos os Produtos com Baixo Estoque
                                 </a>
                                 <button class="btn btn-success" onclick="alert('Funcionalidade de geração de pedido de compra em desenvolvimento')">
@@ -328,7 +328,7 @@
                         <div class="col-md-6">
                             <h5>Produtos com Estoque Alto</h5>
                             <div class="d-grid gap-2">
-                                <a href="{{ route('inventory.index', ['status' => 'high']) }}" class="btn btn-info">
+                                <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="btn btn-info">
                                     <i class="fas fa-list"></i> Ver Todos os Produtos com Alto Estoque
                                 </a>
                                 <button class="btn btn-warning" onclick="alert('Funcionalidade de promoção de vendas em desenvolvimento')">

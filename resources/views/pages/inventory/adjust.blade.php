@@ -9,9 +9,9 @@
             <h1 class="mb-4">Ajustar Estoque</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.index') }}">Inventário</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.show', $product) }}">{{ $product->name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.index') }}">Inventário</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.show', $product) }}">{{ $product->name }}</a></li>
                     <li class="breadcrumb-item active">Ajustar Estoque</li>
                 </ol>
             </nav>
@@ -53,7 +53,7 @@
                     <h3 class="card-title">Ajuste de Estoque</h3>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('inventory.adjust', $product) }}" method="POST">
+                    <form action="{{ route('provider.inventory.adjust.store', $product) }}" method="POST">
                         @csrf
                         
                         <div class="form-group">
@@ -106,7 +106,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Confirmar Ajuste
                             </button>
-                            <a href="{{ route('inventory.show', $product) }}" class="btn btn-secondary">
+                            <a href="{{ route('provider.inventory.show', $product) }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Cancelar
                             </a>
                         </div>

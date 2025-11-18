@@ -9,8 +9,8 @@
             <h1 class="mb-4">Ajustar Estoque</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.dashboard') }}">Inventário</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('inventory.index') }}">Produtos</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.index') }}">Produtos</a></li>
                     <li class="breadcrumb-item active">Ajustar Estoque</li>
                 </ol>
             </nav>
@@ -42,7 +42,7 @@
                     </div>
 
                     <!-- Formulário de Ajuste -->
-                    <form action="{{ route('inventory.adjustStock', $product) }}" method="POST">
+                    <form action="{{ route('provider.inventory.adjust.store', $product) }}" method="POST">
                         @csrf
                         
                         <div class="row">
@@ -122,7 +122,7 @@
                                 <button type="submit" class="btn btn-success">
                                     <i class="fas fa-save"></i> Confirmar Ajuste
                                 </button>
-                                <a href="{{ route('inventory.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Cancelar
                                 </a>
                             </div>
@@ -173,7 +173,7 @@
                     @endif
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('inventory.movements', $product) }}" class="btn btn-block btn-outline-primary">
+                    <a href="{{ route('provider.inventory.movements', $product) }}" class="btn btn-block btn-outline-primary">
                         Ver Todas as Movimentações
                     </a>
                 </div>

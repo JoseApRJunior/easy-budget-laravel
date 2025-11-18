@@ -166,6 +166,13 @@
 @section('js')
 <script>
 $(document).ready(function() {
+    // Setup CSRF token for all AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val()
+        }
+    });
+    
     // Main QR Code generator
     $('#qrForm').on('submit', function(e) {
         e.preventDefault();
@@ -177,7 +184,7 @@ $(document).ready(function() {
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Gerando...').prop('disabled', true);
         
         $.ajax({
-            url: '{{ route("qrcode.generate") }}',
+            url: '{{ route("provider.qrcode.generate") }}',
             type: 'POST',
             data: formData,
             success: function(response) {
@@ -224,7 +231,7 @@ $(document).ready(function() {
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Gerando...').prop('disabled', true);
         
         $.ajax({
-            url: '{{ route("qrcode.budget") }}',
+            url: '{{ route("provider.qrcode.budget") }}',
             type: 'POST',
             data: formData,
             success: function(response) {
@@ -266,7 +273,7 @@ $(document).ready(function() {
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Gerando...').prop('disabled', true);
         
         $.ajax({
-            url: '{{ route("qrcode.invoice") }}',
+            url: '{{ route("provider.qrcode.invoice") }}',
             type: 'POST',
             data: formData,
             success: function(response) {

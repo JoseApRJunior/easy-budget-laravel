@@ -367,6 +367,10 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get('/stock-turnover', [ InventoryController::class, 'stockTurnover' ])->name('stock-turnover');
         Route::get('/most-used', [ InventoryController::class, 'mostUsedProducts' ])->name('most-used');
         Route::get('/alerts', [ InventoryController::class, 'alerts' ])->name('alerts');
+        Route::get('/report', [ InventoryController::class, 'report' ])->name('report');
+        Route::get('/export', [ InventoryController::class, 'export' ])->name('export');
+        Route::get('/export-movements', [ InventoryController::class, 'exportMovements' ])->name('export-movements');
+        Route::get('/export-stock-turnover', [ InventoryController::class, 'exportStockTurnover' ])->name('export-stock-turnover');
         Route::get('/{product}', [ InventoryController::class, 'show' ])->name('show');
         Route::get('/{product}/adjust', [ InventoryController::class, 'adjustStockForm' ])->name('adjust');
         Route::post('/{product}/adjust', [ InventoryController::class, 'adjustStock' ])->name('adjust.store');

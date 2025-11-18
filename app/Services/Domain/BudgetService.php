@@ -490,7 +490,7 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Verificar se pode editar
-                if ( !$budget->status->canBeEdited() ) {
+                if ( !$budget->status->canEdit() ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Orçamento não pode ser editado no status {$budget->status->value}",
