@@ -1,4 +1,4 @@
-<div class="tab-pane fade" id="notificacoes">
+<div class="tab-pane fade {{ $activeTab === 'notifications' ? 'show active' : '' }}" id="notificacoes">
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-transparent border-0">
             <h3 class="h5 mb-0">Notificações</h3>
@@ -7,7 +7,7 @@
         <div class="card-body">
             <form method="POST" action="{{ route('settings.notifications.update') }}">
                 @csrf
-                
+
                 <!-- Notificações por Email -->
                 <div class="mb-4">
                     <h5 class="h6 text-primary mb-3">Notificações por Email</h5>
@@ -21,7 +21,7 @@
                             Notificações importantes sobre seu negócio
                         </small>
                     </div>
-                    
+
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" id="transaction_notifications" name="transaction_notifications"
                                value="1" {{ old('transaction_notifications', $tabs['notifications']['data']['user_settings']['transaction_notifications'] ?? true) ? 'checked' : '' }}>
@@ -32,7 +32,7 @@
                             Alertas sobre novas vendas, pagamentos e alterações financeiras
                         </small>
                     </div>
-                    
+
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" id="weekly_reports" name="weekly_reports"
                                value="1" {{ old('weekly_reports', $tabs['notifications']['data']['user_settings']['weekly_reports'] ?? false) ? 'checked' : '' }}>
@@ -43,7 +43,7 @@
                             Resumo semanal do desempenho do seu negócio
                         </small>
                     </div>
-                    
+
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" id="newsletter_subscription" name="newsletter_subscription"
                                value="1" {{ old('newsletter_subscription', $tabs['notifications']['data']['user_settings']['newsletter_subscription'] ?? false) ? 'checked' : '' }}>

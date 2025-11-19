@@ -269,8 +269,17 @@ return new class extends Migration
             $table->foreignId( 'product_id' )->constrained( 'products' )->cascadeOnDelete();
             $table->string( 'type', 10 ); // 'in' | 'out'
             $table->integer( 'quantity' );
+            $table->integer( 'previous_quantity' )->nullable();
+            $table->integer( 'new_quantity' )->nullable();
             $table->string( 'reason', 255 )->nullable();
+            $table->integer( 'reference_id' )->nullable();
+            $table->string( 'reference_type', 50 )->nullable();
             $table->timestamps();
+
+            // Índices para performance
+            $table->index( [ 'reference_id', 'reference_type' ] );
+            $table->index( [ 'product_id', 'type' ] );
+            $table->index( 'created_at' );
         } );
 
         // 6) Tokens e agendamentos
@@ -332,8 +341,10 @@ return new class extends Migration
             $table->json( 'permissions' )->nullable();
             $table->timestamp( 'expires_at' )->nullable();
             $table->boolean( 'is_active' )->default( true );
+            $table->enum( 'status', [ 'active', 'rejected', 'expired' ] )->default( 'active' );
             $table->integer( 'access_count' )->default( 0 );
             $table->timestamp( 'last_accessed_at' )->nullable();
+            $table->timestamp( 'rejected_at' )->nullable();
             $table->timestamps();
         } );
 
@@ -427,8 +438,11 @@ return new class extends Migration
             $table->string( 'public_token', 43 )->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
             $table->timestamp( 'public_expires_at' )->nullable();
             $table->text( 'notes' )->nullable();
+            $table->boolean( 'is_automatic' )->default( false );
             $table->softDeletes();
             $table->timestamps();
+
+            $table->index( 'is_automatic' );
         } );
 
         Schema::create( 'invoice_items', function ( Blueprint $table ) {
@@ -506,14 +520,21 @@ return new class extends Migration
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->foreignId( 'user_id' )->constrained( 'users' )->cascadeOnDelete();
-            $table->string( 'hash', 64 )->nullable();
+            $table->string( 'hash', 64 )->unique();
             $table->string( 'type', 50 );
             $table->text( 'description' )->nullable();
             $table->string( 'file_name', 255 );
-            $table->string( 'status', 20 ); // pending, processing, completed, failed
-            $table->string( 'format', 10 ); // pdf, xlsx, csv
+            $table->string( 'file_path' )->nullable();
+            $table->enum( 'status', [ 'pending', 'processing', 'completed', 'failed' ] )->default( 'pending' );
+            $table->enum( 'format', [ 'pdf', 'excel', 'csv' ] )->default( 'pdf' );
             $table->float( 'size' );
+            $table->json( 'filters' )->nullable();
+            $table->text( 'error_message' )->nullable();
+            $table->timestamp( 'generated_at' )->nullable();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique( [ 'tenant_id', 'hash' ], 'uq_reports_tenant_hash' );
         } );
 
         Schema::create( 'notifications', function ( Blueprint $table ) {
@@ -539,8 +560,23 @@ return new class extends Migration
         Schema::create( 'alert_settings', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->json( 'settings' );
+            $table->string( 'alert_type', 20 ); // performance, security, availability, resource, business, system
+            $table->string( 'metric_name', 100 );
+            $table->string( 'severity', 10 ); // info, warning, error, critical
+            $table->decimal( 'threshold_value', 10, 3 );
+            $table->integer( 'evaluation_window_minutes' )->default( 5 );
+            $table->integer( 'cooldown_minutes' )->default( 15 );
+            $table->boolean( 'is_active' )->default( true );
+            $table->json( 'notification_channels' ); // ['email', 'sms', 'slack']
+            $table->json( 'notification_emails' )->nullable();
+            $table->string( 'slack_webhook_url', 500 )->nullable();
+            $table->text( 'custom_message' )->nullable();
             $table->timestamps();
+
+            // Índices para performance
+            $table->index( [ 'tenant_id', 'alert_type' ] );
+            $table->index( [ 'tenant_id', 'is_active' ] );
+            $table->index( [ 'alert_type', 'severity' ] );
         } );
 
         Schema::create( 'middleware_metrics_history', function ( Blueprint $table ) {
@@ -568,10 +604,10 @@ return new class extends Migration
         Schema::create( 'monitoring_alerts_history', function ( Blueprint $table ) {
             $table->id();
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->string( 'alert_type', 20 ); // performance,error,security,availability,resource
-            $table->string( 'severity', 10 );   // low,medium,high,critical
-            $table->string( 'middleware_name', 100 );
-            $table->string( 'endpoint', 255 )->nullable();
+            $table->foreignId( 'alert_setting_id' )->nullable()->constrained( 'alert_settings' )->nullOnDelete();
+            $table->foreignId( 'resolved_by' )->nullable()->constrained( 'users' )->nullOnDelete();
+            $table->string( 'alert_type', 20 ); // performance, security, availability, resource, business, system
+            $table->string( 'severity', 10 ); // info, warning, error, critical
             $table->string( 'metric_name', 100 );
             $table->decimal( 'metric_value', 10, 3 );
             $table->decimal( 'threshold_value', 10, 3 );
@@ -579,11 +615,18 @@ return new class extends Migration
             $table->json( 'additional_data' )->nullable();
             $table->boolean( 'is_resolved' )->default( false );
             $table->dateTime( 'resolved_at' )->nullable();
-            $table->foreignId( 'resolved_by' )->nullable()->constrained( 'users' )->nullOnDelete();
             $table->text( 'resolution_notes' )->nullable();
             $table->boolean( 'notification_sent' )->default( false );
             $table->dateTime( 'notification_sent_at' )->nullable();
             $table->timestamps();
+
+            // Índices para performance
+            $table->index( [ 'tenant_id', 'alert_type' ] );
+            $table->index( [ 'tenant_id', 'severity' ] );
+            $table->index( [ 'tenant_id', 'is_resolved' ] );
+            $table->index( [ 'alert_type', 'severity' ] );
+            $table->index( 'created_at' );
+            $table->index( [ 'is_resolved', 'resolved_at' ] );
         } );
 
         Schema::create( 'activities', function ( Blueprint $table ) {
@@ -608,6 +651,19 @@ return new class extends Migration
             $table->string( 'status', 30 );
             $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
             $table->timestamps();
+        } );
+
+        // Tabela de webhooks
+        Schema::create( 'webhook_requests', function ( Blueprint $table ) {
+            $table->id();
+            $table->string( 'request_id' )->index();
+            $table->string( 'type' )->index();
+            $table->string( 'payload_hash' );
+            $table->string( 'status' )->default( 'received' );
+            $table->timestamp( 'received_at' )->useCurrent();
+            $table->timestamp( 'processed_at' )->nullable();
+            $table->timestamps();
+            $table->unique( [ 'request_id', 'type' ] );
         } );
 
         // Tabelas de configurações
@@ -776,6 +832,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists( 'webhook_requests' );
         Schema::dropIfExists( 'business_datas' );
         Schema::dropIfExists( 'audit_logs' );
         Schema::dropIfExists( 'failed_jobs' );

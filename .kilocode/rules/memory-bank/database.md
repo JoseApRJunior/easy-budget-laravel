@@ -8,10 +8,10 @@
 -  **Engine:** InnoDB
 -  **Charset:** utf8mb4
 -  **Collation:** utf8mb4_unicode_ci
--  **Tabelas:** 40+ tabelas principais (contando tabelas de sistema)
+-  **Tabelas:** 50+ tabelas principais (contando tabelas de sistema)
 -  **Multi-tenant:** Isolamento completo por empresa
--  **Arquitetura:** Sistema complexo com integração Mercado Pago
--  **Status:** Schema inicial criado via migration em Laravel 12 (migrado de sistema legado Twig + DoctrineDBAL)
+-  **Arquitetura:** Sistema complexo com integração Mercado Pago e webhooks
+-  **Status:** Schema consolidado em uma única migration inicial (Laravel 12)
 
 ### **🏗️ Estrutura das Tabelas Principais**
 
@@ -616,17 +616,22 @@ CREATE TABLE reports (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED,
     user_id BIGINT UNSIGNED,
-    hash VARCHAR(64) NULL,
+    hash VARCHAR(64) UNIQUE NOT NULL,
     type VARCHAR(50) NOT NULL,
     description TEXT NULL,
     file_name VARCHAR(255) NOT NULL,
-    status VARCHAR(20) NOT NULL, -- pending, processing, completed, failed
-    format VARCHAR(10) NOT NULL, -- pdf, xlsx, csv
+    file_path VARCHAR(255) NULL,
+    status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+    format ENUM('pdf', 'excel', 'csv') DEFAULT 'pdf',
     size FLOAT NOT NULL,
+    filters JSON NULL,
+    error_message TEXT NULL,
+    generated_at TIMESTAMP NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_reports_tenant_hash (tenant_id, hash)
 );
 ```
 
@@ -734,10 +739,10 @@ CREATE TABLE middleware_metrics_history (
 CREATE TABLE monitoring_alerts_history (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED,
-    alert_type VARCHAR(20) NOT NULL, -- performance,error,security,availability,resource
-    severity VARCHAR(10) NOT NULL,   -- low,medium,high,critical
-    middleware_name VARCHAR(100) NOT NULL,
-    endpoint VARCHAR(255) NULL,
+    alert_setting_id BIGINT UNSIGNED NULL,
+    resolved_by BIGINT UNSIGNED NULL,
+    alert_type VARCHAR(20) NOT NULL, -- performance, security, availability, resource, business, system
+    severity VARCHAR(10) NOT NULL, -- info, warning, error, critical
     metric_name VARCHAR(100) NOT NULL,
     metric_value DECIMAL(10,3) NOT NULL,
     threshold_value DECIMAL(10,3) NOT NULL,
@@ -745,14 +750,20 @@ CREATE TABLE monitoring_alerts_history (
     additional_data JSON NULL,
     is_resolved BOOLEAN DEFAULT FALSE,
     resolved_at DATETIME NULL,
-    resolved_by BIGINT UNSIGNED NULL,
     resolution_notes TEXT NULL,
     notification_sent BOOLEAN DEFAULT FALSE,
     notification_sent_at DATETIME NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (alert_setting_id) REFERENCES alert_settings(id) ON DELETE SET NULL,
+    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_monitoring_alerts_tenant_alert_type (tenant_id, alert_type),
+    INDEX idx_monitoring_alerts_tenant_severity (tenant_id, severity),
+    INDEX idx_monitoring_alerts_tenant_is_resolved (tenant_id, is_resolved),
+    INDEX idx_monitoring_alerts_alert_type_severity (alert_type, severity),
+    INDEX idx_monitoring_alerts_created_at (created_at),
+    INDEX idx_monitoring_alerts_is_resolved_resolved_at (is_resolved, resolved_at)
 );
 ```
 
@@ -764,10 +775,23 @@ CREATE TABLE monitoring_alerts_history (
 CREATE TABLE alert_settings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED,
-    settings JSON NOT NULL,
+    alert_type VARCHAR(20) NOT NULL, -- performance, security, availability, resource, business, system
+    metric_name VARCHAR(100) NOT NULL,
+    severity VARCHAR(10) NOT NULL, -- info, warning, error, critical
+    threshold_value DECIMAL(10, 3) NOT NULL,
+    evaluation_window_minutes INT DEFAULT 5,
+    cooldown_minutes INT DEFAULT 15,
+    is_active BOOLEAN DEFAULT TRUE,
+    notification_channels JSON NOT NULL, -- ['email', 'sms', 'slack']
+    notification_emails JSON NULL,
+    slack_webhook_url VARCHAR(500) NULL,
+    custom_message TEXT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    INDEX idx_alert_settings_tenant_alert_type (tenant_id, alert_type),
+    INDEX idx_alert_settings_tenant_is_active (tenant_id, is_active),
+    INDEX idx_alert_settings_alert_type_severity (alert_type, severity)
 );
 ```
 
@@ -800,6 +824,25 @@ CREATE TABLE supports (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+);
+```
+
+##### **webhook_requests**
+
+```sql
+CREATE TABLE webhook_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    payload_hash VARCHAR(255) NOT NULL,
+    status VARCHAR(255) DEFAULT 'received',
+    received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX webhook_requests_request_id_index (request_id),
+    INDEX webhook_requests_type_index (type),
+    UNIQUE KEY webhook_requests_request_id_type_unique (request_id, type)
 );
 ```
 
