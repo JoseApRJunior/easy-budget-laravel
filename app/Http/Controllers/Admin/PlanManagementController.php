@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Services\Domain\PlanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -115,12 +116,14 @@ class PlanManagementController extends Controller
      */
     public function show( Plan $plan ): View
     {
+        // Admin global precisa ver assinaturas de todos os tenants
         $subscriptions = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
             ->where( 'plan_id', $plan->id )
             ->latest()
             ->paginate( 10 );
-        dd( $subscriptions );
-        $stats = $this->getPlanDetailedStats( $plan );
+
+        $stats = $this->getPlanDetailedStats( $plan, $subscriptions );
 
         return view( 'pages.admin.plan.show', [
             'plan'          => $plan,
@@ -253,7 +256,9 @@ class PlanManagementController extends Controller
         $search = $request->get( 'search' );
         $status = $request->get( 'status' );
 
+        // Admin global precisa ver assinaturas de todos os tenants
         $query = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
             ->where( 'plan_id', $plan->id );
 
         if ( $search ) {
@@ -287,7 +292,9 @@ class PlanManagementController extends Controller
      */
     public function history( Plan $plan ): View
     {
+        // Admin global precisa ver histórico de todos os tenants
         $history = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
             ->where( 'plan_id', $plan->id )
             ->latest()
             ->paginate( 20 );
@@ -338,12 +345,16 @@ class PlanManagementController extends Controller
             'inactive'             => Plan::where( 'status', 'inactive' )->count(),
             'draft'                => Plan::where( 'status', 'draft' )->count(),
             'featured'             => 0, // Não há campo is_featured na tabela plans
-            'total_subscriptions'  => PlanSubscription::count(),
-            'active_subscriptions' => PlanSubscription::where( 'status', 'active' )->count(),
-            'monthly_revenue'      => PlanSubscription::where( 'status', 'active' )
+            // Admin global precisa de estatísticas de todos os tenants
+            'total_subscriptions'  => PlanSubscription::withoutGlobalScope( \App\Models\Traits\TenantScope::class)->count(),
+            'active_subscriptions' => PlanSubscription::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+                ->where( 'status', 'active' )->count(),
+            'monthly_revenue'      => PlanSubscription::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+                ->where( 'status', 'active' )
                 ->whereMonth( 'created_at', now()->month )
                 ->sum( 'transaction_amount' ),
-            'yearly_revenue'       => PlanSubscription::where( 'status', 'active' )
+            'yearly_revenue'       => PlanSubscription::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+                ->where( 'status', 'active' )
                 ->whereYear( 'created_at', now()->year )
                 ->sum( 'transaction_amount' ),
         ];
@@ -352,20 +363,36 @@ class PlanManagementController extends Controller
     /**
      * Get detailed plan statistics
      */
-    private function getPlanDetailedStats( Plan $plan ): array
+    private function getPlanDetailedStats( Plan $plan, $subscriptions = null ): array
     {
+        // Se temos as subscriptions já carregadas, usamos elas para calcular estatísticas
+        if ( $subscriptions && method_exists( $subscriptions, 'get' ) ) {
+            $allSubscriptions = $subscriptions->get();
+        } else {
+            // Fallback para query de todas as subscriptions (sem tenant scope para admin)
+            $allSubscriptions = PlanSubscription::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+                ->where( 'plan_id', $plan->id )
+                ->get();
+        }
+
+        $activeSubscriptions    = $allSubscriptions->where( 'status', 'active' );
+        $cancelledSubscriptions = $allSubscriptions->where( 'status', 'cancelled' );
+        $pendingSubscriptions   = $allSubscriptions->where( 'status', 'pending' );
+        $expiredSubscriptions   = $allSubscriptions->where( 'status', 'expired' );
+        $trialSubscriptions     = $allSubscriptions->where( 'payment_method', 'trial' )->where( 'transaction_amount', 0 );
+        $thisMonthActive        = $activeSubscriptions->whereBetween( 'created_at', [ now()->startOfMonth(), now()->endOfMonth() ] );
+
         return [
-            'total_subscriptions'     => $plan->planSubscriptions()->count(),
-            'active_subscriptions'    => $plan->planSubscriptions()->where( 'status', 'active' )->count(),
-            'cancelled_subscriptions' => $plan->planSubscriptions()->where( 'status', 'cancelled' )->count(),
-            'trial_subscriptions'     => $plan->planSubscriptions()->where( 'status', 'trial' )->count(),
-            'total_revenue'           => $plan->planSubscriptions()->sum( 'transaction_amount' ),
-            'monthly_revenue'         => $plan->planSubscriptions()
-                ->where( 'status', 'active' )
-                ->whereMonth( 'created_at', now()->month )
-                ->sum( 'transaction_amount' ),
-            'churn_rate'              => $this->calculateChurnRate( $plan ),
-            'conversion_rate'         => $this->calculateConversionRate( $plan ),
+            'total_subscriptions'     => $allSubscriptions->count(),
+            'active_subscriptions'    => $activeSubscriptions->count(),
+            'cancelled_subscriptions' => $cancelledSubscriptions->count(),
+            'pending_subscriptions'   => $pendingSubscriptions->count(),
+            'expired_subscriptions'   => $expiredSubscriptions->count(),
+            'trial_subscriptions'     => $trialSubscriptions->count(),
+            'total_revenue'           => $allSubscriptions->sum( 'transaction_amount' ),
+            'monthly_revenue'         => $thisMonthActive->sum( 'transaction_amount' ),
+            'churn_rate'              => $this->calculateChurnRate( $allSubscriptions ),
+            'conversion_rate'         => $this->calculateConversionRate( $allSubscriptions ),
         ];
     }
 
@@ -406,25 +433,26 @@ class PlanManagementController extends Controller
     }
 
     /**
-     * Calculate churn rate
+     * Calculate churn rate using already loaded subscriptions
      */
-    private function calculateChurnRate( Plan $plan ): float
+    private function calculateChurnRate( Collection $subscriptions ): float
     {
-        $totalSubscriptions     = $plan->planSubscriptions()->count();
-        $cancelledSubscriptions = $plan->planSubscriptions()->where( 'status', 'cancelled' )->count();
+        $totalSubscriptions     = $subscriptions->count();
+        $cancelledSubscriptions = $subscriptions->where( 'status', 'cancelled' )->count();
 
         return $totalSubscriptions > 0 ? ( $cancelledSubscriptions / $totalSubscriptions ) * 100 : 0;
     }
 
     /**
-     * Calculate conversion rate
+     * Calculate conversion rate using already loaded subscriptions
+     * (pending to active conversion rate)
      */
-    private function calculateConversionRate( Plan $plan ): float
+    private function calculateConversionRate( Collection $subscriptions ): float
     {
-        $trialSubscriptions  = $plan->planSubscriptions()->where( 'status', 'trial' )->count();
-        $activeSubscriptions = $plan->planSubscriptions()->where( 'status', 'active' )->count();
+        $pendingSubscriptions = $subscriptions->where( 'status', 'pending' )->count();
+        $activeSubscriptions  = $subscriptions->where( 'status', 'active' )->count();
 
-        return $trialSubscriptions > 0 ? ( $activeSubscriptions / $trialSubscriptions ) * 100 : 0;
+        return $pendingSubscriptions > 0 ? ( $activeSubscriptions / $pendingSubscriptions ) * 100 : 0;
     }
 
     /**

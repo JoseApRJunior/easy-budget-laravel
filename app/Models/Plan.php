@@ -109,7 +109,7 @@ class Plan extends Model
     /**
      * Assinaturas deste plano.
      */
-    public function planSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function planSubscriptions(): HasMany
     {
         return $this->hasMany( PlanSubscription::class);
     }
