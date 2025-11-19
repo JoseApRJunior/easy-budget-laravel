@@ -97,18 +97,23 @@ class InvoiceService extends AbstractBaseService
 
                 // Calcular total da fatura
                 $totalAmount = $this->calculateInvoiceTotal( $data[ 'items' ] );
+                $subtotal    = $totalAmount; // Por padrão, subtotal é igual ao total
+                $discount    = (float) ( $data[ 'discount' ] ?? 0 );
+                $finalTotal  = $totalAmount - $discount;
 
                 // Criar fatura
                 $invoice = Invoice::create( [
-                    'tenant_id'    => tenant()->id,
-                    'service_id'   => $service->id,
-                    'customer_id'  => $data[ 'customer_id' ],
-                    'code'         => $invoiceCode,
-                    'issue_date'   => $data[ 'issue_date' ],
-                    'due_date'     => $data[ 'due_date' ],
-                    'total_amount' => $totalAmount,
-                    'status'       => $data[ 'status' ] ?? InvoiceStatus::PENDING->value,
-                    'public_hash'  => bin2hex( random_bytes( 32 ) ),
+                    'tenant_id'   => tenant()->id,
+                    'service_id'  => $service->id,
+                    'customer_id' => $data[ 'customer_id' ],
+                    'code'        => $invoiceCode,
+                    'issue_date'  => $data[ 'issue_date' ],
+                    'due_date'    => $data[ 'due_date' ],
+                    'subtotal'    => $subtotal,
+                    'discount'    => $discount,
+                    'total'       => $finalTotal,
+                    'status'      => $data[ 'status' ] ?? InvoiceStatus::PENDING->value,
+                    'public_hash' => bin2hex( random_bytes( 32 ) ),
                 ] );
 
                 $user = $this->authUser();
