@@ -86,10 +86,10 @@
 
 #### **Sistema Atual (Produção)**
 
--  **Framework Legado:** Sistema próprio com Twig + DoctrineDBAL
+-  **Framework Legado:** Sistema próprio com Twig + DoctrineDBAL (Código removido do repositório, lógica migrada)
 -  **Arquitetura:** Classes abstratas e interfaces personalizadas
 -  **Banco:** MySQL com DoctrineDBAL
--  **Sistema:** Totalmente funcional e operacional
+-  **Sistema:** Operacional em produção, sendo substituído gradualmente
 
 #### **Sistema Laravel 12 (Em Desenvolvimento)**
 
@@ -115,11 +115,11 @@
 -  **Sistema de logs** e auditoria
 -  **Geração de relatórios** em PDF
 
-#### **Migração (Em Andamento)**
+#### **Migração (Fase de Desenvolvimento)**
 
--  **Migração de DoctrineDBAL** para Eloquent ORM
+-  **Lógica de Negócio:** Migrada para Laravel (Services/Repositories)
+-  **Código Legado:** Pasta `old-system` removida do repositório
 -  **Conversão de templates Twig** para Blade
--  **Aproveitamento de lógica de negócio** do sistema legado
 -  **Modernização da arquitetura** com padrões Laravel
 
 ### **🏢 Arquitetura do Sistema:**
@@ -155,20 +155,17 @@
 #### **🏗️ Processo de Migração**
 
 ```
-🔄 Sistema Legado (Produção)
-├── 📁 Twig Templates + DoctrineDBAL
-├── 🏢 Modelo de negócio funcional
-├── 👥 Sistema antigo operacional
-└── 💾 Dados em produção
+🔄 Sistema Legado (Histórico)
+├── 📁 Código removido do repositório (`old-system`)
+├── 🏢 Lógica de negócio migrada para Services/Repositories
+└── 💾 Dados em produção (sendo migrados)
 
-⬇️ Migração em Andamento
-
-🏗️ Sistema Laravel 12 (Desenvolvimento)
+🏗️ Sistema Laravel 12 (Atual)
 ├── 🏗️ Controller → Services → Repositories → Models
-├── 🗃️ DoctrineDBAL → Eloquent ORM
-├── 🎨 Twig → Blade Templates
-├── ✅ Arquitetura moderna
-└── 🔄 Lógica de negócio sendo adaptada
+├── 🗃️ Eloquent ORM (Substituindo DoctrineDBAL)
+├── 🎨 Blade Templates (Substituindo Twig)
+├── ✅ Arquitetura moderna implementada
+└── � Desenvolvimento de novos recursos
 ```
 
 ### **🎯 Características Distintivas:**
@@ -212,17 +209,17 @@
 
 | **Componente**             | **Status**                | **Detalhes**                                      |
 | -------------------------- | ------------------------- | ------------------------------------------------- |
-| **Sistema Legado**         | ✅ **70% Funcional**      | Sistema antigo operacional em produção            |
+| **Sistema Legado**         | 🗑️ **Removido**           | Pasta `old-system` removida; lógica migrada       |
 | **Backend Laravel**        | ✅ **100% Atualizado**    | Arquitetura moderna implementada com Eloquent ORM |
 | **Banco de Dados**         | ✅ **100% Atualizado**    | Schema completo migrado para Laravel 12           |
-| **Multi-tenant**           | ✅ **Projetado**          | Estrutura definida para implementação             |
-| **Autenticação**           | 🔄 **Em Desenvolvimento** | Sistema RBAC sendo implementado                   |
-| **Auditoria**              | 🔄 **Em Desenvolvimento** | Sistema de logs sendo criado                      |
-| **Módulos CRM**            | 🔄 **Em Migração**        | Lógica de negócio sendo adaptada                  |
-| **Sistema de Assinaturas** | ⏳ **Planejado**          | Integração Mercado Pago futura                    |
+| **Multi-tenant**           | ✅ **Implementado**       | Estrutura funcional e em uso                      |
+| **Autenticação**           | ✅ **Implementado**       | Sistema RBAC e Login Híbrido funcionais           |
+| **Auditoria**              | ✅ **Implementado**       | Sistema de logs ativo                             |
+| **Módulos CRM**            | 🔄 **Em Desenvolvimento** | Recursos sendo finalizados no Laravel             |
+| **Sistema de Assinaturas** | 🔄 **Em Desenvolvimento** | Integração Mercado Pago em andamento              |
 | **Relatórios**             | 🔄 **Em Desenvolvimento** | Dashboards sendo criados                          |
 | **Aplicação Web**          | 🔄 **Em Desenvolvimento** | Interface Blade sendo construída                  |
-| **Análise de Migração**    | ✅ **Completa**           | Relatório BudgetController disponível             |
+| **Análise de Migração**    | ✅ **Concluída**          | Lógica legada absorvida pelo novo sistema         |
 | **Frontend Moderno**       | ⏳ **Pendente**           | TailwindCSS + Vite (próxima fase)                 |
 
 ### **🎊 Conclusão:**
@@ -231,13 +228,11 @@
 
 **Com arquitetura diferenciada onde cada empresa possui apenas um usuário provider com dashboard completo e ambiente de IA analítica para gestão do negócio, enquanto o admin global (dono do sistema) possui dashboard separado com métricas de todos os tenants e IA para análise de melhorias, sistema de auditoria avançado, integração completa com Mercado Pago para assinaturas e pagamentos, e backend sólido com interface web responsiva usando Blade templates, está pronto para uso em produção ou desenvolvimento de novas funcionalidades.**
 
-**Migração completa do sistema legado (Twig + DoctrineDBAL) para Laravel 12, com lógica de negócio adaptada e arquitetura moderna implementada com padrões Laravel (Controller → Services → Repositories → Models).**
+**Migração da lógica de negócio do sistema legado (Twig + DoctrineDBAL) para Laravel 12 concluída. A pasta `old-system` foi removida do repositório. O foco agora é o desenvolvimento e aprimoramento dos recursos na nova arquitetura (Controller → Services → Repositories → Models).**
 
-**Última atualização do Memory Bank:** 15/11/2025 - ✅ **Atualização completa do Memory Bank**:
+**Última atualização do Memory Bank:** 19/11/2025 - ✅ **Atualização completa do Memory Bank**:
 
--  Revisão de todos os arquivos do memory bank para consistência
--  Adição da análise completa do BudgetController legado
--  Atualização do contexto atual com relatório de migração disponível
--  Próxima prioridade: migração do módulo de orçamentos
--  Confirmação de arquitetura implementada e padrões unificados
--  Correções recentes de padrões de códigos em seeders integradas
+-  Remoção de referências à pasta `old-system` (removida do projeto)
+-  Confirmação da migração da lógica de negócio para o Laravel
+-  Atualização do status dos componentes (Legado removido, Autenticação/Auditoria implementados)
+-  Foco atualizado para desenvolvimento de recursos na nova arquitetura

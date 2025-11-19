@@ -9,55 +9,55 @@ use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Tenant;
 use App\Services\Domain\PlanService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PlanManagementController extends Controller
 {
     public function __construct(
-        private PlanService $planService
+        private PlanService $planService,
     ) {}
 
     /**
      * Display plans management dashboard
      */
-    public function index(Request $request): View
+    public function index( Request $request ): View
     {
-        $search = $request->get('search');
-        $status = $request->get('status');
-        $sort = $request->get('sort', 'name');
-        $direction = $request->get('direction', 'asc');
+        $search    = $request->get( 'search' );
+        $status    = $request->get( 'status' );
+        $sort      = $request->get( 'sort', 'name' );
+        $direction = $request->get( 'direction', 'asc' );
 
         $query = Plan::query();
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
+        if ( $search ) {
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'name', 'like', "%{$search}%" )
+                    ->orWhere( 'description', 'like', "%{$search}%" );
+            } );
         }
 
-        if ($status) {
-            $query->where('status', $status);
+        if ( $status ) {
+            $query->where( 'status', $status );
         }
 
-        $plans = $query->orderBy($sort, $direction)
-                      ->paginate(15)
-                      ->appends($request->query());
+        $plans = $query->orderBy( $sort, $direction )
+            ->paginate( 15 )
+            ->appends( $request->query() );
 
         $stats = $this->getPlanStats();
 
-        return view('pages.admin.plan.index', [
-            'plans' => $plans,
-            'stats' => $stats,
-            'search' => $search,
-            'status' => $status,
-            'sort' => $sort,
+        return view( 'pages.admin.plan.index', [
+            'plans'     => $plans,
+            'stats'     => $stats,
+            'search'    => $search,
+            'status'    => $status,
+            'sort'      => $sort,
             'direction' => $direction,
-        ]);
+        ] );
     }
 
     /**
@@ -65,265 +65,265 @@ class PlanManagementController extends Controller
      */
     public function create(): View
     {
-        return view('pages.admin.plan.create', [
+        return view( 'pages.admin.plan.create', [
             'features' => $this->getAvailableFeatures(),
-        ]);
+        ] );
     }
 
     /**
      * Store new plan
      */
-    public function store(Request $request): RedirectResponse
+    public function store( Request $request ): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:plans',
+        $validated = $request->validate( [
+            'name'        => 'required|string|max:50|unique:plans',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'status' => 'required|boolean',
+            'price'       => 'required|numeric|min:0',
+            'status'      => 'required|boolean',
             'max_budgets' => 'required|integer|min:1',
             'max_clients' => 'required|integer|min:1',
-            'features' => 'nullable|array',
-        ]);
+            'features'    => 'nullable|array',
+        ] );
 
-        DB::transaction(function () use ($validated) {
-            $plan = Plan::create([
-                'name' => $validated['name'],
-                'slug' => \Str::slug($validated['name']),
-                'description' => $validated['description'] ?? null,
-                'price' => $validated['price'],
-                'status' => $validated['status'],
-                'max_budgets' => $validated['max_budgets'],
-                'max_clients' => $validated['max_clients'],
-                'features' => $validated['features'] ?? null,
-            ]);
+        DB::transaction( function () use ($validated) {
+            $plan = Plan::create( [
+                'name'        => $validated[ 'name' ],
+                'slug'        => \Str::slug( $validated[ 'name' ] ),
+                'description' => $validated[ 'description' ] ?? null,
+                'price'       => $validated[ 'price' ],
+                'status'      => $validated[ 'status' ],
+                'max_budgets' => $validated[ 'max_budgets' ],
+                'max_clients' => $validated[ 'max_clients' ],
+                'features'    => $validated[ 'features' ] ?? null,
+            ] );
 
             // Log activity
             activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano criado: ' . $plan->name);
-        });
+                ->causedBy( auth()->user() )
+                ->performedOn( $plan )
+                ->log( 'Plano criado: ' . $plan->name );
+        } );
 
-        Cache::forget('plans.active');
+        Cache::forget( 'plans.active' );
 
-        return redirect()->route('admin.plans.index')
-                        ->with('success', 'Plano criado com sucesso!');
+        return redirect()->route( 'admin.plans.index' )
+            ->with( 'success', 'Plano criado com sucesso!' );
     }
 
     /**
      * Show plan details
      */
-    public function show(Plan $plan): View
+    public function show( Plan $plan ): View
     {
-        $subscriptions = PlanSubscription::with(['tenant', 'provider'])
-                                       ->where('plan_id', $plan->id)
-                                       ->latest()
-                                       ->paginate(10);
+        $subscriptions = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->where( 'plan_id', $plan->id )
+            ->latest()
+            ->paginate( 10 );
+        dd( $subscriptions );
+        $stats = $this->getPlanDetailedStats( $plan );
 
-        $stats = $this->getPlanDetailedStats($plan);
-
-        return view('pages.admin.plan.show', [
-            'plan' => $plan,
+        return view( 'pages.admin.plan.show', [
+            'plan'          => $plan,
             'subscriptions' => $subscriptions,
-            'stats' => $stats,
-        ]);
+            'stats'         => $stats,
+        ] );
     }
 
     /**
      * Show edit plan form
      */
-    public function edit(Plan $plan): View
+    public function edit( Plan $plan ): View
     {
-        return view('pages.admin.plan.edit', [
-            'plan' => $plan,
+        return view( 'pages.admin.plan.edit', [
+            'plan'     => $plan,
             'features' => $this->getAvailableFeatures(),
-        ]);
+        ] );
     }
 
     /**
      * Update plan
      */
-    public function update(Request $request, Plan $plan): RedirectResponse
+    public function update( Request $request, Plan $plan ): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:plans,name,' . $plan->id,
+        $validated = $request->validate( [
+            'name'        => 'required|string|max:50|unique:plans,name,' . $plan->id,
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'status' => 'required|boolean',
+            'price'       => 'required|numeric|min:0',
+            'status'      => 'required|boolean',
             'max_budgets' => 'required|integer|min:1',
             'max_clients' => 'required|integer|min:1',
-            'features' => 'nullable|array',
-        ]);
+            'features'    => 'nullable|array',
+        ] );
 
-        DB::transaction(function () use ($validated, $plan) {
-            $plan->update([
-                'name' => $validated['name'],
-                'slug' => \Str::slug($validated['name']),
-                'description' => $validated['description'] ?? null,
-                'price' => $validated['price'],
-                'status' => $validated['status'],
-                'max_budgets' => $validated['max_budgets'],
-                'max_clients' => $validated['max_clients'],
-                'features' => $validated['features'] ?? null,
-            ]);
+        DB::transaction( function () use ($validated, $plan) {
+            $plan->update( [
+                'name'        => $validated[ 'name' ],
+                'slug'        => \Str::slug( $validated[ 'name' ] ),
+                'description' => $validated[ 'description' ] ?? null,
+                'price'       => $validated[ 'price' ],
+                'status'      => $validated[ 'status' ],
+                'max_budgets' => $validated[ 'max_budgets' ],
+                'max_clients' => $validated[ 'max_clients' ],
+                'features'    => $validated[ 'features' ] ?? null,
+            ] );
 
             // Log activity
             activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano atualizado: ' . $plan->name);
-        });
+                ->causedBy( auth()->user() )
+                ->performedOn( $plan )
+                ->log( 'Plano atualizado: ' . $plan->name );
+        } );
 
-        Cache::forget('plans.active');
+        Cache::forget( 'plans.active' );
 
-        return redirect()->route('admin.plans.index')
-                        ->with('success', 'Plano atualizado com sucesso!');
+        return redirect()->route( 'admin.plans.index' )
+            ->with( 'success', 'Plano atualizado com sucesso!' );
     }
 
     /**
      * Delete plan
      */
-    public function destroy(Plan $plan): RedirectResponse
+    public function destroy( Plan $plan ): RedirectResponse
     {
-        if ($plan->planSubscriptions()->exists()) {
+        if ( $plan->planSubscriptions()->exists() ) {
             return redirect()->back()
-                           ->with('error', 'Não é possível excluir um plano com assinaturas ativas.');
+                ->with( 'error', 'Não é possível excluir um plano com assinaturas ativas.' );
         }
 
-        DB::transaction(function () use ($plan) {
+        DB::transaction( function () use ($plan) {
             // Log activity before deletion
             activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano excluído: ' . $plan->name);
+                ->causedBy( auth()->user() )
+                ->performedOn( $plan )
+                ->log( 'Plano excluído: ' . $plan->name );
 
             $plan->delete();
-        });
+        } );
 
-        Cache::forget('plans.active');
+        Cache::forget( 'plans.active' );
 
-        return redirect()->route('admin.plans.index')
-                        ->with('success', 'Plano excluído com sucesso!');
+        return redirect()->route( 'admin.plans.index' )
+            ->with( 'success', 'Plano excluído com sucesso!' );
     }
 
     /**
      * Toggle plan status
      */
-    public function toggleStatus(Plan $plan): RedirectResponse
+    public function toggleStatus( Plan $plan ): RedirectResponse
     {
-        $plan->update([
+        $plan->update( [
             'status' => $plan->status === 'active' ? 'inactive' : 'active'
-        ]);
+        ] );
 
         activity()
-            ->causedBy(auth()->user())
-            ->performedOn($plan)
-            ->log('Status do plano alterado: ' . $plan->name . ' - ' . $plan->status);
+            ->causedBy( auth()->user() )
+            ->performedOn( $plan )
+            ->log( 'Status do plano alterado: ' . $plan->name . ' - ' . $plan->status );
 
-        Cache::forget('plans.active');
+        Cache::forget( 'plans.active' );
 
         return redirect()->back()
-                        ->with('success', 'Status do plano alterado com sucesso!');
+            ->with( 'success', 'Status do plano alterado com sucesso!' );
     }
 
     /**
      * Duplicate plan
      */
-    public function duplicate(Plan $plan): RedirectResponse
+    public function duplicate( Plan $plan ): RedirectResponse
     {
-        $newPlan = $plan->replicate();
-        $newPlan->name = $plan->name . ' (Cópia)';
+        $newPlan         = $plan->replicate();
+        $newPlan->name   = $plan->name . ' (Cópia)';
         $newPlan->status = 'draft';
         $newPlan->save();
 
         activity()
-            ->causedBy(auth()->user())
-            ->performedOn($newPlan)
-            ->log('Plano duplicado: ' . $plan->name . ' -> ' . $newPlan->name);
+            ->causedBy( auth()->user() )
+            ->performedOn( $newPlan )
+            ->log( 'Plano duplicado: ' . $plan->name . ' -> ' . $newPlan->name );
 
-        return redirect()->route('admin.plans.edit', $newPlan)
-                        ->with('success', 'Plano duplicado com sucesso!');
+        return redirect()->route( 'admin.plans.edit', $newPlan )
+            ->with( 'success', 'Plano duplicado com sucesso!' );
     }
 
     /**
      * Show plan subscribers
      */
-    public function subscribers(Plan $plan, Request $request): View
+    public function subscribers( Plan $plan, Request $request ): View
     {
-        $search = $request->get('search');
-        $status = $request->get('status');
+        $search = $request->get( 'search' );
+        $status = $request->get( 'status' );
 
-        $query = PlanSubscription::with(['tenant', 'provider'])
-                                ->where('plan_id', $plan->id);
+        $query = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->where( 'plan_id', $plan->id );
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('tenant', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
-                });
-            });
+        if ( $search ) {
+            $query->where( function ( $q ) use ( $search ) {
+                $q->whereHas( 'tenant', function ( $q ) use ( $search ) {
+                    $q->where( 'name', 'like', "%{$search}%" );
+                } )
+                    ->orWhereHas( 'user', function ( $q ) use ( $search ) {
+                        $q->where( 'name', 'like', "%{$search}%" )
+                            ->orWhere( 'email', 'like', "%{$search}%" );
+                    } );
+            } );
         }
 
-        if ($status) {
-            $query->where('status', $status);
+        if ( $status ) {
+            $query->where( 'status', $status );
         }
 
-        $subscribers = $query->latest()->paginate(20);
+        $subscribers = $query->latest()->paginate( 20 );
 
-        return view('pages.admin.plan.subscribers', [
-            'plan' => $plan,
+        return view( 'pages.admin.plan.subscribers', [
+            'plan'        => $plan,
             'subscribers' => $subscribers,
-            'search' => $search,
-            'status' => $status,
-        ]);
+            'search'      => $search,
+            'status'      => $status,
+        ] );
     }
 
     /**
      * Show plan upgrade/downgrade history
      */
-    public function history(Plan $plan): View
+    public function history( Plan $plan ): View
     {
-        $history = PlanSubscription::with(['tenant', 'provider'])
-                                  ->where('plan_id', $plan->id)
-                                  ->latest()
-                                  ->paginate(20);
+        $history = PlanSubscription::with( [ 'tenant', 'provider' ] )
+            ->where( 'plan_id', $plan->id )
+            ->latest()
+            ->paginate( 20 );
 
-        return view('pages.admin.plan.history', [
-            'plan' => $plan,
+        return view( 'pages.admin.plan.history', [
+            'plan'    => $plan,
             'history' => $history,
-        ]);
+        ] );
     }
 
     /**
      * Show plan analytics
      */
-    public function analytics(Plan $plan): View
+    public function analytics( Plan $plan ): View
     {
-        $analytics = $this->getPlanAnalytics($plan);
+        $analytics = $this->getPlanAnalytics( $plan );
 
-        return view('pages.admin.plan.analytics', [
-            'plan' => $plan,
+        return view( 'pages.admin.plan.analytics', [
+            'plan'      => $plan,
             'analytics' => $analytics,
-        ]);
+        ] );
     }
 
     /**
      * Export plan data
      */
-    public function export(Request $request)
+    public function export( Request $request )
     {
-        $format = $request->get('format', 'csv');
-        $plans = Plan::with(['planSubscriptions'])->get();
+        $format = $request->get( 'format', 'csv' );
+        $plans  = Plan::with( [ 'planSubscriptions' ] )->get();
 
-        return match($format) {
-            'csv' => $this->exportCsv($plans),
-            'json' => $this->exportJson($plans),
-            'pdf' => $this->exportPdf($plans),
-            default => $this->exportCsv($plans),
+        return match ( $format ) {
+            'csv'   => $this->exportCsv( $plans ),
+            'json'  => $this->exportJson( $plans ),
+            'pdf'   => $this->exportPdf( $plans ),
+            default => $this->exportCsv( $plans ),
         };
     }
 
@@ -333,131 +333,131 @@ class PlanManagementController extends Controller
     private function getPlanStats(): array
     {
         return [
-            'total' => Plan::count(),
-            'active' => Plan::where('status', 'active')->count(),
-            'inactive' => Plan::where('status', 'inactive')->count(),
-            'draft' => Plan::where('status', 'draft')->count(),
-            'featured' => 0, // Não há campo is_featured na tabela plans
-            'total_subscriptions' => PlanSubscription::count(),
-            'active_subscriptions' => PlanSubscription::where('status', 'active')->count(),
-            'monthly_revenue' => PlanSubscription::where('status', 'active')
-                                              ->whereMonth('created_at', now()->month)
-                                              ->sum('transaction_amount'),
-            'yearly_revenue' => PlanSubscription::where('status', 'active')
-                                               ->whereYear('created_at', now()->year)
-                                               ->sum('transaction_amount'),
+            'total'                => Plan::count(),
+            'active'               => Plan::where( 'status', 'active' )->count(),
+            'inactive'             => Plan::where( 'status', 'inactive' )->count(),
+            'draft'                => Plan::where( 'status', 'draft' )->count(),
+            'featured'             => 0, // Não há campo is_featured na tabela plans
+            'total_subscriptions'  => PlanSubscription::count(),
+            'active_subscriptions' => PlanSubscription::where( 'status', 'active' )->count(),
+            'monthly_revenue'      => PlanSubscription::where( 'status', 'active' )
+                ->whereMonth( 'created_at', now()->month )
+                ->sum( 'transaction_amount' ),
+            'yearly_revenue'       => PlanSubscription::where( 'status', 'active' )
+                ->whereYear( 'created_at', now()->year )
+                ->sum( 'transaction_amount' ),
         ];
     }
 
     /**
      * Get detailed plan statistics
      */
-    private function getPlanDetailedStats(Plan $plan): array
+    private function getPlanDetailedStats( Plan $plan ): array
     {
         return [
-            'total_subscriptions' => $plan->planSubscriptions()->count(),
-            'active_subscriptions' => $plan->planSubscriptions()->where('status', 'active')->count(),
-            'cancelled_subscriptions' => $plan->planSubscriptions()->where('status', 'cancelled')->count(),
-            'trial_subscriptions' => $plan->planSubscriptions()->where('status', 'trial')->count(),
-            'total_revenue' => $plan->planSubscriptions()->sum('transaction_amount'),
-            'monthly_revenue' => $plan->planSubscriptions()
-                                    ->where('status', 'active')
-                                    ->whereMonth('created_at', now()->month)
-                                    ->sum('transaction_amount'),
-            'churn_rate' => $this->calculateChurnRate($plan),
-            'conversion_rate' => $this->calculateConversionRate($plan),
+            'total_subscriptions'     => $plan->planSubscriptions()->count(),
+            'active_subscriptions'    => $plan->planSubscriptions()->where( 'status', 'active' )->count(),
+            'cancelled_subscriptions' => $plan->planSubscriptions()->where( 'status', 'cancelled' )->count(),
+            'trial_subscriptions'     => $plan->planSubscriptions()->where( 'status', 'trial' )->count(),
+            'total_revenue'           => $plan->planSubscriptions()->sum( 'transaction_amount' ),
+            'monthly_revenue'         => $plan->planSubscriptions()
+                ->where( 'status', 'active' )
+                ->whereMonth( 'created_at', now()->month )
+                ->sum( 'transaction_amount' ),
+            'churn_rate'              => $this->calculateChurnRate( $plan ),
+            'conversion_rate'         => $this->calculateConversionRate( $plan ),
         ];
     }
 
     /**
      * Get plan analytics
      */
-    private function getPlanAnalytics(Plan $plan): array
+    private function getPlanAnalytics( Plan $plan ): array
     {
         $subscriptions = $plan->planSubscriptions()
-                            ->where('created_at', '>=', now()->subYear())
-                            ->get();
+            ->where( 'created_at', '>=', now()->subYear() )
+            ->get();
 
         $monthlyData = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $date = now()->subMonths($i)->startOfMonth();
+        for ( $i = 11; $i >= 0; $i-- ) {
+            $date          = now()->subMonths( $i )->startOfMonth();
             $monthlyData[] = [
-                'month' => $date->format('M Y'),
-                'new_subscriptions' => $subscriptions->whereBetween('created_at', [
+                'month'                   => $date->format( 'M Y' ),
+                'new_subscriptions'       => $subscriptions->whereBetween( 'created_at', [
                     $date->copy(),
                     $date->copy()->endOfMonth()
-                ])->count(),
-                'cancelled_subscriptions' => $subscriptions->whereBetween('updated_at', [
+                ] )->count(),
+                'cancelled_subscriptions' => $subscriptions->whereBetween( 'updated_at', [
                     $date->copy(),
                     $date->copy()->endOfMonth()
-                ])->where('status', 'cancelled')->count(),
-                'revenue' => $subscriptions->whereBetween('created_at', [
+                ] )->where( 'status', 'cancelled' )->count(),
+                'revenue'                 => $subscriptions->whereBetween( 'created_at', [
                     $date->copy(),
                     $date->copy()->endOfMonth()
-                ])->sum('transaction_amount'),
+                ] )->sum( 'transaction_amount' ),
             ];
         }
 
         return [
-            'monthly_data' => $monthlyData,
-            'growth_rate' => $this->calculateGrowthRate($plan),
-            'retention_rate' => $this->calculateRetentionRate($plan),
+            'monthly_data'   => $monthlyData,
+            'growth_rate'    => $this->calculateGrowthRate( $plan ),
+            'retention_rate' => $this->calculateRetentionRate( $plan ),
         ];
     }
 
     /**
      * Calculate churn rate
      */
-    private function calculateChurnRate(Plan $plan): float
+    private function calculateChurnRate( Plan $plan ): float
     {
-        $totalSubscriptions = $plan->planSubscriptions()->count();
-        $cancelledSubscriptions = $plan->planSubscriptions()->where('status', 'cancelled')->count();
+        $totalSubscriptions     = $plan->planSubscriptions()->count();
+        $cancelledSubscriptions = $plan->planSubscriptions()->where( 'status', 'cancelled' )->count();
 
-        return $totalSubscriptions > 0 ? ($cancelledSubscriptions / $totalSubscriptions) * 100 : 0;
+        return $totalSubscriptions > 0 ? ( $cancelledSubscriptions / $totalSubscriptions ) * 100 : 0;
     }
 
     /**
      * Calculate conversion rate
      */
-    private function calculateConversionRate(Plan $plan): float
+    private function calculateConversionRate( Plan $plan ): float
     {
-        $trialSubscriptions = $plan->planSubscriptions()->where('status', 'trial')->count();
-        $activeSubscriptions = $plan->planSubscriptions()->where('status', 'active')->count();
+        $trialSubscriptions  = $plan->planSubscriptions()->where( 'status', 'trial' )->count();
+        $activeSubscriptions = $plan->planSubscriptions()->where( 'status', 'active' )->count();
 
-        return $trialSubscriptions > 0 ? ($activeSubscriptions / $trialSubscriptions) * 100 : 0;
+        return $trialSubscriptions > 0 ? ( $activeSubscriptions / $trialSubscriptions ) * 100 : 0;
     }
 
     /**
      * Calculate growth rate
      */
-    private function calculateGrowthRate(Plan $plan): float
+    private function calculateGrowthRate( Plan $plan ): float
     {
         $lastMonth = $plan->planSubscriptions()
-                          ->whereBetween('created_at', [
-                              now()->subMonths(2)->startOfMonth(),
-                              now()->subMonth()->endOfMonth()
-                          ])
-                          ->count();
+            ->whereBetween( 'created_at', [
+                now()->subMonths( 2 )->startOfMonth(),
+                now()->subMonth()->endOfMonth()
+            ] )
+            ->count();
 
         $thisMonth = $plan->planSubscriptions()
-                          ->whereBetween('created_at', [
-                              now()->startOfMonth(),
-                              now()->endOfMonth()
-                          ])
-                          ->count();
+            ->whereBetween( 'created_at', [
+                now()->startOfMonth(),
+                now()->endOfMonth()
+            ] )
+            ->count();
 
-        return $lastMonth > 0 ? (($thisMonth - $lastMonth) / $lastMonth) * 100 : 0;
+        return $lastMonth > 0 ? ( ( $thisMonth - $lastMonth ) / $lastMonth ) * 100 : 0;
     }
 
     /**
      * Calculate retention rate
      */
-    private function calculateRetentionRate(Plan $plan): float
+    private function calculateRetentionRate( Plan $plan ): float
     {
-        $totalSubscriptions = $plan->planSubscriptions()->count();
-        $activeSubscriptions = $plan->planSubscriptions()->where('status', 'active')->count();
+        $totalSubscriptions  = $plan->planSubscriptions()->count();
+        $activeSubscriptions = $plan->planSubscriptions()->where( 'status', 'active' )->count();
 
-        return $totalSubscriptions > 0 ? ($activeSubscriptions / $totalSubscriptions) * 100 : 0;
+        return $totalSubscriptions > 0 ? ( $activeSubscriptions / $totalSubscriptions ) * 100 : 0;
     }
 
     /**
@@ -467,74 +467,75 @@ class PlanManagementController extends Controller
     {
         return [
             'unlimited_customers' => 'Clientes Ilimitados',
-            'unlimited_invoices' => 'Faturas Ilimitadas',
-            'unlimited_budgets' => 'Orçamentos Ilimitados',
-            'unlimited_products' => 'Produtos Ilimitados',
-            'unlimited_services' => 'Serviços Ilimitados',
-            'unlimited_storage' => 'Armazenamento Ilimitado',
-            'advanced_reports' => 'Relatórios Avançados',
-            'custom_branding' => 'Marca Personalizada',
-            'api_access' => 'Acesso à API',
-            'priority_support' => 'Suporte Prioritário',
-            'team_members' => 'Membros da Equipe',
-            'multi_language' => 'Multi-idioma',
-            'advanced_analytics' => 'Analytics Avançado',
-            'ai_features' => 'Recursos de IA',
+            'unlimited_invoices'  => 'Faturas Ilimitadas',
+            'unlimited_budgets'   => 'Orçamentos Ilimitados',
+            'unlimited_products'  => 'Produtos Ilimitados',
+            'unlimited_services'  => 'Serviços Ilimitados',
+            'unlimited_storage'   => 'Armazenamento Ilimitado',
+            'advanced_reports'    => 'Relatórios Avançados',
+            'custom_branding'     => 'Marca Personalizada',
+            'api_access'          => 'Acesso à API',
+            'priority_support'    => 'Suporte Prioritário',
+            'team_members'        => 'Membros da Equipe',
+            'multi_language'      => 'Multi-idioma',
+            'advanced_analytics'  => 'Analytics Avançado',
+            'ai_features'         => 'Recursos de IA',
             'custom_integrations' => 'Integrações Customizadas',
-            'white_label' => 'White Label',
-            'dedicated_server' => 'Servidor Dedicado',
+            'white_label'         => 'White Label',
+            'dedicated_server'    => 'Servidor Dedicado',
         ];
     }
 
     /**
      * Export plans to CSV
      */
-    private function exportCsv($plans)
+    private function exportCsv( $plans )
     {
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="plans-' . date('Y-m-d') . '.csv"',
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="plans-' . date( 'Y-m-d' ) . '.csv"',
         ];
 
         $callback = function () use ($plans) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Nome', 'Descrição', 'Preço', 'Ciclo', 'Status', 'Assinaturas Ativas', 'Receita Total']);
+            $file = fopen( 'php://output', 'w' );
+            fputcsv( $file, [ 'Nome', 'Descrição', 'Preço', 'Ciclo', 'Status', 'Assinaturas Ativas', 'Receita Total' ] );
 
-            foreach ($plans as $plan) {
-                fputcsv($file, [
+            foreach ( $plans as $plan ) {
+                fputcsv( $file, [
                     $plan->name,
                     $plan->description,
                     $plan->price,
                     'N/A', // Não há campo billing_cycle no plano
                     $plan->status,
-                    $plan->planSubscriptions()->where('status', 'active')->count(),
-                    $plan->planSubscriptions()->sum('transaction_amount'),
-                ]);
+                    $plan->planSubscriptions()->where( 'status', 'active' )->count(),
+                    $plan->planSubscriptions()->sum( 'transaction_amount' ),
+                ] );
             }
 
-            fclose($file);
+            fclose( $file );
         };
 
-        return response()->stream($callback, 200, $headers);
+        return response()->stream( $callback, 200, $headers );
     }
 
     /**
      * Export plans to JSON
      */
-    private function exportJson($plans)
+    private function exportJson( $plans )
     {
-        return response()->json($plans->toArray(), 200, [
-            'Content-Disposition' => 'attachment; filename="plans-' . date('Y-m-d') . '.json"',
-        ]);
+        return response()->json( $plans->toArray(), 200, [
+            'Content-Disposition' => 'attachment; filename="plans-' . date( 'Y-m-d' ) . '.json"',
+        ] );
     }
 
     /**
      * Export plans to PDF
      */
-    private function exportPdf($plans)
+    private function exportPdf( $plans )
     {
         // Implementation for PDF export would go here
         // This would typically use a PDF library like DomPDF or mPDF
-        return response()->json(['message' => 'PDF export not implemented yet'], 501);
+        return response()->json( [ 'message' => 'PDF export not implemented yet' ], 501 );
     }
+
 }

@@ -427,16 +427,16 @@ class NovoModeloService extends BaseTenantService
 **Arquivos modificados:**
 
 -  `database/seeders/BudgetTestSeeder.php` - Padrões de códigos corrigidos
--  `old-system/test-DoctrineORM/database/seeds/inserts/insert.sql` - Referência de padrões antigos
 -  `check_codes.php` - Script de verificação criado
+-  _(Referência histórica: `old-system/test-DoctrineORM/database/seeds/inserts/insert.sql` - Removido)_
 
 **Problema identificado:**
 
 -  BudgetTestSeeder estava usando padrões de códigos novos em vez dos padrões do sistema antigo
--  Causando inconsistência entre sistema novo e antigo
+-  Causando inconsistência entre sistema novo e antigo (agora migrado)
 -  Faturas duplicando códigos
 
-**Padrões do sistema antigo identificados:**
+**Padrões do sistema legado identificados:**
 
 -  **Orçamento:** `ORC-YYYYMMDD-0001` (ORC + data + sequencial 4 dígitos)
 -  **Serviço:** `YYYYMMDD-0001-S001` (data + orçamento + sequencial S001, S002, etc.)
@@ -482,7 +482,7 @@ class NovoModeloService extends BaseTenantService
 
 **Considerações importantes:**
 
--  **Análise de dados antigos:** Sempre verificar SQL de produção para manter consistência
+-  **Análise de dados históricos:** Verificar padrões estabelecidos para manter consistência
 -  **Padrões sequenciais:** Usar contadores globais para evitar duplicação entre diferentes providers
 -  **Data atual:** Usar `now()->format('Ymd')` para refletir data real do seeding
 -  **Validação:** Criar scripts de verificação para confirmar padrões corretos
@@ -490,4 +490,4 @@ class NovoModeloService extends BaseTenantService
 
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
-**Última atualização:** 12/11/2025 - Adicionada tarefa "Corrigir Padrões de Códigos em Seeders" com solução completa para manter consistência com sistema antigo.
+**Última atualização:** 19/11/2025 - Atualização para refletir remoção da pasta `old-system` e manutenção de referências históricas.

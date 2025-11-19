@@ -338,4 +338,4 @@ memory_get_usage()
 
 Este documento detalha toda a stack tecnológica utilizada no Easy Budget Laravel, incluindo configurações, dependências e padrões de desenvolvimento estabelecidos.
 
-**Última atualização:** 15/11/2025 - ✅ **Atualização com migração parcial para Vanilla JS (máscaras)**
+**Última atualização:** 19/11/2025 - ✅ **Atualização com migração parcial para Vanilla JS (máscaras)**
