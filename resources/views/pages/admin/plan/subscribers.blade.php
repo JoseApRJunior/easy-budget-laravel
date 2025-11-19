@@ -114,9 +114,9 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($subscription->user)
-                                            <strong>{{ $subscription->user->name }}</strong>
-                                            <br><small class="text-muted">{{ $subscription->user->email }}</small>
+                                        @if($subscription->provider)
+                                            <strong>{{ $subscription->provider->name }}</strong>
+                                            <br><small class="text-muted">{{ $subscription->provider->email ?? 'N/A' }}</small>
                                         @else
                                             <span class="text-muted">N/A</span>
                                         @endif
@@ -136,7 +136,7 @@
                                     <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
                                     <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
                                     <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
-                                    <td>{{ $subscription->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-sm btn-primary" title="Ver detalhes">

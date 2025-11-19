@@ -662,9 +662,10 @@ class InvoiceService extends AbstractBaseService
     public function generateInvoiceDataFromService(string $serviceCode): ServiceResult
     {
         try {
-            $service = Service::where('code', $serviceCode)
-                ->where('tenant_id', tenant()->id)
-                ->first();
+            Log::info('Starting generateInvoiceDataFromService', ['service_code' => $serviceCode]);
+            
+            // First find the service without tenant filter to get the tenant_id
+            $service = Service::where('code', $serviceCode)->first();
 
             if (!$service) {
                 return $this->error(
@@ -673,9 +674,26 @@ class InvoiceService extends AbstractBaseService
                 );
             }
 
+            Log::info('Service found', ['service_id' => $service->id, 'tenant_id' => $service->tenant_id]);
+
+            // Now apply tenant filter with the correct tenant_id
+            $service = Service::where('code', $serviceCode)
+                ->where('tenant_id', $service->tenant_id)
+                ->first();
+
+            if (!$service) {
+                return $this->error(
+                    OperationStatus::NOT_FOUND,
+                    'Serviço não encontrado para o tenant atual.',
+                );
+            }
+
             // Load budget and customer relationships
             $service->load(['budget.customer']);
+            Log::info('Relationships loaded');
+            
             $customer = $service->budget->customer ?? null;
+            Log::info('Customer check', ['customer_exists' => $customer !== null]);
             
             if (!$customer) {
                 return $this->error(
@@ -684,9 +702,12 @@ class InvoiceService extends AbstractBaseService
                 );
             }
 
+            Log::info('Loading service items');
             $serviceItems = ServiceItem::where('service_id', $service->id)
-                ->where('tenant_id', tenant()->id)
+                ->where('tenant_id', $service->tenant_id)
                 ->get();
+
+            Log::info('Service items loaded', ['count' => $serviceItems->count()]);
 
             $invoiceData = [
                 'customer_name'    => $customer->name,
@@ -702,6 +723,8 @@ class InvoiceService extends AbstractBaseService
                 'status'           => $service->status->value, // 'completed' ou 'partial'
             ];
 
+            Log::info('Invoice data prepared', ['total' => $invoiceData['total']]);
+
             // Lógica para desconto em serviços parciais (do sistema antigo)
             if ($service->status->value === 'partial') {
                 $partialDiscountPercentage = 0.90; // 10% de desconto
@@ -710,9 +733,15 @@ class InvoiceService extends AbstractBaseService
                 $invoiceData['notes'] = "Fatura gerada com base na conclusão parcial do serviço. Valor ajustado.";
             }
 
+            Log::info('Returning invoice data success');
             return $this->success($invoiceData, 'Dados da fatura gerados com sucesso');
 
         } catch (Exception $e) {
+            Log::error('Exception in generateInvoiceDataFromService', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             return $this->error(
                 OperationStatus::ERROR,
                 'Falha ao gerar dados da fatura: ' . $e->getMessage(),
@@ -729,10 +758,13 @@ class InvoiceService extends AbstractBaseService
     {
         return DB::transaction(function () use ($serviceCode, $additionalData) {
             try {
-                // Verificar se o serviço existe
-                $service = Service::where('code', $serviceCode)
-                    ->where('tenant_id', tenant()->id)
-                    ->first();
+                Log::info('Starting createInvoiceFromService', [
+                    'service_code' => $serviceCode,
+                    'additional_data' => $additionalData
+                ]);
+                
+                // Verificar se o serviço existe - first find without tenant filter
+                $service = Service::where('code', $serviceCode)->first();
 
                 if (!$service) {
                     return $this->error(
@@ -741,8 +773,10 @@ class InvoiceService extends AbstractBaseService
                     );
                 }
 
+                Log::info('Service found', ['service_id' => $service->id, 'tenant_id' => $service->tenant_id]);
+
                 // Verificar se já existe fatura para este serviço
-                $existingInvoice = Invoice::where('tenant_id', tenant()->id)
+                $existingInvoice = Invoice::where('tenant_id', $service->tenant_id)
                     ->where('service_id', $service->id)
                     ->first();
 
@@ -754,15 +788,18 @@ class InvoiceService extends AbstractBaseService
                 }
 
                 // Gerar dados da fatura
+                Log::info('Generating invoice data from service');
                 $invoiceDataResult = $this->generateInvoiceDataFromService($serviceCode);
                 if (!$invoiceDataResult->isSuccess()) {
+                    Log::error('Failed to generate invoice data', ['error' => $invoiceDataResult->getMessage()]);
                     return $invoiceDataResult;
                 }
+                Log::info('Invoice data generated successfully');
 
                 $invoiceData = $invoiceDataResult->getData();
 
                 // Gerar código único seguindo padrão antigo
-                $lastCode = Invoice::where('tenant_id', tenant()->id)
+                $lastCode = Invoice::where('tenant_id', $service->tenant_id)
                     ->where('code', 'like', 'FAT-' . date('Ymd') . '%')
                     ->orderBy('code', 'desc')
                     ->first();
@@ -774,8 +811,27 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = 'FAT-' . date('Ymd') . str_pad((string) $sequential, 4, '0', STR_PAD_LEFT);
 
-                // Load budget and customer relationships
+                // Load budget and customer relationships - ADD DETAILED LOGGING
+                Log::info('Loading budget and customer relationships');
                 $service->load(['budget.customer']);
+                
+                Log::info('Checking budget relationship', [
+                    'budget_exists' => $service->budget !== null,
+                    'budget_id' => $service->budget->id ?? 'null'
+                ]);
+                
+                if (!$service->budget) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        'Orçamento não encontrado para o serviço.',
+                    );
+                }
+                
+                Log::info('Checking customer relationship', [
+                    'customer_exists' => $service->budget->customer !== null,
+                    'customer_id' => $service->budget->customer->id ?? 'null'
+                ]);
+                
                 $customerId = $service->budget->customer->id ?? null;
                 
                 if (!$customerId) {
@@ -785,9 +841,17 @@ class InvoiceService extends AbstractBaseService
                     );
                 }
 
+                Log::info('Creating invoice with data', [
+                    'tenant_id' => $service->tenant_id,
+                    'service_id' => $service->id,
+                    'customer_id' => $customerId,
+                    'code' => $invoiceCode,
+                    'total_amount' => $invoiceData['total']
+                ]);
+
                 // Criar fatura
                 $invoice = Invoice::create([
-                    'tenant_id'     => tenant()->id,
+                    'tenant_id'     => $service->tenant_id,
                     'service_id'    => $service->id,
                     'customer_id'   => $customerId,
                     'code'          => $invoiceCode,
@@ -800,10 +864,19 @@ class InvoiceService extends AbstractBaseService
                     'is_automatic'  => $additionalData['is_automatic'] ?? false,
                 ]);
 
+                Log::info('Invoice created successfully', ['invoice_id' => $invoice->id]);
+
                 // Criar itens da fatura a partir dos itens do serviço
+                Log::info('Creating invoice items from service items', ['count' => count($invoiceData['items'])]);
                 foreach ($invoiceData['items'] as $serviceItem) {
+                    Log::info('Creating invoice item', [
+                        'product_id' => $serviceItem->product_id,
+                        'quantity' => $serviceItem->quantity,
+                        'unit_value' => $serviceItem->unit_value
+                    ]);
+                    
                     InvoiceItem::create([
-                        'tenant_id'  => tenant()->id,
+                        'tenant_id'  => $service->tenant_id,
                         'invoice_id' => $invoice->id,
                         'product_id' => $serviceItem->product_id,
                         'unit_price' => (float) $serviceItem->unit_value,
@@ -812,18 +885,34 @@ class InvoiceService extends AbstractBaseService
                     ]);
                 }
 
+                Log::info('All invoice items created successfully');
+
                 // Criar token de confirmação
                 $user = $this->authUser();
                 if ($user) {
+                    Log::info('Creating confirmation token for user', ['user_id' => $user->id]);
                     $tokenService = app(\App\Services\Application\UserConfirmationTokenService::class);
                     $tokenRes = $tokenService->createTokenWithGeneration($user, \App\Enums\TokenType::PAYMENT_VERIFICATION);
                     if ($tokenRes->isSuccess()) {
                         $tokenStr = (string)($tokenRes->getData()['token'] ?? '');
-                        $tokenRecord = \App\Models\UserConfirmationToken::where('token', $tokenStr)->first();
-                        if ($tokenRecord) {
-                            $invoice->update(['user_confirmation_token_id' => $tokenRecord->id]);
+                        Log::info('Token created successfully', ['token' => $tokenStr]);
+                        
+                        if (!empty($tokenStr)) {
+                            $tokenRecord = \App\Models\UserConfirmationToken::where('token', $tokenStr)->first();
+                            if ($tokenRecord) {
+                                Log::info('Token record found, updating invoice', ['token_id' => $tokenRecord->id]);
+                                $invoice->update(['user_confirmation_token_id' => $tokenRecord->id]);
+                            } else {
+                                Log::warning('Token record not found for token', ['token' => $tokenStr]);
+                            }
+                        } else {
+                            Log::warning('Empty token string received');
                         }
+                    } else {
+                        Log::warning('Failed to create token', ['error' => $tokenRes->getMessage()]);
                     }
+                } else {
+                    Log::warning('No authenticated user found for token creation');
                 }
 
                 // Enviar notificação por email (se implementado)
@@ -840,12 +929,19 @@ class InvoiceService extends AbstractBaseService
                     ]);
                 }
 
+                Log::info('Invoice creation completed successfully');
                 return $this->success(
                     $invoice->load(['customer', 'service', 'invoiceItems.product']),
                     'Fatura gerada com sucesso a partir do serviço'
                 );
 
             } catch (Exception $e) {
+                Log::error('Exception in createInvoiceFromService', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
                 return $this->error(
                     OperationStatus::ERROR,
                     'Erro ao criar fatura a partir do serviço: ' . $e->getMessage(),
@@ -861,7 +957,13 @@ class InvoiceService extends AbstractBaseService
      */
     public function checkExistingInvoiceForService(int $serviceId): bool
     {
-        return Invoice::where('tenant_id', tenant()->id)
+        // Get the service first to get the tenant_id
+        $service = Service::find($serviceId);
+        if (!$service) {
+            return false;
+        }
+        
+        return Invoice::where('tenant_id', $service->tenant_id)
             ->where('service_id', $serviceId)
             ->exists();
     }

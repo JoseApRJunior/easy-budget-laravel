@@ -64,11 +64,11 @@
                         </tr>
                         <tr>
                             <th>Criado em:</th>
-                            <td>{{ $plan->created_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                         <tr>
                             <th>Atualizado em:</th>
-                            <td>{{ $plan->updated_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ $plan->updated_at ? $plan->updated_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                     </table>
                 </div>
@@ -97,8 +97,8 @@
                         <hr>
                         <h6>Recursos Incluídos:</h6>
                         <ul class="list-unstyled">
-                            @foreach(json_decode($plan->features, true) as $feature)
-                                <li><i class="bi bi-check-circle text-success me-2"></i>{{ $features[$feature] ?? $feature }}</li>
+                            @foreach($plan->features as $feature)
+                                <li><i class="bi bi-check-circle text-success me-2"></i>{{ $feature }}</li>
                             @endforeach
                         </ul>
                     @endif
@@ -183,7 +183,7 @@
                                         <tr>
                                             <td>{{ $subscription->id }}</td>
                                             <td>{{ $subscription->tenant->name ?? 'N/A' }}</td>
-                                            <td>{{ $subscription->user->name ?? 'N/A' }}</td>
+                                            <td>{{ $subscription->provider->name ?? 'N/A' }}</td>
                                             <td>
                                                 @php
                                                     $statusClass = match($subscription->status) {
@@ -200,7 +200,7 @@
                                             <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
                                             <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
                                             <td>
-                                                <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
+                                                <a href="{{ route('admin.plans.subscribers', [$plan, 'search' => $subscription->id]) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                             </td>

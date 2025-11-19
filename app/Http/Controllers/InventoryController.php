@@ -426,6 +426,79 @@ class InventoryController extends Controller
     }
 
     /**
+     * Exportar relatório de giro de estoque
+     */
+    public function exportStockTurnover(Request $request)
+    {
+        $tenantId = Auth::user()->tenant_id;
+        
+        $filters = [
+            'start_date' => $request->get('start_date', now()->subDays(30)->format('Y-m-d')),
+            'end_date' => $request->get('end_date', now()->format('Y-m-d')),
+            'category_id' => $request->get('category_id'),
+        ];
+
+        try {
+            $stockTurnoverData = $this->inventoryService->getStockTurnoverReport($tenantId, $filters);
+            
+            // Transform data for export
+            $exportData = collect($stockTurnoverData)->map(function ($item) {
+                $product = $item['product'];
+                $turnover = $item['average_stock'] > 0 ? $item['total_out'] / $item['average_stock'] : 0;
+                
+                // Classificação do giro
+                if ($turnover >= 12) {
+                    $classification = 'Muito Alto';
+                } elseif ($turnover >= 6) {
+                    $classification = 'Alto';
+                } elseif ($turnover >= 3) {
+                    $classification = 'Médio';
+                } elseif ($turnover >= 1) {
+                    $classification = 'Baixo';
+                } else {
+                    $classification = 'Muito Baixo';
+                }
+                
+                return [
+                    'SKU' => $product->sku,
+                    'Produto' => $product->name,
+                    'Categoria' => $product->category->name ?? 'Sem Categoria',
+                    'Estoque Médio' => number_format($item['average_stock'], 2, ',', '.'),
+                    'Total Entradas' => number_format($item['total_in'], 2, ',', '.'),
+                    'Total Saídas' => number_format($item['total_out'], 2, ',', '.'),
+                    'Giro de Estoque' => number_format($turnover, 2, ',', '.'),
+                    'Classificação' => $classification,
+                    'Unidade' => $product->unit,
+                    'Estoque Atual' => $product->productInventory->quantity ?? 0,
+                    'Estoque Mínimo' => $product->productInventory->min_quantity ?? 0,
+                ];
+            });
+
+            // Por enquanto, retornar como JSON (pode ser adaptado para Excel/PDF posteriormente)
+            return response()->json([
+                'success' => true,
+                'message' => 'Relatório de giro de estoque exportado com sucesso',
+                'data' => $exportData,
+                'total_records' => $exportData->count(),
+                'filters' => $filters
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao exportar relatório de giro de estoque', [
+                'tenant_id' => $tenantId,
+                'filters' => $filters,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao exportar relatório de giro de estoque',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Relatório de giro de estoque
      */
     public function stockTurnover(Request $request)
@@ -723,6 +796,70 @@ class InventoryController extends Controller
                 'success' => false,
                 'message' => 'Erro ao verificar disponibilidade'
             ], 500);
+        }
+    }
+
+    /**
+     * Exportar produtos mais usados
+     */
+    public function exportMostUsed(Request $request)
+    {
+        $tenantId = Auth::user()->tenant_id;
+        
+        try {
+            $filters = [
+                'start_date' => $request->get('start_date', now()->subDays(30)->format('Y-m-d')),
+                'end_date' => $request->get('end_date', now()->format('Y-m-d')),
+                'category' => $request->get('category'),
+                'limit' => $request->get('limit', 50)
+            ];
+
+            $mostUsedProductsData = $this->inventoryService->getMostUsedProducts($tenantId, $filters['limit'], $filters);
+            
+            // Preparar dados para exportação
+            $exportData = collect($mostUsedProductsData)->map(function ($item) {
+                return [
+                    'Produto' => $item['product_name'],
+                    'Categoria' => $item['category_name'] ?? 'Sem categoria',
+                    'Quantidade Total Usada' => $item['total_quantity_used'],
+                    'Valor Total Usado' => number_format($item['total_value_used'], 2, ',', '.'),
+                    'Último Uso' => $item['last_movement_date'] ? \Carbon\Carbon::parse($item['last_movement_date'])->format('d/m/Y') : 'N/A',
+                    'Média de Uso' => number_format($item['average_usage'], 2, ',', '.')
+                ];
+            });
+
+            // Gerar CSV
+            $headers = [
+                'Content-Type' => 'text/csv; charset=utf-8',
+                'Content-Disposition' => 'attachment; filename="produtos_mais_usados_' . date('Y-m-d_H-i-s') . '.csv"'
+            ];
+
+            $callback = function () use ($exportData) {
+                $file = fopen('php://output', 'w');
+                
+                // Adicionar BOM para UTF-8
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                // Cabeçalhos
+                fputcsv($file, array_keys($exportData->first()));
+                
+                // Dados
+                foreach ($exportData as $row) {
+                    fputcsv($file, $row);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao exportar produtos mais usados', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Erro ao exportar produtos mais usados.');
         }
     }
 }

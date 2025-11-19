@@ -371,6 +371,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get('/export', [ InventoryController::class, 'export' ])->name('export');
         Route::get('/export-movements', [ InventoryController::class, 'exportMovements' ])->name('export-movements');
         Route::get('/export-stock-turnover', [ InventoryController::class, 'exportStockTurnover' ])->name('export-stock-turnover');
+        Route::get('/export-most-used', [ InventoryController::class, 'exportMostUsed' ])->name('export-most-used');
         Route::get('/{product}', [ InventoryController::class, 'show' ])->name('show');
         Route::get('/{product}/adjust', [ InventoryController::class, 'adjustStockForm' ])->name('adjust');
         Route::post('/{product}/adjust', [ InventoryController::class, 'adjustStock' ])->name('adjust.store');

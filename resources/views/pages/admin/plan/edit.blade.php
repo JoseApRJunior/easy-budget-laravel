@@ -135,11 +135,11 @@
                         </tr>
                         <tr>
                             <th>Criado em:</th>
-                            <td>{{ $plan->created_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                         <tr>
                             <th>Última atualização:</th>
-                            <td>{{ $plan->updated_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ $plan->updated_at ? $plan->updated_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                     </table>
 

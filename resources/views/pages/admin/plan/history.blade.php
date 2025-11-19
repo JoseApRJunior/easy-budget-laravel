@@ -83,9 +83,9 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($subscription->user)
-                                            <strong>{{ $subscription->user->name }}</strong>
-                                            <br><small class="text-muted">{{ $subscription->user->email }}</small>
+                                        @if($subscription->provider)
+                                            <strong>{{ $subscription->provider->name }}</strong>
+                                            <br><small class="text-muted">{{ $subscription->provider->email ?? 'N/A' }}</small>
                                         @else
                                             <span class="text-muted">N/A</span>
                                         @endif
@@ -109,7 +109,7 @@
                                     <td>
                                         <span class="badge bg-secondary">{{ ucfirst($subscription->payment_method ?? 'N/A') }}</span>
                                     </td>
-                                    <td>{{ $subscription->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-sm btn-primary" title="Ver detalhes">

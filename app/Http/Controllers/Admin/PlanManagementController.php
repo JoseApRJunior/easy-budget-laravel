@@ -115,7 +115,7 @@ class PlanManagementController extends Controller
      */
     public function show(Plan $plan): View
     {
-        $subscriptions = PlanSubscription::with(['tenant', 'user'])
+        $subscriptions = PlanSubscription::with(['tenant', 'provider'])
                                        ->where('plan_id', $plan->id)
                                        ->latest()
                                        ->paginate(10);
@@ -253,7 +253,7 @@ class PlanManagementController extends Controller
         $search = $request->get('search');
         $status = $request->get('status');
 
-        $query = PlanSubscription::with(['tenant', 'user'])
+        $query = PlanSubscription::with(['tenant', 'provider'])
                                 ->where('plan_id', $plan->id);
 
         if ($search) {
@@ -287,7 +287,7 @@ class PlanManagementController extends Controller
      */
     public function history(Plan $plan): View
     {
-        $history = PlanSubscription::with(['tenant', 'user'])
+        $history = PlanSubscription::with(['tenant', 'provider'])
                                   ->where('plan_id', $plan->id)
                                   ->latest()
                                   ->paginate(20);

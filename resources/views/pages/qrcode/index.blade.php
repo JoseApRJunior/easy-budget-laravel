@@ -208,9 +208,21 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 const response = xhr.responseJSON;
+                let errorMessage = 'Erro ao gerar QR Code';
+                
+                if (xhr.status === 401) {
+                    errorMessage = 'Você precisa estar logado para gerar QR codes. Por favor, faça login.';
+                } else if (xhr.status === 419) {
+                    errorMessage = 'Sessão expirada. Por favor, recarregue a página e tente novamente.';
+                } else if (xhr.status === 302) {
+                    errorMessage = 'Redirecionando para login... Você precisa estar autenticado.';
+                } else if (response?.message) {
+                    errorMessage = response.message;
+                }
+                
                 $('#qrResult').html(`
                     <div class="alert alert-danger">
-                        <strong>Erro!</strong> ${response?.message || 'Erro ao gerar QR Code'}
+                        <strong>Erro!</strong> ${errorMessage}
                     </div>
                 `);
             },
@@ -254,7 +266,19 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 const response = xhr.responseJSON;
-                alert('Erro: ' + (response?.message || 'Erro ao gerar QR Code'));
+                let errorMessage = 'Erro ao gerar QR Code';
+                
+                if (xhr.status === 401) {
+                    errorMessage = 'Você precisa estar logado para gerar QR codes. Por favor, faça login.';
+                } else if (xhr.status === 419) {
+                    errorMessage = 'Sessão expirada. Por favor, recarregue a página e tente novamente.';
+                } else if (xhr.status === 302) {
+                    errorMessage = 'Redirecionando para login... Você precisa estar autenticado.';
+                } else if (response?.message) {
+                    errorMessage = response.message;
+                }
+                
+                alert('Erro: ' + errorMessage);
             },
             complete: function() {
                 submitBtn.html(originalText).prop('disabled', false);
@@ -296,7 +320,19 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 const response = xhr.responseJSON;
-                alert('Erro: ' + (response?.message || 'Erro ao gerar QR Code'));
+                let errorMessage = 'Erro ao gerar QR Code';
+                
+                if (xhr.status === 401) {
+                    errorMessage = 'Você precisa estar logado para gerar QR codes. Por favor, faça login.';
+                } else if (xhr.status === 419) {
+                    errorMessage = 'Sessão expirada. Por favor, recarregue a página e tente novamente.';
+                } else if (xhr.status === 302) {
+                    errorMessage = 'Redirecionando para login... Você precisa estar autenticado.';
+                } else if (response?.message) {
+                    errorMessage = response.message;
+                }
+                
+                alert('Erro: ' + errorMessage);
             },
             complete: function() {
                 submitBtn.html(originalText).prop('disabled', false);

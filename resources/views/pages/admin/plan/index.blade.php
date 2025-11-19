@@ -143,7 +143,7 @@
                                     <td>
                                         <span class="badge bg-info">{{ $plan->planSubscriptions()->count() }}</span>
                                     </td>
-                                    <td>{{ $plan->created_at->format('d/m/Y') }}</td>
+                                    <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
