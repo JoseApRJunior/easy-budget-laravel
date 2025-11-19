@@ -1,0 +1,33 @@
+# Dependências e pacotes
+vendor/
+node_modules/
+
+# Build e cache
+storage/
+bootstrap/cache/
+public/build/
+public/mix-manifest.json
+.phpunit.cache
+
+# Arquivos ocultos e temporários
+*.log
+*.tmp
+*.cache
+*.zip
+*.tar.gz
+*.DS_Store
+
+# Ambientes e configurações sensíveis
+.env
+.env.*
+*.key
+*.pem
+
+# Diretórios personalizados que não precisam de análise
+docs/
+documentsIA/
+specs/
+.stubs/
+.kilocode/
+.trae/
+.amazonq/
