@@ -32,6 +32,103 @@ class CustomerRequest extends FormRequest
     {
         // Obter ID do customer se estiver em rota de atualização
         $this->excludeCustomerId = $this->route( 'customer' )?->id;
+
+        // Limpar e formatar dados antes da validação
+        $this->cleanAndFormatData();
+    }
+
+    /**
+     * Limpar e formatar dados para validação.
+     */
+    private function cleanAndFormatData(): void
+    {
+        // Limpar CEP - remover formatação
+        if ( $this->has( 'cep' ) ) {
+            $cep = preg_replace( '/\D/', '', $this->input( 'cep' ) );
+            $this->merge( [ 'cep' => $cep ] );
+        }
+
+        // Limpar telefone - manter apenas números e espaços/parênteses
+        if ( $this->has( 'phone_personal' ) ) {
+            $phone = preg_replace( '/[^0-9\(\)\-\s]/', '', $this->input( 'phone_personal' ) );
+            $this->merge( [ 'phone_personal' => $phone ] );
+        }
+
+        if ( $this->has( 'phone_business' ) ) {
+            $phone = preg_replace( '/[^0-9\(\)\-\s]/', '', $this->input( 'phone_business' ) );
+            $this->merge( [ 'phone_business' => $phone ] );
+        }
+
+        // Formatar data de nascimento para formato ISO (Y-m-d)
+        if ( $this->has( 'birth_date' ) ) {
+            $birthDate = $this->input( 'birth_date' );
+            if ( $birthDate && strpos( $birthDate, '/' ) !== false ) {
+                // Converter de DD/MM/YYYY para YYYY-MM-DD
+                $dateParts = explode( '/', $birthDate );
+                if ( count( $dateParts ) === 3 ) {
+                    $formattedDate = $dateParts[ 2 ] . '-' . $dateParts[ 1 ] . '-' . $dateParts[ 0 ];
+                    $this->merge( [ 'birth_date' => $formattedDate ] );
+                }
+            }
+        }
+
+        // Formatar data de fundação para formato ISO (Y-m-d)
+        if ( $this->has( 'founding_date' ) ) {
+            $foundingDate = $this->input( 'founding_date' );
+            if ( $foundingDate && strpos( $foundingDate, '/' ) !== false ) {
+                // Converter de DD/MM/YYYY para YYYY-MM-DD
+                $dateParts = explode( '/', $foundingDate );
+                if ( count( $dateParts ) === 3 ) {
+                    $formattedDate = $dateParts[ 2 ] . '-' . $dateParts[ 1 ] . '-' . $dateParts[ 0 ];
+                    $this->merge( [ 'founding_date' => $formattedDate ] );
+                }
+            }
+        }
+
+        // Limpeza condicional baseada no tipo de pessoa
+        $this->cleanDataByPersonType();
+    }
+
+    /**
+     * Limpar dados baseado no tipo de pessoa para evitar conflitos de validação.
+     */
+    private function cleanDataByPersonType(): void
+    {
+        $personType = $this->input( 'person_type' );
+
+        // Se for pessoa física (pf), remover campos de pessoa jurídica
+        if ( $personType === 'pf' ) {
+            $this->removeInput( [
+                'company_name',
+                'cnpj',
+                'fantasy_name',
+                'founding_date',
+                'state_registration',
+                'municipal_registration',
+                'industry',
+                'company_size',
+            ] );
+        }
+        // Se for pessoa jurídica (pj), remover campos de pessoa física
+        elseif ( $personType === 'pj' ) {
+            $this->removeInput( [
+                'cpf',
+                'birth_date',
+                'profession_id',
+            ] );
+        }
+    }
+
+    /**
+     * Remover valores do input sem remover chaves vazias
+     */
+    private function removeInput( array $keys ): void
+    {
+        foreach ( $keys as $key ) {
+            if ( $this->has( $key ) ) {
+                $this->request->remove( $key );
+            }
+        }
     }
 
     /**
@@ -74,9 +171,9 @@ class CustomerRequest extends FormRequest
 
             // Contatos - pessoais obrigatórios, empresariais opcionais
             'email_personal'         => 'required|email|max:255',
-            'phone_personal'         => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
+            'phone_personal'         => 'required|string|phone_br',
             'email_business'         => 'nullable|email|max:255',
-            'phone_business'         => 'nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
+            'phone_business'         => 'nullable|string|phone_br',
             'website'                => 'nullable|url|max:255',
 
             // Endereço - todos obrigatórios

@@ -96,17 +96,17 @@ class CustomerController extends Controller
             $validated = $request->validated();
 
             // Usar o serviço para criar cliente
-            $result = $this->customerService->create( $validated, $user->tenant_id );
+            $result = $this->customerService->create( $validated );
 
             // Verificar resultado do serviço
             if ( !$result->isSuccess() ) {
                 return redirect()
-                    ->route( 'customers.create' )
+                    ->route( 'provider.customers.create' )
                     ->with( 'error', $result->getMessage() )
                     ->withInput();
             }
 
-            return redirect()->route( 'customers.index' )
+            return redirect()->route( 'provider.customers.index' )
                 ->with( 'success', 'Cliente criado com sucesso!' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao criar cliente', [
@@ -117,7 +117,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'customers.create' )
+                ->route( 'provider.customers.create' )
                 ->with( 'error', 'Erro interno ao criar cliente. Tente novamente.' )
                 ->withInput();
         }
@@ -190,12 +190,12 @@ class CustomerController extends Controller
             // Verificar resultado do serviço
             if ( !$result->isSuccess() ) {
                 return redirect()
-                    ->route( 'customers.edit', $id )
+                    ->route( 'provider.customers.edit', $id )
                     ->with( 'error', $result->getMessage() )
                     ->withInput();
             }
 
-            return redirect()->route( 'customers.index' )
+            return redirect()->route( 'provider.customers.index' )
                 ->with( 'success', 'Cliente atualizado com sucesso!' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao atualizar cliente', [
@@ -207,7 +207,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'customers.edit', $id )
+                ->route( 'provider.customers.edit', $id )
                 ->with( 'error', 'Erro interno ao atualizar cliente. Tente novamente.' )
                 ->withInput();
         }
@@ -226,11 +226,11 @@ class CustomerController extends Controller
 
             if ( !$result->isSuccess() ) {
                 return redirect()
-                    ->route( 'customers.index' )
+                    ->route( 'provider.customers.index' )
                     ->with( 'error', $result->getMessage() );
             }
 
-            return redirect()->route( 'customers.index' )
+            return redirect()->route( 'provider.customers.index' )
                 ->with( 'success', 'Cliente excluído com sucesso!' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao excluir cliente', [
@@ -241,7 +241,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'customers.index' )
+                ->route( 'provider.customers.index' )
                 ->with( 'error', 'Erro interno ao excluir cliente. Tente novamente.' );
         }
     }
@@ -263,7 +263,7 @@ class CustomerController extends Controller
                 : $result->getMessage();
 
             return redirect()
-                ->route( 'customers.index' )
+                ->route( 'provider.customers.index' )
                 ->with( $status, $message );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao alterar status do cliente', [
@@ -274,7 +274,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'customers.index' )
+                ->route( 'provider.customers.index' )
                 ->with( 'error', 'Erro interno ao alterar status. Tente novamente.' );
         }
     }
@@ -296,7 +296,7 @@ class CustomerController extends Controller
                 : $result->getMessage();
 
             return redirect()
-                ->route( 'customers.index' )
+                ->route( 'provider.customers.index' )
                 ->with( $status, $message );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao restaurar cliente', [
@@ -307,7 +307,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'customers.index' )
+                ->route( 'provider.customers.index' )
                 ->with( 'error', 'Erro interno ao restaurar cliente. Tente novamente.' );
         }
     }
@@ -320,7 +320,7 @@ class CustomerController extends Controller
         $cep = $request->get( 'cep' );
 
         if ( !$cep ) {
-            return redirect()->route( 'customers.index' )
+            return redirect()->route( 'provider.customers.index' )
                 ->with( 'error', 'CEP é obrigatório para busca por proximidade.' );
         }
 
@@ -330,13 +330,13 @@ class CustomerController extends Controller
         $result = $this->customerService->findNearbyCustomers( $cep, $user->tenant_id );
 
         if ( !$result->isSuccess() ) {
-            return redirect()->route( 'customers.index' )
+            return redirect()->route( 'provider.customers.index' )
                 ->with( 'error', $result->getMessage() );
         }
 
         // Por enquanto, redirecionar para a página principal com dados filtrados
         // TODO: Implementar view de busca por proximidade
-        return redirect()->route( 'customers.index' )
+        return redirect()->route( 'provider.customers.index' )
             ->with( 'info', 'Busca por proximidade não implementada. Use os filtros da página principal.' );
     }
 

@@ -32,6 +32,34 @@ class CustomerUpdateRequest extends FormRequest
     {
         // Obter ID do customer se estiver em rota de atualização
         $this->excludeCustomerId = $this->route( 'customer' )?->id;
+
+        // Limpar dados de acordo com o tipo de pessoa
+        $this->cleanDataByPersonType();
+    }
+
+    /**
+     * Limpar dados de acordo com o tipo de pessoa (PF ou PJ).
+     */
+    private function cleanDataByPersonType(): void
+    {
+        $personType = $this->input( 'person_type' );
+
+        if ( $personType === 'pf' ) {
+            // Para pessoa física, remover campos de pessoa jurídica
+            $this->removeInput( [
+                'company_name',
+                'cnpj',
+                'fantasy_name',
+                'founding_date',
+                'state_registration',
+                'municipal_registration',
+                'industry',
+                'company_size'
+            ] );
+        } elseif ( $personType === 'pj' ) {
+            // Para pessoa jurídica, remover campos específicos de pessoa física
+            $this->removeInput( [ 'cpf', 'birth_date', 'profession_id' ] );
+        }
     }
 
     /**
@@ -54,13 +82,13 @@ class CustomerUpdateRequest extends FormRequest
 
             // Dados específicos por tipo de pessoa
             // Pessoa Física
-            'cpf'                    => 'sometimes|required_if:person_type,pf|string|max:14|cpf',
+            'cpf'                    => 'sometimes|required_if:person_type,pf|string|max:14',
             'birth_date'             => 'sometimes|required_if:person_type,pf|date|before:today|after:1900-01-01',
             'profession_id'          => 'sometimes|required_if:person_type,pf|exists:professions,id',
 
             // Pessoa Jurídica
             'company_name'           => 'sometimes|required_if:person_type,pj|string|max:255',
-            'cnpj'                   => 'sometimes|required_if:person_type,pj|string|max:18|cnpj',
+            'cnpj'                   => 'sometimes|required_if:person_type,pj|string|max:18',
             'fantasy_name'           => 'nullable|string|max:255',
             'founding_date'          => 'nullable|date|before:today',
             'state_registration'     => 'nullable|string|max:50',

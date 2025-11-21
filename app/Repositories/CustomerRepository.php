@@ -176,12 +176,16 @@ class CustomerRepository extends AbstractTenantRepository
     {
         if ( strlen( $cpf ) !== 11 ) return false; // CPF deve ter 11 dígitos
 
-        $query = CommonData::where( 'tenant_id', $tenantId )
+        $query = CommonData::query()
+            ->where( 'tenant_id', $tenantId )
             ->where( 'cpf', $cpf )
             ->whereNotNull( 'cpf' );
 
+        // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
         if ( $excludeCustomerId ) {
-            $query->where( 'customer_id', '!=', $excludeCustomerId );
+            $query->whereDoesntHave( 'customer', function ( $q ) use ( $excludeCustomerId ) {
+                $q->where( 'id', $excludeCustomerId );
+            } );
         }
 
         return !$query->exists();
@@ -194,12 +198,16 @@ class CustomerRepository extends AbstractTenantRepository
     {
         if ( strlen( $cnpj ) !== 14 ) return false; // CNPJ deve ter 14 dígitos
 
-        $query = CommonData::where( 'tenant_id', $tenantId )
+        $query = CommonData::query()
+            ->where( 'tenant_id', $tenantId )
             ->where( 'cnpj', $cnpj )
             ->whereNotNull( 'cnpj' );
 
+        // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
         if ( $excludeCustomerId ) {
-            $query->where( 'customer_id', '!=', $excludeCustomerId );
+            $query->whereDoesntHave( 'customer', function ( $q ) use ( $excludeCustomerId ) {
+                $q->where( 'id', $excludeCustomerId );
+            } );
         }
 
         return !$query->exists();

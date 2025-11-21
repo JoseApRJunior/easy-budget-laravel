@@ -7,6 +7,7 @@ return [
     App\Providers\EventServiceProvider::class,
     App\Providers\FlashMessageServiceProvider::class,
     App\Providers\MailViewServiceProvider::class,
+    App\Providers\ValidationServiceProvider::class,
     App\Providers\ViewComposerServiceProvider::class,
     Stancl\Tenancy\TenancyServiceProvider::class,
 ];

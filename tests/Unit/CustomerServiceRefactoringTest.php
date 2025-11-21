@@ -22,15 +22,19 @@ class CustomerServiceRefactoringTest extends TestCase
         parent::setUp();
 
         // Mock dos serviços dependentes
-        $this->customerRepository = $this->createMock( CustomerRepository::class);
-        $this->interactionService = $this->createMock( CustomerInteractionService::class);
-        $this->entityDataService  = $this->createMock( EntityDataService::class);
+        $this->customerRepository     = $this->createMock( CustomerRepository::class);
+        $this->commonDataRepository   = $this->createMock( \App\Repositories\CommonDataRepository::class);
+        $this->contactRepository      = $this->createMock( \App\Repositories\ContactRepository::class);
+        $this->addressRepository      = $this->createMock( \App\Repositories\AddressRepository::class);
+        $this->businessDataRepository = $this->createMock( \App\Repositories\BusinessDataRepository::class);
 
-        // Instância do CustomerService com dependências mockadas
+        // Instância do CustomerService com dependências corretas
         $this->customerService = new CustomerService(
             $this->customerRepository,
-            $this->interactionService,
-            $this->entityDataService,
+            $this->commonDataRepository,
+            $this->contactRepository,
+            $this->addressRepository,
+            $this->businessDataRepository,
         );
     }
 

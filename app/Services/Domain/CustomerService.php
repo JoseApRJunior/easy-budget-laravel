@@ -4,572 +4,245 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Enums\CustomerStatus;
-use App\Enums\OperationStatus;
-use App\Repositories\AddressRepository;
-use App\Repositories\BusinessDataRepository;
-use App\Repositories\CommonDataRepository;
-use App\Repositories\ContactRepository;
+use App\Helpers\DateHelper;
+use App\Models\Address;
+use App\Models\CommonData;
+use App\Models\Contact;
+use App\Models\Customer;
 use App\Repositories\CustomerRepository;
+use App\Services\Application\CustomerInteractionService;
+use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Serviço de Clientes - Lógica de negócio para gestão de clientes
  *
- * CRÍTICO: Service deve gerenciar transações em 5 tabelas simultaneamente.
- * Estrutura real: Customer (principal) -> CommonData, Contact, Address, BusinessData (HasMany)
+ * Centraliza operações complexas relacionadas a clientes,
+ * incluindo criação, atualização, busca e relacionamentos.
  */
-class CustomerService
+class CustomerService extends AbstractBaseService
 {
     public function __construct(
         private CustomerRepository $customerRepository,
-        private CommonDataRepository $commonDataRepository,
-        private ContactRepository $contactRepository,
-        private AddressRepository $addressRepository,
-        private BusinessDataRepository $businessDataRepository,
+        private CustomerInteractionService $interactionService,
     ) {}
 
     /**
-     * Criar cliente pessoa física com transação em 4 tabelas
+     * Lista clientes com filtros
      */
-    public function createPessoaFisica( array $data, int $tenantId ): ServiceResult
+    public function listCustomers( array $filters = [] ): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($data, $tenantId) {
-                // 1. Validar unicidade (email, CPF) - exceção para próprio registro
-                if ( !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId ) ) {
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
-                }
+            $customers = $this->customerRepository->listByFilters( $filters );
+            return $this->success( $customers, 'Clientes listados com sucesso' );
+        } catch ( \Exception $e ) {
+            return $this->error( 'Erro ao listar clientes: ' . $e->getMessage() );
+        }
+    }
 
-                $cpf = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cpf' ] ?? '' ) );
-                if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
-                }
+    /**
+     * Cria novo cliente
+     */
+    public function createCustomer( array $data ): ServiceResult
+    {
+        try {
+            // Validação básica dos dados
+            $validation = $this->validateCustomerData( $data );
+            if ( !$validation->isSuccess() ) {
+                return $validation;
+            }
 
-                // 2. Criar dados em cascata (CommonData -> Contact -> Address -> Customer)
-                $commonData = $this->commonDataRepository->create( [
-                    'tenant_id'           => $tenantId,
-                    'first_name'          => $data[ 'first_name' ],
-                    'last_name'           => $data[ 'last_name' ],
-                    'birth_date'          => $data[ 'birth_date' ],
-                    'cpf'                 => $cpf,
+            // Criação com transação
+            $customer = DB::transaction( function () use ($data) {
+                // Criar CommonData
+                $commonData = CommonData::create( [
+                    'tenant_id'           => Auth::user()->tenant_id,
+                    'first_name'          => $data[ 'first_name' ] ?? null,
+                    'last_name'           => $data[ 'last_name' ] ?? null,
+                    'birth_date'          => DateHelper::parseBirthDate( $data[ 'birth_date' ] ?? null ),
                     'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
                     'profession_id'       => $data[ 'profession_id' ] ?? null,
                     'description'         => $data[ 'description' ] ?? null,
+                    'website'             => $data[ 'website' ] ?? null,
+                    'cnpj'                => clean_document_number( $data[ 'cnpj' ] ?? null ),
+                    'cpf'                 => clean_document_number( $data[ 'cpf' ] ?? null ),
                 ] );
 
-                $contact = $this->contactRepository->create( [
-                    'tenant_id'      => $tenantId,
-                    'email_personal' => $data[ 'email_personal' ],
-                    'phone_personal' => $data[ 'phone_personal' ],
-                    'website'        => $data[ 'website' ] ?? null,
+                // Criar Contact
+                $contact = Contact::create( [
+                    'tenant_id'      => Auth::user()->tenant_id,
+                    'email'          => $data[ 'email_personal' ] ?? null,
+                    'phone'          => $data[ 'phone_personal' ] ?? null,
+                    'email_business' => $data[ 'email_business' ] ?? null,
+                    'phone_business' => $data[ 'phone_business' ] ?? null,
                 ] );
 
-                $address = $this->addressRepository->create( [
-                    'tenant_id'      => $tenantId,
-                    'address'        => $data[ 'address' ],
+                // Criar Address
+                $address = Address::create( [
+                    'tenant_id'      => Auth::user()->tenant_id,
+                    'cep'            => $data[ 'cep' ] ?? null,
+                    'address'        => $data[ 'address' ] ?? null,
                     'address_number' => $data[ 'address_number' ] ?? null,
-                    'neighborhood'   => $data[ 'neighborhood' ],
-                    'city'           => $data[ 'city' ],
-                    'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cep' ] ?? '' ) ),
+                    'neighborhood'   => $data[ 'neighborhood' ] ?? null,
+                    'city'           => $data[ 'city' ] ?? null,
+                    'state'          => $data[ 'state' ] ?? null,
                 ] );
 
-                // 3. Criar Customer com relacionamentos
-                $customer = $this->customerRepository->create( [
-                    'tenant_id'      => $tenantId,
-                    'status'         => CustomerStatus::ACTIVE->value,
+                // Criar Customer
+                $customer = Customer::create( [
+                    'tenant_id'      => Auth::user()->tenant_id,
                     'common_data_id' => $commonData->id,
                     'contact_id'     => $contact->id,
                     'address_id'     => $address->id,
+                    'status'         => 'active',
                 ] );
 
-                // 4. Carregar relacionamentos para retorno
-                $customer->load( [ 'commonData', 'contact', 'address' ] );
-                return ServiceResult::success( $customer, 'Cliente PF criado com sucesso' );
+                return $customer->load( [ 'commonData', 'contact', 'address' ] );
             } );
+
+            return $this->success( $customer, 'Cliente criado com sucesso' );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar cliente PF', null, $e );
+            return $this->error( 'Erro ao criar cliente: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Criar cliente pessoa jurídica com transação em 5 tabelas
+     * Valida dados do cliente
      */
-    public function createPessoaJuridica( array $data, int $tenantId ): ServiceResult
+    private function validateCustomerData( array $data ): ServiceResult
     {
-        try {
-            return DB::transaction( function () use ($data, $tenantId) {
-                // 1. Validar unicidade (email, CNPJ)
-                if ( !$this->customerRepository->isEmailUnique( $data[ 'email_business' ], $tenantId ) ) {
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
-                }
-
-                $cnpj = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cnpj' ] ?? '' ) );
-                if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId ) ) {
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
-                }
-
-                // 2. Criar dados em cascata
-                $commonData = $this->commonDataRepository->create( [
-                    'tenant_id'           => $tenantId,
-                    'company_name'        => $data[ 'company_name' ],
-                    'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-                    'profession_id'       => $data[ 'profession_id' ] ?? null,
-                    'description'         => $data[ 'description' ] ?? null,
-                ] );
-
-                $businessData = $this->businessDataRepository->create( [
-                    'tenant_id'              => $tenantId,
-                    'fantasy_name'           => $data[ 'fantasy_name' ],
-                    'cnpj'                   => $cnpj,
-                    'state_registration'     => $data[ 'state_registration' ] ?? null,
-                    'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
-                    'founding_date'          => $data[ 'founding_date' ] ?? null,
-                    'industry'               => $data[ 'industry' ] ?? null,
-                    'company_size'           => $data[ 'company_size' ] ?? null,
-                    'notes'                  => $data[ 'business_notes' ] ?? null,
-                ] );
-
-                $contact = $this->contactRepository->create( [
-                    'tenant_id'      => $tenantId,
-                    'email_business' => $data[ 'email_business' ],
-                    'phone_business' => $data[ 'phone_business' ],
-                    'website'        => $data[ 'website' ] ?? null,
-                ] );
-
-                $address = $this->addressRepository->create( [
-                    'tenant_id'      => $tenantId,
-                    'address'        => $data[ 'address' ],
-                    'address_number' => $data[ 'address_number' ] ?? null,
-                    'neighborhood'   => $data[ 'neighborhood' ],
-                    'city'           => $data[ 'city' ],
-                    'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cep' ] ?? '' ) ),
-                ] );
-
-                // 3. Criar Customer com relacionamentos
-                $customer = $this->customerRepository->create( [
-                    'tenant_id'        => $tenantId,
-                    'status'           => CustomerStatus::ACTIVE->value,
-                    'common_data_id'   => $commonData->id,
-                    'contact_id'       => $contact->id,
-                    'address_id'       => $address->id,
-                    'business_data_id' => $businessData->id,
-                ] );
-
-                // 4. Carregar relacionamentos para retorno
-                $customer->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
-                return ServiceResult::success( $customer, 'Cliente PJ criado com sucesso' );
-            } );
-        } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar cliente PJ', null, $e );
+        // Validações básicas
+        if ( empty( $data[ 'first_name' ] ) || empty( $data[ 'last_name' ] ) ) {
+            return $this->error( 'Nome e sobrenome são obrigatórios' );
         }
-    }
 
-    /**
-     * Criar cliente (Pessoa Física ou Jurídica) - Método unificado
-     */
-    public function create( array $data, int $tenantId ): ServiceResult
-    {
-        try {
-            return DB::transaction( function () use ($data, $tenantId) {
-                // Validar unicidade baseado no tipo de pessoa
-                if ( $data[ 'person_type' ] === 'pf' ) {
-                    // Pessoa Física
-                    if ( !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId ) ) {
-                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
-                    }
-
-                    $cpf = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cpf' ] ?? '' ) );
-                    if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
-                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
-                    }
-
-                    // Usar método específico para pessoa física
-                    return $this->createPessoaFisica( $data, $tenantId );
-                } else {
-                    // Pessoa Jurídica
-                    if ( !$this->customerRepository->isEmailUnique( $data[ 'email_business' ] ?? $data[ 'email_personal' ], $tenantId ) ) {
-                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
-                    }
-
-                    $cnpj = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cnpj' ] ?? '' ) );
-                    if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId ) ) {
-                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
-                    }
-
-                    // Usar método específico para pessoa jurídica
-                    return $this->createPessoaJuridica( $data, $tenantId );
-                }
-            } );
-        } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar cliente', null, $e );
+        if ( empty( $data[ 'email_personal' ] ) ) {
+            return $this->error( 'Email pessoal é obrigatório' );
         }
-    }
 
-    /**
-     * Listar clientes com filtros (alias para getFilteredCustomers)
-     */
-    public function listCustomers( int $tenantId, array $filters = [] ): ServiceResult
-    {
-        return $this->getFilteredCustomers( $filters, $tenantId );
-    }
-
-    /**
-     * Obter clientes filtrados com paginação
-     */
-    public function getFilteredCustomers( array $filters, int $tenantId ): ServiceResult
-    {
-        try {
-            $customers = $this->customerRepository->getPaginated( $filters, 15 );
-            return ServiceResult::success( $customers, 'Clientes filtrados' );
-        } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao filtrar clientes', null, $e );
+        if ( empty( $data[ 'phone_personal' ] ) ) {
+            return $this->error( 'Telefone pessoal é obrigatório' );
         }
+
+        // Verificar se tem pelo menos um documento (CPF ou CNPJ)
+        $hasCpf  = !empty( $data[ 'cpf' ] );
+        $hasCnpj = !empty( $data[ 'cnpj' ] );
+
+        if ( !$hasCpf && !$hasCnpj ) {
+            return $this->error( 'CPF ou CNPJ é obrigatório' );
+        }
+
+        // Validação específica por documento fornecido
+        if ( $hasCpf && strlen( preg_replace( '/\D/', '', $data[ 'cpf' ] ) ) !== 11 ) {
+            return $this->error( 'CPF deve ter 11 dígitos' );
+        }
+
+        if ( $hasCnpj && strlen( preg_replace( '/\D/', '', $data[ 'cnpj' ] ) ) !== 14 ) {
+            return $this->error( 'CNPJ deve ter 14 dígitos' );
+        }
+
+        // Validações de endereço
+        if ( empty( $data[ 'cep' ] ) || empty( $data[ 'address' ] ) || empty( $data[ 'neighborhood' ] ) || empty( $data[ 'city' ] ) || empty( $data[ 'state' ] ) ) {
+            return $this->error( 'Endereço completo é obrigatório' );
+        }
+
+        return $this->success();
     }
 
     /**
-     * Buscar cliente com dados completos
+     * Busca cliente por ID
      */
-    public function findCustomer( int $id, int $tenantId ): ServiceResult
+    public function findCustomer( int $id ): ServiceResult
     {
         try {
-            $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
+            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
             if ( !$customer ) {
-                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
+                return $this->error( 'Cliente não encontrado' );
             }
-            return ServiceResult::success( $customer, 'Cliente encontrado' );
+            return $this->success( $customer );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao buscar cliente', null, $e );
+            return $this->error( 'Erro ao buscar cliente: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Atualizar cliente com transação multi-tabela
+     * Atualiza cliente
      */
-    public function updateCustomer( int $id, array $data, int $tenantId ): ServiceResult
+    public function updateCustomer( int $id, array $data ): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($id, $data, $tenantId) {
-                $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
-                if ( !$customer ) {
-                    return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
-                }
-
-                // Detectar tipo baseado no documento
-                $isCompany = !empty( $data[ 'cnpj' ] ) || $customer->commonData?->cnpj;
-
-                if ( $isCompany ) {
-                    // Use Pessoas Jurídicas logic
-                    return $this->updatePessoaJuridicaData( $customer, $data, $tenantId );
-                } else {
-                    // Use Pessoas Físicas logic
-                    return $this->updatePessoaFisicaData( $customer, $data, $tenantId );
-                }
-            } );
-        } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao atualizar cliente', null, $e );
-        }
-    }
-
-    /**
-     * Update logic específico para Pessoa Física
-     */
-    private function updatePessoaFisicaData( $customer, array $data, int $tenantId ): ServiceResult
-    {
-        // Validar unicidade (email, CPF) - exceção para próprio registro
-        if ( isset( $data[ 'email_personal' ] ) && !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId, $customer->id ) ) {
-            return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
-        }
-
-        if ( isset( $data[ 'cpf' ] ) ) {
-            $cpf = preg_replace( '/[^0-9]/', '', $data[ 'cpf' ] );
-            if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId, $customer->id ) ) {
-                return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
-            }
-            $data[ 'cpf' ] = $cpf;
-        }
-
-        return $this->updateCustomerData( $customer, $data );
-    }
-
-    /**
-     * Update logic específico para Pessoa Jurídica
-     */
-    private function updatePessoaJuridicaData( $customer, array $data, int $tenantId ): ServiceResult
-    {
-        // Validar unicidade (email, CNPJ) - exceção para próprio registro
-        if ( isset( $data[ 'email_business' ] ) && !$this->customerRepository->isEmailUnique( $data[ 'email_business' ], $tenantId, $customer->id ) ) {
-            return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
-        }
-
-        if ( isset( $data[ 'cnpj' ] ) ) {
-            $cnpj = preg_replace( '/[^0-9]/', '', $data[ 'cnpj' ] );
-            if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId, $customer->id ) ) {
-                return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
-            }
-            $data[ 'cnpj' ] = $cnpj;
-        }
-
-        return $this->updateCustomerData( $customer, $data );
-    }
-
-    /**
-     * Lógica base de atualização em cascata
-     */
-    private function updateCustomerData( $customer, array $data ): ServiceResult
-    {
-        // Separar dados por tabela
-        $customerData = [];
-        $commonData   = [];
-        $contact      = [];
-        $address      = [];
-        $businessData = [];
-
-        // Dados do Customer (apenas status)
-        if ( isset( $data[ 'status' ] ) ) $customerData[ 'status' ] = $data[ 'status' ];
-
-        // Dados da CommonData
-        $commonDataFields = [ 'first_name', 'last_name', 'birth_date', 'cpf', 'cnpj', 'company_name',
-            'area_of_activity_id', 'profession_id', 'description' ];
-        foreach ( $commonDataFields as $field ) {
-            if ( array_key_exists( $field, $data ) ) $commonData[ $field ] = $data[ $field ];
-        }
-
-        // Dados do Contact
-        $contactFields = [ 'email_personal', 'phone_personal', 'email_business', 'phone_business', 'website' ];
-        foreach ( $contactFields as $field ) {
-            if ( array_key_exists( $field, $data ) ) $contact[ $field ] = $data[ $field ];
-        }
-
-        // Dados do Address
-        $addressFields = [ 'address', 'address_number', 'neighborhood', 'city', 'state', 'cep' ];
-        foreach ( $addressFields as $field ) {
-            if ( array_key_exists( $field, $data ) ) {
-                $address[ $field ] = $field === 'state' ? strtoupper( $data[ $field ] ) :
-                    ( $field === 'cep' ? preg_replace( '/[^0-9]/', '', $data[ $field ] ) :
-                        $data[ $field ] );
-            }
-        }
-
-        // Dados do BusinessData (apenas para Pessoa Jurídica)
-        if ( !empty( $data[ 'cnpj' ] ) || !empty( $customer->commonData?->cnpj ) ) {
-            $businessDataFields = [ 'fantasy_name', 'state_registration', 'municipal_registration',
-                'founding_date', 'industry', 'company_size', 'notes' ];
-            foreach ( $businessDataFields as $field ) {
-                if ( array_key_exists( $field, $data ) ) $businessData[ $field ] = $data[ $field ];
-            }
-        }
-
-        // Atualizar em cascata
-        if ( !empty( $commonData ) ) {
-            $this->commonDataRepository->update( $customer->commonData->id, $commonData );
-        }
-
-        if ( !empty( $contact ) ) {
-            $this->contactRepository->update( $customer->contact->id, $contact );
-        }
-
-        if ( !empty( $address ) ) {
-            $this->addressRepository->update( $customer->address->id, $address );
-        }
-
-        // Atualizar BusinessData (apenas para PJ e apenas se existir)
-        if ( !empty( $businessData ) && $customer->businessData ) {
-            $this->businessDataRepository->update( $customer->businessData->id, $businessData );
-        }
-
-        if ( !empty( $customerData ) ) {
-            $this->customerRepository->update( $customer->id, $customerData );
-        }
-
-        // Retornar com dados atualizados
-        $customer = $this->customerRepository->findWithCompleteData( $customer->id, $customer->tenant_id );
-        return ServiceResult::success( $customer, 'Cliente atualizado com sucesso' );
-    }
-
-    /**
-     * Excluir cliente com verificação de relacionamentos
-     */
-    public function deleteCustomer( int $id, int $tenantId ): ServiceResult
-    {
-        try {
-            return DB::transaction( function () use ($id, $tenantId) {
-                $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
-                if ( !$customer ) {
-                    return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
-                }
-
-                // Verificar se pode excluir (relacionamentos com orçamentos, faturas, etc.)
-                $canDelete = $this->customerRepository->canDelete( $id, $tenantId );
-                if ( !$canDelete[ 'canDelete' ] ) {
-                    $reason = $canDelete[ 'reason' ];
-
-                    // Construir mensagem mais detalhada
-                    if ( isset( $canDelete[ 'budgetsCount' ] ) && $canDelete[ 'budgetsCount' ] > 0 ) {
-                        $reason .= " (Possui {$canDelete[ 'budgetsCount' ]} orçamento(s) associado(s))";
-                    }
-                    if ( isset( $canDelete[ 'servicesCount' ] ) && $canDelete[ 'servicesCount' ] > 0 ) {
-                        $reason .= " (Possui {$canDelete[ 'servicesCount' ]} serviço(s) associado(s))";
-                    }
-                    if ( isset( $canDelete[ 'invoicesCount' ] ) && $canDelete[ 'invoicesCount' ] > 0 ) {
-                        $reason .= " (Possui {$canDelete[ 'invoicesCount' ]} fatura(s) associada(s))";
-                    }
-
-                    return ServiceResult::error( OperationStatus::VALIDATION_ERROR, $reason );
-                }
-
-                // Verificar se há interações do cliente (tabela não existe no momento)
-                // TODO: Implementar verificação de interações quando a tabela for criada
-                // if ( method_exists( $customer, 'interactions' ) && $customer->interactions()->count() > 0 ) {
-                //     return ServiceResult::error(
-                //         OperationStatus::VALIDATION_ERROR,
-                //         'Cliente não pode ser excluído pois possui interações registradas no histórico',
-                //     );
-                // }
-
-                // Soft delete em cascata
-                $customer->delete();
-
-                // Verificar e deletar dados relacionados se existirem
-                if ( $customer->commonData ) {
-                    $customer->commonData->delete();
-                }
-                if ( $customer->contact ) {
-                    $customer->contact->delete();
-                }
-                if ( $customer->address ) {
-                    $customer->address->delete();
-                }
-                if ( isset( $customer->businessData ) && $customer->businessData ) {
-                    $customer->businessData->delete();
-                }
-
-                return ServiceResult::success( null, 'Cliente excluído com sucesso' );
-            } ); // Closing DB::transaction
-        } catch ( \Exception $e ) {
-            // Log do erro para debug
-            Log::error( 'Erro ao excluir cliente', [
-                'customer_id' => $id,
-                'tenant_id'   => $tenantId,
-                'error'       => $e->getMessage(),
-                'trace'       => $e->getTraceAsString()
-            ] );
-
-            return ServiceResult::error( OperationStatus::ERROR,
-                'Erro ao excluir cliente: ' . $e->getMessage(), null, $e );
-        }
-    }
-
-    /**
-     * Verifica se cliente pode ser excluído e retorna detalhes dos impedimentos
-     */
-    public function canDeleteCustomer( int $id, int $tenantId ): ServiceResult
-    {
-        try {
-            $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
+            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
             if ( !$customer ) {
-                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
+                return $this->error( 'Cliente não encontrado' );
             }
 
-            $canDeleteInfo = $this->customerRepository->canDelete( $id, $tenantId );
+            $validation = $this->validateForTenant( $data, auth()->user()->tenant_id );
+            if ( !$validation->isSuccess() ) {
+                return $validation;
+            }
 
-            return ServiceResult::success( [
-                'can_delete'      => $canDeleteInfo[ 'canDelete' ],
-                'reason'          => $canDeleteInfo[ 'reason' ],
-                'budgets_count'   => $canDeleteInfo[ 'budgetsCount' ] ?? 0,
-                'services_count'  => $canDeleteInfo[ 'servicesCount' ] ?? 0,
-                'invoices_count'  => $canDeleteInfo[ 'invoicesCount' ] ?? 0,
-                'total_relations' => $canDeleteInfo[ 'totalRelationsCount' ] ?? 0
-            ] );
-
+            $updated = $this->customerRepository->update( $customer, $data );
+            return $this->success( $updated, 'Cliente atualizado com sucesso' );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR,
-                'Erro ao verificar se cliente pode ser excluído: ' . $e->getMessage(), null, $e );
+            return $this->error( 'Erro ao atualizar cliente: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Alternar status do cliente (ativo/inativo)
+     * Remove cliente
      */
-    public function toggleStatus( int $id, int $tenantId ): ServiceResult
+    public function deleteCustomer( int $id ): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($id, $tenantId) {
-                $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
-                if ( !$customer ) {
-                    return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
-                }
+            $customer = $this->customerRepository->findByIdAndTenantId( $id, auth()->user()->tenant_id );
+            if ( !$customer ) {
+                return $this->error( 'Cliente não encontrado' );
+            }
 
-                $newStatus = $customer->status === 'active' ? CustomerStatus::INACTIVE->value : CustomerStatus::ACTIVE->value;
-                $this->customerRepository->update( $id, [ 'status' => $newStatus ] );
-
-                $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
-                return ServiceResult::success( $customer, "Cliente {$newStatus} com sucesso" );
-            } );
+            $this->customerRepository->delete( $customer );
+            return $this->success( null, 'Cliente removido com sucesso' );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao alterar status', null, $e );
+            return $this->error( 'Erro ao remover cliente: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Restaurar cliente deletado
+     * Cria interação com cliente
      */
-    public function restoreCustomer( int $id, int $tenantId ): ServiceResult
+    public function createInteraction( int $customerId, array $data ): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($id, $tenantId) {
-                $customer = $this->customerRepository->findWithTrashed( $id, $tenantId );
-                if ( !$customer ) {
-                    return ServiceResult::error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
-                }
+            $customer = $this->customerRepository->findByIdAndTenantId( $customerId, auth()->user()->tenant_id );
+            if ( !$customer ) {
+                return $this->error( 'Cliente não encontrado' );
+            }
 
-                $customer->restore();
-                $customer->commonData()->withTrashed()->each->restore();
-                $customer->contact()->withTrashed()->each->restore();
-                $customer->address()->withTrashed()->each->restore();
-                $customer->businessData()->withTrashed()->each->restore();
-
-                $customer = $this->customerRepository->findWithCompleteData( $id, $tenantId );
-                return ServiceResult::success( $customer, 'Cliente restaurado com sucesso' );
-            } );
+            $interaction = $this->interactionService->createInteraction( $customer, $data, auth()->user() );
+            return $this->success( $interaction, 'Interação criada com sucesso' );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao restaurar cliente', null, $e );
+            return $this->error( 'Erro ao criar interação: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Obter estatísticas de clientes para dashboard
+     * Lista interações de um cliente
      */
-    public function getCustomerStats( int $tenantId ): ServiceResult
+    public function listInteractions( int $customerId, array $filters = [] ): ServiceResult
     {
         try {
-            $stats = [
-                'total_customers'    => $this->customerRepository->countByTenantId( $tenantId ),
-                'active_customers'   => $this->customerRepository->countByStatus( 'active', $tenantId ),
-                'inactive_customers' => $this->customerRepository->countByStatus( 'inactive', $tenantId ),
-                'recent_customers'   => $this->customerRepository->getRecentByTenantId( $tenantId, 10 ),
-            ];
+            $customer = $this->customerRepository->findByIdAndTenantId( $customerId, auth()->user()->tenant_id );
+            if ( !$customer ) {
+                return $this->error( 'Cliente não encontrado' );
+            }
 
-            return ServiceResult::success( $stats, 'Estatísticas de clientes' );
+            $interactions = $this->interactionService->getCustomerInteractions( $customer, $filters );
+            return $this->success( $interactions, 'Interações listadas com sucesso' );
         } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao obter estatísticas', null, $e );
-        }
-    }
-
-    /**
-     * Buscar clientes para autocomplete
-     */
-    public function searchForAutocomplete( string $query, int $tenantId ): ServiceResult
-    {
-        try {
-            $customers = $this->customerRepository->searchForAutocomplete( $query, $tenantId );
-            return ServiceResult::success( $customers, 'Clientes encontrados' );
-        } catch ( \Exception $e ) {
-            return ServiceResult::error( OperationStatus::ERROR, 'Erro na busca', null, $e );
+            return $this->error( 'Erro ao listar interações: ' . $e->getMessage() );
         }
     }
 
