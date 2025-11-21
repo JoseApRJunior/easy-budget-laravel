@@ -26,35 +26,35 @@ class ProviderBusinessUpdateRequest extends FormRequest
     {
         return [
             // Dados pessoais
-            'first_name'          => [ 'required', 'string', 'max:100' ],
-            'last_name'           => [ 'required', 'string', 'max:100' ],
-            'birth_date'          => [ 'nullable', 'date_format:d/m/Y', 'before:today' ],
-            'email_personal'      => [ 'nullable', 'email', 'max:255' ],
-            'phone_personal'      => [ 'nullable', 'string', 'max:20' ],
+            'first_name'             => [ 'required', 'string', 'max:100' ],
+            'last_name'              => [ 'required', 'string', 'max:100' ],
+            'birth_date'             => [ 'nullable', 'string' ],
+            'email_personal'         => [ 'nullable', 'email', 'max:255' ],
+            'phone_personal'         => [ 'nullable', 'string', 'max:20' ],
 
             // Dados empresariais
-            'company_name'        => [ 'nullable', 'string', 'max:255' ],
-            'cnpj'                => [ 'nullable', 'string' ],
-            'cpf'                 => [ 'nullable', 'string' ],
-            'area_of_activity_id' => [ 'nullable', 'integer', 'exists:areas_of_activity,id' ],
-            'profession_id'       => [ 'nullable', 'integer', 'exists:professions,id' ],
-            'description'         => [ 'nullable', 'string', 'max:250' ],
+            'company_name'           => [ 'nullable', 'string', 'max:255' ],
+            'cnpj'                   => [ 'nullable', 'string' ],
+            'cpf'                    => [ 'nullable', 'string' ],
+            'area_of_activity_id'    => [ 'nullable', 'integer', 'exists:areas_of_activity,id' ],
+            'profession_id'          => [ 'nullable', 'integer', 'exists:professions,id' ],
+            'description'            => [ 'nullable', 'string', 'max:250' ],
 
             // Contato empresarial
-            'email_business'      => [ 'nullable', 'email', 'max:255' ],
-            'phone_business'      => [ 'nullable', 'string', 'max:20' ],
-            'website'             => [ 'nullable', 'url', 'max:255' ],
+            'email_business'         => [ 'nullable', 'email', 'max:255' ],
+            'phone_business'         => [ 'nullable', 'string', 'max:20' ],
+            'website'                => [ 'nullable', 'url', 'max:255' ],
 
             // Endereço
-            'address'             => [ 'nullable', 'string', 'max:255' ],
-            'address_number'      => [ 'nullable', 'string', 'max:20' ],
-            'neighborhood'        => [ 'nullable', 'string', 'max:100' ],
-            'city'                => [ 'nullable', 'string', 'max:100' ],
-            'state'               => [ 'nullable', 'string', 'max:2' ],
-            'cep'                 => [ 'nullable', 'string', 'max:9', 'regex:/^\d{5}-?\d{3}$/' ],
+            'address'                => [ 'nullable', 'string', 'max:255' ],
+            'address_number'         => [ 'nullable', 'string', 'max:20' ],
+            'neighborhood'           => [ 'nullable', 'string', 'max:100' ],
+            'city'                   => [ 'nullable', 'string', 'max:100' ],
+            'state'                  => [ 'nullable', 'string', 'max:2' ],
+            'cep'                    => [ 'nullable', 'string', 'max:9', 'regex:/^\d{5}-?\d{3}$/' ],
 
             // Logo da empresa
-            'logo'                => [ 'nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048' ],
+            'logo'                   => [ 'nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048' ],
 
             // Dados empresariais (PJ)
             'fantasy_name'           => [ 'nullable', 'string', 'max:255' ],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\BaseEmail;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Mail\Mailables\Content;

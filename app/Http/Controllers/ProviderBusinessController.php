@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProviderBusinessUpdateRequest;
 use App\Services\Application\ProviderManagementService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;

@@ -32,7 +32,7 @@ class SettingsController extends Controller
      */
     public function index( Request $request ): View
     {
-        $activeTab = $request->get( 'tab', 'general' );
+        $activeTab = $request->get( 'tab', 'profile' );
 
         // Obtém configurações completas
         $userSettings   = $this->settingsService->getCompleteUserSettings();

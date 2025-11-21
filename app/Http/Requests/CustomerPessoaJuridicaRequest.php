@@ -57,7 +57,7 @@ class CustomerPessoaJuridicaRequest extends FormRequest
 
             // Dados de contato (Contact) - COM VALIDAÇÃO DE UNICIDADE
             'email_personal'         => 'required|email|max:255',
-            'phone_personal'         => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'phone_personal'         => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
             'email_business'         => [
                 'required',
                 'email',
@@ -69,13 +69,13 @@ class CustomerPessoaJuridicaRequest extends FormRequest
                     }
                 }
             ],
-            'phone_business'         => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'phone_business'         => 'nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
 
             // CNPJ com validação customizada + UNICIDADE
             'cnpj'                   => [
                 'required',
                 'string',
-                'regex:/^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', // Permite CNPJ com ou sem máscara
+                'regex:/^(?:\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})$/', // Permite CNPJ com ou sem máscara
                 function ( $attribute, $value, $fail ) use ( $tenantId ) {
                     // Limpar CNPJ (apenas números)
                     $cleanCnpj = preg_replace( '/[^0-9]/', '', $value );
@@ -105,7 +105,7 @@ class CustomerPessoaJuridicaRequest extends FormRequest
             'fantasy_name'           => 'nullable|string|max:255',
             'state_registration'     => 'nullable|string|max:50',
             'municipal_registration' => 'nullable|string|max:50',
-            'founding_date'          => 'nullable|date|before:today|after:1800-01-01',
+            'founding_date'          => 'nullable|string',
             'industry'               => 'nullable|string|max:255',
             'company_size'           => 'nullable|in:micro,pequena,media,grande',
             'notes'                  => 'nullable|string|max:1000',

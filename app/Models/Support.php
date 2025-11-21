@@ -63,6 +63,7 @@ class Support extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'code',
         'first_name',
         'last_name',
         'email',
@@ -78,6 +79,7 @@ class Support extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'code'       => 'string',
         'tenant_id'  => 'integer',
         'status'     => 'string',
         'created_at' => 'immutable_datetime',

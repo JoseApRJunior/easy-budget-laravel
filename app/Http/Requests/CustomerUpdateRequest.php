@@ -62,14 +62,14 @@ class CustomerUpdateRequest extends FormRequest
         $commonRules = [
             'first_name'          => 'sometimes|required|string|max:100',
             'last_name'           => 'sometimes|required|string|max:100',
-            'birth_date'          => 'sometimes|nullable|date|before:today|after:1900-01-01',
+            'birth_date'          => 'sometimes|nullable|string',
             'area_of_activity_id' => 'sometimes|nullable|integer|exists:areas_of_activity,id',
             'profession_id'       => 'sometimes|nullable|integer|exists:professions,id',
             'description'         => 'sometimes|nullable|string|max:500',
             'website'             => 'sometimes|nullable|url|max:255',
             // Campos de contato: pessoais obrigatórios, empresariais opcionais
-            'phone_personal'      => 'sometimes|required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
-            'phone_business'      => 'sometimes|nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'phone_personal'      => 'sometimes|required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
+            'phone_business'      => 'sometimes|nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
 
             // Endereço
             'cep'                 => 'sometimes|required|string|regex:/^\d{5}-?\d{3}$/',
@@ -103,7 +103,7 @@ class CustomerUpdateRequest extends FormRequest
                     'sometimes',
                     'required',
                     'string',
-                    'regex:/^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/', // Permite CPF com ou sem máscara
+                    'regex:/^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/', // Permite CPF com ou sem máscara
                     function ( $attribute, $value, $fail ) use ( $tenantId ) {
                         // Limpar CPF (apenas números)
                         $cleanCpf = preg_replace( '/[^0-9]/', '', $value );
@@ -163,7 +163,7 @@ class CustomerUpdateRequest extends FormRequest
                     'sometimes',
                     'required',
                     'string',
-                    'regex:/^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/', // Permite CNPJ com ou sem máscara
+                    'regex:/^(?:\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})$/', // Permite CNPJ com ou sem máscara
                     function ( $attribute, $value, $fail ) use ( $tenantId ) {
                         // Limpar CNPJ (apenas números)
                         $cleanCnpj = preg_replace( '/[^0-9]/', '', $value );
@@ -193,7 +193,7 @@ class CustomerUpdateRequest extends FormRequest
                 'fantasy_name'           => 'sometimes|nullable|string|max:255',
                 'state_registration'     => 'sometimes|nullable|string|max:50',
                 'municipal_registration' => 'sometimes|nullable|string|max:50',
-                'founding_date'          => 'sometimes|nullable|date|before:today|after:1800-01-01',
+                'founding_date'          => 'sometimes|nullable|string',
                 'industry'               => 'sometimes|nullable|string|max:255',
                 'company_size'           => 'sometimes|nullable|in:micro,pequena,media,grande',
                 'notes'                  => 'sometimes|nullable|string|max:1000',

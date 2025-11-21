@@ -58,7 +58,7 @@ class RegisterUserRequest extends FormRequest
             'phone'                 => [
                 'required',
                 'string',
-                'regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/', // Formato: (11) 99999-9999
+                'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/', // Formato: (11) 99999-9999
                 'max:20',
             ],
             'password'              => [

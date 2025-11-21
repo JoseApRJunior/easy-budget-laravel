@@ -151,6 +151,7 @@ class SendSupportContactEmail implements ShouldQueue
                 'subject' => $event->contactData['subject'],
                 'message' => $event->contactData['message'],
                 'support_id' => $event->support->id,
+                'support_code' => $event->support->code ?? $this->formatSupportCode($event->support->id),
                 'submitted_at' => now()->format('d/m/Y H:i:s'),
             ];
 
@@ -179,6 +180,16 @@ class SendSupportContactEmail implements ShouldQueue
             // Não lança exceção para não interromper o fluxo principal
             // O email para suporte já foi enviado com sucesso
         }
+    }
+
+    /**
+     * Gera código de protocolo no padrão SUP-YYYY-MM-XXXX.
+     */
+    private function formatSupportCode(int $supportId): string
+    {
+        $yearMonth = date('Y-m');
+        $seq = str_pad((string) $supportId, 4, '0', STR_PAD_LEFT);
+        return "SUP-{$yearMonth}-{$seq}";
     }
 
     /**

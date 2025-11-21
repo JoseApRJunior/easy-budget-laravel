@@ -7,36 +7,37 @@ namespace App\Providers;
 use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
+use App\Events\ReportGenerated;
 use App\Events\SocialAccountLinked;
 use App\Events\SocialLoginWelcome;
 use App\Events\StatusUpdated;
 use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
-use App\Events\ReportGenerated;
 use App\Events\UserRegistered;
+use App\Listeners\LogReportGeneration;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
 use App\Listeners\SendSocialAccountLinkedNotification;
+use App\Listeners\SendSocialAccountLinkedNotificationSync;
 use App\Listeners\SendSocialLoginWelcomeNotification;
 use App\Listeners\SendStatusUpdateNotification;
 use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
-use App\Listeners\LogReportGeneration;
 use App\Listeners\SendWelcomeEmail;
+use App\Models\Budget;
+use App\Models\BudgetItem;
+use App\Models\Service;
+use App\Models\ServiceItem;
+use App\Observers\BudgetObserver;
+use App\Observers\InventoryObserver;
+use App\Observers\ServiceObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use App\Models\Service;
-use App\Observers\ServiceObserver;
-use App\Models\Budget;
-use App\Models\BudgetItem;
-use App\Models\ServiceItem;
-use App\Observers\InventoryObserver;
-use App\Observers\BudgetObserver;
 
 /**
  * Event Service Provider para registro de eventos e listeners customizados.
@@ -82,10 +83,6 @@ class EventServiceProvider extends ServiceProvider
             SendSocialLoginWelcomeNotification::class,
         ],
 
-        SocialAccountLinked::class        => [
-            SendSocialAccountLinkedNotification::class,
-        ],
-
         SupportTicketCreated::class       => [
             SendSupportContactEmail::class,
         ],
@@ -120,19 +117,37 @@ class EventServiceProvider extends ServiceProvider
 
         // Registrar observer para controle de estoque
         $inventoryObserver = new InventoryObserver(
-            app(\App\Services\Shared\CacheService::class),
-            app(\App\Services\AlertService::class)
+            app( \App\Services\Domain\InventoryService::class),
+            app( \App\Services\AlertService::class),
         );
-        
+
         // Registrar observers para o modelo Service (geração automática de faturas + controle de estoque)
-        Service::observe([ServiceObserver::class, $inventoryObserver]);
-        
-        Budget::observe([BudgetObserver::class, $inventoryObserver]);
-        BudgetItem::observe([$inventoryObserver]);
-        ServiceItem::observe([$inventoryObserver]);
+        Service::observe( [ ServiceObserver::class, $inventoryObserver ] );
+
+        Budget::observe( [ BudgetObserver::class, $inventoryObserver ] );
+        BudgetItem::observe( [ $inventoryObserver ] );
+        ServiceItem::observe( [ $inventoryObserver ] );
 
         // Registra observers adicionais se necessário
         $this->registerAdditionalEventListeners();
+
+        // Registrar listener condicional para SocialAccountLinked baseado no ambiente
+        $this->registerSocialAccountLinkedListener();
+    }
+
+    /**
+     * Registra listener condicional para SocialAccountLinked baseado no ambiente.
+     *
+     * @return void
+     */
+    private function registerSocialAccountLinkedListener(): void
+    {
+        // Registra listener baseado no ambiente
+        $listenerClass = app()->environment( 'local' )
+            ? SendSocialAccountLinkedNotificationSync::class
+            : SendSocialAccountLinkedNotification::class;
+
+        Event::listen( SocialAccountLinked::class, $listenerClass );
     }
 
     /**
@@ -148,9 +163,10 @@ class EventServiceProvider extends ServiceProvider
         }
 
         // Exemplo de registro baseado em ambiente
-        if ( app()->environment( [ 'local', 'testing' ] ) ) {
-            $this->registerDevelopmentEventListeners();
-        }
+        // Desabilitado temporariamente para evitar loop infinito
+        // if ( app()->environment( [ 'local', 'testing' ] ) ) {
+        //     $this->registerDevelopmentEventListeners();
+        // }
     }
 
     /**
@@ -168,7 +184,7 @@ class EventServiceProvider extends ServiceProvider
             PasswordResetRequested::class,
             EmailVerificationRequested::class,
             SocialLoginWelcome::class,
-            SocialAccountLinked::class,
+                // SocialAccountLinked::class, // Removido - registrado condicionalmente
             SupportTicketCreated::class,
             SupportTicketResponded::class,
         ];

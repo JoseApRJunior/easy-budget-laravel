@@ -43,7 +43,7 @@ class CustomerService
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
                 }
 
-                $cpf = preg_replace( '/[^0-9]/', '', $data[ 'cpf' ] );
+                $cpf = preg_replace( '/[^0-9]/', '', (string)($data[ 'cpf' ] ?? '') );
                 if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
                 }
@@ -74,7 +74,7 @@ class CustomerService
                     'neighborhood'   => $data[ 'neighborhood' ],
                     'city'           => $data[ 'city' ],
                     'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', $data[ 'cep' ] ),
+                    'cep'            => preg_replace( '/[^0-9]/', '', (string)($data[ 'cep' ] ?? '') ),
                 ] );
 
                 // 3. Criar Customer com relacionamentos
@@ -107,7 +107,7 @@ class CustomerService
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
                 }
 
-                $cnpj = preg_replace( '/[^0-9]/', '', $data[ 'cnpj' ] );
+                $cnpj = preg_replace( '/[^0-9]/', '', (string)($data[ 'cnpj' ] ?? '') );
                 if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId ) ) {
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
                 }
@@ -147,7 +147,7 @@ class CustomerService
                     'neighborhood'   => $data[ 'neighborhood' ],
                     'city'           => $data[ 'city' ],
                     'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', $data[ 'cep' ] ),
+                    'cep'            => preg_replace( '/[^0-9]/', '', (string)($data[ 'cep' ] ?? '') ),
                 ] );
 
                 // 3. Criar Customer com relacionamentos

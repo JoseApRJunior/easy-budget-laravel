@@ -8,6 +8,7 @@ use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
 use App\Events\SocialAccountLinked;
 use App\Events\SocialLoginWelcome;
+use App\Services\Application\EmailVerificationService;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\Application\UserRegistrationService;
@@ -97,6 +98,19 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
 
         if ( $linkResult->isSuccess() ) {
             Event::dispatch( new SocialAccountLinked( $existingUser, $provider, $userData ) );
+
+            // Se o usuário ainda não tiver verificado o e-mail, disparar verificação
+            if ( !$existingUser->hasVerifiedEmail() ) {
+                try {
+                    app( EmailVerificationService::class)->createConfirmationToken( $existingUser );
+                } catch ( \Throwable $e ) {
+                    Log::warning( 'Falha ao solicitar verificação após vincular conta social', [
+                        'user_id'  => $existingUser->id,
+                        'provider' => $provider,
+                        'error'    => $e->getMessage(),
+                    ] );
+                }
+            }
 
             Log::info( 'Conta social vinculada a usuário existente', [
                 'provider'  => $provider,

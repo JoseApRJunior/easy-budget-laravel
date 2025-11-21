@@ -48,7 +48,7 @@ class CustomerPessoaFisicaRequest extends FormRequest
             // Dados básicos (CommonData)
             'first_name'          => 'required|string|max:100',
             'last_name'           => 'required|string|max:100',
-            'birth_date'          => 'nullable|date|before:today|after:1900-01-01',
+            'birth_date'          => 'nullable|string',
             'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id'       => 'nullable|integer|exists:professions,id',
             'description'         => 'nullable|string|max:500',
@@ -67,15 +67,15 @@ class CustomerPessoaFisicaRequest extends FormRequest
                     }
                 }
             ],
-            'phone_personal'      => 'required|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'phone_personal'      => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
             'email_business'      => 'nullable|email|max:255',
-            'phone_business'      => 'nullable|string|regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/',
+            'phone_business'      => 'nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
 
             // CPF com validação customizada + UNICIDADE
             'cpf'                 => [
                 'required',
                 'string',
-                'regex:/^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/', // Permite CPF com ou sem máscara
+                'regex:/^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/', // Permite CPF com ou sem máscara
                 function ( $attribute, $value, $fail ) use ( $tenantId ) {
                     // Limpar CPF (apenas números)
                     $cleanCpf = preg_replace( '/[^0-9]/', '', $value );
