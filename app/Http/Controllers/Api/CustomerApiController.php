@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerPessoaFisicaRequest;
 use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Models\CommonData;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\CustomerContact;
@@ -62,11 +63,11 @@ class CustomerApiController extends Controller
     public function storePessoaFisica( CustomerPessoaFisicaRequest $request ): JsonResponse
     {
         try {
-            $customer = $this->customerService->createPessoaFisica( $request->validated(), auth()->user() );
+            $customer = $this->customerService->create( $request->validated() );
 
             return response()->json( [
                 'message'  => 'Cliente pessoa física criado com sucesso',
-                'customer' => $customer->load( [ 'address', 'contacts', 'tags' ] ),
+                'customer' => $customer->load( [ 'address', 'contact', 'tags' ] ),
             ], 201 );
 
         } catch ( \Exception $e ) {
@@ -83,11 +84,11 @@ class CustomerApiController extends Controller
     public function storePessoaJuridica( CustomerPessoaJuridicaRequest $request ): JsonResponse
     {
         try {
-            $customer = $this->customerService->createPessoaJuridica( $request->validated(), auth()->user() );
+            $customer = $this->customerService->create( $request->validated() );
 
             return response()->json( [
                 'message'  => 'Cliente pessoa jurídica criado com sucesso',
-                'customer' => $customer->load( [ 'address', 'contacts', 'tags' ] ),
+                'customer' => $customer->load( [ 'address', 'contact', 'tags' ] ),
             ], 201 );
 
         } catch ( \Exception $e ) {
@@ -109,7 +110,7 @@ class CustomerApiController extends Controller
 
         $customer->load( [
             'address',
-            'contacts',
+            'contact',
             'tags',
             'interactions' => function ( $query ) {
                 $query->with( 'user' )->orderBy( 'interaction_date', 'desc' )->limit( 10 );
@@ -132,7 +133,8 @@ class CustomerApiController extends Controller
 
         try {
             // Validar dados conforme tipo de cliente
-            if ( $customer->customer_type === 'individual' ) {
+            $isIndividual = ( $customer->commonData?->type ?? CommonData::TYPE_INDIVIDUAL ) === CommonData::TYPE_INDIVIDUAL;
+            if ( $isIndividual ) {
                 $request->validate( ( new CustomerPessoaFisicaRequest() )->rules() );
                 $validatedData = $request->validated();
             } else {
@@ -140,11 +142,18 @@ class CustomerApiController extends Controller
                 $validatedData = $request->validated();
             }
 
-            $updatedCustomer = $this->customerService->updateCustomer( $customer, $validatedData, auth()->user() );
+            $updatedResult = $this->customerService->updateCustomer( $customer->id, $validatedData );
+            if ( !$updatedResult->isSuccess() ) {
+                return response()->json( [
+                    'message' => 'Erro ao atualizar cliente',
+                    'error'   => $updatedResult->getMessage(),
+                ], 400 );
+            }
+            $updatedCustomer = $updatedResult->getData();
 
             return response()->json( [
                 'message'  => 'Cliente atualizado com sucesso',
-                'customer' => $updatedCustomer->load( [ 'addresses', 'contacts', 'tags' ] ),
+                'customer' => $updatedCustomer->load( [ 'address', 'contact', 'tags' ] ),
             ] );
 
         } catch ( \Exception $e ) {
@@ -165,7 +174,13 @@ class CustomerApiController extends Controller
         }
 
         try {
-            $this->customerService->deleteCustomer( $customer, auth()->user() );
+            $result = $this->customerService->deleteCustomer( $customer->id );
+            if ( !$result->isSuccess() ) {
+                return response()->json( [
+                    'message' => 'Erro ao remover cliente',
+                    'error'   => $result->getMessage(),
+                ], 400 );
+            }
 
             return response()->json( [
                 'message' => 'Cliente removido com sucesso',

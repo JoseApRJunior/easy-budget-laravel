@@ -131,7 +131,7 @@ class CustomerController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $result = $this->customerService->findCustomer( (int) $id, $user->tenant_id );
+        $result = $this->customerService->findCustomer( (int) $id );
 
         if ( !$result->isSuccess() ) {
             abort( 404, $result->getMessage() );
@@ -150,7 +150,7 @@ class CustomerController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $result = $this->customerService->findCustomer( (int) $id, $user->tenant_id );
+        $result = $this->customerService->findCustomer( (int) $id );
 
         if ( !$result->isSuccess() ) {
             abort( 404, $result->getMessage() );
@@ -185,7 +185,7 @@ class CustomerController extends Controller
             $validated = $request->validated();
 
             // Usar o serviço para atualizar cliente
-            $result = $this->customerService->updateCustomer( (int) $id, $validated, $user->tenant_id );
+            $result = $this->customerService->updateCustomer( (int) $id, $validated );
 
             // Verificar resultado do serviço
             if ( !$result->isSuccess() ) {
@@ -222,7 +222,7 @@ class CustomerController extends Controller
             /** @var User $user */
             $user = Auth::user();
 
-            $result = $this->customerService->deleteCustomer( (int) $id, $user->tenant_id );
+            $result = $this->customerService->deleteCustomer( (int) $id );
 
             if ( !$result->isSuccess() ) {
                 return redirect()
