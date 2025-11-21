@@ -1,4 +1,19 @@
 <?php
+use App\Http\Controllers\Admin\ActivityManagementController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdvancedMetricsController;
+use App\Http\Controllers\Admin\AIMetricsController;
+use App\Http\Controllers\Admin\CategoryManagementController;
+use App\Http\Controllers\Admin\CustomerManagementController;
+use App\Http\Controllers\Admin\EnterpriseController;
+use App\Http\Controllers\Admin\FinancialControlController;
+use App\Http\Controllers\Admin\GlobalSettingsController;
+use App\Http\Controllers\Admin\PlanManagementController;
+use App\Http\Controllers\Admin\ProfessionManagementController;
+use App\Http\Controllers\Admin\ProviderManagementController;
+use App\Http\Controllers\Admin\SystemReportsController;
+use App\Http\Controllers\Admin\TenantManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AIAnalyticsController;
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -10,42 +25,26 @@ use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Integrations\MercadoPagoController as IntegrationsMercadoPagoController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailtrapController;
+use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderBusinessController;
 use App\Http\Controllers\ProviderController;
-use App\Http\Controllers\UploadController;
-use App\Http\Controllers\Integrations\MercadoPagoController as IntegrationsMercadoPagoController;
 use App\Http\Controllers\PublicInvoiceController;
+use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\QueueManagementController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\MercadoPagoWebhookController;
-use App\Http\Controllers\Admin\FinancialControlController;
-use App\Http\Controllers\Admin\EnterpriseController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\GlobalSettingsController;
-use App\Http\Controllers\Admin\PlanManagementController;
-use App\Http\Controllers\Admin\TenantManagementController;
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\CategoryManagementController;
-use App\Http\Controllers\Admin\ActivityManagementController;
-use App\Http\Controllers\Admin\ProfessionManagementController;
-use App\Http\Controllers\Admin\CustomerManagementController;
-use App\Http\Controllers\Admin\ProviderManagementController;
-use App\Http\Controllers\Admin\SystemReportsController;
-use App\Http\Controllers\Admin\AIMetricsController;
-use App\Http\Controllers\Admin\AdvancedMetricsController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes group
@@ -64,7 +63,7 @@ Route::group( [], function () {
     Route::get( '/csrf-token', function () {
         return response()->json( [ 'csrf_token' => csrf_token() ] );
     } )->name( 'csrf-token' );
-    
+
 
     Route::get( '/support', [ SupportController::class, 'index' ] )->name( 'support' );
     Route::post( '/support', [ SupportController::class, 'store' ] )->name( 'support.store' );
@@ -76,7 +75,7 @@ Route::group( [], function () {
         Route::get( '/choose-budget-status/code/{code}/token/{token}', [ BudgetController::class, 'chooseBudgetStatus' ] )->name( 'choose-status' );
         Route::post( '/choose-budget-status', [ BudgetController::class, 'chooseBudgetStatusStore' ] )->name( 'choose-status.store' );
         Route::get( '/print/code/{code}/token/{token}', [ BudgetController::class, 'print' ] )->name( 'print' );
-        
+
         // Budget sharing public routes
         Route::get( '/shared/{token}', [ BudgetShareController::class, 'access' ] )->name( 'shared.view' );
         Route::post( '/shared/{token}/accept', [ BudgetShareController::class, 'approve' ] )->name( 'shared.accept' );
@@ -136,7 +135,7 @@ Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAc
 Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider', 'monitoring' ] )->group( function () {
     // Debug Tenant Access
     Route::get( '/debug-tenant', [ \App\Http\Controllers\DebugTenantController::class, 'index' ] )->name( 'debug-tenant' );
-    
+
     // Dashboard
     Route::get( '/dashboard', [ ProviderController::class, 'index' ] )->name( 'dashboard' );
 
@@ -174,17 +173,10 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
 
     // Customers
     Route::prefix( 'customers' )->name( 'customers.' )->group( function () {
-        // Formulários específicos para criação
-        Route::get( '/pessoa-fisica/create', [ CustomerController::class, 'createPessoaFisica' ] )->name( 'create-pessoa-fisica' );
-        Route::get( '/pessoa-juridica/create', [ CustomerController::class, 'createPessoaJuridica' ] )->name( 'create-pessoa-juridica' );
         Route::get( '/', [ CustomerController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ CustomerController::class, 'create' ] )->name( 'create' );
 
-        // Métodos específicos com Form Requests
-        Route::post( '/pessoa-fisica', [ CustomerController::class, 'storePessoaFisica' ] )->name( 'store-pessoa-fisica' );
-        Route::post( '/pessoa-juridica', [ CustomerController::class, 'storePessoaJuridica' ] )->name( 'store-pessoa-juridica' );
-
-        // Método legado para compatibilidade
+        // Método unificado para criação (Pessoa Física e Jurídica)
         Route::post( '/', [ CustomerController::class, 'store' ] )->name( 'store' );
 
         Route::get( '/find-nearby', [ CustomerController::class, 'findNearby' ] )->name( 'find-nearby' );
@@ -273,7 +265,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get( '/', [ BudgetController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ BudgetController::class, 'create' ] )->name( 'create' );
         Route::post( '/', [ BudgetController::class, 'store' ] )->name( 'store' );
-        
+
         // Budget Sharing Routes - MOVIDAS PARA ANTES das rotas com parâmetros
         Route::prefix( 'shares' )->name( 'shares.' )->group( function () {
             Route::get( '/dashboard', [ BudgetShareController::class, 'dashboard' ] )->name( 'dashboard' );
@@ -287,7 +279,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
             Route::post( '/{share}/regenerate', [ BudgetShareController::class, 'regenerateToken' ] )->name( 'regenerate' );
             Route::post( '/{share}/revoke', [ BudgetShareController::class, 'revoke' ] )->name( 'revoke' );
         } );
-        
+
         // Rotas com parâmetros devem vir DEPOIS das rotas específicas
         Route::get( '/{code}', [ BudgetController::class, 'show' ] )->name( 'show' );
         Route::get( '/{code}/edit', [ BudgetController::class, 'edit' ] )->name( 'edit' );
@@ -375,7 +367,7 @@ Route::prefix( 'provider' )->name( 'provider.' )->middleware( [ 'auth', 'verifie
         Route::get('/{product}', [ InventoryController::class, 'show' ])->name('show');
         Route::get('/{product}/adjust', [ InventoryController::class, 'adjustStockForm' ])->name('adjust');
         Route::post('/{product}/adjust', [ InventoryController::class, 'adjustStock' ])->name('adjust.store');
-        
+
         // API routes
         Route::prefix('api')->name('api.')->group(function () {
             Route::post('/check-availability', [ InventoryController::class, 'checkAvailability' ])->name('check-availability');

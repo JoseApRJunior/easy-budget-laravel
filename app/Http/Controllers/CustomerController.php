@@ -1,25 +1,28 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\CustomerPessoaFisicaRequest;
-use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Http\Requests\CustomerRequest;
+use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\AreaOfActivity;
-use App\Models\Customer;
+use App\Models\AreasOfActivity;
 use App\Models\Profession;
 use App\Models\User;
 use App\Services\Domain\CustomerService;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 /**
- * Controller para gestão de clientes - Interface Web
- * Versão simplificada para resolver problemas de sintaxe
+ * Controller de Clientes
+ *
+ * Gerencia CRUD de clientes (Pessoa Física e Jurídica) com separação
+ * de validação e processamento.
  */
 class CustomerController extends Controller
 {
@@ -28,224 +31,404 @@ class CustomerController extends Controller
     ) {}
 
     /**
-     * Lista todos os clientes
+     * Mostrar lista de clientes.
      */
     public function index( Request $request ): View
     {
         /** @var User $user */
         $user = Auth::user();
 
-        $customers = Customer::query()
-            ->where( 'tenant_id', $user->tenant_id )
-            ->orderBy( 'name' )
-            ->paginate( 20 );
+        $filters = $request->only( [ 'search', 'status', 'type' ] );
+        $result  = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            Log::error( 'Erro ao carregar clientes', [
+                'user_id'   => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'error'     => $result->getMessage()
+            ] );
+
+            return view( 'pages.customer.index', [
+                'customers' => collect( [] ),
+                'filters'   => $filters,
+                'error'     => $result->getMessage()
+            ] );
+        }
 
         return view( 'pages.customer.index', [
-            'customers' => $customers,
+            'customers' => $result->getData(),
+            'filters'   => $filters
         ] );
     }
 
     /**
-     * Formulário de criação de cliente
+     * Mostrar formulário de criação de cliente.
      */
     public function create(): View
     {
-        $areasOfActivity = AreaOfActivity::query()
-            ->where( 'is_active', true )
-            ->orderBy( 'name' )
-            ->get();
-
-        $professions = Profession::query()
-            ->where( 'is_active', true )
-            ->orderBy( 'name' )
-            ->get();
-
-        return view( 'pages.customer.create', [
-            'areas_of_activity' => $areasOfActivity,
-            'professions'       => $professions,
-            'customer'          => new Customer(),
-        ] );
-    }
-
-    /**
-     * Criar cliente - Pessoa Física
-     */
-    public function storePessoaFisica( CustomerPessoaFisicaRequest $request ): RedirectResponse
-    {
-        try {
-            /** @var User $user */
-            $user = Auth::user();
-            $this->customerService->createPessoaFisica( $request->validated(), $user->tenant_id );
-
-            return redirect()->route( 'customers.index' )
-                ->with( 'success', 'Cliente criado com sucesso!' );
-        } catch ( \Exception $e ) {
-            return redirect()->back()
-                ->withInput()
-                ->with( 'error', 'Erro ao criar cliente: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Mostrar detalhes do cliente
-     */
-    public function show( Customer $customer ): View
-    {
-        $this->authorize( 'view', $customer );
-
-        return view( 'pages.customer.show', [
-            'customer' => $customer->load( [ 'commonData', 'contact', 'address' ] ),
-        ] );
-    }
-
-    /**
-     * Dashboard de clientes
-     */
-    public function dashboard( Request $request ): View
-    {
         /** @var User $user */
-        $user     = Auth::user();
-        $tenantId = (int) ( $user->tenant_id ?? 0 );
+        $user = Auth::user();
 
-        // Usa o CustomerService para obter estatísticas de forma consistente
-        $result = $this->customerService->getCustomerStats( $tenantId );
-
-        if ( !$result->isSuccess() ) {
-            // Em caso de erro, retorna estatísticas vazias
-            $stats = [
-                'total_customers'    => 0,
-                'active_customers'   => 0,
-                'inactive_customers' => 0,
-                'recent_customers'   => collect(),
-            ];
-        } else {
-            $stats = $result->getData();
-        }
-
-        return view( 'pages.customer.dashboard', compact( 'stats' ) );
-    }
-
-    public function createPessoaFisica(): View
-    {
-        $areasOfActivity = AreaOfActivity::query()
-            ->where( 'is_active', true )
+        // Dados necessários para o formulário
+        $areasOfActivity = AreaOfActivity::where( 'is_active', true )
             ->orderBy( 'name' )
             ->get();
 
-        $professions = Profession::query()
-            ->where( 'is_active', true )
+        $professions = Profession::where( 'is_active', true )
             ->orderBy( 'name' )
             ->get();
 
         return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
-            'customer'          => new Customer(),
+            'customer'          => new \App\Models\Customer(),
         ] );
     }
 
-    public function createPessoaJuridica(): View
-    {
-        $areasOfActivity = AreaOfActivity::query()
-            ->where( 'is_active', true )
-            ->orderBy( 'name' )
-            ->get();
-
-        $professions = Profession::query()
-            ->where( 'is_active', true )
-            ->orderBy( 'name' )
-            ->get();
-
-        return view( 'pages.customer.create', [
-            'areas_of_activity' => $areasOfActivity,
-            'professions'       => $professions,
-            'customer'          => new Customer(),
-        ] );
-    }
-
-    public function storePessoaJuridica( CustomerPessoaJuridicaRequest $request ): RedirectResponse
-    {
-        try {
-            /** @var User $user */
-            $user = Auth::user();
-            $this->customerService->createPessoaJuridica( $request->validated(), $user->tenant_id );
-
-            return redirect()->route( 'customers.index' )
-                ->with( 'success', 'Cliente criado com sucesso!' );
-        } catch ( \Exception $e ) {
-            return redirect()->back()
-                ->withInput()
-                ->with( 'error', 'Erro ao criar cliente: ' . $e->getMessage() );
-        }
-    }
-
-    public function store( Request $request ): RedirectResponse
+    /**
+     * Criar cliente (Pessoa Física ou Jurídica) - Método unificado
+     */
+    public function store( CustomerRequest $request ): RedirectResponse
     {
         try {
             /** @var User $user */
             $user      = Auth::user();
-            $tenantId  = (int) ( $user->tenant_id ?? 0 );
-            $isCompany = filled( $request->input( 'cnpj' ) )
-                || in_array( $request->input( 'type' ), [ 'company', 'pj' ], true )
-                || in_array( $request->input( 'customer_type' ), [ 'company', 'pj' ], true );
+            $validated = $request->validated();
 
-            if ( $isCompany ) {
-                $validated = $request->validate( [
-                    'first_name'          => 'required|string|max:100',
-                    'last_name'           => 'required|string|max:100',
-                    'company_name'        => 'required|string|max:255',
-                    'area_of_activity_id' => 'required|integer|exists:areas_of_activity,id',
-                    'profession_id'       => 'nullable|integer|exists:professions,id',
-                    'description'         => 'nullable|string|max:500',
-                    'website'             => 'nullable|url|max:255',
-                    'email_personal'      => 'required|email|max:255',
-                    'phone_personal'      => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
-                    'email_business'      => 'required|email|max:255',
-                    'phone_business'      => 'nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
-                    'cnpj'                => 'required|string|regex:/^(?:\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})$/',
-                    'cep'                 => 'required|string|regex:/^\d{5}-?\d{3}$/',
-                    'address'             => 'required|string|max:255',
-                    'address_number'      => 'nullable|string|max:20',
-                    'neighborhood'        => 'required|string|max:100',
-                    'city'                => 'required|string|max:100',
-                    'state'               => 'required|string|size:2|alpha',
-                ] );
+            // Usar o serviço para criar cliente
+            $result = $this->customerService->create( $validated, $user->tenant_id );
 
-                $result = $this->customerService->createPessoaJuridica( $validated, $tenantId );
-            } else {
-                $validated = $request->validate( [
-                    'first_name'          => 'required|string|max:100',
-                    'last_name'           => 'required|string|max:100',
-                    'birth_date'          => 'nullable|string',
-                    'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
-                    'profession_id'       => 'nullable|integer|exists:professions,id',
-                    'description'         => 'nullable|string|max:500',
-                    'website'             => 'nullable|url|max:255',
-                    'email_personal'      => 'required|email|max:255',
-                    'phone_personal'      => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
-                    'cpf'                 => 'required|string|regex:/^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/',
-                    'cep'                 => 'required|string|regex:/^\d{5}-?\d{3}$/',
-                    'address'             => 'required|string|max:255',
-                    'address_number'      => 'nullable|string|max:20',
-                    'neighborhood'        => 'required|string|max:100',
-                    'city'                => 'required|string|max:100',
-                    'state'               => 'required|string|size:2|alpha',
-                ] );
-
-                $result = $this->customerService->createPessoaFisica( $validated, $tenantId );
-            }
-
+            // Verificar resultado do serviço
             if ( !$result->isSuccess() ) {
-                return redirect()->back()->withInput()->with( 'error', $result->getMessage() );
+                return redirect()
+                    ->route( 'customers.create' )
+                    ->with( 'error', $result->getMessage() )
+                    ->withInput();
             }
 
             return redirect()->route( 'customers.index' )
                 ->with( 'success', 'Cliente criado com sucesso!' );
         } catch ( \Exception $e ) {
-            return redirect()->back()
-                ->withInput()
-                ->with( 'error', 'Erro ao criar cliente: ' . $e->getMessage() );
+            Log::error( 'Erro inesperado ao criar cliente', [
+                'user_id'   => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id,
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString()
+            ] );
+
+            return redirect()
+                ->route( 'customers.create' )
+                ->with( 'error', 'Erro interno ao criar cliente. Tente novamente.' )
+                ->withInput();
         }
+    }
+
+    /**
+     * Mostrar cliente específico.
+     */
+    public function show( string $id ): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findCustomer( (int) $id, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            abort( 404, $result->getMessage() );
+        }
+
+        return view( 'pages.customer.show', [
+            'customer' => $result->getData()
+        ] );
+    }
+
+    /**
+     * Mostrar formulário de edição de cliente.
+     */
+    public function edit( string $id ): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findCustomer( (int) $id, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            abort( 404, $result->getMessage() );
+        }
+
+        $customer = $result->getData();
+
+        // Dados necessários para o formulário
+        $areasOfActivity = \App\Models\AreasOfActivity::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
+
+        $professions = \App\Models\Profession::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
+
+        return view( 'pages.customer.edit', [
+            'customer'          => $customer,
+            'areas_of_activity' => $areasOfActivity,
+            'professions'       => $professions,
+        ] );
+    }
+
+    /**
+     * Atualizar cliente (Pessoa Física ou Jurídica) - Método unificado
+     */
+    public function update( CustomerUpdateRequest $request, string $id ): RedirectResponse
+    {
+        try {
+            /** @var User $user */
+            $user      = Auth::user();
+            $validated = $request->validated();
+
+            // Usar o serviço para atualizar cliente
+            $result = $this->customerService->updateCustomer( (int) $id, $validated, $user->tenant_id );
+
+            // Verificar resultado do serviço
+            if ( !$result->isSuccess() ) {
+                return redirect()
+                    ->route( 'customers.edit', $id )
+                    ->with( 'error', $result->getMessage() )
+                    ->withInput();
+            }
+
+            return redirect()->route( 'customers.index' )
+                ->with( 'success', 'Cliente atualizado com sucesso!' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao atualizar cliente', [
+                'customer_id' => $id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage(),
+                'trace'       => $e->getTraceAsString()
+            ] );
+
+            return redirect()
+                ->route( 'customers.edit', $id )
+                ->with( 'error', 'Erro interno ao atualizar cliente. Tente novamente.' )
+                ->withInput();
+        }
+    }
+
+    /**
+     * Excluir cliente.
+     */
+    public function destroy( string $id ): RedirectResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $result = $this->customerService->deleteCustomer( (int) $id, $user->tenant_id );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()
+                    ->route( 'customers.index' )
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            return redirect()->route( 'customers.index' )
+                ->with( 'success', 'Cliente excluído com sucesso!' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao excluir cliente', [
+                'customer_id' => $id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage()
+            ] );
+
+            return redirect()
+                ->route( 'customers.index' )
+                ->with( 'error', 'Erro interno ao excluir cliente. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Alterar status do cliente (ativo/inativo).
+     */
+    public function toggleStatus( string $id ): RedirectResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $result = $this->customerService->toggleStatus( (int) $id, $user->tenant_id );
+
+            $status  = $result->isSuccess() ? 'success' : 'error';
+            $message = $result->isSuccess()
+                ? 'Status do cliente alterado com sucesso!'
+                : $result->getMessage();
+
+            return redirect()
+                ->route( 'customers.index' )
+                ->with( $status, $message );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao alterar status do cliente', [
+                'customer_id' => $id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage()
+            ] );
+
+            return redirect()
+                ->route( 'customers.index' )
+                ->with( 'error', 'Erro interno ao alterar status. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Restaurar cliente excluído.
+     */
+    public function restore( string $id ): RedirectResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $result = $this->customerService->restoreCustomer( (int) $id, $user->tenant_id );
+
+            $status  = $result->isSuccess() ? 'success' : 'error';
+            $message = $result->isSuccess()
+                ? 'Cliente restaurado com sucesso!'
+                : $result->getMessage();
+
+            return redirect()
+                ->route( 'customers.index' )
+                ->with( $status, $message );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao restaurar cliente', [
+                'customer_id' => $id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage()
+            ] );
+
+            return redirect()
+                ->route( 'customers.index' )
+                ->with( 'error', 'Erro interno ao restaurar cliente. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Buscar clientes próximos (por CEP).
+     */
+    public function findNearby( Request $request ): View
+    {
+        $cep = $request->get( 'cep' );
+
+        if ( !$cep ) {
+            return redirect()->route( 'customers.index' )
+                ->with( 'error', 'CEP é obrigatório para busca por proximidade.' );
+        }
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findNearbyCustomers( $cep, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return redirect()->route( 'customers.index' )
+                ->with( 'error', $result->getMessage() );
+        }
+
+        // Por enquanto, redirecionar para a página principal com dados filtrados
+        // TODO: Implementar view de busca por proximidade
+        return redirect()->route( 'customers.index' )
+            ->with( 'info', 'Busca por proximidade não implementada. Use os filtros da página principal.' );
+    }
+
+    /**
+     * Buscar clientes (AJAX).
+     */
+    public function search( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        $query = $request->get( 'q' );
+        $type  = $request->get( 'type' );
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->searchCustomers( $query, $type, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'error' => $result->getMessage()
+            ], 400 );
+        }
+
+        return response()->json( [
+            'customers' => $result->getData()
+        ] );
+    }
+
+    /**
+     * Autocompletar clientes (AJAX).
+     */
+    public function autocomplete( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        $query = $request->get( 'q' );
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->searchForAutocomplete( $query, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'error' => $result->getMessage()
+            ], 400 );
+        }
+
+        return response()->json( [
+            'suggestions' => $result->getData()
+        ] );
+    }
+
+    /**
+     * Exportar clientes.
+     */
+    public function export( Request $request ): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $filters = $request->only( [ 'search', 'status', 'type' ] );
+        $format  = $request->get( 'format', 'excel' );
+
+        $result = $this->customerService->exportCustomers( $filters, $format, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'error' => $result->getMessage()
+            ], 400 );
+        }
+
+        return $result->getData();
+    }
+
+    /**
+     * Dashboard de clientes.
+     */
+    public function dashboard(): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->getCustomerStats( $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return view( 'pages.customer.dashboard', [
+                'stats' => [],
+                'error' => $result->getMessage()
+            ] );
+        }
+
+        return view( 'pages.customer.dashboard', [
+            'stats' => $result->getData()
+        ] );
     }
 
 }

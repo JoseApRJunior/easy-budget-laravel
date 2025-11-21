@@ -43,7 +43,7 @@ class CustomerService
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
                 }
 
-                $cpf = preg_replace( '/[^0-9]/', '', (string)($data[ 'cpf' ] ?? '') );
+                $cpf = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cpf' ] ?? '' ) );
                 if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
                 }
@@ -74,7 +74,7 @@ class CustomerService
                     'neighborhood'   => $data[ 'neighborhood' ],
                     'city'           => $data[ 'city' ],
                     'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', (string)($data[ 'cep' ] ?? '') ),
+                    'cep'            => preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cep' ] ?? '' ) ),
                 ] );
 
                 // 3. Criar Customer com relacionamentos
@@ -107,7 +107,7 @@ class CustomerService
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
                 }
 
-                $cnpj = preg_replace( '/[^0-9]/', '', (string)($data[ 'cnpj' ] ?? '') );
+                $cnpj = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cnpj' ] ?? '' ) );
                 if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId ) ) {
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
                 }
@@ -147,7 +147,7 @@ class CustomerService
                     'neighborhood'   => $data[ 'neighborhood' ],
                     'city'           => $data[ 'city' ],
                     'state'          => strtoupper( $data[ 'state' ] ),
-                    'cep'            => preg_replace( '/[^0-9]/', '', (string)($data[ 'cep' ] ?? '') ),
+                    'cep'            => preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cep' ] ?? '' ) ),
                 ] );
 
                 // 3. Criar Customer com relacionamentos
@@ -166,6 +166,47 @@ class CustomerService
             } );
         } catch ( \Exception $e ) {
             return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar cliente PJ', null, $e );
+        }
+    }
+
+    /**
+     * Criar cliente (Pessoa Física ou Jurídica) - Método unificado
+     */
+    public function create( array $data, int $tenantId ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($data, $tenantId) {
+                // Validar unicidade baseado no tipo de pessoa
+                if ( $data[ 'person_type' ] === 'pf' ) {
+                    // Pessoa Física
+                    if ( !$this->customerRepository->isEmailUnique( $data[ 'email_personal' ], $tenantId ) ) {
+                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail já está em uso' );
+                    }
+
+                    $cpf = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cpf' ] ?? '' ) );
+                    if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
+                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CPF já está em uso' );
+                    }
+
+                    // Usar método específico para pessoa física
+                    return $this->createPessoaFisica( $data, $tenantId );
+                } else {
+                    // Pessoa Jurídica
+                    if ( !$this->customerRepository->isEmailUnique( $data[ 'email_business' ] ?? $data[ 'email_personal' ], $tenantId ) ) {
+                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'E-mail empresarial já está em uso' );
+                    }
+
+                    $cnpj = preg_replace( '/[^0-9]/', '', (string) ( $data[ 'cnpj' ] ?? '' ) );
+                    if ( !$this->customerRepository->isCnpjUnique( $cnpj, $tenantId ) ) {
+                        return ServiceResult::error( OperationStatus::VALIDATION_ERROR, 'CNPJ já está em uso' );
+                    }
+
+                    // Usar método específico para pessoa jurídica
+                    return $this->createPessoaJuridica( $data, $tenantId );
+                }
+            } );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar cliente', null, $e );
         }
     }
 
@@ -369,13 +410,13 @@ class CustomerService
 
                     // Construir mensagem mais detalhada
                     if ( isset( $canDelete[ 'budgetsCount' ] ) && $canDelete[ 'budgetsCount' ] > 0 ) {
-                        $reason  .= " (Possui {$canDelete[ 'budgetsCount' ]} orçamento(s) associado(s))";
+                        $reason .= " (Possui {$canDelete[ 'budgetsCount' ]} orçamento(s) associado(s))";
                     }
                     if ( isset( $canDelete[ 'servicesCount' ] ) && $canDelete[ 'servicesCount' ] > 0 ) {
-                        $reason  .= " (Possui {$canDelete[ 'servicesCount' ]} serviço(s) associado(s))";
+                        $reason .= " (Possui {$canDelete[ 'servicesCount' ]} serviço(s) associado(s))";
                     }
                     if ( isset( $canDelete[ 'invoicesCount' ] ) && $canDelete[ 'invoicesCount' ] > 0 ) {
-                        $reason  .= " (Possui {$canDelete[ 'invoicesCount' ]} fatura(s) associada(s))";
+                        $reason .= " (Possui {$canDelete[ 'invoicesCount' ]} fatura(s) associada(s))";
                     }
 
                     return ServiceResult::error( OperationStatus::VALIDATION_ERROR, $reason );

@@ -8,12 +8,12 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Form Request para validação de atualização de clientes (Pessoa Física e Jurídica)
+ * Form Request para validação de clientes (Pessoa Física e Jurídica)
  *
- * Implementa validação unificada para clientes, diferenciando pessoa física e jurídica
- * através do campo 'person_type'.
+ * Implementa validação unificada para criação e atualização de clientes,
+ * diferenciando pessoa física e jurídica através do campo 'person_type'.
  */
-class CustomerUpdateRequest extends FormRequest
+class CustomerRequest extends FormRequest
 {
     private ?int $excludeCustomerId = null;
 
@@ -54,13 +54,13 @@ class CustomerUpdateRequest extends FormRequest
 
             // Dados específicos por tipo de pessoa
             // Pessoa Física
-            'cpf'                    => 'sometimes|required_if:person_type,pf|string|max:14|cpf',
+            'cpf'                    => 'sometimes|required_if:person_type,pf|string|max:14',
             'birth_date'             => 'sometimes|required_if:person_type,pf|date|before:today|after:1900-01-01',
             'profession_id'          => 'sometimes|required_if:person_type,pf|exists:professions,id',
 
             // Pessoa Jurídica
             'company_name'           => 'sometimes|required_if:person_type,pj|string|max:255',
-            'cnpj'                   => 'sometimes|required_if:person_type,pj|string|max:18|cnpj',
+            'cnpj'                   => 'sometimes|required_if:person_type,pj|string|max:18',
             'fantasy_name'           => 'nullable|string|max:255',
             'founding_date'          => 'nullable|date|before:today',
             'state_registration'     => 'nullable|string|max:50',
@@ -118,9 +118,7 @@ class CustomerUpdateRequest extends FormRequest
 
             // Mensagens para CPF/CNPJ
             'cpf.required_if'            => 'O CPF é obrigatório para pessoa física.',
-            'cpf.cpf'                    => 'CPF inválido.',
             'cnpj.required_if'           => 'O CNPJ é obrigatório para pessoa jurídica.',
-            'cnpj.cnpj'                  => 'CNPJ inválido.',
 
             // Mensagens para data de nascimento
             'birth_date.required_if'     => 'A data de nascimento é obrigatória para pessoa física.',
