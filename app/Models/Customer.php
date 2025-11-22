@@ -11,17 +11,17 @@ use App\Models\Contact;
 use App\Models\CustomerInteraction;
 use App\Models\CustomerTag;
 use App\Models\Invoice;
+use App\Models\Service;
 use App\Models\Tenant;
 // use App\Models\Traits\Auditable;
 use App\Models\Traits\TenantScoped;
 use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use App\Models\Service;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
@@ -82,9 +82,6 @@ class Customer extends Model
      */
     protected $fillable = [
         'tenant_id',
-        'common_data_id',
-        'contact_id',
-        'address_id',
         'status',
     ];
 
@@ -219,7 +216,7 @@ class Customer extends Model
      */
     public function getPrimaryEmailAttribute(): ?string
     {
-        $primaryContact = $this->contact()->where('type', 'email')->where('is_primary', true)->first();
+        $primaryContact = $this->contact()->where( 'type', 'email' )->where( 'is_primary', true )->first();
         return $primaryContact?->value;
     }
 
@@ -228,7 +225,7 @@ class Customer extends Model
      */
     public function getPrimaryPhoneAttribute(): ?string
     {
-        $primaryContact = $this->contact()->where('type', 'phone')->where('is_primary', true)->first();
+        $primaryContact = $this->contact()->where( 'type', 'phone' )->where( 'is_primary', true )->first();
         return $primaryContact?->value;
     }
 
@@ -718,7 +715,7 @@ class Customer extends Model
         // Calcula primeiro dígito verificador
         $sum = 0;
         for ( $i = 0; $i < 9; $i++ ) {
-            $sum  += $cpf[ $i ] * ( 10 - $i );
+            $sum += $cpf[ $i ] * ( 10 - $i );
         }
         $remainder = $sum % 11;
         $digit1    = ( $remainder < 2 ) ? 0 : 11 - $remainder;
@@ -726,7 +723,7 @@ class Customer extends Model
         // Calcula segundo dígito verificador
         $sum = 0;
         for ( $i = 0; $i < 10; $i++ ) {
-            $sum  += $cpf[ $i ] * ( 11 - $i );
+            $sum += $cpf[ $i ] * ( 11 - $i );
         }
         $remainder = $sum % 11;
         $digit2    = ( $remainder < 2 ) ? 0 : 11 - $remainder;
@@ -752,7 +749,7 @@ class Customer extends Model
         $weights1 = [ 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 ];
         $sum      = 0;
         for ( $i = 0; $i < 12; $i++ ) {
-            $sum  += $cnpj[ $i ] * $weights1[ $i ];
+            $sum += $cnpj[ $i ] * $weights1[ $i ];
         }
         $remainder = $sum % 11;
         $digit1    = ( $remainder < 2 ) ? 0 : 11 - $remainder;
@@ -761,7 +758,7 @@ class Customer extends Model
         $weights2 = [ 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 ];
         $sum      = 0;
         for ( $i = 0; $i < 13; $i++ ) {
-            $sum  += $cnpj[ $i ] * $weights2[ $i ];
+            $sum += $cnpj[ $i ] * $weights2[ $i ];
         }
         $remainder = $sum % 11;
         $digit2    = ( $remainder < 2 ) ? 0 : 11 - $remainder;

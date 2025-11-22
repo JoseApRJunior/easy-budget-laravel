@@ -30,7 +30,7 @@
               <option value="">Todos os Status</option>
               @foreach( $statusOptions as $status )
                 <option value="{{ $status->value }}" {{ ( request( 'status' ) == $status->value ) ? 'selected' : '' }}>
-                  {{ $status->getName() }}
+                  {{ $status->getDescription() }}
                 </option>
               @endforeach
             </select>
@@ -151,7 +151,7 @@
                     </td>
                     <td>
                       <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}; color: white;">
-                        {{ $service->serviceStatus->getName() }}
+                        {{ $service->serviceStatus->getDescription() }}
                       </span>
                     </td>
                     <td>

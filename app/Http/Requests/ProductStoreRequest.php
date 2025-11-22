@@ -20,7 +20,7 @@ class ProductStoreRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique( 'products' )->where( fn( $query ) => $query->where( 'tenant_id', tenant()->id ) )
+                Rule::unique( 'products' )->where( fn( $query ) => $query->where( 'tenant_id', auth()->user()->tenant_id ) )
             ],
             'price'       => 'required|numeric|min:0',
             'category_id' => 'nullable|integer|exists:categories,id',

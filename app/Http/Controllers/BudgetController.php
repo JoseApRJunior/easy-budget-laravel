@@ -37,7 +37,21 @@ class BudgetController extends Controller
 
     public function create(): View
     {
-        return view('pages.budget.create');
+        /** @var User $user */
+        $user = Auth::user();
+
+        $customers = \App\Models\Customer::where('tenant_id', $user->tenant_id)
+            ->with(['commonData', 'contact'])
+            ->latest('created_at')
+            ->limit(200)
+            ->get();
+
+        $selectedCustomer = null;
+
+        return view('pages.budget.create', [
+            'customers' => $customers,
+            'selectedCustomer' => $selectedCustomer,
+        ]);
     }
 
     public function store(BudgetStoreRequest $request): RedirectResponse

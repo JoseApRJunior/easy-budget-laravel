@@ -133,6 +133,11 @@ class ProductService extends AbstractBaseService
                     $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
                 }
 
+                if ( empty( $data['tenant_id'] ) ) {
+                    $resolvedTenantId = auth()->user()->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+                    $data['tenant_id'] = $resolvedTenantId;
+                }
+
                 $product = $this->productRepository->create( $data );
 
                 return $this->success( $product, 'Produto criado com sucesso' );
@@ -180,7 +185,8 @@ class ProductService extends AbstractBaseService
             return null;
         }
 
-        $path     = 'products/' . tenant()->id;
+        $tenantId = auth()->user()->tenant_id ?? ( function_exists('tenant') && tenant() ? tenant()->id : null );
+        $path     = 'products/' . ($tenantId ?? 'unknown');
         $filename = Str::random( 40 ) . '.' . $imageFile->getClientOriginalExtension();
 
         // Redimensionar e salvar imagem
@@ -188,7 +194,7 @@ class ProductService extends AbstractBaseService
         // Por simplicidade, aqui apenas salva o arquivo original
         $imageFile->storePubliclyAs( $path, $filename, 'public' );
 
-        return Storage::url( $path . '/' . $filename );
+        return $path . '/' . $filename;
     }
 
     public function updateProductBySku( string $sku, array $data ): ServiceResult
@@ -206,7 +212,10 @@ class ProductService extends AbstractBaseService
 
                 // Remover imagem existente se solicitado
                 if ( isset( $data[ 'remove_image' ] ) && $data[ 'remove_image' ] && $product->image ) {
-                    Storage::disk( 'public' )->delete( Str::after( $product->image, '/storage/' ) );
+                    $relative = $this->resolveRelativeStoragePath( $product->image );
+                    if ( $relative ) {
+                        Storage::disk( 'public' )->delete( $relative );
+                    }
                     $data[ 'image' ] = null;
                 }
 
@@ -214,14 +223,20 @@ class ProductService extends AbstractBaseService
                 if ( isset( $data[ 'image' ] ) && is_a( $data[ 'image' ], 'Illuminate\Http\UploadedFile' ) ) {
                     // Deletar imagem antiga se existir
                     if ( $product->image ) {
-                        Storage::disk( 'public' )->delete( Str::after( $product->image, '/storage/' ) );
+                        $relative = $this->resolveRelativeStoragePath( $product->image );
+                        if ( $relative ) {
+                            Storage::disk( 'public' )->delete( $relative );
+                        }
                     }
                     $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
                 } else if ( isset( $data[ 'image' ] ) && $data[ 'image' ] === null ) {
                     // Se a imagem foi explicitamente definida como null (e não foi removida pelo remove_image)
                     // Isso pode acontecer se o campo de upload for limpo sem o checkbox de remover
                     if ( $product->image ) {
-                        Storage::disk( 'public' )->delete( Str::after( $product->image, '/storage/' ) );
+                        $relative = $this->resolveRelativeStoragePath( $product->image );
+                        if ( $relative ) {
+                            Storage::disk( 'public' )->delete( $relative );
+                        }
                     }
                     $data[ 'image' ] = null;
                 } else {
@@ -301,7 +316,10 @@ class ProductService extends AbstractBaseService
 
                 // Deletar imagem física se existir
                 if ( $product->image ) {
-                    Storage::disk( 'public' )->delete( Str::after( $product->image, '/storage/' ) );
+                    $relative = $this->resolveRelativeStoragePath( $product->image );
+                    if ( $relative ) {
+                        Storage::disk( 'public' )->delete( $relative );
+                    }
                 }
 
                 $this->productRepository->delete( $product->id );
@@ -316,6 +334,18 @@ class ProductService extends AbstractBaseService
                 $e,
             );
         }
+    }
+
+    private function resolveRelativeStoragePath( ?string $image ): ?string
+    {
+        if ( empty( $image ) ) {
+            return null;
+        }
+        $trimmed = ltrim( $image, '/' );
+        if ( Str::startsWith( $trimmed, 'storage/' ) ) {
+            return Str::after( $trimmed, 'storage/' );
+        }
+        return $trimmed;
     }
 
 }

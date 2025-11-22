@@ -345,23 +345,61 @@ class CustomerController extends Controller
      */
     public function search( Request $request ): \Illuminate\Http\JsonResponse
     {
-        $query = $request->get( 'q' );
-        $type  = $request->get( 'type' );
-
         /** @var User $user */
-        $user = Auth::user();
+        $user    = Auth::user();
+        $search  = $request->get( 'search' );
+        $type    = $request->get( 'type' );
 
-        $result = $this->customerService->searchCustomers( $query, $type, $user->tenant_id );
+        $query = \App\Models\Customer::with( [ 'commonData', 'contact' ] )
+            ->where( 'tenant_id', $user->tenant_id );
 
-        if ( !$result->isSuccess() ) {
-            return response()->json( [
-                'error' => $result->getMessage()
-            ], 400 );
+        if ( !empty( $search ) ) {
+            $query->where( function ( $q ) use ( $search ) {
+                $q->whereHas( 'commonData', function ( $cq ) use ( $search ) {
+                    $cq->where( 'first_name', 'like', "%{$search}%" )
+                        ->orWhere( 'last_name', 'like', "%{$search}%" )
+                        ->orWhere( 'company_name', 'like', "%{$search}%" )
+                        ->orWhere( 'cpf', 'like', "%{$search}%" )
+                        ->orWhere( 'cnpj', 'like', "%{$search}%" );
+                } )->orWhereHas( 'contact', function ( $cq ) use ( $search ) {
+                    $cq->where( 'email_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'email_business', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_business', 'like', "%{$search}%" );
+                } );
+            } );
         }
 
-        return response()->json( [
-            'customers' => $result->getData()
-        ] );
+        if ( !empty( $type ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $type ) {
+                if ( strtolower( $type ) === 'pessoa_fisica' || strtolower( $type ) === 'pf' || strtolower( $type ) === 'individual' ) {
+                    $q->whereNotNull( 'cpf' );
+                } else {
+                    $q->whereNotNull( 'cnpj' );
+                }
+            } );
+        }
+
+        $customers = $query->orderBy( 'created_at', 'desc' )->limit( 100 )->get();
+
+        $data = $customers->map( function ( $customer ) {
+            $commonData = $customer->commonData;
+            $contact    = $customer->contact;
+
+            return [
+                'id'             => $customer->id,
+                'customer_name'  => $commonData ? ( $commonData->company_name ?: trim( ( $commonData->first_name ?? '' ) . ' ' . ( $commonData->last_name ?? '' ) ) ) : 'Nome não informado',
+                'cpf'            => $commonData->cpf ?? '',
+                'cnpj'           => $commonData->cnpj ?? '',
+                'email'          => $contact->email_personal ?? '',
+                'email_business' => $contact->email_business ?? '',
+                'phone'          => $contact->phone_personal ?? '',
+                'phone_business' => $contact->phone_business ?? '',
+                'created_at'     => $customer->created_at?->toISOString(),
+            ];
+        } );
+
+        return response()->json( [ 'data' => $data ] );
     }
 
     /**

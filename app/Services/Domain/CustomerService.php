@@ -7,9 +7,9 @@ namespace App\Services\Domain;
 use App\Enums\OperationStatus;
 use App\Helpers\DateHelper;
 use App\Helpers\ValidationHelper;
+use App\Models\Address;
 use App\Models\AuditLog;
 use App\Models\BusinessData;
-use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
 use App\Models\Customer;
@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Log;
  */
 class CustomerService extends AbstractBaseService
 {
-    private CustomerRepository $customerRepository;
+    private CustomerRepository         $customerRepository;
     private CustomerInteractionService $interactionService;
 
     public function __construct(
@@ -60,13 +60,13 @@ class CustomerService extends AbstractBaseService
             AuditLog::log( 'created', $customer, null, $customer->toArray(), [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
-                'type'      => $normalized['type'] ?? CommonData::TYPE_INDIVIDUAL,
+                'type'      => $normalized[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
             ] );
 
             Log::info( 'Cliente criado', [
                 'customer_id' => $customer->id,
                 'tenant_id'   => $tenantId,
-                'type'        => $normalized['type'] ?? CommonData::TYPE_INDIVIDUAL,
+                'type'        => $normalized[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
             ] );
 
             return $this->success( $customer, 'Cliente criado com sucesso' );
@@ -104,7 +104,7 @@ class CustomerService extends AbstractBaseService
             AuditLog::log( 'updated', $customer, $old, $customer->toArray(), [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
-                'type'      => $normalized['type'] ?? $customer->commonData?->type,
+                'type'      => $normalized[ 'type' ] ?? $customer->commonData?->type,
             ] );
 
             Log::info( 'Cliente atualizado', [
@@ -125,8 +125,8 @@ class CustomerService extends AbstractBaseService
     /** Compatibilidade: cria cliente vinculando explicitamente a um tenant. */
     public function createByTenantId( array $data, int $tenantId ): ServiceResult
     {
-        $normalized              = $this->normalizeCustomerInput( $data, $tenantId );
-        $normalized['tenant_id'] = $tenantId;
+        $normalized                = $this->normalizeCustomerInput( $data, $tenantId );
+        $normalized[ 'tenant_id' ] = $tenantId;
         return $this->create( $normalized );
     }
 
@@ -156,10 +156,10 @@ class CustomerService extends AbstractBaseService
      */
     private function validateForCreate( array $data ): ServiceResult
     {
-        $tenantId = $data['tenant_id'] ?? Auth::user()->tenant_id;
-        $type     = $this->mapType( $data['type'] ?? CommonData::TYPE_INDIVIDUAL );
+        $tenantId = $data[ 'tenant_id' ] ?? Auth::user()->tenant_id;
+        $type     = $this->mapType( $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL );
 
-        $email = $data['email'] ?? $data['email_personal'] ?? null;
+        $email = $data[ 'email' ] ?? $data[ 'email_personal' ] ?? null;
         if ( !ValidationHelper::isValidEmail( $email ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Email inválido ou ausente' );
         }
@@ -167,37 +167,37 @@ class CustomerService extends AbstractBaseService
             return $this->error( OperationStatus::CONFLICT, 'Email já está em uso neste tenant' );
         }
 
-        $phone = $data['phone'] ?? $data['phone_personal'] ?? null;
+        $phone = $data[ 'phone' ] ?? $data[ 'phone_personal' ] ?? null;
         if ( !ValidationHelper::isValidPhone( $phone ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Telefone inválido ou ausente' );
         }
 
-        if ( !ValidationHelper::isValidCep( $data['cep'] ?? null ) ) {
+        if ( !ValidationHelper::isValidCep( $data[ 'cep' ] ?? null ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'CEP inválido ou ausente' );
         }
-        if ( empty( $data['city'] ) || empty( $data['state'] ) ) {
+        if ( empty( $data[ 'city' ] ) || empty( $data[ 'state' ] ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Cidade e Estado são obrigatórios' );
         }
 
         if ( $type === CommonData::TYPE_INDIVIDUAL ) {
-            if ( empty( $data['first_name'] ) || empty( $data['last_name'] ) ) {
+            if ( empty( $data[ 'first_name' ] ) || empty( $data[ 'last_name' ] ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'Nome e sobrenome são obrigatórios' );
             }
-            $cpf = preg_replace( '/[^0-9]/', '', $data['cpf'] ?? '' );
+            $cpf = preg_replace( '/[^0-9]/', '', $data[ 'cpf' ] ?? '' );
             if ( !ValidationHelper::isValidCpf( $cpf ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'CPF inválido ou ausente' );
             }
             if ( !$this->customerRepository->isCpfUnique( $cpf, $tenantId ) ) {
                 return $this->error( OperationStatus::CONFLICT, 'CPF já está em uso neste tenant' );
             }
-            if ( !empty( $data['birth_date'] ) && !ValidationHelper::isValidBirthDate( $data['birth_date'] ) ) {
+            if ( !empty( $data[ 'birth_date' ] ) && !ValidationHelper::isValidBirthDate( $data[ 'birth_date' ] ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'Data de nascimento inválida' );
             }
         } else {
-            if ( empty( $data['company_name'] ) ) {
+            if ( empty( $data[ 'company_name' ] ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'Razão social é obrigatória para PJ' );
             }
-            $cnpj = preg_replace( '/[^0-9]/', '', $data['cnpj'] ?? '' );
+            $cnpj = preg_replace( '/[^0-9]/', '', $data[ 'cnpj' ] ?? '' );
             if ( !ValidationHelper::isValidCnpj( $cnpj ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'CNPJ inválido ou ausente' );
             }
@@ -213,9 +213,9 @@ class CustomerService extends AbstractBaseService
     private function validateForUpdate( Customer $customer, array $data ): ServiceResult
     {
         $tenantId = $customer->tenant_id;
-        $type     = $this->mapType( $data['type'] ?? ( $customer->commonData?->isCompany() ? 'company' : 'individual' ) );
+        $type     = $this->mapType( $data[ 'type' ] ?? ( $customer->commonData?->isCompany() ? 'company' : 'individual' ) );
 
-        $email = $data['email'] ?? $data['email_personal'] ?? $customer->contact?->email_personal;
+        $email = $data[ 'email' ] ?? $data[ 'email_personal' ] ?? $customer->contact?->email_personal;
         if ( !ValidationHelper::isValidEmail( $email ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Email inválido ou ausente' );
         }
@@ -223,21 +223,21 @@ class CustomerService extends AbstractBaseService
             return $this->error( OperationStatus::CONFLICT, 'Email já está em uso neste tenant' );
         }
 
-        $phone = $data['phone'] ?? $data['phone_personal'] ?? $customer->contact?->phone_personal;
+        $phone = $data[ 'phone' ] ?? $data[ 'phone_personal' ] ?? $customer->contact?->phone_personal;
         if ( !ValidationHelper::isValidPhone( $phone ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Telefone inválido ou ausente' );
         }
 
-        $cep = $data['cep'] ?? $customer->address?->cep;
+        $cep = $data[ 'cep' ] ?? $customer->address?->cep;
         if ( !ValidationHelper::isValidCep( $cep ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'CEP inválido ou ausente' );
         }
-        if ( empty( $data['city'] ?? $customer->address?->city ) || empty( $data['state'] ?? $customer->address?->state ) ) {
+        if ( empty( $data[ 'city' ] ?? $customer->address?->city ) || empty( $data[ 'state' ] ?? $customer->address?->state ) ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Cidade e Estado são obrigatórios' );
         }
 
         if ( $type === CommonData::TYPE_INDIVIDUAL ) {
-            $cpf = preg_replace( '/[^0-9]/', '', $data['cpf'] ?? $customer->commonData?->cpf ?? '' );
+            $cpf = preg_replace( '/[^0-9]/', '', $data[ 'cpf' ] ?? $customer->commonData?->cpf ?? '' );
             if ( !ValidationHelper::isValidCpf( $cpf ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'CPF inválido ou ausente' );
             }
@@ -245,7 +245,7 @@ class CustomerService extends AbstractBaseService
                 return $this->error( OperationStatus::CONFLICT, 'CPF já está em uso neste tenant' );
             }
         } else {
-            $cnpj = preg_replace( '/[^0-9]/', '', $data['cnpj'] ?? $customer->commonData?->cnpj ?? '' );
+            $cnpj = preg_replace( '/[^0-9]/', '', $data[ 'cnpj' ] ?? $customer->commonData?->cnpj ?? '' );
             if ( !ValidationHelper::isValidCnpj( $cnpj ) ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'CNPJ inválido ou ausente' );
             }
@@ -260,32 +260,32 @@ class CustomerService extends AbstractBaseService
     /** Normaliza dados de entrada e aplica limpeza de máscaras */
     private function normalizeCustomerInput( array $data, int $tenantId ): array
     {
-        $type = $this->mapType( $data['type'] ?? CommonData::TYPE_INDIVIDUAL );
+        $type = $this->mapType( $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL );
 
         $normalized = [
             'tenant_id'           => $tenantId,
             'type'                => $type,
-            'first_name'          => $data['first_name'] ?? null,
-            'last_name'           => $data['last_name'] ?? null,
-            'birth_date'          => DateHelper::parseBirthDate( $data['birth_date'] ?? null ),
-            'cpf'                 => isset( $data['cpf'] ) ? preg_replace( '/[^0-9]/', '', (string) $data['cpf'] ) : null,
-            'company_name'        => $data['company_name'] ?? null,
-            'cnpj'                => isset( $data['cnpj'] ) ? preg_replace( '/[^0-9]/', '', (string) $data['cnpj'] ) : null,
-            'description'         => $data['description'] ?? null,
-            'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
-            'profession_id'       => $data['profession_id'] ?? null,
-            'email'               => $data['email'] ?? $data['email_personal'] ?? null,
-            'phone'               => $data['phone'] ?? $data['phone_personal'] ?? null,
-            'email_business'      => $data['email_business'] ?? null,
-            'phone_business'      => $data['phone_business'] ?? null,
-            'website'             => $data['website'] ?? null,
-            'address'             => $data['address'] ?? null,
-            'address_number'      => $data['address_number'] ?? null,
-            'neighborhood'        => $data['neighborhood'] ?? null,
-            'city'                => $data['city'] ?? null,
-            'state'               => $data['state'] ?? null,
-            'cep'                 => $data['cep'] ?? null,
-            'status'              => $data['status'] ?? 'active',
+            'first_name'          => $data[ 'first_name' ] ?? null,
+            'last_name'           => $data[ 'last_name' ] ?? null,
+            'birth_date'          => DateHelper::parseBirthDate( $data[ 'birth_date' ] ?? null ),
+            'cpf'                 => isset( $data[ 'cpf' ] ) ? preg_replace( '/[^0-9]/', '', (string) $data[ 'cpf' ] ) : null,
+            'company_name'        => $data[ 'company_name' ] ?? null,
+            'cnpj'                => isset( $data[ 'cnpj' ] ) ? preg_replace( '/[^0-9]/', '', (string) $data[ 'cnpj' ] ) : null,
+            'description'         => $data[ 'description' ] ?? null,
+            'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
+            'profession_id'       => $data[ 'profession_id' ] ?? null,
+            'email'               => $data[ 'email' ] ?? $data[ 'email_personal' ] ?? null,
+            'phone'               => $data[ 'phone' ] ?? $data[ 'phone_personal' ] ?? null,
+            'email_business'      => $data[ 'email_business' ] ?? null,
+            'phone_business'      => $data[ 'phone_business' ] ?? null,
+            'website'             => $data[ 'website' ] ?? null,
+            'address'             => $data[ 'address' ] ?? null,
+            'address_number'      => $data[ 'address_number' ] ?? null,
+            'neighborhood'        => $data[ 'neighborhood' ] ?? null,
+            'city'                => $data[ 'city' ] ?? null,
+            'state'               => $data[ 'state' ] ?? null,
+            'cep'                 => $data[ 'cep' ] ?? null,
+            'status'              => $data[ 'status' ] ?? 'active',
         ];
 
         return $normalized;
@@ -298,7 +298,7 @@ class CustomerService extends AbstractBaseService
         return match ( $value ) {
             'persona_fisica', 'pf', 'individual' => CommonData::TYPE_INDIVIDUAL,
             'persona_juridica', 'pj', 'company'  => CommonData::TYPE_COMPANY,
-            default                               => CommonData::TYPE_INDIVIDUAL,
+            default                              => CommonData::TYPE_INDIVIDUAL,
         };
     }
 
@@ -383,6 +383,59 @@ class CustomerService extends AbstractBaseService
             return $this->success( $interactions, 'Interações listadas com sucesso' );
         } catch ( \Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao listar interações: ' . $e->getMessage(), null, $e );
+        }
+    }
+
+    /**
+     * Obtém estatísticas de clientes para o dashboard
+     */
+    public function getCustomerStats( int $tenantId ): ServiceResult
+    {
+        try {
+            $total    = Customer::where( 'tenant_id', $tenantId )->count();
+            $active   = Customer::where( 'tenant_id', $tenantId )->where( 'status', 'active' )->count();
+            $inactive = Customer::where( 'tenant_id', $tenantId )->where( 'status', 'inactive' )->count();
+
+            $recentCustomers = Customer::where( 'tenant_id', $tenantId )
+                ->latest()
+                ->limit( 10 )
+                ->with( [ 'commonData', 'contact' ] )
+                ->get();
+
+            $stats = [
+                'total_customers'    => $total,
+                'active_customers'   => $active,
+                'inactive_customers' => $inactive,
+                'recent_customers'   => $recentCustomers,
+            ];
+
+            return $this->success( $stats, 'Estatísticas obtidas com sucesso' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter estatísticas de clientes', [ 'error' => $e->getMessage() ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage(), null, $e );
+        }
+
+    }
+
+    /**
+     * Obtém clientes filtrados com paginação
+     */
+    public function getFilteredCustomers( array $filters, int $tenantId ): ServiceResult
+    {
+        try {
+            // Adicionar tenant_id aos filtros para garantir isolamento
+            $filters[ 'tenant_id' ] = $tenantId;
+
+            $customers = $this->customerRepository->getPaginated( $filters );
+
+            return $this->success( $customers, 'Clientes obtidos com sucesso' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter clientes filtrados', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId,
+                'filters'   => $filters
+            ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter clientes: ' . $e->getMessage(), null, $e );
         }
     }
 

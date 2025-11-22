@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Tenant;
-use App\Models\User;
-use App\Models\Contact;
 use App\Models\Address;
 use App\Models\CommonData;
+use App\Models\Contact;
+use App\Models\Tenant;
+use App\Models\User;
 use App\Services\Domain\CustomerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -33,6 +33,12 @@ class CustomerServiceCreateTest extends TestCase
 
         // Fazer login como provider
         auth()->login( $this->user );
+
+        // Seed das tabelas necessárias para testes
+        $this->seed( [
+            \Database\Seeders\AreasOfActivitySeeder::class,
+            \Database\Seeders\ProfessionSeeder::class,
+        ] );
 
         // Instanciar service
         $this->customerService = app( CustomerService::class);
@@ -62,6 +68,9 @@ class CustomerServiceCreateTest extends TestCase
         $result = $this->customerService->create( $data );
 
         // Assert
+        if ( !$result->isSuccess() ) {
+            dump( 'Error:', $result->getMessage() );
+        }
         $this->assertTrue( $result->isSuccess() );
         $this->assertEquals( 'Cliente criado com sucesso', $result->getMessage() );
 
@@ -104,6 +113,9 @@ class CustomerServiceCreateTest extends TestCase
         $result = $this->customerService->create( $data );
 
         // Assert
+        if ( !$result->isSuccess() ) {
+            dump( 'Error:', $result->getMessage() );
+        }
         $this->assertTrue( $result->isSuccess() );
         $this->assertEquals( 'Cliente criado com sucesso', $result->getMessage() );
 
@@ -214,6 +226,9 @@ class CustomerServiceCreateTest extends TestCase
         $result = $this->customerService->create( $data );
 
         // Assert
+        if ( !$result->isSuccess() ) {
+            dump( 'Error:', $result->getMessage() );
+        }
         $this->assertTrue( $result->isSuccess() );
 
         $customer = $result->getData();

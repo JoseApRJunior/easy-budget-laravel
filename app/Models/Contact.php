@@ -116,4 +116,20 @@ class Contact extends Model
         return $this->belongsTo( Provider::class);
     }
 
+    /**
+     * Accessor para compatibilidade: retorna email_personal como padrão.
+     */
+    public function getEmailAttribute(): ?string
+    {
+        return $this->email_personal ?? $this->email_business;
+    }
+
+    /**
+     * Accessor para compatibilidade: retorna phone_personal como padrão.
+     */
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->phone_personal ?? $this->phone_business;
+    }
+
 }

@@ -118,7 +118,6 @@ class EventServiceProvider extends ServiceProvider
         // Registrar observer para controle de estoque
         $inventoryObserver = new InventoryObserver(
             app( \App\Services\Domain\InventoryService::class),
-            app( \App\Services\AlertService::class),
         );
 
         // Registrar observers para o modelo Service (geração automática de faturas + controle de estoque)

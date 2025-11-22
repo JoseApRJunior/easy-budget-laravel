@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -275,8 +276,11 @@ class Product extends Model
             return $this->image;
         }
 
-        // Caso contrário, assume que é um caminho relativo
-        return asset( 'storage/' . $this->image );
+        $p = ltrim( (string) $this->image, '/' );
+        if ( Str::startsWith( $p, 'storage/' ) ) {
+            return asset( $p );
+        }
+        return asset( 'storage/' . $p );
     }
 
     // ==================== MÉTODOS AUXILIARES ====================

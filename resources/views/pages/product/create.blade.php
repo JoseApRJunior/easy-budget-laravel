@@ -167,7 +167,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 // Preview da imagem
 document.getElementById('image').addEventListener('change', function(e) {
@@ -200,4 +200,4 @@ document.querySelector('.custom-file-input').addEventListener('change', function
     label.textContent = fileName;
 });
 </script>
-@endsection
+@endpush

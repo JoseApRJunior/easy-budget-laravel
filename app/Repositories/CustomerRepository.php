@@ -229,6 +229,10 @@ class CustomerRepository extends AbstractTenantRepository
             'contact', 'address', 'businessData'
         ] );
 
+        if ( !empty( $filters['tenant_id'] ) ) {
+            $query->where( 'tenant_id', $filters['tenant_id'] );
+        }
+
         // Filtro por texto (busca em nome, email, CPF/CNPJ, razão social)
         if ( !empty( $filters[ 'search' ] ) ) {
             $query->where( function ( $q ) use ( $filters ) {
@@ -353,19 +357,12 @@ class CustomerRepository extends AbstractTenantRepository
                 'status'    => $data[ 'status' ] ?? 'active',
             ] );
 
-            // 5. Atualizar IDs das relações no Customer
-            $customer->update( [
-                'common_data_id' => $commonData->id,
-                'contact_id'     => $contact->id,
-                'address_id'     => $address->id,
-            ] );
-
-            // 6. Atualizar customer_id nas tabelas relacionadas
+            // 5. Atualizar customer_id nas tabelas relacionadas
             $commonData->update( [ 'customer_id' => $customer->id ] );
             $contact->update( [ 'customer_id' => $customer->id ] );
             $address->update( [ 'customer_id' => $customer->id ] );
 
-            // 7. Criar BusinessData se for pessoa jurídica
+            // 6. Criar BusinessData se for pessoa jurídica
             if ( ( $data[ 'type' ] ?? 'individual' ) === 'company' || !empty( $data[ 'cnpj' ] ) ) {
                 BusinessData::create( [
                     'tenant_id'              => $tenantId,

@@ -112,7 +112,7 @@
                                         <option value="">Selecione um status</option>
                                         @foreach($statusOptions as $status)
                                             <option value="{{ $status->value }}" {{ old('service_statuses_id') == $status->value ? 'selected' : '' }}>
-                                                {{ $status->getName() }}
+                                                {{ $status->getDescription() }}
                                             </option>
                                         @endforeach
                                     </select>

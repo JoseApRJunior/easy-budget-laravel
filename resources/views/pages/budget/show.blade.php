@@ -28,7 +28,7 @@
                             <strong>Código:</strong> {{ $budget->code }}
                         </div>
                         <div class="mb-3">
-                            <strong>Status:</strong> 
+                            <strong>Status:</strong>
                             <span class="badge bg-secondary">{{ $budget->status->value }}</span>
                         </div>
                         <div class="mb-3">
@@ -46,7 +46,7 @@
                         <h5 class="fw-bold mb-3">Cliente</h5>
                         @if($budget->customer && $budget->customer->commonData)
                         <div class="mb-3">
-                            <strong>Nome:</strong> 
+                            <strong>Nome:</strong>
                             @if($budget->customer->commonData->company_name)
                                 {{ $budget->customer->commonData->company_name }}
                             @else
@@ -63,7 +63,7 @@
                         </div>
                         @endif
                         @endif
-                        
+
                         @if($budget->customer && $budget->customer->contact)
                         @if($budget->customer->contact->email_personal)
                         <div class="mb-3">
@@ -132,6 +132,9 @@
                         <i class="bi bi-arrow-left me-2"></i>Voltar
                     </a>
                     <div class="d-flex gap-2">
+                        <a href="{{ route('provider.budgets.services.create', $budget->code) }}" class="btn btn-success px-4">
+                            <i class="bi bi-tools me-2"></i>Criar Serviço
+                        </a>
                         <a href="{{ route( 'provider.budgets.edit', $budget->code ) }}" class="btn btn-outline-primary px-4">
                             <i class="bi bi-pencil me-2"></i>Editar
                         </a>

@@ -30,7 +30,7 @@
                         <strong>Código do Serviço:</strong> {{ $service->code }}
                         <span class="ms-3"><strong>Status:</strong>
                             <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}">
-                                {{ $service->serviceStatus->getName() }}
+                                {{ $service->serviceStatus->getDescription() }}
                             </span>
                         </span>
                     </div>
@@ -116,7 +116,7 @@
                                             <option value="{{ $status->value }}"
                                                     {{ old('service_statuses_id', $service->service_statuses_id) == $status->value ? 'selected' : '' }}
                                                     {{ $service->serviceStatus->value == $status->value ? '' : '' }}>
-                                                {{ $status->getName() }}
+                                                {{ $status->getDescription() }}
                                             </option>
                                         @endforeach
                                     </select>

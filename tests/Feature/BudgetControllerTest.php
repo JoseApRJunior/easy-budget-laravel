@@ -84,4 +84,26 @@ class BudgetControllerTest extends TestCase
         $this->assertContains( $response->getStatusCode(), [ 302, 422, 404 ] );
     }
 
+    public function test_create_passes_required_variables_to_view(): void
+    {
+        $response = $this->get( route( 'provider.budgets.create' ) );
+
+        $response->assertStatus( 200 );
+        $response->assertViewIs( 'pages.budget.create' );
+        $response->assertViewHas( 'customers' );
+        $response->assertViewHas( 'selectedCustomer', null );
+    }
+
+    public function test_show_contains_link_to_create_service_from_budget(): void
+    {
+        $budget = Budget::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'code' => 'ORC-' . date('Ymd') . '0101',
+        ]);
+
+        $response = $this->get( route( 'provider.budgets.show', $budget->code ) );
+
+        $response->assertStatus( 200 );
+        $response->assertSee( route( 'provider.budgets.services.create', $budget->code ), false );
+    }
 }
