@@ -153,6 +153,7 @@
                                            class="form-control @error('discount') is-invalid @enderror"
                                            id="discount"
                                            name="discount"
+                                           type="text" inputmode="numeric"
                                            value="{{ old('discount', $service->discount) }}"
                                            step="0.01"
                                            min="0"
@@ -194,6 +195,23 @@
                                 </div>
                             </div>
                         </div>
+                        <script>
+                          document.addEventListener('DOMContentLoaded', function(){
+                            try {
+                              if (window.VanillaMask) { new VanillaMask('discount', 'currency'); }
+                              var form = document.querySelector('form');
+                              if (form) {
+                                form.addEventListener('submit', function(){
+                                  var input = document.querySelector('[name="discount"]');
+                                  if (input && window.parseCurrencyBRLToNumber) {
+                                    var num = window.parseCurrencyBRLToNumber(input.value);
+                                    input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
+                                  }
+                                });
+                              }
+                            } catch (e) {}
+                          });
+                        </script>
 
                         <!-- Produtos/Serviços -->
                         <div class="row">

@@ -81,7 +81,7 @@ class ProductInventoryRepository extends AbstractTenantRepository
     {
         return $this->model->updateOrCreate(
             [
-                'tenant_id'  => tenant()->id,
+                'tenant_id'  => auth()->user()->tenant_id,
                 'product_id' => $productId,
             ],
             $data
@@ -97,7 +97,7 @@ class ProductInventoryRepository extends AbstractTenantRepository
 
         if ( !$inventory ) {
             $inventory = $this->model->create( [
-                'tenant_id'    => tenant()->id,
+                'tenant_id'    => auth()->user()->tenant_id,
                 'product_id'   => $productId,
                 'quantity'     => $newQuantity,
                 'min_quantity' => 0,

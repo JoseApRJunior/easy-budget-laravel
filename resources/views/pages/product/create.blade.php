@@ -56,9 +56,9 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">R$</span>
                                         </div>
-                                        <input type="number" class="form-control @error('price') is-invalid @enderror"
-                                               id="price" name="price" value="{{ old('price') }}"
-                                               step="0.01" min="0" placeholder="0,00" required>
+                                        <input type="text" class="form-control @error('price') is-invalid @enderror"
+                                               id="price" name="price" value="{{ old('price', 'R$ 0,00') }}"
+                                               inputmode="numeric" placeholder="R$ 0,00" required>
                                         @error('price')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -169,6 +169,18 @@
 
 @push('scripts')
 <script>
+// Aplicar máscara via VanillaMask
+if (window.VanillaMask) {
+    new VanillaMask('price', 'currency');
+}
+
+// Converter para decimal no submit
+document.querySelector('form[action*="provider/products"]').addEventListener('submit', function(e) {
+    const price = document.getElementById('price');
+    if (price && window.parseCurrencyBRLToNumber) {
+        price.value = window.parseCurrencyBRLToNumber(price.value).toFixed(2);
+    }
+});
 // Preview da imagem
 document.getElementById('image').addEventListener('change', function(e) {
     const file = e.target.files[0];

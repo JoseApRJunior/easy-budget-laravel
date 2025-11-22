@@ -392,3 +392,10 @@ Todos updated: 5 items
 - O plugin oficial para Laravel é `laravel-vite-plugin`, já em uso (`\xampp\htdocs\easy-budget-laravel\package.json:13` e `\xampp\htdocs\easy-budget-laravel\vite.config.js:1,5–10`). Não é necessário `@vitejs/plugin-laravel` neste contexto.
 
 Se quiser, posso aplicar as correções pontuais agora: descomentar `@tailwind` em `app.css` e preparar um exemplo de substituição de `asset()` por `@vite()` em um layout para validar o build e HMR.
+
+
+
+
+pt-AKomRovGpOt7DTtEE8JLFLDs_e430653c-70e8-4150-9ba6-5ac049e5dd1f
+
+Analise outras telas de budgets, services,products, invoices,reports  que precisar mudar tbm e usar os recursos vanillha

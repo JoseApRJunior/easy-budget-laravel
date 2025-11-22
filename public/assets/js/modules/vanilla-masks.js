@@ -23,6 +23,7 @@ const MASK_MAX_LENGTHS = {
    cep: 9,
    phone: 15,
    date: 10,
+   currency: 24,
 };
 
 /**
@@ -85,6 +86,8 @@ const MASK_PATTERNS = {
  * @type {string[]}
  */
 const NUMERIC_ONLY_TYPES = ["cpf", "cnpj", "cep", "phone"];
+// currency aceita apenas dígitos para montagem do valor
+NUMERIC_ONLY_TYPES.push("currency");
 
 /**
  * Configurações padrão para debounce
@@ -302,6 +305,43 @@ function formatPhone(value) {
  */
 function formatDate(value) {
    return applyMaskPattern(value, "date", 8);
+}
+
+/**
+ * Formata moeda BRL a partir de string digitada (apenas dígitos)
+ * @param {string} value - Valor digitado pelo usuário
+ * @returns {string} Valor formatado como BRL, ex: "R$ 1.234,56"
+ */
+function formatCurrencyBRLFromString(value) {
+   const digits = removeNonDigits(String(value));
+   const intVal = parseInt(digits || "0", 10);
+   const cents = (intVal % 100).toString().padStart(2, "0");
+   const integer = Math.floor(intVal / 100).toString();
+   const withSeparators = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+   return `R$ ${withSeparators},${cents}`;
+}
+
+/**
+ * Formata moeda BRL a partir de número decimal
+ * @param {number} num - Valor numérico
+ * @returns {string} Valor formatado como BRL
+ */
+function formatCurrencyBRL(num) {
+   const value = Math.floor(Math.max(0, Math.round(Number(num || 0) * 100)));
+   const cents = (value % 100).toString().padStart(2, "0");
+   const integer = Math.floor(value / 100).toString();
+   const withSeparators = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+   return `R$ ${withSeparators},${cents}`;
+}
+
+/**
+ * Converte string BRL para número decimal
+ * @param {string} str - Ex: "R$ 1.234,56"
+ * @returns {number} Ex: 1234.56
+ */
+function parseCurrencyBRLToNumber(str) {
+   const digits = String(str || "").replace(/\D/g, "");
+   return parseInt(digits || "0", 10) / 100;
 }
 
 // ========================================
@@ -588,18 +628,20 @@ class VanillaMask {
     */
    #format(value) {
       switch (this.type) {
-         case "cnpj":
-            return formatCNPJ(value);
-         case "cpf":
-            return formatCPF(value);
-         case "cep":
-            return formatCEP(value);
-         case "phone":
-            return formatPhone(value);
-         case "date":
-            return formatDate(value);
-         default:
-            return value;
+        case "cnpj":
+           return formatCNPJ(value);
+        case "cpf":
+           return formatCPF(value);
+        case "cep":
+           return formatCEP(value);
+        case "phone":
+           return formatPhone(value);
+        case "date":
+           return formatDate(value);
+        case "currency":
+           return formatCurrencyBRLFromString(value);
+        default:
+           return value;
       }
    }
 
@@ -778,6 +820,8 @@ if (typeof module !== "undefined" && module.exports) {
    window.formatCEP = formatCEP;
    window.formatPhone = formatPhone;
    window.formatDate = formatDate;
+   window.formatCurrencyBRL = formatCurrencyBRL;
+   window.parseCurrencyBRLToNumber = parseCurrencyBRLToNumber;
    window.removeNonDigits = removeNonDigits;
 }
 
@@ -795,3 +839,47 @@ if (typeof window !== "undefined" && document.readyState === "loading") {
    // DOM já carregado
    initializeMasks();
 }
+;(function(){
+  try {
+    if (typeof window !== 'undefined') {
+      window.VANILLA_DEBUG = true;
+      if (window.VANILLA_DEBUG) {
+        console.info('[vanilla-masks] module initializing');
+      }
+      if (typeof VanillaMask !== 'undefined') {
+        window.VanillaMask = window.VanillaMask || VanillaMask;
+        if (window.VANILLA_DEBUG) {
+          console.info('[vanilla-masks] VanillaMask exported to window');
+        }
+      }
+      if (!window.parseCurrencyBRLToNumber) {
+        window.parseCurrencyBRLToNumber = function(str){
+          var digits = String(str||'').replace(/\D/g,'');
+          return parseInt(digits||'0',10)/100;
+        };
+        if (window.VANILLA_DEBUG) {
+          console.info('[vanilla-masks] parseCurrencyBRLToNumber attached');
+        }
+      }
+      if (!window.formatCurrencyBRL) {
+        window.formatCurrencyBRL = function(num){
+          var n = Number(num||0);
+          var value = Math.floor(Math.max(0, Math.round(n*100)));
+          var cents = (value % 100).toString().padStart(2,'0');
+          var integer = Math.floor(value/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+          return 'R$ ' + integer + ',' + cents;
+        };
+        if (window.VANILLA_DEBUG) {
+          console.info('[vanilla-masks] formatCurrencyBRL attached');
+        }
+      }
+      if (window.VANILLA_DEBUG) {
+        console.info('[vanilla-masks] module ready', {
+          hasVanillaMask: !!window.VanillaMask,
+          hasParse: !!window.parseCurrencyBRLToNumber,
+          hasFormat: !!window.formatCurrencyBRL
+        });
+      }
+    }
+  } catch(e) {}
+})();

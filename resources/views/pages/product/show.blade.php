@@ -174,7 +174,7 @@
               <a href="{{ route( 'provider.products.edit', $product->sku ) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Editar Produto
               </a>
-              <form action="{{ route( 'provider.products.toggle', $product->sku ) }}" method="POST" class="d-inline"
+              <form action="{{ route( 'provider.products.toggle-status', $product->sku ) }}" method="POST" class="d-inline"
                 onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
                 @csrf
                 @method( 'PATCH' )

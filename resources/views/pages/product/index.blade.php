@@ -130,8 +130,8 @@
                                                    class="btn btn-warning" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('products.toggle', $product->sku) }}"
-                                                      method="POST" class="d-inline"
+                                                <form action="{{ route('provider.products.toggle-status', $product->sku) }}"
+                                                      method="POST" class="d-inline toggle-status-form"
                                                       onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
                                                     @csrf
                                                     @method('PATCH')
@@ -188,6 +188,49 @@ document.querySelectorAll('#search, #category_id, #active, #min_price, #max_pric
         window.filterTimeout = setTimeout(function() {
             element.closest('form').submit();
         }, 500);
+    });
+});
+
+// Toggle de status via AJAX
+document.querySelectorAll('.toggle-status-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const url = form.getAttribute('action');
+        const btn = form.querySelector('button');
+        btn.disabled = true;
+        fetch(url, { method: 'PATCH' })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                if (json && json.success) {
+                    window.easyAlert.success(json.message || 'Status atualizado');
+                    const badge = form.closest('tr').querySelector('td:nth-child(6) .badge');
+                    if (badge) {
+                        const isActive = badge.classList.contains('badge-success');
+                        if (isActive) {
+                            badge.classList.remove('badge-success');
+                            badge.classList.add('badge-danger');
+                            badge.textContent = 'Inativo';
+                            btn.classList.remove('btn-secondary');
+                            btn.classList.add('btn-success');
+                            btn.querySelector('i').className = 'fas fa-check';
+                            form.setAttribute('onsubmit', "return confirm('Ativar este produto?')");
+                        } else {
+                            badge.classList.remove('badge-danger');
+                            badge.classList.add('badge-success');
+                            badge.textContent = 'Ativo';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-secondary');
+                            btn.querySelector('i').className = 'fas fa-ban';
+                            form.setAttribute('onsubmit', "return confirm('Desativar este produto?')");
+                        }
+                    }
+                } else {
+                    const msg = (json && json.message) ? json.message : 'Erro ao atualizar status';
+                    window.easyAlert.error(msg);
+                }
+            })
+            .catch(function() { window.easyAlert.error('Erro de comunicação'); })
+            .finally(function() { btn.disabled = false; });
     });
 });
 </script>

@@ -111,16 +111,16 @@
                                             required>
                                         <option value="">Selecione um status</option>
                                         @foreach($statusOptions as $status)
-                                            <option value="{{ $status->value }}" {{ old('service_statuses_id') == $status->value ? 'selected' : '' }}>
+                                            <option value="{{ $status->value }}" {{ old('service_statuses_id', \App\Enums\ServiceStatus::DRAFT->value) == $status->value ? 'selected' : '' }}>
                                                 {{ $status->getDescription() }}
                                             </option>
                                         @endforeach
-                                    </select>
-                                    @error('service_statuses_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                        </select>
+                                        @error('service_statuses_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
                         </div>
 
                         <!-- Descrição e Detalhes -->
@@ -145,14 +145,13 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="discount" class="form-label">Desconto (R$)</label>
-                                    <input type="number"
+                                    <input type="text"
                                            class="form-control @error('discount') is-invalid @enderror"
                                            id="discount"
                                            name="discount"
-                                           value="{{ old('discount', '0.00') }}"
-                                           step="0.01"
-                                           min="0"
-                                           placeholder="0,00">
+                                           value="{{ old('discount', 'R$ 0,00') }}"
+                                           inputmode="numeric"
+                                           placeholder="R$ 0,00">
                                     @error('discount')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -169,7 +168,7 @@
                                            value="{{ old('total', '0.00') }}"
                                            step="0.01"
                                            min="0"
-                                           placeholder="0,00">
+                                           placeholder="0,00" readonly>
                                     @error('total')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -179,11 +178,13 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="due_date" class="form-label">Data de Vencimento</label>
-                                    <input type="date"
+                                    <input type="text"
                                            class="form-control @error('due_date') is-invalid @enderror"
                                            id="due_date"
                                            name="due_date"
-                                           value="{{ old('due_date') }}">
+                                           inputmode="numeric"
+                                           placeholder="dd/mm/aaaa"
+                                           value="{{ old('due_date', now()->format('d/m/Y')) }}">
                                     @error('due_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -251,29 +252,32 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Quantidade</label>
-                <input type="number"
-                       class="form-control quantity-input"
-                       name="items[__INDEX__][quantity]"
-                       value="1"
-                       min="1"
-                       required>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement">-</button>
+                    <input type="number"
+                           class="form-control quantity-input"
+                           name="items[__INDEX__][quantity]"
+                           value="1"
+                           min="1"
+                           step="1"
+                           inputmode="numeric"
+                           required>
+                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment">+</button>
+                </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Valor Unit.</label>
-                <input type="number"
+                <input type="text"
                        class="form-control unit-value"
                        name="items[__INDEX__][unit_value]"
-                       step="0.01"
-                       min="0"
-                       required>
+                       inputmode="numeric"
+                       required readonly>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Total</label>
-                <input type="number"
+                <input type="text"
                        class="form-control item-total"
-                       name="items[__INDEX__][total]"
-                       step="0.01"
-                       min="0"
+                       inputmode="numeric"
                        readonly>
             </div>
             <div class="col-md-2">
@@ -321,27 +325,62 @@ document.addEventListener('DOMContentLoaded', function() {
             const unitValueInput = lastItem.querySelector('.unit-value');
             const totalInput = lastItem.querySelector('.item-total');
             const removeButton = lastItem.querySelector('.remove-item');
+            const incBtn = lastItem.querySelector('.quantity-increment');
+            const decBtn = lastItem.querySelector('.quantity-decrement');
 
             // Preencher valor unitário quando produto for selecionado
             productSelect.addEventListener('change', function() {
                 const price = this.options[this.selectedIndex].dataset.price;
-                unitValueInput.value = price || '';
+                const num = parseFloat(price || '0');
+                unitValueInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(num) : (num.toFixed ? num.toFixed(2) : num);
                 calculateTotal();
             });
 
             // Calcular total
             quantityInput.addEventListener('input', calculateTotal);
-            unitValueInput.addEventListener('input', calculateTotal);
+            unitValueInput.setAttribute('type','text');
+            unitValueInput.setAttribute('inputmode','numeric');
+            unitValueInput.addEventListener('input', function(){
+                var digits = this.value.replace(/\D/g, '');
+                var num = (parseInt(digits||'0',10)/100);
+                var integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                var cents = Math.round((num - Math.floor(num))*100).toString().padStart(2,'0');
+                this.value = 'R$ ' + integer + ',' + cents;
+                console.debug('[service:create] unit-value formatted:', this.value);
+                calculateTotal();
+            });
+
+            // Bloquear entrada não numérica na quantidade
+            quantityInput.addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            // Incremento/decremento
+            incBtn.addEventListener('click', function() {
+                const current = parseInt(quantityInput.value || '1', 10);
+                quantityInput.value = (isNaN(current) ? 1 : current + 1);
+                calculateTotal();
+            });
+            decBtn.addEventListener('click', function() {
+                const current = parseInt(quantityInput.value || '1', 10);
+                const next = (isNaN(current) ? 1 : Math.max(1, current - 1));
+                quantityInput.value = next;
+                calculateTotal();
+            });
 
             function calculateTotal() {
                 const quantity = parseFloat(quantityInput.value) || 0;
-                const unitValue = parseFloat(unitValueInput.value) || 0;
-                totalInput.value = (quantity * unitValue).toFixed(2);
+                const unitValue = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(unitValueInput.value) : 0;
+                const total = quantity * unitValue;
+                totalInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(total) : total.toFixed(2);
                 updateFormTotal();
             }
 
             // Remover item
             removeButton.addEventListener('click', function() {
+                if (!confirm('Deseja excluir este item?')) { return; }
                 if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
                     lastItem.remove();
                     updateFormTotal();
@@ -350,18 +389,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateFormTotal() {
-        const totals = document.querySelectorAll('.item-total');
-        let sum = 0;
-        totals.forEach(input => {
-            sum += parseFloat(input.value) || 0;
+    // funções de máscara BRL providas pela VanillaMask
+
+    // Máscara para desconto (moeda BRL)
+    const discountInput = document.getElementById('discount');
+    if (discountInput) {
+        discountInput.setAttribute('type','text');
+        discountInput.setAttribute('inputmode','numeric');
+        discountInput.addEventListener('input', function(e) {
+            const num = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(e.target.value) : 0;
+            e.target.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(num) : e.target.value;
+            updateFormTotal();
         });
-
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
-        const finalTotal = sum - discount;
-
-        document.getElementById('total').value = finalTotal.toFixed(2);
+        discountInput.addEventListener('blur', function(e) {
+            const num = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(e.target.value) : 0;
+            e.target.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(num) : e.target.value;
+        });
     }
+
+function updateFormTotal() {
+    const totals = document.querySelectorAll('.item-total');
+    let sum = 0;
+    totals.forEach(input => {
+        const val = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(input.value) : 0;
+        sum += val;
+    });
+    const discountEl = document.getElementById('discount');
+    let discountNum = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(discountEl ? discountEl.value : 0) : 0;
+    if (discountNum > sum) {
+        discountNum = sum;
+        if (discountEl && window.formatCurrencyBRL) {
+            discountEl.value = window.formatCurrencyBRL(sum);
+        }
+    }
+    const finalTotal = Math.max(0, sum - discountNum);
+    document.getElementById('total').value = finalTotal.toFixed(2);
+}
 
     // Calcular total quando desconto mudar
     document.getElementById('discount').addEventListener('input', updateFormTotal);
@@ -373,6 +436,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adicionar primeiro item automaticamente
     addItem();
+
+    if (window.VanillaMask) {
+        new VanillaMask('due_date', 'date');
+        new VanillaMask('discount', 'currency');
+    }
+
+    function parseBRDateToISO(str) {
+        const m = (str || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (!m) return null;
+        const d = parseInt(m[1], 10);
+        const mo = parseInt(m[2], 10);
+        const y = parseInt(m[3], 10);
+        if (mo < 1 || mo > 12) return null;
+        if (d < 1 || d > 31) return null;
+        const iso = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        return iso;
+    }
+
+    document.getElementById('serviceForm').addEventListener('submit', function(e) {
+        let valid = true;
+        const budget = document.getElementById('budget_id');
+        const category = document.getElementById('category_id');
+        const status = document.getElementById('service_statuses_id');
+        const dueDate = document.getElementById('due_date');
+        if (!budget.value) { window.easyAlert.error('Selecione um orçamento'); valid = false; }
+        if (!category.value) { window.easyAlert.error('Selecione uma categoria'); valid = false; }
+        if (!status.value) { window.easyAlert.error('Selecione um status'); valid = false; }
+        if (dueDate.value) {
+            const iso = parseBRDateToISO(dueDate.value);
+            if (!iso) { window.easyAlert.error('Data inválida'); valid = false; }
+            else {
+                const today = new Date();
+                const todayIso = today.toISOString().slice(0,10);
+                if (iso < todayIso) { window.easyAlert.error('Data deve ser hoje ou posterior'); valid = false; }
+                dueDate.value = iso;
+            }
+        }
+        const rows = document.querySelectorAll('#itemsContainer .item-row');
+        if (rows.length === 0) { window.easyAlert.error('Adicione ao menos um item'); valid = false; }
+        rows.forEach(function(row) {
+            const q = row.querySelector('.quantity-input');
+            const u = row.querySelector('.unit-value');
+            const qNum = (parseFloat(q.value) || 0);
+            const uNum = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(u.value) : (parseFloat(u.value) || 0);
+            if (qNum <= 0) { window.easyAlert.error('Quantidade deve ser maior que zero'); valid = false; }
+            if (uNum <= 0) { window.easyAlert.error('Valor unitário deve ser maior que zero'); valid = false; }
+        });
+        // Converter campos monetários para número antes de enviar
+        const discountNum = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(discountInput.value) : 0;
+        discountInput.value = discountNum.toFixed(2);
+        document.querySelectorAll('.unit-value').forEach(function(input){
+            const num = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(input.value) : 0;
+            input.value = num.toFixed(2);
+        });
+        updateFormTotal();
+        if (!valid) { e.preventDefault(); }
+    });
 });
 </script>
 @endpush

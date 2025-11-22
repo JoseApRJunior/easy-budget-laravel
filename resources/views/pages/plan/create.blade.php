@@ -79,14 +79,13 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">R$</span>
-                                <input type="number"
+                                <input type="text"
                                        class="form-control form-control-lg @error('price') is-invalid @enderror"
                                        id="price"
                                        name="price"
-                                       value="{{ old('price', '0.00') }}"
-                                       step="0.01"
-                                       min="0"
-                                       placeholder="0,00"
+                                       value="{{ old('price', 'R$ 0,00') }}"
+                                       inputmode="numeric"
+                                       placeholder="R$ 0,00"
                                        required>
                                 <span class="input-group-text">/mês</span>
                             </div>
@@ -211,6 +210,14 @@ document.getElementById('name').addEventListener('input', function() {
         }, false)
     })
 })()
+// Máscara BRL para preço de plano
+if (window.VanillaMask) { new VanillaMask('price', 'currency'); }
+document.querySelector('form[action*="plans"]').addEventListener('submit', function(e) {
+    const price = document.getElementById('price');
+    if (price && window.parseCurrencyBRLToNumber) {
+        price.value = window.parseCurrencyBRLToNumber(price.value).toFixed(2);
+    }
+});
 </script>
 @endpush
 @endsection

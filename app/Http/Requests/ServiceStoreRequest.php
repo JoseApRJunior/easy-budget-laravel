@@ -26,17 +26,17 @@ class ServiceStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'budget_code'        => [
+            'budget_id'          => [
                 'required',
-                'string',
-                'exists:budgets,code'
+                'integer',
+                'exists:budgets,id'
             ],
             'category_id'        => [
                 'required',
                 'integer',
                 'exists:categories,id'
             ],
-            'status'             => [
+            'service_statuses_id' => [
                 'required',
                 'string',
                 'in:' . implode( ',', array_map( fn( $case ) => $case->value, ServiceStatus::cases() ) )
@@ -58,12 +58,12 @@ class ServiceStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'budget_code.required'        => 'Código do orçamento é obrigatório',
-            'budget_code.exists'          => 'Orçamento não encontrado',
+            'budget_id.required'          => 'Orçamento é obrigatório',
+            'budget_id.exists'            => 'Orçamento não encontrado',
             'category_id.required'        => 'Categoria é obrigatória',
             'category_id.exists'          => 'Categoria não encontrada',
-            'status.required'             => 'Status é obrigatório',
-            'status.in'                   => 'Status inválido selecionado',
+            'service_statuses_id.required'=> 'Status é obrigatório',
+            'service_statuses_id.in'      => 'Status inválido selecionado',
             'description.max'             => 'Descrição não pode exceder 1000 caracteres',
             'due_date.after'              => 'Data de vencimento deve ser posterior a hoje',
             'items.required'              => 'Itens do serviço são obrigatórios',
@@ -83,11 +83,8 @@ class ServiceStoreRequest extends FormRequest
     public function getValidatedData(): array
     {
         $data = parent::validated();
-
-        // Buscar budget_id pelo código
-        $budget              = Budget::where( 'code', $data[ 'budget_code' ] )->first();
-        $data[ 'budget_id' ] = $budget->id;
-        unset( $data[ 'budget_code' ] );
+        $data['status'] = $data['service_statuses_id'] ?? ServiceStatus::DRAFT->value;
+        unset($data['service_statuses_id']);
 
         return $data;
     }

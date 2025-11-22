@@ -31,8 +31,8 @@
                                 <label for="customer_display" class="form-label fw-semibold">
                                     <i class="bi bi-person-check me-2"></i>Cliente
                                 </label>
-                                <input type="text" id="customer_display" class="form-control" 
-                                    value="{{ $budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' }} ({{ $budget->customer->commonData ? ($budget->customer->commonData->cnpj ?: $budget->customer->commonData->cpf) : 'Sem documento' }})" 
+                                <input type="text" id="customer_display" class="form-control"
+                                    value="{{ $budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' }} ({{ $budget->customer->commonData ? ($budget->customer->commonData->cnpj ?: $budget->customer->commonData->cpf) : 'Sem documento' }})"
                                     disabled readonly>
                                 <input type="hidden" name="customer_id" value="{{ $budget->customer_id }}">
                             </div>
@@ -102,7 +102,7 @@
                                 <label for="total" class="form-label fw-semibold">
                                     <i class="bi bi-currency-dollar me-2"></i>Valor Total
                                 </label>
-                                <input type="number" id="total" name="total" class="form-control" 
+                                <input type="number" id="total" name="total" class="form-control"
                                     value="{{ old( 'total', $budget->total ) }}" step="0.01" min="0">
                                 @error( 'total' )
                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -116,7 +116,47 @@
                                 <label for="discount" class="form-label fw-semibold">
                                     <i class="bi bi-percent me-2"></i>Desconto (%)
                                 </label>
-                                <input type="number" id="discount" name="discount" class="form-control" 
+                                <input type="text" id="discount" name="discount" class="form-control" inputmode="numeric"
+                                >
+                                <script>
+                                  document.addEventListener('DOMContentLoaded', function(){
+                                    try {
+                                      var discountInput = document.getElementById('discount');
+                                      console.info('[budget:edit] DOM ready, discount input found:', !!discountInput, 'VanillaMask:', !!window.VanillaMask);
+                                      if (window.VanillaMask) {
+                                        new VanillaMask('discount', 'currency');
+                                        console.info('[budget:edit] VanillaMask initialized for discount');
+                                      } else if (discountInput) {
+                                        discountInput.addEventListener('input', function(){
+                                          var digits = this.value.replace(/\D/g, '');
+                                          var num = (parseInt(digits||'0',10)/100);
+                                          var integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                          var cents = Math.round((num - Math.floor(num))*100).toString().padStart(2,'0');
+                                          this.value = 'R$ ' + integer + ',' + cents;
+                                          console.debug('[budget:edit] discount input formatted:', this.value);
+                                        });
+                                      }
+                                      var form = document.getElementById('edit-budget-form');
+                                      if (form) {
+                                        form.addEventListener('submit', function() {
+                                          var discountInput = document.getElementById('discount');
+                                          var num = 0;
+                                          if (discountInput) {
+                                            if (window.parseCurrencyBRLToNumber) {
+                                              num = window.parseCurrencyBRLToNumber(discountInput.value);
+                                            } else {
+                                              var digits = discountInput.value.replace(/\D/g, '');
+                                              num = parseInt(digits||'0',10)/100;
+                                            }
+                                            discountInput.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
+                                            console.info('[budget:edit] discount normalized on submit:', discountInput.value);
+                                          }
+                                        });
+                                      }
+                                    } catch (e) {}
+                                  });
+                                </script>
+
                                     value="{{ old( 'discount', $budget->discount ) }}" step="0.01" min="0" max="100">
                                 @error( 'discount' )
                                     <div class="text-danger mt-1">{{ $message }}</div>

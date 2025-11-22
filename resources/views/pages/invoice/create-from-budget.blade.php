@@ -104,7 +104,45 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Desconto</label>
-                        <input type="number" step="0.01" min="0" class="form-control" name="discount" value="0" />
+                        <input type="text" inputmode="numeric" class="form-control" name="discount" id="discount" value="0" />
+                        <script>
+                          document.addEventListener('DOMContentLoaded', function(){
+                            try {
+                              var input = document.getElementById('discount');
+                              console.info('[invoice:create-from-budget] DOM ready, discount input found:', !!input, 'VanillaMask:', !!window.VanillaMask);
+                              if (window.VanillaMask) {
+                                new VanillaMask('discount', 'currency');
+                                console.info('[invoice:create-from-budget] VanillaMask initialized for discount');
+                              } else if (input) {
+                                input.addEventListener('input', function(){
+                                  var digits = this.value.replace(/\D/g, '');
+                                  var num = (parseInt(digits||'0',10)/100);
+                                  var integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                  var cents = Math.round((num - Math.floor(num))*100).toString().padStart(2,'0');
+                                  this.value = 'R$ ' + integer + ',' + cents;
+                                  console.debug('[invoice:create-from-budget] discount input formatted:', this.value);
+                                });
+                              }
+                              var form = document.querySelector('form');
+                              if (form) {
+                                form.addEventListener('submit', function(){
+                                  var input = document.getElementById('discount');
+                                  var num = 0;
+                                  if (input) {
+                                    if (window.parseCurrencyBRLToNumber) {
+                                      num = window.parseCurrencyBRLToNumber(input.value);
+                                    } else {
+                                      var digits = input.value.replace(/\D/g, '');
+                                      num = parseInt(digits||'0',10)/100;
+                                    }
+                                    input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
+                                    console.info('[invoice:create-from-budget] discount normalized on submit:', input.value);
+                                  }
+                                });
+                              }
+                            } catch (e) {}
+                          });
+                        </script>
                     </div>
                 </div>
             </div>
@@ -228,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission validation
     document.querySelector('form').addEventListener('submit', function(e) {
         const totalSelected = parseFloat(totalSelectedElement.textContent.replace('R$ ', '').replace(',', '.'));
-        
+
         if (totalSelected === 0) {
             e.preventDefault();
             alert('Por favor, selecione pelo menos um item para faturar.');

@@ -124,8 +124,7 @@ class ServiceService extends AbstractBaseService
     {
         try {
             return DB::transaction( function () use ($data) {
-                // Buscar orçamento
-                $budget = Budget::where( 'code', $data[ 'budget_code' ] )->first();
+                $budget = Budget::find( $data['budget_id'] ?? 0 );
                 if ( !$budget ) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
@@ -133,7 +132,6 @@ class ServiceService extends AbstractBaseService
                     );
                 }
 
-                // Gerar código único
                 $serviceCode = $this->generateUniqueServiceCode( $budget->code );
 
                 // Criar serviço
@@ -142,7 +140,7 @@ class ServiceService extends AbstractBaseService
                     'budget_id'   => $budget->id,
                     'category_id' => $data[ 'category_id' ] ?? null,
                     'code'        => $serviceCode,
-                    'status'      => $data[ 'status' ] ?? ServiceStatus::SCHEDULED->value,
+                    'status'      => $data[ 'status' ] ?? ServiceStatus::DRAFT->value,
                     'description' => $data[ 'description' ] ?? null,
                     'due_date'    => $data[ 'due_date' ] ?? null,
                     'discount'    => $data[ 'discount' ] ?? 0.0,
