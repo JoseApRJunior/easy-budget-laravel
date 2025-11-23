@@ -172,13 +172,30 @@
 // Aplicar máscara via VanillaMask
 if (window.VanillaMask) {
     new VanillaMask('price', 'currency');
+} else {
+    const priceInput = document.getElementById('price');
+    if (priceInput) {
+        priceInput.addEventListener('input', function(){
+            const digits = this.value.replace(/\D/g, '');
+            const num = (parseInt(digits || '0', 10) / 100);
+            const integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const cents = Math.round((num - Math.floor(num)) * 100).toString().padStart(2, '0');
+            this.value = 'R$ ' + integer + ',' + cents;
+        });
+    }
 }
 
 // Converter para decimal no submit
 document.querySelector('form[action*="provider/products"]').addEventListener('submit', function(e) {
     const price = document.getElementById('price');
-    if (price && window.parseCurrencyBRLToNumber) {
-        price.value = window.parseCurrencyBRLToNumber(price.value).toFixed(2);
+    if (price) {
+        let num = 0;
+        if (window.parseCurrencyBRLToNumber) {
+            num = window.parseCurrencyBRLToNumber(price.value) || 0;
+        } else {
+            num = parseFloat((price.value || '0').replace(/\./g,'').replace(',', '.').replace(/[^0-9\.]/g,'')) || 0;
+        }
+        price.value = num.toFixed(2);
     }
 });
 // Preview da imagem

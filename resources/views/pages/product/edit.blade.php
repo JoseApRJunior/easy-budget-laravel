@@ -132,7 +132,7 @@
                                 <div class="form-group">
                                     <label>Imagem Atual</label>
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $product->image }}" alt="{{ $product->name }}"
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                              class="img-thumbnail mr-3" style="width: 100px; height: 100px; object-fit: cover;">
                                         <div>
                                             <p class="mb-1">Imagem atual do produto</p>
@@ -198,7 +198,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Atualizar Produto
                         </button>
-                        <a href="{{ route('products.show', $product->sku) }}" class="btn btn-secondary">
+                        <a href="{{ route('provider.products.show', $product->sku) }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                         <div class="float-right">
@@ -214,18 +214,35 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 // Aplicar máscara via VanillaMask
 if (window.VanillaMask) {
     new VanillaMask('price', 'currency');
+} else {
+    const priceInput = document.getElementById('price');
+    if (priceInput) {
+        priceInput.addEventListener('input', function(){
+            const digits = this.value.replace(/\D/g, '');
+            const num = (parseInt(digits || '0', 10) / 100);
+            const integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const cents = Math.round((num - Math.floor(num)) * 100).toString().padStart(2, '0');
+            this.value = 'R$ ' + integer + ',' + cents;
+        });
+    }
 }
 
 // Converter para decimal no submit
 document.querySelector('form[action*="provider/products"]').addEventListener('submit', function(e) {
     const price = document.getElementById('price');
-    if (price && window.parseCurrencyBRLToNumber) {
-        price.value = window.parseCurrencyBRLToNumber(price.value).toFixed(2);
+    if (price) {
+        let num = 0;
+        if (window.parseCurrencyBRLToNumber) {
+            num = window.parseCurrencyBRLToNumber(price.value) || 0;
+        } else {
+            num = parseFloat((price.value || '0').replace(/\./g,'').replace(',', '.').replace(/[^0-9\.]/g,'')) || 0;
+        }
+        price.value = num.toFixed(2);
     }
 });
 // Preview da nova imagem
@@ -268,4 +285,4 @@ document.getElementById('remove_image')?.addEventListener('change', function(e) 
     }
 });
 </script>
-@endsection
+@endpush

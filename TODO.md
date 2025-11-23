@@ -399,3 +399,17 @@ Se quiser, posso aplicar as correções pontuais agora: descomentar `@tailwind` 
 pt-AKomRovGpOt7DTtEE8JLFLDs_e430653c-70e8-4150-9ba6-5ac049e5dd1f
 
 Analise outras telas de budgets, services,products, invoices,reports  que precisar mudar tbm e usar os recursos vanillha
+
+
+
+
+
+Exemplo de como ficaria:
+
+| Nome do Produto       | Categoria   | Valor Estimado | Imagem |
+|------------------------|-------------|----------------|--------|
+| Tinta Acrílica Branca | Tintas      | R$ 120,00      | (imagem da lata) |
+| Rolo de Pintura 23cm  | Ferramentas | R$ 25,00       | (imagem do rolo) |
+| Pincel 2"             | Ferramentas | R$ 15,00       | (imagem do pincel) |
+| Bandeja de Pintura    | Acessórios  | R$ 20,00       | (imagem da bandeja) |
+| Escada Alumínio 5 deg | Equipamentos| R$ 280,00      | (imagem da escada) |

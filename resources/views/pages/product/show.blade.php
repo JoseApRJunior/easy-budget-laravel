@@ -30,7 +30,7 @@
                   <label>Imagem</label>
                   <div class="text-center">
                     @if( $product->image )
-                      <img src="{{ $product->image }}" alt="{{ $product->name }}" class="img-fluid rounded shadow"
+                      <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="img-fluid rounded shadow"
                         style="max-width: 300px; max-height: 300px; object-fit: cover;">
                     @else
                       <div class="bg-light d-flex align-items-center justify-content-center rounded"

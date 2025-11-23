@@ -503,6 +503,36 @@ document.addEventListener('DOMContentLoaded', function() {
         addItemListenersForItem(item);
     });
 
+    // Delegação para botões de quantidade (+/-) em itens dinâmicos
+    const itemsContainer = document.getElementById('itemsContainer');
+    if (itemsContainer) {
+      itemsContainer.addEventListener('click', function(e){
+        const btn = e.target.closest('.quantity-increment, .quantity-decrement');
+        if (!btn) return;
+        const itemRow = btn.closest('.item-row');
+        if (!itemRow) return;
+        const quantityInput = itemRow.querySelector('.quantity-input');
+        const unitValueInput = itemRow.querySelector('.unit-value');
+        const totalInput = itemRow.querySelector('.item-total');
+        if (!quantityInput || !unitValueInput || !totalInput) return;
+
+        const current = parseInt(quantityInput.value || '1', 10);
+        const isInc = btn.classList.contains('quantity-increment');
+        quantityInput.value = isInc ? (isNaN(current) ? 1 : current + 1) : (isNaN(current) ? 1 : Math.max(1, current - 1));
+
+        const qty = parseFloat(quantityInput.value) || 0;
+        let unitValue = 0;
+        if (window.parseCurrencyBRLToNumber) {
+          unitValue = window.parseCurrencyBRLToNumber(unitValueInput.value) || 0;
+        } else {
+          unitValue = parseFloat((unitValueInput.value || '0').replace(/\./g,'').replace(',','.')) || 0;
+        }
+        const t = (qty * unitValue).toFixed(2);
+        totalInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(t) : t.replace('.', ',');
+        updateFormTotal();
+      });
+    }
+
     function addItemListenersForItem(item) {
         const productSelect = item.querySelector('.product-select');
         const quantityInput = item.querySelector('.quantity-input');
