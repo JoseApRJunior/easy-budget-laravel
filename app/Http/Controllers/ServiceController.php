@@ -298,7 +298,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'services.show', $service->code )
+            return redirect()->route( 'provider.services.show', $service->code )
                 ->with( 'success', 'Serviço criado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -432,7 +432,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'services.show', $service->code )
+            return redirect()->route( 'provider.services.show', $service->code )
                 ->with( 'success', 'Serviço atualizado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -459,7 +459,7 @@ class ServiceController extends Controller
                     ->with( 'error', $result->getMessage() );
             }
 
-            return redirect()->route( 'services.show', $code )
+            return redirect()->route( 'provider.services.show', $code )
                 ->with( 'success', 'Status alterado com sucesso!' );
 
         } catch ( Exception $e ) {
@@ -508,7 +508,7 @@ class ServiceController extends Controller
 
             $service = $result->getData();
 
-            return redirect()->route( 'services.show', $service->code )
+            return redirect()->route( 'provider.services.show', $service->code )
                 ->with( 'success', 'Serviço cancelado com sucesso!' );
 
         } catch ( Exception $e ) {

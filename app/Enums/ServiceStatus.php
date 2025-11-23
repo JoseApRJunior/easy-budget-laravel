@@ -174,10 +174,10 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     public function canEdit(): bool
     {
         return match ( $this ) {
-            self::SCHEDULED, self::PREPARING, self::ON_HOLD,
+            self::DRAFT, self::SCHEDULED, self::PREPARING, self::ON_HOLD,
             self::IN_PROGRESS, self::PARTIAL                     => true,
             self::APPROVED, self::REJECTED, self::COMPLETED,
-            self::CANCELLED, self::DRAFT, self::PENDING,
+            self::CANCELLED, self::PENDING,
             self::SCHEDULING, self::NOT_PERFORMED, self::EXPIRED => false,
         };
     }

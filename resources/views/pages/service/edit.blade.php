@@ -49,7 +49,7 @@
                                     <select class="form-select @error('budget_id') is-invalid @enderror"
                                             id="budget_id"
                                             name="budget_id"
-                                            required>
+                                            required disabled>
                                         <option value="">Selecione um orçamento</option>
                                         @foreach($budgets as $budgetOption)
                                             <option value="{{ $budgetOption->id }}"
@@ -58,6 +58,7 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    <input type="hidden" name="budget_id" value="{{ old('budget_id', $service->budget_id) }}">
                                     @error('budget_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -149,14 +150,12 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="discount" class="form-label">Desconto (R$)</label>
-                                    <input type="number"
+                                    <input type="text"
+                                           inputmode="numeric"
                                            class="form-control @error('discount') is-invalid @enderror"
                                            id="discount"
                                            name="discount"
-                                           type="text" inputmode="numeric"
-                                           value="{{ old('discount', $service->discount) }}"
-                                           step="0.01"
-                                           min="0"
+                                           value="{{ old('discount', number_format($service->discount, 2, ',', '.')) }}"
                                            placeholder="0,00">
                                     @error('discount')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -167,13 +166,12 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="total" class="form-label">Total (R$)</label>
-                                    <input type="number"
+                                    <input type="text"
+                                           inputmode="numeric"
                                            class="form-control @error('total') is-invalid @enderror"
                                            id="total"
                                            name="total"
-                                           value="{{ old('total', $service->total) }}"
-                                           step="0.01"
-                                           min="0"
+                                           value="{{ old('total', number_format($service->total, 2, ',', '.')) }}"
                                            placeholder="0,00">
                                     @error('total')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -198,15 +196,28 @@
                         <script>
                           document.addEventListener('DOMContentLoaded', function(){
                             try {
-                              if (window.VanillaMask) { new VanillaMask('discount', 'currency'); }
+                              if (window.VanillaMask) {
+                                new VanillaMask('discount', 'currency');
+                                new VanillaMask('total', 'currency');
+                                document.querySelectorAll('.unit-value').forEach(function(el){ new VanillaMask(el, 'currency'); });
+                                document.querySelectorAll('.item-total').forEach(function(el){ new VanillaMask(el, 'currency'); });
+                              }
                               var form = document.querySelector('form');
                               if (form) {
                                 form.addEventListener('submit', function(){
-                                  var input = document.querySelector('[name="discount"]');
-                                  if (input && window.parseCurrencyBRLToNumber) {
-                                    var num = window.parseCurrencyBRLToNumber(input.value);
-                                    input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
-                                  }
+                                  var fields = [];
+                                  var discountEl = document.querySelector('[name="discount"]');
+                                  var totalEl = document.querySelector('[name="total"]');
+                                  if (discountEl) fields.push(discountEl);
+                                  if (totalEl) fields.push(totalEl);
+                                  document.querySelectorAll('.unit-value').forEach(function(el){ fields.push(el); });
+                                  document.querySelectorAll('.item-total').forEach(function(el){ fields.push(el); });
+                                  fields.forEach(function(input){
+                                    if (window.parseCurrencyBRLToNumber) {
+                                      var num = window.parseCurrencyBRLToNumber(input.value);
+                                      input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
+                                    }
+                                  });
                                 });
                               }
                             } catch (e) {}
@@ -249,37 +260,42 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Quantidade</label>
-                                                        <input type="number"
-                                                               class="form-control quantity-input"
-                                                               name="items[{{ $index }}][quantity]"
-                                                               value="{{ $item->quantity }}"
-                                                               min="1"
-                                                               required>
+                                                        <div class="input-group">
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
+                                                            <input type="number"
+                                                                   class="form-control quantity-input"
+                                                                   name="items[{{ $index }}][quantity]"
+                                                                   value="{{ $item->quantity }}"
+                                                                   min="1"
+                                                                   step="1"
+                                                                   inputmode="numeric"
+                                                                   required>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
+                                                        </div>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Valor Unit.</label>
-                                                        <input type="number"
+                                                        <input type="text"
+                                                               inputmode="numeric"
                                                                class="form-control unit-value"
                                                                name="items[{{ $index }}][unit_value]"
-                                                               value="{{ $item->unit_value }}"
-                                                               step="0.01"
-                                                               min="0"
-                                                               required>
+                                                               value="{{ number_format($item->unit_value, 2, ',', '.') }}"
+                                                               required readonly>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label">Total</label>
-                                                        <input type="number"
+                                                        <input type="text"
+                                                               inputmode="numeric"
                                                                class="form-control item-total"
                                                                name="items[{{ $index }}][total]"
-                                                               value="{{ $item->total }}"
-                                                               step="0.01"
-                                                               min="0"
+                                                               value="{{ number_format($item->total, 2, ',', '.') }}"
                                                                readonly>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
-                                                        <button type="button" class="btn btn-danger btn-sm remove-item w-100">
-                                                            <i class="fas fa-trash"></i>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
+                                                            <i class="fas fa-minus-circle text-danger"></i>
+                                                            <span>Excluir</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -331,34 +347,39 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Quantidade</label>
-                <input type="number"
-                       class="form-control quantity-input"
-                       name="items[__INDEX__][quantity]"
-                       value="1"
-                       min="1"
-                       required>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
+                    <input type="number"
+                           class="form-control quantity-input"
+                           name="items[__INDEX__][quantity]"
+                           value="1"
+                           min="1"
+                           step="1"
+                           inputmode="numeric"
+                           required>
+                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
+                </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Valor Unit.</label>
-                <input type="number"
+                <input type="text"
+                       inputmode="numeric"
                        class="form-control unit-value"
                        name="items[__INDEX__][unit_value]"
-                       step="0.01"
-                       min="0"
-                       required>
+                       required readonly>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Total</label>
-                <input type="number"
+                <input type="text"
+                       inputmode="numeric"
                        class="form-control item-total"
                        name="items[__INDEX__][total]"
-                       step="0.01"
-                       min="0"
                        readonly>
             </div>
             <div class="col-md-2">
-                <button type="button" class="btn btn-danger btn-sm remove-item w-100">
-                    <i class="fas fa-trash"></i>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
+                    <i class="fas fa-minus-circle text-danger"></i>
+                    <span>Excluir</span>
                 </button>
             </div>
         </div>
@@ -401,11 +422,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const unitValueInput = lastItem.querySelector('.unit-value');
             const totalInput = lastItem.querySelector('.item-total');
             const removeButton = lastItem.querySelector('.remove-item');
+            const incBtn = lastItem.querySelector('.quantity-increment');
+            const decBtn = lastItem.querySelector('.quantity-decrement');
 
             // Preencher valor unitário quando produto for selecionado
             productSelect.addEventListener('change', function() {
                 const price = this.options[this.selectedIndex].dataset.price;
-                unitValueInput.value = price || '';
+                if (window.formatCurrencyBRL) {
+                  unitValueInput.value = window.formatCurrencyBRL(price || '0');
+                } else {
+                  var v = parseFloat(price || '0');
+                  unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '';
+                }
                 calculateTotal();
             });
 
@@ -415,8 +443,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             function calculateTotal() {
                 const quantity = parseFloat(quantityInput.value) || 0;
-                const unitValue = parseFloat(unitValueInput.value) || 0;
-                totalInput.value = (quantity * unitValue).toFixed(2);
+                var unitValue = 0;
+                if (window.parseCurrencyBRLToNumber) {
+                  unitValue = window.parseCurrencyBRLToNumber(unitValueInput.value) || 0;
+                } else {
+                  unitValue = parseFloat((unitValueInput.value || '0').replace(/\./g,'').replace(',','.')) || 0;
+                }
+                var t = (quantity * unitValue).toFixed(2);
+                totalInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(t) : t.replace('.', ',');
                 updateFormTotal();
             }
 
@@ -437,13 +471,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const totals = document.querySelectorAll('.item-total');
         let sum = 0;
         totals.forEach(input => {
-            sum += parseFloat(input.value) || 0;
+            var v = 0;
+            if (window.parseCurrencyBRLToNumber) {
+              v = window.parseCurrencyBRLToNumber(input.value) || 0;
+            } else {
+              v = parseFloat((input.value || '0').replace(/\./g,'').replace(',','.')) || 0;
+            }
+            sum += v;
         });
 
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
+        var discount = 0;
+        var dEl = document.getElementById('discount');
+        if (dEl) {
+          discount = window.parseCurrencyBRLToNumber ? (window.parseCurrencyBRLToNumber(dEl.value) || 0) : (parseFloat((dEl.value || '0').replace(/\./g,'').replace(',','.')) || 0);
+        }
         const finalTotal = sum - discount;
 
-        document.getElementById('total').value = finalTotal.toFixed(2);
+        var totalEl = document.getElementById('total');
+        if (totalEl) {
+          var t = finalTotal.toFixed(2);
+          totalEl.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(t) : t.replace('.', ',');
+        }
     }
 
     // Calcular total quando desconto mudar
@@ -461,11 +509,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const unitValueInput = item.querySelector('.unit-value');
         const totalInput = item.querySelector('.item-total');
         const removeButton = item.querySelector('.remove-item');
+        const incBtn = item.querySelector('.quantity-increment');
+        const decBtn = item.querySelector('.quantity-decrement');
 
         if (productSelect) {
             productSelect.addEventListener('change', function() {
                 const price = this.options[this.selectedIndex]?.dataset.price;
-                unitValueInput.value = price || '';
+                if (window.formatCurrencyBRL) {
+                  unitValueInput.value = window.formatCurrencyBRL(price || '0');
+                } else {
+                  var v = parseFloat(price || '0');
+                  unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '';
+                }
                 calculateTotal();
             });
         }
@@ -473,13 +528,35 @@ document.addEventListener('DOMContentLoaded', function() {
         if (quantityInput && unitValueInput && totalInput) {
             function calculateTotal() {
                 const quantity = parseFloat(quantityInput.value) || 0;
-                const unitValue = parseFloat(unitValueInput.value) || 0;
-                totalInput.value = (quantity * unitValue).toFixed(2);
+                var unitValue = 0;
+                if (window.parseCurrencyBRLToNumber) {
+                    unitValue = window.parseCurrencyBRLToNumber(unitValueInput.value) || 0;
+                } else {
+                    unitValue = parseFloat((unitValueInput.value || '0').replace(/\./g,'').replace(',','.')) || 0;
+                }
+                var t = (quantity * unitValue).toFixed(2);
+                totalInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(t) : t.replace('.', ',');
                 updateFormTotal();
             }
 
             quantityInput.addEventListener('input', calculateTotal);
             unitValueInput.addEventListener('input', calculateTotal);
+
+            if (incBtn) {
+              incBtn.addEventListener('click', function() {
+                  const current = parseInt(quantityInput.value || '1', 10);
+                  quantityInput.value = (isNaN(current) ? 1 : current + 1);
+                  calculateTotal();
+              });
+            }
+            if (decBtn) {
+              decBtn.addEventListener('click', function() {
+                  const current = parseInt(quantityInput.value || '1', 10);
+                  const next = (isNaN(current) ? 1 : Math.max(1, current - 1));
+                  quantityInput.value = next;
+                  calculateTotal();
+              });
+            }
         }
 
         if (removeButton) {
@@ -496,5 +573,26 @@ document.addEventListener('DOMContentLoaded', function() {
     updateFormTotal();
 });
 </script>
+@endpush
+
+@push('styles')
+<style>
+  .remove-item.btn {
+    transition: transform .05s ease-in-out, box-shadow .2s ease;
+  }
+  .remove-item.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    .remove-item.btn.btn-outline-danger {
+      color: #f28b82;
+      border-color: #f28b82;
+    }
+    .remove-item.btn.btn-outline-danger:hover {
+      background-color: rgba(220,53,69,.15);
+    }
+  }
+</style>
 @endpush
 @endsection

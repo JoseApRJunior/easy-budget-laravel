@@ -217,6 +217,19 @@ class Service extends Model
         return $this->hasMany( Schedule::class);
     }
 
+    public function canBeEdited(): bool
+    {
+        $status = $this->status instanceof \App\Enums\ServiceStatus
+            ? $this->status
+            : \App\Enums\ServiceStatus::fromString((string) $this->status);
+        return $status?->canEdit() ?? false;
+    }
+
+    public function canEdit(): bool
+    {
+        return $this->canBeEdited();
+    }
+
     /**
      * Accessor para tratar valores zero-date no updated_at.
      */

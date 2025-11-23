@@ -161,12 +161,13 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="total" class="form-label">Total (R$)</label>
-                                    <input type="number"
+                                    <input type="text"
                                            class="form-control @error('total') is-invalid @enderror"
                                            id="total"
                                            name="total"
-                                           value="{{ old('total', '0.00') }}"
-                                           step="0.01"
+                                           value="{{ old('total', 'R$ 0,00') }}"
+                                           inputmode="numeric"
+                                           readonly
                                            min="0"
                                            placeholder="0,00" readonly>
                                     @error('total')
@@ -281,7 +282,7 @@
                        readonly>
             </div>
             <div class="col-md-2">
-                <button type="button" class="btn btn-danger btn-sm remove-item w-100">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-item">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -423,7 +424,10 @@ function updateFormTotal() {
         }
     }
     const finalTotal = Math.max(0, sum - discountNum);
-    document.getElementById('total').value = finalTotal.toFixed(2);
+    const totalEl = document.getElementById('total');
+    if (totalEl) {
+        totalEl.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(finalTotal) : finalTotal.toFixed(2);
+    }
 }
 
     // Calcular total quando desconto mudar
@@ -490,6 +494,16 @@ function updateFormTotal() {
             const num = window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(input.value) : 0;
             input.value = num.toFixed(2);
         });
+        // Converter o total exibido (BRL) para número antes de enviar
+        let sum = 0;
+        document.querySelectorAll('.item-total').forEach(function(input){
+            sum += window.parseCurrencyBRLToNumber ? window.parseCurrencyBRLToNumber(input.value) : (parseFloat(input.value) || 0);
+        });
+        const finalTotal = Math.max(0, sum - discountNum);
+        const totalEl = document.getElementById('total');
+        if (totalEl) {
+            totalEl.value = finalTotal.toFixed(2);
+        }
         updateFormTotal();
         if (!valid) { e.preventDefault(); }
     });

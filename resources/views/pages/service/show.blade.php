@@ -20,7 +20,7 @@
             </nav>
           </div>
           <div class="d-flex gap-2">
-            @if( $service->status->canEdit() )
+            @if( $service->canBeEdited() )
               <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil me-2"></i>
                 Editar
@@ -54,7 +54,7 @@
         @if( $service->invoices && $service->invoices->count() > 0 )
           <div class="alert alert-info alert-dismissible fade show" role="alert">
             <i class="bi bi-info-circle me-2"></i>
-            Este serviço já possui {{ $service->invoices->count() }} fatura(s). 
+            Este serviço já possui {{ $service->invoices->count() }} fatura(s).
             <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">
               Ver faturas
             </a>
@@ -295,7 +295,7 @@
           </div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              @if( $service->status->canEdit() )
+              @if( $service->canBeEdited() )
                 <a href="{{ route( 'provider.services.edit', $service->code ) }}" class="btn btn-outline-primary">
                   <i class="bi bi-pencil me-2"></i>
                   Editar Serviço
@@ -307,7 +307,7 @@
                   Ver Orçamento
                 </a>
               @endif
-              
+
               {{-- Botões de Fatura --}}
               @if( $service->status->isFinished() || $service->status->value === 'COMPLETED' )
                 {{-- Serviço finalizado - pode criar fatura completa --}}
