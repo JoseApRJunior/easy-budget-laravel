@@ -106,22 +106,21 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="service_statuses_id" class="form-label">
+                                    <label for="status" class="form-label">
                                         Status <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select @error('service_statuses_id') is-invalid @enderror"
-                                            id="service_statuses_id"
-                                            name="service_statuses_id"
+                                    <select class="form-select @error('status') is-invalid @enderror"
+                                            id="status"
+                                            name="status"
                                             required>
                                         @foreach($statusOptions as $status)
                                             <option value="{{ $status->value }}"
-                                                    {{ old('service_statuses_id', $service->service_statuses_id) == $status->value ? 'selected' : '' }}
-                                                    {{ $service->serviceStatus->value == $status->value ? '' : '' }}>
+                                                    {{ old('status', $service->status->value ?? $service->serviceStatus->value) == $status->value ? 'selected' : '' }}>
                                                 {{ $status->getDescription() }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('service_statuses_id')
+                                    @error('status')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -240,8 +239,71 @@
                                 </div>
 
                                 <div id="itemsContainer">
-                                    <!-- Itens existentes -->
-                                    @if($service->serviceItems->count() > 0)
+                                    <!-- Itens enviados anteriormente (old) ou itens existentes -->
+                                    @php($oldItems = old('items'))
+                                    @if(is_array($oldItems) && count($oldItems) > 0)
+                                        @foreach($oldItems as $index => $old)
+                                            <div class="item-row border rounded p-3 mb-3 bg-light">
+                                                <div class="row align-items-end">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Produto/Serviço</label>
+                                                        <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
+                                                            <option value="">Selecione um produto</option>
+                                                            @foreach($products as $product)
+                                                                <option value="{{ $product->id }}"
+                                                                        data-price="{{ $product->price }}"
+                                                                        {{ (string)($old['product_id'] ?? '') === (string)$product->id ? 'selected' : '' }}>
+                                                                    {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Quantidade</label>
+                                                        <div class="input-group">
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
+                                                            <input type="number"
+                                                                   class="form-control quantity-input"
+                                                                   name="items[{{ $index }}][quantity]"
+                                                                   value="{{ $old['quantity'] ?? 1 }}"
+                                                                   min="1"
+                                                                   step="1"
+                                                                   inputmode="numeric"
+                                                                   required>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Valor Unit.</label>
+                                                        <input type="text"
+                                                               inputmode="numeric"
+                                                               class="form-control unit-value"
+                                                               name="items[{{ $index }}][unit_value]"
+                                                               value="{{ $old['unit_value'] ?? '' }}"
+                                                               required readonly>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Total</label>
+                                                        <input type="text"
+                                                               inputmode="numeric"
+                                                               class="form-control item-total"
+                                                               name="items[{{ $index }}][total]"
+                                                               value="{{ $old['total'] ?? '' }}"
+                                                               readonly>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        @if(!empty($old['id']))
+                                                            <input type="hidden" name="items[{{ $index }}][id]" value="{{ $old['id'] }}">
+                                                        @endif
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
+                                                            <i class="fas fa-minus-circle text-danger"></i>
+                                                            <span>Excluir</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
                                         @foreach($service->serviceItems as $index => $item)
                                             <div class="item-row border rounded p-3 mb-3 bg-light">
                                                 <div class="row align-items-end">
@@ -293,6 +355,7 @@
                                                     </div>
                                                     <div class="col-md-2">
                                                         <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                                        <input type="hidden" name="items[{{ $index }}][action]" value="update">
                                                         <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
                                                             <i class="fas fa-minus-circle text-danger"></i>
                                                             <span>Excluir</span>
@@ -301,8 +364,6 @@
                                                 </div>
                                             </div>
                                         @endforeach
-                                    @else
-                                        <!-- Item vazio inicial -->
                                     @endif
                                 </div>
                             </div>
@@ -377,6 +438,7 @@
                        readonly>
             </div>
             <div class="col-md-2">
+                <input type="hidden" name="items[__INDEX__][action]" value="create">
                 <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
                     <i class="fas fa-minus-circle text-danger"></i>
                     <span>Excluir</span>
@@ -389,7 +451,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let itemIndex = {{ $service->serviceItems->count() }};
+    let itemIndex = {{ is_array(old('items')) ? count(old('items')) : $service->serviceItems->count() }};
 
     // Adicionar novo item
     document.getElementById('addItem').addEventListener('click', function() {
@@ -456,9 +518,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Remover item
             removeButton.addEventListener('click', function() {
-                if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
+                const idInput = lastItem.querySelector('input[name^="items"][name$="[id]"]');
+                const actionInput = lastItem.querySelector('input[name^="items"][name$="[action]"]');
+                if (idInput) {
+                  if (actionInput) actionInput.value = 'delete';
+                  lastItem.style.opacity = '0.5';
+                  lastItem.querySelectorAll('input, select, button').forEach(el => {
+                    if (!el.name.endsWith('[id]') && !el.name.endsWith('[action]')) {
+                      el.disabled = true;
+                    }
+                  });
+                } else {
+                  if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
                     lastItem.remove();
                     updateFormTotal();
+                  }
                 }
             });
 
@@ -591,9 +665,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (removeButton) {
             removeButton.addEventListener('click', function() {
-                if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
+                const idInput = item.querySelector('input[name^="items"][name$="[id]"]');
+                const actionInput = item.querySelector('input[name^="items"][name$="[action]"]');
+                if (idInput) {
+                  if (actionInput) actionInput.value = 'delete';
+                  item.style.opacity = '0.5';
+                  item.querySelectorAll('input, select, button').forEach(el => {
+                    if (!el.name.endsWith('[id]') && !el.name.endsWith('[action]')) {
+                      el.disabled = true;
+                    }
+                  });
+                  updateFormTotal();
+                } else {
+                  if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
                     item.remove();
                     updateFormTotal();
+                  }
                 }
             });
         }

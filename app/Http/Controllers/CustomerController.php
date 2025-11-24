@@ -8,7 +8,6 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\AreaOfActivity;
-use App\Models\AreasOfActivity;
 use App\Models\Profession;
 use App\Models\User;
 use App\Services\Domain\CustomerService;
@@ -159,7 +158,7 @@ class CustomerController extends Controller
         $customer = $result->getData();
 
         // Dados necessários para o formulário
-        $areasOfActivity = \App\Models\AreasOfActivity::where( 'is_active', true )
+        $areasOfActivity = AreaOfActivity::where( 'is_active', true )
             ->orderBy( 'name' )
             ->get();
 
@@ -177,7 +176,7 @@ class CustomerController extends Controller
     /**
      * Atualizar cliente (Pessoa Física ou Jurídica) - Método unificado
      */
-    public function update( CustomerUpdateRequest $request, string $id ): RedirectResponse
+    public function update( CustomerUpdateRequest $request, \App\Models\Customer $customer ): RedirectResponse
     {
         try {
             /** @var User $user */
@@ -185,12 +184,12 @@ class CustomerController extends Controller
             $validated = $request->validated();
 
             // Usar o serviço para atualizar cliente
-            $result = $this->customerService->updateCustomer( (int) $id, $validated );
+            $result = $this->customerService->updateCustomer( (int) $customer->id, $validated );
 
             // Verificar resultado do serviço
             if ( !$result->isSuccess() ) {
                 return redirect()
-                    ->route( 'provider.customers.edit', $id )
+                    ->route( 'provider.customers.edit', $customer->id )
                     ->with( 'error', $result->getMessage() )
                     ->withInput();
             }
@@ -199,7 +198,7 @@ class CustomerController extends Controller
                 ->with( 'success', 'Cliente atualizado com sucesso!' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao atualizar cliente', [
-                'customer_id' => $id,
+                'customer_id' => $customer->id,
                 'user_id'     => auth()->id(),
                 'tenant_id'   => auth()->user()->tenant_id,
                 'error'       => $e->getMessage(),
@@ -207,7 +206,7 @@ class CustomerController extends Controller
             ] );
 
             return redirect()
-                ->route( 'provider.customers.edit', $id )
+                ->route( 'provider.customers.edit', $customer->id )
                 ->with( 'error', 'Erro interno ao atualizar cliente. Tente novamente.' )
                 ->withInput();
         }
@@ -216,13 +215,13 @@ class CustomerController extends Controller
     /**
      * Excluir cliente.
      */
-    public function destroy( string $id ): RedirectResponse
+    public function destroy( \App\Models\Customer $customer ): RedirectResponse
     {
         try {
             /** @var User $user */
             $user = Auth::user();
 
-            $result = $this->customerService->deleteCustomer( (int) $id );
+            $result = $this->customerService->deleteCustomer( (int) $customer->id );
 
             if ( !$result->isSuccess() ) {
                 return redirect()
@@ -234,7 +233,7 @@ class CustomerController extends Controller
                 ->with( 'success', 'Cliente excluído com sucesso!' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao excluir cliente', [
-                'customer_id' => $id,
+                'customer_id' => $customer->id,
                 'user_id'     => auth()->id(),
                 'tenant_id'   => auth()->user()->tenant_id,
                 'error'       => $e->getMessage()
@@ -249,13 +248,13 @@ class CustomerController extends Controller
     /**
      * Alterar status do cliente (ativo/inativo).
      */
-    public function toggleStatus( string $id ): RedirectResponse
+    public function toggleStatus( \App\Models\Customer $customer ): RedirectResponse
     {
         try {
             /** @var User $user */
             $user = Auth::user();
 
-            $result = $this->customerService->toggleStatus( (int) $id, $user->tenant_id );
+            $result = $this->customerService->toggleStatus( (int) $customer->id, $user->tenant_id );
 
             $status  = $result->isSuccess() ? 'success' : 'error';
             $message = $result->isSuccess()
@@ -267,7 +266,7 @@ class CustomerController extends Controller
                 ->with( $status, $message );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao alterar status do cliente', [
-                'customer_id' => $id,
+                'customer_id' => $customer->id,
                 'user_id'     => auth()->id(),
                 'tenant_id'   => auth()->user()->tenant_id,
                 'error'       => $e->getMessage()

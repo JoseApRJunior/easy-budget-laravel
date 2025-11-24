@@ -129,6 +129,16 @@ class CustomerRepository extends AbstractTenantRepository
         return $this->paginateByTenant( $perPage, $criteria, $orderBy );
     }
 
+    public function findByIdAndTenantId( int $id, int $tenantId ): ?Customer
+    {
+        $query = $this->model->newQuery();
+        $this->applyFilters( $query, [
+            'id'        => $id,
+            'tenant_id' => $tenantId,
+        ] );
+        return $query->first();
+    }
+
     /**
      * Lista clientes por filtros (compatibilidade com service).
      *

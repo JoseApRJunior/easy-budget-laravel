@@ -422,20 +422,49 @@ class ServiceController extends Controller
     public function update( string $code, ServiceUpdateRequest $request ): RedirectResponse
     {
         try {
-            $result = $this->serviceService->updateServiceByCode( $code, $request->getValidatedData() );
+            $payload = $request->getValidatedData();
+            Log::info('Service update started', [
+                'code' => $code,
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id ?? null,
+                'category_id' => $payload['category_id'] ?? null,
+                'status' => $payload['status'] ?? null,
+                'create_count' => count($payload['items_to_create'] ?? []),
+                'update_count' => count($payload['items_to_update'] ?? []),
+                'delete_count' => count($payload['items_to_delete'] ?? []),
+            ]);
+
+            $result = $this->serviceService->updateServiceByCode( $code, $payload );
 
             if ( !$result->isSuccess() ) {
+                Log::warning('Service update failed', [
+                    'code' => $code,
+                    'message' => $result->getMessage(),
+                ]);
                 return redirect()->back()
                     ->withInput()
                     ->with( 'error', $result->getMessage() );
             }
 
             $service = $result->getData();
+            Log::info('Service updated successfully', [
+                'code' => $service->code,
+                'service_id' => $service->id,
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id ?? null,
+            ]);
 
             return redirect()->route( 'provider.services.show', $service->code )
                 ->with( 'success', 'Serviço atualizado com sucesso!' );
 
         } catch ( Exception $e ) {
+            Log::error('Service update exception', [
+                'code' => $code,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id ?? null,
+                'request' => $request->all(),
+            ]);
             return redirect()->back()
                 ->withInput()
                 ->with( 'error', 'Erro ao atualizar serviço: ' . $e->getMessage() );

@@ -112,7 +112,7 @@
                     <h5 class="mb-0">
                         <i class="bi bi-receipt me-2"></i>Orçamentos
                     </h5>
-                    <a href="{{ url( '/provider/orcamento/create' ) }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-lg me-2"></i>Novo Orçamento
                     </a>
                 </div>
@@ -159,12 +159,12 @@
                                     </td>
                                     <td class="text-end px-4">
                                         <div class="btn-group">
-                                            <a href="{{ url( '/provider/orcamento/' . $orcamento->id . '/show' ) }}"
+                                            <a href="{{ route( 'provider.budgets.show', $orcamento->code ) }}"
                                                 class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
                                                 title="Visualizar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ url( '/provider/orcamento/' . $orcamento->id . '/edit' ) }}"
+                                            <a href="{{ route( 'provider.budgets.edit', $orcamento->code ) }}"
                                                 class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>

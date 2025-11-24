@@ -119,7 +119,7 @@ class ServiceUpdateRequest extends FormRequest
                             "items.{$index}.id",
                             'Item não encontrado',
                         );
-                    } elseif ( $serviceItem->tenant_id !== tenant( 'id' ) ) {
+                    } elseif ( $serviceItem->tenant_id !== ( auth()->user()->tenant_id ?? null ) ) {
                         $validator->errors()->add(
                             "items.{$index}.id",
                             'Item não pertence à sua empresa',

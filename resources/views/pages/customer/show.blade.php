@@ -306,7 +306,7 @@
                                                 </td>
                                                 <td>{{ money( $budget->total ) }}</td>
                                                 <td>
-                                                    <a href="{{ route( 'provider.budgets.show', $budget ) }}"
+                                                    <a href="{{ route( 'provider.budgets.show', $budget->code ) }}"
                                                         class="btn btn-sm btn-outline-primary">
                                                         <i class="bi bi-eye"></i>
                                                     </a>

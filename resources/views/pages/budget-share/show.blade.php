@@ -98,7 +98,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Número do Orçamento</label>
                                 <p class="form-control-plaintext">
-                                    <a href="{{ route('budgets.show', $share->budget->id) }}" class="text-decoration-none">
+                                    <a href="{{ route('provider.budgets.show', $share->budget->code) }}" class="text-decoration-none">
                                         #{{ str_pad($share->budget->id, 6, '0', STR_PAD_LEFT) }}
                                     </a>
                                 </p>

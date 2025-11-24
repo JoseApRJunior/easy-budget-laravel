@@ -99,8 +99,8 @@
                                 @forelse($products as $product)
                                     <tr>
                                         <td class="text-center">
-                                            @if($product->image)
-                                                <img src="{{ $product->image }}" alt="{{ $product->name }}"
+                                        @if($product->image)
+                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                                      class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center"
@@ -198,7 +198,8 @@ document.querySelectorAll('.toggle-status-form').forEach(function(form) {
         const url = form.getAttribute('action');
         const btn = form.querySelector('button');
         btn.disabled = true;
-        fetch(url, { method: 'PATCH' })
+        const headers = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+        fetch(url, { method: 'PATCH', headers })
             .then(function(res) { return res.json(); })
             .then(function(json) {
                 if (json && json.success) {

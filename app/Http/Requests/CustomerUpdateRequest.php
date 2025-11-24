@@ -30,11 +30,24 @@ class CustomerUpdateRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Obter ID do customer se estiver em rota de atualização
-        $this->excludeCustomerId = $this->route( 'customer' )?->id;
+        $routeCustomer = $this->route( 'customer' );
+        $routeId       = $this->route( 'id' );
+        $this->excludeCustomerId = is_object( $routeCustomer )
+            ? ( $routeCustomer->id ?? null )
+            : ( is_numeric( $routeCustomer )
+                ? (int) $routeCustomer
+                : ( is_numeric( $routeId ) ? (int) $routeId : null ) );
 
-        // Limpar dados de acordo com o tipo de pessoa
         $this->cleanDataByPersonType();
+
+        $birth = $this->input( 'birth_date' );
+        if ( isset( $birth ) ) {
+            $birth = trim( (string) $birth );
+            if ( $birth !== '' && preg_match( '/^(\d{2})\/(\d{2})\/(\d{4})$/', $birth, $m ) ) {
+                $iso = $m[3] . '-' . str_pad( $m[2], 2, '0', STR_PAD_LEFT ) . '-' . str_pad( $m[1], 2, '0', STR_PAD_LEFT );
+                $this->merge( [ 'birth_date' => $iso ] );
+            }
+        }
     }
 
     /**
@@ -45,7 +58,6 @@ class CustomerUpdateRequest extends FormRequest
         $personType = $this->input( 'person_type' );
 
         if ( $personType === 'pf' ) {
-            // Para pessoa física, remover campos de pessoa jurídica
             $this->removeInput( [
                 'company_name',
                 'cnpj',
@@ -57,9 +69,13 @@ class CustomerUpdateRequest extends FormRequest
                 'company_size'
             ] );
         } elseif ( $personType === 'pj' ) {
-            // Para pessoa jurídica, remover campos específicos de pessoa física
             $this->removeInput( [ 'cpf', 'birth_date', 'profession_id' ] );
         }
+    }
+
+    private function removeInput( array $keys ): void
+    {
+        $this->replace( $this->except( $keys ) );
     }
 
     /**

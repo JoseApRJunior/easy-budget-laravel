@@ -273,6 +273,11 @@ class Budget extends Model
         return $this->hasMany( BudgetNotification::class);
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'code';
+    }
+
     /**
      * Scope para orçamentos ativos.
      */

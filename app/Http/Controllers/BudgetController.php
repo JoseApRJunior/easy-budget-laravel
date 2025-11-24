@@ -29,7 +29,7 @@ class BudgetController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $budgets = $this->budgetService->getBudgetsForProvider($user->id, $request->all());
-        
+
         return view('pages.budget.index', [
             'budgets' => $budgets
         ]);
@@ -58,7 +58,7 @@ class BudgetController extends Controller
     {
         try {
             $result = $this->budgetService->create($request->validated());
-            
+
             return redirect()->route('provider.budgets.show', $result->getData()->code)
                 ->with('success', 'Orçamento criado com sucesso!');
         } catch (\Exception $e) {
@@ -72,15 +72,22 @@ class BudgetController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
-        // Usar query builder para evitar problemas com PHPStan
+
         $budget = Budget::query()
+            ->with([
+                'customer.commonData',
+                'customer.contact',
+                'items' => function ($q) {
+                    $q->ordered();
+                },
+                'services.category',
+            ])
             ->where('code', $code)
             ->where('tenant_id', $user->tenant_id)
             ->firstOrFail();
-            
+
         return view('pages.budget.show', [
-            'budget' => $budget
+            'budget' => $budget,
         ]);
     }
 
@@ -88,13 +95,13 @@ class BudgetController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         // Busca o orçamento por código
         $budget = Budget::query()
             ->where('code', $code)
             ->where('tenant_id', $user->tenant_id)
             ->firstOrFail();
-            
+
         return view('pages.budget.edit', [
             'budget' => $budget
         ]);
@@ -105,26 +112,78 @@ class BudgetController extends Controller
         try {
             // Prepara os dados para atualização
             $data = $request->validated();
-            
+
             // Força o status para "pending" após edição
             $data['status'] = 'pending';
-            
+
             $result = $this->budgetService->updateByCode($code, $data);
-            
+
             if (!$result->isSuccess()) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', $result->getMessage());
             }
-            
+
             return redirect()->route('provider.budgets.show', $code)
                 ->with('success', 'Orçamento atualizado com sucesso! Status alterado para Pendente.');
-                
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
         }
+    }
+
+    public function print( Request $request, Budget $budget )
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ($budget->tenant_id !== ($user->tenant_id ?? 0)) {
+            abort(404);
+        }
+
+        $budget->load([
+            'customer.commonData',
+            'customer.contact',
+            'items' => function ($q) {
+                $q->ordered();
+            },
+            'services.category',
+        ]);
+
+        if ( $request->boolean( 'pdf' ) ) {
+            $html = view( 'pages.budget.pdf_budget', [
+                'budget' => $budget,
+            ] )->render();
+
+            $mpdf = new \Mpdf\Mpdf( [
+                'mode'          => 'utf-8',
+                'format'        => 'A4',
+                'margin_left'   => 12,
+                'margin_right'  => 12,
+                'margin_top'    => 14,
+                'margin_bottom' => 14,
+            ] );
+
+            $mpdf->SetHeader( 'Orçamento ' . $budget->code . ' - ' . config( 'app.name' ) . '||Gerado em: ' . now()->format( 'd/m/Y' ) );
+            $mpdf->SetFooter( 'Página {PAGENO} de {nb}|Usuário: ' . ( $user->name ?? 'N/A' ) . '|' . config( 'app.url' ) );
+            $mpdf->WriteHTML( $html );
+
+            $filename = 'orcamento_' . $budget->code . '_' . now()->format( 'Ymd_His' ) . '.pdf';
+            $content  = $mpdf->Output( '', 'S' );
+
+            $disposition = $request->boolean( 'download' ) ? 'attachment' : 'inline';
+
+            return response( $content, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => $disposition . '; filename="' . $filename . '"'
+            ] );
+        }
+
+        return view( 'pages.budget.pdf_budget', [
+            'budget' => $budget,
+        ] );
     }
 
     /**
