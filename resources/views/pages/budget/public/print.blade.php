@@ -121,7 +121,7 @@
               <div class="d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">{{ $service->category->name }}</h6>
                 <span class="badge"
-                  style="background-color: {{ $service->status->color }};">{{ $service->status->name }}</span>
+                  style="background-color: {{ $service->status->getColor() }};">{{ $service->status->getDescription() }}</span>
               </div>
             </div>
 

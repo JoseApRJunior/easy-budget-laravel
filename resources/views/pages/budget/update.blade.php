@@ -25,7 +25,7 @@
                 <form id="update-budget-form" action="{{ route( 'budget.update', $budget->id ) }}" method="POST">
                     @csrf
                     @method( 'PUT' )
-                    <fieldset {{ !StatusHelper::status_allows_edit( $budget->status->slug ) ? 'disabled' : '' }}>
+                    <fieldset {{ !StatusHelper::status_allows_edit( $budget->status->value ) ? 'disabled' : '' }}>
                         <!-- Budget Information -->
                         <div class="row mb-4">
                             <div class="col-md-2">
@@ -105,13 +105,13 @@
                         <i class="bi bi-x-circle me-2"></i>Cancelar
                     </a>
                     <div>
-                        @if ( StatusHelper::status_allows_edit( $budget->status->slug ) )
+                        @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
                             <button type="submit" form="update-budget-form" class="btn btn-primary px-4">
                                 <i class="bi bi-check-lg me-2"></i>Salvar Alterações
                             </button>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3">
-                                <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->name }})
+                                <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->getDescription() }})
                             </div>
                         @endif
                     </div>

@@ -41,8 +41,8 @@ class ServiceUpdateRequest extends FormRequest
             'items'              => 'required|array|min:1',
             'items.*.id'         => 'nullable|integer|exists:service_items,id',
             'items.*.product_id' => 'required_without:items.*.id|integer|exists:products,id',
-            'items.*.quantity'   => 'required|numeric|min:0.01',
-            'items.*.unit_value' => 'required|numeric|min:0.01',
+            'items.*.quantity'   => 'required_unless:items.*.action,delete|numeric|min:0.01',
+            'items.*.unit_value' => 'required_unless:items.*.action,delete|numeric|min:0.01',
             'items.*.action'     => 'nullable|in:create,update,delete'
         ];
     }

@@ -30,7 +30,7 @@
                         <p class="mb-1">Validade: {{ $budget->due_date->format( 'd/m/Y' ) }}</p>
                     </div>
                     <span class="badge"
-                        style="background-color: {{ $budget->status->color }};">{{ $budget->status->name }}</span>
+                        style="background-color: {{ $budget->status->getColor() }};">{{ $budget->status->getDescription() }}</span>
                 </div>
             </div>
         </div>
@@ -73,7 +73,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">{{ $service->category->name }}</h6>
                             <span class="badge"
-                                style="background-color: {{ $service->status->color }};">{{ $service->status->name }}</span>
+                                style="background-color: {{ $service->status->getColor() }};">{{ $service->status->getDescription() }}</span>
                         </div>
                     </div>
 

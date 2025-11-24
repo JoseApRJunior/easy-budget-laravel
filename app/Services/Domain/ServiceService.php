@@ -94,8 +94,8 @@ class ServiceService extends AbstractBaseService
                 } );
             }
 
-            // Eager loading
-            $withDefaults = [ 'category', 'budget.customer', 'serviceStatus' ];
+            // Eager loading - apenas relações válidas
+            $withDefaults = [ 'category', 'budget.customer' ];
             $with         = array_unique( array_merge( $withDefaults, $with ) );
             $query->with( $with );
 

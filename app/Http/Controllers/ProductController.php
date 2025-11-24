@@ -43,15 +43,24 @@ class ProductController extends Controller
         $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price']);
 
         try {
-            $result = $this->productService->getFilteredProducts($filters, ['category']);
+            $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
+            $confirmAll = (bool) $request->boolean('all');
 
-            if (! $result->isSuccess()) {
-                abort(500, 'Erro ao carregar lista de produtos');
+            if ($hasFilters || $confirmAll) {
+                $result = $this->productService->getFilteredProducts($filters, ['category']);
+
+                if (! $result->isSuccess()) {
+                    abort(500, 'Erro ao carregar lista de produtos');
+                }
+
+                $products = $result->getData();
+            } else {
+                $products = collect();
             }
 
             return view('pages.product.index', [
-                'products' => $result->getData(),
-                'filters' => $filters,
+                'products'   => $products,
+                'filters'    => $filters,
                 'categories' => $this->categoryService->getActive(),
             ]);
         } catch (Exception) {

@@ -174,7 +174,7 @@
             <div class="card-header p-3 d-flex justify-content-between align-items-center">
               <h5 class="mb-0"><i class="bi bi-tag me-2"></i>{{ $service->category->name }}</h5>
               <span class="badge"
-                style="background-color: {{ $service->status->color }};">{{ $service->status->name }}</span>
+                style="background-color: {{ $service->serviceStatus->getColor() }};">{{ $service->serviceStatus->getDescription() }}</span>
             </div>
             <div class="card-body p-4">
               <div class="row g-4">
