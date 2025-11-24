@@ -234,6 +234,30 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole( 'customer' );
     }
 
+    public function hasPermission( string $permission ): bool
+    {
+        // Admin users have all permissions
+        if ( $this->isAdmin() ) {
+            return true;
+        }
+
+        return $this->permissions()
+            ->where( 'name', $permission )
+            ->exists();
+    }
+
+    public function hasAnyPermission( array $permissions ): bool
+    {
+        // Admin users have all permissions
+        if ( $this->isAdmin() ) {
+            return true;
+        }
+
+        return $this->permissions()
+            ->whereIn( 'name', $permissions )
+            ->exists();
+    }
+
     public function getEmailForVerification(): string
     {
         return $this->email;

@@ -1,6 +1,22 @@
 # 📋 **ÍNDICE COMPLETO - CHECKLISTS DE DESENVOLVIMENTO**
 
-## 🎯 **NAVEGAÇÃO RÁPIDA**
+## 🔗 **Sumário**
+
+-  [Roadmap Geral](#roadmap-geral)
+-  [Checklists por Fase](#checklists-por-fase)
+-  [Módulos Detalhados](#modulos-detalhados)
+-  [Como Usar](#como-usar)
+-  [Status de Progresso](#status-de-progresso)
+-  [Alertas Importantes](#alertas-importantes)
+-  [Suporte](#suporte)
+-  [Alterações Estruturais](#alteracoes-estruturais)
+-  [Configurações Modificadas](#configuracoes-modificadas)
+-  [Verificação de Caminhos](#verificacao-de-caminhos)
+-  [Novos Processos](#novos-processos)
+
+---
+
+## 🎯 **NAVEGAÇÃO RÁPIDA** {#roadmap-geral}
 
 ### **📊 ROADMAP GERAL**
 
@@ -11,24 +27,24 @@
 
 ---
 
-## 📋 **CHECKLISTS POR FASE**
+## 📋 **CHECKLISTS POR FASE** {#checklists-por-fase}
 
 ### **✅ FASE 1 - BASE FUNCIONAL (Semanas 1-2)**
 
 **Prioridade:** MÁXIMA | **Impacto:** CRÍTICO
 
 -  [CHECKLIST_FASE_1_BASE_FUNCIONAL.md](./CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
-   -  📂 Categories (Prioridade MÁXIMA)
-   -  📦 Products (Prioridade MÁXIMA)
-   -  👥 Customers (Prioridade CRÍTICA)
+   -  📂 Categories
+   -  📦 Products
+   -  👥 Customers
 
 ### **✅ FASE 2 - CORE BUSINESS (Semanas 3-5)**
 
 **Prioridade:** CRÍTICA | **Impacto:** CRÍTICO
 
 -  [CHECKLIST_FASE_2_CORE_BUSINESS.md](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
-   -  💰 Budgets (Orçamentos) - PRIORIDADE CRÍTICA
-   -  🛠️ Services (Serviços) - PRIORIDADE CRÍTICA
+   -  💰 Budgets (Orçamentos)
+   -  🛠️ Services (Serviços)
 
 ### **✅ FASE 3 - FLUXO FINANCEIRO (Semanas 6-7)**
 
@@ -36,7 +52,7 @@
 
 -  [CHECKLIST_FASE_3_FLUXO_FINANCEIRO.md](./CHECKLIST_FASE_3_FLUXO_FINANCEIRO.md)
    -  🧾 Invoices (Faturas)
-   -  💳 MercadoPago Optimization
+   -  💳 MercadoPago
 
 ### **✅ FASE 4 - INSIGHTS (Semanas 8-9)**
 
@@ -48,137 +64,134 @@
 
 ---
 
-## 🔍 **CHECKLISTS DETALHADOS POR MÓDULO**
+## 🔍 **CHECKLISTS DETALHADOS POR MÓDULO** {#modulos-detalhados}
 
 ### **📂 MÓDULOS INDEPENDENTES (Fase 1)**
 
-#### **📂 Categories**
+#### **📂 Categories** — 🟡 Em progresso
 
 -  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_CATEGORIES.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_CATEGORIES.md)
-   -  Backend completo (Model, Repository, Service)
-   -  Controller CRUD completo
-   -  Interface responsiva
-   -  Testes unitários e de feature
-   -  Validação final
+   -  Backend (Model, Repository, Service) disponível
+   -  Views criadas (`resources/views/pages/category/*`)
+   -  Controller/rotas: ajuste pendente
 
-#### **📦 Products**
+#### **📦 Products** — 🟢 Concluído (CRUD + Estoque)
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_PRODUCTS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_PRODUCTS.md)
-   -  CRUD completo + gestão de estoque
-   -  ProductInventory integration
-   -  Interface com filtros avançados
-   -  Testes de gestão de estoque
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 1](./CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
+-  Funcionalidades:
+   -  CRUD completo com filtros
+   -  Estoque integrado (Inventory)
+   -  Dashboard e toggling de status
 
-#### **👥 Customers (CRM)**
+#### **👥 Customers (CRM)** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_CUSTOMERS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_CUSTOMERS.md)
-   -  CRM completo (PF/PJ)
-   -  CommonData/Contact/Address integration
-   -  Dashboard CRM
-   -  Segmentação de clientes
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 1](./CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
+-  Funcionalidades:
+   -  CRUD PF/PJ unificado
+   -  Integração CommonData/Contact/Address
+   -  Filtros e busca avançados
 
 ### **💰 MÓDULOS CORE BUSINESS (Fase 2)**
 
-#### **💰 Budgets (Orçamentos)**
+#### **💰 Budgets (Orçamentos)** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_BUDGETS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_BUDGETS.md)
-   -  12 métodos do BudgetController
-   -  PDF generation
-   -  Workflow de aprovação
-   -  Sistema de tokens públicos
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 2](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
+-  Funcionalidades:
+   -  CRUD com código único
+   -  PDF profissional
+   -  Dashboard e tokens públicos
 
-#### **🛠️ Services (Serviços)**
+#### **🛠️ Services (Serviços)** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_SERVICES.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_SERVICES.md)
-   -  CRUD completo + ServiceItems
-   -  Integration com Budgets/Categories/Products
-   -  PDF generation
-   -  Workflow de execução
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 2](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
+-  Funcionalidades:
+   -  CRUD + ServiceItems
+   -  Integração com Budgets/Categories/Products
+   -  Status público via token
 
 ### **🧾 MÓDULOS FINANCEIROS (Fase 3)**
 
-#### **🧾 Invoices (Faturas)**
+#### **🧾 Invoices (Faturas)** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_INVOICES.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_INVOICES.md)
-   -  CRUD completo + InvoiceItems
-   -  Integration com Services
-   -  MercadoPago integration
-   -  PDF fiscal
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 3](./CHECKLIST_FASE_3_FLUXO_FINANCEIRO.md)
+-  Funcionalidades:
+   -  CRUD + itens
+   -  PDF fiscal e export
+   -  Integração MercadoPago
 
-#### **💳 MercadoPago**
+#### **💳 MercadoPago** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_MERCADOPAGO.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_MERCADOPAGO.md)
-   -  PaymentController optimization
-   -  Webhook processing
-   -  Payment notifications
-   -  Analytics de pagamentos
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 3](./CHECKLIST_FASE_3_FLUXO_FINANCEIRO.md)
+-  Funcionalidades:
+   -  Webhooks e OAuth
+   -  Pagamentos de fatura e plano
+   -  Métricas e notificações
 
 ### **📊 MÓDULOS DE INSIGHTS (Fase 4)**
 
-#### **📊 Reports & Analytics**
+#### **📊 Reports & Analytics** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_REPORTS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_REPORTS.md)
-   -  Relatórios financeiros
-   -  Dashboard analytics
-   -  Export functionality
-   -  Scheduled reports
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 4](./CHECKLIST_FASE_4_INSIGHTS.md)
 
-#### **📈 Executive Dashboard**
+#### **📈 Executive Dashboard** — 🟡 Em progresso
 
--  [CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_EXECUTIVE_DASHBOARD.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_EXECUTIVE_DASHBOARD.md)
-   -  KPIs executivos
-   -  Advanced analytics
-   -  Strategic insights
-   -  Mobile responsive
+-  Checklist individual: em construção
+-  Referência de fase: [Fase 4](./CHECKLIST_FASE_4_INSIGHTS.md)
 
 ---
 
-## 🎯 **COMO USAR ESTES CHECKLISTS**
+## 🎯 **COMO USAR ESTES CHECKLISTS** {#como-usar}
 
 ### **👥 Para Desenvolvedores**
 
-1. **Comece pela FASE 1** - Base sólida é fundamental
-2. **Siga a ordem estabelecida** - Dependências são reais
-3. **Marque itens conforme conclusão** - Acompanhe progresso
-4. **Não pule para próxima fase** sem completar a atual
-5. **Execute testes** antes de marcar como concluído
+1. Comece pela Fase 1
+2. Respeite dependências entre módulos
+3. Marque progresso ao concluir itens
+4. Não avance sem validar testes
+5. Atualize documentação ao concluir
 
 ### **👔 Para Gestores**
 
-1. **Use roadmap geral** para visão macro
-2. **Acompanhe fases** para cronograma macro
-3. **Monitore progresso** dos módulos individuais
-4. **Identifique bloqueios** através dos alertas
-5. **Valide entregas** nos critérios de conclusão
+1. Use roadmap geral para visão macro
+2. Acompanhe avanço por fase e módulo
+3. Monitore bloqueios e riscos
+4. Valide entregas com critérios claros
+5. Revise indicadores de qualidade
 
 ### **🔄 Para Revisões**
 
-1. **Use checklists detalhados** para reviews
-2. **Verifique critérios de validação** técnica
-3. **Confirme valor de negócio** entregue
-4. **Valide performance** e usabilidade
-5. **Prepare documentação** de entrega
+1. Use checklists detalhados por fase
+2. Verifique critérios técnicos e negócio
+3. Valide performance e usabilidade
+4. Atualize documentação de entrega
 
 ---
 
-## 📊 **STATUS DE PROGRESSO**
+## 📊 **STATUS DE PROGRESSO** {#status-de-progresso}
 
 ### **🎯 Por Fase**
 
--  **FASE 1 - Base Funcional:** 🔴 Não iniciado
--  **FASE 2 - Core Business:** 🔴 Não iniciado
--  **FASE 3 - Fluxo Financeiro:** 🔴 Não iniciado
--  **FASE 4 - Insights:** 🔴 Não iniciado
+-  Fase 1 - Base Funcional: � Em progresso
+-  Fase 2 - Core Business: � Em progresso
+-  Fase 3 - Fluxo Financeiro: � Em progresso
+-  Fase 4 - Insights: � Em progresso
 
 ### **📈 Por Módulo**
 
--  **Categories:** 🔴 Não iniciado
--  **Products:** 🔴 Não iniciado
--  **Customers:** 🔴 Não iniciado
--  **Budgets:** 🔴 Não iniciado
--  **Services:** 🔴 Não iniciado
--  **Invoices:** 🔴 Não iniciado
--  **Reports:** 🔴 Não iniciado
+-  Categories: � Em progresso
+-  Products: � Concluído (CRUD + Estoque)
+-  Customers: � Em progresso
+-  Budgets: � Em progresso
+-  Services: � Em progresso
+-  Invoices: � Em progresso
+-  Reports: � Em progresso
 
 ### **⚡ Indicadores**
 
@@ -189,26 +202,26 @@
 
 ---
 
-## 🚨 **ALERTAS IMPORTANTES**
+## 🚨 **ALERTAS IMPORTANTES** {#alertas-importantes}
 
 ### **⚠️ Dependências Críticas**
 
--  **Categories** deve ser 100% antes de Services
--  **Products** deve ter estoque antes de Services
--  **Customers** deve ter CRUD antes de Budgets
--  **Budgets** deve estar pronto antes de Services
--  **Services** deve estar pronto antes de Invoices
+-  Categories deve estar pronto antes de Services
+-  Products deve ter estoque antes de Services
+-  Customers deve estar pronto antes de Budgets
+-  Budgets antes de Services
+-  Services antes de Invoices
 
 ### **📞 Escalação**
 
--  **Bloqueios:** Reporte imediatamente
--  **Atrasos:** Notifique coordenação
--  **Dúvidas:** Consulte documentação técnica
--  **Mudanças:** Documente impacto nas dependências
+-  Bloqueios: reporte imediatamente
+-  Atrasos: notifique coordenação
+-  Dúvidas: consulte documentação técnica
+-  Mudanças: documente impacto nas dependências
 
 ---
 
-## 📞 **SUPORTE**
+## 📞 **SUPORTE** {#suporte}
 
 ### **📚 Documentação**
 
@@ -218,13 +231,70 @@
 
 ### **🔧 Ferramentas**
 
--  **Testing:** PHPUnit, Laravel Dusk
--  **Code Quality:** Laravel Pint, PHPStan
--  **Performance:** Laravel Telescope, Debugbar
--  **Documentation:** PHPDoc, Markdown
+-  Testing: PHPUnit, Laravel Dusk
+-  Code Quality: Laravel Pint, PHPStan
+-  Performance: Laravel Telescope, Debugbar
+-  Documentation: PHPDoc, Markdown
+
+---
+
+## 🧭 **Alterações Estruturais Pós-Migração** {#alteracoes-estruturais}
+
+-  Estrutura MVC com Service Layer: `Controllers → Services → Repositories → Models`
+-  Camadas de serviço: `Domain`, `Application`, `Infrastructure`
+-  Repositories com arquitetura dual (`AbstractTenantRepository`, `AbstractGlobalRepository`)
+-  Multi-tenant com `stancl/tenancy` e grupos de rotas: `routes/tenant.php`, `routes/web.php`
+-  Middlewares customizados: `AdminMiddleware`, `ProviderMiddleware`, `MonitoringMiddleware`, `TenantMiddleware`
+-  Namespaces padronizados (PSR-4): `App\` para `app/`, factories e seeders em `database/*`
+-  Views reorganizadas por domínio: `resources/views/pages/*` (budget, customer, product, service, invoice, report)
+-  Controller base com tratamento `ServiceResult` e responses padronizadas
+
+---
+
+## ⚙️ **Configurações Modificadas** {#configuracoes-modificadas}
+
+-  Variáveis de ambiente principais (`.env.example`):
+   -  `APP_TIMEZONE`, `APP_LOCALE`, `SESSION_*`, `QUEUE_CONNECTION`, `CACHE_STORE`
+   -  MercadoPago: `MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_WEBHOOK_SECRET`, `MERCADOPAGO_APP_ID`, `MERCADOPAGO_CLIENT_SECRET`
+   -  Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+-  Arquivos em `config/` atualizados:
+   -  `tenancy.php` (domínios centrais, bootstrappers, storage multi-tenant)
+   -  `queue.php`, `session.php`, `cache.php`, `services.php`, `upload.php`
+   -  `mcp.php` (servers auxiliares para contexto e testes)
+-  Composer (`composer.json`):
+   -  Laravel 12, Sanctum, Socialite, Tenancy, Debugbar, Pint, PHPStan, Dusk
+   -  Integrações: Doctrine DBAL/ORM, MPDF, PhpSpreadsheet, MercadoPago SDK, Spatie Directory Cleanup
+
+---
+
+## 🗺️ **Verificação de Caminhos** {#verificacao-de-caminhos}
+
+-  Links internos atualizados para arquivos existentes
+-  Checklists individuais ausentes foram referenciados pelas checklists de fase
+-  Assets públicos sob multi-tenant: usar `tenant_asset()` quando necessário
+-  Views e templates confirmados em `resources/views/pages/*`
+-  Rotas agrupadas por contexto: `provider.*`, `reports.*`, `invoices.*`
+
+---
+
+## 🚀 **Novos Processos** {#novos-processos}
+
+-  Comandos Artisan (custom):
+   -  `logs:clear`, `logs:monitor-size`, `dev:reset-db`, `queue:process-email`, `email:manage`
+-  Fluxos de trabalho Laravel:
+   -  Email verification e reset de senha via eventos e listeners
+   -  Webhooks MercadoPago com job assíncrono
+   -  PDFs via MPDF e exportações via PhpSpreadsheet
+-  Deploy e CI/CD:
+   -  `composer install --no-dev`, `php artisan migrate --graceful`, `npm run build`
+   -  Cache de config/routes/views e workers de queue
+-  Troubleshooting pós-migração:
+   -  `php artisan storage:link` para assets
+   -  Ajuste de sessão/tenancy em ambientes locais
+   -  Dusk/ChromeDriver para testes E2E
 
 ---
 
 **📅 Última Atualização:** 24/11/2025
-**🎯 Versão:** 1.0 - Roadmap Completo Implementado
+**🎯 Versão:** 1.1 - Índice atualizado pós-migração
 **👥 Responsável:** Equipe de Desenvolvimento Easy Budget Laravel
