@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
    const loadingSpinner = document.getElementById("loading-spinner");
    const resultsContainer = document.getElementById("results-container");
    const resultsCount = document.getElementById("results-count");
+   const statusSelect = document.getElementById("status");
+   const typeSelect = document.getElementById("type");
+   const areaSelect = document.getElementById("area_of_activity_id");
+   const btnFilterCustomers = document.getElementById("btnFilterCustomers");
 
    // Verificação de elementos essenciais
    if (!searchInput) {
@@ -20,12 +24,15 @@ document.addEventListener("DOMContentLoaded", function () {
       paginationId: "pagination",
       infoId: "pagination-info",
       itemsPerPage: 10,
-      colSpan: 6,
+      colSpan: 7,
       formatRow: formatCustomerRow,
    });
 
    async function performSearch() {
       const searchTerm = searchInput?.value?.trim() || "";
+      const status = statusSelect?.value?.trim() || "";
+      const type = typeSelect?.value?.trim() || "";
+      const area = areaSelect?.value?.trim() || "";
 
       if (!initialMessage || !loadingSpinner || !resultsContainer) {
          console.error("Elementos da interface não encontrados");
@@ -49,11 +56,13 @@ document.addEventListener("DOMContentLoaded", function () {
          console.log("Iniciando busca com termo:", searchTerm);
 
          // Configuração da requisição AJAX (GET com query string)
-         const url = searchTerm.trim()
-            ? `/provider/customers/search?search=${encodeURIComponent(
-                 searchTerm
-              )}`
-            : "/provider/customers/search";
+         const params = new URLSearchParams();
+         if (searchTerm) params.set("search", searchTerm);
+         if (status) params.set("status", status);
+         if (type) params.set("type", type);
+         if (area) params.set("area_of_activity_id", area);
+         const qs = params.toString();
+         const url = qs ? `/provider/customers/search?${qs}` : "/provider/customers/search";
          console.log("URL da requisição:", url);
 
          const response = await fetch(url, {
@@ -133,6 +142,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const customerType = customer.cnpj ? "PJ" : "PF";
       const customerTypeClass = customer.cnpj ? "text-info" : "text-success";
       const customerTypeIcon = customer.cnpj ? "bi-building" : "bi-person";
+      const status = (customer.status || "").toLowerCase();
+      const statusLabel = customer.status_label || (status === "active" ? "Ativo" : status === "inactive" ? "Inativo" : "Excluído");
+      const badgeClass = status === "active" ? "badge-success" : status === "inactive" ? "badge-secondary" : "badge-danger";
+      const toggleLabel = status === "active" ? "Desativar" : "Ativar";
 
       return `
       <tr class="table-row-hover">
@@ -219,6 +232,9 @@ document.addEventListener("DOMContentLoaded", function () {
                )}</small>
             </div>
          </td>
+         <td class="px-3 py-3 align-middle">
+            <span class="badge ${badgeClass}">${statusLabel}</span>
+         </td>
          <td class="text-center align-middle">
             <div class="btn-group" role="group">
                <a href="/provider/customers/${customer.id}"
@@ -233,7 +249,9 @@ document.addEventListener("DOMContentLoaded", function () {
                   title="Editar">
                   <i class="bi bi-pencil"></i>
                </a>
-
+               <button type="button" class="btn btn-sm btn-outline-warning toggle-status-btn" data-id="${customer.id}" data-current="${status}">
+                   <i class="bi bi-toggle2-on"></i> ${toggleLabel}
+               </button>
             </div>
          </td>
       </tr>`;
@@ -323,7 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
    if (mainSearchBtn) {
       mainSearchBtn.addEventListener("click", (e) => {
          e.preventDefault();
-         performSearch();
+         handleFilterSubmit();
       });
    }
 
@@ -331,13 +349,48 @@ document.addEventListener("DOMContentLoaded", function () {
       searchInput.addEventListener("keypress", (e) => {
          if (e.key === "Enter") {
             e.preventDefault();
-            performSearch();
+            handleFilterSubmit();
          }
       });
    }
 
    if (clearMainSearch) {
       clearMainSearch.addEventListener("click", clearFields);
+   }
+
+   if (btnFilterCustomers) {
+      btnFilterCustomers.addEventListener("click", (e) => {
+         e.preventDefault();
+         handleFilterSubmit();
+      });
+   }
+
+   function handleFilterSubmit() {
+      const hasFilters = !!(
+         (searchInput?.value || "").trim() ||
+         (statusSelect?.value || "").trim() ||
+         (typeSelect?.value || "").trim() ||
+         (areaSelect?.value || "").trim()
+      );
+
+      if (!hasFilters) {
+         const modalEl = document.getElementById("confirmAllCustomersModal");
+         if (!modalEl) {
+            performSearch();
+            return;
+         }
+         const confirmBtn = modalEl.querySelector(".btn-confirm-all-customers");
+         const modal = new bootstrap.Modal(modalEl);
+         const handler = function () {
+            confirmBtn.removeEventListener("click", handler);
+            modal.hide();
+            performSearch();
+         };
+         confirmBtn.addEventListener("click", handler);
+         modal.show();
+      } else {
+         performSearch();
+      }
    }
 });
 
@@ -387,3 +440,46 @@ function confirmDelete(customerId) {
 
    modal.show();
 }
+
+// Delegação para alternar status via AJAX
+document.addEventListener("click", async function (e) {
+   const target = e.target.closest(".toggle-status-btn");
+   if (!target) return;
+   e.preventDefault();
+   try {
+      const id = target.getAttribute("data-id");
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+      const response = await fetch(`/provider/customers/${id}/toggle-status`, {
+         method: "POST",
+         headers: {
+            "X-CSRF-TOKEN": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+         },
+      });
+
+      const json = await response.json().catch(() => null);
+      if (response.ok && json && json.success) {
+         window.easyAlert && window.easyAlert.success(json.message || "Status atualizado");
+         // Atualiza a badge e label do botão na linha
+         const row = target.closest("tr");
+         const badge = row && row.querySelector("td:nth-child(6) .badge");
+         // Determinar novo status alternando
+         const current = (target.getAttribute("data-current") || "").toLowerCase();
+         const next = current === "active" ? "inactive" : "active";
+         target.setAttribute("data-current", next);
+         target.innerHTML = `<i class="bi bi-toggle2-on"></i> ${next === "active" ? "Desativar" : "Ativar"}`;
+         if (badge) {
+            badge.textContent = next === "active" ? "Ativo" : "Inativo";
+            badge.classList.remove("badge-success", "badge-secondary", "badge-danger");
+            badge.classList.add(next === "active" ? "badge-success" : "badge-secondary");
+         }
+      } else {
+         const msg = (json && json.message) ? json.message : "Erro ao atualizar status";
+         window.easyAlert && window.easyAlert.error(msg);
+      }
+   } catch (err) {
+      window.easyAlert && window.easyAlert.error("Erro na requisição de status");
+      console.error(err);
+   }
+});

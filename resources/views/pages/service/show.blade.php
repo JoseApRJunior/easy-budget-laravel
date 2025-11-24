@@ -232,10 +232,15 @@
                 <div class="card-body">
                     @if( $service->budget?->customer )
                     <div class="mb-3">
-                        <strong>{{ $service->budget->customer->commonData?->first_name }}
-                            {{ $service->budget->customer->commonData?->last_name }}</strong>
+                        <a href="{{ route('provider.customers.show', $service->budget->customer) }}" class="text-decoration-none">
+                            <strong>{{ $service->budget->customer->commonData?->first_name }}
+                                {{ $service->budget->customer->commonData?->last_name }}</strong>
+                        </a>
                         @if( $service->budget->customer->commonData?->company_name )
-                        <br><small class="text-muted">{{ $service->budget->customer->commonData->company_name }}</small>
+                        <br>
+                        <a href="{{ route('provider.customers.show', $service->budget->customer) }}" class="text-decoration-none">
+                            <small class="text-muted">{{ $service->budget->customer->commonData->company_name }}</small>
+                        </a>
                         @endif
                     </div>
 

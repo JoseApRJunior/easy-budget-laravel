@@ -36,6 +36,7 @@ class ServiceUpdateRequest extends FormRequest
                 'string',
                 'in:' . implode( ',', array_map( fn( $case ) => $case->value, ServiceStatus::cases() ) )
             ],
+            'discount'           => 'nullable|numeric|min:0',
             'description'        => 'nullable|string|max:1000',
             'due_date'           => 'nullable|date|after_or_equal:today',
             'items'              => 'required|array|min:1',

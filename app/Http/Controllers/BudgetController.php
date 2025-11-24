@@ -146,10 +146,8 @@ class BudgetController extends Controller
         $budget->load([
             'customer.commonData',
             'customer.contact',
-            'items' => function ($q) {
-                $q->ordered();
-            },
             'services.category',
+            'services.items',
         ]);
 
         if ( $request->boolean( 'pdf' ) ) {

@@ -104,7 +104,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Desconto</label>
-                        <input type="text" inputmode="numeric" class="form-control" name="discount" id="discount" value="0" />
+                        <input type="text" inputmode="numeric" class="form-control" name="discount" id="discount" value="R$ {{ number_format($budget->discount ?? 0, 2, ',', '.') }}" />
                         <script>
                           document.addEventListener('DOMContentLoaded', function(){
                             try {

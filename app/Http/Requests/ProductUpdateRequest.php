@@ -30,6 +30,7 @@ class ProductUpdateRequest extends FormRequest
 
         return [
             'name' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|nullable|string|max:1000',
             'sku' => [
                 'sometimes',
                 'nullable',
