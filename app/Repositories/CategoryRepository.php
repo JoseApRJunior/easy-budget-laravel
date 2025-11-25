@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Category;
-use App\Repositories\Abstracts\AbstractGlobalRepository;
+use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * Estende AbstractGlobalRepository para operações globais
  * (categorias são compartilhadas entre tenants).
  */
-class CategoryRepository extends AbstractGlobalRepository
+class CategoryRepository extends AbstractTenantRepository implements CategoryRepositoryInterface
 {
     /**
      * Define o Model a ser utilizado pelo Repositório.
@@ -31,7 +32,7 @@ class CategoryRepository extends AbstractGlobalRepository
      * @param string $slug Slug da categoria
      * @return Category|null Categoria encontrada
      */
-    public function findBySlug( string $slug ): ?Category
+    public function findByTenantAndSlug( string $slug ): ?Model
     {
         return $this->model->where( 'slug', $slug )->first();
     }
@@ -42,10 +43,10 @@ class CategoryRepository extends AbstractGlobalRepository
      * @param array<string, string>|null $orderBy Ordenação
      * @return Collection<Category> Categorias ativas
      */
-    public function findActive( ?array $orderBy = null ): Collection
+    public function listActive( ?array $orderBy = null ): Collection
     {
-        return $this->getAllGlobal(
-            [ 'status' => 'active' ],
+        return $this->getAllByTenant(
+            [ 'is_active' => true ],
             $orderBy,
         );
     }
@@ -58,10 +59,9 @@ class CategoryRepository extends AbstractGlobalRepository
      */
     public function findOrderedByName( string $direction = 'asc' ): Collection
     {
-        return $this->getAllGlobal(
+        return $this->getAllByTenant(
             [],
             [ 'name' => $direction ],
         );
     }
-
 }

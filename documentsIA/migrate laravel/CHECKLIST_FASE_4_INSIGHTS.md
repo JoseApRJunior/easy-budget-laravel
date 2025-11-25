@@ -1,5 +1,7 @@
 # 📋 **CHECKLIST FASE 4 - INSIGHTS (Semanas 8-9)**
 
+[⬅️ Voltar ao Índice](./INDICE_CHECKLISTS.md)
+
 ## 🎯 **Objetivo:** Implementar sistema completo de relatórios e analytics
 
 ### **Status Geral da Fase:**

@@ -77,7 +77,7 @@
 
 #### **📦 Products** — 🟢 Concluído (CRUD + Estoque)
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_PRODUCTS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_PRODUCTS.md) ✓
 -  Referência de fase: [Fase 1](./CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
 -  Funcionalidades:
    -  CRUD completo com filtros
@@ -86,7 +86,7 @@
 
 #### **👥 Customers (CRM)** — 🟡 Em progresso
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_CUSTOMERS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_CUSTOMERS.md) ✓
 -  Referência de fase: [Fase 1](./CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
 -  Funcionalidades:
    -  CRUD PF/PJ unificado
@@ -97,7 +97,7 @@
 
 #### **💰 Budgets (Orçamentos)** — 🟡 Em progresso
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_BUDGETS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_BUDGETS.md) ✓
 -  Referência de fase: [Fase 2](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
 -  Funcionalidades:
    -  CRUD com código único
@@ -106,7 +106,7 @@
 
 #### **🛠️ Services (Serviços)** — 🟡 Em progresso
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_SERVICES.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_SERVICES.md) ✓
 -  Referência de fase: [Fase 2](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
 -  Funcionalidades:
    -  CRUD + ServiceItems
@@ -117,7 +117,7 @@
 
 #### **🧾 Invoices (Faturas)** — 🟡 Em progresso
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_INVOICES.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_INVOICES.md) ✓
 -  Referência de fase: [Fase 3](./CHECKLIST_FASE_3_FLUXO_FINANCEIRO.md)
 -  Funcionalidades:
    -  CRUD + itens
@@ -137,7 +137,7 @@
 
 #### **📊 Reports & Analytics** — 🟡 Em progresso
 
--  Checklist individual: em construção
+-  Checklist individual disponível: [CHECKLIST_REPORTS.md](./CHECKLIST_MODULOS_INDIVIDUAIS/CHECKLIST_REPORTS.md) ✓
 -  Referência de fase: [Fase 4](./CHECKLIST_FASE_4_INSIGHTS.md)
 
 #### **📈 Executive Dashboard** — 🟡 Em progresso
@@ -178,20 +178,20 @@
 
 ### **🎯 Por Fase**
 
--  Fase 1 - Base Funcional: � Em progresso
--  Fase 2 - Core Business: � Em progresso
--  Fase 3 - Fluxo Financeiro: � Em progresso
--  Fase 4 - Insights: � Em progresso
+-  Fase 1 - Base Funcional: 🟡 Em progresso
+-  Fase 2 - Core Business: 🟡 Em progresso
+-  Fase 3 - Fluxo Financeiro: 🟡 Em progresso
+-  Fase 4 - Insights: 🟡 Em progresso
 
 ### **📈 Por Módulo**
 
--  Categories: � Em progresso
--  Products: � Concluído (CRUD + Estoque)
--  Customers: � Em progresso
--  Budgets: � Em progresso
--  Services: � Em progresso
--  Invoices: � Em progresso
--  Reports: � Em progresso
+-  Categories: 🟡 Em progresso
+-  Products: 🟢 Concluído (CRUD + Estoque)
+-  Customers: 🟡 Em progresso
+-  Budgets: 🟡 Em progresso
+-  Services: 🟡 Em progresso
+-  Invoices: 🟡 Em progresso
+-  Reports: 🟡 Em progresso
 
 ### **⚡ Indicadores**
 

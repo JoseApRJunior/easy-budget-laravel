@@ -17,8 +17,11 @@ class CategoryFactory extends Factory
         $slug = $this->faker->unique()->slug( 2 );
 
         return [
-            'name' => $this->faker->word,
-            'slug' => $slug,
+            'tenant_id'  => Tenant::factory(),
+            'name'       => $this->faker->words(2, true),
+            'slug'       => $slug,
+            'description'=> $this->faker->sentence(),
+            'is_active'  => true,
         ];
     }
 

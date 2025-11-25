@@ -1,5 +1,7 @@
 # 📋 **CHECKLIST CATEGORIES - MÓDULO INDIVIDUAL**
 
+[⬅️ Voltar ao Índice](../INDICE_CHECKLISTS.md)
+
 ## 🎯 **Informações do Módulo:**
 
 -  **Nome:** Categories (Categorias)

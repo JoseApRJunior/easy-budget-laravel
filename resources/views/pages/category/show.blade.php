@@ -9,7 +9,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'admin.dashboard' ) }}">Dashboard Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'admin.index' ) }}">Dashboard Admin</a></li>
                     <li class="breadcrumb-item"><a href="{{ route( 'admin.categories.index' ) }}">Categorias</a></li>
                     <li class="breadcrumb-item active">Detalhes</li>
                 </ol>

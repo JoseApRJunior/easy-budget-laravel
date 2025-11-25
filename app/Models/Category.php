@@ -6,13 +6,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Model para representar categorias, com tenant_id opcional para compatibilidade com sistema legado.
  */
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Models\Traits\TenantScoped, \App\Models\Traits\Auditable;
 
     /**
      * Boot the model.
@@ -20,13 +22,18 @@ class Category extends Model
     protected static function boot()
     {
         parent::boot();
+        static::bootTenantScoped();
+        static::bootAuditable();
     }
 
     protected $table = 'categories';
 
     protected $fillable = [
+        'tenant_id',
         'slug',
         'name',
+        'description',
+        'is_active',
     ];
 
     /**
@@ -35,10 +42,13 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'slug'       => 'string',
-        'name'       => 'string',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'datetime',
+        'tenant_id'   => 'integer',
+        'slug'        => 'string',
+        'name'        => 'string',
+        'description' => 'string',
+        'is_active'   => 'boolean',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
     ];
 
     /**
@@ -55,20 +65,23 @@ class Category extends Model
     public static function businessRules(): array
     {
         return [
-            'slug' => 'required|string|max:255|unique:categories,slug',
-            'name' => 'required|string|max:255',
+            'tenant_id'  => 'required|integer|exists:tenants,id',
+            'name'       => 'required|string|max:255',
+            'slug'       => 'required|string|max:255|unique:categories,slug,NULL,id,tenant_id,' . (auth()->user()->tenant_id ?? 'NULL'),
+            'description' => 'nullable|string',
+            'is_active'  => 'boolean',
         ];
     }
 
     /**
      * Validação customizada para verificar se o slug .
      */
-    public static function validateUniqueSlug( string $slug, ?int $excludeCategoryId = null ): bool
+    public static function validateUniqueSlug(string $slug, ?int $excludeCategoryId = null): bool
     {
-        $query = static::where( 'slug', $slug );
+        $query = static::where('slug', $slug);
 
-        if ( $excludeCategoryId ) {
-            $query->where( 'id', '!=', $excludeCategoryId );
+        if ($excludeCategoryId) {
+            $query->where('id', '!=', $excludeCategoryId);
         }
 
         return !$query->exists();
@@ -77,9 +90,9 @@ class Category extends Model
     /**
      * Validação customizada para verificar se o slug tem formato válido.
      */
-    public static function validateSlugFormat( string $slug ): bool
+    public static function validateSlugFormat(string $slug): bool
     {
-        return preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug );
+        return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug);
     }
 
     /**
@@ -87,10 +100,43 @@ class Category extends Model
      */
     public function services(): HasMany
     {
-        return $this->hasMany( Service::class);
+        return $this->hasMany(Service::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
-     * Relacionamentos podem ser adicionados aqui se aplicável, ex: products, services.
+     * Relação com a categoria pai (para hierarquia)
      */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * Relação com as categorias filhas (para hierarquia)
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    /**
+     * Verifica se esta categoria tem filhas
+     */
+    public function hasChildren(): bool
+    {
+        return $this->children()->exists();
+    }
+
+    /**
+     * Contagem de categorias filhas ativas
+     */
+    public function getActiveChildrenCountAttribute(): int
+    {
+        return $this->children()->where('is_active', true)->count();
+    }
 }

@@ -1,5 +1,7 @@
 # 📋 **CHECKLIST FASE 1 - BASE FUNCIONAL (Semanas 1-2)**
 
+[⬅️ Voltar ao Índice](./INDICE_CHECKLISTS.md)
+
 ## 🎯 **Objetivo:** Estabelecer fundações sólidas para todo o sistema
 
 ### **Status Geral da Fase:**
@@ -23,20 +25,20 @@
 
 #### **🔧 Backend (Models, Repositories, Services)**
 
--  [ ] Verificar e atualizar Category Model
+-  [x] Verificar e atualizar Category Model
 
-   -  [ ] Relationships corretas
+   -  [x] Relationships corretas
    -  [ ] Fillable/casts adequados
    -  [ ] Traits TenantScoped e Auditable
 
--  [ ] Implementar CategoryRepository
+-  [x] Implementar CategoryRepository
 
    -  [ ] Interface definida
-   -  [ ] Métodos CRUD completos
-   -  [ ] Filtros e busca
+   -  [x] Métodos CRUD completos
+   -  [x] Filtros e busca
    -  [ ] Validações de negócio
 
--  [ ] Implementar CategoryService
+-  [x] Implementar CategoryService
    -  [ ] ServiceResult em todas operações
    -  [ ] Validações específicas
    -  [ ] Regras de negócio
@@ -60,17 +62,17 @@
 
 #### **🎨 Interface (Views)**
 
--  [ ] Criar/atualizar views em resources/views/pages/category/
-   -  [ ] index.blade.php - listagem com search/filter
-   -  [ ] create.blade.php - formulário de criação
-   -  [ ] edit.blade.php - formulário de edição
-   -  [ ] show.blade.php - visualização detalhada
+-  [x] Criar/atualizar views em resources/views/pages/category/
+   -  [x] index.blade.php - listagem com search/filter
+   -  [x] create.blade.php - formulário de criação
+   -  [x] edit.blade.php - formulário de edição
+   -  [x] show.blade.php - visualização detalhada
    -  [ ] partials para filtros e ações
 
 #### **🧪 Testes**
 
--  [ ] Criar CategoryFactory
--  [ ] Implementar CategorySeeder
+-  [x] Criar CategoryFactory
+-  [x] Implementar CategorySeeder
 -  [ ] Testes unitários CategoryService
 -  [ ] Testes de Feature CategoryController
 -  [ ] Testes de integração com UI
@@ -98,20 +100,20 @@
 
 #### **🔧 Backend (Models, Repositories, Services)**
 
--  [ ] Verificar e atualizar Product Model
+-  [x] Verificar e atualizar Product Model
 
-   -  [ ] Relationships corretas (category, inventory)
-   -  [ ] Fillable/casts adequados
+   -  [x] Relationships corretas (category, inventory)
+   -  [x] Fillable/casts adequados
    -  [ ] Traits TenantScoped e Auditable
 
--  [ ] Implementar ProductRepository
+-  [x] Implementar ProductRepository
 
    -  [ ] Interface definida
-   -  [ ] CRUD completo
-   -  [ ] Busca por categoria/preço
-   -  [ ] Filtros avançados
+   -  [x] CRUD completo
+   -  [x] Busca por categoria/preço
+   -  [x] Filtros avançados
 
--  [ ] Implementar ProductService
+-  [x] Implementar ProductService
    -  [ ] ServiceResult padronizado
    -  [ ] Gestão de estoque (ProductInventory)
    -  [ ] Gestão de preços
@@ -119,43 +121,43 @@
 
 #### **🎮 Controller e Rotas**
 
--  [ ] Implementar ProductController completo
+-  [x] Implementar ProductController completo
 
-   -  [ ] index() - listagem com filtros
-   -  [ ] create() - formulário de criação
-   -  [ ] store() - validação e criação
-   -  [ ] show() - visualização individual
-   -  [ ] edit() - formulário de edição
-   -  [ ] update() - validação e atualização
-   -  [ ] destroy() - exclusão segura
+   -  [x] index() - listagem com filtros
+   -  [x] create() - formulário de criação
+   -  [x] store() - validação e criação
+   -  [x] show() - visualização individual
+   -  [x] edit() - formulário de edição
+   -  [x] update() - validação e atualização
+   -  [x] destroy() - exclusão segura
 
--  [ ] Verificar/ajustar rotas em routes/web.php
-   -  [ ] Rotas RESTful
-   -  [ ] Middleware de autenticação
-   -  [ ] Namespacing adequado
+-  [x] Verificar/ajustar rotas em routes/web.php
+   -  [x] Rotas RESTful
+   -  [x] Middleware de autenticação
+   -  [x] Namespacing adequado
 
 #### **📦 Gestão de Inventário**
 
 -  [ ] Implementar ProductInventory controller
    -  [ ] Adicionar estoque
    -  [ ] Remover estoque
-   -  [ ] Histórico de movimentações
+   -  [x] Histórico de movimentações
    -  [ ] Alertas de estoque mínimo
 
 #### **🎨 Interface (Views)**
 
--  [ ] Criar/atualizar views em resources/views/pages/product/
-   -  [ ] index.blade.php - listagem com search/filter
-   -  [ ] create.blade.php - formulário de criação
-   -  [ ] edit.blade.php - formulário de edição
-   -  [ ] show.blade.php - visualização detalhada
-   -  [ ] dashboard.blade.php - visão geral do inventário
+-  [x] Criar/atualizar views em resources/views/pages/product/
+   -  [x] index.blade.php - listagem com search/filter
+   -  [x] create.blade.php - formulário de criação
+   -  [x] edit.blade.php - formulário de edição
+   -  [x] show.blade.php - visualização detalhada
+   -  [x] dashboard.blade.php - visão geral do inventário
    -  [ ] Componentes para gestão de estoque
 
 #### **🧪 Testes**
 
--  [ ] Criar ProductFactory
--  [ ] Implementar ProductSeeder
+-  [x] Criar ProductFactory
+-  [x] Implementar ProductSeeder
 -  [ ] Testes unitários ProductService
 -  [ ] Testes de Feature ProductController
 -  [ ] Testes de gestão de estoque
@@ -184,21 +186,21 @@
 
 #### **🔧 Backend (Models, Repositories, Services)**
 
--  [ ] Verificar e atualizar Customer Model
+-  [x] Verificar e atualizar Customer Model
 
-   -  [ ] Relationships (common_data, contact, address)
+   -  [x] Relationships (common_data, contact, address)
    -  [ ] Fillable/casts adequados
    -  [ ] Traits TenantScoped e Auditable
 
--  [ ] Implementar CustomerRepository
+-  [x] Implementar CustomerRepository
 
    -  [ ] Interface definida
-   -  [ ] CRUD completo (PF/PJ)
-   -  [ ] Busca por tipo/nome/email
+   -  [x] CRUD completo (PF/PJ)
+   -  [x] Busca por tipo/nome/email
    -  [ ] Filtros avançados
    -  [ ] Relatórios básicos
 
--  [ ] Implementar CustomerService
+-  [x] Implementar CustomerService
    -  [ ] ServiceResult padronizado
    -  [ ] Lógica para PF vs PJ
    -  [ ] Validações específicas
@@ -206,25 +208,25 @@
 
 #### **🎮 Controller e Rotas**
 
--  [ ] Implementar CustomerController completo
-   -  [ ] index() - listagem com paginação
-   -  [ ] create() - formulário de criação
-   -  [ ] store() - validação e criação
-   -  [ ] show() - visualização detalhada
-   -  [ ] edit() - formulário de edição
-   -  [ ] update() - validação e atualização
-   -  [ ] destroy() - exclusão segura
+-  [x] Implementar CustomerController completo
+   -  [x] index() - listagem com paginação
+   -  [x] create() - formulário de criação
+   -  [x] store() - validação e criação
+   -  [x] show() - visualização detalhada
+   -  [x] edit() - formulário de edição
+   -  [x] update() - validação e atualização
+   -  [x] destroy() - exclusão segura
    -  [ ] services_and_quotes() - histórico de serviços
 
 #### **🎨 Interface (Views)**
 
--  [ ] Criar/atualizar views em resources/views/pages/customer/
-   -  [ ] index.blade.php - listagem com busca
-   -  [ ] create.blade.php - formulário PF/PJ
-   -  [ ] edit.blade.php - formulário de edição
-   -  [ ] show.blade.php - perfil completo
-   -  [ ] services_and_quotes.blade.php - histórico
-   -  [ ] dashboard.blade.php - visão geral CRM
+-  [x] Criar/atualizar views em resources/views/pages/customer/
+   -  [x] index.blade.php - listagem com busca
+   -  [x] create.blade.php - formulário PF/PJ
+   -  [x] edit.blade.php - formulário de edição
+   -  [x] show.blade.php - perfil completo
+   -  [x] services_and_quotes.blade.php - histórico
+   -  [x] dashboard.blade.php - visão geral CRM
 
 #### **🔗 Integração com Dados Relacionados**
 
@@ -255,8 +257,8 @@
 
 #### **🧪 Testes**
 
--  [ ] Criar CustomerFactory
--  [ ] Implementar CustomerSeeder
+-  [x] Criar CustomerFactory
+-  [x] Implementar CustomerSeeder
 -  [ ] Testes unitários CustomerService
 -  [ ] Testes de Feature CustomerController
 -  [ ] Testes de formulários dinâmicos

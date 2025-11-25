@@ -44,7 +44,7 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                 {{-- Rotas implementadas --}}
-                <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">
+                <li><a class="dropdown-item" href="{{ route( 'admin.index' ) }}">
                         <i class="bi bi-house me-2"></i>Home Admin</a></li>
                 <li><a class="dropdown-item" href="{{ route( 'admin.enterprises.index' ) }}">
                         <i class="bi bi-building me-2"></i>Gestão de Empresas</a></li>

@@ -11,7 +11,7 @@ class CategorySeeder extends Seeder
     {
         $now = now();
         $categories = [
-            ['slug' => 'hidraulica',        'name' => 'Hidráulica',        'created_at' => $now],
+            ['slug' => 'hidraulica',        'name' => 'Hidráulica',        'is_active' => true, 'created_at' => $now],
             ['slug' => 'eletrica',          'name' => 'Elétrica',          'created_at' => $now],
             ['slug' => 'pintura',           'name' => 'Pintura',           'created_at' => $now],
             ['slug' => 'alvenaria',         'name' => 'Alvenaria',         'created_at' => $now],
@@ -39,6 +39,6 @@ class CategorySeeder extends Seeder
             ['slug' => 'outros',            'name' => 'Outros',            'created_at' => $now],
         ];
 
-        DB::table('categories')->upsert($categories, ['slug'], ['name']);
+        DB::table('categories')->upsert($categories, ['slug'], ['name','is_active']);
     }
 }

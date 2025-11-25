@@ -1,5 +1,7 @@
 # 📋 **CHECKLIST FASE 3 - FLUXO FINANCEIRO (Semanas 6-7)**
 
+[⬅️ Voltar ao Índice](./INDICE_CHECKLISTS.md)
+
 ## 🎯 **Objetivo:** Implementar sistema completo de faturamento e pagamentos
 
 ### **Status Geral da Fase:**

@@ -1,5 +1,7 @@
 # 📋 **CHECKLIST FASE 2 - CORE BUSINESS (Semanas 3-5)**
 
+[⬅️ Voltar ao Índice](./INDICE_CHECKLISTS.md)
+
 ## 🎯 **Objetivo:** Implementar funcionalidades centrais do sistema
 
 ### **Status Geral da Fase:**

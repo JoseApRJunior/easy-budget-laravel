@@ -12,6 +12,7 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         health: '/up',
     )
     ->withProviders( [
+        App\Providers\AuthServiceProvider::class,
         App\Providers\AliasServiceProvider::class,
         App\Providers\ViewComposerServiceProvider::class,
         App\Providers\BladeDirectiveServiceProvider::class,
@@ -23,7 +24,7 @@ return Application::configure( basePath: dirname( __DIR__ ) )
             'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
             'provider'        => \App\Http\Middleware\ProviderMiddleware::class,
             'admin'           => \App\Http\Middleware\AdminMiddleware::class,
-            'monitoring'    => \App\Http\Middleware\MonitoringMiddleware::class,
+            'monitoring'      => \App\Http\Middleware\MonitoringMiddleware::class,
         ] );
 
         // Trust Cloudflare proxies for correct URL generation

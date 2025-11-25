@@ -32,7 +32,7 @@
         <li>
             <hr class="dropdown-divider">
         </li>
-        <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">
+        <li><a class="dropdown-item" href="{{ route( 'admin.index' ) }}">
                 <i class="bi bi-shield-lock me-2"></i>Administração</a></li>
         @endrole
 
