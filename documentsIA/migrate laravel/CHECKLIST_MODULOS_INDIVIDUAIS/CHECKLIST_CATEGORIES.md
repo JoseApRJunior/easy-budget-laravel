@@ -54,9 +54,9 @@
 
 -  [ ] CategoryService (app/Services/Domain/CategoryService.php)
    -  [ ] Estender BaseTenantService
-   -  [ ] ServiceResult em todas operações
-   -  [ ] Validações específicas
-   -  [ ] Regras de negócio
+   -  [x] ServiceResult em todas operações
+   -  [x] Validações específicas
+   -  [x] Regras de negócio
 
 ---
 
@@ -66,38 +66,38 @@
 
  -  [x] **index()** - Listagem com paginação
 
-   -  [ ] Carregar categories com filtros
-   -  [ ] Paginação configurada
-   -  [ ] Search functionality
+  -  [ ] Carregar categories com filtros
+  -  [x] Paginação configurada
+  -  [ ] Search functionality
 
 -  [ ] **create()** - Formulário de criação
 
-   -  [ ] Exibir formulário
-   -  [ ] Dados padrão
+  -  [x] Exibir formulário
+  -  [ ] Dados padrão
 
 -  [ ] **store()** - Criar categoria
 
-   -  [ ] Validação de dados
-   -  [ ] Verificar unicidade do slug
-   -  [ ] Criar no banco
-   -  [ ] Log de auditoria
+  -  [x] Validação de dados
+  -  [x] Verificar unicidade do slug
+  -  [x] Criar no banco
+  -  [ ] Log de auditoria
 
 -  [ ] **show()** - Visualizar categoria
 
-   -  [ ] Detalhamento completo
-   -  [ ] Services relacionados (se houver)
+  -  [x] Detalhamento completo
+  -  [ ] Services relacionados (se houver)
 
 -  [ ] **edit()** - Formulário de edição
 
-   -  [ ] Carregar dados existentes
-   -  [ ] Exibir formulário preenchido
+  -  [x] Carregar dados existentes
+  -  [x] Exibir formulário preenchido
 
 -  [ ] **update()** - Atualizar categoria
 
-   -  [ ] Validação de dados
-   -  [ ] Verificar permissões
-   -  [ ] Salvar alterações
-   -  [ ] Log de auditoria
+  -  [x] Validação de dados
+  -  [ ] Verificar permissões
+  -  [x] Salvar alterações
+  -  [ ] Log de auditoria
 
 -  [ ] **destroy()** - Excluir categoria
    -  [ ] Verificar se há serviços dependentes
@@ -106,9 +106,9 @@
 
 ### **🛣️ Rotas (routes/web.php)**
 
--  [ ] Rotas RESTful configuradas
--  [ ] Middleware de autenticação aplicado
--  [ ] Namespacing adequado
+-  [x] Rotas RESTful configuradas
+-  [x] Middleware de autenticação aplicado
+-  [x] Namespacing adequado
 
 ---
 

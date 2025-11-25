@@ -1,51 +1,123 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-tag-plus me-2"></i>Nova Categoria
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'admin.index' ) }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'admin.categories.index' ) }}">Categorias</a></li>
-                    <li class="breadcrumb-item active">Nova</li>
-                </ol>
-            </nav>
-        </div>
+@section('title', 'Nova Categoria')
 
-        <!-- Formulário -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <form action="{{ route( 'admin.categories.store' ) }}" method="POST">
-                    @csrf
-                    <div class="row g-4">
-                        <!-- Nome -->
-                        <div class="col-md-12">
-                            <div class="form-floating">
-                                <input type="text" class="form-control @error( 'name' ) is-invalid @enderror" id="name"
-                                    name="name" placeholder="Nome da Categoria" value="{{ old( 'name' ) }}" required>
-                                <label for="name">Nome da Categoria *</label>
-                                @error( 'name' )
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+@section('content')
+<div class="container-fluid py-1">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-tag-plus me-2"></i>Nova Categoria
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nova</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form action="{{ route('categories.store') }}" method="POST">
+                @csrf
+                <div class="row g-4">
+                    <div class="col-md-12">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                                name="name" placeholder="Nome da Categoria" value="{{ old('name') }}" required>
+                            <label for="name">Nome da Categoria *</label>
+                            @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="slugPreview" name="slugPreview"
+                                value="{{ Str::slug(old('name')) }}" placeholder="slug" disabled>
+                            <label for="slugPreview">Slug (gerado automaticamente)</label>
+                        </div>
+                        <div class="form-text" id="slugStatus"></div>
                     </div>
+                </div>
 
-                    <div class="mt-4 d-flex justify-content-between">
-                        <a href="{{ route( 'admin.categories.index' ) }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Voltar
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Salvar
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Salvar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    (function() {
+        var nameInput = document.getElementById('name');
+        var slugInput = document.getElementById('slugPreview');
+        var statusEl = document.getElementById('slugStatus');
+        var submitBtn = document.querySelector('form button[type="submit"]');
+
+        function slugify(text) {
+            return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        function checkSlug(slug) {
+            var url = '{{ url(' / categories / ajax / check - slug ') }}' + '?slug=' + encodeURIComponent(slug);
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(r) {
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (data.attached) {
+                        statusEl.innerHTML = 'Já existe uma categoria com este slug neste tenant. ' + (data.edit_url ? '<a href="' + data.edit_url + '" class="text-danger">Editar</a>' : '');
+                        statusEl.className = 'form-text text-danger';
+                        submitBtn.disabled = true;
+                        nameInput.classList.add('is-invalid');
+                    } else if (data.exists) {
+                        statusEl.textContent = 'Slug disponível: categoria existente será vinculada ao seu tenant.';
+                        statusEl.className = 'form-text text-warning';
+                        submitBtn.disabled = false;
+                        nameInput.classList.remove('is-invalid');
+                    } else {
+                        statusEl.textContent = 'Slug disponível.';
+                        statusEl.className = 'form-text text-muted';
+                        submitBtn.disabled = false;
+                        nameInput.classList.remove('is-invalid');
+                    }
+                })
+                .catch(function() {
+                    statusEl.textContent = '';
+                    statusEl.className = 'form-text';
+                    submitBtn.disabled = false;
+                    nameInput.classList.remove('is-invalid');
+                });
+        }
+        if (nameInput && slugInput) {
+            nameInput.addEventListener('input', function() {
+                slugInput.value = slugify(nameInput.value || '');
+                var s = slugInput.value;
+                if (s) {
+                    checkSlug(s);
+                }
+            });
+            if (nameInput.value) {
+                checkSlug(slugify(nameInput.value));
+            }
+        }
+    })();
+</script>
+@endpush

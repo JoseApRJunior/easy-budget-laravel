@@ -222,6 +222,10 @@ Route::prefix('provider')->name('provider.')->middleware(['auth', 'verified', 'p
         // Status e exclusão via SKU
         Route::patch('/{sku}/toggle-status', [ProductController::class, 'toggle_status'])->name('toggle-status');
         Route::delete('/{sku}', [ProductController::class, 'delete_store'])->name('destroy');
+
+        // Inventory Management
+        Route::post('/{id}/inventory/add', [InventoryController::class, 'add'])->name('inventory.add');
+        Route::post('/{id}/inventory/remove', [InventoryController::class, 'remove'])->name('inventory.remove');
     });
 
     // Services
@@ -507,17 +511,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'monitoring
         Route::get('/{user}/activity', [UserManagementController::class, 'activity'])->name('activity');
     });
 
-    // Category Management (unificado)
-    Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
-        Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
-        Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
-    });
+// Category Management (unificado)
+Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
+    Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
+});
 
     // Activity Management
     Route::prefix('activities')->name('activities.')->group(function () {
@@ -669,6 +674,21 @@ Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(fu
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
+    Route::get('/ajax/check-slug', [\App\Http\Controllers\CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
+});
+
+// Admin Category Management (espelhado)
+Route::middleware(['auth'])->prefix('admin/categories')->name('admin.categories.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
+    Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
 });
 
 // Queues routes group

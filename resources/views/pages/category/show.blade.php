@@ -1,26 +1,21 @@
-@extends( 'layouts.app' )
+@extends( 'layouts.admin' )
 
-@section( 'content' )
+@section( 'breadcrumb' )
+<li class="breadcrumb-item"><a href="{{ route( 'admin.categories.index' ) }}">Categorias</a></li>
+<li class="breadcrumb-item active">Detalhes</li>
+@endsection
+
+@section( 'admin_content' )
 <div class="container-fluid py-4">
-    <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">
             <i class="bi bi-tag me-2"></i>Detalhes da Categoria
         </h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route( 'admin.index' ) }}">Dashboard Admin</a></li>
-                <li class="breadcrumb-item"><a href="{{ route( 'admin.categories.index' ) }}">Categorias</a></li>
-                <li class="breadcrumb-item active">Detalhes</li>
-            </ol>
-        </nav>
     </div>
 
-    <!-- Detalhes da Categoria -->
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             <div class="row g-4">
-                <!-- ID -->
                 <div class="col-md-3">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">ID</label>
@@ -28,21 +23,13 @@
                     </div>
                 </div>
 
-                <!-- Nome -->
                 <div class="col-md-3">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Nome</label>
-                        <h5 class="mb-0">
-                            {{ $category->name }}
-                            @php $pivot = $category->tenants->first()?->pivot; @endphp
-                            @if($pivot && $pivot->is_default)
-                                <i class="bi bi-star-fill text-warning ms-2" title="Categoria padrão"></i>
-                            @endif
-                        </h5>
+                        <h5 class="mb-0">{{ $category->name }}</h5>
                     </div>
                 </div>
 
-                <!-- Slug -->
                 <div class="col-md-3">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Slug</label>
@@ -50,7 +37,6 @@
                     </div>
                 </div>
 
-                <!-- Datas -->
                 <div class="col-md-3">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Criado em</label>
@@ -77,14 +63,6 @@
                         data-bs-target="#deleteModal-{{ $category->id }}">
                         <i class="bi bi-trash me-2"></i>Excluir
                     </button>
-                    @can('manage-custom-categories')
-                    <form action="{{ route('categories.set-default', $category->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-success">
-                            <i class="bi bi-star me-2"></i>Definir como padrão
-                        </button>
-                    </form>
-                    @endcan
                 </div>
             </div>
         </div>
@@ -92,13 +70,6 @@
 
 </div>
 
-    @if(session('status'))
-    <div class="alert alert-success mt-3" role="alert">
-        {{ session('status') }}
-    </div>
-    @endif
-
-    <!-- Modal de Exclusão -->
 <div class="modal fade" id="deleteModal-{{ $category->id }}" tabindex="-1"
     aria-labelledby="deleteModalLabel-{{ $category->id }}" aria-hidden="true">
     <div class="modal-dialog">

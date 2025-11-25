@@ -136,20 +136,6 @@
                         <i class="fas fa-clock text-muted"></i>
                         {{ $product->updated_at->format( 'd/m/Y H:i' ) }}
                       </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Informações Adicionais -->
-            <div class="row mt-4">
-              <div class="col-12">
-                <div class="card card-outline card-primary">
-                  <div class="card-header">
-                    <h5 class="card-title">
-                      <i class="fas fa-info-circle"></i> Informações do Sistema
-                    </h5>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -202,6 +188,88 @@
       </div>
     </div>
   </div>
+@endsection
+
+@section('scripts')
+<script>
+  $(document).ready(function() {
+    // Add Stock
+    $('#addStockForm').on('submit', function(e) {
+      e.preventDefault();
+      const form = $(this);
+      const btn = form.find('button[type="submit"]');
+      const originalText = btn.html();
+
+      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
+
+      $.ajax({
+        url: "{{ route('provider.products.inventory.add', $product->id) }}",
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(response) {
+          if(response.success) {
+            toastr.success(response.message);
+            $('#addStockModal').modal('hide');
+            form[0].reset();
+            // Update stock display
+            if(response.data && response.data.quantity !== undefined) {
+                $('#current-stock').text(response.data.quantity);
+            } else {
+                location.reload();
+            }
+          } else {
+            toastr.error(response.message);
+          }
+        },
+        error: function(xhr) {
+          toastr.error(xhr.responseJSON?.message || 'Erro ao adicionar estoque');
+        },
+        complete: function() {
+          btn.prop('disabled', false).html(originalText);
+        }
+      });
+    });
+
+    // Remove Stock
+    $('#removeStockForm').on('submit', function(e) {
+      e.preventDefault();
+      const form = $(this);
+      const btn = form.find('button[type="submit"]');
+      const originalText = btn.html();
+
+      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
+
+      $.ajax({
+        url: "{{ route('provider.products.inventory.remove', $product->id) }}",
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(response) {
+          if(response.success) {
+            toastr.success(response.message);
+            $('#removeStockModal').modal('hide');
+            form[0].reset();
+            // Update stock display
+             if(response.data && response.data.quantity !== undefined) {
+                $('#current-stock').text(response.data.quantity);
+            } else {
+                location.reload();
+            }
+          } else {
+            toastr.error(response.message);
+          }
+        },
+        error: function(xhr) {
+          toastr.error(xhr.responseJSON?.message || 'Erro ao remover estoque');
+        },
+        complete: function() {
+          btn.prop('disabled', false).html(originalText);
+        }
+      });
+    });
+  });
+</script>
 @endsection
 
 @section( 'styles' )

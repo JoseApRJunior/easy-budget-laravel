@@ -36,30 +36,30 @@
 
    -  [x] Interface (N/A — usa AbstractGlobalRepository com GlobalRepositoryInterface)
    -  [x] Métodos CRUD completos
-   -  [x] Filtros e busca
-   -  [ ] Validações de negócio
+-  [x] Filtros e busca
+-  [x] Validações de negócio
 
 -  [x] Implementar CategoryService
-   -  [ ] ServiceResult em todas operações
-   -  [ ] Validações específicas
-   -  [ ] Regras de negócio
+   -  [x] ServiceResult em todas operações
+   -  [x] Validações específicas
+   -  [x] Regras de negócio
 
 #### **🎮 Controller e Rotas**
 
 -  [x] Implementar CategoryController completo
 
-   -  [ ] index() - listagem com paginação
-   -  [ ] create() - formulário de criação
-   -  [ ] store() - validação e criação
-   -  [ ] show() - visualização individual
-   -  [ ] edit() - formulário de edição
-   -  [ ] update() - validação e atualização
+   -  [x] index() - listagem com paginação
+   -  [x] create() - formulário de criação
+   -  [x] store() - validação e criação
+   -  [x] show() - visualização individual
+   -  [x] edit() - formulário de edição
+   -  [x] update() - validação e atualização
    -  [ ] destroy() - exclusão segura
 
 -  [x] Verificar rotas em routes/web.php
-   -  [ ] Rotas RESTful configuradas
-   -  [ ] Middleware aplicado
-   -  [ ] Nomes de rotas consistentes
+   -  [x] Rotas RESTful configuradas
+   -  [x] Middleware aplicado
+   -  [x] Nomes de rotas consistentes
 
 #### **🎨 Interface (Views)**
 
