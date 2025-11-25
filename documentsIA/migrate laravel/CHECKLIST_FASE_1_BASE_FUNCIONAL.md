@@ -16,7 +16,7 @@
 
 ### **📊 Informações do Módulo:**
 
--  **Status Atual:** Estrutura existe, CRUD básico necessário
+-  **Status Atual:** Schema unificado, Model/Repository atualizados, Views prontas
 -  **Dependências:** Nenhuma (independente)
 -  **Impacto:** 🟨 ALTO - Services e Products precisam de categories
 -  **Tempo Estimado:** 3 dias
@@ -28,7 +28,7 @@
 -  [x] Verificar e atualizar Category Model
 
    -  [x] Relationships corretas
-   -  [ ] Fillable/casts adequados
+   -  [x] Fillable/casts adequados
    -  [ ] Traits TenantScoped e Auditable
 
 -  [x] Implementar CategoryRepository
