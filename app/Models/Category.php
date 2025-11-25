@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Category extends Model
 {
-    use HasFactory, \App\Models\Traits\TenantScoped, \App\Models\Traits\Auditable;
+    use HasFactory;
 
     /**
      * Boot the model.
@@ -22,17 +23,13 @@ class Category extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
-        static::bootAuditable();
     }
 
     protected $table = 'categories';
 
     protected $fillable = [
-        'tenant_id',
         'slug',
         'name',
-        'description',
         'is_active',
     ];
 
@@ -42,13 +39,11 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'   => 'integer',
-        'slug'        => 'string',
-        'name'        => 'string',
-        'description' => 'string',
-        'is_active'   => 'boolean',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
+        'slug'       => 'string',
+        'name'       => 'string',
+        'is_active'  => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -65,11 +60,8 @@ class Category extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'  => 'required|integer|exists:tenants,id',
-            'name'       => 'required|string|max:255',
-            'slug'       => 'required|string|max:255|unique:categories,slug,NULL,id,tenant_id,' . (auth()->user()->tenant_id ?? 'NULL'),
-            'description' => 'nullable|string',
-            'is_active'  => 'boolean',
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:categories,slug',
         ];
     }
 
@@ -103,38 +95,28 @@ class Category extends Model
         return $this->hasMany(Service::class);
     }
 
-    public function tenant(): BelongsTo
+    public function tenants(): BelongsToMany
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsToMany(Tenant::class, 'category_tenant')
+            ->withPivot(['is_default', 'is_custom'])
+            ->withTimestamps();
     }
 
-    /**
-     * Relação com a categoria pai (para hierarquia)
-     */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    /**
-     * Relação com as categorias filhas (para hierarquia)
-     */
     public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    /**
-     * Verifica se esta categoria tem filhas
-     */
     public function hasChildren(): bool
     {
         return $this->children()->exists();
     }
 
-    /**
-     * Contagem de categorias filhas ativas
-     */
     public function getActiveChildrenCountAttribute(): int
     {
         return $this->children()->where('is_active', true)->count();

@@ -20,6 +20,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tenant extends Model
 {
@@ -164,6 +165,13 @@ class Tenant extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany( Contact::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany( Category::class, 'category_tenant')
+            ->withPivot(['is_default','is_custom'])
+            ->withTimestamps();
     }
 
     /**

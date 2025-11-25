@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\ActivityManagementController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdvancedMetricsController;
 use App\Http\Controllers\Admin\AIMetricsController;
-use App\Http\Controllers\Admin\CategoryManagementController;
 use App\Http\Controllers\Admin\CustomerManagementController;
 use App\Http\Controllers\Admin\EnterpriseController;
 use App\Http\Controllers\Admin\FinancialControlController;
@@ -508,19 +507,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'monitoring
         Route::get('/{user}/activity', [UserManagementController::class, 'activity'])->name('activity');
     });
 
-    // Category Management
+    // Category Management (unificado)
     Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/', [CategoryManagementController::class, 'index'])->name('index');
-        Route::get('/create', [CategoryManagementController::class, 'create'])->name('create');
-        Route::post('/', [CategoryManagementController::class, 'store'])->name('store');
-        Route::get('/{category}', [CategoryManagementController::class, 'show'])->name('show');
-        Route::get('/{category}/edit', [CategoryManagementController::class, 'edit'])->name('edit');
-        Route::put('/{category}', [CategoryManagementController::class, 'update'])->name('update');
-        Route::delete('/{category}', [CategoryManagementController::class, 'destroy'])->name('destroy');
-        Route::post('/{category}/toggle-status', [CategoryManagementController::class, 'toggleStatus'])->name('toggle-status');
-        Route::post('/{category}/duplicate', [CategoryManagementController::class, 'duplicate'])->name('duplicate');
-        Route::get('/export/{format}', [CategoryManagementController::class, 'export'])->name('export');
-        Route::get('/ajax/subcategories', [CategoryManagementController::class, 'getSubcategories'])->name('ajax.subcategories');
+        Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
+        Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     });
 
     // Activity Management

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Category;
-use App\Repositories\Abstracts\AbstractTenantRepository;
-use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\TenantScope;
+use App\Models\Traits\TenantScoped;
 
 /**
  * Repositório para gerenciamento de categorias.
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * Estende AbstractGlobalRepository para operações globais
  * (categorias são compartilhadas entre tenants).
  */
-class CategoryRepository extends AbstractTenantRepository implements CategoryRepositoryInterface
+class CategoryRepository extends AbstractGlobalRepository
 {
     /**
      * Define o Model a ser utilizado pelo Repositório.
@@ -32,9 +33,9 @@ class CategoryRepository extends AbstractTenantRepository implements CategoryRep
      * @param string $slug Slug da categoria
      * @return Category|null Categoria encontrada
      */
-    public function findByTenantAndSlug( string $slug ): ?Model
+    public function findBySlug(string $slug): ?Model
     {
-        return $this->model->where( 'slug', $slug )->first();
+        return $this->model->where('slug', $slug)->first();
     }
 
     /**
@@ -43,10 +44,10 @@ class CategoryRepository extends AbstractTenantRepository implements CategoryRep
      * @param array<string, string>|null $orderBy Ordenação
      * @return Collection<Category> Categorias ativas
      */
-    public function listActive( ?array $orderBy = null ): Collection
+    public function listActive(?array $orderBy = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'is_active' => true ],
+        return $this->getAllGlobal(
+            [],
             $orderBy,
         );
     }
@@ -57,11 +58,33 @@ class CategoryRepository extends AbstractTenantRepository implements CategoryRep
      * @param string $direction Direção da ordenação (asc/desc)
      * @return Collection<Category> Categorias ordenadas
      */
-    public function findOrderedByName( string $direction = 'asc' ): Collection
+    public function findOrderedByName(string $direction = 'asc'): Collection
     {
-        return $this->getAllByTenant(
+        return $this->getAllGlobal(
             [],
-            [ 'name' => $direction ],
+            ['name' => $direction],
         );
+    }
+
+    /**
+     * Lista categorias do tenant atual junto com categorias globais (tenant_id NULL).
+     *
+     * @param array<string, string>|null $orderBy
+     * @return Collection<Category>
+     */
+    public function listWithGlobals(?array $orderBy = null): Collection
+    {
+        $tenantId = TenantScoped::getCurrentTenantId();
+        $query = $this->model->newQuery()->withoutGlobalScope(TenantScope::class);
+
+        $query->where(function ($q) use ($tenantId) {
+            $q->whereHas('tenants', function ($t) use ($tenantId) {
+                $t->where('tenant_id', $tenantId);
+            })
+            ->orDoesntHave('tenants');
+        });
+
+        $this->applyOrderBy($query, $orderBy);
+        return $query->get();
     }
 }

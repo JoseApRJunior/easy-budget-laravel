@@ -11,7 +11,7 @@ class CategorySeeder extends Seeder
     {
         $now = now();
         $categories = [
-            ['slug' => 'hidraulica',        'name' => 'Hidráulica',        'is_active' => true, 'created_at' => $now],
+            ['slug' => 'hidraulica',        'name' => 'Hidráulica',        'created_at' => $now],
             ['slug' => 'eletrica',          'name' => 'Elétrica',          'created_at' => $now],
             ['slug' => 'pintura',           'name' => 'Pintura',           'created_at' => $now],
             ['slug' => 'alvenaria',         'name' => 'Alvenaria',         'created_at' => $now],
@@ -39,6 +39,19 @@ class CategorySeeder extends Seeder
             ['slug' => 'outros',            'name' => 'Outros',            'created_at' => $now],
         ];
 
-        DB::table('categories')->upsert($categories, ['slug'], ['name','is_active']);
+        DB::table('categories')->upsert($categories, ['slug'], ['name']);
+
+        // Vincula categorias básicas a todos os tenants como padrão
+        $tenantIds = DB::table('tenants')->pluck('id');
+        $categoryIds = DB::table('categories')->pluck('id', 'slug');
+        foreach ($tenantIds as $tenantId) {
+            foreach (array_keys($categoryIds->toArray()) as $slug) {
+                $categoryId = $categoryIds[$slug];
+                DB::table('category_tenant')->updateOrInsert(
+                    ['category_id' => $categoryId, 'tenant_id' => $tenantId],
+                    ['is_default' => true, 'is_custom' => false, 'created_at' => $now, 'updated_at' => $now]
+                );
+            }
+        }
     }
 }

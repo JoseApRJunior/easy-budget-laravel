@@ -19,6 +19,7 @@ use App\Observers\ProductObserver;
 use App\Observers\ProviderObserver;
 use App\Observers\ServiceObserver;
 use App\Observers\UserObserver;
+use App\Observers\TenantObserver;
 use App\Policies\SchedulePolicy;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
@@ -97,6 +98,7 @@ class AppServiceProvider extends ServiceProvider
         Invoice::observe(InvoiceObserver::class);
         Product::observe(ProductObserver::class);
         Service::observe(ServiceObserver::class);
+        \App\Models\Tenant::observe(TenantObserver::class);
 
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
