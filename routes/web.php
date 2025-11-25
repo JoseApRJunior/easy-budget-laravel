@@ -516,6 +516,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'monitoring
         Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
         Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
         Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
     });
 
     // Activity Management
@@ -667,6 +668,7 @@ Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(fu
     Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
 });
 
 // Queues routes group

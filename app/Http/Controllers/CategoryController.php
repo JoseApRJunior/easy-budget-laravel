@@ -5,97 +5,148 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Controllers\Traits\HandlesCategoryContext;
-use App\Services\Domain\CategoryService;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Category;
+use App\Models\Traits\TenantScoped;
+use App\Repositories\CategoryRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    use HandlesCategoryContext;
-    public function __construct(private CategoryService $service) {}
+    public function __construct(private CategoryRepository $repository) {}
 
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 15);
-
-        $collection = $this->service->listAll()->getData();
-        if ($collection instanceof \Illuminate\Database\Eloquent\Collection) {
-            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-                $collection->forPage(\Illuminate\Support\Facades\Request::input('page', 1), $perPage),
-                $collection->count(),
-                $perPage,
-                (int) $request->get('page', 1)
-            );
-        } else {
-            $paginator = $collection;
-        }
-
-        return view($this->categoryView('index'), ['categories' => $paginator]);
+        $tenantId = TenantScoped::getCurrentTenantId();
+        $categories = Category::query()
+            ->forTenantWithGlobals($tenantId)
+            ->with(['tenants' => function ($q) use ($tenantId) {
+                if ($tenantId !== null) {
+                    $q->where('tenant_id', $tenantId);
+                }
+            }])
+            ->orderBy('name')
+            ->paginate(15)
+            ->appends($request->query());
+        return view('pages.category.index', compact('categories'));
     }
 
-    public function create(): View
+    public function create()
     {
-        return view($this->categoryView('create'));
+        return view('pages.category.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255'],
         ]);
 
-        $result = $this->service->createCategory($validated);
-
-        if ($result->isError()) {
-            return back()->withInput()->with('error', $result->getMessage());
+        $slug = Str::slug($validated['name']);
+        if (!Category::validateUniqueSlug($slug)) {
+            return back()->withErrors(['name' => 'Slug já existe'])->withInput();
         }
 
-        Log::info('Categoria criada', ['id' => $result->getData()->id]);
-        $route = $this->isAdminContext() ? 'admin.categories.index' : 'categories.index';
-        return redirect()->route($route)->with('success', 'Categoria criada com sucesso');
+        $category = Category::create([
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'is_active' => true,
+        ]);
+
+        $tenantId = TenantScoped::getCurrentTenantId();
+        if ($tenantId !== null) {
+            $category->tenants()->syncWithoutDetaching([
+                $tenantId => ['is_default' => false, 'is_custom' => true],
+            ]);
+        }
+
+        return redirect()->route('categories.index');
     }
 
-    public function show(string $slug): View
+    public function show(string $slug)
     {
-        $result = $this->service->findBySlug($slug);
-        abort_unless($result->isSuccess(), 404);
-        return view($this->categoryView('show'), ['category' => $result->getData()]);
+        $tenantId = TenantScoped::getCurrentTenantId();
+        $category = $this->repository->findBySlug($slug);
+        abort_unless($category, 404);
+        $category->load(['tenants' => function ($q) use ($tenantId) {
+            if ($tenantId !== null) {
+                $q->where('tenant_id', $tenantId);
+            }
+        }]);
+        return view('pages.category.show', compact('category'));
     }
 
-    public function edit(int $id): View
+    public function edit(int $id)
     {
-        $result = $this->service->findById($id);
-        abort_unless($result->isSuccess(), 404);
-        return view($this->categoryView('edit'), ['category' => $result->getData()]);
+        $category = Category::findOrFail($id);
+        return view('pages.category.edit', compact('category'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, int $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255'],
         ]);
 
-        $result = $this->service->updateCategory($id, $validated);
-        if ($result->isError()) {
-            return back()->withInput()->with('error', $result->getMessage());
+        $category = Category::findOrFail($id);
+        $slug = Str::slug($validated['name']);
+        if (!Category::validateUniqueSlug($slug, $category->id)) {
+            return back()->withErrors(['name' => 'Slug já existe'])->withInput();
         }
-        Log::info('Categoria atualizada', ['id' => $id]);
-        $route = $this->isAdminContext() ? 'admin.categories.index' : 'categories.index';
-        return redirect()->route($route)->with('success', 'Categoria atualizada');
+
+        $category->name = $validated['name'];
+        $category->slug = $slug;
+        $category->save();
+
+        return redirect()->route('categories.index');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(int $id)
     {
-        $result = $this->service->deleteCategory($id);
-        if ($result->isError()) {
-            return back()->with('error', $result->getMessage());
+        $category = Category::findOrFail($id);
+        $category->delete();
+        return redirect()->route('categories.index');
+    }
+
+    public function setDefault(Request $request, int $id)
+    {
+        $this->authorize('manage-custom-categories');
+        $category = Category::findOrFail($id);
+        $tenantId = TenantScoped::getCurrentTenantId();
+        $user = auth()->user();
+
+        if ($user && $user->isAdmin() && $request->filled('tenant_id')) {
+            $this->authorize('manage-global-categories');
+            $tenantCandidate = (int) $request->input('tenant_id');
+            if ($tenantCandidate > 0) {
+                $exists = \App\Models\Tenant::query()->where('id', $tenantCandidate)->exists();
+                if ($exists) {
+                    $tenantId = $tenantCandidate;
+                }
+            }
         }
-        Log::info('Categoria excluída', ['id' => $id]);
-        $route = $this->isAdminContext() ? 'admin.categories.index' : 'categories.index';
-        return redirect()->route($route)->with('success', 'Categoria excluída');
+
+        if ($tenantId === null) {
+            return redirect()->route('categories.index')->with('status', 'Não foi possível determinar o tenant.');
+        }
+
+        $oldDefault = \Illuminate\Support\Facades\DB::table('category_tenant')
+            ->where('tenant_id', $tenantId)
+            ->where('is_default', true)
+            ->first();
+
+        $category->tenants()->syncWithoutDetaching([
+            $tenantId => ['is_default' => true, 'is_custom' => false],
+        ]);
+
+        \App\Models\AuditLog::log(
+            'updated',
+            $category,
+            ['default_category_id' => $oldDefault->category_id ?? null],
+            ['default_category_id' => $category->id],
+            ['context' => 'set_default_category']
+        );
+
+        return redirect()->route('categories.index')->with('status', 'Categoria definida como padrão com sucesso.');
     }
 }

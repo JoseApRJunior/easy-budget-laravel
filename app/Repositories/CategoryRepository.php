@@ -47,7 +47,7 @@ class CategoryRepository extends AbstractGlobalRepository
     public function listActive(?array $orderBy = null): Collection
     {
         return $this->getAllGlobal(
-            [],
+            ['is_active' => true],
             $orderBy,
         );
     }
@@ -75,15 +75,7 @@ class CategoryRepository extends AbstractGlobalRepository
     public function listWithGlobals(?array $orderBy = null): Collection
     {
         $tenantId = TenantScoped::getCurrentTenantId();
-        $query = $this->model->newQuery()->withoutGlobalScope(TenantScope::class);
-
-        $query->where(function ($q) use ($tenantId) {
-            $q->whereHas('tenants', function ($t) use ($tenantId) {
-                $t->where('tenant_id', $tenantId);
-            })
-            ->orDoesntHave('tenants');
-        });
-
+        $query = $this->model->newQuery()->forTenantWithGlobals($tenantId);
         $this->applyOrderBy($query, $orderBy);
         return $query->get();
     }

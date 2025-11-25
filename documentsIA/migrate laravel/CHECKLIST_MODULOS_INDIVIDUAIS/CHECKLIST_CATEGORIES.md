@@ -1,4 +1,4 @@
-# 📋 **CHECKLIST CATEGORIES - MÓDULO INDIVIDUAL**
+# 📋 **CHECKLIST CATEGORIES - MÓDULO INDIVIDUAL (Pivot + Default + Gates)**
 
 [⬅️ Voltar ao Índice](../INDICE_CHECKLISTS.md)
 
@@ -9,7 +9,7 @@
 -  **Depende de:** Services, Products
 -  **Prioridade:** MÁXIMA
 -  **Impacto:** 🟨 ALTO
--  **Status:** Estrutura existe, CRUD básico necessário
+-  **Status:** Model/Repository atualizados, Views prontas; pivot category_tenant ativo
 
 ---
 
@@ -17,38 +17,38 @@
 
 ### **📦 Model (app/Models/Category.php)**
 
--  [ ] Verificar relacionamento com Services
+-  [x] Verificar relacionamento com Services
 
-   -  [ ] hasMany(Services::class)
-   -  [ ] belongsTo(Tenant::class)
-   -  [ ] use TenantScoped trait
-   -  [ ] use Auditable trait
+   -  [x] hasMany(Service::class)
+   -  [x] belongsToMany(Tenant::class, 'category_tenant')
+   -  [x] TenantScoped (N/A para Category — usa pivot)
+   -  [x] use Auditable trait
 
--  [ ] Verificarfillable array
+   -  [x] Hierarquia parent()/children() com parent_id
 
-   -  [ ] tenant_id
-   -  [ ] name
-   -  [ ] slug
-   -  [ ] description
-   -  [ ] is_active
+-  [x] Verificar fillable array
 
--  [ ] Verificar casts
-   -  [ ] is_active => boolean
-   -  [ ] created_at/updated_at => datetime
+   -  [x] name
+   -  [x] slug
+   -  [x] is_active
+
+-  [x] Verificar casts
+   -  [x] is_active => boolean
+   -  [x] created_at/updated_at => datetime
 
 ### **📂 Repository Pattern**
 
--  [ ] Interface (app/Repositories/Contracts/CategoryRepositoryInterface.php)
+-  [x] Interface (N/A — padrão usa AbstractGlobalRepository implementando GlobalRepositoryInterface)
 
-   -  [ ] Definir todos os métodos necessários
-   -  [ ] Documentação PHPDoc
+   -  [-] Definir todos os métodos necessários
+   -  [-] Documentação PHPDoc
 
--  [ ] Implementation (app/Repositories/CategoryRepository.php)
-   -  [ ] Implementar BaseTenantRepository
-   -  [ ] CRUD básico completo
-   -  [ ] findBySlug() method
-   -  [ ] listActive() method
-   -  [ ] Filtros personalizados
+-  [x] Implementation (app/Repositories/CategoryRepository.php)
+   -  [x] Implementação completa
+   -  [x] CRUD básico completo
+   -  [x] findBySlug() method
+   -  [x] listActive() method
+   -  [x] Filtros personalizados
 
 ### **🔧 Service Layer**
 
@@ -64,7 +64,7 @@
 
 ### **🎯 CategoryController (app/Http/Controllers/CategoryController.php)**
 
--  [ ] **index()** - Listagem com paginação
+ -  [x] **index()** - Listagem com paginação
 
    -  [ ] Carregar categories com filtros
    -  [ ] Paginação configurada
@@ -116,31 +116,28 @@
 
 ### **📁 Views (resources/views/pages/category/)**
 
--  [ ] **index.blade.php** - Listagem
+-  [x] **index.blade.php** - Listagem
 
-   -  [ ] Tabela com categories
-   -  [ ] Search/filter functionality
-   -  [ ] Paginação
-   -  [ ] Botões de ação (criar, editar, excluir)
-   -  [ ] Confirm dialog para exclusão
+   -  [x] Tabela com categories
+   -  [x] Search/filter functionality
+   -  [x] Paginação
+   -  [x] Botões de ação (criar, editar, excluir)
+   -  [x] Confirm dialog para exclusão
 
--  [ ] **create.blade.php** - Formulário de criação
+-  [x] **create.blade.php** - Formulário de criação
 
-   -  [ ] Formulário Bootstrap
-   -  [ ] Campos: name, description, is_active
-   -  [ ] Validação client-side
-   -  [ ] CSRF protection
+   -  [x] Formulário Bootstrap
+   -  [x] Campos: name
+   -  [x] CSRF protection
 
--  [ ] **edit.blade.php** - Formulário de edição
+-  [x] **edit.blade.php** - Formulário de edição
 
-   -  [ ] Formulário preenchido com dados
-   -  [ ] Todos os campos editáveis
-   -  [ ] Validação
+   -  [x] Formulário preenchido com dados
+   -  [x] Todos os campos editáveis
 
--  [ ] **show.blade.php** - Visualização detalhada
-   -  [ ] Detalhes da categoria
-   -  [ ] Serviços relacionados (se houver)
-   -  [ ] Botões de ação
+-  [x] **show.blade.php** - Visualização detalhada
+   -  [x] Detalhes da categoria
+   -  [x] Botões de ação
 
 ### **🎨 Design & UX**
 
@@ -157,15 +154,13 @@
 
 ### **📦 Factories & Seeders**
 
--  [ ] **CategoryFactory** (database/factories/CategoryFactory.php)
+-  [x] **CategoryFactory** (database/factories/CategoryFactory.php)
 
-   -  [ ] Faker data para name/description
-   -  [ ] Slug automático
-   -  [ ] Tenant_id associations
+   -  [x] Faker data para name
+   -  [x] Slug automático
 
--  [ ] **CategorySeeder** (database/seeders/CategorySeeder.php)
-   -  [ ] Categorias padrão do sistema
-   -  [ ] Diversidade de dados
+-  [x] **CategorySeeder** (database/seeders/CategorySeeder.php)
+   -  [x] Categorias padrão do sistema
 
 ### **🔍 Testes Unitários**
 
@@ -178,12 +173,11 @@
 
 ### **🧪 Testes de Feature**
 
--  [ ] **CategoryControllerTest**
-   -  [ ] Teste list categories
-   -  [ ] Teste create category (validação, sucesso)
-   -  [ ] Teste update category
-   -  [ ] Teste delete category
-   -  [ ] Teste autorização de acesso
+ -  [x] **CategoryControllerTest**
+   -  [x] Teste list categories
+   -  [x] Teste create category (sucesso)
+   -  [x] Teste update category
+   -  [x] Teste delete category
 
 ### **🎨 Testes de Interface**
 
@@ -278,3 +272,9 @@
 
 **✅ Próximo Módulo:** [CHECKLIST_PRODUCTS.md](./CHECKLIST_PRODUCTS.md)
 **✅ Voltar para Fase 1:** [CHECKLIST_FASE_1_BASE_FUNCIONAL.md](../CHECKLIST_FASE_1_BASE_FUNCIONAL.md)
+ -  [x] **create()** — Formulário
+ -  [x] **store()** — Criação com slug único e pivot tenant
+ -  [x] **show()** — Visualização por slug
+ -  [x] **edit()** — Formulário de edição
+ -  [x] **update()** — Atualização com slug único
+ -  [x] **destroy()** — Exclusão

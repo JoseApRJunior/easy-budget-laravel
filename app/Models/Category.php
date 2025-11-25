@@ -6,16 +6,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Pivots\CategoryTenant;
+use App\Models\Traits\Auditable;
 
 /**
  * Model para representar categorias, com tenant_id opcional para compatibilidade com sistema legado.
  */
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     /**
      * Boot the model.
@@ -41,6 +44,7 @@ class Category extends Model
     protected $casts = [
         'slug'       => 'string',
         'name'       => 'string',
+        'parent_id'  => 'integer',
         'is_active'  => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
@@ -98,6 +102,7 @@ class Category extends Model
     public function tenants(): BelongsToMany
     {
         return $this->belongsToMany(Tenant::class, 'category_tenant')
+            ->using(CategoryTenant::class)
             ->withPivot(['is_default', 'is_custom'])
             ->withTimestamps();
     }
@@ -120,5 +125,24 @@ class Category extends Model
     public function getActiveChildrenCountAttribute(): int
     {
         return $this->children()->where('is_active', true)->count();
+    }
+
+    public function scopeOwnedByTenant(Builder $query, int $tenantId): Builder
+    {
+        return $query->whereHas('tenants', function ($t) use ($tenantId) {
+            $t->where('tenant_id', $tenantId);
+        });
+    }
+
+    public function scopeForTenantWithGlobals(Builder $query, ?int $tenantId): Builder
+    {
+        return $query->where(function ($q) use ($tenantId) {
+            if ($tenantId !== null) {
+                $q->whereHas('tenants', function ($t) use ($tenantId) {
+                    $t->where('tenant_id', $tenantId);
+                });
+            }
+            $q->orDoesntHave('tenants');
+        });
     }
 }

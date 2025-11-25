@@ -8,6 +8,9 @@ use App\Models\Category;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
+use App\Enums\OperationStatus;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class CategoryService extends AbstractBaseService
@@ -32,6 +35,24 @@ class CategoryService extends AbstractBaseService
             $i++;
         }
         return $slug;
+    }
+
+    public function validate( array $data, bool $isUpdate = false ): ServiceResult
+    {
+        $rules = Category::businessRules();
+
+        if ( $isUpdate && isset( $data['id'] ) ) {
+            $rules['slug'] = 'required|string|max:255|unique:categories,slug,' . $data['id'];
+        }
+
+        $validator = Validator::make( $data, $rules );
+
+        if ( $validator->fails() ) {
+            $messages = implode( ', ', $validator->errors()->all() );
+            return $this->error( OperationStatus::INVALID_DATA, $messages );
+        }
+
+        return $this->success( $data );
     }
 
     public function createCategory( array $data ): ServiceResult
@@ -62,6 +83,16 @@ class CategoryService extends AbstractBaseService
             return $this->error( 'Não é possível excluir: possui serviços associados' );
         }
         return $this->delete( $id );
+    }
+
+    public function getActive(): Collection
+    {
+        return $this->repository->listActive( ['name' => 'asc'] );
+    }
+
+    public function getWithGlobals(): Collection
+    {
+        return $this->repository->listWithGlobals( ['name' => 'asc'] );
     }
 
     public function findBySlug( string $slug ): ServiceResult

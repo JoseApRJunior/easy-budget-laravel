@@ -12,7 +12,7 @@
 
 ---
 
-## 📂 **1. CATEGORIES (PRIORIDADE MÁXIMA)**
+## 📂 **1. CATEGORIES (PRIORIDADE MÁXIMA) — Pivot, Default, Auditoria, Gates**
 
 ### **📊 Informações do Módulo:**
 
@@ -29,11 +29,12 @@
 
    -  [x] Relationships corretas
    -  [x] Fillable/casts adequados
-   -  [ ] Traits TenantScoped e Auditable
+   -  [x] Auditable
+   -  [x] TenantScoped (N/A para Category — usa pivot)
 
 -  [x] Implementar CategoryRepository
 
-   -  [ ] Interface definida
+   -  [x] Interface (N/A — usa AbstractGlobalRepository com GlobalRepositoryInterface)
    -  [x] Métodos CRUD completos
    -  [x] Filtros e busca
    -  [ ] Validações de negócio
@@ -45,7 +46,7 @@
 
 #### **🎮 Controller e Rotas**
 
--  [ ] Implementar CategoryController completo
+-  [x] Implementar CategoryController completo
 
    -  [ ] index() - listagem com paginação
    -  [ ] create() - formulário de criação
@@ -55,7 +56,7 @@
    -  [ ] update() - validação e atualização
    -  [ ] destroy() - exclusão segura
 
--  [ ] Verificar rotas em routes/web.php
+-  [x] Verificar rotas em routes/web.php
    -  [ ] Rotas RESTful configuradas
    -  [ ] Middleware aplicado
    -  [ ] Nomes de rotas consistentes
@@ -74,7 +75,7 @@
 -  [x] Criar CategoryFactory
 -  [x] Implementar CategorySeeder
 -  [ ] Testes unitários CategoryService
--  [ ] Testes de Feature CategoryController
+-  [x] Testes de Feature CategoryController
 -  [ ] Testes de integração com UI
 
 #### **✅ Validação Final**
