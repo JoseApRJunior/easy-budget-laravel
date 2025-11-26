@@ -140,6 +140,15 @@ class ProductService extends AbstractBaseService
 
                 $product = $this->productRepository->create( $data );
 
+                // Criar registro de inventário automaticamente
+                \App\Models\ProductInventory::create([
+                    'tenant_id' => $product->tenant_id,
+                    'product_id' => $product->id,
+                    'quantity' => 0,
+                    'min_quantity' => 0,
+                    'max_quantity' => null,
+                ]);
+
                 return $this->success( $product, 'Produto criado com sucesso' );
             } );
         } catch ( Exception $e ) {

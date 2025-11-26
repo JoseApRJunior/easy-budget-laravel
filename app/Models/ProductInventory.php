@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductInventory extends Model
 {
@@ -208,6 +209,43 @@ class ProductInventory extends Model
         }
 
         return round( ( $this->quantity / $this->max_quantity ) * 100, 2 );
+    }
+
+    /**
+     * Accessor para compatibilidade com views - current_quantity
+     */
+    public function getCurrentQuantityAttribute(): int
+    {
+        return $this->quantity;
+    }
+
+    /**
+     * Accessor para compatibilidade com views - minimum_quantity
+     */
+    public function getMinimumQuantityAttribute(): int
+    {
+        return $this->min_quantity;
+    }
+
+    /**
+     * Accessor para compatibilidade com views - unit_value
+     */
+    public function getUnitValueAttribute(): float
+    {
+        return $this->product?->price ?? 0;
+    }
+
+    /**
+     * Accessor para última movimentação
+     */
+    public function getLastMovementAtAttribute(): ?string
+    {
+        $lastMovement = \App\Models\InventoryMovement::query()
+            ->where('product_id', $this->product_id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        return $lastMovement?->created_at;
     }
 
 }

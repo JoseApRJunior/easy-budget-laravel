@@ -34,7 +34,7 @@
                                 <div class="form-group">
                                     <label for="search">Buscar</label>
                                     <input type="text" class="form-control" id="search" name="search"
-                                        value="{{ $filters['search'] ?? '' }}" placeholder="Nome ou slug">
+                                        value="{{ $filters['search'] ?? '' }}" placeholder="Categoria, Subcategoria, Slug">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -90,7 +90,8 @@
                             <thead>
                                 <tr>
                                     <th><i class="bi bi-tag" aria-hidden="true"></i></th>
-                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Subcategoria</th>
                                     <th>Slug</th>
                                     <th>Status</th>
                                     <th>Criado em</th>
@@ -103,7 +104,8 @@
                                     <td class="text-center">
                                         <i class="bi bi-tag text-muted" aria-hidden="true"></i>
                                     </td>
-                                    <td>{{ $category->name }}</td>
+                                    <td>{{ $category->parent ? $category->parent->name : $category->name }}</td>
+                                    <td>{{ $category->parent ? $category->name : '—' }}</td>
                                     <td><span class="text-code">{{ $category->slug }}</span></td>
                                     <td>
                                         @if($category->is_active)
@@ -146,7 +148,7 @@
                 @if($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
                 <div class="card-footer">
                     <div class="d-flex justify-content-center">
-                        {{ $categories->appends(request()->query())->links() }}
+                        {{ $categories->appends(request()->query())->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
                 @endif

@@ -28,6 +28,7 @@ use App\Services\Infrastructure\OAuth\GoogleOAuthClient;
 use App\Services\AlertService;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -105,6 +106,8 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::if( 'role', fn( $role ) => auth()->check() && auth()->user()->hasRole( $role ) );
         Blade::if( 'anyrole', fn( $roles ) => auth()->check() && auth()->user()->hasAnyRole( (array) $roles ) );
+
+        Paginator::useBootstrapFive();
     }
 
 }

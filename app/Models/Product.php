@@ -317,4 +317,12 @@ class Product extends Model
         return $this->total_stock <= $threshold;
     }
 
+    /**
+     * Accessor para compatibilidade - code como alias de sku
+     */
+    public function getCodeAttribute(): ?string
+    {
+        return $this->sku;
+    }
+
 }

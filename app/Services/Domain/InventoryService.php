@@ -82,15 +82,18 @@ class InventoryService extends AbstractBaseService
                 // Por enquanto, vou comentar a criação do log se o model não existir, mas o ideal é ter.
 
                 if (class_exists(\App\Models\InventoryMovement::class)) {
+                    $user = auth()->user();
+                    $tenantId = $user?->tenant_id ?? $inventory->tenant_id; // Fallback to inventory tenant if user not auth (e.g. system job)
+
                      \App\Models\InventoryMovement::create([
-                        'tenant_id' => auth()->user()->tenant_id,
+                        'tenant_id' => $tenantId,
                         'product_id' => $productId,
                         'type' => $type,
                         'quantity' => $quantity,
                         'previous_quantity' => $currentQuantity,
                         'new_quantity' => $newQuantity,
                         'reason' => $reason,
-                        // 'user_id' => auth()->id(), // Field not in fillable/migration based on model view
+                        'user_id' => $user?->id,
                     ]);
                 }
 

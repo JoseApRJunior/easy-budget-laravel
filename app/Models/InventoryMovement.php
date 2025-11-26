@@ -89,4 +89,12 @@ class InventoryMovement extends Model
         return $this->belongsTo( Product::class);
     }
 
+    /**
+     * Get the user that created the InventoryMovement.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo( \App\Models\User::class);
+    }
+
 }

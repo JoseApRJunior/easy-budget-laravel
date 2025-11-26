@@ -21,6 +21,7 @@
         <div class="card-body p-4">
             <form action="{{ route('categories.store') }}" method="POST">
                 @csrf
+                <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
                 <div class="row g-4">
                     <div class="col-md-12">
                         <div class="form-floating mb-3">
@@ -30,6 +31,15 @@
                             @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select class="form-control" id="parent_id" name="parent_id">
+                                <option value="">Sem categoria pai</option>
+                                @foreach(($parents ?? collect()) as $p)
+                                <option value="{{ $p->id }}" {{ (string)old('parent_id') === (string)$p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                            <label for="parent_id">Categoria (opcional)</label>
                         </div>
                         <div class="form-floating">
                             <input type="text" class="form-control" id="slugPreview" name="slugPreview"
@@ -61,6 +71,18 @@
         var slugInput = document.getElementById('slugPreview');
         var statusEl = document.getElementById('slugStatus');
         var submitBtn = document.querySelector('form button[type="submit"]');
+        var tenantIdEl = document.getElementById('tenantId');
+        var tenantId = tenantIdEl && tenantIdEl.value ? parseInt(tenantIdEl.value) : null;
+        var formEl = document.querySelector('form');
+        var lastCheck = {
+            slug: '',
+            attached: false,
+            exists: false
+        };
+        var isAdmin = false;
+        @role('admin')
+        isAdmin = true;
+        @endrole
 
         function slugify(text) {
             return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -72,7 +94,7 @@
         }
 
         function checkSlug(slug) {
-            var url = '{{ url(' / categories / ajax / check - slug ') }}' + '?slug=' + encodeURIComponent(slug);
+            var url = window.location.origin + '/categories/ajax/check-slug' + '?slug=' + encodeURIComponent(slug) + (tenantId ? '&tenant_id=' + tenantId : '');
             fetch(url, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
@@ -82,16 +104,16 @@
                     return r.json();
                 })
                 .then(function(data) {
-                    if (data.attached) {
-                        statusEl.innerHTML = 'Já existe uma categoria com este slug neste tenant. ' + (data.edit_url ? '<a href="' + data.edit_url + '" class="text-danger">Editar</a>' : '');
+                    lastCheck = {
+                        slug: data.slug,
+                        attached: !!data.attached,
+                        exists: !!data.exists
+                    };
+                    if (data.exists) {
+                        statusEl.textContent = 'Este nome já está em uso.';
                         statusEl.className = 'form-text text-danger';
                         submitBtn.disabled = true;
                         nameInput.classList.add('is-invalid');
-                    } else if (data.exists) {
-                        statusEl.textContent = 'Slug disponível: categoria existente será vinculada ao seu tenant.';
-                        statusEl.className = 'form-text text-warning';
-                        submitBtn.disabled = false;
-                        nameInput.classList.remove('is-invalid');
                     } else {
                         statusEl.textContent = 'Slug disponível.';
                         statusEl.className = 'form-text text-muted';
@@ -116,6 +138,29 @@
             });
             if (nameInput.value) {
                 checkSlug(slugify(nameInput.value));
+            }
+
+            if (formEl) {
+                formEl.addEventListener('submit', function(e) {
+                    var currentSlug = slugify(nameInput.value || '');
+                    if (!currentSlug) {
+                        return;
+                    }
+                    if (lastCheck.slug !== currentSlug) {
+                        e.preventDefault();
+                        checkSlug(currentSlug);
+                        setTimeout(function() {
+                            if (lastCheck.attached) {
+                                submitBtn.disabled = true;
+                                return;
+                            }
+                            formEl.submit();
+                        }, 200);
+                    } else if (lastCheck.attached) {
+                        e.preventDefault();
+                        submitBtn.disabled = true;
+                    }
+                });
             }
         }
     })();

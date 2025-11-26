@@ -25,18 +25,21 @@ class CategoryController extends Controller
         $confirmAll = (bool) $request->boolean('all');
 
         if ($hasFilters || $confirmAll) {
-            $query = Category::query()->forTenantWithGlobals($tenantId)
+            $query = Category::query()->ownedByTenant($tenantId)
                 ->with(['tenants' => function ($q) use ($tenantId) {
                     if ($tenantId !== null) {
                         $q->where('tenant_id', $tenantId);
                     }
-                }]);
+                }])
+                ->with('parent');
 
             if (filled($filters['search'] ?? null)) {
                 $search = trim((string) $filters['search']);
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('slug', 'like', "%{$search}%");
+                })->orWhereHas('parent', function ($p) use ($search) {
+                    $p->where('name', 'like', "%{$search}%");
                 });
             }
 
@@ -45,7 +48,11 @@ class CategoryController extends Controller
                 $query->where('is_active', $active);
             }
 
-            $categories = $query->orderBy('name')
+            $categories = $query
+                ->leftJoin('categories as parent', 'parent.id', '=', 'categories.parent_id')
+                ->select('categories.*')
+                ->orderByRaw('COALESCE(parent.name, categories.name) ASC')
+                ->orderBy('categories.name', 'ASC')
                 ->paginate(15)
                 ->appends($request->query());
         } else {
@@ -60,40 +67,50 @@ class CategoryController extends Controller
 
     public function create()
     {
-        return view('pages.category.create');
+        $tenantId = TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null);
+        $parents = $tenantId !== null
+            ? Category::query()->ownedByTenant($tenantId)->orderBy('name')->get(['id', 'name'])
+            : collect();
+        return view('pages.category.create', compact('parents'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
         ]);
+
         $slug = Str::slug($validated['name']);
 
-        $tenantId = TenantScoped::getCurrentTenantId();
+        $tenantId = $request->integer('tenant_id') ?: (TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null));
 
         // Se já existir categoria com o mesmo slug
         $existing = Category::query()->where('slug', $slug)->first();
         if ($existing) {
-            if ($tenantId !== null) {
-                $alreadyAttached = $existing->tenants()->where('tenant_id', $tenantId)->exists();
-                if ($alreadyAttached) {
-                    return back()->withErrors(['name' => 'Já existe uma categoria com este slug neste tenant.'])->withInput();
-                }
+            return back()->withErrors(['name' => 'Este nome já está em uso.']) . withInput();
+        }
 
-                // Vincula a categoria existente ao tenant atual como custom
-                $existing->tenants()->syncWithoutDetaching([
-                    $tenantId => ['is_default' => false, 'is_custom' => true],
-                ]);
+        // Se informou parent_id, validar que pertence ao mesmo tenant
+        if (($validated['parent_id'] ?? null) !== null) {
+            if ($tenantId === null) {
+                return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
             }
-
-            return redirect()->route('categories.index');
+            $parentId = (int) $validated['parent_id'];
+            $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
+                ->where('tenant_id', $tenantId)
+                ->where('category_id', $parentId)
+                ->exists();
+            if (!$parentAttached) {
+                return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço.']) . withInput();
+            }
         }
 
         // Caso não exista, cria nova categoria e vincula ao tenant
         $category = Category::create([
             'name' => $validated['name'],
             'slug' => $slug,
+            'parent_id' => $validated['parent_id'] ?? null,
             'is_active' => true,
         ]);
 
@@ -122,13 +139,20 @@ class CategoryController extends Controller
     public function edit(int $id)
     {
         $category = Category::findOrFail($id);
-        return view('pages.category.edit', compact('category'));
+        $tenantId = TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null);
+        $parents = $tenantId !== null
+            ? Category::query()->ownedByTenant($tenantId)
+            ->where('id', '!=', $id)
+            ->orderBy('name')->get(['id', 'name'])
+            : collect();
+        return view('pages.category.edit', compact('category', 'parents'));
     }
 
     public function update(Request $request, int $id)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
         ]);
 
         $category = Category::findOrFail($id);
@@ -137,8 +161,25 @@ class CategoryController extends Controller
             return back()->withErrors(['name' => 'Slug já existe'])->withInput();
         }
 
+        // Validar parent_id do mesmo tenant
+        $tenantId = TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null);
+        if (($validated['parent_id'] ?? null) !== null) {
+            if ($tenantId === null) {
+                return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
+            }
+            $parentId = (int) $validated['parent_id'];
+            $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
+                ->where('tenant_id', $tenantId)
+                ->where('category_id', $parentId)
+                ->exists();
+            if (!$parentAttached) {
+                return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço.']) . withInput();
+            }
+        }
+
         $category->name = $validated['name'];
         $category->slug = $slug;
+        $category->parent_id = $validated['parent_id'] ?? null;
         $category->save();
 
         return redirect()->route('categories.index');
@@ -210,7 +251,7 @@ class CategoryController extends Controller
     {
         $slugInput = (string) $request->get('slug', '');
         $slug = Str::slug($slugInput);
-        $tenantId = TenantScoped::getCurrentTenantId();
+        $tenantId = $request->integer('tenant_id') ?: (TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null));
 
         $exists = false;
         $attached = false;
@@ -223,7 +264,10 @@ class CategoryController extends Controller
                 $exists = true;
                 $id = $category->id;
                 if ($tenantId !== null) {
-                    $attached = $category->tenants()->where('tenant_id', $tenantId)->exists();
+                    $attached = \Illuminate\Support\Facades\DB::table('category_tenant')
+                        ->where('tenant_id', $tenantId)
+                        ->where('category_id', $category->id)
+                        ->exists();
                 }
                 $editUrl = route('categories.edit', $category->id);
             }
