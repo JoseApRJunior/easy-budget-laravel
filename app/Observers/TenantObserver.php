@@ -9,7 +9,10 @@ class TenantObserver
 {
     public function created(Tenant $tenant): void
     {
-        $categories = Category::orderBy('name')->get(['id']);
+        $categories = Category::query()
+            ->whereNull('tenant_id')
+            ->orderBy('name')
+            ->get(['id']);
         $tenant->categories()->syncWithoutDetaching(
             $categories->mapWithKeys(function ($c) {
                 return [$c->id => ['is_default' => true, 'is_custom' => false]];
@@ -17,4 +20,3 @@ class TenantObserver
         );
     }
 }
-

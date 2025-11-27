@@ -1,318 +1,210 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', 'Detalhes do Produto: ' . $product->name )
+@section('title', 'Detalhes do Produto: ' . $product->name)
 
-@section( 'content' )
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">
-              <i class="fas fa-box mr-2"></i>
-              {{ $product->name }}
-            </h3>
-            <div class="card-tools">
-              <a href="{{ route( 'provider.products.edit', $product->sku ) }}" class="btn btn-warning btn-sm">
-                <i class="fas fa-edit"></i> Editar
-              </a>
-              <a href="{{ route( 'provider.products.index' ) }}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i> Voltar
-              </a>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <div class="row">
-              <!-- Imagem do Produto -->
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Imagem</label>
-                  <div class="text-center">
-                    @if( $product->image )
-                      <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="img-fluid rounded shadow"
-                        style="max-width: 300px; max-height: 300px; object-fit: cover;">
-                    @else
-                      <div class="bg-light d-flex align-items-center justify-content-center rounded"
-                        style="width: 300px; height: 300px; margin: 0 auto;">
-                        <i class="fas fa-image text-muted fa-4x"></i>
-                      </div>
-                    @endif
-                  </div>
-                </div>
-              </div>
-
-              <!-- Detalhes do Produto -->
-              <div class="col-md-8">
-                <div class="row">
-                  <!-- SKU -->
-                  <div class="col-md-6">
-                    <div class="info-box bg-light">
-                      <div class="info-box-content">
-                        <span class="info-box-text">SKU</span>
-                        <span class="info-box-number">
-                          <span class="text-code">{{ $product->sku }}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Preço -->
-                  <div class="col-md-6">
-                    <div class="info-box bg-success">
-                      <div class="info-box-content">
-                        <span class="info-box-text text-white">Preço</span>
-                        <span class="info-box-number text-white">
-                          R$ {{ number_format( $product->price, 2, ',', '.' ) }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row">
-                  <!-- Categoria -->
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="font-weight-bold">Categoria</label>
-                      <p class="form-control-plaintext">
-                        @if( $product->category )
-                          <span class="badge badge-primary">{{ $product->category->name }}</span>
-                        @else
-                          <span class="text-muted">Nenhuma categoria</span>
-                        @endif
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- Unidade -->
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="font-weight-bold">Unidade</label>
-                      <p class="form-control-plaintext">
-                        {{ $product->unit ?? 'Não especificada' }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Status -->
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="font-weight-bold">Status</label>
-                      <p class="form-control-plaintext">
-                        @if( $product->active )
-                          <span class="badge badge-success badge-lg">
-                            <i class="fas fa-check-circle"></i> Ativo
-                          </span>
-                        @else
-                          <span class="badge badge-danger badge-lg">
-                            <i class="fas fa-times-circle"></i> Inativo
-                          </span>
-                        @endif
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- Data de Criação -->
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="font-weight-bold">Data de Criação</label>
-                      <p class="form-control-plaintext">
-                        <i class="fas fa-calendar-alt text-muted"></i>
-                        {{ $product->created_at->format( 'd/m/Y H:i' ) }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Data de Atualização -->
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="font-weight-bold">Última Atualização</label>
-                      <p class="form-control-plaintext">
-                        <i class="fas fa-clock text-muted"></i>
-                        {{ $product->updated_at->format( 'd/m/Y H:i' ) }}
-                      </p>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-4">
-                        <strong>ID:</strong> {{ $product->id }}
-                      </div>
-                      <div class="col-md-4">
-                        <strong>Tenant ID:</strong> {{ $product->tenant_id }}
-                      </div>
-                      <div class="col-md-4">
-                        <strong>Categoria ID:</strong> {{ $product->category_id ?? 'N/A' }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <div class="btn-group">
-              <a href="{{ route( 'provider.products.edit', $product->sku ) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar Produto
-              </a>
-              <form action="{{ route( 'provider.products.toggle-status', $product->sku ) }}" method="POST" class="d-inline"
-                onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
-                @csrf
-                @method( 'PATCH' )
-                <button type="submit" class="btn {{ $product->active ? 'btn-secondary' : 'btn-success' }}">
-                  <i class="fas fa-{{ $product->active ? 'ban' : 'check' }}"></i>
-                  {{ $product->active ? 'Desativar' : 'Ativar' }}
-                </button>
-              </form>
-              <form action="{{ route( 'provider.products.destroy', $product->sku ) }}" method="POST" class="d-inline"
-                onsubmit="return confirm('Excluir este produto permanentemente?')">
-                @csrf
-                @method( 'DELETE' )
-                <button type="submit" class="btn btn-danger">
-                  <i class="fas fa-trash"></i> Excluir
-                </button>
-              </form>
-            </div>
-            <div class="float-right">
-              <a href="{{ route( 'provider.products.index' ) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Voltar à Lista
-              </a>
-            </div>
-          </div>
+@section('content')
+<div class="container-fluid py-1">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-box-seam me-2"></i>
+                {{ $product->name }}
+            </h1>
+            <p class="text-muted mb-0">SKU: <span class="text-code">{{ $product->sku }}</span></p>
         </div>
-      </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-1"></i> Editar
+            </a>
+            <a href="{{ route('provider.products.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
     </div>
-  </div>
-@endsection
 
-@section('scripts')
-<script>
-  $(document).ready(function() {
-    // Add Stock
-    $('#addStockForm').on('submit', function(e) {
-      e.preventDefault();
-      const form = $(this);
-      const btn = form.find('button[type="submit"]');
-      const originalText = btn.html();
+    <div class="row">
+        <!-- Coluna Esquerda: Imagem e Status -->
 
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    @if($product->image)
+                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                             class="img-fluid rounded shadow-sm mb-3"
+                             style="max-height: 300px; object-fit: cover;">
+                    @else
+                        <div class="d-flex align-items-center justify-content-center rounded mb-3 border"
+                             style="height: 250px;">
+                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                    @endif
 
-      $.ajax({
-        url: "{{ route('provider.products.inventory.add', $product->id) }}",
-        method: 'POST',
-        data: form.serialize(),
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-          if(response.success) {
-            toastr.success(response.message);
-            $('#addStockModal').modal('hide');
-            form[0].reset();
-            // Update stock display
-            if(response.data && response.data.quantity !== undefined) {
-                $('#current-stock').text(response.data.quantity);
-            } else {
-                location.reload();
-            }
-          } else {
-            toastr.error(response.message);
-          }
-        },
-        error: function(xhr) {
-          toastr.error(xhr.responseJSON?.message || 'Erro ao adicionar estoque');
-        },
-        complete: function() {
-          btn.prop('disabled', false).html(originalText);
-        }
-      });
-    });
+                    <div class="d-grid gap-2">
+                        @if($product->active)
+                            <div class="alert alert-success py-2 mb-0">
+                                <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
+                            </div>
+                        @else
+                            <div class="alert alert-danger py-2 mb-0">
+                                <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
 
-    // Remove Stock
-    $('#removeStockForm').on('submit', function(e) {
-      e.preventDefault();
-      const form = $(this);
-      const btn = form.find('button[type="submit"]');
-      const originalText = btn.html();
+            <!-- Card de Ações Rápidas -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge me-1"></i> Ações Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <form action="{{ route('provider.products.toggle-status', $product->sku) }}" method="POST"
+                              onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn {{ $product->active ? 'btn-outline-danger' : 'btn-outline-success' }} w-100">
+                                <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-1"></i>
+                                {{ $product->active ? 'Desativar Produto' : 'Ativar Produto' }}
+                            </button>
+                        </form>
 
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
+                        <form action="{{ route('provider.products.destroy', $product->sku) }}" method="POST"
+                              onsubmit="return confirm('Tem certeza que deseja excluir este produto permanentemente?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-trash me-1"></i> Excluir Produto
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      $.ajax({
-        url: "{{ route('provider.products.inventory.remove', $product->id) }}",
-        method: 'POST',
-        data: form.serialize(),
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-          if(response.success) {
-            toastr.success(response.message);
-            $('#removeStockModal').modal('hide');
-            form[0].reset();
-            // Update stock display
-             if(response.data && response.data.quantity !== undefined) {
-                $('#current-stock').text(response.data.quantity);
-            } else {
-                location.reload();
-            }
-          } else {
-            toastr.error(response.message);
-          }
-        },
-        error: function(xhr) {
-          toastr.error(xhr.responseJSON?.message || 'Erro ao remover estoque');
-        },
-        complete: function() {
-          btn.prop('disabled', false).html(originalText);
-        }
-      });
-    });
-  });
-</script>
-@endsection
+        <!-- Coluna Direita: Detalhes e Abas -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active text-dark" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-selected="true">
+                                <i class="bi bi-info-circle me-1"></i> Detalhes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-dark" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-boxes me-1"></i> Inventário
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="productTabsContent">
+                        <!-- Aba Detalhes -->
+                        <div class="tab-pane fade show active" id="details" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Preço</label>
+                                    <p class="h4 text-success">R$ {{ number_format($product->price, 2, ',', '.') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Categoria</label>
+                                    <p class="h5">
+                                        @if($product->category)
+                                            <span class="badge bg-primary">{{ $product->category->name }}</span>
+                                        @else
+                                            <span class="text-muted">Sem categoria</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Unidade</label>
+                                    <p class="h5">{{ $product->unit ?? 'N/A' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Criado em</label>
+                                    <p>{{ $product->created_at->format('d/m/Y H:i') }}</p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="text-muted small text-uppercase fw-bold">Descrição</label>
+                                    <div class="p-3 rounded border">
+                                        {{ $product->description ?? 'Nenhuma descrição informada.' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-@section( 'styles' )
-  <style>
-    .info-box {
-      box-shadow: 0 0 1px rgba(0, 0, 0, .125), 0 1px 3px rgba(0, 0, 0, .2);
-      border-radius: .25rem;
-      margin-bottom: 1rem;
-      background-color: #fff;
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
+                        <!-- Aba Inventário -->
+                        <div class="tab-pane fade" id="inventory" role="tabpanel">
+                            @php
+                                $inventory = $product->productInventory->first();
+                                $quantity = $inventory ? $inventory->quantity : 0;
+                                $minQuantity = $inventory ? $inventory->min_quantity : 0;
+                                $maxQuantity = $inventory ? $inventory->max_quantity : null;
 
-    .info-box .info-box-content {
-      padding: 5px 10px;
-      margin-left: 0;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
+                                $statusClass = 'success';
+                                $statusLabel = 'Estoque OK';
 
-    .info-box .info-box-text {
-      text-transform: uppercase;
-      font-weight: 700;
-      font-size: .6875rem;
-      color: #6c757d;
-    }
+                                if ($quantity <= 0) {
+                                    $statusClass = 'danger';
+                                    $statusLabel = 'Sem Estoque';
+                                } elseif ($quantity <= $minQuantity) {
+                                    $statusClass = 'warning';
+                                    $statusLabel = 'Estoque Baixo';
+                                }
+                            @endphp
 
-    .info-box .info-box-number {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: #495057;
-    }
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    <div class="p-3 border rounded">
+                                        <small class="text-muted text-uppercase">Quantidade Atual</small>
+                                        <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-0">{{ $quantity }}</h2>
+                                        <span class="badge bg-{{ $statusClass }}">{{ $statusLabel }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="p-3 border rounded">
+                                                <small class="text-muted">Mínimo</small>
+                                                <p class="h4 mb-0">{{ $minQuantity }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-3 border rounded">
+                                                <small class="text-muted">Máximo</small>
+                                                <p class="h4 mb-0">{{ $maxQuantity ?? '∞' }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex gap-2 mt-2">
+                                                <a href="{{ route('provider.inventory.entry', $product->sku) }}" class="btn btn-success flex-grow-1">
+                                                    <i class="bi bi-arrow-down-circle me-1"></i> Entrada
+                                                </a>
+                                                <a href="{{ route('provider.inventory.exit', $product->sku) }}" class="btn btn-warning flex-grow-1">
+                                                    <i class="bi bi-arrow-up-circle me-1"></i> Saída
+                                                </a>
+                                                <a href="{{ route('provider.inventory.adjust', $product->sku) }}" class="btn btn-secondary flex-grow-1">
+                                                    <i class="bi bi-sliders me-1"></i> Ajustar
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-    .info-box.bg-success .info-box-text,
-    .info-box.bg-success .info-box-number {
-      color: #fff !important;
-    }
-
-    .badge-lg {
-      font-size: 0.875rem;
-      padding: 0.5rem 0.75rem;
-    }
-  </style>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Para ver o histórico completo de movimentações, acesse o <a href="{{ route('provider.inventory.show', $product->sku) }}" class="alert-link">Painel de Inventário</a> deste produto.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

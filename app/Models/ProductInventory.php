@@ -29,6 +29,13 @@ class ProductInventory extends Model
     protected $table = 'product_inventory';
 
     /**
+     * Relacionamentos carregados automaticamente
+     *
+     * @var array
+     */
+    protected $with = ['product'];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

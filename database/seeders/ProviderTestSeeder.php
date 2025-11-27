@@ -28,34 +28,34 @@ class ProviderTestSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->command->info( '🏢 Criando prestadores de teste...' );
+        $this->command->info('🏢 Criando prestadores de teste...');
 
-        for ( $i = 1; $i <= 3; $i++ ) {
-            $provider = $this->createProvider( 'company', $i );
-            $this->createCustomersForProvider( $provider, $i );
+        for ($i = 1; $i <= 2; $i++) {
+            $provider = $this->createProvider('company', $i);
+            $this->createCustomersForProvider($provider, $i);
         }
 
-        for ( $i = 4; $i <= 6; $i++ ) {
-            $provider = $this->createProvider( 'individual', $i );
-            $this->createCustomersForProvider( $provider, $i );
+        for ($i = 3; $i <= 4; $i++) {
+            $provider = $this->createProvider('individual', $i);
+            $this->createCustomersForProvider($provider, $i);
         }
 
-        $this->command->info( '✅ Prestadores de teste criados com sucesso!' );
+        $this->command->info('✅ Prestadores de teste criados com sucesso!');
     }
 
-    private function createProvider( string $type, int $index ): Provider
+    private function createProvider(string $type, int $index): Provider
     {
         $tenant = Tenant::firstOrCreate(
-            [ 'name' => $type === 'company' ? "Provider PJ {$index}" : "Provider PF {$index}" ],
-            [ 'is_active' => true ],
+            ['name' => $type === 'company' ? "Provider PJ {$index}" : "Provider PF {$index}"],
+            ['is_active' => true],
         );
 
         $user = User::firstOrCreate(
-            [ 'email' => "provider{$index}@test.com" ],
+            ['email' => "provider{$index}@test.com"],
             [
                 'tenant_id'         => $tenant->id,
                 'name'              => $type === 'company' ? "Provider PJ  {$index}" : "Provider PF {$index}",
-                'password'          => Hash::make( 'Password1@' ),
+                'password'          => Hash::make('Password1@'),
                 'google_id'         => null,
                 'avatar'            => null,
                 'google_data'       => null,
@@ -67,21 +67,21 @@ class ProviderTestSeeder extends Seeder
         );
 
         $provider = Provider::firstOrCreate(
-            [ 'user_id' => $user->id, 'tenant_id' => $tenant->id ],
-            [ 'terms_accepted' => true ],
+            ['user_id' => $user->id, 'tenant_id' => $tenant->id],
+            ['terms_accepted' => true],
         );
 
         CommonData::firstOrCreate(
-            [ 'provider_id' => $provider->id ],
+            ['provider_id' => $provider->id],
             [
                 'tenant_id'           => $tenant->id,
                 'type'                => $type,
                 'first_name'          => $type === 'individual' ? "Provider {$index}" : null,
                 'last_name'           => $type === 'individual' ? "Teste" : null,
                 'birth_date'          => $type === 'individual' ? '1985-01-01' : null,
-                'cpf'                 => $type === 'individual' ? $this->generateCPF( $index ) : null,
+                'cpf'                 => $type === 'individual' ? $this->generateCPF($index) : null,
                 'company_name'        => $type === 'company' ? "Empresa Teste {$index} Ltda" : null,
-                'cnpj'                => $type === 'company' ? $this->generateCNPJ( $index ) : null,
+                'cnpj'                => $type === 'company' ? $this->generateCNPJ($index) : null,
                 'description'         => "Descrição do provider {$index}",
                 'area_of_activity_id' => AreaOfActivity::first()?->id,
                 'profession_id'       => Profession::first()?->id,
@@ -89,7 +89,7 @@ class ProviderTestSeeder extends Seeder
         );
 
         Contact::firstOrCreate(
-            [ 'provider_id' => $provider->id ],
+            ['provider_id' => $provider->id],
             [
                 'tenant_id'      => $tenant->id,
                 'email_personal' => "provider{$index}@test.com",
@@ -101,21 +101,21 @@ class ProviderTestSeeder extends Seeder
         );
 
         Address::firstOrCreate(
-            [ 'provider_id' => $provider->id ],
+            ['provider_id' => $provider->id],
             [
                 'tenant_id'      => $tenant->id,
                 'address'        => "Rua Teste {$index}",
-                'address_number' => (string) ( $index * 100 ),
+                'address_number' => (string) ($index * 100),
                 'neighborhood'   => "Bairro {$index}",
                 'city'           => 'São Paulo',
                 'state'          => 'SP',
-                'cep'            => sprintf( '%08d', $index ),
+                'cep'            => sprintf('%08d', $index),
             ],
         );
 
-        if ( $type === 'company' ) {
+        if ($type === 'company') {
             BusinessData::firstOrCreate(
-                [ 'provider_id' => $provider->id ],
+                ['provider_id' => $provider->id],
                 [
                     'tenant_id'              => $tenant->id,
                     'fantasy_name'           => "Empresa {$index}",
@@ -129,19 +129,19 @@ class ProviderTestSeeder extends Seeder
             );
         }
 
-        $role = Role::where( 'name', 'Provider' )->first();
-        if ( $role ) {
-            UserRole::firstOrCreate( [
+        $role = Role::where('name', 'Provider')->first();
+        if ($role) {
+            UserRole::firstOrCreate([
                 'user_id'   => $user->id,
                 'role_id'   => $role->id,
                 'tenant_id' => $tenant->id,
-            ] );
+            ]);
         }
 
         $plan = Plan::first();
-        if ( $plan ) {
+        if ($plan) {
             PlanSubscription::firstOrCreate(
-                [ 'provider_id' => $provider->id ],
+                ['provider_id' => $provider->id],
                 [
                     'plan_id'            => $plan->id,
                     'tenant_id'          => $tenant->id,
@@ -158,7 +158,7 @@ class ProviderTestSeeder extends Seeder
 
         // Criar configurações do usuário
         UserSettings::firstOrCreate(
-            [ 'user_id' => $user->id, 'tenant_id' => $tenant->id ],
+            ['user_id' => $user->id, 'tenant_id' => $tenant->id],
             [
                 'avatar'                    => null,
                 'full_name'                 => $user->name,
@@ -181,18 +181,18 @@ class ProviderTestSeeder extends Seeder
                 'security_alerts'           => true,
                 'newsletter_subscription'   => false,
                 'push_notifications'        => false,
-                'custom_preferences'        => json_encode( [ 'auto_save' => true, 'compact_mode' => false, 'show_tips' => true ] ),
+                'custom_preferences'        => json_encode(['auto_save' => true, 'compact_mode' => false, 'show_tips' => true]),
             ],
         );
 
         // Recarregar provider com relacionamentos
-        $provider->load( [ 'commonData', 'contact', 'address' ] );
+        $provider->load(['commonData', 'contact', 'address']);
         $commonData = $provider->commonData;
         $contact    = $provider->contact;
         $address    = $provider->address;
 
         SystemSettings::firstOrCreate(
-            [ 'tenant_id' => $tenant->id ],
+            ['tenant_id' => $tenant->id],
             [
                 'company_name'                => $commonData->company_name ?? $commonData->first_name . ' ' . $commonData->last_name,
                 'contact_email'               => $contact->email_business ?? $contact->email_personal,
@@ -217,50 +217,50 @@ class ProviderTestSeeder extends Seeder
                 'session_lifetime'            => 120,
                 'max_login_attempts'          => 5,
                 'lockout_duration'            => 15,
-                'allowed_file_types'          => json_encode( [ 'image/jpeg', 'image/png', 'image/gif', 'application/pdf' ] ),
+                'allowed_file_types'          => json_encode(['image/jpeg', 'image/png', 'image/gif', 'application/pdf']),
                 'max_file_size'               => 2048,
-                'system_preferences'          => json_encode( [ 'auto_save' => true, 'compact_mode' => false, 'show_tips' => true ] ),
+                'system_preferences'          => json_encode(['auto_save' => true, 'compact_mode' => false, 'show_tips' => true]),
             ],
         );
 
-        $this->command->info( "   ✓ Provider {$index} ({$type}) criado" );
+        $this->command->info("   ✓ Provider {$index} ({$type}) criado");
         return $provider;
     }
 
-    private function createCustomersForProvider( Provider $provider, int $providerIndex ): void
+    private function createCustomersForProvider(Provider $provider, int $providerIndex): void
     {
-        for ( $i = 1; $i <= 3; $i++ ) {
-            $this->createCustomer( $provider, 'individual', $providerIndex, $i );
+        for ($i = 3; $i <= 4; $i++) {
+            $this->createCustomer($provider, 'company', $providerIndex, $i);
         }
 
-        for ( $i = 4; $i <= 6; $i++ ) {
-            $this->createCustomer( $provider, 'company', $providerIndex, $i );
+        for ($i = 5; $i <= 6; $i++) {
+            $this->createCustomer($provider, 'individual', $providerIndex, $i);
         }
     }
 
-    private function createCustomer( Provider $provider, string $type, int $providerIndex, int $customerIndex ): void
+    private function createCustomer(Provider $provider, string $type, int $providerIndex, int $customerIndex): void
     {
-        $customer = Customer::create( [
+        $customer = Customer::create([
             'tenant_id' => $provider->tenant_id,
             'status'    => 'active',
-        ] );
+        ]);
 
-        CommonData::create( [
+        CommonData::create([
             'tenant_id'           => $provider->tenant_id,
             'customer_id'         => $customer->id,
             'type'                => $type,
             'first_name'          => $type === 'individual' ? "Cliente {$customerIndex}" : null,
             'last_name'           => $type === 'individual' ? "Teste" : null,
             'birth_date'          => $type === 'individual' ? '1990-01-01' : null,
-            'cpf'                 => $type === 'individual' ? $this->generateCPF( $providerIndex * 100 + $customerIndex ) : null,
+            'cpf'                 => $type === 'individual' ? $this->generateCPF($providerIndex * 100 + $customerIndex) : null,
             'company_name'        => $type === 'company' ? "Cliente Empresa {$customerIndex} Ltda" : null,
-            'cnpj'                => $type === 'company' ? $this->generateCNPJ( $providerIndex * 100 + $customerIndex ) : null,
+            'cnpj'                => $type === 'company' ? $this->generateCNPJ($providerIndex * 100 + $customerIndex) : null,
             'description'         => "Cliente {$customerIndex} do provider {$providerIndex}",
             'area_of_activity_id' => AreaOfActivity::first()?->id,
             'profession_id'       => $type === 'individual' ? Profession::first()?->id : null,
-        ] );
+        ]);
 
-        Contact::create( [
+        Contact::create([
             'tenant_id'      => $provider->tenant_id,
             'customer_id'    => $customer->id,
             'email_personal' => "cliente{$providerIndex}_{$customerIndex}@test.com",
@@ -268,20 +268,20 @@ class ProviderTestSeeder extends Seeder
             'email_business' => $type === 'company' ? "empresa{$providerIndex}_{$customerIndex}@test.com" : null,
             'phone_business' => $type === 'company' ? DocumentGeneratorHelper::generateValidPhone() : null,
             'website'        => $type === 'company' ? "https://cliente{$customerIndex}.com" : null,
-        ] );
+        ]);
 
-        Address::create( [
+        Address::create([
             'tenant_id'      => $provider->tenant_id,
             'customer_id'    => $customer->id,
             'address'        => "Rua Cliente {$customerIndex}",
-            'address_number' => (string) ( $customerIndex * 10 ),
+            'address_number' => (string) ($customerIndex * 10),
             'neighborhood'   => "Bairro Cliente {$customerIndex}",
             'city'           => 'São Paulo',
             'state'          => 'SP',
-            'cep'            => sprintf( '%08d', $customerIndex + $providerIndex * 1000 ),
-        ] );
+            'cep'            => sprintf('%08d', $customerIndex + $providerIndex * 1000),
+        ]);
 
-        if ( $type === 'company' ) {
+        if ($type === 'company') {
             BusinessData::firstOrCreate(
                 [
                     'tenant_id'   => $provider->tenant_id,
@@ -300,33 +300,32 @@ class ProviderTestSeeder extends Seeder
         }
     }
 
-    private function generateCPF( int $seed ): string
+    private function generateCPF(int $seed): string
     {
         // Gerar CPF único baseado no seed para evitar duplicatas
         // Garantir que seja de 11 dígitos e único para cada combinação
-        $base = str_pad( (string) $seed, 9, '0', STR_PAD_LEFT );
+        $base = str_pad((string) $seed, 9, '0', STR_PAD_LEFT);
 
         // Adicionar dígitos verificadores simples
-        $cpf = substr( $base . '03', 0, 11 ); // Garantir 11 dígitos
+        $cpf = substr($base . '03', 0, 11); // Garantir 11 dígitos
 
         // Validar que não seja um CPF inválido (todos iguais)
-        if ( substr_count( $cpf, $cpf[ 0 ] ) === 11 ) {
+        if (substr_count($cpf, $cpf[0]) === 11) {
             $cpf = '12345678901'; // CPF válido de fallback
         }
 
         return $cpf;
     }
 
-    private function generateCNPJ( int $seed ): string
+    private function generateCNPJ(int $seed): string
     {
         // Gerar CNPJ único baseado no seed para evitar duplicatas
         // Garantir que seja de 14 dígitos e único para cada combinação
-        $base = str_pad( (string) $seed, 12, '0', STR_PAD_LEFT );
+        $base = str_pad((string) $seed, 12, '0', STR_PAD_LEFT);
 
         // Adicionar dígitos verificadores simples
-        $cnpj = substr( $base . '91', 0, 14 ); // Garantir 14 dígitos
+        $cnpj = substr($base . '91', 0, 14); // Garantir 14 dígitos
 
         return $cnpj;
     }
-
 }

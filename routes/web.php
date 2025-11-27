@@ -368,9 +368,16 @@ Route::prefix('provider')->name('provider.')->middleware(['auth', 'verified', 'p
         Route::get('/export-movements', [InventoryController::class, 'exportMovements'])->name('export-movements');
         Route::get('/export-stock-turnover', [InventoryController::class, 'exportStockTurnover'])->name('export-stock-turnover');
         Route::get('/export-most-used', [InventoryController::class, 'exportMostUsed'])->name('export-most-used');
-        Route::get('/{product}', [InventoryController::class, 'show'])->name('show');
-        Route::get('/{product}/adjust', [InventoryController::class, 'adjustStockForm'])->name('adjust');
-        Route::post('/{product}/adjust', [InventoryController::class, 'adjustStock'])->name('adjust.store');
+        Route::get('/{sku}', [InventoryController::class, 'show'])->name('show');
+
+        // Entrada e saída de estoque
+        Route::get('/{sku}/entry', [InventoryController::class, 'entryForm'])->name('entry');
+        Route::post('/{sku}/entry', [InventoryController::class, 'entry'])->name('entry.store');
+        Route::get('/{sku}/exit', [InventoryController::class, 'exitForm'])->name('exit');
+        Route::post('/{sku}/exit', [InventoryController::class, 'exit'])->name('exit.store');
+
+        Route::get('/{sku}/adjust', [InventoryController::class, 'adjustStockForm'])->name('adjust');
+        Route::post('/{sku}/adjust', [InventoryController::class, 'adjustStock'])->name('adjust.store');
 
         // API routes
         Route::prefix('api')->name('api.')->group(function () {

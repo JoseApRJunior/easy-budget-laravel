@@ -47,6 +47,17 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, TenantScoped, Notifiable, SoftDeletes;
 
+    /**
+     * Cache para verificações de roles (evita queries duplicadas)
+     */
+    protected array $roleCache = [];
+    protected array $permissionCache = [];
+
+    /**
+     * Relacionamentos que devem ser sempre carregados
+     */
+    protected $with = ['tenant'];
+
     protected static function boot()
     {
         parent::boot();
@@ -198,7 +209,13 @@ class User extends Authenticatable implements MustVerifyEmail
         if ( is_array( $role ) ) {
             return $this->hasAnyRole( $role );
         }
-        return $this->getTenantScopedRoles()->where( 'name', $role )->exists();
+
+        // Cache para evitar queries duplicadas
+        if (!isset($this->roleCache[$role])) {
+            $this->roleCache[$role] = $this->getTenantScopedRoles()->where( 'name', $role )->exists();
+        }
+
+        return $this->roleCache[$role];
     }
 
     public function hasRoleInTenant( string $role, int $tenantId ): bool
@@ -216,7 +233,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasAnyRole( array $roles ): bool
     {
-        return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+        // Cache para evitar queries duplicadas
+        $cacheKey = 'any_' . implode('_', $roles);
+        if (!isset($this->roleCache[$cacheKey])) {
+            $this->roleCache[$cacheKey] = $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+        }
+
+        return $this->roleCache[$cacheKey];
     }
 
     public function isAdmin(): bool
@@ -241,9 +264,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        return $this->permissions()
-            ->where( 'name', $permission )
-            ->exists();
+        // Cache para evitar queries duplicadas
+        if (!isset($this->permissionCache[$permission])) {
+            $this->permissionCache[$permission] = $this->permissions()
+                ->where( 'name', $permission )
+                ->exists();
+        }
+
+        return $this->permissionCache[$permission];
     }
 
     public function hasAnyPermission( array $permissions ): bool

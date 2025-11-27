@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryMovement extends Model
 {
@@ -26,6 +27,13 @@ class InventoryMovement extends Model
      * @var string
      */
     protected $table = 'inventory_movements';
+
+    /**
+     * Relacionamentos carregados automaticamente
+     *
+     * @var array
+     */
+    protected $with = ['product'];
 
     /**
      * The attributes that are mass assignable.

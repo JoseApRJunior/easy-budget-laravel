@@ -120,7 +120,7 @@ class ProductController extends Controller
     public function show(string $sku): View
     {
         try {
-            $result = $this->productService->findBySku($sku, ['category']);
+            $result = $this->productService->findBySku($sku, ['category', 'productInventory']);
 
             if (! $result->isSuccess()) {
                 abort(404, 'Produto não encontrado');

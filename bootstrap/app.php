@@ -25,7 +25,13 @@ return Application::configure( basePath: dirname( __DIR__ ) )
             'provider'        => \App\Http\Middleware\ProviderMiddleware::class,
             'admin'           => \App\Http\Middleware\AdminMiddleware::class,
             'monitoring'      => \App\Http\Middleware\MonitoringMiddleware::class,
+            'optimize.auth'   => \App\Http\Middleware\OptimizeAuthUser::class,
         ] );
+
+        // Adicionar middleware de otimização ao grupo web
+        $middleware->web(append: [
+            \App\Http\Middleware\OptimizeAuthUser::class,
+        ]);
 
         // Trust Cloudflare proxies for correct URL generation
         $middleware->trustProxies(

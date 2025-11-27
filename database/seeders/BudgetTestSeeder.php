@@ -29,13 +29,13 @@ class BudgetTestSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->command->info( '🏢 Criando dados de teste de budgets...' );
+        $this->command->info('🏢 Criando dados de teste de budgets...');
 
-        // Buscar todos os providers criados pelo ProviderTestSeeder
-        $providers = Provider::with( 'tenant' )->get();
+        // Buscar apenas providers dos tenants a partir do ID 3
+        $providers = Provider::with('tenant')->where('tenant_id', '>=', 3)->get();
 
-        if ( $providers->isEmpty() ) {
-            $this->command->warn( '⚠️  Nenhum provider encontrado. Execute ProviderTestSeeder primeiro.' );
+        if ($providers->isEmpty()) {
+            $this->command->warn('⚠️  Nenhum provider encontrado. Execute ProviderTestSeeder primeiro.');
             return;
         }
 
@@ -43,96 +43,100 @@ class BudgetTestSeeder extends Seeder
         $globalBudgetCounter  = 1;
         $globalInvoiceCounter = 1;
 
-        foreach ( $providers as $provider ) {
-            $this->createBudgetsForProvider( $provider, $globalBudgetCounter, $globalInvoiceCounter );
+        foreach ($providers as $provider) {
+            $this->createBudgetsForProvider($provider, $globalBudgetCounter, $globalInvoiceCounter);
         }
 
-        $this->command->info( '✅ Dados de teste de budgets criados com sucesso!' );
+        $this->command->info('✅ Dados de teste de budgets criados com sucesso!');
     }
 
-    private function createBudgetsForProvider( Provider $provider, int &$globalBudgetCounter, int &$globalInvoiceCounter ): void
+    private function createBudgetsForProvider(Provider $provider, int &$globalBudgetCounter, int &$globalInvoiceCounter): void
     {
         $tenant    = $provider->tenant;
-        $customers = Customer::where( 'tenant_id', $tenant->id )->get();
+        $customers = Customer::where('tenant_id', $tenant->id)->get();
 
-        if ( $customers->isEmpty() ) {
-            $this->command->warn( "⚠️  Nenhum cliente encontrado para o tenant {$tenant->id}" );
+        if ($customers->isEmpty()) {
+            $this->command->warn("⚠️  Nenhum cliente encontrado para o tenant {$tenant->id}");
             return;
         }
 
-        // Criar 3 budgets por provider
-        for ( $i = 1; $i <= 3; $i++ ) {
+        // Criar 2 budgets por provider
+        for ($i = 1; $i <= 2; $i++) {
             $customer = $customers->random();
-            $this->createBudgetWithServices( $provider, $tenant, $customer, $i, $globalBudgetCounter, $globalInvoiceCounter );
+            $this->createBudgetWithServices($provider, $tenant, $customer, $i, $globalBudgetCounter, $globalInvoiceCounter);
         }
 
-        $this->command->info( "   ✓ 3 budgets criados para provider {$provider->id} ({$tenant->name})" );
+        $this->command->info("   ✓ 2 budgets criados para provider {$provider->id} ({$tenant->name})");
     }
 
-    private function createBudgetWithServices( Provider $provider, Tenant $tenant, Customer $customer, int $budgetIndex, int &$globalBudgetCounter, int &$globalInvoiceCounter ): void
+    private function createBudgetWithServices(Provider $provider, Tenant $tenant, Customer $customer, int $budgetIndex, int &$globalBudgetCounter, int &$globalInvoiceCounter): void
     {
-        DB::transaction( function () use ($provider, $tenant, $customer, $budgetIndex, &$globalBudgetCounter, &$globalInvoiceCounter) {
+        DB::transaction(function () use ($provider, $tenant, $customer, $budgetIndex, &$globalBudgetCounter, &$globalInvoiceCounter) {
             // Usar globalBudgetCounter para código sequencial único
-            $budgetDate       = now()->format( 'Ymd' );
-            $budgetSequential = str_pad( (string) $globalBudgetCounter, 4, '0', STR_PAD_LEFT );
+            $budgetDate       = now()->format('Ymd');
+            $budgetSequential = str_pad((string) $globalBudgetCounter, 4, '0', STR_PAD_LEFT);
             $budgetCode       = "ORC-{$budgetDate}-{$budgetSequential}";
 
             // Criar budget
-            $budget = Budget::create( [
+            $budget = Budget::create([
                 'tenant_id'   => $tenant->id,
                 'customer_id' => $customer->id,
                 'code'        => $budgetCode,
                 'total'       => 0, // Será calculado depois
                 'discount'    => 0,
                 'status'      => BudgetStatus::DRAFT->value,
-                'due_date'    => now()->addDays( rand( 7, 30 ) ),
-            ] );
+                'due_date'    => now()->addDays(rand(7, 30)),
+            ]);
 
             $totalBudget = 0;
 
-            // Criar 3 services com status diferentes
+            // Criar 2 services: um COMPLETED e um APPROVED
             $serviceStatuses = [
-                ServiceStatus::SCHEDULED,
-                ServiceStatus::IN_PROGRESS,
                 ServiceStatus::COMPLETED,
                 ServiceStatus::APPROVED,
-                ServiceStatus::CANCELLED,
             ];
 
             $categories = Category::all(); // Categorias são globais, não por tenant
-            if ( $categories->isEmpty() ) {
+            if ($categories->isEmpty()) {
                 // Criar uma categoria se não existir nenhuma
-                $category   = Category::create( [
+                $category   = Category::create([
                     'name' => 'Categoria Teste',
                     'slug' => 'categoria-teste',
-                ] );
-                $categories = collect( [ $category ] );
+                ]);
+                $categories = collect([$category]);
             }
 
-            foreach ( $serviceStatuses as $index => $status ) {
-                $serviceTotal  = $this->createServiceWithItems( $budget, $tenant, $categories->random(), $status, $index + 1, $budgetCode );
+            foreach ($serviceStatuses as $index => $status) {
+                $serviceTotal  = $this->createServiceWithItems($budget, $tenant, $categories->random(), $status, $index + 1, $budgetCode);
                 $totalBudget  += $serviceTotal;
+            }
 
-                // Para services COMPLETED ou APPROVED, criar fatura
-                if ( in_array( $status, [ ServiceStatus::COMPLETED, ServiceStatus::APPROVED ] ) ) {
-                    $this->createInvoiceForService( $budget, $tenant, $customer, $budget->services()->latest()->first(), $budgetDate, $globalInvoiceCounter );
-                    $globalInvoiceCounter++; // Incrementar contador de invoice
-                }
+            $serviceCompleted = $budget->services()->where('status', ServiceStatus::COMPLETED->value)->first();
+            $serviceApproved  = $budget->services()->where('status', ServiceStatus::APPROVED->value)->first();
+
+            if ($serviceCompleted) {
+                $this->createInvoiceForService($budget, $tenant, $customer, $serviceCompleted, $budgetDate, $globalInvoiceCounter, true);
+                $globalInvoiceCounter++;
+            }
+
+            if ($serviceApproved) {
+                $this->createInvoiceForService($budget, $tenant, $customer, $serviceApproved, $budgetDate, $globalInvoiceCounter, false);
+                $globalInvoiceCounter++;
             }
 
             // Atualizar total do budget
-            $budget->update( [ 'total' => $totalBudget ] );
+            $budget->update(['total' => $totalBudget]);
             $globalBudgetCounter++; // Incrementar contador de budget
-        } );
+        });
     }
 
-    private function createServiceWithItems( Budget $budget, Tenant $tenant, Category $category, ServiceStatus $status, int $serviceIndex, string $budgetCode ): float
+    private function createServiceWithItems(Budget $budget, Tenant $tenant, Category $category, ServiceStatus $status, int $serviceIndex, string $budgetCode): float
     {
         // Gerar código de serviço seguindo padrão YYYYMMDD-0001-S001
-        $serviceCode = "{$budgetCode}-S" . str_pad( (string) $serviceIndex, 3, '0', STR_PAD_LEFT );
+        $serviceCode = "{$budgetCode}-S" . str_pad((string) $serviceIndex, 3, '0', STR_PAD_LEFT);
 
         // Criar service
-        $service = Service::create( [
+        $service = Service::create([
             'tenant_id'   => $tenant->id,
             'budget_id'   => $budget->id,
             'category_id' => $category->id,
@@ -141,72 +145,75 @@ class BudgetTestSeeder extends Seeder
             'status'      => $status->value,
             'discount'    => 0,
             'total'       => 0, // Será calculado
-            'due_date'    => now()->addDays( rand( 1, 30 ) ),
-        ] );
+            'due_date'    => now()->addDays(rand(1, 30)),
+        ]);
 
         $totalService = 0;
 
         // Criar 3 produtos para este service
-        $products = Product::where( 'tenant_id', $tenant->id )->inRandomOrder()->limit( 3 )->get();
+        $products = Product::where('tenant_id', $tenant->id)->inRandomOrder()->limit(3)->get();
 
         // Se não há produtos suficientes, criar alguns
-        if ( $products->count() < 3 ) {
-            for ( $i = $products->count(); $i < 3; $i++ ) {
-                $product = Product::create( [
+        if ($products->count() < 3) {
+            for ($i = $products->count(); $i < 3; $i++) {
+                $product = Product::create([
                     'tenant_id'   => $tenant->id,
                     'category_id' => $category->id,
                     'name'        => "Produto Teste {$i}",
                     'description' => "Produto criado para teste",
                     'sku'         => "PRD-{$tenant->id}-{$i}",
-                    'price'       => rand( 10, 500 ),
+                    'price'       => rand(10, 500),
                     'unit'        => 'un',
                     'active'      => true,
-                ] );
-                $products->push( $product );
+                ]);
+                $products->push($product);
             }
         }
 
-        foreach ( $products as $index => $product ) {
-            $quantity  = rand( 1, 10 );
+        foreach ($products as $index => $product) {
+            $quantity  = rand(1, 10);
             $unitValue = (float) $product->price;
             $total     = $quantity * $unitValue;
 
-            ServiceItem::create( [
+            ServiceItem::create([
                 'tenant_id'  => $tenant->id,
                 'service_id' => $service->id,
                 'product_id' => $product->id,
                 'unit_value' => $unitValue,
                 'quantity'   => $quantity,
                 'total'      => $total,
-            ] );
+            ]);
 
             $totalService  += $total;
         }
 
         // Atualizar total do service
-        $service->update( [ 'total' => $totalService ] );
+        $service->update(['total' => $totalService]);
 
         return $totalService;
     }
 
-    private function createInvoiceForService( Budget $budget, Tenant $tenant, Customer $customer, Service $service, string $budgetDate, int $invoiceCounter ): void
+    private function createInvoiceForService(Budget $budget, Tenant $tenant, Customer $customer, Service $service, string $budgetDate, int $invoiceCounter, bool $isPartial): void
     {
         // Gerar código de fatura seguindo padrão FAT-YYYYMMDD-0001
-        $invoiceSequential = str_pad( (string) $invoiceCounter, 4, '0', STR_PAD_LEFT );
+        $invoiceSequential = str_pad((string) $invoiceCounter, 4, '0', STR_PAD_LEFT);
         $invoiceCode       = "FAT-{$budgetDate}-{$invoiceSequential}";
 
-        Invoice::create( [
+        $subtotal = $service->total;
+        $discount = $isPartial ? $service->total * 0.5 : 0;
+        $total    = $subtotal - $discount;
+
+        Invoice::create([
             'tenant_id'      => $tenant->id,
             'service_id'     => $service->id,
             'customer_id'    => $customer->id,
             'code'           => $invoiceCode,
-            'subtotal'       => $service->total,
-            'discount'       => 0,
-            'total'          => $service->total,
-            'due_date'       => now()->addDays( rand( 7, 30 ) ),
-            'payment_method' => collect( [ 'pix', 'boleto', 'cartao' ] )->random(),
+            'subtotal'       => $subtotal,
+            'discount'       => $discount,
+            'total'          => $total,
+            'due_date'       => now()->addDays(rand(7, 30)),
+            'payment_method' => collect(['pix', 'boleto', 'cartao'])->random(),
             'status'         => InvoiceStatus::PENDING->value,
-        ] );
+        ]);
     }
-
 }

@@ -34,6 +34,13 @@ class Product extends Model
     protected $table = 'products';
 
     /**
+     * Relacionamentos carregados automaticamente
+     *
+     * @var array
+     */
+    protected $with = ['category'];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

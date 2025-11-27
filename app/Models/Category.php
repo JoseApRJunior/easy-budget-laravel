@@ -34,6 +34,7 @@ class Category extends Model
         'slug',
         'name',
         'parent_id',
+        'tenant_id',
         'is_active',
     ];
 
@@ -130,9 +131,14 @@ class Category extends Model
 
     public function scopeOwnedByTenant(Builder $query, int $tenantId): Builder
     {
-        return $query->whereHas('tenants', function ($t) use ($tenantId) {
-            $t->where('tenant_id', $tenantId);
-        });
+        return $query
+            ->whereHas('tenants', function ($t) use ($tenantId) {
+                $t->where('tenant_id', $tenantId);
+            })
+            ->where(function ($q) use ($tenantId) {
+                $q->whereNull('categories.tenant_id')
+                  ->orWhere('categories.tenant_id', $tenantId);
+            });
     }
 
     public function scopeForTenantWithGlobals(Builder $query, ?int $tenantId): Builder
@@ -145,5 +151,10 @@ class Category extends Model
             }
             $q->orDoesntHave('tenants');
         });
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Tenant::class, 'tenant_id');
     }
 }

@@ -79,4 +79,21 @@ class CategoryRepository extends AbstractGlobalRepository
         $this->applyOrderBy($query, $orderBy);
         return $query->get();
     }
+
+    /**
+     * Pagina categorias do tenant atual junto com categorias globais (sem vínculo de tenant).
+     *
+     * @param int $perPage
+     * @param array<string, mixed> $filters
+     * @param array<string, string>|null $orderBy
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function paginateWithGlobals(int $perPage = 10, array $filters = [], ?array $orderBy = ['name' => 'asc']): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $tenantId = TenantScoped::getCurrentTenantId();
+        $query = $this->model->newQuery()->forTenantWithGlobals($tenantId);
+        $this->applyFilters($query, $filters);
+        $this->applyOrderBy($query, $orderBy);
+        return $query->paginate($perPage);
+    }
 }

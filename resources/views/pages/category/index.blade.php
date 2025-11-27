@@ -47,6 +47,17 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="per_page">Itens por página</label>
+                                    <select class="form-control" id="per_page" name="per_page">
+                                        @php($pp = (int) (($filters['per_page'] ?? 10)))
+                                        <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
+                                        <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
+                                        <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
                                     <button type="submit" id="btnFilterCategories" class="btn btn-primary" aria-label="Filtrar">
@@ -85,6 +96,7 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped mb-0">
                             <thead>
@@ -145,13 +157,8 @@
                         </table>
                     </div>
                 </div>
-                @if($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
-                <div class="card-footer">
-                    <div class="d-flex justify-content-center">
-                        {{ $categories->appends(request()->query())->links('pagination::bootstrap-5') }}
-                    </div>
-                </div>
-                @endif
+                @php($p = method_exists($categories, 'appends') ? $categories->appends(request()->query()) : null)
+                @include('partials.components.paginator', ['p' => $p, 'size' => 'sm', 'show_info' => true])
             </div>
         </div>
     </div>
@@ -207,7 +214,7 @@
             });
         }
 
-        document.querySelectorAll('#search, #active').forEach(function(element) {
+        document.querySelectorAll('#search, #active, #per_page').forEach(function(element) {
             element.addEventListener('change', function() {
                 clearTimeout(window.filterTimeout);
                 window.filterTimeout = setTimeout(function() {
