@@ -99,12 +99,18 @@
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped mb-0">
+                            @php($isAdminTable = false)
+                            @role('admin')
+                            @php($isAdminTable = true)
+                            @endrole
                             <thead>
                                 <tr>
                                     <th><i class="bi bi-tag" aria-hidden="true"></i></th>
                                     <th>Categoria</th>
                                     <th>Subcategoria</th>
+                                    @if($isAdminTable)
                                     <th>Slug</th>
+                                    @endif
                                     <th>Status</th>
                                     <th>Criado em</th>
                                     <th class="text-center">Ações</th>
@@ -116,9 +122,31 @@
                                     <td class="text-center">
                                         <i class="bi bi-tag text-muted" aria-hidden="true"></i>
                                     </td>
-                                    <td>{{ $category->parent ? $category->parent->name : $category->name }}</td>
-                                    <td>{{ $category->parent ? $category->name : '—' }}</td>
+                                    <td>
+                                        {{ $category->parent ? $category->parent->name : $category->name }}
+                                        @if(!$category->parent)
+                                        @if($category->tenant_id === null)
+                                        <span class="badge bg-secondary ms-2">Sistema</span>
+                                        @else
+                                        <span class="badge bg-primary ms-2">Pessoal</span>
+                                        @endif
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($category->parent)
+                                        {{ $category->name }}
+                                        @if($category->tenant_id === null)
+                                        <span class="badge bg-secondary ms-2">Sistema</span>
+                                        @else
+                                        <span class="badge bg-primary ms-2">Pessoal</span>
+                                        @endif
+                                        @else
+                                        —
+                                        @endif
+                                    </td>
+                                    @if($isAdminTable)
                                     <td><span class="text-code">{{ $category->slug }}</span></td>
+                                    @endif
                                     <td>
                                         @if($category->is_active)
                                         <span class="badge badge-success">Ativo</span>
@@ -126,13 +154,30 @@
                                         <span class="badge badge-danger">Inativo</span>
                                         @endif
                                     </td>
-                                    <td>{{ $category->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        @php($isGlobalDate = $category->tenant_id === null)
+                                        @php($isAdminDate = false)
+                                        @role('admin')
+                                        @php($isAdminDate = true)
+                                        @endrole
+                                        @if($isAdminDate || !$isGlobalDate)
+                                        {{ $category->created_at?->format('d/m/Y H:i') }}
+                                        @else
+                                        —
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             <a href="{{ route('categories.show', $category->slug) }}"
                                                 class="btn btn-info" title="Visualizar" aria-label="Visualizar">
                                                 <i class="bi bi-eye" aria-hidden="true"></i>
                                             </a>
+                                            @php($isGlobal = $category->tenant_id === null)
+                                            @php($isAdmin = false)
+                                            @role('admin')
+                                            @php($isAdmin = true)
+                                            @endrole
+                                            @if($isAdmin)
                                             <a href="{{ route('categories.edit', $category->id) }}"
                                                 class="btn btn-warning" title="Editar" aria-label="Editar">
                                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
@@ -141,6 +186,18 @@
                                                 data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
                                                 <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
+                                            @else
+                                            @if(!$isGlobal)
+                                            <a href="{{ route('categories.edit', $category->id) }}"
+                                                class="btn btn-warning" title="Editar" aria-label="Editar">
+                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
+                                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                            </button>
+                                            @endif
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

@@ -88,12 +88,37 @@ class CategoryRepository extends AbstractGlobalRepository
      * @param array<string, string>|null $orderBy
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function paginateWithGlobals(int $perPage = 10, array $filters = [], ?array $orderBy = ['name' => 'asc']): \Illuminate\Pagination\LengthAwarePaginator
+    public function paginateWithGlobals(int $perPage = 15, array $filters = [], ?array $orderBy = ['name' => 'asc']): \Illuminate\Pagination\LengthAwarePaginator
     {
         $tenantId = TenantScoped::getCurrentTenantId();
-        $query = $this->model->newQuery()->forTenantWithGlobals($tenantId);
+        $query = $this->model->newQuery()
+            ->forTenantWithGlobals($tenantId)
+            ->leftJoin('categories as parent', 'parent.id', '=', 'categories.parent_id')
+            ->select('categories.*')
+            ->orderByRaw('COALESCE(parent.name, categories.name) ASC')
+            ->orderBy('categories.name', 'ASC');
         $this->applyFilters($query, $filters);
-        $this->applyOrderBy($query, $orderBy);
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Pagina apenas categorias globais (tenant_id NULL), ignorando filtros de tenant.
+     *
+     * @param int $perPage
+     * @param array<string, mixed> $filters
+     * @param array<string, string>|null $orderBy
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function paginateOnlyGlobals(int $perPage = 15, array $filters = [], ?array $orderBy = ['name' => 'asc']): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = $this->model->newQuery()
+            ->whereNull('tenant_id')
+            ->leftJoin('categories as parent', 'parent.id', '=', 'categories.parent_id')
+            ->select('categories.*')
+            ->orderByRaw('COALESCE(parent.name, categories.name) ASC')
+            ->orderBy('categories.name', 'ASC');
+        unset($filters['tenant_id']);
+        $this->applyFilters($query, $filters);
         return $query->paginate($perPage);
     }
 }

@@ -87,7 +87,7 @@ class PermissionService
     public function canManageCustomCategories( User $user ): bool
     {
         // Provider pode sempre gerenciar suas próprias categorias
-        if ( $user->role === 'provider' ) {
+        if ( $user->isProvider() ) {
             return true;
         }
 
@@ -136,7 +136,7 @@ class PermissionService
     public function canAssignCategories( User $user ): bool
     {
         // Providers podem sempre associar (gerencia produtos/serviços próprios)
-        if ( $user->role === 'provider' ) {
+        if ( $user->isProvider() ) {
             return true;
         }
 
@@ -152,7 +152,7 @@ class PermissionService
      */
     public function canManageProducts( User $user ): bool
     {
-        return $user->role === 'provider' || $this->isAdminGlobal( $user );
+        return $user->isProvider() || $this->isAdminGlobal( $user );
     }
 
     /**
@@ -160,7 +160,7 @@ class PermissionService
      */
     public function canManageServices( User $user ): bool
     {
-        return $user->role === 'provider' || $this->isAdminGlobal( $user );
+        return $user->isProvider() || $this->isAdminGlobal( $user );
     }
 
     /**
@@ -168,7 +168,7 @@ class PermissionService
      */
     public function canManageCustomers( User $user ): bool
     {
-        return $user->role === 'provider' || $this->isAdminGlobal( $user );
+        return $user->isProvider() || $this->isAdminGlobal( $user );
     }
 
     /**
@@ -220,7 +220,7 @@ class PermissionService
      */
     protected function isAdminGlobal( User $user ): bool
     {
-        return $user->role === 'admin';
+        return $user->isAdmin();
     }
 
     /**

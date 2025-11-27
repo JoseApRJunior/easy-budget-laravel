@@ -13,6 +13,7 @@ return Application::configure( basePath: dirname( __DIR__ ) )
     )
     ->withProviders( [
         App\Providers\AuthServiceProvider::class,
+        App\Providers\OptimizedAuthServiceProvider::class,
         App\Providers\AliasServiceProvider::class,
         App\Providers\ViewComposerServiceProvider::class,
         App\Providers\BladeDirectiveServiceProvider::class,

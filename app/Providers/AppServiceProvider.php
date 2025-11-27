@@ -108,6 +108,12 @@ class AppServiceProvider extends ServiceProvider
         Blade::if( 'anyrole', fn( $roles ) => auth()->check() && auth()->user()->hasAnyRole( (array) $roles ) );
 
         Paginator::useBootstrapFive();
+
+        // Aumentar limite de memória para evitar erros em requisições pesadas
+        ini_set('memory_limit', '256M');
+
+        // Otimizar respostas JSON removendo o wrap 'data' desnecessário
+        \Illuminate\Http\Resources\Json\JsonResource::withoutWrapping();
     }
 
 }

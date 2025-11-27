@@ -55,7 +55,7 @@ class CategoryService extends AbstractBaseService
         return $this->success($data);
     }
 
-    public function paginateWithGlobals(array $filters, int $perPage = 15): ServiceResult
+    public function paginateWithGlobals( array $filters, int $perPage = 15 ): ServiceResult
     {
         try {
             $normalized = [];
@@ -74,10 +74,35 @@ class CategoryService extends AbstractBaseService
                 $normalized['slug'] = ['operator' => 'like', 'value' => $term];
             }
 
-            $paginator = $this->repository->paginateWithGlobals($perPage, $normalized);
+            $paginator = $this->repository->paginateWithGlobals($perPage, $normalized, ['name' => 'asc']);
             return $this->success($paginator, 'Categorias paginadas com sucesso.');
         } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e);
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e );
+        }
+    }
+
+    public function paginateGlobalOnly( array $filters, int $perPage = 15 ): ServiceResult
+    {
+        try {
+            $normalized = [];
+            if (!empty($filters['active']) || $filters['active'] === '0') {
+                $normalized['is_active'] = (string) $filters['active'] === '1';
+            }
+            if (!empty($filters['name'])) {
+                $normalized['name'] = ['operator' => 'like', 'value' => '%' . $filters['name'] . '%'];
+            }
+            if (!empty($filters['slug'])) {
+                $normalized['slug'] = ['operator' => 'like', 'value' => '%' . $filters['slug'] . '%'];
+            }
+            if (!empty($filters['search'])) {
+                $term = '%' . $filters['search'] . '%';
+                $normalized['name'] = ['operator' => 'like', 'value' => $term];
+                $normalized['slug'] = ['operator' => 'like', 'value' => $term];
+            }
+            $paginator = $this->repository->paginateOnlyGlobals($perPage, $normalized, ['name' => 'asc']);
+            return $this->success($paginator, 'Categorias globais paginadas com sucesso.');
+        } catch (\Exception $e) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias globais.', null, $e );
         }
     }
 

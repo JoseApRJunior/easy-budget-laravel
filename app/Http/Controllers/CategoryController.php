@@ -37,7 +37,12 @@ class CategoryController extends Controller
                 'search' => $filters['search'] ?? '',
                 'active' => $filters['active'] ?? '',
             ];
-            $result = app(\App\Services\Domain\CategoryService::class)->paginateWithGlobals($serviceFilters, $perPage);
+            $user = auth()->user();
+            $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+            $service = app(\App\Services\Domain\CategoryService::class);
+            $result = $isAdmin
+                ? $service->paginateGlobalOnly($serviceFilters, $perPage)
+                : $service->paginateWithGlobals($serviceFilters, $perPage);
             $categories = $this->getServiceData($result, collect());
             if (method_exists($categories, 'appends')) {
                 $categories = $categories->appends($request->query());
@@ -61,7 +66,7 @@ class CategoryController extends Controller
         } else {
             $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
             $parents = $tenantId !== null
-                ? Category::query()->ownedByTenant($tenantId)->orderBy('name')->get(['id', 'name'])
+                ? Category::query()->forTenantWithGlobals($tenantId)->orderBy('name')->get(['id', 'name'])
                 : collect();
         }
         $defaults = ['is_active' => true];
@@ -131,12 +136,14 @@ class CategoryController extends Controller
                     return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
                 }
                 $parentId = (int) $validated['parent_id'];
+                $parent = Category::query()->find($parentId);
                 $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
                     ->where('tenant_id', $tenantId)
                     ->where('category_id', $parentId)
                     ->exists();
-                if (!$parentAttached) {
-                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço.'])->withInput();
+                $isGlobalParent = $parent && $parent->tenant_id === null;
+                if (!$isGlobalParent && !$parentAttached) {
+                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
                 }
             }
             $category = Category::create([
@@ -167,7 +174,7 @@ class CategoryController extends Controller
 
     public function show(string $slug)
     {
-        $tenantId = TenantScoped::getCurrentTenantId();
+        $tenantId = auth()->user()->tenant_id ?? null;
         $category = $this->repository->findBySlug($slug);
         abort_unless($category, 404);
         $category->load(['tenants' => function ($q) use ($tenantId) {
@@ -183,14 +190,17 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+        if ($isAdmin && $category->tenant_id !== null) {
+            return $this->redirectError('categories.index', 'Admin só pode editar categorias globais.');
+        }
         if ($isAdmin) {
             $parents = Category::query()->whereNull('tenant_id')
                 ->where('id', '!=', $id)
                 ->orderBy('name')->get(['id', 'name']);
         } else {
-            $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
+            $tenantId = $user->tenant_id ?? null;
             $parents = $tenantId !== null
-                ? Category::query()->ownedByTenant($tenantId)
+                ? Category::query()->forTenantWithGlobals($tenantId)
                 ->where('id', '!=', $id)
                 ->orderBy('name')->get(['id', 'name'])
                 : collect();
@@ -208,15 +218,18 @@ class CategoryController extends Controller
 
         $category = Category::findOrFail($id);
         $user = auth()->user();
-        $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
         if (!$isAdmin && $category->tenant_id === null) {
             return back()->withErrors(['category' => 'Categorias globais só podem ser editadas por administradores.']);
+        }
+        if ($isAdmin && $category->tenant_id !== null) {
+            return back()->withErrors(['category' => 'Admin só pode editar categorias globais.']);
         }
         $slug = Str::slug($validated['name']);
         if (!Category::validateUniqueSlug($slug, $category->id)) {
             return back()->withErrors(['name' => 'Slug já existe'])->withInput();
         }
-        $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
+        $tenantId = $user->tenant_id ?? null;
         if (($validated['parent_id'] ?? null) !== null) {
             $parentId = (int) $validated['parent_id'];
             if ($isAdmin) {
@@ -228,12 +241,14 @@ class CategoryController extends Controller
                 if ($tenantId === null) {
                     return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
                 }
+                $parent = Category::query()->find($parentId);
                 $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
                     ->where('tenant_id', $tenantId)
                     ->where('category_id', $parentId)
                     ->exists();
-                if (!$parentAttached) {
-                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço.'])->withInput();
+                $isGlobalParent = $parent && $parent->tenant_id === null;
+                if (!$isGlobalParent && !$parentAttached) {
+                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
                 }
             }
         }
@@ -260,9 +275,12 @@ class CategoryController extends Controller
         $this->authorize('manage-custom-categories');
         $category = Category::findOrFail($id);
         $user = auth()->user();
-        $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
         if (!$isAdmin && $category->tenant_id === null) {
             return $this->redirectError('categories.index', 'Categorias globais só podem ser excluídas por administradores.');
+        }
+        if ($isAdmin && $category->tenant_id !== null) {
+            return $this->redirectError('categories.index', 'Admin só pode excluir categorias globais.');
         }
         if ($category->services()->exists()) {
             return $this->redirectError('categories.index', 'Não é possível excluir: possui serviços associados');
@@ -297,7 +315,7 @@ class CategoryController extends Controller
     {
         $this->authorize('manage-custom-categories');
         $category = Category::findOrFail($id);
-        $tenantId = TenantScoped::getCurrentTenantId();
+        $tenantId = auth()->user()->tenant_id ?? null;
         $user = auth()->user();
 
         if ($user && $user->isAdmin() && $request->filled('tenant_id')) {
@@ -340,7 +358,7 @@ class CategoryController extends Controller
     {
         $slugInput = (string) $request->get('slug', '');
         $slug = Str::slug($slugInput);
-        $tenantId = $request->integer('tenant_id') ?: (TenantScoped::getCurrentTenantId() ?? (auth()->user()->tenant_id ?? null));
+        $tenantId = $request->integer('tenant_id') ?: (auth()->user()->tenant_id ?? null);
 
         $exists = false;
         $attached = false;

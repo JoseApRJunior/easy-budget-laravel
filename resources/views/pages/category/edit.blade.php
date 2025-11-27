@@ -63,7 +63,7 @@
         var slugInput = document.getElementById('slugPreview');
         var statusEl = document.getElementById('slugStatus');
         var submitBtn = document.querySelector('form button[type="submit"]');
-        var tenantId = @json(optional(auth() - > user()) - > tenant_id);
+        var tenantId = @json(optional(auth()->user())->tenant_id);
         var isAdmin = false;
         @role('admin')
         isAdmin = true;

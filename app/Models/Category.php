@@ -143,13 +143,15 @@ class Category extends Model
 
     public function scopeForTenantWithGlobals(Builder $query, ?int $tenantId): Builder
     {
+        if ($tenantId === null) {
+            return $query;
+        }
+
         return $query->where(function ($q) use ($tenantId) {
-            if ($tenantId !== null) {
-                $q->whereHas('tenants', function ($t) use ($tenantId) {
-                    $t->where('tenant_id', $tenantId);
-                });
-            }
-            $q->orDoesntHave('tenants');
+            $q->whereHas('tenants', function ($t) use ($tenantId) {
+                $t->where('tenant_id', $tenantId);
+            })
+            ->orWhereNull('categories.tenant_id');
         });
     }
 
