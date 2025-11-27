@@ -2,7 +2,6 @@
 
 namespace App\Mail\Concerns;
 
-use App\Mail\Concerns\BaseEmail;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Infrastructure\LinkService;
@@ -29,7 +28,7 @@ abstract class AbstractBaseSimpleEmail extends BaseEmail
         array $additionalData = [],
         ?LinkService $linkService = null,
     ) {
-        parent::__construct( $user, $tenant, $linkService );
+        parent::__construct($user, $tenant, $linkService);
 
         $this->additionalData = $additionalData;
     }
@@ -41,10 +40,9 @@ abstract class AbstractBaseSimpleEmail extends BaseEmail
      */
     protected function getTemplateData(): array
     {
-        return array_merge( $this->getUserBasicData(), $this->additionalData, [
+        return array_merge($this->getUserBasicData(), $this->additionalData, [
             'tenant' => $this->tenant,
-            'user'   => $this->user,
-        ] );
+            'user' => $this->user,
+        ]);
     }
-
 }

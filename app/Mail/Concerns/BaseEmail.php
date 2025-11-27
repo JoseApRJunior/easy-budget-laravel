@@ -53,9 +53,9 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
         ?Tenant $tenant = null,
         ?LinkService $linkService = null,
     ) {
-        $this->user                    = $user;
-        $this->tenant                  = $tenant;
-        $this->linkService = $linkService ?? app( LinkService::class);
+        $this->user = $user;
+        $this->tenant = $tenant;
+        $this->linkService = $linkService ?? app(LinkService::class);
     }
 
     /**
@@ -71,21 +71,21 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     protected function getUserFirstName(): string
     {
         // Estratégia 1: Buscar nome através da estrutura completa User → Provider → CommonData
-        if ( $this->user->provider && $this->user->provider->commonData ) {
+        if ($this->user->provider && $this->user->provider->commonData) {
             $firstName = $this->user->provider->commonData->first_name;
 
-            if ( !empty( trim( $firstName ) ) ) {
-                return trim( $firstName );
+            if (! empty(trim($firstName))) {
+                return trim($firstName);
             }
         }
 
         // Estratégia 2: Fallback para parte do e-mail (antes do @)
         // Remove caracteres especiais e números para melhorar apresentação
-        $emailPrefix = explode( '@', $this->user->email )[ 0 ];
-        $cleanName   = preg_replace( '/[^a-zA-ZÀ-ÿ\s]/', '', $emailPrefix );
+        $emailPrefix = explode('@', $this->user->email)[0];
+        $cleanName = preg_replace('/[^a-zA-ZÀ-ÿ\s]/', '', $emailPrefix);
 
-        if ( !empty( trim( $cleanName ) ) ) {
-            return ucfirst( strtolower( trim( $cleanName ) ) );
+        if (! empty(trim($cleanName))) {
+            return ucfirst(strtolower(trim($cleanName)));
         }
 
         // Estratégia 3: Último recurso - nome genérico
@@ -119,21 +119,21 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
      */
     protected function getCompanyData(): array
     {
-        if ( $this->tenant ) {
+        if ($this->tenant) {
             return [
-                'company_name'   => $this->tenant->name,
-                'email'          => null,
+                'company_name' => $this->tenant->name,
+                'email' => null,
                 'email_business' => null,
-                'phone'          => null,
+                'phone' => null,
                 'phone_business' => null,
             ];
         }
 
         return [
-            'company_name'   => config( 'app.name', 'Easy Budget' ),
-            'email'          => null,
+            'company_name' => config('app.name', 'Easy Budget'),
+            'email' => null,
             'email_business' => null,
-            'phone'          => null,
+            'phone' => null,
             'phone_business' => null,
         ];
     }
@@ -151,17 +151,17 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     protected function getSupportEmail(): string
     {
         // Tentar obter e-mail de suporte do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) && !empty( $this->tenant->settings[ 'support_email' ] ) ) {
-            return $this->tenant->settings[ 'support_email' ];
+        if ($this->tenant && isset($this->tenant->settings['support_email']) && ! empty($this->tenant->settings['support_email'])) {
+            return $this->tenant->settings['support_email'];
         }
 
         // Tentar obter e-mail de contato do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'contact_email' ] ) && !empty( $this->tenant->settings[ 'contact_email' ] ) ) {
-            return $this->tenant->settings[ 'contact_email' ];
+        if ($this->tenant && isset($this->tenant->settings['contact_email']) && ! empty($this->tenant->settings['contact_email'])) {
+            return $this->tenant->settings['contact_email'];
         }
 
         // E-mail padrão de suporte
-        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
+        return config('mail.support_email', 'suporte@easybudget.net.br');
     }
 
     /**
@@ -172,10 +172,10 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     protected function getUserBasicData(): array
     {
         return [
-            'first_name'    => $this->getUserFirstName(),
-            'name'          => $this->getUserName(),
-            'email'         => $this->getUserEmail(),
-            'company_data'  => $this->getCompanyData(),
+            'first_name' => $this->getUserFirstName(),
+            'name' => $this->getUserName(),
+            'email' => $this->getUserEmail(),
+            'company_data' => $this->getCompanyData(),
             'support_email' => $this->getSupportEmail(),
         ];
     }
@@ -183,35 +183,34 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     /**
      * Log de operações críticas do e-mail.
      *
-     * @param string $action Ação realizada
-     * @param array $context Contexto adicional
+     * @param  string  $action  Ação realizada
+     * @param  array  $context  Contexto adicional
      */
-    protected function logEmailOperation( string $action, array $context = [] ): void
+    protected function logEmailOperation(string $action, array $context = []): void
     {
-        Log::info( "Email operation: {$action}", [
+        Log::info("Email operation: {$action}", [
             'email_class' => static::class,
-            'user_id'     => $this->user->id,
-            'tenant_id'   => $this->tenant?->id,
-            'context'     => $context,
-        ] );
+            'user_id' => $this->user->id,
+            'tenant_id' => $this->tenant?->id,
+            'context' => $context,
+        ]);
     }
 
     /**
      * Tratamento padronizado de erros em operações de e-mail.
      *
-     * @param \Throwable $e Exceção capturada
-     * @param string $operation Operação que falhou
-     * @param array $context Contexto adicional
+     * @param  \Throwable  $e  Exceção capturada
+     * @param  string  $operation  Operação que falhou
+     * @param  array  $context  Contexto adicional
      */
-    protected function handleEmailError( \Throwable $e, string $operation, array $context = [] ): void
+    protected function handleEmailError(\Throwable $e, string $operation, array $context = []): void
     {
-        Log::warning( "Email error in {$operation}", [
+        Log::warning("Email error in {$operation}", [
             'email_class' => static::class,
-            'user_id'     => $this->user->id,
-            'tenant_id'   => $this->tenant?->id,
-            'error'       => $e->getMessage(),
-            'context'     => $context,
-        ] );
+            'user_id' => $this->user->id,
+            'tenant_id' => $this->tenant?->id,
+            'error' => $e->getMessage(),
+            'context' => $context,
+        ]);
     }
-
 }

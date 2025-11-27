@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Controller para gerenciamento de agendamentos
- * 
+ *
  * Este controller gerencia o sistema de agendamentos de serviços,
  * permitindo que prestadores gerenciem seus horários disponíveis
  * e clientes agendem serviços.
@@ -34,7 +35,7 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $filters = [
             'date_from' => $request->input('date_from'),
             'date_to' => $request->input('date_to'),
@@ -44,10 +45,10 @@ class ScheduleController extends Controller
         ];
 
         $result = $this->scheduleService->getSchedules($filters);
-        
+
         return view('pages.schedule.index', [
             'schedules' => $this->getServiceData($result, collect()),
-            'filters' => $filters
+            'filters' => $filters,
         ]);
     }
 
@@ -82,14 +83,14 @@ class ScheduleController extends Controller
             : 0;
 
         $upcomingCount = Schedule::where('tenant_id', $tenantId)
-            ->when($hasStatus, function($q){
+            ->when($hasStatus, function ($q) {
                 $q->where('status', '!=', 'cancelled');
             })
             ->where('start_date_time', '>=', now())
             ->count();
 
         $recentUpcoming = Schedule::where('tenant_id', $tenantId)
-            ->when($hasStatus, function($q){
+            ->when($hasStatus, function ($q) {
                 $q->where('status', '!=', 'cancelled');
             })
             ->where('start_date_time', '>=', now()->subDays(1))
@@ -99,11 +100,11 @@ class ScheduleController extends Controller
             ->get();
 
         $statusBreakdown = [
-            'pending' => [ 'count' => $pending, 'color' => '#F59E0B' ],
-            'confirmed' => [ 'count' => $confirmed, 'color' => '#3B82F6' ],
-            'completed' => [ 'count' => $completed, 'color' => '#10B981' ],
-            'cancelled' => [ 'count' => $cancelled, 'color' => '#EF4444' ],
-            'no_show' => [ 'count' => $noShow, 'color' => '#6B7280' ],
+            'pending' => ['count' => $pending, 'color' => '#F59E0B'],
+            'confirmed' => ['count' => $confirmed, 'color' => '#3B82F6'],
+            'completed' => ['count' => $completed, 'color' => '#10B981'],
+            'cancelled' => ['count' => $cancelled, 'color' => '#EF4444'],
+            'no_show' => ['count' => $noShow, 'color' => '#6B7280'],
         ];
 
         $stats = [
@@ -128,22 +129,22 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         // Se não for especificado um prestador, usa o usuário logado (se for prestador)
         $targetProviderId = $providerId ?? ($user->isProvider() ? $user->id : null);
-        
-        if (!$targetProviderId) {
+
+        if (! $targetProviderId) {
             abort(404, 'Prestador não encontrado');
         }
 
         $month = $request->input('month', now()->format('Y-m'));
-        
+
         $result = $this->scheduleService->getAvailabilityCalendar($targetProviderId, $month);
-        
+
         return view('pages.schedule.calendar', [
             'calendar' => $this->getServiceData($result, []),
             'providerId' => $targetProviderId,
-            'month' => $month
+            'month' => $month,
         ]);
     }
 
@@ -154,14 +155,14 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $providers = $this->scheduleService->getAvailableProviders();
-        
+
         return view('pages.schedule.create', [
             'providers' => $this->getServiceData($providers, collect()),
             'selectedProvider' => $request->input('provider_id'),
             'selectedDate' => $request->input('date'),
-            'selectedTime' => $request->input('time')
+            'selectedTime' => $request->input('time'),
         ]);
     }
 
@@ -172,11 +173,11 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         try {
             $data = array_merge($request->validated(), [
                 'customer_id' => $user->isCustomer() ? $user->id : $request->input('customer_id'),
-                'created_by' => $user->id
+                'created_by' => $user->id,
             ]);
 
             $result = $this->scheduleService->createSchedule($data);
@@ -195,7 +196,7 @@ class ScheduleController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar agendamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao criar agendamento: '.$e->getMessage());
         }
     }
 
@@ -206,24 +207,24 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $result = $this->scheduleService->getSchedule($id);
-        
-        if (!$result->isSuccess()) {
+
+        if (! $result->isSuccess()) {
             abort(404, 'Agendamento não encontrado');
         }
 
         $schedule = $result->getData();
-        
+
         // Verifica se o usuário tem permissão para ver este agendamento
-        if (!$user->isAdmin() && 
-            $schedule->customer_id !== $user->id && 
+        if (! $user->isAdmin() &&
+            $schedule->customer_id !== $user->id &&
             $schedule->provider_id !== $user->id) {
             abort(403, 'Acesso não autorizado');
         }
 
         return view('pages.schedule.show', [
-            'schedule' => $schedule
+            'schedule' => $schedule,
         ]);
     }
 
@@ -234,9 +235,9 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $request->validate([
-            'status' => 'required|in:confirmed,cancelled,completed,no_show'
+            'status' => 'required|in:confirmed,cancelled,completed,no_show',
         ]);
 
         try {
@@ -245,11 +246,11 @@ class ScheduleController extends Controller
                 $request->input('status'),
                 $user->id
             );
-            
+
             return $this->jsonResponse($result);
 
         } catch (\Exception $e) {
-            return $this->jsonError('Erro ao atualizar status: ' . $e->getMessage());
+            return $this->jsonError('Erro ao atualizar status: '.$e->getMessage());
         }
     }
 
@@ -260,10 +261,10 @@ class ScheduleController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         try {
             $result = $this->scheduleService->cancelSchedule($id, $user->id);
-            
+
             return $this->redirectWithServiceResult(
                 'schedules.index',
                 $result,
@@ -272,7 +273,7 @@ class ScheduleController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Erro ao cancelar agendamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao cancelar agendamento: '.$e->getMessage());
         }
     }
 
@@ -293,11 +294,11 @@ class ScheduleController extends Controller
                 $request->input('date'),
                 $request->input('duration', 60)
             );
-            
+
             return $this->jsonResponse($result);
 
         } catch (\Exception $e) {
-            return $this->jsonError('Erro ao verificar disponibilidade: ' . $e->getMessage());
+            return $this->jsonError('Erro ao verificar disponibilidade: '.$e->getMessage());
         }
     }
 
@@ -318,11 +319,11 @@ class ScheduleController extends Controller
                 $request->input('date'),
                 $request->input('service_duration', 60)
             );
-            
+
             return $this->jsonResponse($result);
 
         } catch (\Exception $e) {
-            return $this->jsonError('Erro ao obter horários disponíveis: ' . $e->getMessage());
+            return $this->jsonError('Erro ao obter horários disponíveis: '.$e->getMessage());
         }
     }
 }

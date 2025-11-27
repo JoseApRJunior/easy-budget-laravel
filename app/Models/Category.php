@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Pivots\CategoryTenant;
+use App\Models\Traits\Auditable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Pivots\CategoryTenant;
-use App\Models\Traits\Auditable;
 
 /**
  * Model para representar categorias, com tenant_id opcional para compatibilidade com sistema legado.
  */
 class Category extends Model
 {
-    use HasFactory, Auditable;
+    use Auditable, HasFactory;
 
     /**
      * Boot the model.
@@ -44,10 +44,10 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'slug'       => 'string',
-        'name'       => 'string',
-        'parent_id'  => 'integer',
-        'is_active'  => 'boolean',
+        'slug' => 'string',
+        'name' => 'string',
+        'parent_id' => 'integer',
+        'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -82,7 +82,7 @@ class Category extends Model
             $query->where('id', '!=', $excludeCategoryId);
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     /**
@@ -137,7 +137,7 @@ class Category extends Model
             })
             ->where(function ($q) use ($tenantId) {
                 $q->whereNull('categories.tenant_id')
-                  ->orWhere('categories.tenant_id', $tenantId);
+                    ->orWhere('categories.tenant_id', $tenantId);
             });
     }
 
@@ -151,7 +151,7 @@ class Category extends Model
             $q->whereHas('tenants', function ($t) use ($tenantId) {
                 $t->where('tenant_id', $tenantId);
             })
-            ->orWhereNull('categories.tenant_id');
+                ->orWhereNull('categories.tenant_id');
         });
     }
 

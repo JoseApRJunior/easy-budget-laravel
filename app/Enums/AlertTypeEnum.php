@@ -15,7 +15,7 @@ enum AlertTypeEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PERFORMANCE => 'Performance',
             self::SECURITY => 'Segurança',
             self::AVAILABILITY => 'Disponibilidade',
@@ -27,7 +27,7 @@ enum AlertTypeEnum: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PERFORMANCE => 'Alertas relacionados à performance do sistema',
             self::SECURITY => 'Alertas de segurança e tentativas de acesso não autorizado',
             self::AVAILABILITY => 'Alertas de disponibilidade e uptime do sistema',
@@ -39,7 +39,7 @@ enum AlertTypeEnum: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PERFORMANCE => '#f59e0b',
             self::SECURITY => '#ef4444',
             self::AVAILABILITY => '#3b82f6',
@@ -51,7 +51,7 @@ enum AlertTypeEnum: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PERFORMANCE => 'bi-speedometer2',
             self::SECURITY => 'bi-shield-exclamation',
             self::AVAILABILITY => 'bi-wifi',

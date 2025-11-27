@@ -25,13 +25,13 @@ class AlertController extends Controller
     public function index(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         // Obter estatísticas dos últimos 30 dias
         $startDate = Carbon::now()->subDays(30);
         $endDate = Carbon::now();
-        
+
         $statistics = $this->alertService->getAlertStatistics($tenantId, $startDate, $endDate);
-        
+
         // Obter alertas não resolvidos
         $unresolvedAlerts = $this->alertService->getUnresolvedAlerts($tenantId, [
             'date_from' => $request->input('date_from', $startDate),
@@ -67,7 +67,7 @@ class AlertController extends Controller
     public function settings(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $alertSettings = AlertSetting::where('tenant_id', $tenantId)
             ->orderBy('alert_type')
             ->orderBy('metric_name')
@@ -91,7 +91,7 @@ class AlertController extends Controller
     {
         $alertTypes = AlertTypeEnum::cases();
         $severities = AlertSeverityEnum::cases();
-        
+
         // Métricas disponíveis por tipo
         $availableMetrics = [
             'performance' => [
@@ -139,9 +139,9 @@ class AlertController extends Controller
     public function storeSetting(Request $request)
     {
         $validated = $request->validate([
-            'alert_type' => 'required|string|in:' . implode(',', array_column(AlertTypeEnum::cases(), 'value')),
+            'alert_type' => 'required|string|in:'.implode(',', array_column(AlertTypeEnum::cases(), 'value')),
             'metric_name' => 'required|string|max:100',
-            'severity' => 'required|string|in:' . implode(',', array_column(AlertSeverityEnum::cases(), 'value')),
+            'severity' => 'required|string|in:'.implode(',', array_column(AlertSeverityEnum::cases(), 'value')),
             'threshold_value' => 'required|numeric|min:0',
             'evaluation_window_minutes' => 'required|integer|min:1|max:1440',
             'cooldown_minutes' => 'required|integer|min:1|max:10080',
@@ -174,7 +174,7 @@ class AlertController extends Controller
 
         $alertTypes = AlertTypeEnum::cases();
         $severities = AlertSeverityEnum::cases();
-        
+
         // Métricas disponíveis por tipo (mesmo do create)
         $availableMetrics = [
             'performance' => [
@@ -225,9 +225,9 @@ class AlertController extends Controller
         $this->authorize('update', $alertSetting);
 
         $validated = $request->validate([
-            'alert_type' => 'required|string|in:' . implode(',', array_column(AlertTypeEnum::cases(), 'value')),
+            'alert_type' => 'required|string|in:'.implode(',', array_column(AlertTypeEnum::cases(), 'value')),
             'metric_name' => 'required|string|max:100',
-            'severity' => 'required|string|in:' . implode(',', array_column(AlertSeverityEnum::cases(), 'value')),
+            'severity' => 'required|string|in:'.implode(',', array_column(AlertSeverityEnum::cases(), 'value')),
             'threshold_value' => 'required|numeric|min:0',
             'evaluation_window_minutes' => 'required|integer|min:1|max:1440',
             'cooldown_minutes' => 'required|integer|min:1|max:10080',
@@ -270,10 +270,10 @@ class AlertController extends Controller
     {
         $this->authorize('update', $alertSetting);
 
-        $alertSetting->update(['is_active' => !$alertSetting->is_active]);
+        $alertSetting->update(['is_active' => ! $alertSetting->is_active]);
 
         return redirect()->route('admin.alerts.settings')
-            ->with('success', 'Configuração de alerta ' . ($alertSetting->is_active ? 'ativada' : 'desativada') . ' com sucesso!');
+            ->with('success', 'Configuração de alerta '.($alertSetting->is_active ? 'ativada' : 'desativada').' com sucesso!');
     }
 
     /**
@@ -282,7 +282,7 @@ class AlertController extends Controller
     public function history(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $query = MonitoringAlertsHistory::where('tenant_id', $tenantId)
             ->with(['alertSetting', 'resolvedBy'])
             ->orderBy('created_at', 'desc');
@@ -347,7 +347,7 @@ class AlertController extends Controller
     public function statistics(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;
-        
+
         $startDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 

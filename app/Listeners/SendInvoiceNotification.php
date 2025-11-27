@@ -29,21 +29,18 @@ class SendInvoiceNotification implements ShouldQueue
 
     /**
      * Handle the event.
-     *
-     * @param InvoiceCreated $event
-     * @return void
      */
-    public function handle( InvoiceCreated $event ): void
+    public function handle(InvoiceCreated $event): void
     {
         try {
-            Log::info( 'Processando evento InvoiceCreated para envio de notificação de fatura', [
-                'invoice_id'   => $event->invoice->id,
+            Log::info('Processando evento InvoiceCreated para envio de notificação de fatura', [
+                'invoice_id' => $event->invoice->id,
                 'invoice_code' => $event->invoice->code,
-                'customer_id'  => $event->customer->id,
-                'tenant_id'    => $event->tenant?->id,
-            ] );
+                'customer_id' => $event->customer->id,
+                'tenant_id' => $event->tenant?->id,
+            ]);
 
-            $mailerService = app( MailerService::class);
+            $mailerService = app(MailerService::class);
 
             $result = $mailerService->sendInvoiceNotification(
                 $event->invoice,
@@ -51,32 +48,32 @@ class SendInvoiceNotification implements ShouldQueue
                 $event->tenant,
             );
 
-            if ( $result->isSuccess() ) {
-                Log::info( 'Notificação de fatura enviada com sucesso via evento', [
-                    'invoice_id'   => $event->invoice->id,
+            if ($result->isSuccess()) {
+                Log::info('Notificação de fatura enviada com sucesso via evento', [
+                    'invoice_id' => $event->invoice->id,
                     'invoice_code' => $event->invoice->code,
-                    'customer_id'  => $event->customer->id,
-                    'queued_at'    => $result->getData()[ 'queued_at' ] ?? null,
-                ] );
+                    'customer_id' => $event->customer->id,
+                    'queued_at' => $result->getData()['queued_at'] ?? null,
+                ]);
             } else {
-                Log::error( 'Falha ao enviar notificação de fatura via evento', [
-                    'invoice_id'   => $event->invoice->id,
+                Log::error('Falha ao enviar notificação de fatura via evento', [
+                    'invoice_id' => $event->invoice->id,
                     'invoice_code' => $event->invoice->code,
-                    'customer_id'  => $event->customer->id,
-                    'error'        => $result->getMessage(),
-                ] );
+                    'customer_id' => $event->customer->id,
+                    'error' => $result->getMessage(),
+                ]);
 
                 // Relança a exceção para que seja tratada pela queue
-                throw new \Exception( 'Falha no envio de notificação de fatura: ' . $result->getMessage() );
+                throw new \Exception('Falha no envio de notificação de fatura: '.$result->getMessage());
             }
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'Erro crítico no listener SendInvoiceNotification', [
-                'invoice_id'  => $event->invoice->id,
+        } catch (\Throwable $e) {
+            Log::error('Erro crítico no listener SendInvoiceNotification', [
+                'invoice_id' => $event->invoice->id,
                 'customer_id' => $event->customer->id,
-                'error'       => $e->getMessage(),
-                'trace'       => $e->getTraceAsString(),
-            ] );
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             // Relança a exceção para que seja tratada pela queue
             throw $e;
@@ -85,23 +82,18 @@ class SendInvoiceNotification implements ShouldQueue
 
     /**
      * Handle a job failure.
-     *
-     * @param InvoiceCreated $event
-     * @param \Throwable $exception
-     * @return void
      */
-    public function failed( InvoiceCreated $event, \Throwable $exception ): void
+    public function failed(InvoiceCreated $event, \Throwable $exception): void
     {
-        Log::critical( 'Listener SendInvoiceNotification falhou após todas as tentativas', [
-            'invoice_id'   => $event->invoice->id,
+        Log::critical('Listener SendInvoiceNotification falhou após todas as tentativas', [
+            'invoice_id' => $event->invoice->id,
             'invoice_code' => $event->invoice->code,
-            'customer_id'  => $event->customer->id,
-            'error'        => $exception->getMessage(),
-            'attempts'     => $this->tries,
-        ] );
+            'customer_id' => $event->customer->id,
+            'error' => $exception->getMessage(),
+            'attempts' => $this->tries,
+        ]);
 
         // Em produção, poderia notificar administradores sobre a falha
         // ou implementar lógica de fallback
     }
-
 }

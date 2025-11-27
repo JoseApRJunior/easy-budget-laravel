@@ -8,97 +8,98 @@ use App\Enums\ServiceStatus;
 
 class StatusHelper
 {
-    public static function status_badge( $status )
+    public static function status_badge($status)
     {
-        if ( $status instanceof BudgetStatus ) {
+        if ($status instanceof BudgetStatus) {
             $status_color = $status->getColor();
-            $status_icon  = $status->getIcon();
-            $status_name  = $status->getDescription();
-        } elseif ( $status instanceof ServiceStatus ) {
+            $status_icon = $status->getIcon();
+            $status_name = $status->getDescription();
+        } elseif ($status instanceof ServiceStatus) {
             $status_color = $status->getColor();
-            $status_icon  = $status->getIcon();
-            $status_name  = $status->getDescription();
-        } elseif ( $status instanceof InvoiceStatus ) {
+            $status_icon = $status->getIcon();
+            $status_name = $status->getDescription();
+        } elseif ($status instanceof InvoiceStatus) {
             $status_color = $status->getColor();
-            $status_icon  = $status->getIcon();
-            $status_name  = $status->getDescription();
-        } elseif ( is_array( $status ) && !empty( $status ) ) {
+            $status_icon = $status->getIcon();
+            $status_name = $status->getDescription();
+        } elseif (is_array($status) && ! empty($status)) {
             // Fallback para arrays legados
-            $status_color       = $status[ 'status_color' ] ?? '#6c757d';
-            $status_icon        = $status[ 'status_icon' ] ?? 'bi-question-circle';
-            $status_name        = $status[ 'status_name' ] ?? 'N/A';
-            $status_description = $status[ 'status_description' ] ?? '';
+            $status_color = $status['status_color'] ?? '#6c757d';
+            $status_icon = $status['status_icon'] ?? 'bi-question-circle';
+            $status_name = $status['status_name'] ?? 'N/A';
+            $status_description = $status['status_description'] ?? '';
         } else {
             return '';
         }
 
         $description_html = '';
-        if ( isset( $status_description ) && $status_description ) {
-            $description_html = sprintf( '<span class="d-none d-md-inline ms-1 small">(%s)</span>', e( $status_description ) );
+        if (isset($status_description) && $status_description) {
+            $description_html = sprintf('<span class="d-none d-md-inline ms-1 small">(%s)</span>', e($status_description));
         }
 
         return sprintf(
             '<span class="badge" style="background-color: %s">
                 <i class="bi %s"></i> %s %s
             </span>',
-            e( $status_color ),
-            e( $status_icon ),
-            e( $status_name ),
+            e($status_color),
+            e($status_icon),
+            e($status_name),
             $description_html,
         );
     }
 
-    public static function service_next_statuses( $currentStatus )
+    public static function service_next_statuses($currentStatus)
     {
-        if ( $currentStatus instanceof ServiceStatus ) {
+        if ($currentStatus instanceof ServiceStatus) {
             // Get valid transitions based on the enum's canTransitionTo method if it exists
             $validTransitions = [];
-            foreach ( ServiceStatus::cases() as $status ) {
-                if ( method_exists( $currentStatus, 'canTransitionTo' ) && $currentStatus->canTransitionTo( $status ) ) {
+            foreach (ServiceStatus::cases() as $status) {
+                if (method_exists($currentStatus, 'canTransitionTo') && $currentStatus->canTransitionTo($status)) {
                     $validTransitions[] = $status->value;
                 }
             }
+
             return $validTransitions;
-        } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            $statusEnum = ServiceStatus::tryFrom( $currentStatus[ 'slug' ] );
-            if ( $statusEnum ) {
-                return self::service_next_statuses( $statusEnum );
+        } elseif (is_array($currentStatus) && ! empty($currentStatus['slug'])) {
+            $statusEnum = ServiceStatus::tryFrom($currentStatus['slug']);
+            if ($statusEnum) {
+                return self::service_next_statuses($statusEnum);
             }
         }
 
         return [];
     }
 
-    public static function service_status_options( $selectedStatus = '' )
+    public static function service_status_options($selectedStatus = '')
     {
-        $options = [ '<option value="">Todos</option>' ];
+        $options = ['<option value="">Todos</option>'];
 
-        foreach ( ServiceStatus::cases() as $status ) {
-            $selected  = $selectedStatus === $status->value ? 'selected' : '';
+        foreach (ServiceStatus::cases() as $status) {
+            $selected = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $status->value ),
+                e($status->value),
                 $selected,
-                e( $status->getDescription() ),
+                e($status->getDescription()),
             );
         }
 
-        return implode( "\n", $options );
+        return implode("\n", $options);
     }
 
-    public static function status_progress( $status )
+    public static function status_progress($status)
     {
-        if ( is_string( $status ) ) {
-            $status = BudgetStatus::tryFrom( $status );
+        if (is_string($status)) {
+            $status = BudgetStatus::tryFrom($status);
         }
 
-        if ( $status instanceof BudgetStatus ) {
-            return match ( $status ) {
-                BudgetStatus::DRAFT     => 10,
-                BudgetStatus::PENDING   => 25,
-                BudgetStatus::APPROVED  => 50,
-                BudgetStatus::REJECTED  => 0,
-                BudgetStatus::EXPIRED   => 0,
+        if ($status instanceof BudgetStatus) {
+            return match ($status) {
+                BudgetStatus::DRAFT => 10,
+                BudgetStatus::PENDING => 25,
+                BudgetStatus::APPROVED => 50,
+                BudgetStatus::REJECTED => 0,
+                BudgetStatus::EXPIRED => 0,
                 BudgetStatus::CANCELLED => 0,
                 BudgetStatus::COMPLETED => 100,
             };
@@ -107,19 +108,19 @@ class StatusHelper
         return 0;
     }
 
-    public static function status_color_class( $status )
+    public static function status_color_class($status)
     {
-        if ( is_string( $status ) ) {
-            $status = BudgetStatus::tryFrom( $status );
+        if (is_string($status)) {
+            $status = BudgetStatus::tryFrom($status);
         }
 
-        if ( $status instanceof BudgetStatus ) {
-            return match ( $status ) {
-                BudgetStatus::DRAFT     => 'secondary',
-                BudgetStatus::PENDING   => 'primary',
-                BudgetStatus::APPROVED  => 'success',
-                BudgetStatus::REJECTED  => 'danger',
-                BudgetStatus::EXPIRED   => 'warning',
+        if ($status instanceof BudgetStatus) {
+            return match ($status) {
+                BudgetStatus::DRAFT => 'secondary',
+                BudgetStatus::PENDING => 'primary',
+                BudgetStatus::APPROVED => 'success',
+                BudgetStatus::REJECTED => 'danger',
+                BudgetStatus::EXPIRED => 'warning',
                 BudgetStatus::CANCELLED => 'dark',
                 BudgetStatus::COMPLETED => 'info',
             };
@@ -128,40 +129,41 @@ class StatusHelper
         return 'secondary';
     }
 
-    public static function budget_next_statuses( $currentStatus )
+    public static function budget_next_statuses($currentStatus)
     {
-        if ( $currentStatus instanceof BudgetStatus ) {
+        if ($currentStatus instanceof BudgetStatus) {
             // Get valid transitions based on the enum's canTransitionTo method
             $validTransitions = [];
-            foreach ( BudgetStatus::cases() as $status ) {
-                if ( $currentStatus->canTransitionTo( $status ) ) {
+            foreach (BudgetStatus::cases() as $status) {
+                if ($currentStatus->canTransitionTo($status)) {
                     $validTransitions[] = $status->value;
                 }
             }
+
             return $validTransitions;
-        } elseif ( is_array( $currentStatus ) && !empty( $currentStatus[ 'slug' ] ) ) {
-            $statusEnum = BudgetStatus::tryFrom( $currentStatus[ 'slug' ] );
-            if ( $statusEnum ) {
-                return self::budget_next_statuses( $statusEnum );
+        } elseif (is_array($currentStatus) && ! empty($currentStatus['slug'])) {
+            $statusEnum = BudgetStatus::tryFrom($currentStatus['slug']);
+            if ($statusEnum) {
+                return self::budget_next_statuses($statusEnum);
             }
         }
 
         return [];
     }
 
-    public static function status_allows_edit( $status ): bool
+    public static function status_allows_edit($status): bool
     {
-        if ( is_string( $status ) ) {
-            $status = BudgetStatus::tryFrom( $status );
+        if (is_string($status)) {
+            $status = BudgetStatus::tryFrom($status);
         }
 
-        if ( $status instanceof BudgetStatus ) {
-            return match ( $status ) {
-                BudgetStatus::DRAFT     => true,
-                BudgetStatus::PENDING   => true,
-                BudgetStatus::APPROVED  => false,
-                BudgetStatus::REJECTED  => false,
-                BudgetStatus::EXPIRED   => false,
+        if ($status instanceof BudgetStatus) {
+            return match ($status) {
+                BudgetStatus::DRAFT => true,
+                BudgetStatus::PENDING => true,
+                BudgetStatus::APPROVED => false,
+                BudgetStatus::REJECTED => false,
+                BudgetStatus::EXPIRED => false,
                 BudgetStatus::CANCELLED => false,
                 BudgetStatus::COMPLETED => false,
             };
@@ -170,94 +172,93 @@ class StatusHelper
         return false;
     }
 
-    public static function is_final_status( $status ): bool
+    public static function is_final_status($status): bool
     {
-        if ( is_string( $status ) ) {
-            $status = BudgetStatus::tryFrom( $status );
+        if (is_string($status)) {
+            $status = BudgetStatus::tryFrom($status);
         }
 
-        if ( $status instanceof BudgetStatus ) {
+        if ($status instanceof BudgetStatus) {
             return $status->isFinished();
         }
 
         return false;
     }
 
-    public static function budget_status_options( $selectedStatus = '' )
+    public static function budget_status_options($selectedStatus = '')
     {
-        $options = [ '<option value="">Todos</option>' ];
+        $options = ['<option value="">Todos</option>'];
 
-        foreach ( BudgetStatus::cases() as $status ) {
-            $selected  = $selectedStatus === $status->value ? 'selected' : '';
+        foreach (BudgetStatus::cases() as $status) {
+            $selected = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $status->value ),
+                e($status->value),
                 $selected,
-                e( $status->getDescription() ),
+                e($status->getDescription()),
             );
         }
 
-        return implode( "\n", $options );
+        return implode("\n", $options);
     }
 
-    public static function is_active_status( $status ): bool
+    public static function is_active_status($status): bool
     {
-        if ( is_string( $status ) ) {
-            $status = BudgetStatus::tryFrom( $status );
+        if (is_string($status)) {
+            $status = BudgetStatus::tryFrom($status);
         }
 
-        if ( $status instanceof BudgetStatus ) {
+        if ($status instanceof BudgetStatus) {
             return $status->isActive();
         }
 
         return false;
     }
 
-    public static function invoice_status_options( $selectedStatus = '' )
+    public static function invoice_status_options($selectedStatus = '')
     {
-        $options = [ '<option value="">Todos</option>' ];
+        $options = ['<option value="">Todos</option>'];
 
-        foreach ( InvoiceStatus::cases() as $status ) {
-            $selected  = $selectedStatus === $status->value ? 'selected' : '';
+        foreach (InvoiceStatus::cases() as $status) {
+            $selected = $selectedStatus === $status->value ? 'selected' : '';
             $options[] = sprintf(
                 '<option value="%s" %s>%s</option>',
-                e( $status->value ),
+                e($status->value),
                 $selected,
-                e( $status->getDescription() ),
+                e($status->getDescription()),
             );
         }
 
-        return implode( "\n", $options );
+        return implode("\n", $options);
     }
 
-    public static function budget_progress_from_services( array $services ): int
+    public static function budget_progress_from_services(array $services): int
     {
-        if ( empty( $services ) ) {
+        if (empty($services)) {
             return 0;
         }
 
-        $total_services     = count( $services );
+        $total_services = count($services);
         $completed_services = 0;
 
-        foreach ( $services as $service ) {
+        foreach ($services as $service) {
             // Verificar se é enum instance
             if (
-                $service[ 'status' ] instanceof ServiceStatus &&
-                $service[ 'status' ] === ServiceStatus::COMPLETED
+                $service['status'] instanceof ServiceStatus &&
+                $service['status'] === ServiceStatus::COMPLETED
             ) {
                 $completed_services++;
             }
             // Fallback para arrays legados
             elseif (
-                is_array( $service[ 'status' ] ) &&
-                ( $service[ 'status' ][ 'slug' ] === 'completed' ||
-                    $service[ 'status' ][ 'slug' ] === 'COMPLETED' )
+                is_array($service['status']) &&
+                ($service['status']['slug'] === 'completed' ||
+                    $service['status']['slug'] === 'COMPLETED')
             ) {
                 $completed_services++;
             }
         }
 
-        return ( $completed_services / $total_services ) * 100;
+        return ($completed_services / $total_services) * 100;
     }
-
 }

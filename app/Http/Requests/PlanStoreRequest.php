@@ -27,17 +27,17 @@ class PlanStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => 'required|string|max:255',
-            'slug'        => [
+            'name' => 'required|string|max:255',
+            'slug' => [
                 'required', 'string', 'max:50',
-                \Illuminate\Validation\Rule::unique( 'plans' )
+                \Illuminate\Validation\Rule::unique('plans'),
             ],
             'description' => 'nullable|string|max:500',
-            'price'       => 'required|numeric|min:0',
-            'status'      => 'boolean',
-            'features'    => 'nullable|array',
+            'price' => 'required|numeric|min:0',
+            'status' => 'boolean',
+            'features' => 'nullable|array',
             'max_budgets' => 'required|integer|min:0',
-            'max_clients' => 'required|integer|min:0'
+            'max_clients' => 'required|integer|min:0',
         ];
     }
 
@@ -49,14 +49,13 @@ class PlanStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'        => 'O nome é obrigatório.',
-            'slug.unique'          => 'O slug informado já está em uso.',
-            'price.required'       => 'O preço é obrigatório.',
-            'price.numeric'        => 'O preço deve ser numérico.',
-            'price.min'            => 'O preço deve ser no mínimo 0.',
+            'name.required' => 'O nome é obrigatório.',
+            'slug.unique' => 'O slug informado já está em uso.',
+            'price.required' => 'O preço é obrigatório.',
+            'price.numeric' => 'O preço deve ser numérico.',
+            'price.min' => 'O preço deve ser no mínimo 0.',
             'max_budgets.required' => 'O máximo de orçamentos é obrigatório.',
-            'max_clients.required' => 'O máximo de clientes é obrigatório.'
+            'max_clients.required' => 'O máximo de clientes é obrigatório.',
         ];
     }
-
 }

@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProfessionsExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Profession;
 use App\Models\Tenant;
 use App\Services\Shared\CacheService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ProfessionsExport;
 
 class ProfessionManagementController extends Controller
 {
@@ -122,13 +122,13 @@ class ProfessionManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $profession = new Profession();
+            $profession = new Profession;
             $profession->fill($validated);
-            
+
             if (empty($validated['code'])) {
                 $profession->code = $this->generateUniqueCode($validated['name']);
             }
-            
+
             $profession->slug = $this->generateUniqueSlug($validated['name']);
             $profession->save();
 
@@ -167,7 +167,7 @@ class ProfessionManagementController extends Controller
             'users',
             'providers',
             'users.tenant',
-            'providers.tenant'
+            'providers.tenant',
         ]);
 
         $statistics = $this->getProfessionDetailedStatistics($profession);
@@ -208,7 +208,7 @@ class ProfessionManagementController extends Controller
             'description' => 'nullable|string|max:1000',
             'type' => 'required|string|max:50',
             'tenant_id' => 'nullable|exists:tenants,id',
-            'code' => 'nullable|string|max:50|unique:professions,code,' . $profession->id,
+            'code' => 'nullable|string|max:50|unique:professions,code,'.$profession->id,
             'is_active' => 'boolean',
             'color' => 'nullable|string|max:7|regex:/^#[0-9A-Fa-f]{6}$/',
             'icon' => 'nullable|string|max:50',
@@ -267,14 +267,14 @@ class ProfessionManagementController extends Controller
         if ($profession->users()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir uma profissão que possui usuários associados.'
+                'message' => 'Não é possível excluir uma profissão que possui usuários associados.',
             ], 422);
         }
 
         if ($profession->providers()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir uma profissão que possui fornecedores associados.'
+                'message' => 'Não é possível excluir uma profissão que possui fornecedores associados.',
             ], 422);
         }
 
@@ -295,7 +295,7 @@ class ProfessionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Profissão excluída com sucesso!'
+                'message' => 'Profissão excluída com sucesso!',
             ]);
 
         } catch (\Exception $e) {
@@ -308,7 +308,7 @@ class ProfessionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao excluir profissão. Por favor, tente novamente.'
+                'message' => 'Erro ao excluir profissão. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -318,7 +318,7 @@ class ProfessionManagementController extends Controller
         $this->authorize('manage-professions');
 
         try {
-            $profession->is_active = !$profession->is_active;
+            $profession->is_active = ! $profession->is_active;
             $profession->save();
 
             $this->cacheService->forgetPattern('professions.*');
@@ -333,7 +333,7 @@ class ProfessionManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Status alterado com sucesso!',
-                'is_active' => $profession->is_active
+                'is_active' => $profession->is_active,
             ]);
 
         } catch (\Exception $e) {
@@ -345,7 +345,7 @@ class ProfessionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.'
+                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -358,7 +358,7 @@ class ProfessionManagementController extends Controller
             DB::beginTransaction();
 
             $newProfession = $profession->replicate();
-            $newProfession->name = $profession->name . ' (Cópia)';
+            $newProfession->name = $profession->name.' (Cópia)';
             $newProfession->code = $this->generateUniqueCode($newProfession->name);
             $newProfession->slug = $this->generateUniqueSlug($newProfession->name);
             $newProfession->is_active = false;
@@ -426,7 +426,7 @@ class ProfessionManagementController extends Controller
 
         return Excel::download(
             new ProfessionsExport($professions),
-            'profissoes_' . now()->format('Y-m-d_H-i-s') . '.' . $format
+            'profissoes_'.now()->format('Y-m-d_H-i-s').'.'.$format
         );
     }
 
@@ -453,7 +453,7 @@ class ProfessionManagementController extends Controller
     protected function generateUniqueCode(string $name, ?int $excludeId = null): string
     {
         $code = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 6));
-        
+
         if (empty($code)) {
             $code = 'PROF';
         }
@@ -463,16 +463,16 @@ class ProfessionManagementController extends Controller
 
         while (true) {
             $query = Profession::where('code', $code);
-            
+
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
 
-            $code = $baseCode . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $code = $baseCode.str_pad($counter, 2, '0', STR_PAD_LEFT);
             $counter++;
         }
 
@@ -487,16 +487,16 @@ class ProfessionManagementController extends Controller
 
         while (true) {
             $query = Profession::where('slug', $slug);
-            
+
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
 
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 

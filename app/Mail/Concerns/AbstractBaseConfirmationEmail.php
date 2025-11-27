@@ -2,7 +2,6 @@
 
 namespace App\Mail\Concerns;
 
-use App\Mail\Concerns\BaseEmail;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Infrastructure\LinkService;
@@ -29,7 +28,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         ?string $confirmationLink = null,
         ?LinkService $linkService = null,
     ) {
-        parent::__construct( $user, $tenant, $linkService );
+        parent::__construct($user, $tenant, $linkService);
 
         $this->confirmationLink = $confirmationLink;
     }
@@ -41,10 +40,9 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
      */
     protected function getConfirmationData(): array
     {
-        return array_merge( $this->getUserBasicData(), [
+        return array_merge($this->getUserBasicData(), [
             'confirmationLink' => $this->confirmationLink,
-            'tenant_name'      => $this->tenant?->name ?? 'Easy Budget',
-        ] );
+            'tenant_name' => $this->tenant?->name ?? 'Easy Budget',
+        ]);
     }
-
 }

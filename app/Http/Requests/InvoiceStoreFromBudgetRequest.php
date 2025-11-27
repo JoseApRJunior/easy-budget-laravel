@@ -18,7 +18,7 @@ class InvoiceStoreFromBudgetRequest extends FormRequest
             'budget_code' => 'required|string|exists:budgets,code',
             'service_id' => 'required|integer|exists:services,id',
             'due_date' => 'required|date',
-            'status' => 'required|string|in:' . implode(',', array_map(fn($c) => $c->value, InvoiceStatus::cases())),
+            'status' => 'required|string|in:'.implode(',', array_map(fn ($c) => $c->value, InvoiceStatus::cases())),
             'discount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.service_item_id' => 'required|integer|exists:service_items,id',

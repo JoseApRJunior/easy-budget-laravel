@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,7 +54,7 @@ class Contact extends Model
         'phone_personal' => null,
         'email_business' => null,
         'phone_business' => null,
-        'website'        => null,
+        'website' => null,
     ];
 
     /**
@@ -63,16 +63,16 @@ class Contact extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'      => 'integer',
-        'customer_id'    => 'integer',
-        'provider_id'    => 'integer',
+        'tenant_id' => 'integer',
+        'customer_id' => 'integer',
+        'provider_id' => 'integer',
         'email_personal' => 'string',
         'phone_personal' => 'string',
         'email_business' => 'string',
         'phone_business' => 'string',
-        'website'        => 'string',
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'datetime',
+        'website' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -81,14 +81,14 @@ class Contact extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'      => 'required|integer|exists:tenants,id',
-            'customer_id'    => 'nullable|integer|exists:customers,id',
-            'provider_id'    => 'nullable|integer|exists:providers,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'customer_id' => 'nullable|integer|exists:customers,id',
+            'provider_id' => 'nullable|integer|exists:providers,id',
             'email_personal' => 'nullable|email|max:255',
             'phone_personal' => 'nullable|string|max:20',
             'email_business' => 'nullable|email|max:255',
             'phone_business' => 'nullable|string|max:20',
-            'website'        => 'nullable|url|max:255',
+            'website' => 'nullable|url|max:255',
         ];
     }
 
@@ -97,7 +97,7 @@ class Contact extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -105,7 +105,7 @@ class Contact extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo( Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -113,7 +113,7 @@ class Contact extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo( Provider::class);
+        return $this->belongsTo(Provider::class);
     }
 
     /**
@@ -131,5 +131,4 @@ class Contact extends Model
     {
         return $this->phone_personal ?? $this->phone_business;
     }
-
 }

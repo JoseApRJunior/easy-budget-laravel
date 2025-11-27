@@ -14,132 +14,133 @@ use Illuminate\View\View;
 
 class MercadoPagoController extends Controller
 {
-    public function index( MercadoPagoOAuthService $oauth ): View
+    public function index(MercadoPagoOAuthService $oauth): View
     {
-        $cred = ProviderCredential::where( 'tenant_id', auth()->user()->tenant_id )
-            ->where( 'payment_gateway', 'mercadopago' )
+        $cred = ProviderCredential::where('tenant_id', auth()->user()->tenant_id)
+            ->where('payment_gateway', 'mercadopago')
             ->first();
 
         $isConnected = (bool) $cred;
-        $state       = (string) auth()->user()->id . ':' . now()->timestamp;
-        $authUrl     = $oauth->getAuthorizationUrl( $state );
+        $state = (string) auth()->user()->id.':'.now()->timestamp;
+        $authUrl = $oauth->getAuthorizationUrl($state);
 
         $expiresReadable = null;
-        $expires = (int) ( $cred?->expires_in ?? 0 );
-        if ( $expires > 0 ) {
-            if ( $expires < 3600 ) {
-                $expiresReadable = ceil( $expires / 60 ) . ' min';
+        $expires = (int) ($cred?->expires_in ?? 0);
+        if ($expires > 0) {
+            if ($expires < 3600) {
+                $expiresReadable = ceil($expires / 60).' min';
             } else {
-                $expiresReadable = ceil( $expires / 3600 ) . ' h';
+                $expiresReadable = ceil($expires / 3600).' h';
             }
         }
 
-        return view( 'pages.mercadopago.index', [
-            'isConnected'       => $isConnected,
+        return view('pages.mercadopago.index', [
+            'isConnected' => $isConnected,
             'authorization_url' => $authUrl,
-            'public_key'        => $cred?->public_key,
-            'expires_in'        => (int) ( $cred?->expires_in ?? 0 ),
-            'expires_readable'  => $expiresReadable,
-            'can_refresh'       => $isConnected,
-        ] );
+            'public_key' => $cred?->public_key,
+            'expires_in' => (int) ($cred?->expires_in ?? 0),
+            'expires_readable' => $expiresReadable,
+            'can_refresh' => $isConnected,
+        ]);
     }
 
-    public function callback( Request $request, EncryptionService $encryption, MercadoPagoOAuthService $oauth ): RedirectResponse
+    public function callback(Request $request, EncryptionService $encryption, MercadoPagoOAuthService $oauth): RedirectResponse
     {
-        $code  = (string) $request->get( 'code' );
-        $state = (string) $request->get( 'state' );
+        $code = (string) $request->get('code');
+        $state = (string) $request->get('state');
 
-        if ( empty( $code ) ) {
-            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Código de autorização inválido' );
+        if (empty($code)) {
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Código de autorização inválido');
         }
 
         $tenantId = auth()->user()->tenant_id;
 
-        $exchange = $oauth->exchangeCode( $code );
-        if ( !$exchange->isSuccess() ) {
-            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha na troca de tokens' );
+        $exchange = $oauth->exchangeCode($code);
+        if (! $exchange->isSuccess()) {
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha na troca de tokens');
         }
 
-        $data    = $exchange->getData();
-        $access  = $encryption->encryptStringLaravel( (string) ( $data[ 'access_token' ] ?? '' ) );
-        $refresh = $encryption->encryptStringLaravel( (string) ( $data[ 'refresh_token' ] ?? '' ) );
+        $data = $exchange->getData();
+        $access = $encryption->encryptStringLaravel((string) ($data['access_token'] ?? ''));
+        $refresh = $encryption->encryptStringLaravel((string) ($data['refresh_token'] ?? ''));
 
-        if ( !$access->isSuccess() ) {
-            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar access token' );
+        if (! $access->isSuccess()) {
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao criptografar access token');
         }
-        if ( !$refresh->isSuccess() ) {
-            return redirect()->route( 'integrations.mercadopago.index' )->with( 'error', 'Falha ao criptografar refresh token' );
+        if (! $refresh->isSuccess()) {
+            return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao criptografar refresh token');
         }
 
         ProviderCredential::updateOrCreate(
-            [ 'tenant_id' => $tenantId, 'payment_gateway' => 'mercadopago' ],
+            ['tenant_id' => $tenantId, 'payment_gateway' => 'mercadopago'],
             [
-                'access_token_encrypted'  => (string) $access->getData()[ 'encrypted' ],
-                'refresh_token_encrypted' => (string) $refresh->getData()[ 'encrypted' ],
-                'public_key'              => (string) ( $data[ 'public_key' ] ?? '' ),
-                'user_id_gateway'         => (string) ( $data[ 'user_id' ] ?? '' ),
-                'expires_in'              => (int) ( $data[ 'expires_in' ] ?? 0 ),
-                'provider_id'             => auth()->user()->provider->id ?? null,
+                'access_token_encrypted' => (string) $access->getData()['encrypted'],
+                'refresh_token_encrypted' => (string) $refresh->getData()['encrypted'],
+                'public_key' => (string) ($data['public_key'] ?? ''),
+                'user_id_gateway' => (string) ($data['user_id'] ?? ''),
+                'expires_in' => (int) ($data['expires_in'] ?? 0),
+                'provider_id' => auth()->user()->provider->id ?? null,
             ],
         );
 
-        return redirect()->route( 'integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago conectada' );
+        return redirect()->route('integrations.mercadopago.index')->with('success', 'Conta Mercado Pago conectada');
     }
 
     public function disconnect(): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
-        ProviderCredential::where( 'tenant_id', $tenantId )->where( 'payment_gateway', 'mercadopago' )->delete();
-        return redirect()->route( 'integrations.mercadopago.index' )->with( 'success', 'Conta Mercado Pago desconectada' );
+        ProviderCredential::where('tenant_id', $tenantId)->where('payment_gateway', 'mercadopago')->delete();
+
+        return redirect()->route('integrations.mercadopago.index')->with('success', 'Conta Mercado Pago desconectada');
     }
 
-    public function refresh( EncryptionService $encryption, MercadoPagoOAuthService $oauth ): RedirectResponse
+    public function refresh(EncryptionService $encryption, MercadoPagoOAuthService $oauth): RedirectResponse
     {
         $tenantId = auth()->user()->tenant_id;
         $cred = ProviderCredential::where('tenant_id', $tenantId)
             ->where('payment_gateway', 'mercadopago')
             ->first();
-        if (!$cred) {
+        if (! $cred) {
             return redirect()->route('integrations.mercadopago.index')->with('error', 'Credenciais não encontradas');
         }
 
-        $dr = $encryption->decryptStringLaravel((string)$cred->refresh_token_encrypted);
-        if (!$dr->isSuccess()) {
+        $dr = $encryption->decryptStringLaravel((string) $cred->refresh_token_encrypted);
+        if (! $dr->isSuccess()) {
             return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao descriptografar refresh token');
         }
 
-        $refreshToken = (string)($dr->getData()['decrypted'] ?? '');
+        $refreshToken = (string) ($dr->getData()['decrypted'] ?? '');
         $res = $oauth->refreshToken($refreshToken);
-        if (!$res->isSuccess()) {
+        if (! $res->isSuccess()) {
             return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao renovar token');
         }
 
         $data = $res->getData();
-        $accessEnc = $encryption->encryptStringLaravel((string)($data['access_token'] ?? ''));
-        $refreshEnc = $encryption->encryptStringLaravel((string)($data['refresh_token'] ?? ''));
-        if (!$accessEnc->isSuccess() || !$refreshEnc->isSuccess()) {
+        $accessEnc = $encryption->encryptStringLaravel((string) ($data['access_token'] ?? ''));
+        $refreshEnc = $encryption->encryptStringLaravel((string) ($data['refresh_token'] ?? ''));
+        if (! $accessEnc->isSuccess() || ! $refreshEnc->isSuccess()) {
             return redirect()->route('integrations.mercadopago.index')->with('error', 'Falha ao criptografar novos tokens');
         }
 
         $cred->update([
-            'access_token_encrypted' => (string)$accessEnc->getData()['encrypted'],
-            'refresh_token_encrypted' => (string)$refreshEnc->getData()['encrypted'],
-            'expires_in' => (int)($data['expires_in'] ?? 0),
+            'access_token_encrypted' => (string) $accessEnc->getData()['encrypted'],
+            'refresh_token_encrypted' => (string) $refreshEnc->getData()['encrypted'],
+            'expires_in' => (int) ($data['expires_in'] ?? 0),
         ]);
 
         return redirect()->route('integrations.mercadopago.index')->with('success', 'Tokens renovados com sucesso');
     }
 
-    public function testConnection( EncryptionService $encryption ): \Illuminate\Http\JsonResponse
+    public function testConnection(EncryptionService $encryption): \Illuminate\Http\JsonResponse
     {
         $tenantId = auth()->user()->tenant_id;
         $cred = ProviderCredential::where('tenant_id', $tenantId)->where('payment_gateway', 'mercadopago')->first();
 
         $accessToken = '';
         if ($cred && $cred->access_token_encrypted) {
-            $dr = $encryption->decryptStringLaravel((string)$cred->access_token_encrypted);
+            $dr = $encryption->decryptStringLaravel((string) $cred->access_token_encrypted);
             if ($dr->isSuccess()) {
-                $accessToken = (string)($dr->getData()['decrypted'] ?? '');
+                $accessToken = (string) ($dr->getData()['decrypted'] ?? '');
             }
         }
         if ($accessToken === '') {

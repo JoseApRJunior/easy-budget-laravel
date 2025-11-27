@@ -9,9 +9,8 @@ use App\Services\Infrastructure\EmailProviderService;
 use App\Services\Infrastructure\EmailTestService;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Controller para gerenciamento da interface web do Mailtrap e ferramentas de teste de e-mail.
@@ -46,267 +45,267 @@ class MailtrapController extends Controller
         EmailTestService $testService,
     ) {
         $this->providerService = $providerService;
-        $this->testService     = $testService;
+        $this->testService = $testService;
     }
 
     /**
      * Exibe dashboard principal do Mailtrap.
      */
-    public function index( Request $request ): View
+    public function index(Request $request): View
     {
         try {
             $data = [
-                'title'               => 'Mailtrap - Ferramentas de E-mail',
-                'current_provider'    => $this->providerService->getCurrentProvider(),
+                'title' => 'Mailtrap - Ferramentas de E-mail',
+                'current_provider' => $this->providerService->getCurrentProvider(),
                 'available_providers' => $this->providerService->getAvailableProviders(),
-                'provider_stats'      => $this->providerService->getProviderStats(),
-                'test_types'          => $this->testService->getAvailableTestTypes(),
-                'recent_tests'        => $this->getRecentTestResults(),
+                'provider_stats' => $this->providerService->getProviderStats(),
+                'test_types' => $this->testService->getAvailableTestTypes(),
+                'recent_tests' => $this->getRecentTestResults(),
             ];
 
-            Log::info( 'Dashboard Mailtrap acessado', [
-                'user_id'          => auth()->id(),
-                'current_provider' => $data[ 'current_provider' ][ 'provider' ] ?? 'unknown',
-            ] );
-
-            return view( 'mailtrap.index', $data );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar dashboard Mailtrap', [
-                'error'   => $e->getMessage(),
+            Log::info('Dashboard Mailtrap acessado', [
                 'user_id' => auth()->id(),
-            ] );
+                'current_provider' => $data['current_provider']['provider'] ?? 'unknown',
+            ]);
 
-            return view( 'mailtrap.index', [
+            return view('mailtrap.index', $data);
+
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar dashboard Mailtrap', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return view('mailtrap.index', [
                 'title' => 'Mailtrap - Ferramentas de E-mail',
-                'error' => 'Erro ao carregar dashboard: ' . $e->getMessage(),
-            ] );
+                'error' => 'Erro ao carregar dashboard: '.$e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Exibe página de configuração de provedores.
      */
-    public function providers( Request $request ): View
+    public function providers(Request $request): View
     {
         try {
             $data = [
-                'title'            => 'Configuração de Provedores de E-mail',
-                'providers'        => $this->providerService->getAvailableProviders(),
+                'title' => 'Configuração de Provedores de E-mail',
+                'providers' => $this->providerService->getAvailableProviders(),
                 'current_provider' => $this->providerService->getCurrentProvider(),
                 'provider_configs' => $this->getProviderConfigurations(),
             ];
 
-            return view( 'mailtrap.providers', $data );
+            return view('mailtrap.providers', $data);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar configuração de provedores', [
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar configuração de provedores', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
-            return view( 'mailtrap.providers', [
+            return view('mailtrap.providers', [
                 'title' => 'Configuração de Provedores de E-mail',
-                'error' => 'Erro ao carregar provedores: ' . $e->getMessage(),
-            ] );
+                'error' => 'Erro ao carregar provedores: '.$e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Testa conectividade com um provedor específico.
      */
-    public function testProvider( Request $request )
+    public function testProvider(Request $request)
     {
         try {
-            $provider = $request->input( 'provider' );
+            $provider = $request->input('provider');
 
-            if ( !$provider ) {
-                return response()->json( [
+            if (! $provider) {
+                return response()->json([
                     'success' => false,
-                    'error'   => 'Provedor não especificado',
-                ], 400 );
+                    'error' => 'Provedor não especificado',
+                ], 400);
             }
 
-            $result = $this->providerService->testProvider( $provider );
+            $result = $this->providerService->testProvider($provider);
 
-            return response()->json( [
-                'success'   => $result->isSuccess(),
-                'message'   => $result->getMessage(),
-                'data'      => $result->getData(),
+            return response()->json([
+                'success' => $result->isSuccess(),
+                'message' => $result->getMessage(),
+                'data' => $result->getData(),
                 'timestamp' => now()->toDateTimeString(),
-            ] );
+            ]);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao testar provedor', [
-                'provider' => $request->input( 'provider' ),
-                'error'    => $e->getMessage(),
-            ] );
+        } catch (Exception $e) {
+            Log::error('Erro ao testar provedor', [
+                'provider' => $request->input('provider'),
+                'error' => $e->getMessage(),
+            ]);
 
-            return response()->json( [
+            return response()->json([
                 'success' => false,
-                'error'   => 'Erro interno: ' . $e->getMessage(),
-            ], 500 );
+                'error' => 'Erro interno: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Exibe página de testes de e-mail.
      */
-    public function tests( Request $request ): View
+    public function tests(Request $request): View
     {
         try {
             $data = [
-                'title'          => 'Testes de E-mail',
-                'test_types'     => $this->testService->getAvailableTestTypes(),
+                'title' => 'Testes de E-mail',
+                'test_types' => $this->testService->getAvailableTestTypes(),
                 'recent_results' => $this->getRecentTestResults(),
-                'test_history'   => $this->getTestHistory(),
+                'test_history' => $this->getTestHistory(),
             ];
 
-            return view( 'mailtrap.tests', $data );
+            return view('mailtrap.tests', $data);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar página de testes', [
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar página de testes', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
-            return view( 'mailtrap.tests', [
+            return view('mailtrap.tests', [
                 'title' => 'Testes de E-mail',
-                'error' => 'Erro ao carregar testes: ' . $e->getMessage(),
-            ] );
+                'error' => 'Erro ao carregar testes: '.$e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Executa teste específico de e-mail.
      */
-    public function runTest( Request $request )
+    public function runTest(Request $request)
     {
         try {
-            $testType = $request->input( 'test_type' );
+            $testType = $request->input('test_type');
 
-            if ( !$testType ) {
-                return response()->json( [
+            if (! $testType) {
+                return response()->json([
                     'success' => false,
-                    'error'   => 'Tipo de teste não especificado',
-                ], 400 );
+                    'error' => 'Tipo de teste não especificado',
+                ], 400);
             }
 
             $options = [
-                'recipient_email'  => $request->input( 'recipient_email', 'test@example.com' ),
-                'tenant_id'        => $request->input( 'tenant_id', auth()->user()->tenant_id ?? 1 ),
-                'verification_url' => $request->input( 'verification_url' ),
+                'recipient_email' => $request->input('recipient_email', 'test@example.com'),
+                'tenant_id' => $request->input('tenant_id', auth()->user()->tenant_id ?? 1),
+                'verification_url' => $request->input('verification_url'),
             ];
 
-            $result = $this->testService->runTest( $testType, $options );
+            $result = $this->testService->runTest($testType, $options);
 
-            return response()->json( [
-                'success'   => $result->isSuccess(),
-                'message'   => $result->getMessage(),
-                'data'      => $result->getData(),
+            return response()->json([
+                'success' => $result->isSuccess(),
+                'message' => $result->getMessage(),
+                'data' => $result->getData(),
                 'timestamp' => now()->toDateTimeString(),
-            ] );
+            ]);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao executar teste de e-mail', [
-                'test_type' => $request->input( 'test_type' ),
-                'error'     => $e->getMessage(),
-            ] );
+        } catch (Exception $e) {
+            Log::error('Erro ao executar teste de e-mail', [
+                'test_type' => $request->input('test_type'),
+                'error' => $e->getMessage(),
+            ]);
 
-            return response()->json( [
+            return response()->json([
                 'success' => false,
-                'error'   => 'Erro interno: ' . $e->getMessage(),
-            ], 500 );
+                'error' => 'Erro interno: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Exibe logs detalhados de e-mail.
      */
-    public function logs( Request $request ): View
+    public function logs(Request $request): View
     {
         try {
             $data = [
-                'title'       => 'Logs de E-mail',
+                'title' => 'Logs de E-mail',
                 'log_entries' => $this->getEmailLogs(),
                 'log_summary' => $this->getLogSummary(),
             ];
 
-            return view( 'mailtrap.logs', $data );
+            return view('mailtrap.logs', $data);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar logs de e-mail', [
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar logs de e-mail', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
-            return view( 'mailtrap.logs', [
+            return view('mailtrap.logs', [
                 'title' => 'Logs de E-mail',
-                'error' => 'Erro ao carregar logs: ' . $e->getMessage(),
-            ] );
+                'error' => 'Erro ao carregar logs: '.$e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Gera relatório completo de testes.
      */
-    public function generateReport( Request $request )
+    public function generateReport(Request $request)
     {
         try {
             $result = $this->testService->generateTestReport();
 
-            if ( $result->isSuccess() ) {
+            if ($result->isSuccess()) {
                 $reportData = $result->getData();
 
                 // Se for requisição AJAX, retorna JSON
-                if ( $request->expectsJson() ) {
-                    return response()->json( [
-                        'success'      => true,
-                        'report'       => $reportData,
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'report' => $reportData,
                         'generated_at' => now()->toDateTimeString(),
-                    ] );
+                    ]);
                 }
 
                 // Caso contrário, exibe página com relatório
-                return view( 'mailtrap.report', [
-                    'title'  => 'Relatório de Testes de E-mail',
+                return view('mailtrap.report', [
+                    'title' => 'Relatório de Testes de E-mail',
                     'report' => $reportData,
-                ] );
+                ]);
             } else {
-                if ( $request->expectsJson() ) {
-                    return response()->json( [
+                if ($request->expectsJson()) {
+                    return response()->json([
                         'success' => false,
-                        'error'   => $result->getMessage(),
-                    ], 500 );
+                        'error' => $result->getMessage(),
+                    ], 500);
                 }
 
-                return back()->with( 'error', $result->getMessage() );
+                return back()->with('error', $result->getMessage());
             }
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao gerar relatório de testes', [
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar relatório de testes', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
-            if ( $request->expectsJson() ) {
-                return response()->json( [
+            if ($request->expectsJson()) {
+                return response()->json([
                     'success' => false,
-                    'error'   => 'Erro interno: ' . $e->getMessage(),
-                ], 500 );
+                    'error' => 'Erro interno: '.$e->getMessage(),
+                ], 500);
             }
 
-            return back()->with( 'error', 'Erro ao gerar relatório: ' . $e->getMessage() );
+            return back()->with('error', 'Erro ao gerar relatório: '.$e->getMessage());
         }
     }
 
     /**
      * Limpa cache de testes e configurações.
      */
-    public function clearCache( Request $request )
+    public function clearCache(Request $request)
     {
         try {
             $results = [];
 
             // Limpar cache de provedores
             $providerResult = $this->providerService->clearProviderCache();
-            $results[]      = [
+            $results[] = [
                 'service' => 'provider_cache',
                 'success' => $providerResult->isSuccess(),
                 'message' => $providerResult->getMessage(),
@@ -314,83 +313,83 @@ class MailtrapController extends Controller
 
             // Limpar cache de testes
             $testResult = $this->testService->clearTestCache();
-            $results[]  = [
+            $results[] = [
                 'service' => 'test_cache',
                 'success' => $testResult->isSuccess(),
                 'message' => $testResult->getMessage(),
             ];
 
-            $allSuccessful = collect( $results )->every( 'success' );
+            $allSuccessful = collect($results)->every('success');
 
-            if ( $request->expectsJson() ) {
-                return response()->json( [
-                    'success'   => $allSuccessful,
-                    'results'   => $results,
-                    'message'   => $allSuccessful ? 'Cache limpo com sucesso' : 'Alguns caches não foram limpos',
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => $allSuccessful,
+                    'results' => $results,
+                    'message' => $allSuccessful ? 'Cache limpo com sucesso' : 'Alguns caches não foram limpos',
                     'timestamp' => now()->toDateTimeString(),
-                ] );
+                ]);
             }
 
             $message = $allSuccessful
                 ? 'Cache limpo com sucesso'
                 : 'Alguns caches não foram limpos. Verifique os detalhes.';
 
-            return back()->with( $allSuccessful ? 'success' : 'warning', $message );
+            return back()->with($allSuccessful ? 'success' : 'warning', $message);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao limpar cache', [
+        } catch (Exception $e) {
+            Log::error('Erro ao limpar cache', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
-            if ( $request->expectsJson() ) {
-                return response()->json( [
+            if ($request->expectsJson()) {
+                return response()->json([
                     'success' => false,
-                    'error'   => 'Erro interno: ' . $e->getMessage(),
-                ], 500 );
+                    'error' => 'Erro interno: '.$e->getMessage(),
+                ], 500);
             }
 
-            return back()->with( 'error', 'Erro ao limpar cache: ' . $e->getMessage() );
+            return back()->with('error', 'Erro ao limpar cache: '.$e->getMessage());
         }
     }
 
     /**
      * Exibe configurações detalhadas de um provedor.
      */
-    public function providerConfig( Request $request, string $provider )
+    public function providerConfig(Request $request, string $provider)
     {
         try {
-            $config = $this->providerService->getProviderConfig( $provider );
+            $config = $this->providerService->getProviderConfig($provider);
 
-            if ( empty( $config ) ) {
-                return response()->json( [
+            if (empty($config)) {
+                return response()->json([
                     'success' => false,
-                    'error'   => "Provedor '{$provider}' não encontrado",
-                ], 404 );
+                    'error' => "Provedor '{$provider}' não encontrado",
+                ], 404);
             }
 
-            $testResult = $this->providerService->testProvider( $provider );
+            $testResult = $this->providerService->testProvider($provider);
 
-            return response()->json( [
-                'success'     => true,
-                'provider'    => $provider,
-                'config'      => $config,
+            return response()->json([
+                'success' => true,
+                'provider' => $provider,
+                'config' => $config,
                 'test_result' => [
                     'is_success' => $testResult->isSuccess(),
-                    'message'    => $testResult->getMessage(),
+                    'message' => $testResult->getMessage(),
                 ],
-                'timestamp'   => now()->toDateTimeString(),
-            ] );
+                'timestamp' => now()->toDateTimeString(),
+            ]);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao obter configuração de provedor', [
+        } catch (Exception $e) {
+            Log::error('Erro ao obter configuração de provedor', [
                 'provider' => $provider,
-                'error'    => $e->getMessage(),
-            ] );
+                'error' => $e->getMessage(),
+            ]);
 
-            return response()->json( [
+            return response()->json([
                 'success' => false,
-                'error'   => 'Erro interno: ' . $e->getMessage(),
-            ], 500 );
+                'error' => 'Erro interno: '.$e->getMessage(),
+            ], 500);
         }
     }
 
@@ -401,16 +400,16 @@ class MailtrapController extends Controller
     {
         $results = [];
 
-        foreach ( [ 'connectivity', 'verification', 'budget_notification', 'invoice_notification' ] as $testType ) {
-            $cachedResult = $this->testService->getCachedTestResult( $testType );
+        foreach (['connectivity', 'verification', 'budget_notification', 'invoice_notification'] as $testType) {
+            $cachedResult = $this->testService->getCachedTestResult($testType);
 
-            if ( $cachedResult ) {
+            if ($cachedResult) {
                 $results[] = [
-                    'test_type'  => $testType,
-                    'name'       => $this->testService->getAvailableTestTypes()[ $testType ][ 'name' ] ?? $testType,
-                    'is_success' => $cachedResult[ 'is_success' ],
-                    'message'    => $cachedResult[ 'message' ],
-                    'cached_at'  => $cachedResult[ 'cached_at' ],
+                    'test_type' => $testType,
+                    'name' => $this->testService->getAvailableTestTypes()[$testType]['name'] ?? $testType,
+                    'is_success' => $cachedResult['is_success'],
+                    'message' => $cachedResult['message'],
+                    'cached_at' => $cachedResult['cached_at'],
                 ];
             }
         }
@@ -435,8 +434,8 @@ class MailtrapController extends Controller
     {
         $configs = [];
 
-        foreach ( [ 'mailtrap', 'smtp', 'ses', 'log' ] as $provider ) {
-            $configs[ $provider ] = $this->providerService->getProviderConfig( $provider );
+        foreach (['mailtrap', 'smtp', 'ses', 'log'] as $provider) {
+            $configs[$provider] = $this->providerService->getProviderConfig($provider);
         }
 
         return $configs;
@@ -453,16 +452,16 @@ class MailtrapController extends Controller
             return [
                 [
                     'timestamp' => now()->toDateTimeString(),
-                    'level'     => 'info',
-                    'message'   => 'Sistema de logs de e-mail inicializado',
-                    'context'   => [ 'user_id' => auth()->id() ],
+                    'level' => 'info',
+                    'message' => 'Sistema de logs de e-mail inicializado',
+                    'context' => ['user_id' => auth()->id()],
                 ],
             ];
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao obter logs de e-mail', [
+        } catch (Exception $e) {
+            Log::error('Erro ao obter logs de e-mail', [
                 'error' => $e->getMessage(),
-            ] );
+            ]);
 
             return [];
         }
@@ -475,9 +474,8 @@ class MailtrapController extends Controller
     {
         return [
             'total_entries' => 1,
-            'last_updated'  => now()->toDateTimeString(),
-            'log_level'     => 'info',
+            'last_updated' => now()->toDateTimeString(),
+            'log_level' => 'info',
         ];
     }
-
 }

@@ -3,28 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Services\Application\AIAnalyticsService;
-use Illuminate\Http\Request;
 use App\Models\Customer;
+use App\Services\Application\AIAnalyticsService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class AIAnalyticsController extends Controller
 {
     protected $aiAnalyticsService;
 
-    public function __construct( AIAnalyticsService $aiAnalyticsService )
+    public function __construct(AIAnalyticsService $aiAnalyticsService)
     {
         $this->aiAnalyticsService = $aiAnalyticsService;
     }
 
-    public function index( Request $request )
+    public function index(Request $request)
     {
         $analytics = $this->aiAnalyticsService->getBusinessOverview();
 
-        return view( 'pages.analytics.index', compact( 'analytics' ) );
+        return view('pages.analytics.index', compact('analytics'));
     }
 
-    public function overview( Request $request )
+    public function overview(Request $request)
     {
         $overview = $this->aiAnalyticsService->getBusinessOverview();
         $performance = $this->aiAnalyticsService->getPerformanceMetrics();
@@ -54,40 +54,42 @@ class AIAnalyticsController extends Controller
         ]);
     }
 
-    public function trends( Request $request )
+    public function trends(Request $request)
     {
-        $period = $request->get( 'period', '6months' );
+        $period = $request->get('period', '6months');
         $trends = $this->aiAnalyticsService->getBusinessTrends($period);
         $labels = collect($trends['monthly_data'] ?? [])->pluck('month')->all();
         $values = collect($trends['monthly_data'] ?? [])->pluck('revenue')->all();
+
         return response()->json([
             'labels' => $labels,
             'values' => $values,
         ]);
     }
 
-    public function predictions( Request $request )
+    public function predictions(Request $request)
     {
         $predictions = $this->aiAnalyticsService->getPredictions();
 
-        return response()->json( $predictions );
+        return response()->json($predictions);
     }
 
-    public function suggestions( Request $request )
+    public function suggestions(Request $request)
     {
         $suggestions = $this->aiAnalyticsService->getBusinessSuggestions();
-        return response()->json([ 'suggestions' => $suggestions ]);
+
+        return response()->json(['suggestions' => $suggestions]);
     }
 
-    public function performance( Request $request )
+    public function performance(Request $request)
     {
-        $metrics     = $request->get( 'metrics', [ 'conversion_rate', 'average_ticket', 'customer_lifetime_value' ] );
+        $metrics = $request->get('metrics', ['conversion_rate', 'average_ticket', 'customer_lifetime_value']);
         $performance = $this->aiAnalyticsService->getPerformanceMetrics($metrics);
 
-        return response()->json( $performance );
+        return response()->json($performance);
     }
 
-    public function customers( Request $request )
+    public function customers(Request $request)
     {
         $tenantId = (int) (auth()->user()->tenant_id ?? 0);
         $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
@@ -107,11 +109,11 @@ class AIAnalyticsController extends Controller
             'active_customers' => (int) $activeCustomers,
             'new_customers_month' => (int) $newCustomersMonth,
             'churn_rate' => (float) $churnRate,
-            'main_segment' => 'Análise em progresso...'
+            'main_segment' => 'Análise em progresso...',
         ]);
     }
 
-    public function financial( Request $request )
+    public function financial(Request $request)
     {
         $overview = $this->aiAnalyticsService->getBusinessOverview();
         $monthlyRevenue = (float) ($overview['current_month']['revenue'] ?? 0);
@@ -129,11 +131,10 @@ class AIAnalyticsController extends Controller
         ]);
     }
 
-    public function efficiency( Request $request )
+    public function efficiency(Request $request)
     {
         $efficiency = $this->aiAnalyticsService->getOperationalEfficiency();
 
-        return response()->json( $efficiency );
+        return response()->json($efficiency);
     }
-
 }

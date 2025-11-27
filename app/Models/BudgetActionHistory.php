@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Budget;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -51,11 +48,11 @@ class BudgetActionHistory extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
-        'budget_id'  => 'integer',
-        'user_id'    => 'integer',
-        'changes'    => 'array',
-        'metadata'   => 'array',
+        'tenant_id' => 'integer',
+        'budget_id' => 'integer',
+        'user_id' => 'integer',
+        'changes' => 'array',
+        'metadata' => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -65,7 +62,7 @@ class BudgetActionHistory extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -73,7 +70,7 @@ class BudgetActionHistory extends Model
      */
     public function budget(): BelongsTo
     {
-        return $this->belongsTo( Budget::class);
+        return $this->belongsTo(Budget::class);
     }
 
     /**
@@ -81,31 +78,31 @@ class BudgetActionHistory extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
      * Scope para ações de um orçamento específico.
      */
-    public function scopeForBudget( $query, int $budgetId )
+    public function scopeForBudget($query, int $budgetId)
     {
-        return $query->where( 'budget_id', $budgetId );
+        return $query->where('budget_id', $budgetId);
     }
 
     /**
      * Scope para ações por tipo.
      */
-    public function scopeByAction( $query, string $action )
+    public function scopeByAction($query, string $action)
     {
-        return $query->where( 'action', $action );
+        return $query->where('action', $action);
     }
 
     /**
      * Scope para ações recentes.
      */
-    public function scopeRecent( $query, int $days = 30 )
+    public function scopeRecent($query, int $days = 30)
     {
-        return $query->where( 'created_at', '>=', now()->subDays( $days ) );
+        return $query->where('created_at', '>=', now()->subDays($days));
     }
 
     /**
@@ -114,18 +111,18 @@ class BudgetActionHistory extends Model
     public static function getAvailableActions(): array
     {
         return [
-            'created'         => 'Criado',
-            'updated'         => 'Atualizado',
-            'sent'            => 'Enviado',
-            'approved'        => 'Aprovado',
-            'rejected'        => 'Rejeitado',
-            'expired'         => 'Expirado',
-            'viewed'          => 'Visualizado',
-            'downloaded'      => 'Baixado',
-            'shared'          => 'Compartilhado',
-            'duplicated'      => 'Duplicado',
+            'created' => 'Criado',
+            'updated' => 'Atualizado',
+            'sent' => 'Enviado',
+            'approved' => 'Aprovado',
+            'rejected' => 'Rejeitado',
+            'expired' => 'Expirado',
+            'viewed' => 'Visualizado',
+            'downloaded' => 'Baixado',
+            'shared' => 'Compartilhado',
+            'duplicated' => 'Duplicado',
             'version_created' => 'Versão Criada',
-            'restored'        => 'Restaurado',
+            'restored' => 'Restaurado',
         ];
     }
 
@@ -142,18 +139,18 @@ class BudgetActionHistory extends Model
         array $changes = [],
         array $metadata = [],
     ): self {
-        return static::create( [
-            'budget_id'   => $budgetId,
-            'user_id'     => $userId,
-            'action'      => $action,
-            'old_status'  => $oldStatus,
-            'new_status'  => $newStatus,
+        return static::create([
+            'budget_id' => $budgetId,
+            'user_id' => $userId,
+            'action' => $action,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
             'description' => $description,
-            'changes'     => $changes,
-            'metadata'    => $metadata,
-            'ip_address'  => request()->ip(),
-            'user_agent'  => request()->userAgent(),
-        ] );
+            'changes' => $changes,
+            'metadata' => $metadata,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
     }
 
     /**
@@ -164,15 +161,14 @@ class BudgetActionHistory extends Model
         $actions = self::getAvailableActions();
 
         return [
-            'action'       => $this->action,
-            'action_label' => $actions[ $this->action ] ?? ucfirst( $this->action ),
-            'description'  => $this->description,
-            'old_status'   => $this->old_status,
-            'new_status'   => $this->new_status,
-            'user_name'    => $this->user->name ?? 'Sistema',
-            'date'         => $this->created_at->format( 'd/m/Y H:i:s' ),
-            'changes'      => $this->changes,
+            'action' => $this->action,
+            'action_label' => $actions[$this->action] ?? ucfirst($this->action),
+            'description' => $this->description,
+            'old_status' => $this->old_status,
+            'new_status' => $this->new_status,
+            'user_name' => $this->user->name ?? 'Sistema',
+            'date' => $this->created_at->format('d/m/Y H:i:s'),
+            'changes' => $this->changes,
         ];
     }
-
 }

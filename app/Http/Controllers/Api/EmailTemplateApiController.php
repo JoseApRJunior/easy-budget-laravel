@@ -15,355 +15,356 @@ use Illuminate\Support\Facades\Auth;
 class EmailTemplateApiController extends Controller
 {
     private EmailTemplateService $templateService;
-    private VariableProcessor    $variableProcessor;
+
+    private VariableProcessor $variableProcessor;
 
     public function __construct(
         EmailTemplateService $templateService,
         VariableProcessor $variableProcessor,
     ) {
-        $this->templateService   = $templateService;
+        $this->templateService = $templateService;
         $this->variableProcessor = $variableProcessor;
     }
 
     /**
      * Lista templates com paginação e filtros.
      */
-    public function index( Request $request ): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $user    = Auth::user();
-        $filters = $request->only( [ 'search', 'category', 'is_active', 'sort_by', 'sort_direction' ] );
-        $perPage = $request->get( 'per_page', 15 );
-        $page    = $request->get( 'page', 1 );
+        $user = Auth::user();
+        $filters = $request->only(['search', 'category', 'is_active', 'sort_by', 'sort_direction']);
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
         try {
             // Para API, vamos usar paginação simples
-            $offset = ( $page - 1 ) * $perPage;
+            $offset = ($page - 1) * $perPage;
 
-            $templatesResult = $this->templateService->listByTenantId( $user->tenant_id, $filters );
+            $templatesResult = $this->templateService->listByTenantId($user->tenant_id, $filters);
 
-            if ( !$templatesResult->isSuccess() ) {
-                return $this->errorResponse( 'Erro ao listar templates: ' . $templatesResult->getMessage() );
+            if (! $templatesResult->isSuccess()) {
+                return $this->errorResponse('Erro ao listar templates: '.$templatesResult->getMessage());
             }
 
             $templates = $templatesResult->getData();
 
             // Aplicar paginação manual
-            $total     = count( $templates );
-            $paginated = array_slice( $templates, $offset, $perPage );
+            $total = count($templates);
+            $paginated = array_slice($templates, $offset, $perPage);
 
-            return $this->successResponse( [
-                'templates'  => $paginated,
+            return $this->successResponse([
+                'templates' => $paginated,
                 'pagination' => [
                     'current_page' => $page,
-                    'per_page'     => $perPage,
-                    'total'        => $total,
-                    'last_page'    => ceil( $total / $perPage ),
-                    'from'         => $offset + 1,
-                    'to'           => min( $offset + $perPage, $total ),
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'last_page' => ceil($total / $perPage),
+                    'from' => $offset + 1,
+                    'to' => min($offset + $perPage, $total),
                 ],
-            ] );
+            ]);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro interno do servidor: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro interno do servidor: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Cria novo template.
      */
-    public function store( Request $request ): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $user = Auth::user();
 
-        $validated = $request->validate( [
-            'name'         => 'required|string|max:255',
-            'slug'         => 'required|string|max:100|unique:email_templates,slug',
-            'category'     => 'required|in:transactional,promotional,notification,system',
-            'subject'      => 'required|string|max:500',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:100|unique:email_templates,slug',
+            'category' => 'required|in:transactional,promotional,notification,system',
+            'subject' => 'required|string|max:500',
             'html_content' => 'required|string',
             'text_content' => 'nullable|string',
-            'is_active'    => 'boolean',
-            'sort_order'   => 'integer|min:0',
-            'metadata'     => 'nullable|array',
-        ] );
+            'is_active' => 'boolean',
+            'sort_order' => 'integer|min:0',
+            'metadata' => 'nullable|array',
+        ]);
 
         try {
-            $result = $this->templateService->createTemplate( $validated, $user->tenant_id );
+            $result = $this->templateService->createTemplate($validated, $user->tenant_id);
 
-            if ( $result->isSuccess() ) {
-                return $this->successResponse( $result->getData(), 'Template criado com sucesso.', 201 );
+            if ($result->isSuccess()) {
+                return $this->successResponse($result->getData(), 'Template criado com sucesso.', 201);
             } else {
-                return $this->errorResponse( $result->getMessage(), 400 );
+                return $this->errorResponse($result->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao criar template: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao criar template: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Mostra template específico.
      */
-    public function show( EmailTemplate $template ): JsonResponse
+    public function show(EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
         try {
             // Carregar relacionamentos
-            $template->load( [ 'logs' => function ( $query ) {
-                $query->latest()->limit( 5 );
-            } ] );
+            $template->load(['logs' => function ($query) {
+                $query->latest()->limit(5);
+            }]);
 
-            return $this->successResponse( $template );
+            return $this->successResponse($template);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao obter template: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao obter template: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Atualiza template.
      */
-    public function update( Request $request, EmailTemplate $template ): JsonResponse
+    public function update(Request $request, EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id || !$template->canBeEdited() ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id || ! $template->canBeEdited()) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
-        $validated = $request->validate( [
-            'name'         => 'required|string|max:255',
-            'slug'         => 'required|string|max:100|unique:email_templates,slug,' . $template->id,
-            'category'     => 'required|in:transactional,promotional,notification,system',
-            'subject'      => 'required|string|max:500',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:100|unique:email_templates,slug,'.$template->id,
+            'category' => 'required|in:transactional,promotional,notification,system',
+            'subject' => 'required|string|max:500',
             'html_content' => 'required|string',
             'text_content' => 'nullable|string',
-            'is_active'    => 'boolean',
-            'sort_order'   => 'integer|min:0',
-            'metadata'     => 'nullable|array',
-        ] );
+            'is_active' => 'boolean',
+            'sort_order' => 'integer|min:0',
+            'metadata' => 'nullable|array',
+        ]);
 
         try {
-            $result = $this->templateService->updateTemplate( $template->id, $validated, $template->tenant_id );
+            $result = $this->templateService->updateTemplate($template->id, $validated, $template->tenant_id);
 
-            if ( $result->isSuccess() ) {
-                return $this->successResponse( $result->getData(), 'Template atualizado com sucesso.' );
+            if ($result->isSuccess()) {
+                return $this->successResponse($result->getData(), 'Template atualizado com sucesso.');
             } else {
-                return $this->errorResponse( $result->getMessage(), 400 );
+                return $this->errorResponse($result->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao atualizar template: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao atualizar template: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Remove template.
      */
-    public function destroy( EmailTemplate $template ): JsonResponse
+    public function destroy(EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id || !$template->canBeDeleted() ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id || ! $template->canBeDeleted()) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
         try {
-            $result = $this->templateService->deleteByIdAndTenantId( $template->id, $template->tenant_id );
+            $result = $this->templateService->deleteByIdAndTenantId($template->id, $template->tenant_id);
 
-            if ( $result->isSuccess() ) {
-                return $this->successResponse( null, 'Template excluído com sucesso.' );
+            if ($result->isSuccess()) {
+                return $this->successResponse(null, 'Template excluído com sucesso.');
             } else {
-                return $this->errorResponse( $result->getMessage(), 400 );
+                return $this->errorResponse($result->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao excluir template: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao excluir template: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Obtém preview do template.
      */
-    public function preview( Request $request, EmailTemplate $template ): JsonResponse
+    public function preview(Request $request, EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
-        $data = $request->input( 'data', [] );
+        $data = $request->input('data', []);
 
         try {
-            $result = $this->templateService->getTemplatePreview( $template->id, $data, $template->tenant_id );
+            $result = $this->templateService->getTemplatePreview($template->id, $data, $template->tenant_id);
 
-            if ( $result->isSuccess() ) {
-                return $this->successResponse( $result->getData() );
+            if ($result->isSuccess()) {
+                return $this->successResponse($result->getData());
             } else {
-                return $this->errorResponse( $result->getMessage(), 400 );
+                return $this->errorResponse($result->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao gerar preview: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao gerar preview: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Envia email de teste.
      */
-    public function sendTest( Request $request, EmailTemplate $template ): JsonResponse
+    public function sendTest(Request $request, EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
-        $validated = $request->validate( [
+        $validated = $request->validate([
             'test_email' => 'required|email',
-            'test_name'  => 'nullable|string|max:255',
-            'test_data'  => 'nullable|array',
-        ] );
+            'test_name' => 'nullable|string|max:255',
+            'test_data' => 'nullable|array',
+        ]);
 
         try {
             // Processar template com dados de teste
-            $data = array_merge( $validated[ 'test_data' ] ?? [], [
-                'context'   => 'test',
+            $data = array_merge($validated['test_data'] ?? [], [
+                'context' => 'test',
                 'test_mode' => true,
-            ] );
+            ]);
 
-            $processResult = $this->templateService->processTemplate( $template->id, $data, $template->tenant_id );
+            $processResult = $this->templateService->processTemplate($template->id, $data, $template->tenant_id);
 
-            if ( !$processResult->isSuccess() ) {
-                return $this->errorResponse( 'Erro ao processar template: ' . $processResult->getMessage(), 400 );
+            if (! $processResult->isSuccess()) {
+                return $this->errorResponse('Erro ao processar template: '.$processResult->getMessage(), 400);
             }
 
             $processed = $processResult->getData();
 
             // TODO: Implementar envio real de email de teste
             // Por enquanto, retornar sucesso
-            return $this->successResponse( [
-                'message' => 'Email de teste enviado para ' . $validated[ 'test_email' ],
+            return $this->successResponse([
+                'message' => 'Email de teste enviado para '.$validated['test_email'],
                 'preview' => [
-                    'subject'      => $processed[ 'subject' ],
-                    'html_content' => $processed[ 'html_content' ],
-                    'text_content' => $processed[ 'text_content' ],
-                ]
-            ] );
+                    'subject' => $processed['subject'],
+                    'html_content' => $processed['html_content'],
+                    'text_content' => $processed['text_content'],
+                ],
+            ]);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao enviar email de teste: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao enviar email de teste: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Duplica template.
      */
-    public function duplicate( Request $request, EmailTemplate $template ): JsonResponse
+    public function duplicate(Request $request, EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
         try {
-            $result = $this->templateService->duplicateTemplate( $template->id, $template->tenant_id );
+            $result = $this->templateService->duplicateTemplate($template->id, $template->tenant_id);
 
-            if ( $result->isSuccess() ) {
-                return $this->successResponse( $result->getData(), 'Template duplicado com sucesso.' );
+            if ($result->isSuccess()) {
+                return $this->successResponse($result->getData(), 'Template duplicado com sucesso.');
             } else {
-                return $this->errorResponse( $result->getMessage(), 400 );
+                return $this->errorResponse($result->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao duplicar template: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao duplicar template: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Obtém variáveis disponíveis.
      */
-    public function getVariables( Request $request ): JsonResponse
+    public function getVariables(Request $request): JsonResponse
     {
         $user = Auth::user();
 
         try {
-            $availableVariables = $this->variableProcessor->getAvailableVariables( $user->tenant_id );
+            $availableVariables = $this->variableProcessor->getAvailableVariables($user->tenant_id);
 
-            return $this->successResponse( [
-                'variables'        => $availableVariables,
-                'total_categories' => count( $availableVariables ),
-                'total_variables'  => array_sum( array_map( 'count', $availableVariables ) ),
-            ] );
+            return $this->successResponse([
+                'variables' => $availableVariables,
+                'total_categories' => count($availableVariables),
+                'total_variables' => array_sum(array_map('count', $availableVariables)),
+            ]);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao obter variáveis: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao obter variáveis: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Obtém estatísticas dos templates.
      */
-    public function getStats( Request $request, EmailTemplate $template ): JsonResponse
+    public function getStats(Request $request, EmailTemplate $template): JsonResponse
     {
         // Verificar permissão
-        if ( $template->tenant_id !== Auth::user()->tenant_id ) {
-            return $this->errorResponse( 'Acesso negado.', 403 );
+        if ($template->tenant_id !== Auth::user()->tenant_id) {
+            return $this->errorResponse('Acesso negado.', 403);
         }
 
-        $period = $request->get( 'period', 'month' );
+        $period = $request->get('period', 'month');
 
         try {
-            $statsResult = $this->templateService->getTemplateStats( $template->id, $template->tenant_id );
+            $statsResult = $this->templateService->getTemplateStats($template->id, $template->tenant_id);
 
-            if ( $statsResult->isSuccess() ) {
-                return $this->successResponse( $statsResult->getData() );
+            if ($statsResult->isSuccess()) {
+                return $this->successResponse($statsResult->getData());
             } else {
-                return $this->errorResponse( $statsResult->getMessage(), 400 );
+                return $this->errorResponse($statsResult->getMessage(), 400);
             }
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao obter estatísticas: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao obter estatísticas: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Obtém estatísticas gerais de email.
      */
-    public function getAnalytics( Request $request ): JsonResponse
+    public function getAnalytics(Request $request): JsonResponse
     {
-        $user   = Auth::user();
-        $period = $request->get( 'period', 'month' );
+        $user = Auth::user();
+        $period = $request->get('period', 'month');
 
         try {
             // TODO: Implementar método no serviço para estatísticas gerais
             $stats = [
-                'total_templates'  => EmailTemplate::where( 'tenant_id', $user->tenant_id )->count(),
-                'active_templates' => EmailTemplate::where( 'tenant_id', $user->tenant_id )->active()->count(),
-                'total_sent'       => 0, // Será implementado quando tivermos logs
-                'period'           => $period,
+                'total_templates' => EmailTemplate::where('tenant_id', $user->tenant_id)->count(),
+                'active_templates' => EmailTemplate::where('tenant_id', $user->tenant_id)->active()->count(),
+                'total_sent' => 0, // Será implementado quando tivermos logs
+                'period' => $period,
             ];
 
-            return $this->successResponse( $stats );
+            return $this->successResponse($stats);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao obter analytics: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao obter analytics: '.$e->getMessage(), 500);
         }
     }
 
     /**
      * Obtém templates predefinidos por categoria.
      */
-    public function getPresets( Request $request ): JsonResponse
+    public function getPresets(Request $request): JsonResponse
     {
-        $user     = Auth::user();
-        $category = $request->get( 'category' );
+        $user = Auth::user();
+        $category = $request->get('category');
 
         try {
             $presets = [];
 
-            switch ( $category ) {
+            switch ($category) {
                 case 'transactional':
                     $presets = $this->getTransactionalPresets();
                     break;
@@ -374,17 +375,17 @@ class EmailTemplateApiController extends Controller
                     $presets = $this->getNotificationPresets();
                     break;
                 default:
-                    return $this->errorResponse( 'Categoria inválida.', 400 );
+                    return $this->errorResponse('Categoria inválida.', 400);
             }
 
-            return $this->successResponse( [
+            return $this->successResponse([
                 'category' => $category,
-                'presets'  => $presets,
-                'total'    => count( $presets ),
-            ] );
+                'presets' => $presets,
+                'total' => count($presets),
+            ]);
 
-        } catch ( \Exception $e ) {
-            return $this->errorResponse( 'Erro ao obter presets: ' . $e->getMessage(), 500 );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro ao obter presets: '.$e->getMessage(), 500);
         }
     }
 
@@ -395,19 +396,19 @@ class EmailTemplateApiController extends Controller
     {
         return [
             [
-                'name'         => 'Confirmação de Orçamento',
-                'slug'         => 'budget-confirmation',
-                'category'     => 'transactional',
-                'subject'      => 'Confirmação de Orçamento #{{budget_number}}',
-                'description'  => 'Email enviado ao cliente confirmando recebimento do orçamento',
+                'name' => 'Confirmação de Orçamento',
+                'slug' => 'budget-confirmation',
+                'category' => 'transactional',
+                'subject' => 'Confirmação de Orçamento #{{budget_number}}',
+                'description' => 'Email enviado ao cliente confirmando recebimento do orçamento',
                 'html_content' => $this->getBudgetConfirmationTemplate(),
             ],
             [
-                'name'         => 'Fatura Gerada',
-                'slug'         => 'invoice-generated',
-                'category'     => 'transactional',
-                'subject'      => 'Fatura #{{invoice_number}} Gerada',
-                'description'  => 'Email enviado ao cliente quando uma fatura é gerada',
+                'name' => 'Fatura Gerada',
+                'slug' => 'invoice-generated',
+                'category' => 'transactional',
+                'subject' => 'Fatura #{{invoice_number}} Gerada',
+                'description' => 'Email enviado ao cliente quando uma fatura é gerada',
                 'html_content' => $this->getInvoiceGeneratedTemplate(),
             ],
         ];
@@ -420,19 +421,19 @@ class EmailTemplateApiController extends Controller
     {
         return [
             [
-                'name'         => 'Newsletter Mensal',
-                'slug'         => 'monthly-newsletter',
-                'category'     => 'promotional',
-                'subject'      => 'Newsletter {{company_name}} - {{current_date}}',
-                'description'  => 'Informativo mensal para clientes',
+                'name' => 'Newsletter Mensal',
+                'slug' => 'monthly-newsletter',
+                'category' => 'promotional',
+                'subject' => 'Newsletter {{company_name}} - {{current_date}}',
+                'description' => 'Informativo mensal para clientes',
                 'html_content' => $this->getNewsletterTemplate(),
             ],
             [
-                'name'         => 'Promoções Especiais',
-                'slug'         => 'special-offers',
-                'category'     => 'promotional',
-                'subject'      => 'Ofertas Especiais - {{company_name}}',
-                'description'  => 'Email promocional com ofertas e descontos',
+                'name' => 'Promoções Especiais',
+                'slug' => 'special-offers',
+                'category' => 'promotional',
+                'subject' => 'Ofertas Especiais - {{company_name}}',
+                'description' => 'Email promocional com ofertas e descontos',
                 'html_content' => $this->getPromotionalTemplate(),
             ],
         ];
@@ -445,19 +446,19 @@ class EmailTemplateApiController extends Controller
     {
         return [
             [
-                'name'         => 'Aprovação de Orçamento',
-                'slug'         => 'budget-approved',
-                'category'     => 'notification',
-                'subject'      => 'Orçamento #{{budget_number}} Aprovado',
-                'description'  => 'Notificação de aprovação de orçamento',
+                'name' => 'Aprovação de Orçamento',
+                'slug' => 'budget-approved',
+                'category' => 'notification',
+                'subject' => 'Orçamento #{{budget_number}} Aprovado',
+                'description' => 'Notificação de aprovação de orçamento',
                 'html_content' => $this->getBudgetApprovedTemplate(),
             ],
             [
-                'name'         => 'Pagamento Confirmado',
-                'slug'         => 'payment-confirmed',
-                'category'     => 'notification',
-                'subject'      => 'Pagamento da Fatura #{{invoice_number}} Confirmado',
-                'description'  => 'Confirmação de pagamento recebido',
+                'name' => 'Pagamento Confirmado',
+                'slug' => 'payment-confirmed',
+                'category' => 'notification',
+                'subject' => 'Pagamento da Fatura #{{invoice_number}} Confirmado',
+                'description' => 'Confirmação de pagamento recebido',
                 'html_content' => $this->getPaymentConfirmedTemplate(),
             ],
         ];
@@ -589,23 +590,22 @@ class EmailTemplateApiController extends Controller
     /**
      * Métodos auxiliares para resposta JSON.
      */
-    private function successResponse( $data, string $message = 'Operação realizada com sucesso.', int $statusCode = 200 ): JsonResponse
+    private function successResponse($data, string $message = 'Operação realizada com sucesso.', int $statusCode = 200): JsonResponse
     {
-        return response()->json( [
-            'success'   => true,
-            'message'   => $message,
-            'data'      => $data,
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
             'timestamp' => now()->toISOString(),
-        ], $statusCode );
+        ], $statusCode);
     }
 
-    private function errorResponse( string $message, int $statusCode = 400 ): JsonResponse
+    private function errorResponse(string $message, int $statusCode = 400): JsonResponse
     {
-        return response()->json( [
-            'success'   => false,
-            'message'   => $message,
+        return response()->json([
+            'success' => false,
+            'message' => $message,
             'timestamp' => now()->toISOString(),
-        ], $statusCode );
+        ], $statusCode);
     }
-
 }

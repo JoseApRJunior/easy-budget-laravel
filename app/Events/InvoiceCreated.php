@@ -21,22 +21,23 @@ class InvoiceCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public Invoice  $invoice;
+    public Invoice $invoice;
+
     public Customer $customer;
-    public ?Tenant  $tenant;
+
+    public ?Tenant $tenant;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param Invoice $invoice Fatura criada
-     * @param Customer $customer Cliente da fatura
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  Invoice  $invoice  Fatura criada
+     * @param  Customer  $customer  Cliente da fatura
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
-    public function __construct( Invoice $invoice, Customer $customer, ?Tenant $tenant = null )
+    public function __construct(Invoice $invoice, Customer $customer, ?Tenant $tenant = null)
     {
-        $this->invoice  = $invoice;
+        $this->invoice = $invoice;
         $this->customer = $customer;
-        $this->tenant   = $tenant;
+        $this->tenant = $tenant;
     }
-
 }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Budget;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -51,14 +49,14 @@ class BudgetAttachment extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'          => 'integer',
-        'budget_id'          => 'integer',
-        'file_size'          => 'integer',
-        'is_public'          => 'boolean',
-        'download_count'     => 'integer',
+        'tenant_id' => 'integer',
+        'budget_id' => 'integer',
+        'file_size' => 'integer',
+        'is_public' => 'boolean',
+        'download_count' => 'integer',
         'last_downloaded_at' => 'datetime',
-        'created_at'         => 'immutable_datetime',
-        'updated_at'         => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -67,16 +65,16 @@ class BudgetAttachment extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'      => 'required|integer|exists:tenants,id',
-            'budget_id'      => 'required|integer|exists:budgets,id',
-            'file_name'      => 'required|string|max:255',
-            'original_name'  => 'required|string|max:255',
-            'file_path'      => 'required|string|max:500',
-            'mime_type'      => 'required|string|max:100',
-            'file_size'      => 'required|integer|min:1|max:52428800', // Máximo 50MB
-            'file_hash'      => 'nullable|string|max:64',
-            'description'    => 'nullable|string|max:1000',
-            'is_public'      => 'required|boolean',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'budget_id' => 'required|integer|exists:budgets,id',
+            'file_name' => 'required|string|max:255',
+            'original_name' => 'required|string|max:255',
+            'file_path' => 'required|string|max:500',
+            'mime_type' => 'required|string|max:100',
+            'file_size' => 'required|integer|min:1|max:52428800', // Máximo 50MB
+            'file_hash' => 'nullable|string|max:64',
+            'description' => 'nullable|string|max:1000',
+            'is_public' => 'required|boolean',
             'download_count' => 'required|integer|min:0',
         ];
     }
@@ -86,7 +84,7 @@ class BudgetAttachment extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -94,39 +92,39 @@ class BudgetAttachment extends Model
      */
     public function budget(): BelongsTo
     {
-        return $this->belongsTo( Budget::class);
+        return $this->belongsTo(Budget::class);
     }
 
     /**
      * Scope para anexos públicos.
      */
-    public function scopePublic( $query )
+    public function scopePublic($query)
     {
-        return $query->where( 'is_public', true );
+        return $query->where('is_public', true);
     }
 
     /**
      * Scope para anexos privados.
      */
-    public function scopePrivate( $query )
+    public function scopePrivate($query)
     {
-        return $query->where( 'is_public', false );
+        return $query->where('is_public', false);
     }
 
     /**
      * Scope para anexos de um orçamento específico.
      */
-    public function scopeForBudget( $query, int $budgetId )
+    public function scopeForBudget($query, int $budgetId)
     {
-        return $query->where( 'budget_id', $budgetId );
+        return $query->where('budget_id', $budgetId);
     }
 
     /**
      * Scope para anexos ordenados por data.
      */
-    public function scopeRecent( $query )
+    public function scopeRecent($query)
     {
-        return $query->orderBy( 'created_at', 'desc' );
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
@@ -134,18 +132,19 @@ class BudgetAttachment extends Model
      */
     public function incrementDownloadCount(): bool
     {
-        $this->increment( 'download_count' );
+        $this->increment('download_count');
         $this->last_downloaded_at = now();
+
         return $this->save();
     }
 
     /**
      * Verifica se o anexo pode ser baixado pelo usuário.
      */
-    public function canBeDownloadedBy( int $userId ): bool
+    public function canBeDownloadedBy(int $userId): bool
     {
         // Se é público, qualquer um pode baixar
-        if ( $this->is_public ) {
+        if ($this->is_public) {
             return true;
         }
 
@@ -159,13 +158,13 @@ class BudgetAttachment extends Model
     public function getFormattedFileSizeAttribute(): string
     {
         $bytes = $this->file_size;
-        $units = [ 'B', 'KB', 'MB', 'GB' ];
+        $units = ['B', 'KB', 'MB', 'GB'];
 
-        for ( $i = 0; $bytes > 1024 && $i < 3; $i++ ) {
+        for ($i = 0; $bytes > 1024 && $i < 3; $i++) {
             $bytes /= 1024;
         }
 
-        return round( $bytes, 2 ) . ' ' . $units[ $i ];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -173,7 +172,7 @@ class BudgetAttachment extends Model
      */
     public function getFileExtensionAttribute(): string
     {
-        return strtolower( pathinfo( $this->file_name, PATHINFO_EXTENSION ) );
+        return strtolower(pathinfo($this->file_name, PATHINFO_EXTENSION));
     }
 
     /**
@@ -181,7 +180,7 @@ class BudgetAttachment extends Model
      */
     public function isImage(): bool
     {
-        return str_starts_with( $this->mime_type, 'image/' );
+        return str_starts_with($this->mime_type, 'image/');
     }
 
     /**
@@ -197,7 +196,7 @@ class BudgetAttachment extends Model
      */
     public function getFullUrlAttribute(): string
     {
-        return asset( 'storage/' . $this->file_path );
+        return asset('storage/'.$this->file_path);
     }
 
     /**
@@ -205,7 +204,6 @@ class BudgetAttachment extends Model
      */
     public function getFullPathAttribute(): string
     {
-        return storage_path( 'app/public/' . $this->file_path );
+        return storage_path('app/public/'.$this->file_path);
     }
-
 }

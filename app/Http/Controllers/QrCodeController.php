@@ -26,186 +26,173 @@ class QrCodeController extends Controller
 
     /**
      * Generate QR code from text
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
-    public function generate( Request $request ): JsonResponse
+    public function generate(Request $request): JsonResponse
     {
-        $request->validate( [
-            'text'   => 'required|string|max:1000',
-            'size'   => 'nullable|integer|min:100|max:1000',
+        $request->validate([
+            'text' => 'required|string|max:1000',
+            'size' => 'nullable|integer|min:100|max:1000',
             'margin' => 'nullable|integer|min:0|max:50',
-        ] );
+        ]);
 
         try {
-            $text   = $request->input( 'text' );
-            $size   = $request->input( 'size', 300 );
-            $margin = $request->input( 'margin', 10 );
+            $text = $request->input('text');
+            $size = $request->input('size', 300);
+            $margin = $request->input('margin', 10);
 
             // Use the existing QrCodeService to generate data URI
-            $dataUri = $this->qrCodeService->generateDataUri( $text, $size );
+            $dataUri = $this->qrCodeService->generateDataUri($text, $size);
 
-            if ( empty( $dataUri ) ) {
-                return response()->json( [
+            if (empty($dataUri)) {
+                return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao gerar QR Code'
-                ], 500 );
+                    'message' => 'Erro ao gerar QR Code',
+                ], 500);
             }
 
-            return response()->json( [
+            return response()->json([
                 'success' => true,
                 'message' => 'QR Code gerado com sucesso',
-                'data'    => [
+                'data' => [
                     'qr_code' => $dataUri,
-                    'text'    => $text,
-                    'size'    => $size
-                ]
-            ] );
+                    'text' => $text,
+                    'size' => $size,
+                ],
+            ]);
 
-        } catch ( \Exception $e ) {
-            return response()->json( [
+        } catch (\Exception $e) {
+            return response()->json([
                 'success' => false,
-                'message' => 'Erro ao gerar QR Code: ' . $e->getMessage()
-            ], 500 );
+                'message' => 'Erro ao gerar QR Code: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Generate and immediately read QR code (for testing)
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
-    public function handle( Request $request ): JsonResponse
+    public function handle(Request $request): JsonResponse
     {
-        $request->validate( [
+        $request->validate([
             'text' => 'required|string|max:1000',
             'size' => 'nullable|integer|min:100|max:1000',
-        ] );
+        ]);
 
         try {
-            $text = $request->input( 'text' );
-            $size = $request->input( 'size', 300 );
+            $text = $request->input('text');
+            $size = $request->input('size', 300);
 
             // Generate QR code
-            $dataUri = $this->qrCodeService->generateDataUri( $text, $size );
+            $dataUri = $this->qrCodeService->generateDataUri($text, $size);
 
-            if ( empty( $dataUri ) ) {
-                return response()->json( [
+            if (empty($dataUri)) {
+                return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao gerar QR Code'
-                ], 500 );
+                    'message' => 'Erro ao gerar QR Code',
+                ], 500);
             }
 
             // For now, we'll return the generated QR code without reading it
             // Reading would require additional libraries like zxing/qrcode-reader
-            return response()->json( [
+            return response()->json([
                 'success' => true,
                 'message' => 'QR Code processado com sucesso',
-                'data'    => [
+                'data' => [
                     'original_text' => $text,
-                    'decoded_text'  => $text, // In a full implementation, this would be the actual decoded text
-                    'qr_code'       => $dataUri
-                ]
-            ] );
+                    'decoded_text' => $text, // In a full implementation, this would be the actual decoded text
+                    'qr_code' => $dataUri,
+                ],
+            ]);
 
-        } catch ( \Exception $e ) {
-            return response()->json( [
+        } catch (\Exception $e) {
+            return response()->json([
                 'success' => false,
-                'message' => 'Erro ao processar QR Code: ' . $e->getMessage()
-            ], 500 );
+                'message' => 'Erro ao processar QR Code: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Generate QR code for budget verification
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
-    public function generateForBudget( Request $request ): JsonResponse
+    public function generateForBudget(Request $request): JsonResponse
     {
-        $request->validate( [
+        $request->validate([
             'budget_id' => 'required|integer',
-            'url'       => 'required|url|max:500',
-        ] );
+            'url' => 'required|url|max:500',
+        ]);
 
         try {
-            $budgetId = $request->input( 'budget_id' );
-            $url      = $request->input( 'url' );
+            $budgetId = $request->input('budget_id');
+            $url = $request->input('url');
 
             // Generate QR code with budget-specific settings
-            $dataUri = $this->qrCodeService->generateDataUri( $url, 200 );
+            $dataUri = $this->qrCodeService->generateDataUri($url, 200);
 
-            if ( empty( $dataUri ) ) {
-                return response()->json( [
+            if (empty($dataUri)) {
+                return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao gerar QR Code do orçamento'
-                ], 500 );
+                    'message' => 'Erro ao gerar QR Code do orçamento',
+                ], 500);
             }
 
-            return response()->json( [
+            return response()->json([
                 'success' => true,
                 'message' => 'QR Code do orçamento gerado com sucesso',
-                'data'    => [
-                    'qr_code'   => $dataUri,
+                'data' => [
+                    'qr_code' => $dataUri,
                     'budget_id' => $budgetId,
-                    'url'       => $url
-                ]
-            ] );
+                    'url' => $url,
+                ],
+            ]);
 
-        } catch ( \Exception $e ) {
-            return response()->json( [
+        } catch (\Exception $e) {
+            return response()->json([
                 'success' => false,
-                'message' => 'Erro ao gerar QR Code do orçamento: ' . $e->getMessage()
-            ], 500 );
+                'message' => 'Erro ao gerar QR Code do orçamento: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Generate QR code for invoice verification
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
-    public function generateForInvoice( Request $request ): JsonResponse
+    public function generateForInvoice(Request $request): JsonResponse
     {
-        $request->validate( [
+        $request->validate([
             'invoice_id' => 'required|integer',
-            'url'        => 'required|url|max:500',
-        ] );
+            'url' => 'required|url|max:500',
+        ]);
 
         try {
-            $invoiceId = $request->input( 'invoice_id' );
-            $url       = $request->input( 'url' );
+            $invoiceId = $request->input('invoice_id');
+            $url = $request->input('url');
 
             // Generate QR code with invoice-specific settings
-            $dataUri = $this->qrCodeService->generateDataUri( $url, 200 );
+            $dataUri = $this->qrCodeService->generateDataUri($url, 200);
 
-            if ( empty( $dataUri ) ) {
-                return response()->json( [
+            if (empty($dataUri)) {
+                return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao gerar QR Code da fatura'
-                ], 500 );
+                    'message' => 'Erro ao gerar QR Code da fatura',
+                ], 500);
             }
 
-            return response()->json( [
+            return response()->json([
                 'success' => true,
                 'message' => 'QR Code da fatura gerado com sucesso',
-                'data'    => [
-                    'qr_code'    => $dataUri,
+                'data' => [
+                    'qr_code' => $dataUri,
                     'invoice_id' => $invoiceId,
-                    'url'        => $url
-                ]
-            ] );
+                    'url' => $url,
+                ],
+            ]);
 
-        } catch ( \Exception $e ) {
-            return response()->json( [
+        } catch (\Exception $e) {
+            return response()->json([
                 'success' => false,
-                'message' => 'Erro ao gerar QR Code da fatura: ' . $e->getMessage()
-            ], 500 );
+                'message' => 'Erro ao gerar QR Code da fatura: '.$e->getMessage(),
+            ], 500);
         }
     }
-
 }

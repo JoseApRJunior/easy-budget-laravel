@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\CategoriesExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Category;
 use App\Models\Traits\TenantScoped;
 use App\Repositories\CategoryRepository;
-use App\Exports\CategoriesExport;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CategoryController extends Controller
 {
@@ -19,17 +19,23 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
-        $tenantId   = TenantScoped::getCurrentTenantId();
+        $tenantId = TenantScoped::getCurrentTenantId();
         if ($tenantId === null) {
             $tenantId = (int) (auth()->user()->tenant_id ?? 0) ?: null;
         }
-        $filters    = $request->only(['search', 'active', 'per_page']);
+        $filters = $request->only(['search', 'active', 'per_page']);
         $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
         $confirmAll = $request->has('all') && in_array((string) $request->input('all'), ['1', 'true', 'on', 'yes'], true);
         $perPage = (int) ($filters['per_page'] ?? $request->input('per_page', 10));
         $allowedPerPage = [10, 20, 50];
-        if (!in_array($perPage, $allowedPerPage, true)) {
+        if (! in_array($perPage, $allowedPerPage, true)) {
             $perPage = 10;
+        }
+
+        $user = auth()->user();
+        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+        if ($isAdmin && ! $hasFilters) {
+            $confirmAll = true;
         }
 
         if ($hasFilters || $confirmAll) {
@@ -37,8 +43,6 @@ class CategoryController extends Controller
                 'search' => $filters['search'] ?? '',
                 'active' => $filters['active'] ?? '',
             ];
-            $user = auth()->user();
-            $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
             $service = app(\App\Services\Domain\CategoryService::class);
             $result = $isAdmin
                 ? $service->paginateGlobalOnly($serviceFilters, $perPage)
@@ -53,7 +57,7 @@ class CategoryController extends Controller
 
         return view('pages.category.index', [
             'categories' => $categories,
-            'filters'    => $filters,
+            'filters' => $filters,
         ]);
     }
 
@@ -70,6 +74,7 @@ class CategoryController extends Controller
                 : collect();
         }
         $defaults = ['is_active' => true];
+
         return view('pages.category.create', compact('parents', 'defaults'));
     }
 
@@ -94,7 +99,7 @@ class CategoryController extends Controller
             if (($validated['parent_id'] ?? null) !== null) {
                 $parentId = (int) $validated['parent_id'];
                 $isBaseParent = Category::query()->where('id', $parentId)->whereNull('tenant_id')->exists();
-                if (!$isBaseParent) {
+                if (! $isBaseParent) {
                     return back()->withErrors(['parent_id' => 'Admin só pode selecionar categoria pai base.'])->withInput();
                 }
             }
@@ -142,7 +147,7 @@ class CategoryController extends Controller
                     ->where('category_id', $parentId)
                     ->exists();
                 $isGlobalParent = $parent && $parent->tenant_id === null;
-                if (!$isGlobalParent && !$parentAttached) {
+                if (! $isGlobalParent && ! $parentAttached) {
                     return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
                 }
             }
@@ -169,6 +174,7 @@ class CategoryController extends Controller
         );
 
         $this->logOperation('categories_store', ['id' => $category->id, 'name' => $category->name]);
+
         return $this->redirectSuccess('categories.index', 'Categoria criada com sucesso.');
     }
 
@@ -182,6 +188,7 @@ class CategoryController extends Controller
                 $q->where('tenant_id', $tenantId);
             }
         }]);
+
         return view('pages.category.show', compact('category'));
     }
 
@@ -205,6 +212,7 @@ class CategoryController extends Controller
                 ->orderBy('name')->get(['id', 'name'])
                 : collect();
         }
+
         return view('pages.category.edit', compact('category', 'parents'));
     }
 
@@ -219,14 +227,14 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if (!$isAdmin && $category->tenant_id === null) {
+        if (! $isAdmin && $category->tenant_id === null) {
             return back()->withErrors(['category' => 'Categorias globais só podem ser editadas por administradores.']);
         }
         if ($isAdmin && $category->tenant_id !== null) {
             return back()->withErrors(['category' => 'Admin só pode editar categorias globais.']);
         }
         $slug = Str::slug($validated['name']);
-        if (!Category::validateUniqueSlug($slug, $category->id)) {
+        if (! Category::validateUniqueSlug($slug, $category->id)) {
             return back()->withErrors(['name' => 'Slug já existe'])->withInput();
         }
         $tenantId = $user->tenant_id ?? null;
@@ -234,7 +242,7 @@ class CategoryController extends Controller
             $parentId = (int) $validated['parent_id'];
             if ($isAdmin) {
                 $isBaseParent = Category::query()->where('id', $parentId)->whereNull('tenant_id')->exists();
-                if (!$isBaseParent) {
+                if (! $isBaseParent) {
                     return back()->withErrors(['parent_id' => 'Admin só pode selecionar categoria pai base.'])->withInput();
                 }
             } else {
@@ -247,7 +255,7 @@ class CategoryController extends Controller
                     ->where('category_id', $parentId)
                     ->exists();
                 $isGlobalParent = $parent && $parent->tenant_id === null;
-                if (!$isGlobalParent && !$parentAttached) {
+                if (! $isGlobalParent && ! $parentAttached) {
                     return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
                 }
             }
@@ -267,6 +275,7 @@ class CategoryController extends Controller
         );
 
         $this->logOperation('categories_update', ['id' => $category->id, 'name' => $category->name]);
+
         return $this->redirectSuccess('categories.index', 'Categoria atualizada com sucesso.');
     }
 
@@ -276,7 +285,7 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if (!$isAdmin && $category->tenant_id === null) {
+        if (! $isAdmin && $category->tenant_id === null) {
             return $this->redirectError('categories.index', 'Categorias globais só podem ser excluídas por administradores.');
         }
         if ($isAdmin && $category->tenant_id !== null) {
@@ -295,6 +304,7 @@ class CategoryController extends Controller
             ['context' => 'categories_destroy']
         );
         $this->logOperation('categories_destroy', ['id' => $id]);
+
         return $this->redirectSuccess('categories.index', 'Categoria excluída com sucesso.');
     }
 
@@ -303,12 +313,12 @@ class CategoryController extends Controller
         $format = $request->get('format', 'xlsx');
 
         $fileName = match ($format) {
-            'csv'  => 'categories.csv',
+            'csv' => 'categories.csv',
             'xlsx' => 'categories.xlsx',
             default => 'categories.xlsx',
         };
 
-        return Excel::download(new CategoriesExport(), $fileName);
+        return Excel::download(new CategoriesExport, $fileName);
     }
 
     public function setDefault(Request $request, int $id)
@@ -351,6 +361,7 @@ class CategoryController extends Controller
         );
 
         $this->logOperation('categories_set_default', ['id' => $category->id, 'tenant_id' => $tenantId]);
+
         return $this->redirectSuccess('categories.index', 'Categoria definida como padrão com sucesso.');
     }
 
@@ -385,6 +396,7 @@ class CategoryController extends Controller
         }
 
         $this->logOperation('categories_check_slug', ['slug' => $slug, 'exists' => $exists]);
+
         return $this->jsonSuccess([
             'slug' => $slug,
             'exists' => $exists,

@@ -24,10 +24,11 @@ class FinancialControlController extends Controller
 
             return view('admin.financial.index', compact('financialOverview', 'budgetAlerts'));
         } catch (\Exception $e) {
-            Log::error('Error loading financial control dashboard: ' . $e->getMessage());
+            Log::error('Error loading financial control dashboard: '.$e->getMessage());
+
             return view('admin.financial.index', [
                 'financialOverview' => $this->getDefaultOverview(),
-                'budgetAlerts' => []
+                'budgetAlerts' => [],
             ]);
         }
     }
@@ -39,9 +40,10 @@ class FinancialControlController extends Controller
 
             return view('admin.financial.provider-details', compact('providerFinancialDetails'));
         } catch (\Exception $e) {
-            Log::error('Error loading provider financial details for tenant ' . $tenantId . ': ' . $e->getMessage());
+            Log::error('Error loading provider financial details for tenant '.$tenantId.': '.$e->getMessage());
+
             return view('admin.financial.provider-details', [
-                'providerFinancialDetails' => $this->getDefaultProviderDetails()
+                'providerFinancialDetails' => $this->getDefaultProviderDetails(),
             ]);
         }
     }
@@ -60,11 +62,12 @@ class FinancialControlController extends Controller
 
             return view('admin.financial.reports', compact('reports', 'filters', 'tenants'));
         } catch (\Exception $e) {
-            Log::error('Error loading financial reports: ' . $e->getMessage());
+            Log::error('Error loading financial reports: '.$e->getMessage());
+
             return view('admin.financial.reports', [
                 'reports' => $this->getDefaultReports(),
                 'filters' => $filters ?? [],
-                'tenants' => []
+                'tenants' => [],
             ]);
         }
     }
@@ -76,14 +79,15 @@ class FinancialControlController extends Controller
 
             return response()->json([
                 'success' => true,
-                'alerts' => $budgetAlerts
+                'alerts' => $budgetAlerts,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting budget alerts: ' . $e->getMessage());
+            Log::error('Error getting budget alerts: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao carregar alertas de orçamento',
-                'alerts' => []
+                'alerts' => [],
             ], 500);
         }
     }
@@ -104,38 +108,39 @@ class FinancialControlController extends Controller
 
             return response($csvContent, 200, [
                 'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="financial_report_' . date('Y-m-d') . '.csv"'
+                'Content-Disposition' => 'attachment; filename="financial_report_'.date('Y-m-d').'.csv"',
             ]);
         } catch (\Exception $e) {
-            Log::error('Error exporting financial reports: ' . $e->getMessage());
+            Log::error('Error exporting financial reports: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao exportar relatórios financeiros'
+                'message' => 'Erro ao exportar relatórios financeiros',
             ], 500);
         }
     }
 
     private function generateCsvReport(array $reports): string
     {
-        $csv = "Relatório Financeiro - " . date('d/m/Y') . "\n\n";
+        $csv = 'Relatório Financeiro - '.date('d/m/Y')."\n\n";
 
         // Revenue by period
         $csv .= "Receita por Período\n";
         $csv .= "Data;Total\n";
         foreach ($reports['revenue_by_period'] as $revenue) {
-            $csv .= $revenue['date'] . ";" . number_format($revenue['total'], 2, ',', '.') . "\n";
+            $csv .= $revenue['date'].';'.number_format($revenue['total'], 2, ',', '.')."\n";
         }
 
         $csv .= "\nCustos por Categoria\n";
         $csv .= "Categoria;Total\n";
         foreach ($reports['costs_by_category'] as $category => $amount) {
-            $csv .= ucfirst($category) . ";" . number_format($amount, 2, ',', '.') . "\n";
+            $csv .= ucfirst($category).';'.number_format($amount, 2, ',', '.')."\n";
         }
 
         $csv .= "\nMétodos de Pagamento\n";
         $csv .= "Método;Quantidade;Total\n";
         foreach ($reports['payment_method_analysis'] as $method) {
-            $csv .= $method['payment_method'] . ";" . $method['count'] . ";" . number_format($method['total'], 2, ',', '.') . "\n";
+            $csv .= $method['payment_method'].';'.$method['count'].';'.number_format($method['total'], 2, ',', '.')."\n";
         }
 
         return $csv;

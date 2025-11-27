@@ -62,13 +62,13 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param Invoice $invoice Fatura a ser notificada
-     * @param Customer $customer Cliente da fatura
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $publicLink Link público para visualização (opcional)
-     * @param string|null $customMessage Mensagem personalizada (opcional)
-     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param  Invoice  $invoice  Fatura a ser notificada
+     * @param  Customer  $customer  Cliente da fatura
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $publicLink  Link público para visualização (opcional)
+     * @param  string|null  $customMessage  Mensagem personalizada (opcional)
+     * @param  string  $locale  Locale para internacionalização (opcional, padrão: pt-BR)
      */
     public function __construct(
         Invoice $invoice,
@@ -79,16 +79,16 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         ?string $customMessage = null,
         string $locale = 'pt-BR',
     ) {
-        $this->invoice       = $invoice;
-        $this->customer      = $customer;
-        $this->tenant        = $tenant;
-        $this->company       = $company ?? [];
-        $this->publicLink    = $publicLink;
+        $this->invoice = $invoice;
+        $this->customer = $customer;
+        $this->tenant = $tenant;
+        $this->company = $company ?? [];
+        $this->publicLink = $publicLink;
         $this->customMessage = $customMessage;
-        $this->locale        = $locale;
+        $this->locale = $locale;
 
         // Configurar locale para internacionalização
-        app()->setLocale( $this->locale );
+        app()->setLocale($this->locale);
     }
 
     /**
@@ -97,16 +97,16 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __( 'emails.invoice.subject', [
+            subject: __('emails.invoice.subject', [
                 'invoice_code' => $this->invoice->code,
-            ], $this->locale ),
-            tags: [ 'invoice-notification', 'billing' ],
+            ], $this->locale),
+            tags: ['invoice-notification', 'billing'],
             metadata: [
-                'invoice_id'   => $this->invoice->id,
+                'invoice_id' => $this->invoice->id,
                 'invoice_code' => $this->invoice->code,
-                'customer_id'  => $this->customer->id,
-                'tenant_id'    => $this->tenant?->id,
-                'locale'       => $this->locale,
+                'customer_id' => $this->customer->id,
+                'tenant_id' => $this->tenant?->id,
+                'locale' => $this->locale,
                 'total_amount' => $this->invoice->total,
             ],
         );
@@ -120,24 +120,24 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.invoice-notification',
             with: [
-                'invoice'       => $this->invoice,
-                'customer'      => $this->customer,
-                'tenant'        => $this->tenant,
-                'company'       => $this->getCompanyData(),
-                'locale'        => $this->locale,
-                'appName'       => config( 'app.name', 'Easy Budget' ),
-                'supportEmail'  => $this->getSupportEmail(),
+                'invoice' => $this->invoice,
+                'customer' => $this->customer,
+                'tenant' => $this->tenant,
+                'company' => $this->getCompanyData(),
+                'locale' => $this->locale,
+                'appName' => config('app.name', 'Easy Budget'),
+                'supportEmail' => $this->getSupportEmail(),
                 'customMessage' => $this->customMessage,
-                'publicLink'    => $this->publicLink ?? $this->generatePublicLink(),
-                'invoiceData'   => [
-                    'code'           => $this->invoice->code,
-                    'total'          => number_format( $this->invoice->total, 2, ',', '.' ),
-                    'subtotal'       => number_format( $this->invoice->subtotal, 2, ',', '.' ),
-                    'discount'       => number_format( $this->invoice->discount, 2, ',', '.' ),
-                    'due_date'       => $this->invoice->due_date?->format( 'd/m/Y' ),
+                'publicLink' => $this->publicLink ?? $this->generatePublicLink(),
+                'invoiceData' => [
+                    'code' => $this->invoice->code,
+                    'total' => number_format($this->invoice->total, 2, ',', '.'),
+                    'subtotal' => number_format($this->invoice->subtotal, 2, ',', '.'),
+                    'discount' => number_format($this->invoice->discount, 2, ',', '.'),
+                    'due_date' => $this->invoice->due_date?->format('d/m/Y'),
                     'payment_method' => $this->invoice->payment_method,
-                    'notes'          => $this->invoice->notes,
-                    'customer_name'  => $this->getCustomerName(),
+                    'notes' => $this->invoice->notes,
+                    'customer_name' => $this->getCustomerName(),
                 ],
             ],
         );
@@ -151,10 +151,10 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         $attachments = [];
 
         // Adicionar PDF da fatura se existir
-        if ( $this->invoice->attachment && file_exists( storage_path( 'app/' . $this->invoice->attachment ) ) ) {
+        if ($this->invoice->attachment && file_exists(storage_path('app/'.$this->invoice->attachment))) {
             $attachments[] = [
-                'path' => storage_path( 'app/' . $this->invoice->attachment ),
-                'as'   => 'fatura-' . $this->invoice->code . '.pdf',
+                'path' => storage_path('app/'.$this->invoice->attachment),
+                'as' => 'fatura-'.$this->invoice->code.'.pdf',
                 'mime' => 'application/pdf',
             ];
         }
@@ -169,8 +169,8 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      */
     private function getCustomerName(): string
     {
-        if ( $this->customer->commonData ) {
-            return trim( $this->customer->commonData->first_name . ' ' . $this->customer->commonData->last_name );
+        if ($this->customer->commonData) {
+            return trim($this->customer->commonData->first_name.' '.$this->customer->commonData->last_name);
         }
 
         return 'Cliente';
@@ -183,15 +183,15 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      */
     private function generatePublicLink(): string
     {
-        if ( $this->publicLink ) {
+        if ($this->publicLink) {
             return $this->publicLink;
         }
 
-        if ( $this->invoice->public_hash ) {
-            return config( 'app.url' ) . '/invoice/' . $this->invoice->public_hash;
+        if ($this->invoice->public_hash) {
+            return config('app.url').'/invoice/'.$this->invoice->public_hash;
         }
 
-        return config( 'app.url' ) . '/invoices/' . $this->invoice->id;
+        return config('app.url').'/invoices/'.$this->invoice->id;
     }
 
     /**
@@ -201,26 +201,26 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      */
     private function getCompanyData(): array
     {
-        if ( !empty( $this->company ) ) {
+        if (! empty($this->company)) {
             return $this->company;
         }
 
         // Tentar obter dados da empresa através do tenant
-        if ( $this->tenant ) {
+        if ($this->tenant) {
             return [
-                'company_name'   => $this->tenant->name,
-                'email'          => null,
+                'company_name' => $this->tenant->name,
+                'email' => null,
                 'email_business' => null,
-                'phone'          => null,
+                'phone' => null,
                 'phone_business' => null,
             ];
         }
 
         return [
-            'company_name'   => 'Easy Budget',
-            'email'          => null,
+            'company_name' => 'Easy Budget',
+            'email' => null,
             'email_business' => null,
-            'phone'          => null,
+            'phone' => null,
             'phone_business' => null,
         ];
     }
@@ -233,12 +233,11 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     private function getSupportEmail(): string
     {
         // Tentar obter e-mail de suporte do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) ) {
-            return $this->tenant->settings[ 'support_email' ];
+        if ($this->tenant && isset($this->tenant->settings['support_email'])) {
+            return $this->tenant->settings['support_email'];
         }
 
         // E-mail padrão de suporte
-        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
+        return config('mail.support_email', 'suporte@easybudget.net.br');
     }
-
 }

@@ -11,24 +11,22 @@ use App\Contracts\Interfaces\StatusEnumInterface;
  *
  * Implementa StatusEnumInterface para garantir consistência
  * com o padrão de enums de status da aplicação.
- *
- * @package App\Enums
  */
 enum CustomerStatus: string implements StatusEnumInterface
 {
-    case ACTIVE   = 'active';
+    case ACTIVE = 'active';
     case INACTIVE = 'inactive';
-    case DELETED  = 'deleted';
+    case DELETED = 'deleted';
 
     /**
      * {@inheritdoc}
      */
     public function getDescription(): string
     {
-        return match ( $this ) {
-            self::ACTIVE   => 'Cliente ativo no sistema',
+        return match ($this) {
+            self::ACTIVE => 'Cliente ativo no sistema',
             self::INACTIVE => 'Cliente inativo temporariamente',
-            self::DELETED  => 'Cliente removido do sistema',
+            self::DELETED => 'Cliente removido do sistema',
         };
     }
 
@@ -37,10 +35,10 @@ enum CustomerStatus: string implements StatusEnumInterface
      */
     public function getColor(): string
     {
-        return match ( $this ) {
-            self::ACTIVE   => '#28a745',   // Verde
+        return match ($this) {
+            self::ACTIVE => '#28a745',   // Verde
             self::INACTIVE => '#ffc107', // Amarelo
-            self::DELETED  => '#dc3545',  // Vermelho
+            self::DELETED => '#dc3545',  // Vermelho
         };
     }
 
@@ -49,10 +47,10 @@ enum CustomerStatus: string implements StatusEnumInterface
      */
     public function getIcon(): string
     {
-        return match ( $this ) {
-            self::ACTIVE   => 'check-circle',
+        return match ($this) {
+            self::ACTIVE => 'check-circle',
             self::INACTIVE => 'pause-circle',
-            self::DELETED  => 'x-circle',
+            self::DELETED => 'x-circle',
         };
     }
 
@@ -78,12 +76,12 @@ enum CustomerStatus: string implements StatusEnumInterface
     public function getMetadata(): array
     {
         return [
-            'description'          => $this->getDescription(),
-            'color'                => $this->getColor(),
-            'icon'                 => $this->getIcon(),
-            'is_active'            => $this->isActive(),
-            'is_finished'          => $this->isFinished(),
-            'can_be_edited'        => $this->canBeEdited(),
+            'description' => $this->getDescription(),
+            'color' => $this->getColor(),
+            'icon' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+            'can_be_edited' => $this->canBeEdited(),
             'can_receive_services' => $this->canReceiveServices(),
         ];
     }
@@ -91,42 +89,44 @@ enum CustomerStatus: string implements StatusEnumInterface
     /**
      * {@inheritdoc}
      */
-    public static function fromString( string $value ): ?self
+    public static function fromString(string $value): ?self
     {
-        foreach ( self::cases() as $status ) {
-            if ( $status->value === $value ) {
+        foreach (self::cases() as $status) {
+            if ($status->value === $value) {
                 return $status;
             }
         }
+
         return null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public static function getOptions( bool $includeFinished = true ): array
+    public static function getOptions(bool $includeFinished = true): array
     {
         $options = [];
-        foreach ( self::cases() as $status ) {
-            if ( !$includeFinished && $status->isFinished() ) {
+        foreach (self::cases() as $status) {
+            if (! $includeFinished && $status->isFinished()) {
                 continue;
             }
-            $options[ $status->value ] = $status->getDescription();
+            $options[$status->value] = $status->getDescription();
         }
+
         return $options;
     }
 
     /**
      * {@inheritdoc}
      */
-    public static function getOrdered( bool $includeFinished = true ): array
+    public static function getOrdered(bool $includeFinished = true): array
     {
         $ordered = [
             self::ACTIVE,    // Prioridade 1
             self::INACTIVE,  // Prioridade 2
         ];
 
-        if ( $includeFinished ) {
+        if ($includeFinished) {
             $ordered[] = self::DELETED; // Prioridade 3
         }
 
@@ -136,30 +136,30 @@ enum CustomerStatus: string implements StatusEnumInterface
     /**
      * {@inheritdoc}
      */
-    public static function calculateMetrics( array $statuses ): array
+    public static function calculateMetrics(array $statuses): array
     {
         $metrics = [
-            'total'              => count( $statuses ),
-            'active'             => 0,
-            'inactive'           => 0,
-            'deleted'            => 0,
-            'active_percentage'  => 0,
+            'total' => count($statuses),
+            'active' => 0,
+            'inactive' => 0,
+            'deleted' => 0,
+            'active_percentage' => 0,
             'deleted_percentage' => 0,
         ];
 
-        foreach ( $statuses as $status ) {
-            if ( $status->isActive() ) {
-                $metrics[ 'active' ]++;
-            } elseif ( $status->isFinished() ) {
-                $metrics[ 'deleted' ]++;
+        foreach ($statuses as $status) {
+            if ($status->isActive()) {
+                $metrics['active']++;
+            } elseif ($status->isFinished()) {
+                $metrics['deleted']++;
             } else {
-                $metrics[ 'inactive' ]++;
+                $metrics['inactive']++;
             }
         }
 
-        if ( $metrics[ 'total' ] > 0 ) {
-            $metrics[ 'active_percentage' ]  = round( ( $metrics[ 'active' ] / $metrics[ 'total' ] ) * 100, 2 );
-            $metrics[ 'deleted_percentage' ] = round( ( $metrics[ 'deleted' ] / $metrics[ 'total' ] ) * 100, 2 );
+        if ($metrics['total'] > 0) {
+            $metrics['active_percentage'] = round(($metrics['active'] / $metrics['total']) * 100, 2);
+            $metrics['deleted_percentage'] = round(($metrics['deleted'] / $metrics['total']) * 100, 2);
         }
 
         return $metrics;
@@ -167,8 +167,6 @@ enum CustomerStatus: string implements StatusEnumInterface
 
     /**
      * Verifica se o cliente pode ser editado
-     *
-     * @return bool
      */
     public function canBeEdited(): bool
     {
@@ -177,8 +175,6 @@ enum CustomerStatus: string implements StatusEnumInterface
 
     /**
      * Verifica se o cliente pode receber orçamentos/serviços
-     *
-     * @return bool
      */
     public function canReceiveServices(): bool
     {
@@ -187,15 +183,13 @@ enum CustomerStatus: string implements StatusEnumInterface
 
     /**
      * Retorna a cor de fundo para badges
-     *
-     * @return string
      */
     public function getBadgeColor(): string
     {
-        return match ( $this ) {
-            self::ACTIVE   => 'bg-success-subtle text-success',
+        return match ($this) {
+            self::ACTIVE => 'bg-success-subtle text-success',
             self::INACTIVE => 'bg-warning-subtle text-warning',
-            self::DELETED  => 'bg-danger-subtle text-danger',
+            self::DELETED => 'bg-danger-subtle text-danger',
         };
     }
 
@@ -216,7 +210,6 @@ enum CustomerStatus: string implements StatusEnumInterface
      */
     public static function activeOptions(): array
     {
-        return self::getOptions( includeFinished: false );
+        return self::getOptions(includeFinished: false);
     }
-
 }

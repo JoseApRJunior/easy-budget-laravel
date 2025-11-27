@@ -20,16 +20,14 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /**
      * Retorna uma descrição para cada status
-     *
-     * @return string
      */
     public function getDescription(): string
     {
-        return match ( $this ) {
-            self::PENDING   => 'Fatura pendente de pagamento',
-            self::PAID      => 'Fatura paga',
+        return match ($this) {
+            self::PENDING => 'Fatura pendente de pagamento',
+            self::PAID => 'Fatura paga',
             self::CANCELLED => 'Fatura cancelada',
-            self::OVERDUE   => 'Fatura vencida',
+            self::OVERDUE => 'Fatura vencida',
         };
     }
 
@@ -40,11 +38,11 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getColor(): string
     {
-        return match ( $this ) {
-            self::PENDING   => '#ffc107', // Amarelo
-            self::PAID      => '#198754', // Verde escuro
+        return match ($this) {
+            self::PENDING => '#ffc107', // Amarelo
+            self::PAID => '#198754', // Verde escuro
             self::CANCELLED => '#dc3545', // Vermelho
-            self::OVERDUE   => '#6f42c1', // Roxo
+            self::OVERDUE => '#6f42c1', // Roxo
         };
     }
 
@@ -55,11 +53,11 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getIcon(): string
     {
-        return match ( $this ) {
-            self::PENDING   => 'bi-hourglass-split',
-            self::PAID      => 'bi-check-circle-fill',
+        return match ($this) {
+            self::PENDING => 'bi-hourglass-split',
+            self::PAID => 'bi-check-circle-fill',
             self::CANCELLED => 'bi-x-circle-fill',
-            self::OVERDUE   => 'bi-calendar-x-fill',
+            self::OVERDUE => 'bi-calendar-x-fill',
         };
     }
 
@@ -70,9 +68,9 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function isPending(): bool
     {
-        return match ( $this ) {
+        return match ($this) {
             self::PENDING, self::OVERDUE => true,
-            self::PAID, self::CANCELLED  => false,
+            self::PAID, self::CANCELLED => false,
         };
     }
 
@@ -83,9 +81,9 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function isActive(): bool
     {
-        return match ( $this ) {
+        return match ($this) {
             self::PENDING, self::OVERDUE => true,
-            self::PAID, self::CANCELLED  => false,
+            self::PAID, self::CANCELLED => false,
         };
     }
 
@@ -96,8 +94,8 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function isFinished(): bool
     {
-        return match ( $this ) {
-            self::PAID, self::CANCELLED  => true,
+        return match ($this) {
+            self::PAID, self::CANCELLED => true,
             self::PENDING, self::OVERDUE => false,
         };
     }
@@ -109,8 +107,8 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function isChargeable(): bool
     {
-        return match ( $this ) {
-            self::PENDING                              => true,
+        return match ($this) {
+            self::PENDING => true,
             self::PAID, self::CANCELLED, self::OVERDUE => false,
         };
     }
@@ -187,9 +185,9 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getNextStatus(): ?InvoiceStatus
     {
-        return match ( $this ) {
+        return match ($this) {
             self::PENDING => self::PAID,
-            default       => null, // Status finais não têm próximo
+            default => null, // Status finais não têm próximo
         };
     }
 
@@ -200,29 +198,29 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getPreviousStatus(): ?InvoiceStatus
     {
-        return match ( $this ) {
+        return match ($this) {
             self::PAID => self::PENDING,
-            default    => null, // Status iniciais não têm anterior
+            default => null, // Status iniciais não têm anterior
         };
     }
 
     /**
      * Verifica se é possível transitar para um determinado status
      *
-     * @param InvoiceStatus $targetStatus Status alvo
+     * @param  InvoiceStatus  $targetStatus  Status alvo
      * @return bool True se a transição for válida
      */
-    public function canTransitionTo( InvoiceStatus $targetStatus ): bool
+    public function canTransitionTo(InvoiceStatus $targetStatus): bool
     {
         // Define transições válidas usando strings como chaves
         $validTransitions = [
-            self::PENDING->value   => [ self::PAID->value, self::CANCELLED->value, self::OVERDUE->value ],
-            self::PAID->value      => [], // Status final
+            self::PENDING->value => [self::PAID->value, self::CANCELLED->value, self::OVERDUE->value],
+            self::PAID->value => [], // Status final
             self::CANCELLED->value => [], // Status final
-            self::OVERDUE->value   => [ self::PAID->value, self::CANCELLED->value ],
+            self::OVERDUE->value => [self::PAID->value, self::CANCELLED->value],
         ];
 
-        return in_array( $targetStatus->value, $validTransitions[ $this->value ] ?? [] );
+        return in_array($targetStatus->value, $validTransitions[$this->value] ?? []);
     }
 
     /**
@@ -232,10 +230,10 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getPriorityOrder(): int
     {
-        return match ( $this ) {
-            self::OVERDUE   => 1, // Vencidas têm maior prioridade
-            self::PENDING   => 2,
-            self::PAID      => 3,
+        return match ($this) {
+            self::OVERDUE => 1, // Vencidas têm maior prioridade
+            self::PENDING => 2,
+            self::PAID => 3,
             self::CANCELLED => 4,
         };
     }
@@ -248,13 +246,13 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     public function getMetadata(): array
     {
         return [
-            'value'          => $this->value,
-            'description'    => $this->getDescription(),
-            'color'          => $this->getColor(),
-            'icon'           => $this->getIcon(),
-            'is_pending'     => $this->isPending(),
-            'is_finished'    => $this->isFinished(),
-            'is_chargeable'  => $this->isChargeable(),
+            'value' => $this->value,
+            'description' => $this->getDescription(),
+            'color' => $this->getColor(),
+            'icon' => $this->getIcon(),
+            'is_pending' => $this->isPending(),
+            'is_finished' => $this->isFinished(),
+            'is_chargeable' => $this->isChargeable(),
             'priority_order' => $this->getPriorityOrder(),
         ];
     }
@@ -262,38 +260,39 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     /**
      * Cria instância do enum a partir de string
      *
-     * @param string $value Valor do status
+     * @param  string  $value  Valor do status
      * @return InvoiceStatus|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?InvoiceStatus
+    public static function fromString(string $value): ?InvoiceStatus
     {
-        foreach ( self::cases() as $case ) {
-            if ( $case->value === $value ) {
+        foreach (self::cases() as $case) {
+            if ($case->value === $value) {
                 return $case;
             }
         }
+
         return null;
     }
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
      *
-     * @param bool $includeFinished Incluir status finalizados
-     * @param bool $includeOverdue Incluir status vencidos
+     * @param  bool  $includeFinished  Incluir status finalizados
+     * @param  bool  $includeOverdue  Incluir status vencidos
      * @return array<string, string> Array associativo [valor => descrição]
      */
-    public static function getOptions( bool $includeFinished = true, bool $includeOverdue = true ): array
+    public static function getOptions(bool $includeFinished = true, bool $includeOverdue = true): array
     {
         $options = [];
 
-        foreach ( self::cases() as $status ) {
-            if ( !$includeFinished && $status->isFinished() ) {
+        foreach (self::cases() as $status) {
+            if (! $includeFinished && $status->isFinished()) {
                 continue;
             }
-            if ( !$includeOverdue && $status === self::OVERDUE ) {
+            if (! $includeOverdue && $status === self::OVERDUE) {
                 continue;
             }
-            $options[ $status->value ] = $status->getDescription();
+            $options[$status->value] = $status->getDescription();
         }
 
         return $options;
@@ -302,62 +301,62 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     /**
      * Ordena status por prioridade para exibição
      *
-     * @param bool $includeFinished Incluir status finalizados na ordenação
+     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
      * @return array<InvoiceStatus> Status ordenados por prioridade
      */
-    public static function getOrdered( bool $includeFinished = true ): array
+    public static function getOrdered(bool $includeFinished = true): array
     {
         $statuses = self::cases();
 
-        usort( $statuses, function ( InvoiceStatus $a, InvoiceStatus $b ) {
+        usort($statuses, function (InvoiceStatus $a, InvoiceStatus $b) {
             return $a->getPriorityOrder() <=> $b->getPriorityOrder();
-        } );
+        });
 
-        if ( !$includeFinished ) {
-            $statuses = array_filter( $statuses, function ( InvoiceStatus $status ) {
-                return !$status->isFinished();
-            } );
+        if (! $includeFinished) {
+            $statuses = array_filter($statuses, function (InvoiceStatus $status) {
+                return ! $status->isFinished();
+            });
         }
 
-        return array_values( $statuses );
+        return array_values($statuses);
     }
 
     /**
      * Valida se uma transição de status é permitida
      *
-     * @param InvoiceStatus $fromStatus Status atual
-     * @param InvoiceStatus $toStatus Status alvo
+     * @param  InvoiceStatus  $fromStatus  Status atual
+     * @param  InvoiceStatus  $toStatus  Status alvo
      * @return bool True se transição for válida
      */
-    public static function isValidTransition( InvoiceStatus $fromStatus, InvoiceStatus $toStatus ): bool
+    public static function isValidTransition(InvoiceStatus $fromStatus, InvoiceStatus $toStatus): bool
     {
         // Define transições válidas usando strings como chaves
         $validTransitions = [
-            self::PENDING->value   => [ self::PAID->value, self::CANCELLED->value, self::OVERDUE->value ],
-            self::PAID->value      => [], // Status final
+            self::PENDING->value => [self::PAID->value, self::CANCELLED->value, self::OVERDUE->value],
+            self::PAID->value => [], // Status final
             self::CANCELLED->value => [], // Status final
-            self::OVERDUE->value   => [ self::PAID->value, self::CANCELLED->value ],
+            self::OVERDUE->value => [self::PAID->value, self::CANCELLED->value],
         ];
 
-        return in_array( $toStatus->value, $validTransitions[ $fromStatus->value ] ?? [] );
+        return in_array($toStatus->value, $validTransitions[$fromStatus->value] ?? []);
     }
 
     /**
      * Calcula métricas de status para dashboards
      *
-     * @param array<InvoiceStatus> $statuses Lista de status para análise
+     * @param  array<InvoiceStatus>  $statuses  Lista de status para análise
      * @return array<string, int> Métricas [pendente, pago, cancelado, vencido, total]
      */
-    public static function calculateMetrics( array $statuses ): array
+    public static function calculateMetrics(array $statuses): array
     {
-        $total     = count( $statuses );
-        $pending   = 0;
-        $paid      = 0;
+        $total = count($statuses);
+        $pending = 0;
+        $paid = 0;
         $cancelled = 0;
-        $overdue   = 0;
+        $overdue = 0;
 
-        foreach ( $statuses as $status ) {
-            switch ( $status ) {
+        foreach ($statuses as $status) {
+            switch ($status) {
                 case self::PENDING:
                     $pending++;
                     break;
@@ -374,16 +373,15 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         }
 
         return [
-            'total'                => $total,
-            'pending'              => $pending,
-            'paid'                 => $paid,
-            'cancelled'            => $cancelled,
-            'overdue'              => $overdue,
-            'pending_percentage'   => $total > 0 ? round( ( $pending / $total ) * 100, 1 ) : 0,
-            'paid_percentage'      => $total > 0 ? round( ( $paid / $total ) * 100, 1 ) : 0,
-            'cancelled_percentage' => $total > 0 ? round( ( $cancelled / $total ) * 100, 1 ) : 0,
-            'overdue_percentage'   => $total > 0 ? round( ( $overdue / $total ) * 100, 1 ) : 0,
+            'total' => $total,
+            'pending' => $pending,
+            'paid' => $paid,
+            'cancelled' => $cancelled,
+            'overdue' => $overdue,
+            'pending_percentage' => $total > 0 ? round(($pending / $total) * 100, 1) : 0,
+            'paid_percentage' => $total > 0 ? round(($paid / $total) * 100, 1) : 0,
+            'cancelled_percentage' => $total > 0 ? round(($cancelled / $total) * 100, 1) : 0,
+            'overdue_percentage' => $total > 0 ? round(($overdue / $total) * 100, 1) : 0,
         ];
     }
-
 }

@@ -20,6 +20,7 @@ class BusinessData extends Model
         parent::boot();
         static::bootTenantScoped();
     }
+
     protected $table = 'business_datas';
 
     protected $fillable = [
@@ -41,17 +42,16 @@ class BusinessData extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo( Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function provider(): BelongsTo
     {
-        return $this->belongsTo( Provider::class);
+        return $this->belongsTo(Provider::class);
     }
 
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
-
 }

@@ -23,14 +23,15 @@ class SystemSettingsController extends Controller
             $settings = $this->systemSettingsService->getAllSettings();
             $categories = $this->systemSettingsService->getSettingsCategories();
             $environment = $this->systemSettingsService->getEnvironmentInfo();
-            
+
             return view('admin.settings.index', compact('settings', 'categories', 'environment'));
         } catch (\Exception $e) {
-            Log::error('Error loading system settings: ' . $e->getMessage());
+            Log::error('Error loading system settings: '.$e->getMessage());
+
             return view('admin.settings.index', [
                 'settings' => [],
                 'categories' => [],
-                'environment' => []
+                'environment' => [],
             ]);
         }
     }
@@ -42,21 +43,22 @@ class SystemSettingsController extends Controller
                 'settings' => 'required|array',
                 'settings.*.key' => 'required|string',
                 'settings.*.value' => 'nullable',
-                'settings.*.type' => 'required|string|in:string,integer,boolean,array,json'
+                'settings.*.type' => 'required|string|in:string,integer,boolean,array,json',
             ]);
 
             $updatedSettings = $this->systemSettingsService->updateSettings($validated['settings']);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Configurações atualizadas com sucesso',
-                'updated' => $updatedSettings
+                'updated' => $updatedSettings,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating system settings: ' . $e->getMessage());
+            Log::error('Error updating system settings: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao atualizar configurações: ' . $e->getMessage()
+                'message' => 'Erro ao atualizar configurações: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -65,17 +67,18 @@ class SystemSettingsController extends Controller
     {
         try {
             $backupPath = $this->systemSettingsService->createSettingsBackup();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Backup criado com sucesso',
-                'backup_path' => $backupPath
+                'backup_path' => $backupPath,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error creating settings backup: ' . $e->getMessage());
+            Log::error('Error creating settings backup: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao criar backup'
+                'message' => 'Erro ao criar backup',
             ], 500);
         }
     }
@@ -84,21 +87,22 @@ class SystemSettingsController extends Controller
     {
         try {
             $validated = $request->validate([
-                'backup_file' => 'required|string'
+                'backup_file' => 'required|string',
             ]);
 
             $restored = $this->systemSettingsService->restoreSettingsBackup($validated['backup_file']);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Configurações restauradas com sucesso',
-                'restored' => $restored
+                'restored' => $restored,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error restoring settings backup: ' . $e->getMessage());
+            Log::error('Error restoring settings backup: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao restaurar backup'
+                'message' => 'Erro ao restaurar backup',
             ], 500);
         }
     }
@@ -107,17 +111,18 @@ class SystemSettingsController extends Controller
     {
         try {
             $resetSettings = $this->systemSettingsService->resetToDefaultSettings();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Configurações redefinidas para valores padrão',
-                'reset' => $resetSettings
+                'reset' => $resetSettings,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error resetting to default settings: ' . $e->getMessage());
+            Log::error('Error resetting to default settings: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao redefinir configurações'
+                'message' => 'Erro ao redefinir configurações',
             ], 500);
         }
     }
@@ -126,17 +131,18 @@ class SystemSettingsController extends Controller
     {
         try {
             $value = $this->systemSettingsService->getSettingValue($key);
-            
+
             return response()->json([
                 'success' => true,
                 'key' => $key,
-                'value' => $value
+                'value' => $value,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting setting value: ' . $e->getMessage());
+            Log::error('Error getting setting value: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao obter valor da configuração'
+                'message' => 'Erro ao obter valor da configuração',
             ], 500);
         }
     }
@@ -145,21 +151,22 @@ class SystemSettingsController extends Controller
     {
         try {
             $validated = $request->validate([
-                'test_type' => 'required|string|in:email,database,payment,storage,queue'
+                'test_type' => 'required|string|in:email,database,payment,storage,queue',
             ]);
 
             $result = $this->systemSettingsService->testConfiguration($validated['test_type']);
-            
+
             return response()->json([
                 'success' => $result['success'],
                 'message' => $result['message'],
-                'details' => $result['details'] ?? null
+                'details' => $result['details'] ?? null,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error testing configuration: ' . $e->getMessage());
+            Log::error('Error testing configuration: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao testar configuração'
+                'message' => 'Erro ao testar configuração',
             ], 500);
         }
     }

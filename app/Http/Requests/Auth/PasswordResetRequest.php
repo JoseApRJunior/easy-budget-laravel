@@ -12,34 +12,32 @@ class PasswordResetRequest extends FormRequest
      *
      * Para reset de senha, qualquer usuário pode solicitar desde que
      * forneça um e-mail válido e existente no sistema.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
         try {
             // Log de tentativa de autorização
-            Log::info( 'PasswordResetRequest::authorize - Verificando autorização', [
-                'ip'             => $this->ip(),
-                'user_agent'     => $this->userAgent(),
-                'has_email'      => $this->has( 'email' ),
-                'email_provided' => $this->filled( 'email' ),
-                'timestamp'      => now()->toISOString()
-            ] );
+            Log::info('PasswordResetRequest::authorize - Verificando autorização', [
+                'ip' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+                'has_email' => $this->has('email'),
+                'email_provided' => $this->filled('email'),
+                'timestamp' => now()->toISOString(),
+            ]);
 
             // Para reset de senha, permitimos qualquer solicitação válida
             // A validação real acontece no controller após verificar se o usuário existe
             return true;
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'PasswordResetRequest::authorize - Erro na verificação de autorização', [
-                'error'      => $e->getMessage(),
-                'error_type' => get_class( $e ),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'ip'         => $this->ip(),
-                'timestamp'  => now()->toISOString()
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('PasswordResetRequest::authorize - Erro na verificação de autorização', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'ip' => $this->ip(),
+                'timestamp' => now()->toISOString(),
+            ]);
 
             // Em caso de erro, negamos a autorização por segurança
             return false;
@@ -66,8 +64,8 @@ class PasswordResetRequest extends FormRequest
                 'email:rfc,dns',
                 'max:254', // RFC 5321 limite para e-mail
                 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
-                'filter_var:FILTER_SANITIZE_EMAIL'
-            ]
+                'filter_var:FILTER_SANITIZE_EMAIL',
+            ],
         ];
     }
 
@@ -83,12 +81,12 @@ class PasswordResetRequest extends FormRequest
     {
         return [
             'email.required' => 'O campo de e-mail é obrigatório.',
-            'email.string'   => 'O e-mail deve ser um texto válido.',
-            'email.email'    => 'Por favor, insira um endereço de e-mail válido.',
-            'email.rfc'      => 'O formato do e-mail não está de acordo com os padrões RFC.',
-            'email.dns'      => 'O domínio do e-mail não foi encontrado. Verifique se está correto.',
-            'email.max'      => 'O e-mail não pode ter mais de 254 caracteres.',
-            'email.regex'    => 'O formato do e-mail é inválido. Use apenas letras, números e os símbolos permitidos.',
+            'email.string' => 'O e-mail deve ser um texto válido.',
+            'email.email' => 'Por favor, insira um endereço de e-mail válido.',
+            'email.rfc' => 'O formato do e-mail não está de acordo com os padrões RFC.',
+            'email.dns' => 'O domínio do e-mail não foi encontrado. Verifique se está correto.',
+            'email.max' => 'O e-mail não pode ter mais de 254 caracteres.',
+            'email.regex' => 'O formato do e-mail é inválido. Use apenas letras, números e os símbolos permitidos.',
         ];
     }
 
@@ -103,7 +101,7 @@ class PasswordResetRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'email' => 'endereço de e-mail'
+            'email' => 'endereço de e-mail',
         ];
     }
 
@@ -112,54 +110,52 @@ class PasswordResetRequest extends FormRequest
      *
      * Realiza limpeza e normalização dos dados antes da validação
      * para garantir consistência e segurança.
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {
         try {
             // Log de preparação para validação
-            Log::info( 'PasswordResetRequest::prepareForValidation - Preparando dados', [
-                'ip'        => $this->ip(),
-                'has_email' => $this->has( 'email' ),
-                'email_raw' => $this->input( 'email' ),
-                'timestamp' => now()->toISOString()
-            ] );
+            Log::info('PasswordResetRequest::prepareForValidation - Preparando dados', [
+                'ip' => $this->ip(),
+                'has_email' => $this->has('email'),
+                'email_raw' => $this->input('email'),
+                'timestamp' => now()->toISOString(),
+            ]);
 
             // Limpeza e normalização do e-mail
-            if ( $this->has( 'email' ) && $this->filled( 'email' ) ) {
-                $email = $this->input( 'email' );
+            if ($this->has('email') && $this->filled('email')) {
+                $email = $this->input('email');
 
                 // Remove espaços em branco desnecessários
-                $email = trim( $email );
+                $email = trim($email);
 
                 // Converte para minúsculas (case-insensitive para e-mails)
-                $email = strtolower( $email );
+                $email = strtolower($email);
 
                 // Remove caracteres potencialmente perigosos
-                $email = filter_var( $email, FILTER_SANITIZE_EMAIL );
+                $email = filter_var($email, FILTER_SANITIZE_EMAIL);
 
                 // Atualiza o valor no request
-                $this->merge( [
-                    'email' => $email
-                ] );
+                $this->merge([
+                    'email' => $email,
+                ]);
 
-                Log::info( 'PasswordResetRequest::prepareForValidation - E-mail processado', [
-                    'email_original'   => $this->input( 'email' ),
+                Log::info('PasswordResetRequest::prepareForValidation - E-mail processado', [
+                    'email_original' => $this->input('email'),
                     'email_processado' => $email,
-                    'timestamp'        => now()->toISOString()
-                ] );
+                    'timestamp' => now()->toISOString(),
+                ]);
             }
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'PasswordResetRequest::prepareForValidation - Erro na preparação', [
-                'error'      => $e->getMessage(),
-                'error_type' => get_class( $e ),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'ip'         => $this->ip(),
-                'timestamp'  => now()->toISOString()
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('PasswordResetRequest::prepareForValidation - Erro na preparação', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'ip' => $this->ip(),
+                'timestamp' => now()->toISOString(),
+            ]);
 
             // Em caso de erro, não interrompemos o processo
             // mas logamos para análise posterior
@@ -171,29 +167,27 @@ class PasswordResetRequest extends FormRequest
      *
      * Permite ajustes finais nas regras de validação baseadas
      * no estado atual dos dados.
-     *
-     * @return void
      */
     protected function passedValidation(): void
     {
         try {
             // Log de validação bem-sucedida
-            Log::info( 'PasswordResetRequest::passedValidation - Validação aprovada', [
-                'email'      => $this->validated()[ 'email' ],
-                'ip'         => $this->ip(),
+            Log::info('PasswordResetRequest::passedValidation - Validação aprovada', [
+                'email' => $this->validated()['email'],
+                'ip' => $this->ip(),
                 'user_agent' => $this->userAgent(),
-                'timestamp'  => now()->toISOString()
-            ] );
+                'timestamp' => now()->toISOString(),
+            ]);
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'PasswordResetRequest::passedValidation - Erro após validação', [
-                'error'      => $e->getMessage(),
-                'error_type' => get_class( $e ),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'ip'         => $this->ip(),
-                'timestamp'  => now()->toISOString()
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('PasswordResetRequest::passedValidation - Erro após validação', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'ip' => $this->ip(),
+                'timestamp' => now()->toISOString(),
+            ]);
         }
     }
 
@@ -202,34 +196,31 @@ class PasswordResetRequest extends FormRequest
      *
      * Registra todas as falhas de validação para análise de segurança
      * e melhoria da experiência do usuário.
-     *
-     * @return void
      */
-    protected function failedValidation( \Illuminate\Contracts\Validation\Validator $validator ): void
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator): void
     {
         try {
             // Log detalhado de falha de validação
-            Log::warning( 'PasswordResetRequest::failedValidation - Validação falhou', [
-                'email'      => $this->input( 'email' ),
-                'errors'     => $validator->errors()->toArray(),
-                'ip'         => $this->ip(),
+            Log::warning('PasswordResetRequest::failedValidation - Validação falhou', [
+                'email' => $this->input('email'),
+                'errors' => $validator->errors()->toArray(),
+                'ip' => $this->ip(),
                 'user_agent' => $this->userAgent(),
-                'timestamp'  => now()->toISOString()
-            ] );
+                'timestamp' => now()->toISOString(),
+            ]);
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'PasswordResetRequest::failedValidation - Erro no logging de falha', [
-                'error'      => $e->getMessage(),
-                'error_type' => get_class( $e ),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'ip'         => $this->ip(),
-                'timestamp'  => now()->toISOString()
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('PasswordResetRequest::failedValidation - Erro no logging de falha', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'ip' => $this->ip(),
+                'timestamp' => now()->toISOString(),
+            ]);
         }
 
         // Chama o método pai para tratamento padrão
-        parent::failedValidation( $validator );
+        parent::failedValidation($validator);
     }
-
 }

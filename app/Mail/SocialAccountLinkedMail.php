@@ -23,13 +23,13 @@ class SocialAccountLinkedMail extends BaseEmail
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param User $user Usuário que teve a conta vinculada
-     * @param Tenant|null $tenant Tenant do usuário
-     * @param string $provider Provedor social vinculado
+     * @param  User  $user  Usuário que teve a conta vinculada
+     * @param  Tenant|null  $tenant  Tenant do usuário
+     * @param  string  $provider  Provedor social vinculado
      */
-    public function __construct( User $user, ?Tenant $tenant = null, string $provider = 'google' )
+    public function __construct(User $user, ?Tenant $tenant = null, string $provider = 'google')
     {
-        parent::__construct( $user, $tenant );
+        parent::__construct($user, $tenant);
         $this->provider = $provider;
     }
 
@@ -39,7 +39,7 @@ class SocialAccountLinkedMail extends BaseEmail
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Conta ' . ucfirst( $this->provider ) . ' vinculada com sucesso!',
+            subject: 'Conta '.ucfirst($this->provider).' vinculada com sucesso!',
         );
     }
 
@@ -50,9 +50,9 @@ class SocialAccountLinkedMail extends BaseEmail
     {
         return new Content(
             view: 'emails.users.social-account-linked',
-            with: array_merge( $this->getUserBasicData(), [
+            with: array_merge($this->getUserBasicData(), [
                 'provider' => $this->provider,
-            ] ),
+            ]),
         );
     }
 
@@ -63,5 +63,4 @@ class SocialAccountLinkedMail extends BaseEmail
     {
         return [];
     }
-
 }

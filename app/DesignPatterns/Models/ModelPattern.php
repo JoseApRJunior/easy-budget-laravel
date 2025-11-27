@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Models;
  *
  * Define convenções consistentes para desenvolvimento de models,
  * garantindo uniformidade, manutenibilidade e reutilização de código.
- *
- * @package App\DesignPatterns
  */
 class ModelPattern
 {
@@ -1248,5 +1246,4 @@ public function scopeRecent($query, int $days = 7)
 - Use nomes descritivos e claros
 - Documente métodos públicos importantes';
     }
-
 }

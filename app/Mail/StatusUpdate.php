@@ -57,12 +57,12 @@ class StatusUpdate extends Mailable implements ShouldQueue
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param Model $entity Entidade que teve o status atualizado
-     * @param string $status Novo status da entidade
-     * @param string $statusName Nome do status para exibição
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $entityUrl URL para acessar a entidade (opcional)
+     * @param  Model  $entity  Entidade que teve o status atualizado
+     * @param  string  $status  Novo status da entidade
+     * @param  string  $statusName  Nome do status para exibição
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $entityUrl  URL para acessar a entidade (opcional)
      */
     public function __construct(
         Model $entity,
@@ -72,12 +72,12 @@ class StatusUpdate extends Mailable implements ShouldQueue
         ?array $company = null,
         ?string $entityUrl = null,
     ) {
-        $this->entity     = $entity;
-        $this->status     = $status;
+        $this->entity = $entity;
+        $this->status = $status;
         $this->statusName = $statusName;
-        $this->tenant     = $tenant;
-        $this->company    = $company ?? [];
-        $this->entityUrl  = $entityUrl;
+        $this->tenant = $tenant;
+        $this->company = $company ?? [];
+        $this->entityUrl = $entityUrl;
     }
 
     /**
@@ -86,7 +86,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Atualização de Status - ' . $this->getEntityTitle(),
+            subject: 'Atualização de Status - '.$this->getEntityTitle(),
         );
     }
 
@@ -98,22 +98,22 @@ class StatusUpdate extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.notification-status',
             with: [
-                'emailData'  => [
-                    'first_name'          => $this->getUserFirstName(),
-                    'service_code'        => $this->getEntityCode(),
+                'emailData' => [
+                    'first_name' => $this->getUserFirstName(),
+                    'service_code' => $this->getEntityCode(),
                     'service_status_name' => $this->statusName,
                     'service_description' => $this->getEntityDescription(),
-                    'service_total'       => $this->getEntityTotal(),
-                    'link'                => $this->entityUrl ?? $this->generateEntityUrl(),
-                    'entity_type'         => $this->getEntityType(),
-                    'old_status'          => $this->getEntityOldStatus(),
-                    'new_status'          => $this->status,
-                    'status_changed_at'   => now()->format( 'd/m/Y H:i' ),
+                    'service_total' => $this->getEntityTotal(),
+                    'link' => $this->entityUrl ?? $this->generateEntityUrl(),
+                    'entity_type' => $this->getEntityType(),
+                    'old_status' => $this->getEntityOldStatus(),
+                    'new_status' => $this->status,
+                    'status_changed_at' => now()->format('d/m/Y H:i'),
                 ],
-                'company'    => $this->getCompanyData(),
-                'urlSuporte' => config( 'app.url' ) . '/support',
-                'tenant'     => $this->tenant,
-                'entity'     => $this->entity,
+                'company' => $this->getCompanyData(),
+                'urlSuporte' => config('app.url').'/support',
+                'tenant' => $this->tenant,
+                'entity' => $this->entity,
             ],
         );
     }
@@ -135,11 +135,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
     {
         $entityType = $this->getEntityType();
 
-        return match ( $entityType ) {
-            'budget'  => 'Orçamento ' . $this->getEntityCode(),
-            'service' => 'Serviço ' . $this->getEntityCode(),
-            'invoice' => 'Fatura ' . $this->getEntityCode(),
-            default   => ucfirst( $entityType ) . ' ' . $this->getEntityCode(),
+        return match ($entityType) {
+            'budget' => 'Orçamento '.$this->getEntityCode(),
+            'service' => 'Serviço '.$this->getEntityCode(),
+            'invoice' => 'Fatura '.$this->getEntityCode(),
+            default => ucfirst($entityType).' '.$this->getEntityCode(),
         };
     }
 
@@ -150,11 +150,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getEntityCode(): string
     {
-        return match ( $this->getEntityType() ) {
-            'budget'  => $this->entity->code ?? 'N/A',
+        return match ($this->getEntityType()) {
+            'budget' => $this->entity->code ?? 'N/A',
             'service' => $this->entity->code ?? 'N/A',
             'invoice' => $this->entity->code ?? 'N/A',
-            default   => $this->entity->id ?? 'N/A',
+            default => $this->entity->id ?? 'N/A',
         };
     }
 
@@ -165,11 +165,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getEntityDescription(): string
     {
-        return match ( $this->getEntityType() ) {
-            'budget'  => $this->entity->description ?? 'Orçamento sem descrição',
+        return match ($this->getEntityType()) {
+            'budget' => $this->entity->description ?? 'Orçamento sem descrição',
             'service' => $this->entity->description ?? 'Serviço sem descrição',
             'invoice' => $this->entity->notes ?? 'Fatura sem observações',
-            default   => 'Entidade atualizada',
+            default => 'Entidade atualizada',
         };
     }
 
@@ -180,14 +180,14 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getEntityTotal(): string
     {
-        $total = match ( $this->getEntityType() ) {
-            'budget'  => $this->entity->total ?? 0,
+        $total = match ($this->getEntityType()) {
+            'budget' => $this->entity->total ?? 0,
             'service' => $this->entity->total ?? 0,
             'invoice' => $this->entity->total ?? 0,
-            default   => 0,
+            default => 0,
         };
 
-        return number_format( $total, 2, ',', '.' );
+        return number_format($total, 2, ',', '.');
     }
 
     /**
@@ -197,7 +197,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getEntityType(): string
     {
-        return strtolower( class_basename( $this->entity ) );
+        return strtolower(class_basename($this->entity));
     }
 
     /**
@@ -218,17 +218,17 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function generateEntityUrl(): string
     {
-        if ( $this->entityUrl ) {
+        if ($this->entityUrl) {
             return $this->entityUrl;
         }
 
         $entityType = $this->getEntityType();
 
-        return match ( $entityType ) {
-            'budget'  => config( 'app.url' ) . '/budgets/' . $this->entity->id,
-            'service' => config( 'app.url' ) . '/services/' . $this->entity->id,
-            'invoice' => config( 'app.url' ) . '/invoices/' . $this->entity->id,
-            default   => config( 'app.url' ),
+        return match ($entityType) {
+            'budget' => config('app.url').'/budgets/'.$this->entity->id,
+            'service' => config('app.url').'/services/'.$this->entity->id,
+            'invoice' => config('app.url').'/invoices/'.$this->entity->id,
+            default => config('app.url'),
         };
     }
 
@@ -240,11 +240,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
     private function getUserFirstName(): string
     {
         // Tentar obter o nome do usuário através de relacionamentos
-        if ( method_exists( $this->entity, 'user' ) && $this->entity->user ) {
+        if (method_exists($this->entity, 'user') && $this->entity->user) {
             return $this->entity->user->name ?? 'Usuário';
         }
 
-        if ( method_exists( $this->entity, 'customer' ) && $this->entity->customer ) {
+        if (method_exists($this->entity, 'customer') && $this->entity->customer) {
             return $this->entity->customer->first_name ?? 'Cliente';
         }
 
@@ -258,28 +258,27 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getCompanyData(): array
     {
-        if ( !empty( $this->company ) ) {
+        if (! empty($this->company)) {
             return $this->company;
         }
 
         // Tentar obter dados da empresa através do tenant
-        if ( $this->tenant ) {
+        if ($this->tenant) {
             return [
-                'company_name'   => $this->tenant->name,
-                'email'          => null,
+                'company_name' => $this->tenant->name,
+                'email' => null,
                 'email_business' => null,
-                'phone'          => null,
+                'phone' => null,
                 'phone_business' => null,
             ];
         }
 
         return [
-            'company_name'   => 'Easy Budget',
-            'email'          => null,
+            'company_name' => 'Easy Budget',
+            'email' => null,
             'email_business' => null,
-            'phone'          => null,
+            'phone' => null,
             'phone_business' => null,
         ];
     }
-
 }

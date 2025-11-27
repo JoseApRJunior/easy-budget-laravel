@@ -20,20 +20,24 @@ class StatusUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public Model   $entity;
-    public string  $oldStatus;
-    public string  $newStatus;
-    public string  $statusName;
+    public Model $entity;
+
+    public string $oldStatus;
+
+    public string $newStatus;
+
+    public string $statusName;
+
     public ?Tenant $tenant;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param Model $entity Entidade que teve o status atualizado
-     * @param string $oldStatus Status anterior da entidade
-     * @param string $newStatus Novo status da entidade
-     * @param string $statusName Nome do status para exibição
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  Model  $entity  Entidade que teve o status atualizado
+     * @param  string  $oldStatus  Status anterior da entidade
+     * @param  string  $newStatus  Novo status da entidade
+     * @param  string  $statusName  Nome do status para exibição
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
     public function __construct(
         Model $entity,
@@ -42,11 +46,10 @@ class StatusUpdated
         string $statusName,
         ?Tenant $tenant = null,
     ) {
-        $this->entity     = $entity;
-        $this->oldStatus  = $oldStatus;
-        $this->newStatus  = $newStatus;
+        $this->entity = $entity;
+        $this->oldStatus = $oldStatus;
+        $this->newStatus = $newStatus;
         $this->statusName = $statusName;
-        $this->tenant     = $tenant;
+        $this->tenant = $tenant;
     }
-
 }

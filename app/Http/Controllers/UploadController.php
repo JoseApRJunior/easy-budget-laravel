@@ -6,15 +6,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Infrastructure\ImageProcessingService;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UploadController extends Controller
 {
-    public function __construct(private ImageProcessingService $imageProcessingService)
-    {
-    }
+    public function __construct(private ImageProcessingService $imageProcessingService) {}
 
     /**
      * Upload de imagem com processamento
@@ -34,8 +32,8 @@ class UploadController extends Controller
                 'quality' => 'nullable|integer|min:1|max:100',
             ]);
 
-            $directory = $validated['directory'] ?? 'uploads/' . auth()->user()->tenant_id . '/images';
-            
+            $directory = $validated['directory'] ?? 'uploads/'.auth()->user()->tenant_id.'/images';
+
             $options = [
                 'resize' => $validated['resize'] ?? true,
                 'max_width' => $validated['max_width'] ?? null,
@@ -52,7 +50,7 @@ class UploadController extends Controller
                 $options
             );
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return response()->json([
                     'success' => false,
                     'error' => $result['error'] ?? 'Erro ao processar imagem',

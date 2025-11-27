@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
@@ -6,12 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Models\User;
-use App\Services\Application\FileUploadService;
 use App\Services\Application\ProviderManagementService;
-use App\Services\Domain\AddressService;
-use App\Services\Domain\CommonDataService;
-use App\Services\Domain\ContactService;
-use App\Services\Domain\UserService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,92 +33,76 @@ class ProviderController extends Controller
 
     /**
      * Dashboard do provider com resumo de orçamentos, atividades e financeiro.
-     *
-     * @return View
      */
     public function index(): View
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $dashboardData = $this->providerService->getDashboardData(
             $user->tenant_id,
         );
 
-        return view( 'pages.provider.index', [
-            'budgets'           => $dashboardData[ 'budgets' ],
-            'activities'        => $dashboardData[ 'activities' ],
-            'financial_summary' => $dashboardData[ 'financial_summary' ],
-            'total_activities'  => count( $dashboardData[ 'activities' ] ),
-            'events'            => $dashboardData[ 'events' ] ?? [],
-        ] );
+        return view('pages.provider.index', [
+            'budgets' => $dashboardData['budgets'],
+            'activities' => $dashboardData['activities'],
+            'financial_summary' => $dashboardData['financial_summary'],
+            'total_activities' => count($dashboardData['activities']),
+            'events' => $dashboardData['events'] ?? [],
+        ]);
     }
 
     /**
      * Exibe formulário de atualização do provider (legacy - redireciona para nova estrutura).
-     *
-     * @return RedirectResponse
      */
     public function update(): \Illuminate\Http\RedirectResponse
     {
-        return redirect()->route( 'provider.business.edit' )
-            ->with( 'info', 'Use a nova interface separada para atualizar seus dados.' );
+        return redirect()->route('provider.business.edit')
+            ->with('info', 'Use a nova interface separada para atualizar seus dados.');
     }
 
     /**
      * Processa atualização dos dados do provider (legacy - redireciona para nova estrutura).
-     *
-     * @param Request $request
-     * @return RedirectResponse
      */
-    public function update_store( Request $request ): \Illuminate\Http\RedirectResponse
+    public function update_store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        return redirect()->route( 'provider.business.edit' )
-            ->with( 'info', 'Use a nova interface separada para atualizar seus dados.' );
+        return redirect()->route('provider.business.edit')
+            ->with('info', 'Use a nova interface separada para atualizar seus dados.');
     }
 
     /**
      * Exibe formulário de alteração de senha.
-     *
-     * @return View
      */
     public function change_password(): View
     {
         /** @var User $user */
         $user = Auth::user();
-        $isGoogleUser = is_null( $user->password );
+        $isGoogleUser = is_null($user->password);
 
-        return view( 'pages.provider.change_password', [
+        return view('pages.provider.change_password', [
             'isGoogleUser' => $isGoogleUser,
-            'userEmail'    => $user->email,
-        ] );
+            'userEmail' => $user->email,
+        ]);
     }
 
     /**
      * Processa alteração de senha.
-     *
-     * @return RedirectResponse
      */
-    public function change_password_store( ChangePasswordRequest $request ): RedirectResponse
+    public function change_password_store(ChangePasswordRequest $request): RedirectResponse
     {
         try {
-            $this->providerService->changePassword( $request->validated()[ 'password' ] );
+            $this->providerService->changePassword($request->validated()['password']);
 
             /** @var User $user */
-            $user           = Auth::user();
-            $isGoogleUser   = is_null( $user->password );
+            $user = Auth::user();
+            $isGoogleUser = is_null($user->password);
             $successMessage = $isGoogleUser ? 'Senha definida com sucesso!' : 'Senha alterada com sucesso!';
 
-            return redirect()->route( 'settings.index' )
-                ->with( 'success', $successMessage );
-        } catch ( \Exception $e ) {
-            return redirect()->route( 'provider.change_password' )
-                ->with( 'error', 'Erro ao atualizar senha: ' . $e->getMessage() );
+            return redirect()->route('settings.index')
+                ->with('success', $successMessage);
+        } catch (\Exception $e) {
+            return redirect()->route('provider.change_password')
+                ->with('error', 'Erro ao atualizar senha: '.$e->getMessage());
         }
     }
-
-
-
-
-
 }

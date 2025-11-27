@@ -6,9 +6,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\ReportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SystemReportsController extends Controller
@@ -94,10 +94,10 @@ class SystemReportsController extends Controller
     public function export(Request $request, string $type, string $format): RedirectResponse
     {
         $dateRange = $request->get('date_range', 'last_30_days');
-        
+
         try {
             $exportData = $this->reportService->prepareExportData($type, $dateRange);
-            
+
             if ($format === 'excel') {
                 return Excel::download($exportData, "{$type}_report.xlsx");
             } elseif ($format === 'pdf') {
@@ -105,10 +105,10 @@ class SystemReportsController extends Controller
             } elseif ($format === 'csv') {
                 return Excel::download($exportData, "{$type}_report.csv");
             }
-            
+
             return back()->with('error', 'Formato de exportação não suportado.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao gerar relatório: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao gerar relatório: '.$e->getMessage());
         }
     }
 
@@ -127,16 +127,16 @@ class SystemReportsController extends Controller
 
         try {
             $reportData = $this->reportService->generateCustomReport($validated);
-            
+
             if ($validated['format'] === 'html') {
                 return redirect()->route("admin.reports.{$validated['report_type']}", [
-                    'date_range' => $validated['date_range']
+                    'date_range' => $validated['date_range'],
                 ]);
             }
-            
+
             return $this->export($request, $validated['report_type'], $validated['format']);
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao gerar relatório: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao gerar relatório: '.$e->getMessage());
         }
     }
 }

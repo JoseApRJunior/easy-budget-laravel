@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Traits;
 
 trait HandlesCategoryContext
@@ -10,7 +11,6 @@ trait HandlesCategoryContext
 
     protected function categoryView(string $name): string
     {
-        return $this->isAdminContext() ? ('admin.categories.' . $name) : ('pages.category.' . $name);
+        return $this->isAdminContext() ? ('admin.categories.'.$name) : ('pages.category.'.$name);
     }
 }
-

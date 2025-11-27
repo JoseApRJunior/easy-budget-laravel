@@ -17,9 +17,10 @@ class TenantPurgeCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $force = (bool) $this->option('force');
 
-        if (!$dryRun && !$force) {
-            if (!$this->confirm("Tem certeza que deseja remover todos os dados do tenant {$tenantId}?", false)) {
+        if (! $dryRun && ! $force) {
+            if (! $this->confirm("Tem certeza que deseja remover todos os dados do tenant {$tenantId}?", false)) {
                 $this->warn('Operação cancelada.');
+
                 return self::SUCCESS;
             }
         }
@@ -36,6 +37,7 @@ class TenantPurgeCommand extends Command
 
         if (empty($tables)) {
             $this->info('Nenhuma tabela com coluna tenant_id encontrada.');
+
             return self::SUCCESS;
         }
 
@@ -51,6 +53,7 @@ class TenantPurgeCommand extends Command
             }, $tables));
             $total = array_sum($summary);
             $this->info("Total a excluir: {$total}");
+
             return self::SUCCESS;
         }
 
@@ -69,13 +72,14 @@ class TenantPurgeCommand extends Command
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->error('Falha ao excluir registros: ' . $e->getMessage());
+            $this->error('Falha ao excluir registros: '.$e->getMessage());
+
             return self::FAILURE;
         }
 
         $total = array_sum($summary);
         $this->info("Exclusão concluída. Total removido: {$total}");
+
         return self::SUCCESS;
     }
 }
-

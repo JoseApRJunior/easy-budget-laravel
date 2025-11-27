@@ -9,15 +9,11 @@ namespace App\Contracts\Interfaces;
  *
  * Define o contrato que todos os enums de status devem implementar
  * para garantir consistência e reutilização de funcionalidades.
- *
- * @package App\Contracts\Interfaces
  */
 interface StatusEnumInterface
 {
     /**
      * Retorna uma descrição para o status
-     *
-     * @return string
      */
     public function getDescription(): string;
 
@@ -59,32 +55,32 @@ interface StatusEnumInterface
     /**
      * Cria instância do enum a partir de string
      *
-     * @param string $value Valor do status
+     * @param  string  $value  Valor do status
      * @return self|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?self;
+    public static function fromString(string $value): ?self;
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
      *
-     * @param bool $includeFinished Incluir status finalizados
+     * @param  bool  $includeFinished  Incluir status finalizados
      * @return array<string, string> Array associativo [valor => descrição]
      */
-    public static function getOptions( bool $includeFinished = true ): array;
+    public static function getOptions(bool $includeFinished = true): array;
 
     /**
      * Ordena status por prioridade para exibição
      *
-     * @param bool $includeFinished Incluir status finalizados na ordenação
+     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
      * @return array<self> Status ordenados por prioridade
      */
-    public static function getOrdered( bool $includeFinished = true ): array;
+    public static function getOrdered(bool $includeFinished = true): array;
 
     /**
      * Calcula métricas de status para dashboards
      *
-     * @param array<self> $statuses Lista de status para análise
+     * @param  array<self>  $statuses  Lista de status para análise
      * @return array<string, mixed> Métricas calculadas
      */
-    public static function calculateMetrics( array $statuses ): array;
+    public static function calculateMetrics(array $statuses): array;
 }

@@ -38,19 +38,17 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
 
     /**
      * Retorna uma descrição para o tipo de token
-     *
-     * @return string
      */
     public function getDescription(): string
     {
-        return match ( $this ) {
-            self::EMAIL_VERIFICATION        => 'Verificação de e-mail',
-            self::PASSWORD_RESET            => 'Reset de senha',
-            self::ACCOUNT_CONFIRMATION      => 'Confirmação de cadastro',
-            self::TWO_FACTOR_AUTH           => 'Autenticação de 2 fatores',
+        return match ($this) {
+            self::EMAIL_VERIFICATION => 'Verificação de e-mail',
+            self::PASSWORD_RESET => 'Reset de senha',
+            self::ACCOUNT_CONFIRMATION => 'Confirmação de cadastro',
+            self::TWO_FACTOR_AUTH => 'Autenticação de 2 fatores',
             self::EMAIL_CHANGE_VERIFICATION => 'Verificação de mudança de e-mail',
-            self::PHONE_VERIFICATION        => 'Verificação de telefone',
-            self::PAYMENT_VERIFICATION      => 'Verificação de pagamento',
+            self::PHONE_VERIFICATION => 'Verificação de telefone',
+            self::PAYMENT_VERIFICATION => 'Verificação de pagamento',
             self::SUBSCRIPTION_VERIFICATION => 'Verificação de assinatura',
         };
     }
@@ -62,14 +60,14 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
      */
     public function getColor(): string
     {
-        return match ( $this ) {
-            self::EMAIL_VERIFICATION        => '#007bff', // Azul
-            self::PASSWORD_RESET            => '#dc3545', // Vermelho
-            self::ACCOUNT_CONFIRMATION      => '#28a745', // Verde
-            self::TWO_FACTOR_AUTH           => '#ffc107', // Amarelo
+        return match ($this) {
+            self::EMAIL_VERIFICATION => '#007bff', // Azul
+            self::PASSWORD_RESET => '#dc3545', // Vermelho
+            self::ACCOUNT_CONFIRMATION => '#28a745', // Verde
+            self::TWO_FACTOR_AUTH => '#ffc107', // Amarelo
             self::EMAIL_CHANGE_VERIFICATION => '#6f42c1', // Roxo
-            self::PHONE_VERIFICATION        => '#17a2b8', // Azul claro
-            self::PAYMENT_VERIFICATION      => '#fd7e14', // Laranja
+            self::PHONE_VERIFICATION => '#17a2b8', // Azul claro
+            self::PAYMENT_VERIFICATION => '#fd7e14', // Laranja
             self::SUBSCRIPTION_VERIFICATION => '#20c997', // Verde claro
         };
     }
@@ -81,14 +79,14 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
      */
     public function getIcon(): string
     {
-        return match ( $this ) {
-            self::EMAIL_VERIFICATION        => 'bi-envelope-check',
-            self::PASSWORD_RESET            => 'bi-key',
-            self::ACCOUNT_CONFIRMATION      => 'bi-person-check',
-            self::TWO_FACTOR_AUTH           => 'bi-shield-check',
+        return match ($this) {
+            self::EMAIL_VERIFICATION => 'bi-envelope-check',
+            self::PASSWORD_RESET => 'bi-key',
+            self::ACCOUNT_CONFIRMATION => 'bi-person-check',
+            self::TWO_FACTOR_AUTH => 'bi-shield-check',
             self::EMAIL_CHANGE_VERIFICATION => 'bi-envelope-at',
-            self::PHONE_VERIFICATION        => 'bi-phone',
-            self::PAYMENT_VERIFICATION      => 'bi-credit-card',
+            self::PHONE_VERIFICATION => 'bi-phone',
+            self::PAYMENT_VERIFICATION => 'bi-credit-card',
             self::SUBSCRIPTION_VERIFICATION => 'bi-receipt',
         };
     }
@@ -100,7 +98,7 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
      */
     public function isActive(): bool
     {
-        return match ( $this ) {
+        return match ($this) {
             self::EMAIL_VERIFICATION, self::PASSWORD_RESET, self::ACCOUNT_CONFIRMATION,
             self::TWO_FACTOR_AUTH, self::EMAIL_CHANGE_VERIFICATION, self::PHONE_VERIFICATION,
             self::PAYMENT_VERIFICATION, self::SUBSCRIPTION_VERIFICATION => true,
@@ -126,12 +124,12 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
     public function getMetadata(): array
     {
         return [
-            'value'                      => $this->value,
-            'description'                => $this->getDescription(),
-            'color'                      => $this->getColor(),
-            'icon'                       => $this->getIcon(),
-            'is_active'                  => $this->isActive(),
-            'is_finished'                => $this->isFinished(),
+            'value' => $this->value,
+            'description' => $this->getDescription(),
+            'color' => $this->getColor(),
+            'icon' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
             'default_expiration_minutes' => $this->getDefaultExpirationMinutes(),
         ];
     }
@@ -139,34 +137,35 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
     /**
      * Cria instância do enum a partir de string
      *
-     * @param string $value Valor do tipo
+     * @param  string  $value  Valor do tipo
      * @return TokenType|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?self
+    public static function fromString(string $value): ?self
     {
-        foreach ( self::cases() as $case ) {
-            if ( $case->value === $value ) {
+        foreach (self::cases() as $case) {
+            if ($case->value === $value) {
                 return $case;
             }
         }
+
         return null;
     }
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
      *
-     * @param bool $includeFinished Incluir tipos finalizados
+     * @param  bool  $includeFinished  Incluir tipos finalizados
      * @return array<string, string> Array associativo [valor => descrição]
      */
-    public static function getOptions( bool $includeFinished = true ): array
+    public static function getOptions(bool $includeFinished = true): array
     {
         $options = [];
 
-        foreach ( self::cases() as $type ) {
-            if ( !$includeFinished && $type->isFinished() ) {
+        foreach (self::cases() as $type) {
+            if (! $includeFinished && $type->isFinished()) {
                 continue;
             }
-            $options[ $type->value ] = $type->getDescription();
+            $options[$type->value] = $type->getDescription();
         }
 
         return $options;
@@ -175,27 +174,28 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
     /**
      * Ordena tipos por categoria para exibição
      *
-     * @param bool $includeFinished Incluir tipos finalizados na ordenação
+     * @param  bool  $includeFinished  Incluir tipos finalizados na ordenação
      * @return array<TokenType> Tipos ordenados por categoria
      */
-    public static function getOrdered( bool $includeFinished = true ): array
+    public static function getOrdered(bool $includeFinished = true): array
     {
         $types = self::cases();
 
-        usort( $types, function ( TokenType $a, TokenType $b ) {
+        usort($types, function (TokenType $a, TokenType $b) {
             // Ordem: EMAIL, PASSWORD, ACCOUNT, 2FA, EMAIL_CHANGE, PHONE, PAYMENT, SUBSCRIPTION
             $order = [
-                self::EMAIL_VERIFICATION->value        => 1,
+                self::EMAIL_VERIFICATION->value => 1,
                 self::EMAIL_CHANGE_VERIFICATION->value => 2,
-                self::PASSWORD_RESET->value            => 3,
-                self::ACCOUNT_CONFIRMATION->value      => 4,
-                self::TWO_FACTOR_AUTH->value           => 5,
-                self::PHONE_VERIFICATION->value        => 6,
-                self::PAYMENT_VERIFICATION->value      => 7,
+                self::PASSWORD_RESET->value => 3,
+                self::ACCOUNT_CONFIRMATION->value => 4,
+                self::TWO_FACTOR_AUTH->value => 5,
+                self::PHONE_VERIFICATION->value => 6,
+                self::PAYMENT_VERIFICATION->value => 7,
                 self::SUBSCRIPTION_VERIFICATION->value => 8,
             ];
-            return ( $order[ $a->value ] ?? 99 ) <=> ( $order[ $b->value ] ?? 99 );
-        } );
+
+            return ($order[$a->value] ?? 99) <=> ($order[$b->value] ?? 99);
+        });
 
         return $types;
     }
@@ -203,29 +203,29 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
     /**
      * Calcula métricas de tipos para dashboards
      *
-     * @param array<TokenType> $types Lista de tipos para análise
+     * @param  array<TokenType>  $types  Lista de tipos para análise
      * @return array<string, int> Métricas [ativo, finalizado, total]
      */
-    public static function calculateMetrics( array $types ): array
+    public static function calculateMetrics(array $types): array
     {
-        $total    = count( $types );
-        $active   = 0;
+        $total = count($types);
+        $active = 0;
         $finished = 0;
 
-        foreach ( $types as $type ) {
-            if ( $type->isActive() ) {
+        foreach ($types as $type) {
+            if ($type->isActive()) {
                 $active++;
-            } elseif ( $type->isFinished() ) {
+            } elseif ($type->isFinished()) {
                 $finished++;
             }
         }
 
         return [
-            'total'               => $total,
-            'active'              => $active,
-            'finished'            => $finished,
-            'active_percentage'   => $total > 0 ? round( ( $active / $total ) * 100, 1 ) : 0,
-            'finished_percentage' => $total > 0 ? round( ( $finished / $total ) * 100, 1 ) : 0,
+            'total' => $total,
+            'active' => $active,
+            'finished' => $finished,
+            'active_percentage' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
+            'finished_percentage' => $total > 0 ? round(($finished / $total) * 100, 1) : 0,
         ];
     }
 
@@ -236,37 +236,31 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
      */
     public static function getAllTypes(): array
     {
-        return array_column( self::cases(), 'value' );
+        return array_column(self::cases(), 'value');
     }
 
     /**
      * Verifica se o tipo é válido
-     *
-     * @param string $type
-     * @return bool
      */
-    public static function isValid( string $type ): bool
+    public static function isValid(string $type): bool
     {
-        return in_array( $type, self::getAllTypes() );
+        return in_array($type, self::getAllTypes());
     }
 
     /**
      * Retorna o tempo de expiração padrão para cada tipo (em minutos)
-     *
-     * @return int
      */
     public function getDefaultExpirationMinutes(): int
     {
-        return match ( $this ) {
-            self::EMAIL_VERIFICATION        => 30,
-            self::PASSWORD_RESET            => 15,
-            self::ACCOUNT_CONFIRMATION      => 60,
-            self::TWO_FACTOR_AUTH           => 10,
+        return match ($this) {
+            self::EMAIL_VERIFICATION => 30,
+            self::PASSWORD_RESET => 15,
+            self::ACCOUNT_CONFIRMATION => 60,
+            self::TWO_FACTOR_AUTH => 10,
             self::EMAIL_CHANGE_VERIFICATION => 30,
-            self::PHONE_VERIFICATION        => 15,
-            self::PAYMENT_VERIFICATION      => 10,
+            self::PHONE_VERIFICATION => 15,
+            self::PAYMENT_VERIFICATION => 10,
             self::SUBSCRIPTION_VERIFICATION => 30,
         };
     }
-
 }

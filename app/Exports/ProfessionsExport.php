@@ -2,15 +2,14 @@
 
 namespace App\Exports;
 
-use App\Models\Profession;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProfessionsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class ProfessionsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     protected $professions;
 
@@ -70,7 +69,7 @@ class ProfessionsExport implements FromCollection, WithHeadings, WithMapping, Wi
             $profession->requirements ?? '-',
             $profession->certifications ?? '-',
             $profession->skills ?? '-',
-            $profession->average_salary ? 'R$ ' . number_format($profession->average_salary, 2, ',', '.') : '-',
+            $profession->average_salary ? 'R$ '.number_format($profession->average_salary, 2, ',', '.') : '-',
             $this->getJobMarketLabel($profession->job_market),
             $this->getEducationLevelLabel($profession->education_level),
             $profession->users_count,

@@ -29,27 +29,24 @@ class SendStatusUpdateNotification implements ShouldQueue
 
     /**
      * Handle the event.
-     *
-     * @param StatusUpdated $event
-     * @return void
      */
-    public function handle( StatusUpdated $event ): void
+    public function handle(StatusUpdated $event): void
     {
         try {
-            Log::info( 'Processando evento StatusUpdated para envio de notificação', [
-                'entity_type' => class_basename( $event->entity ),
-                'entity_id'   => $event->entity->id,
-                'old_status'  => $event->oldStatus,
-                'new_status'  => $event->newStatus,
+            Log::info('Processando evento StatusUpdated para envio de notificação', [
+                'entity_type' => class_basename($event->entity),
+                'entity_id' => $event->entity->id,
+                'old_status' => $event->oldStatus,
+                'new_status' => $event->newStatus,
                 'status_name' => $event->statusName,
-                'tenant_id'   => $event->tenant?->id,
-            ] );
+                'tenant_id' => $event->tenant?->id,
+            ]);
 
-            $mailerService = app( MailerService::class);
+            $mailerService = app(MailerService::class);
 
             // Gera URL da entidade se disponível
             $entityUrl = null;
-            if ( method_exists( $event->entity, 'getUrl' ) ) {
+            if (method_exists($event->entity, 'getUrl')) {
                 $entityUrl = $event->entity->getUrl();
             }
 
@@ -62,38 +59,38 @@ class SendStatusUpdateNotification implements ShouldQueue
                 $entityUrl,
             );
 
-            if ( $result->isSuccess() ) {
-                Log::info( 'Notificação de atualização de status enviada com sucesso via evento', [
-                    'entity_type' => class_basename( $event->entity ),
-                    'entity_id'   => $event->entity->id,
-                    'old_status'  => $event->oldStatus,
-                    'new_status'  => $event->newStatus,
+            if ($result->isSuccess()) {
+                Log::info('Notificação de atualização de status enviada com sucesso via evento', [
+                    'entity_type' => class_basename($event->entity),
+                    'entity_id' => $event->entity->id,
+                    'old_status' => $event->oldStatus,
+                    'new_status' => $event->newStatus,
                     'status_name' => $event->statusName,
-                    'sent_at'     => $result->getData()[ 'sent_at' ] ?? null,
-                ] );
+                    'sent_at' => $result->getData()['sent_at'] ?? null,
+                ]);
             } else {
-                Log::error( 'Falha ao enviar notificação de atualização de status via evento', [
-                    'entity_type' => class_basename( $event->entity ),
-                    'entity_id'   => $event->entity->id,
-                    'old_status'  => $event->oldStatus,
-                    'new_status'  => $event->newStatus,
+                Log::error('Falha ao enviar notificação de atualização de status via evento', [
+                    'entity_type' => class_basename($event->entity),
+                    'entity_id' => $event->entity->id,
+                    'old_status' => $event->oldStatus,
+                    'new_status' => $event->newStatus,
                     'status_name' => $event->statusName,
-                    'error'       => $result->getMessage(),
-                ] );
+                    'error' => $result->getMessage(),
+                ]);
 
                 // Relança a exceção para que seja tratada pela queue
-                throw new \Exception( 'Falha no envio de notificação de atualização de status: ' . $result->getMessage() );
+                throw new \Exception('Falha no envio de notificação de atualização de status: '.$result->getMessage());
             }
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'Erro crítico no listener SendStatusUpdateNotification', [
-                'entity_type' => class_basename( $event->entity ),
-                'entity_id'   => $event->entity->id,
-                'old_status'  => $event->oldStatus,
-                'new_status'  => $event->newStatus,
-                'error'       => $e->getMessage(),
-                'trace'       => $e->getTraceAsString(),
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('Erro crítico no listener SendStatusUpdateNotification', [
+                'entity_type' => class_basename($event->entity),
+                'entity_id' => $event->entity->id,
+                'old_status' => $event->oldStatus,
+                'new_status' => $event->newStatus,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             // Relança a exceção para que seja tratada pela queue
             throw $e;
@@ -102,24 +99,19 @@ class SendStatusUpdateNotification implements ShouldQueue
 
     /**
      * Handle a job failure.
-     *
-     * @param StatusUpdated $event
-     * @param \Throwable $exception
-     * @return void
      */
-    public function failed( StatusUpdated $event, \Throwable $exception ): void
+    public function failed(StatusUpdated $event, \Throwable $exception): void
     {
-        Log::critical( 'Listener SendStatusUpdateNotification falhou após todas as tentativas', [
-            'entity_type' => class_basename( $event->entity ),
-            'entity_id'   => $event->entity->id,
-            'old_status'  => $event->oldStatus,
-            'new_status'  => $event->newStatus,
-            'error'       => $exception->getMessage(),
-            'attempts'    => $this->tries,
-        ] );
+        Log::critical('Listener SendStatusUpdateNotification falhou após todas as tentativas', [
+            'entity_type' => class_basename($event->entity),
+            'entity_id' => $event->entity->id,
+            'old_status' => $event->oldStatus,
+            'new_status' => $event->newStatus,
+            'error' => $exception->getMessage(),
+            'attempts' => $this->tries,
+        ]);
 
         // Em produção, poderia notificar administradores sobre a falha
         // ou implementar lógica de fallback
     }
-
 }

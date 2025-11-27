@@ -38,9 +38,9 @@ class SupportTicketCreated
     /**
      * Cria uma nova instância do evento.
      *
-     * @param Support $support Ticket de suporte criado
-     * @param array $contactData Dados originais do formulário
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  Support  $support  Ticket de suporte criado
+     * @param  array  $contactData  Dados originais do formulário
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
     public function __construct(Support $support, array $contactData, ?Tenant $tenant = null)
     {
@@ -79,16 +79,16 @@ class SupportTicketCreated
     {
         $firstName = $this->support->first_name ?? '';
         $lastName = $this->support->last_name ?? '';
-        
-        $fullName = trim($firstName . ' ' . $lastName);
-        
-        return !empty($fullName) ? $fullName : 'Usuário';
+
+        $fullName = trim($firstName.' '.$lastName);
+
+        return ! empty($fullName) ? $fullName : 'Usuário';
     }
 
     /**
      * Verifica se o ticket é de um tenant específico.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return bool True se pertence ao tenant
      */
     public function belongsToTenant(int $tenantId): bool

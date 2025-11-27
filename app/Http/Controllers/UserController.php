@@ -13,7 +13,4 @@ use App\Http\Controllers\Abstracts\Controller;
  * incluindo listagem, criação, edição, exclusão e funcionalidades específicas
  * como ativação de contas e confirmação de email.
  */
-class UserController extends Controller
-{
-
-}
+class UserController extends Controller {}

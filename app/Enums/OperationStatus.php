@@ -35,18 +35,16 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
 
     /**
      * Retorna uma descrição para o status
-     *
-     * @return string
      */
     public function getDescription(): string
     {
-        return match ( $this ) {
-            self::SUCCESS          => 'Operação executada com sucesso',
-            self::NOT_FOUND        => 'Recurso não encontrado',
-            self::ERROR            => 'Erro interno do servidor',
-            self::FORBIDDEN        => 'Acesso negado',
-            self::INVALID_DATA     => 'Dados inválidos fornecidos',
-            self::CONFLICT         => 'Conflito de dados',
+        return match ($this) {
+            self::SUCCESS => 'Operação executada com sucesso',
+            self::NOT_FOUND => 'Recurso não encontrado',
+            self::ERROR => 'Erro interno do servidor',
+            self::FORBIDDEN => 'Acesso negado',
+            self::INVALID_DATA => 'Dados inválidos fornecidos',
+            self::CONFLICT => 'Conflito de dados',
             self::VALIDATION_ERROR => 'Erro de validação'
         };
     }
@@ -58,10 +56,10 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
      */
     public function getColor(): string
     {
-        return match ( $this ) {
-            self::SUCCESS                                               => '#28a745', // Verde
+        return match ($this) {
+            self::SUCCESS => '#28a745', // Verde
             self::NOT_FOUND, self::INVALID_DATA, self::VALIDATION_ERROR => '#ffc107', // Amarelo
-            self::ERROR, self::FORBIDDEN, self::CONFLICT                => '#dc3545', // Vermelho
+            self::ERROR, self::FORBIDDEN, self::CONFLICT => '#dc3545', // Vermelho
         };
     }
 
@@ -72,13 +70,13 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
      */
     public function getIcon(): string
     {
-        return match ( $this ) {
-            self::SUCCESS          => 'bi-check-circle',
-            self::NOT_FOUND        => 'bi-search',
-            self::ERROR            => 'bi-exclamation-triangle',
-            self::FORBIDDEN        => 'bi-shield-x',
-            self::INVALID_DATA     => 'bi-exclamation-circle',
-            self::CONFLICT         => 'bi-arrow-left-right',
+        return match ($this) {
+            self::SUCCESS => 'bi-check-circle',
+            self::NOT_FOUND => 'bi-search',
+            self::ERROR => 'bi-exclamation-triangle',
+            self::FORBIDDEN => 'bi-shield-x',
+            self::INVALID_DATA => 'bi-exclamation-circle',
+            self::CONFLICT => 'bi-arrow-left-right',
             self::VALIDATION_ERROR => 'bi-exclamation-diamond',
         };
     }
@@ -90,7 +88,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
      */
     public function isActive(): bool
     {
-        return match ( $this ) {
+        return match ($this) {
             self::SUCCESS, self::ERROR, self::NOT_FOUND, self::FORBIDDEN,
             self::INVALID_DATA, self::CONFLICT, self::VALIDATION_ERROR => true,
         };
@@ -114,48 +112,49 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     public function getMetadata(): array
     {
         return [
-            'value'       => $this->value,
+            'value' => $this->value,
             'description' => $this->getDescription(),
-            'color'       => $this->getColor(),
-            'icon'        => $this->getIcon(),
-            'is_active'   => $this->isActive(),
+            'color' => $this->getColor(),
+            'icon' => $this->getIcon(),
+            'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
-            'is_success'  => $this->isSuccess(),
-            'is_error'    => $this->isError(),
+            'is_success' => $this->isSuccess(),
+            'is_error' => $this->isError(),
         ];
     }
 
     /**
      * Cria instância do enum a partir de string
      *
-     * @param string $value Valor do status
+     * @param  string  $value  Valor do status
      * @return OperationStatus|null Instância do enum ou null se inválido
      */
-    public static function fromString( string $value ): ?self
+    public static function fromString(string $value): ?self
     {
-        foreach ( self::cases() as $case ) {
-            if ( $case->value === $value ) {
+        foreach (self::cases() as $case) {
+            if ($case->value === $value) {
                 return $case;
             }
         }
+
         return null;
     }
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
      *
-     * @param bool $includeFinished Incluir status finalizados
+     * @param  bool  $includeFinished  Incluir status finalizados
      * @return array<string, string> Array associativo [valor => descrição]
      */
-    public static function getOptions( bool $includeFinished = true ): array
+    public static function getOptions(bool $includeFinished = true): array
     {
         $options = [];
 
-        foreach ( self::cases() as $status ) {
-            if ( !$includeFinished && $status->isFinished() ) {
+        foreach (self::cases() as $status) {
+            if (! $includeFinished && $status->isFinished()) {
                 continue;
             }
-            $options[ $status->value ] = $status->getDescription();
+            $options[$status->value] = $status->getDescription();
         }
 
         return $options;
@@ -164,26 +163,27 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     /**
      * Ordena status por prioridade para exibição
      *
-     * @param bool $includeFinished Incluir status finalizados na ordenação
+     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
      * @return array<OperationStatus> Status ordenados por prioridade
      */
-    public static function getOrdered( bool $includeFinished = true ): array
+    public static function getOrdered(bool $includeFinished = true): array
     {
         $statuses = self::cases();
 
-        usort( $statuses, function ( OperationStatus $a, OperationStatus $b ) {
+        usort($statuses, function (OperationStatus $a, OperationStatus $b) {
             // Ordem: SUCCESS, NOT_FOUND, INVALID_DATA, VALIDATION_ERROR, FORBIDDEN, CONFLICT, ERROR
             $order = [
-                self::SUCCESS->value          => 1,
-                self::NOT_FOUND->value        => 2,
-                self::INVALID_DATA->value     => 3,
+                self::SUCCESS->value => 1,
+                self::NOT_FOUND->value => 2,
+                self::INVALID_DATA->value => 3,
                 self::VALIDATION_ERROR->value => 4,
-                self::FORBIDDEN->value        => 5,
-                self::CONFLICT->value         => 6,
-                self::ERROR->value            => 7,
+                self::FORBIDDEN->value => 5,
+                self::CONFLICT->value => 6,
+                self::ERROR->value => 7,
             ];
-            return ( $order[ $a->value ] ?? 99 ) <=> ( $order[ $b->value ] ?? 99 );
-        } );
+
+            return ($order[$a->value] ?? 99) <=> ($order[$b->value] ?? 99);
+        });
 
         return $statuses;
     }
@@ -191,36 +191,34 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     /**
      * Calcula métricas de status para dashboards
      *
-     * @param array<OperationStatus> $statuses Lista de status para análise
+     * @param  array<OperationStatus>  $statuses  Lista de status para análise
      * @return array<string, int> Métricas [sucesso, erro, total]
      */
-    public static function calculateMetrics( array $statuses ): array
+    public static function calculateMetrics(array $statuses): array
     {
-        $total   = count( $statuses );
+        $total = count($statuses);
         $success = 0;
-        $error   = 0;
+        $error = 0;
 
-        foreach ( $statuses as $status ) {
-            if ( $status->isSuccess() ) {
+        foreach ($statuses as $status) {
+            if ($status->isSuccess()) {
                 $success++;
-            } elseif ( $status->isError() ) {
+            } elseif ($status->isError()) {
                 $error++;
             }
         }
 
         return [
-            'total'              => $total,
-            'success'            => $success,
-            'error'              => $error,
-            'success_percentage' => $total > 0 ? round( ( $success / $total ) * 100, 1 ) : 0,
-            'error_percentage'   => $total > 0 ? round( ( $error / $total ) * 100, 1 ) : 0,
+            'total' => $total,
+            'success' => $success,
+            'error' => $error,
+            'success_percentage' => $total > 0 ? round(($success / $total) * 100, 1) : 0,
+            'error_percentage' => $total > 0 ? round(($error / $total) * 100, 1) : 0,
         ];
     }
 
     /**
      * Verifica se o status indica sucesso
-     *
-     * @return bool
      */
     public function isSuccess(): bool
     {
@@ -229,22 +227,17 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
 
     /**
      * Verifica se o status indica erro
-     *
-     * @return bool
      */
     public function isError(): bool
     {
-        return !$this->isSuccess();
+        return ! $this->isSuccess();
     }
 
     /**
      * Retorna uma mensagem padrão para o status (alias para getDescription)
-     *
-     * @return string
      */
     public function getMessage(): string
     {
         return $this->getDescription();
     }
-
 }

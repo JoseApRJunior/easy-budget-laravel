@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class AlertsController extends Controller
 {
@@ -208,11 +208,11 @@ class AlertsController extends Controller
         $this->authorize('manage-alerts');
 
         // Simular exportação
-        $filename = 'alerts_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
+        $filename = 'alerts_'.now()->format('Y-m-d_H-i-s').'.'.$format;
 
         // Retornar uma resposta vazia para exemplo
         return response()->download(
-            storage_path('app/public/' . $filename),
+            storage_path('app/public/'.$filename),
             $filename
         );
     }

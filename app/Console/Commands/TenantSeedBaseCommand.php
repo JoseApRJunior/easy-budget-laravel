@@ -17,9 +17,10 @@ class TenantSeedBaseCommand extends Command
         $sourceTenantId = $this->option('source-tenant') ? (int) $this->option('source-tenant') : null;
         $force = (bool) $this->option('force');
 
-        if (!$force) {
-            if (!$this->confirm("Anexar categorias base ao tenant {$tenantId}?", true)) {
+        if (! $force) {
+            if (! $this->confirm("Anexar categorias base ao tenant {$tenantId}?", true)) {
                 $this->warn('Operação cancelada.');
+
                 return self::SUCCESS;
             }
         }
@@ -40,20 +41,22 @@ class TenantSeedBaseCommand extends Command
 
                 if ($sourceCats->isEmpty()) {
                     $this->warn('Tenant de origem não possui categorias para copiar.');
+
                     return self::SUCCESS;
                 }
 
                 $map = [];
                 $remaining = $sourceCats->toArray();
                 $iterations = 0;
-                while (!empty($remaining) && $iterations < 10000) {
+                while (! empty($remaining) && $iterations < 10000) {
                     $iterations++;
                     $next = [];
                     foreach ($remaining as $sc) {
                         $sc = (array) $sc;
                         $parentId = $sc['parent_id'];
-                        if ($parentId !== null && !isset($map[$parentId])) {
+                        if ($parentId !== null && ! isset($map[$parentId])) {
                             $next[] = $sc;
+
                             continue;
                         }
                         $existsSlug = DB::table('categories')
@@ -66,6 +69,7 @@ class TenantSeedBaseCommand extends Command
                                 ->where('slug', $sc['slug'])
                                 ->value('id');
                             $map[$sc['id']] = $baseId;
+
                             continue;
                         }
                         $newId = DB::table('categories')->insertGetId([
@@ -85,6 +89,7 @@ class TenantSeedBaseCommand extends Command
                     ->all();
             } else {
                 $this->info('Nenhuma categoria base encontrada. Informe --source-tenant={id} para copiar de um tenant modelo.');
+
                 return self::SUCCESS;
             }
         }
@@ -95,7 +100,7 @@ class TenantSeedBaseCommand extends Command
                 ->where('tenant_id', $tenantId)
                 ->where('category_id', $cid)
                 ->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('category_tenant')->insert([
                     'tenant_id' => $tenantId,
                     'category_id' => $cid,
@@ -107,6 +112,7 @@ class TenantSeedBaseCommand extends Command
         }
 
         $this->info("Anexadas {$attached} categorias base ao tenant {$tenantId}.");
+
         return self::SUCCESS;
     }
 }

@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Services;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em ServicePattern.
- *
- * @package App\DesignPatterns
  */
 class ServiceTemplates
 {
@@ -953,5 +951,4 @@ private function logOperation(string $operation, array $context = []): void
 - Especifique filtros suportados
 - Documente métodos públicos com exemplos de uso';
     }
-
 }

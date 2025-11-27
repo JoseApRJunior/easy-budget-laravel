@@ -43,7 +43,7 @@ class ProductController extends Controller
         $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price']);
 
         try {
-            $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
+            $hasFilters = collect($filters)->filter(fn ($v) => filled($v))->isNotEmpty();
             $confirmAll = (bool) $request->boolean('all');
 
             if ($hasFilters || $confirmAll) {
@@ -59,8 +59,8 @@ class ProductController extends Controller
             }
 
             return view('pages.product.index', [
-                'products'   => $products,
-                'filters'    => $filters,
+                'products' => $products,
+                'filters' => $filters,
                 'categories' => $this->categoryService->getActive(),
             ]);
         } catch (Exception) {

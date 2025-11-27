@@ -7,10 +7,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Tenant;
 use App\Services\Domain\TenantService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class TenantManagementController extends Controller
 {
@@ -33,8 +33,8 @@ class TenantManagementController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('domain', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('domain', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -43,8 +43,8 @@ class TenantManagementController extends Controller
         }
 
         $tenants = $query->orderBy($sort, $direction)
-                        ->paginate(15)
-                        ->appends($request->query());
+            ->paginate(15)
+            ->appends($request->query());
 
         return view('admin.tenants.index', compact('tenants', 'search', 'status', 'sort', 'direction'));
     }
@@ -75,10 +75,11 @@ class TenantManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.tenants.show', $tenant)
-                           ->with('success', 'Tenant criado com sucesso!');
+                ->with('success', 'Tenant criado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Erro ao criar tenant: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Erro ao criar tenant: '.$e->getMessage());
         }
     }
 
@@ -88,6 +89,7 @@ class TenantManagementController extends Controller
     public function show(Tenant $tenant): View
     {
         $tenant->load(['users', 'subscriptions.plan']);
+
         return view('admin.tenants.show', compact('tenant'));
     }
 
@@ -105,7 +107,7 @@ class TenantManagementController extends Controller
     public function update(Request $request, Tenant $tenant): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:tenants,name,' . $tenant->id,
+            'name' => 'required|string|max:255|unique:tenants,name,'.$tenant->id,
         ]);
 
         DB::beginTransaction();
@@ -116,10 +118,11 @@ class TenantManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.tenants.show', $tenant)
-                           ->with('success', 'Tenant atualizado com sucesso!');
+                ->with('success', 'Tenant atualizado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Erro ao atualizar tenant: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Erro ao atualizar tenant: '.$e->getMessage());
         }
     }
 
@@ -154,10 +157,11 @@ class TenantManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.tenants.index')
-                           ->with('success', 'Tenant excluído com sucesso!');
+                ->with('success', 'Tenant excluído com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Erro ao excluir tenant: ' . $e->getMessage());
+
+            return back()->with('error', 'Erro ao excluir tenant: '.$e->getMessage());
         }
     }
 
@@ -167,7 +171,7 @@ class TenantManagementController extends Controller
     public function financialData(Tenant $tenant): View
     {
         $financialData = $this->tenantService->getFinancialData($tenant->id);
-        
+
         return view('admin.tenants.financial-data', compact('tenant', 'financialData'));
     }
 
@@ -177,7 +181,7 @@ class TenantManagementController extends Controller
     public function analytics(Tenant $tenant): View
     {
         $analytics = $this->tenantService->getAnalytics($tenant->id);
-        
+
         return view('admin.tenants.analytics', compact('tenant', 'analytics'));
     }
 
@@ -187,7 +191,7 @@ class TenantManagementController extends Controller
     public function billing(Tenant $tenant): View
     {
         $billingData = $this->tenantService->getBillingData($tenant->id);
-        
+
         return view('admin.tenants.billing', compact('tenant', 'billingData'));
     }
 
@@ -197,8 +201,8 @@ class TenantManagementController extends Controller
     public function impersonate(Tenant $tenant): RedirectResponse
     {
         $adminUser = $tenant->users()->where('role', 'admin')->first();
-        
-        if (!$adminUser) {
+
+        if (! $adminUser) {
             return back()->with('error', 'Tenant não possui usuário administrador.');
         }
 
@@ -206,6 +210,6 @@ class TenantManagementController extends Controller
         session(['original_user' => auth()->id()]);
 
         return redirect()->route('provider.dashboard')
-                       ->with('success', 'Você está agora impersonando o administrador do tenant ' . $tenant->name);
+            ->with('success', 'Você está agora impersonando o administrador do tenant '.$tenant->name);
     }
 }

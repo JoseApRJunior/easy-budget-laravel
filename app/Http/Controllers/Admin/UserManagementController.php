@@ -7,11 +7,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\User;
 use App\Services\Domain\UserService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
@@ -35,8 +35,8 @@ class UserManagementController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('cpf_cnpj', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('cpf_cnpj', 'like', "%{$search}%");
             });
         }
 
@@ -49,8 +49,8 @@ class UserManagementController extends Controller
         }
 
         $users = $query->orderBy($sort, $direction)
-                      ->paginate(15)
-                      ->appends($request->query());
+            ->paginate(15)
+            ->appends($request->query());
 
         return view('admin.users.index', compact('users', 'search', 'status', 'role', 'sort', 'direction'));
     }
@@ -94,10 +94,11 @@ class UserManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.users.show', $user)
-                           ->with('success', 'Usuário criado com sucesso!');
+                ->with('success', 'Usuário criado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Erro ao criar usuário: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Erro ao criar usuário: '.$e->getMessage());
         }
     }
 
@@ -107,6 +108,7 @@ class UserManagementController extends Controller
     public function show(User $user): View
     {
         $user->load(['tenant', 'subscriptions.plan']);
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -125,7 +127,7 @@ class UserManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string|in:admin,provider,customer',
             'cpf_cnpj' => 'nullable|string|max:20',
@@ -142,7 +144,7 @@ class UserManagementController extends Controller
             $user->phone = $validated['phone'] ?? null;
             $user->status = $validated['status'];
 
-            if (!empty($validated['password'])) {
+            if (! empty($validated['password'])) {
                 $user->password = Hash::make($validated['password']);
             }
 
@@ -151,10 +153,11 @@ class UserManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.users.show', $user)
-                           ->with('success', 'Usuário atualizado com sucesso!');
+                ->with('success', 'Usuário atualizado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Erro ao atualizar usuário: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Erro ao atualizar usuário: '.$e->getMessage());
         }
     }
 
@@ -195,7 +198,7 @@ class UserManagementController extends Controller
         session(['original_user' => auth()->id()]);
 
         return redirect()->route('provider.dashboard')
-                       ->with('success', 'Você está agora impersonando ' . $user->name);
+            ->with('success', 'Você está agora impersonando '.$user->name);
     }
 
     /**
@@ -213,10 +216,11 @@ class UserManagementController extends Controller
             DB::commit();
 
             return redirect()->route('admin.users.index')
-                           ->with('success', 'Usuário excluído com sucesso!');
+                ->with('success', 'Usuário excluído com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Erro ao excluir usuário: ' . $e->getMessage());
+
+            return back()->with('error', 'Erro ao excluir usuário: '.$e->getMessage());
         }
     }
 
@@ -226,8 +230,8 @@ class UserManagementController extends Controller
     public function activity(User $user): View
     {
         $activities = $user->activities()
-                          ->latest()
-                          ->paginate(20);
+            ->latest()
+            ->paginate(20);
 
         return view('admin.users.activity', compact('user', 'activities'));
     }

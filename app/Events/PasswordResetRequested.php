@@ -20,22 +20,23 @@ class PasswordResetRequested
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public User    $user;
-    public string  $resetToken;
+    public User $user;
+
+    public string $resetToken;
+
     public ?Tenant $tenant;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param User $user Usuário que solicitou a redefinição
-     * @param string $resetToken Token de redefinição de senha
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  User  $user  Usuário que solicitou a redefinição
+     * @param  string  $resetToken  Token de redefinição de senha
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
-    public function __construct( User $user, string $resetToken, ?Tenant $tenant = null )
+    public function __construct(User $user, string $resetToken, ?Tenant $tenant = null)
     {
-        $this->user       = $user;
+        $this->user = $user;
         $this->resetToken = $resetToken;
-        $this->tenant     = $tenant;
+        $this->tenant = $tenant;
     }
-
 }

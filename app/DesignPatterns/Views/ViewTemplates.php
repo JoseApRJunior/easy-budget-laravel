@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Views;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em ViewPattern.
- *
- * @package App\DesignPatterns
  */
 class ViewTemplates
 {
@@ -911,5 +909,4 @@ resources/views/
 - Documente funcionalidades complexas
 - Use nomes de classe descritivos';
     }
-
 }

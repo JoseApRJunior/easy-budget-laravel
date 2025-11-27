@@ -10,9 +10,7 @@ use Illuminate\Contracts\View\View;
 
 class DocumentVerificationController extends Controller
 {
-    public function __construct(private DocumentVerificationService $verificationService)
-    {
-    }
+    public function __construct(private DocumentVerificationService $verificationService) {}
 
     public function verify(string $hash): View
     {

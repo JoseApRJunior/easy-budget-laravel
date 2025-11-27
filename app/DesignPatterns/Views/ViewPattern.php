@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Views;
  *
  * Define convenções consistentes para desenvolvimento de views Blade,
  * garantindo uniformidade, manutenibilidade e reutilização de código.
- *
- * @package App\DesignPatterns
  */
 class ViewPattern
 {
@@ -1272,5 +1270,4 @@ resources/views/
 - Documente funcionalidades complexas
 - Use nomes de classe descritivos';
     }
-
 }

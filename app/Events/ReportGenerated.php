@@ -8,7 +8,5 @@ use App\Models\Report;
 
 class ReportGenerated
 {
-    public function __construct(public Report $report)
-    {
-    }
+    public function __construct(public Report $report) {}
 }

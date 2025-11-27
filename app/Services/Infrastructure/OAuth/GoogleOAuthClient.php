@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use GuzzleHttp\Client;
 
 /**
  * Cliente OAuth para integração com Google
@@ -31,7 +32,9 @@ class GoogleOAuthClient implements OAuthClientInterface
             'user_agent' => request()->userAgent(),
         ] );
 
-        return Socialite::driver( 'google' )->redirect();
+        return Socialite::driver( 'google' )
+            ->setHttpClient( $this->getHttpClient() )
+            ->redirect();
     }
 
     /**
@@ -43,7 +46,9 @@ class GoogleOAuthClient implements OAuthClientInterface
     public function handleProviderCallback( Request $request ): array
     {
         try {
-            $googleUser = Socialite::driver( 'google' )->user();
+            $googleUser = Socialite::driver( 'google' )
+                ->setHttpClient( $this->getHttpClient() )
+                ->user();
 
             Log::info( 'Callback do Google OAuth processado com sucesso', [
                 'provider'  => $this->getProviderName(),
@@ -79,7 +84,9 @@ class GoogleOAuthClient implements OAuthClientInterface
     public function getUserInfo( string $accessToken ): array
     {
         try {
-            $googleUser = Socialite::driver( 'google' )->userFromToken( $accessToken );
+            $googleUser = Socialite::driver( 'google' )
+                ->setHttpClient( $this->getHttpClient() )
+                ->userFromToken( $accessToken );
 
             return [
                 'id'     => $googleUser->getId(),
@@ -119,6 +126,21 @@ class GoogleOAuthClient implements OAuthClientInterface
     public function getProviderName(): string
     {
         return 'google';
+    }
+
+    private function getHttpClient(): Client
+    {
+        $cacertPath = config( 'services.cacert_path' );
+
+        if ( $cacertPath && file_exists( $cacertPath ) ) {
+            Log::info( 'Usando CA bundle customizado para Socialite', [ 'path' => $cacertPath ] );
+            return new Client( [ 'verify' => $cacertPath ] );
+        }
+
+        Log::warning( 'CA bundle não configurado ou inválido, desabilitando verificação de certificado temporariamente', [
+            'configured_path' => $cacertPath,
+        ] );
+        return new Client( [ 'verify' => false ] );
     }
 
 }

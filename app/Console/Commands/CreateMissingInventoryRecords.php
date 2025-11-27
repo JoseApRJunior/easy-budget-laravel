@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class CreateMissingInventoryRecords extends Command
 {
     protected $signature = 'inventory:create-missing';
+
     protected $description = 'Cria registros de inventário para produtos que não possuem';
 
     public function handle()
@@ -21,6 +22,7 @@ class CreateMissingInventoryRecords extends Command
 
         if ($productsWithoutInventory->isEmpty()) {
             $this->info('✅ Todos os produtos já possuem inventário!');
+
             return 0;
         }
 

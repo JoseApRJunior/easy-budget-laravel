@@ -8,12 +8,12 @@ use App\Models\Customer;
 use App\Services\Domain\ReportService;
 use Exception;
 use Illuminate\Contracts\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Illuminate\Http\Response;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Controlador principal para gerenciamento de relatórios
@@ -24,25 +24,27 @@ class ReportController extends Controller
     /**
      * Índice de relatórios
      */
-    public function index( Request $request ): View
+    public function index(Request $request): View
     {
         try {
-            $filters = $request->only( [ 'search', 'type', 'status', 'format', 'start_date', 'end_date' ] );
-            $result  = app( ReportService::class)->getFilteredReports( $filters, [ 'user' ] );
-            if ( !$result->isSuccess() ) abort( 500, 'Erro ao carregar relatórios' );
+            $filters = $request->only(['search', 'type', 'status', 'format', 'start_date', 'end_date']);
+            $result = app(ReportService::class)->getFilteredReports($filters, ['user']);
+            if (! $result->isSuccess()) {
+                abort(500, 'Erro ao carregar relatórios');
+            }
 
-            $stats         = app( ReportService::class)->getReportStats();
-            $recentReports = app( ReportService::class)->getRecentReports( 10 );
+            $stats = app(ReportService::class)->getReportStats();
+            $recentReports = app(ReportService::class)->getRecentReports(10);
 
-            return view( 'pages.report.index', [
-                'reports'        => $result->getData(),
+            return view('pages.report.index', [
+                'reports' => $result->getData(),
                 'recent_reports' => $recentReports->getData(),
-                'filters'        => $filters,
-                'stats'          => $stats->getData(),
-            ] );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar página de relatórios', [ 'error' => $e->getMessage() ] );
-            abort( 500, 'Erro interno do servidor' );
+                'filters' => $filters,
+                'stats' => $stats->getData(),
+            ]);
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar página de relatórios', ['error' => $e->getMessage()]);
+            abort(500, 'Erro interno do servidor');
         }
     }
 
@@ -51,48 +53,51 @@ class ReportController extends Controller
      */
     public function create(): View
     {
-        return view( 'reports.create', [
-            'types'   => [ 'budget' => 'Orçamentos', 'customer' => 'Clientes', 'product' => 'Produtos', 'service' => 'Serviços' ],
-            'formats' => [ 'pdf' => 'PDF', 'excel' => 'Excel', 'csv' => 'CSV' ],
-        ] );
+        return view('reports.create', [
+            'types' => ['budget' => 'Orçamentos', 'customer' => 'Clientes', 'product' => 'Produtos', 'service' => 'Serviços'],
+            'formats' => ['pdf' => 'PDF', 'excel' => 'Excel', 'csv' => 'CSV'],
+        ]);
     }
 
     /**
      * Solicitar geração de relatório
      */
-    public function store( ReportGenerateRequest $request )
+    public function store(ReportGenerateRequest $request)
     {
         try {
-            $result = app( ReportService::class)->generateReport( $request->validated() );
-            if ( $result->isSuccess() ) {
-                return redirect()->route( 'reports.index' )->with( 'success', $result->getMessage() );
+            $result = app(ReportService::class)->generateReport($request->validated());
+            if ($result->isSuccess()) {
+                return redirect()->route('reports.index')->with('success', $result->getMessage());
             } else {
-                return redirect()->back()->with( 'error', $result->getMessage() )->withInput();
+                return redirect()->back()->with('error', $result->getMessage())->withInput();
             }
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao solicitar relatório', [ 'error' => $e->getMessage(), 'data' => $request->all() ] );
-            return redirect()->back()->with( 'error', 'Erro interno do servidor' )->withInput();
+        } catch (Exception $e) {
+            Log::error('Erro ao solicitar relatório', ['error' => $e->getMessage(), 'data' => $request->all()]);
+
+            return redirect()->back()->with('error', 'Erro interno do servidor')->withInput();
         }
     }
 
     /**
      * Fazer download do relatório
      */
-    public function download( string $hash ): BinaryFileResponse
+    public function download(string $hash): BinaryFileResponse
     {
         try {
-            $result = app( ReportService::class)->downloadReport( $hash );
-            if ( !$result->isSuccess() ) abort( 404, $result->getMessage() );
+            $result = app(ReportService::class)->downloadReport($hash);
+            if (! $result->isSuccess()) {
+                abort(404, $result->getMessage());
+            }
 
-            $data     = $result->getData();
-            $filePath = Storage::disk( 'reports' )->path( $data[ 'file_path' ] );
+            $data = $result->getData();
+            $filePath = Storage::disk('reports')->path($data['file_path']);
 
-            return response()->download( $filePath, $data[ 'file_name' ], [
-                'Content-Type' => $data[ 'mime_type' ]
-            ] );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao fazer download do relatório', [ 'hash' => $hash, 'error' => $e->getMessage() ] );
-            abort( 500, 'Erro interno do servidor' );
+            return response()->download($filePath, $data['file_name'], [
+                'Content-Type' => $data['mime_type'],
+            ]);
+        } catch (Exception $e) {
+            Log::error('Erro ao fazer download do relatório', ['hash' => $hash, 'error' => $e->getMessage()]);
+            abort(500, 'Erro interno do servidor');
         }
     }
 
@@ -101,7 +106,7 @@ class ReportController extends Controller
      */
     public function financial(): View
     {
-        return view( 'pages.report.financial.financial' );
+        return view('pages.report.financial.financial');
     }
 
     /**
@@ -109,7 +114,7 @@ class ReportController extends Controller
      */
     public function customers(): View
     {
-        return view( 'pages.report.customer.customer' );
+        return view('pages.report.customer.customer');
     }
 
     /**
@@ -117,7 +122,7 @@ class ReportController extends Controller
      */
     public function products(): View
     {
-        return view( 'pages.report.product.product' );
+        return view('pages.report.product.product');
     }
 
     /**
@@ -125,30 +130,32 @@ class ReportController extends Controller
      */
     public function budgets(): View
     {
-        return view( 'pages.report.budget.budget', [
+        return view('pages.report.budget.budget', [
             'filters' => [
-                'status' => request( 'status', '' ),
-            ]
-        ] );
+                'status' => request('status', ''),
+            ],
+        ]);
     }
 
     /**
      * Gerar PDF de orçamentos (LEGACY)
      */
-    public function budgetsPdf( Request $request ): Response
+    public function budgetsPdf(Request $request): Response
     {
         try {
-            $filters = $request->only( [ 'code', 'start_date', 'end_date', 'customer_name', 'total', 'status' ] );
+            $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
 
-            $budgetService = app( \App\Services\Domain\BudgetService::class);
-            $result        = $budgetService->getFilteredBudgets( $filters );
-            if ( !$result->isSuccess() ) abort( 500, 'Erro ao buscar dados' );
+            $budgetService = app(\App\Services\Domain\BudgetService::class);
+            $result = $budgetService->getFilteredBudgets($filters);
+            if (! $result->isSuccess()) {
+                abort(500, 'Erro ao buscar dados');
+            }
 
             $budgets = $result->getData();
-            $totals  = $this->calculateTotals( $budgets );
+            $totals = $this->calculateTotals($budgets);
 
-            $html     = view( 'pages.report.budget.pdf_budget', compact( 'budgets', 'totals', 'filters' ) )->render();
-            $filename = $this->generateFileName( 'orcamentos', 'pdf', count( $budgets ) );
+            $html = view('pages.report.budget.pdf_budget', compact('budgets', 'totals', 'filters'))->render();
+            $filename = $this->generateFileName('orcamentos', 'pdf', count($budgets));
 
             $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
@@ -158,72 +165,73 @@ class ReportController extends Controller
                 'margin_top' => 14,
                 'margin_bottom' => 14,
             ]);
-            $mpdf->WriteHTML( $html );
-            $content = $mpdf->Output( '', 'S' );
+            $mpdf->WriteHTML($html);
+            $content = $mpdf->Output('', 'S');
 
-            return response( $content, 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"'
-            ] );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao gerar PDF de orçamentos', [ 'error' => $e->getMessage() ] );
-            abort( 500, 'Erro interno' );
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Erro ao gerar PDF de orçamentos', ['error' => $e->getMessage()]);
+            abort(500, 'Erro interno');
         }
     }
 
-    private function calculateTotals( Collection $budgets ): array
+    private function calculateTotals(Collection $budgets): array
     {
         return [
             'count' => $budgets->count(),
-            'sum'   => $budgets->sum( 'total' ),
-            'avg'   => $budgets->avg( 'total' ) ?? 0,
+            'sum' => $budgets->sum('total'),
+            'avg' => $budgets->avg('total') ?? 0,
         ];
     }
 
-    private function generateFileName( string $type, string $format, int $count ): string
+    private function generateFileName(string $type, string $format, int $count): string
     {
-        $timestamp      = now()->format( 'Ymd_His' );
-        $countFormatted = str_pad( $count, 3, '0', STR_PAD_LEFT );
+        $timestamp = now()->format('Ymd_His');
+        $countFormatted = str_pad($count, 3, '0', STR_PAD_LEFT);
+
         return "relatorio_{$type}_{$timestamp}_{$countFormatted}_registros.{$format}";
     }
 
     /**
      * Exportação PDF de orçamentos
      */
-    public function budgets_pdf( Request $request )
+    public function budgets_pdf(Request $request)
     {
         try {
             // Get filters from request
-            $filters = $request->only( [ 'code', 'start_date', 'end_date', 'customer_name', 'total', 'status' ] );
+            $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
 
             // Get budget data
-            $budgetService = app( \App\Services\Domain\BudgetService::class );
-            $result        = $budgetService->getFilteredBudgets( $filters );
-            
-            if ( !$result->isSuccess() ) {
-                return response()->json( [ 'error' => 'Erro ao buscar dados' ], 500 );
+            $budgetService = app(\App\Services\Domain\BudgetService::class);
+            $result = $budgetService->getFilteredBudgets($filters);
+
+            if (! $result->isSuccess()) {
+                return response()->json(['error' => 'Erro ao buscar dados'], 500);
             }
 
             $budgets = $result->getData();
-            
-            if ( $budgets->isEmpty() ) {
-                return response()->json( [ 'error' => 'Nenhum orçamento encontrado' ], 404 );
+
+            if ($budgets->isEmpty()) {
+                return response()->json(['error' => 'Nenhum orçamento encontrado'], 404);
             }
 
             // Calculate totals
-            $totals = $this->calculateTotals( $budgets );
+            $totals = $this->calculateTotals($budgets);
 
             // Generate HTML for PDF
-            $html = view( 'pages.report.budget.pdf_budget', [
+            $html = view('pages.report.budget.pdf_budget', [
                 'budgets' => $budgets,
                 'totals' => $totals,
                 'filters' => $filters,
-                'generated_at' => now()->format( 'd/m/Y H:i:s' ),
-                'generated_by' => auth()->user()->name
-            ] )->render();
+                'generated_at' => now()->format('d/m/Y H:i:s'),
+                'generated_by' => auth()->user()->name,
+            ])->render();
 
             // Create PDF using mPDF
-            $mpdf = new \Mpdf\Mpdf( [
+            $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
                 'format' => 'A4',
                 'margin_left' => 12,
@@ -231,149 +239,151 @@ class ReportController extends Controller
                 'margin_top' => 14,
                 'margin_bottom' => 14,
                 'margin_header' => 8,
-                'margin_footer' => 8
-            ] );
+                'margin_footer' => 8,
+            ]);
 
             // Add header and footer
-            $mpdf->SetHeader( 'Relatório de Orçamentos - ' . config( 'app.name' ) . '||Gerado em: ' . now()->format( 'd/m/Y' ) );
-            $mpdf->SetFooter( 'Página {PAGENO} de {nb}|Usuário: ' . auth()->user()->name . '|' . config( 'app.url' ) );
+            $mpdf->SetHeader('Relatório de Orçamentos - '.config('app.name').'||Gerado em: '.now()->format('d/m/Y'));
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.auth()->user()->name.'|'.config('app.url'));
 
             // Write HTML content
-            $mpdf->WriteHTML( $html );
+            $mpdf->WriteHTML($html);
 
             // Generate filename
             $count = $budgets->count();
-            $timestamp = now()->format( 'Ymd_His' );
+            $timestamp = now()->format('Ymd_His');
             $filename = "relatorio_orcamentos_{$timestamp}_{$count}_registros.pdf";
 
             // Return PDF as download
-            $content = $mpdf->Output( '', 'S' );
-            
-            return response( $content, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"'
-            ] );
+            $content = $mpdf->Output('', 'S');
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao gerar PDF de orçamentos', [ 'error' => $e->getMessage() ] );
-            return response()->json( [ 'error' => 'Erro interno ao gerar PDF' ], 500 );
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar PDF de orçamentos', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Erro interno ao gerar PDF'], 500);
         }
     }
 
     /**
      * Exportação Excel de orçamentos
      */
-    public function budgets_excel( Request $request )
+    public function budgets_excel(Request $request)
     {
         try {
             // Get filters from request
-            $filters = $request->only( [ 'code', 'start_date', 'end_date', 'customer_name', 'total', 'status' ] );
+            $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
 
             // Get budget data
-            $budgetService = app( \App\Services\Domain\BudgetService::class );
-            $result        = $budgetService->getFilteredBudgets( $filters );
-            
-            if ( !$result->isSuccess() ) {
-                return response()->json( [ 'error' => 'Erro ao buscar dados' ], 500 );
+            $budgetService = app(\App\Services\Domain\BudgetService::class);
+            $result = $budgetService->getFilteredBudgets($filters);
+
+            if (! $result->isSuccess()) {
+                return response()->json(['error' => 'Erro ao buscar dados'], 500);
             }
 
             $budgets = $result->getData();
-            
-            if ( $budgets->isEmpty() ) {
-                return response()->json( [ 'error' => 'Nenhum orçamento encontrado' ], 404 );
+
+            if ($budgets->isEmpty()) {
+                return response()->json(['error' => 'Nenhum orçamento encontrado'], 404);
             }
 
             // Prepare data for Excel
             $excelData = [];
-            $excelData[] = [ 'Nº Orçamento', 'Cliente', 'Descrição', 'Data Criação', 'Data Vencimento', 'Valor Total', 'Status' ];
-            
-            foreach ( $budgets as $budget ) {
+            $excelData[] = ['Nº Orçamento', 'Cliente', 'Descrição', 'Data Criação', 'Data Vencimento', 'Valor Total', 'Status'];
+
+            foreach ($budgets as $budget) {
                 $customerName = 'Não informado';
-                if ( $budget->customer && $budget->customer->commonData ) {
+                if ($budget->customer && $budget->customer->commonData) {
                     $commonData = $budget->customer->commonData;
-                    $customerName = $commonData->company_name ?: ( $commonData->first_name . ' ' . $commonData->last_name );
+                    $customerName = $commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name);
                 }
-                
+
                 $excelData[] = [
                     $budget->code,
                     $customerName,
                     $budget->description ?: 'Sem descrição',
-                    $budget->created_at->format( 'd/m/Y' ),
-                    $budget->due_date ? \Carbon\Carbon::parse( $budget->due_date )->format( 'd/m/Y' ) : 'N/A',
-                    number_format( $budget->total, 2, ',', '.' ),
-                    $budget->status_label ?? $budget->status
+                    $budget->created_at->format('d/m/Y'),
+                    $budget->due_date ? \Carbon\Carbon::parse($budget->due_date)->format('d/m/Y') : 'N/A',
+                    number_format($budget->total, 2, ',', '.'),
+                    $budget->status_label ?? $budget->status,
                 ];
             }
 
             // Create Excel file using PhpSpreadsheet
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
             $sheet = $spreadsheet->getActiveSheet();
-            
+
             // Set data
-            $sheet->fromArray( $excelData, null, 'A1' );
-            
+            $sheet->fromArray($excelData, null, 'A1');
+
             // Format header row
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                    'color' => [ 'rgb' => 'FFFFFF' ]
+                    'color' => ['rgb' => 'FFFFFF'],
                 ],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [ 'rgb' => '4472C4' ]
+                    'startColor' => ['rgb' => '4472C4'],
                 ],
                 'alignment' => [
                     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-                ]
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
             ];
-            
-            $sheet->getStyle( 'A1:G1' )->applyFromArray( $headerStyle );
-            
+
+            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+
             // Auto-size columns
-            foreach ( range( 'A', 'G' ) as $column ) {
-                $sheet->getColumnDimension( $column )->setAutoSize( true );
+            foreach (range('A', 'G') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
             }
-            
+
             // Format currency column
             $currencyStyle = [
                 'numberFormat' => [
-                    'formatCode' => '#,##0.00'
+                    'formatCode' => '#,##0.00',
                 ],
                 'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT
-                ]
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                ],
             ];
-            
-            $lastRow = count( $excelData );
-            $sheet->getStyle( "F2:F{$lastRow}" )->applyFromArray( $currencyStyle );
-            
+
+            $lastRow = count($excelData);
+            $sheet->getStyle("F2:F{$lastRow}")->applyFromArray($currencyStyle);
+
             // Set title and metadata
-            $sheet->setTitle( 'Orçamentos' );
+            $sheet->setTitle('Orçamentos');
             $spreadsheet->getProperties()
-                ->setCreator( auth()->user()->name )
-                ->setTitle( 'Relatório de Orçamentos' )
-                ->setDescription( 'Relatório de orçamentos gerado em ' . now()->format( 'd/m/Y H:i:s' ) );
+                ->setCreator(auth()->user()->name)
+                ->setTitle('Relatório de Orçamentos')
+                ->setDescription('Relatório de orçamentos gerado em '.now()->format('d/m/Y H:i:s'));
 
             // Create filename
             $count = $budgets->count();
-            $timestamp = now()->format( 'Ymd_His' );
+            $timestamp = now()->format('Ymd_His');
             $filename = "relatorio_orcamentos_{$timestamp}_{$count}_registros.xlsx";
 
             // Save to temporary file
-            $tempFile = tempnam( sys_get_temp_dir(), 'excel_' );
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx( $spreadsheet );
-            $writer->save( $tempFile );
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($tempFile);
 
             // Return file as download
-            return response()->download( $tempFile, $filename, [
+            return response()->download($tempFile, $filename, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
-            ] )->deleteFileAfterSend( true );
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ])->deleteFileAfterSend(true);
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao gerar Excel de orçamentos', [ 'error' => $e->getMessage() ] );
-            return response()->json( [ 'error' => 'Erro interno ao gerar Excel' ], 500 );
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar Excel de orçamentos', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Erro interno ao gerar Excel'], 500);
         }
     }
 
@@ -382,217 +392,217 @@ class ReportController extends Controller
      */
     public function services(): View
     {
-        return view( 'pages.report.service.service' );
+        return view('pages.report.service.service');
     }
 
     /**
      * Busca dados para relatório de clientes
      */
-    public function customersSearch( Request $request ): JsonResponse
+    public function customersSearch(Request $request): JsonResponse
     {
         try {
-            $name      = $request->input( 'name', '' );
-            $document  = $request->input( 'document', '' );
-            $startDate = $request->input( 'start_date' );
-            $endDate   = $request->input( 'end_date' );
+            $name = $request->input('name', '');
+            $document = $request->input('document', '');
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
 
-            Log::info( 'Filtros recebidos:', [
-                'name'       => $name,
-                'document'   => $document,
+            Log::info('Filtros recebidos:', [
+                'name' => $name,
+                'document' => $document,
                 'start_date' => $startDate,
-                'end_date'   => $endDate
-            ] );
+                'end_date' => $endDate,
+            ]);
 
-            $query = Customer::with( [ 'commonData', 'contact' ] )
-                ->where( 'tenant_id', auth()->user()->tenant_id );
+            $query = Customer::with(['commonData', 'contact'])
+                ->where('tenant_id', auth()->user()->tenant_id);
 
             // Aplicar filtros separadamente com AND
-            if ( !empty( $name ) ) {
-                $query->whereHas( 'commonData', function ( $subQ ) use ( $name ) {
-                    $subQ->where( 'first_name', 'like', "%{$name}%" )
-                        ->orWhere( 'last_name', 'like', "%{$name}%" )
-                        ->orWhere( 'company_name', 'like', "%{$name}%" );
-                } );
+            if (! empty($name)) {
+                $query->whereHas('commonData', function ($subQ) use ($name) {
+                    $subQ->where('first_name', 'like', "%{$name}%")
+                        ->orWhere('last_name', 'like', "%{$name}%")
+                        ->orWhere('company_name', 'like', "%{$name}%");
+                });
             }
 
-            if ( !empty( $document ) ) {
-                $cleanDocument = clean_document_partial( $document, 1 );
-                Log::info( 'Documento limpo:', [ 'original' => $document, 'clean' => $cleanDocument ] );
+            if (! empty($document)) {
+                $cleanDocument = clean_document_partial($document, 1);
+                Log::info('Documento limpo:', ['original' => $document, 'clean' => $cleanDocument]);
 
-                if ( !empty( $cleanDocument ) ) {
-                    $query->whereHas( 'commonData', function ( $subQ ) use ( $cleanDocument ) {
-                        $subQ->where( 'cpf', 'like', "%{$cleanDocument}%" )
-                            ->orWhere( 'cnpj', 'like', "%{$cleanDocument}%" );
-                    } );
+                if (! empty($cleanDocument)) {
+                    $query->whereHas('commonData', function ($subQ) use ($cleanDocument) {
+                        $subQ->where('cpf', 'like', "%{$cleanDocument}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanDocument}%");
+                    });
                 }
             }
 
             // Filtro por data de cadastro
-            if ( !empty( $startDate ) ) {
-                $query->where( 'created_at', '>=', $startDate . ' 00:00:00' );
+            if (! empty($startDate)) {
+                $query->where('created_at', '>=', $startDate.' 00:00:00');
             }
 
-            if ( !empty( $endDate ) ) {
-                $query->where( 'created_at', '<=', $endDate . ' 23:59:59' );
+            if (! empty($endDate)) {
+                $query->where('created_at', '<=', $endDate.' 23:59:59');
             }
 
             $customers = $query->get();
 
-            Log::info( 'Resultados encontrados:', [ 'count' => $customers->count() ] );
+            Log::info('Resultados encontrados:', ['count' => $customers->count()]);
 
-            $result = $customers->map( function ( $customer ) {
+            $result = $customers->map(function ($customer) {
                 $commonData = $customer->commonData;
-                $contact    = $customer->contact;
+                $contact = $customer->contact;
 
                 return [
-                    'id'             => $customer->id,
-                    'customer_name'  => $commonData ?
-                        ( $commonData->company_name ?: ( $commonData->first_name . ' ' . $commonData->last_name ) ) :
+                    'id' => $customer->id,
+                    'customer_name' => $commonData ?
+                        ($commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name)) :
                         'Nome não informado',
-                    'cpf'            => $commonData?->cpf ?? '',
-                    'cnpj'           => $commonData?->cnpj ?? '',
-                    'email'          => $contact?->email_personal ?? '',
+                    'cpf' => $commonData?->cpf ?? '',
+                    'cnpj' => $commonData?->cnpj ?? '',
+                    'email' => $contact?->email_personal ?? '',
                     'email_business' => $contact?->email_business ?? '',
-                    'phone'          => $contact?->phone_personal ?? '',
+                    'phone' => $contact?->phone_personal ?? '',
                     'phone_business' => $contact?->phone_business ?? '',
-                    'created_at'     => $customer->created_at->toISOString(),
+                    'created_at' => $customer->created_at->toISOString(),
                 ];
-            } );
+            });
 
-            return response()->json( $result );
+            return response()->json($result);
 
-        } catch ( Exception $e ) {
-            return response()->json( [
-                'error' => 'Erro interno: ' . $e->getMessage()
-            ], 500 );
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Erro interno: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Exportação PDF de clientes
      */
-    public function customersPdf( Request $request )
+    public function customersPdf(Request $request)
     {
         try {
-            $name      = $request->input( 'name', '' );
-            $document  = $request->input( 'document', '' );
-            $startDate = $request->input( 'start_date' );
-            $endDate   = $request->input( 'end_date' );
+            $name = $request->input('name', '');
+            $document = $request->input('document', '');
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
 
-            $query = Customer::with( [ 'commonData', 'contact' ] )
-                ->where( 'tenant_id', auth()->user()->tenant_id );
+            $query = Customer::with(['commonData', 'contact'])
+                ->where('tenant_id', auth()->user()->tenant_id);
 
             // Aplicar mesmos filtros da busca
-            if ( !empty( $name ) ) {
-                $query->whereHas( 'commonData', function ( $subQ ) use ( $name ) {
-                    $subQ->where( 'first_name', 'like', "%{$name}%" )
-                        ->orWhere( 'last_name', 'like', "%{$name}%" )
-                        ->orWhere( 'company_name', 'like', "%{$name}%" );
-                } );
+            if (! empty($name)) {
+                $query->whereHas('commonData', function ($subQ) use ($name) {
+                    $subQ->where('first_name', 'like', "%{$name}%")
+                        ->orWhere('last_name', 'like', "%{$name}%")
+                        ->orWhere('company_name', 'like', "%{$name}%");
+                });
             }
 
-            if ( !empty( $document ) ) {
-                $cleanDocument = clean_document_partial( $document, 1 );
-                if ( !empty( $cleanDocument ) ) {
-                    $query->whereHas( 'commonData', function ( $subQ ) use ( $cleanDocument ) {
-                        $subQ->where( 'cpf', 'like', "%{$cleanDocument}%" )
-                            ->orWhere( 'cnpj', 'like', "%{$cleanDocument}%" );
-                    } );
+            if (! empty($document)) {
+                $cleanDocument = clean_document_partial($document, 1);
+                if (! empty($cleanDocument)) {
+                    $query->whereHas('commonData', function ($subQ) use ($cleanDocument) {
+                        $subQ->where('cpf', 'like', "%{$cleanDocument}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanDocument}%");
+                    });
                 }
             }
 
-            if ( !empty( $startDate ) ) {
-                $query->where( 'created_at', '>=', $startDate . ' 00:00:00' );
+            if (! empty($startDate)) {
+                $query->where('created_at', '>=', $startDate.' 00:00:00');
             }
 
-            if ( !empty( $endDate ) ) {
-                $query->where( 'created_at', '<=', $endDate . ' 23:59:59' );
+            if (! empty($endDate)) {
+                $query->where('created_at', '<=', $endDate.' 23:59:59');
             }
 
             $customers = $query->get();
 
             $filters = [
-                'name'       => $name,
-                'document'   => $document,
+                'name' => $name,
+                'document' => $document,
                 'start_date' => $startDate,
-                'end_date'   => $endDate
+                'end_date' => $endDate,
             ];
 
-            return view( 'pages.report.customer.pdf_customer', [
+            return view('pages.report.customer.pdf_customer', [
                 'customers' => $customers,
-                'filters'   => $filters
-            ] );
+                'filters' => $filters,
+            ]);
 
-        } catch ( Exception $e ) {
-            return response()->json( [
-                'error' => 'Erro ao gerar PDF: ' . $e->getMessage()
-            ], 500 );
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Erro ao gerar PDF: '.$e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Exportação Excel de clientes
      */
-    public function customersExcel( Request $request )
+    public function customersExcel(Request $request)
     {
         try {
-            $name      = $request->input( 'name', '' );
-            $document  = $request->input( 'document', '' );
-            $startDate = $request->input( 'start_date' );
-            $endDate   = $request->input( 'end_date' );
+            $name = $request->input('name', '');
+            $document = $request->input('document', '');
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
 
-            $query = Customer::with( [ 'commonData', 'contact' ] )
-                ->where( 'tenant_id', auth()->user()->tenant_id );
+            $query = Customer::with(['commonData', 'contact'])
+                ->where('tenant_id', auth()->user()->tenant_id);
 
             // Aplicar mesmos filtros da busca
-            if ( !empty( $name ) ) {
-                $query->whereHas( 'commonData', function ( $subQ ) use ( $name ) {
-                    $subQ->where( 'first_name', 'like', "%{$name}%" )
-                        ->orWhere( 'last_name', 'like', "%{$name}%" )
-                        ->orWhere( 'company_name', 'like', "%{$name}%" );
-                } );
+            if (! empty($name)) {
+                $query->whereHas('commonData', function ($subQ) use ($name) {
+                    $subQ->where('first_name', 'like', "%{$name}%")
+                        ->orWhere('last_name', 'like', "%{$name}%")
+                        ->orWhere('company_name', 'like', "%{$name}%");
+                });
             }
 
-            if ( !empty( $document ) ) {
-                $cleanDocument = clean_document_partial( $document, 1 );
-                if ( !empty( $cleanDocument ) ) {
-                    $query->whereHas( 'commonData', function ( $subQ ) use ( $cleanDocument ) {
-                        $subQ->where( 'cpf', 'like', "%{$cleanDocument}%" )
-                            ->orWhere( 'cnpj', 'like', "%{$cleanDocument}%" );
-                    } );
+            if (! empty($document)) {
+                $cleanDocument = clean_document_partial($document, 1);
+                if (! empty($cleanDocument)) {
+                    $query->whereHas('commonData', function ($subQ) use ($cleanDocument) {
+                        $subQ->where('cpf', 'like', "%{$cleanDocument}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanDocument}%");
+                    });
                 }
             }
 
-            if ( !empty( $startDate ) ) {
-                $query->where( 'created_at', '>=', $startDate . ' 00:00:00' );
+            if (! empty($startDate)) {
+                $query->where('created_at', '>=', $startDate.' 00:00:00');
             }
 
-            if ( !empty( $endDate ) ) {
-                $query->where( 'created_at', '<=', $endDate . ' 23:59:59' );
+            if (! empty($endDate)) {
+                $query->where('created_at', '<=', $endDate.' 23:59:59');
             }
 
             $customers = $query->get();
 
-            if ( $customers->isEmpty() ) {
-                return response()->json( [ 'error' => 'Nenhum cliente encontrado' ], 404 );
+            if ($customers->isEmpty()) {
+                return response()->json(['error' => 'Nenhum cliente encontrado'], 404);
             }
 
             // Prepare data for Excel
             $excelData = [];
-            $excelData[] = [ 'Nome/Razão Social', 'CPF/CNPJ', 'E-mail Pessoal', 'E-mail Comercial', 'Telefone Pessoal', 'Telefone Comercial', 'Data Cadastro' ];
-            
-            foreach ( $customers as $customer ) {
+            $excelData[] = ['Nome/Razão Social', 'CPF/CNPJ', 'E-mail Pessoal', 'E-mail Comercial', 'Telefone Pessoal', 'Telefone Comercial', 'Data Cadastro'];
+
+            foreach ($customers as $customer) {
                 $commonData = $customer->commonData;
-                $contact    = $customer->contact;
-                
+                $contact = $customer->contact;
+
                 $customerName = 'Não informado';
                 $documentNumber = '';
-                
-                if ( $commonData ) {
-                    $customerName = $commonData->company_name ?: ( $commonData->first_name . ' ' . $commonData->last_name );
+
+                if ($commonData) {
+                    $customerName = $commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name);
                     $documentNumber = $commonData->cpf ?: $commonData->cnpj ?: '';
                 }
-                
+
                 $excelData[] = [
                     $customerName,
                     $documentNumber,
@@ -600,67 +610,67 @@ class ReportController extends Controller
                     $contact?->email_business ?: 'N/A',
                     $contact?->phone_personal ?: 'N/A',
                     $contact?->phone_business ?: 'N/A',
-                    $customer->created_at->format( 'd/m/Y' )
+                    $customer->created_at->format('d/m/Y'),
                 ];
             }
 
             // Create Excel file using PhpSpreadsheet
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
             $sheet = $spreadsheet->getActiveSheet();
-            
+
             // Set data
-            $sheet->fromArray( $excelData, null, 'A1' );
-            
+            $sheet->fromArray($excelData, null, 'A1');
+
             // Format header row
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                    'color' => [ 'rgb' => 'FFFFFF' ]
+                    'color' => ['rgb' => 'FFFFFF'],
                 ],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [ 'rgb' => '4472C4' ]
+                    'startColor' => ['rgb' => '4472C4'],
                 ],
                 'alignment' => [
                     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-                ]
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
             ];
-            
-            $sheet->getStyle( 'A1:G1' )->applyFromArray( $headerStyle );
-            
+
+            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+
             // Auto-size columns
-            foreach ( range( 'A', 'G' ) as $column ) {
-                $sheet->getColumnDimension( $column )->setAutoSize( true );
+            foreach (range('A', 'G') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
             }
-            
+
             // Set title and metadata
-            $sheet->setTitle( 'Clientes' );
+            $sheet->setTitle('Clientes');
             $spreadsheet->getProperties()
-                ->setCreator( auth()->user()->name )
-                ->setTitle( 'Relatório de Clientes' )
-                ->setDescription( 'Relatório de clientes gerado em ' . now()->format( 'd/m/Y H:i:s' ) );
+                ->setCreator(auth()->user()->name)
+                ->setTitle('Relatório de Clientes')
+                ->setDescription('Relatório de clientes gerado em '.now()->format('d/m/Y H:i:s'));
 
             // Create filename
             $count = $customers->count();
-            $timestamp = now()->format( 'Ymd_His' );
+            $timestamp = now()->format('Ymd_His');
             $filename = "relatorio_clientes_{$timestamp}_{$count}_registros.xlsx";
 
             // Save to temporary file
-            $tempFile = tempnam( sys_get_temp_dir(), 'excel_' );
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx( $spreadsheet );
-            $writer->save( $tempFile );
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($tempFile);
 
             // Return file as download
-            return response()->download( $tempFile, $filename, [
+            return response()->download($tempFile, $filename, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
-            ] )->deleteFileAfterSend( true );
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ])->deleteFileAfterSend(true);
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao gerar Excel de clientes', [ 'error' => $e->getMessage() ] );
-            return response()->json( [ 'error' => 'Erro interno ao gerar Excel' ], 500 );
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar Excel de clientes', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Erro interno ao gerar Excel'], 500);
         }
     }
-
 }

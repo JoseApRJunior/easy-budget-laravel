@@ -202,16 +202,16 @@ class InventoryController extends Controller
         $countCancellations = (int) $summaryQuery->clone()->where('type', 'cancellation')->count();
 
         $summary = [
-            'total_entries'       => $totalEntries,
-            'total_exits'         => $totalExits,
-            'balance'             => $totalEntries - $totalExits,
-            'total_adjustments'   => $totalAdjustments,
-            'total_reservations'  => $totalReservations,
+            'total_entries' => $totalEntries,
+            'total_exits' => $totalExits,
+            'balance' => $totalEntries - $totalExits,
+            'total_adjustments' => $totalAdjustments,
+            'total_reservations' => $totalReservations,
             'total_cancellations' => $totalCancellations,
-            'count_entries'       => $countEntries,
-            'count_exits'         => $countExits,
-            'count_adjustments'   => $countAdjustments,
-            'count_reservations'  => $countReservations,
+            'count_entries' => $countEntries,
+            'count_exits' => $countExits,
+            'count_adjustments' => $countAdjustments,
+            'count_reservations' => $countReservations,
             'count_cancellations' => $countCancellations,
         ];
 
@@ -226,7 +226,7 @@ class InventoryController extends Controller
         $filters = $request->only(['start_date', 'end_date', 'category_id']) + [
             'start_date' => '',
             'end_date' => '',
-            'category_id' => ''
+            'category_id' => '',
         ];
 
         $categories = \App\Models\Category::all();
@@ -234,7 +234,7 @@ class InventoryController extends Controller
         $query = Product::query()
             ->with(['category'])
             ->select(['products.*'])
-            ->when(!empty($filters['category_id']), function ($q) use ($filters) {
+            ->when(! empty($filters['category_id']), function ($q) use ($filters) {
                 $q->where('category_id', (int) $filters['category_id']);
             })
             ->selectSub(
@@ -254,10 +254,10 @@ class InventoryController extends Controller
                     ->selectRaw('COALESCE(SUM(quantity),0)')
                     ->whereColumn('product_id', 'products.id')
                     ->where('type', 'entry')
-                    ->when(!empty($filters['start_date']), function ($q) use ($filters) {
+                    ->when(! empty($filters['start_date']), function ($q) use ($filters) {
                         $q->whereDate('created_at', '>=', $filters['start_date']);
                     })
-                    ->when(!empty($filters['end_date']), function ($q) use ($filters) {
+                    ->when(! empty($filters['end_date']), function ($q) use ($filters) {
                         $q->whereDate('created_at', '<=', $filters['end_date']);
                     }),
                 'total_entries'
@@ -267,10 +267,10 @@ class InventoryController extends Controller
                     ->selectRaw('COALESCE(SUM(quantity),0)')
                     ->whereColumn('product_id', 'products.id')
                     ->whereIn('type', ['exit', 'subtraction'])
-                    ->when(!empty($filters['start_date']), function ($q) use ($filters) {
+                    ->when(! empty($filters['start_date']), function ($q) use ($filters) {
                         $q->whereDate('created_at', '>=', $filters['start_date']);
                     })
-                    ->when(!empty($filters['end_date']), function ($q) use ($filters) {
+                    ->when(! empty($filters['end_date']), function ($q) use ($filters) {
                         $q->whereDate('created_at', '<=', $filters['end_date']);
                     }),
                 'total_exits'
@@ -373,6 +373,7 @@ class InventoryController extends Controller
     public function show($sku): View
     {
         $product = Product::where('sku', $sku)->firstOrFail();
+
         return view('pages.inventory.show', compact('product'));
     }
 
@@ -382,6 +383,7 @@ class InventoryController extends Controller
     public function entryForm($sku): View
     {
         $product = Product::where('sku', $sku)->firstOrFail();
+
         return view('pages.inventory.entry', compact('product'));
     }
 
@@ -420,6 +422,7 @@ class InventoryController extends Controller
     public function exitForm($sku): View
     {
         $product = Product::where('sku', $sku)->firstOrFail();
+
         return view('pages.inventory.exit', compact('product'));
     }
 
@@ -500,7 +503,7 @@ class InventoryController extends Controller
         // TODO: implementar verificação de disponibilidade
         return response()->json([
             'available' => true,
-            'quantity' => 0
+            'quantity' => 0,
         ]);
     }
 
@@ -523,22 +526,22 @@ class InventoryController extends Controller
                 (string) $request->input('reason', '')
             );
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
                 ], 400);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Estoque adicionado com sucesso',
-                'data' => $result->getData()
+                'data' => $result->getData(),
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao adicionar estoque: ' . $e->getMessage()
+                'message' => 'Erro ao adicionar estoque: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -562,22 +565,22 @@ class InventoryController extends Controller
                 (string) $request->input('reason', '')
             );
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
                 ], 400);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Estoque removido com sucesso',
-                'data' => $result->getData()
+                'data' => $result->getData(),
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao remover estoque: ' . $e->getMessage()
+                'message' => 'Erro ao remover estoque: '.$e->getMessage(),
             ], 500);
         }
     }

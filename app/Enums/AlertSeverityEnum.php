@@ -13,7 +13,7 @@ enum AlertSeverityEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => 'Informação',
             self::WARNING => 'Aviso',
             self::ERROR => 'Erro',
@@ -23,7 +23,7 @@ enum AlertSeverityEnum: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => 'Informação geral, não requer ação imediata',
             self::WARNING => 'Condição que pode requerer atenção',
             self::ERROR => 'Problema que requer atenção',
@@ -33,7 +33,7 @@ enum AlertSeverityEnum: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => '#3b82f6',
             self::WARNING => '#f59e0b',
             self::ERROR => '#ef4444',
@@ -43,7 +43,7 @@ enum AlertSeverityEnum: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => 'bi-info-circle',
             self::WARNING => 'bi-exclamation-triangle',
             self::ERROR => 'bi-x-circle',
@@ -53,7 +53,7 @@ enum AlertSeverityEnum: string
 
     public function priority(): int
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => 1,
             self::WARNING => 2,
             self::ERROR => 3,
@@ -63,7 +63,7 @@ enum AlertSeverityEnum: string
 
     public function shouldNotify(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => false,
             self::WARNING => true,
             self::ERROR => true,
@@ -73,7 +73,7 @@ enum AlertSeverityEnum: string
 
     public function notificationDelay(): int
     {
-        return match($this) {
+        return match ($this) {
             self::INFO => 0,
             self::WARNING => 5, // 5 minutos
             self::ERROR => 1, // 1 minuto

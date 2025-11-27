@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CustomersExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Customer;
 use App\Models\Tenant;
 use App\Services\Shared\CacheService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\CustomersExport;
 
 class CustomerManagementController extends Controller
 {
@@ -125,7 +125,7 @@ class CustomerManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $customer = new Customer();
+            $customer = new Customer;
             $customer->fill($validated);
             $customer->save();
 
@@ -166,7 +166,7 @@ class CustomerManagementController extends Controller
             'state',
             'budgets',
             'services',
-            'invoices'
+            'invoices',
         ]);
 
         $statistics = $this->getCustomerDetailedStatistics($customer);
@@ -198,9 +198,9 @@ class CustomerManagementController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
+            'email' => 'required|email|max:255|unique:customers,email,'.$customer->id,
             'phone' => 'nullable|string|max:20',
-            'document' => 'nullable|string|max:20|unique:customers,document,' . $customer->id,
+            'document' => 'nullable|string|max:20|unique:customers,document,'.$customer->id,
             'type' => 'required|in:individual,company',
             'company_name' => 'nullable|string|max:255',
             'trading_name' => 'nullable|string|max:255',
@@ -260,21 +260,21 @@ class CustomerManagementController extends Controller
         if ($customer->budgets()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um cliente que possui orçamentos associados.'
+                'message' => 'Não é possível excluir um cliente que possui orçamentos associados.',
             ], 422);
         }
 
         if ($customer->services()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um cliente que possui serviços associados.'
+                'message' => 'Não é possível excluir um cliente que possui serviços associados.',
             ], 422);
         }
 
         if ($customer->invoices()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um cliente que possui faturas associadas.'
+                'message' => 'Não é possível excluir um cliente que possui faturas associadas.',
             ], 422);
         }
 
@@ -295,7 +295,7 @@ class CustomerManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Cliente excluído com sucesso!'
+                'message' => 'Cliente excluído com sucesso!',
             ]);
 
         } catch (\Exception $e) {
@@ -308,7 +308,7 @@ class CustomerManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao excluir cliente. Por favor, tente novamente.'
+                'message' => 'Erro ao excluir cliente. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -318,7 +318,7 @@ class CustomerManagementController extends Controller
         $this->authorize('manage-customers');
 
         try {
-            $customer->is_active = !$customer->is_active;
+            $customer->is_active = ! $customer->is_active;
             $customer->save();
 
             $this->cacheService->forgetPattern('customers.*');
@@ -333,7 +333,7 @@ class CustomerManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Status alterado com sucesso!',
-                'is_active' => $customer->is_active
+                'is_active' => $customer->is_active,
             ]);
 
         } catch (\Exception $e) {
@@ -345,7 +345,7 @@ class CustomerManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.'
+                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -395,7 +395,7 @@ class CustomerManagementController extends Controller
 
         return Excel::download(
             new CustomersExport($customers),
-            'clientes_' . now()->format('Y-m-d_H-i-s') . '.' . $format
+            'clientes_'.now()->format('Y-m-d_H-i-s').'.'.$format
         );
     }
 

@@ -73,22 +73,22 @@ class AuditLog extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'        => 'integer',
-        'user_id'          => 'integer',
-        'model_id'         => 'integer',
-        'old_values'       => 'array',
-        'new_values'       => 'array',
-        'metadata'         => 'array',
+        'tenant_id' => 'integer',
+        'user_id' => 'integer',
+        'model_id' => 'integer',
+        'old_values' => 'array',
+        'new_values' => 'array',
+        'metadata' => 'array',
         'is_system_action' => 'boolean',
-        'created_at'       => 'immutable_datetime',
-        'updated_at'       => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
      * Default values for attributes.
      */
     protected $attributes = [
-        'severity'         => 'info',
+        'severity' => 'info',
         'is_system_action' => false,
     ];
 
@@ -124,45 +124,45 @@ class AuditLog extends Model
      */
     public const COMMON_ACTIONS = [
         // Authentication
-        'login'               => 'authentication',
-        'logout'              => 'authentication',
-        'login_failed'        => 'security',
-        'password_changed'    => 'security',
-        'password_reset'      => 'security',
+        'login' => 'authentication',
+        'logout' => 'authentication',
+        'login_failed' => 'security',
+        'password_changed' => 'security',
+        'password_reset' => 'security',
 
         // Data operations
-        'created'             => 'data_modification',
-        'updated'             => 'data_modification',
-        'deleted'             => 'data_modification',
-        'restored'            => 'data_modification',
-        'archived'            => 'data_modification',
+        'created' => 'data_modification',
+        'updated' => 'data_modification',
+        'deleted' => 'data_modification',
+        'restored' => 'data_modification',
+        'archived' => 'data_modification',
 
         // Settings
-        'settings_updated'    => 'settings',
-        'settings_restored'   => 'settings',
-        'profile_updated'     => 'settings',
+        'settings_updated' => 'settings',
+        'settings_restored' => 'settings',
+        'profile_updated' => 'settings',
 
         // Security
-        'two_factor_enabled'  => 'security',
+        'two_factor_enabled' => 'security',
         'two_factor_disabled' => 'security',
-        'session_terminated'  => 'security',
-        'permission_granted'  => 'authorization',
-        'permission_revoked'  => 'authorization',
+        'session_terminated' => 'security',
+        'permission_granted' => 'authorization',
+        'permission_revoked' => 'authorization',
 
         // File operations
-        'file_uploaded'       => 'file_operations',
-        'file_deleted'        => 'file_operations',
-        'avatar_updated'      => 'file_operations',
+        'file_uploaded' => 'file_operations',
+        'file_deleted' => 'file_operations',
+        'avatar_updated' => 'file_operations',
 
         // Backup operations
-        'backup_created'      => 'backup_restore',
-        'backup_restored'     => 'backup_restore',
-        'backup_deleted'      => 'backup_restore',
+        'backup_created' => 'backup_restore',
+        'backup_restored' => 'backup_restore',
+        'backup_deleted' => 'backup_restore',
 
         // System
-        'system_maintenance'  => 'system',
-        'cache_cleared'       => 'system',
-        'migration_ran'       => 'system',
+        'system_maintenance' => 'system',
+        'cache_cleared' => 'system',
+        'migration_ran' => 'system',
     ];
 
     /**
@@ -171,19 +171,19 @@ class AuditLog extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'        => 'required|integer|exists:tenants,id',
-            'user_id'          => 'required|integer|exists:users,id',
-            'action'           => 'required|string|max:100',
-            'model_type'       => 'nullable|string|max:255',
-            'model_id'         => 'nullable|integer',
-            'old_values'       => 'nullable|array',
-            'new_values'       => 'nullable|array',
-            'ip_address'       => 'nullable|ip|max:45',
-            'user_agent'       => 'nullable|string|max:500',
-            'metadata'         => 'nullable|array',
-            'description'      => 'nullable|string|max:1000',
-            'severity'         => 'required|in:' . implode( ',', self::SEVERITY_LEVELS ),
-            'category'         => 'nullable|in:' . implode( ',', self::ACTION_CATEGORIES ),
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'user_id' => 'required|integer|exists:users,id',
+            'action' => 'required|string|max:100',
+            'model_type' => 'nullable|string|max:255',
+            'model_id' => 'nullable|integer',
+            'old_values' => 'nullable|array',
+            'new_values' => 'nullable|array',
+            'ip_address' => 'nullable|ip|max:45',
+            'user_agent' => 'nullable|string|max:500',
+            'metadata' => 'nullable|array',
+            'description' => 'nullable|string|max:1000',
+            'severity' => 'required|in:'.implode(',', self::SEVERITY_LEVELS),
+            'category' => 'nullable|in:'.implode(',', self::ACTION_CATEGORIES),
             'is_system_action' => 'boolean',
         ];
     }
@@ -193,7 +193,7 @@ class AuditLog extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -201,7 +201,7 @@ class AuditLog extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -217,13 +217,13 @@ class AuditLog extends Model
      */
     public function getFormattedIpAddressAttribute(): string
     {
-        if ( !$this->ip_address ) {
+        if (! $this->ip_address) {
             return 'N/A';
         }
 
         // Se temos metadata com localização, inclui
-        if ( $this->metadata && isset( $this->metadata[ 'location' ] ) ) {
-            return $this->ip_address . ' (' . $this->metadata[ 'location' ] . ')';
+        if ($this->metadata && isset($this->metadata['location'])) {
+            return $this->ip_address.' ('.$this->metadata['location'].')';
         }
 
         return $this->ip_address;
@@ -234,16 +234,16 @@ class AuditLog extends Model
      */
     public function getUserAgentInfoAttribute(): array
     {
-        if ( !$this->user_agent ) {
+        if (! $this->user_agent) {
             return [];
         }
 
         // Parse básico do user agent
         return [
-            'browser' => $this->extractBrowser( $this->user_agent ),
-            'os'      => $this->extractOS( $this->user_agent ),
-            'device'  => $this->extractDevice( $this->user_agent ),
-            'raw'     => $this->user_agent,
+            'browser' => $this->extractBrowser($this->user_agent),
+            'os' => $this->extractOS($this->user_agent),
+            'device' => $this->extractDevice($this->user_agent),
+            'raw' => $this->user_agent,
         ];
     }
 
@@ -254,18 +254,18 @@ class AuditLog extends Model
     {
         $changes = [];
 
-        if ( !$this->old_values || !$this->new_values ) {
+        if (! $this->old_values || ! $this->new_values) {
             return $changes;
         }
 
-        foreach ( $this->new_values as $key => $newValue ) {
-            $oldValue = $this->old_values[ $key ] ?? null;
+        foreach ($this->new_values as $key => $newValue) {
+            $oldValue = $this->old_values[$key] ?? null;
 
-            if ( $oldValue !== $newValue ) {
-                $changes[ $key ] = [
-                    'old'  => $oldValue,
-                    'new'  => $newValue,
-                    'type' => $this->determineChangeType( $oldValue, $newValue ),
+            if ($oldValue !== $newValue) {
+                $changes[$key] = [
+                    'old' => $oldValue,
+                    'new' => $newValue,
+                    'type' => $this->determineChangeType($oldValue, $newValue),
                 ];
             }
         }
@@ -278,13 +278,13 @@ class AuditLog extends Model
      */
     public function getSeverityColorAttribute(): string
     {
-        return match ( $this->severity ) {
-            'low'      => 'gray',
-            'info'     => 'blue',
-            'warning'  => 'yellow',
-            'high'     => 'red',
+        return match ($this->severity) {
+            'low' => 'gray',
+            'info' => 'blue',
+            'warning' => 'yellow',
+            'high' => 'red',
             'critical' => 'red',
-            default    => 'gray',
+            default => 'gray',
         };
     }
 
@@ -293,18 +293,18 @@ class AuditLog extends Model
      */
     public function getCategoryIconAttribute(): string
     {
-        return match ( $this->category ) {
-            'authentication'    => 'bi-shield-check',
-            'authorization'     => 'bi-key',
+        return match ($this->category) {
+            'authentication' => 'bi-shield-check',
+            'authorization' => 'bi-key',
             'data_modification' => 'bi-pencil-square',
-            'data_access'       => 'bi-eye',
-            'system'            => 'bi-gear',
-            'security'          => 'bi-shield-exclamation',
-            'settings'          => 'bi-gear',
-            'user_management'   => 'bi-people',
-            'file_operations'   => 'bi-file-earmark',
-            'backup_restore'    => 'bi-archive',
-            default             => 'bi-info-circle',
+            'data_access' => 'bi-eye',
+            'system' => 'bi-gear',
+            'security' => 'bi-shield-exclamation',
+            'settings' => 'bi-gear',
+            'user_management' => 'bi-people',
+            'file_operations' => 'bi-file-earmark',
+            'backup_restore' => 'bi-archive',
+            default => 'bi-info-circle',
         };
     }
 
@@ -324,7 +324,7 @@ class AuditLog extends Model
             'permission_revoked',
         ];
 
-        return in_array( $this->action, $securityActions ) ||
+        return in_array($this->action, $securityActions) ||
             $this->category === 'security' ||
             $this->severity === 'critical' ||
             $this->severity === 'high';
@@ -343,7 +343,7 @@ class AuditLog extends Model
             'archived',
         ];
 
-        return in_array( $this->action, $dataActions ) ||
+        return in_array($this->action, $dataActions) ||
             $this->category === 'data_modification';
     }
 
@@ -359,32 +359,32 @@ class AuditLog extends Model
     ): static {
         $user = auth()->user();
 
-        if ( !$user ) {
-            return new static();
+        if (! $user) {
+            return new static;
         }
 
-        $category = self::COMMON_ACTIONS[ $action ] ?? 'system';
+        $category = self::COMMON_ACTIONS[$action] ?? 'system';
 
-        return static::create( [
-            'tenant_id'  => $user->tenant_id,
-            'user_id'    => $user->id,
-            'action'     => $action,
-            'model_type' => $model ? get_class( $model ) : null,
-            'model_id'   => $model ? $model->getKey() : null,
+        return static::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'action' => $action,
+            'model_type' => $model ? get_class($model) : null,
+            'model_id' => $model ? $model->getKey() : null,
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'metadata'   => $metadata,
-            'category'   => $category,
-            'severity'   => static::determineSeverity( $action ),
-        ] );
+            'metadata' => $metadata,
+            'category' => $category,
+            'severity' => static::determineSeverity($action),
+        ]);
     }
 
     /**
      * Determine severity level for action.
      */
-    protected static function determineSeverity( string $action ): string
+    protected static function determineSeverity(string $action): string
     {
         $criticalActions = [
             'login_failed',
@@ -406,15 +406,15 @@ class AuditLog extends Model
             'two_factor_enabled',
         ];
 
-        if ( in_array( $action, $criticalActions ) ) {
+        if (in_array($action, $criticalActions)) {
             return 'critical';
         }
 
-        if ( in_array( $action, $highActions ) ) {
+        if (in_array($action, $highActions)) {
             return 'high';
         }
 
-        if ( in_array( $action, $warningActions ) ) {
+        if (in_array($action, $warningActions)) {
             return 'warning';
         }
 
@@ -424,18 +424,18 @@ class AuditLog extends Model
     /**
      * Extract browser from user agent.
      */
-    private function extractBrowser( string $userAgent ): string
+    private function extractBrowser(string $userAgent): string
     {
-        if ( stripos( $userAgent, 'Chrome' ) !== false ) {
+        if (stripos($userAgent, 'Chrome') !== false) {
             return 'Chrome';
         }
-        if ( stripos( $userAgent, 'Firefox' ) !== false ) {
+        if (stripos($userAgent, 'Firefox') !== false) {
             return 'Firefox';
         }
-        if ( stripos( $userAgent, 'Safari' ) !== false ) {
+        if (stripos($userAgent, 'Safari') !== false) {
             return 'Safari';
         }
-        if ( stripos( $userAgent, 'Edge' ) !== false ) {
+        if (stripos($userAgent, 'Edge') !== false) {
             return 'Edge';
         }
 
@@ -445,21 +445,21 @@ class AuditLog extends Model
     /**
      * Extract OS from user agent.
      */
-    private function extractOS( string $userAgent ): string
+    private function extractOS(string $userAgent): string
     {
-        if ( stripos( $userAgent, 'Windows' ) !== false ) {
+        if (stripos($userAgent, 'Windows') !== false) {
             return 'Windows';
         }
-        if ( stripos( $userAgent, 'Mac' ) !== false ) {
+        if (stripos($userAgent, 'Mac') !== false) {
             return 'macOS';
         }
-        if ( stripos( $userAgent, 'Linux' ) !== false ) {
+        if (stripos($userAgent, 'Linux') !== false) {
             return 'Linux';
         }
-        if ( stripos( $userAgent, 'Android' ) !== false ) {
+        if (stripos($userAgent, 'Android') !== false) {
             return 'Android';
         }
-        if ( stripos( $userAgent, 'iOS' ) !== false ) {
+        if (stripos($userAgent, 'iOS') !== false) {
             return 'iOS';
         }
 
@@ -469,12 +469,12 @@ class AuditLog extends Model
     /**
      * Extract device from user agent.
      */
-    private function extractDevice( string $userAgent ): string
+    private function extractDevice(string $userAgent): string
     {
-        if ( stripos( $userAgent, 'Mobile' ) !== false ) {
+        if (stripos($userAgent, 'Mobile') !== false) {
             return 'Mobile';
         }
-        if ( stripos( $userAgent, 'Tablet' ) !== false ) {
+        if (stripos($userAgent, 'Tablet') !== false) {
             return 'Tablet';
         }
 
@@ -484,13 +484,13 @@ class AuditLog extends Model
     /**
      * Determine change type.
      */
-    private function determineChangeType( $oldValue, $newValue ): string
+    private function determineChangeType($oldValue, $newValue): string
     {
-        if ( $oldValue === null && $newValue !== null ) {
+        if ($oldValue === null && $newValue !== null) {
             return 'created';
         }
 
-        if ( $oldValue !== null && $newValue === null ) {
+        if ($oldValue !== null && $newValue === null) {
             return 'deleted';
         }
 
@@ -500,32 +500,31 @@ class AuditLog extends Model
     /**
      * Scope for security related logs.
      */
-    public function scopeSecurity( $query )
+    public function scopeSecurity($query)
     {
-        return $query->where( function ( $q ) {
-            $q->whereIn( 'action', [ 'login_failed', 'password_changed', 'two_factor_enabled', 'two_factor_disabled' ] )
-                ->orWhere( 'category', 'security' )
-                ->orWhereIn( 'severity', [ 'high', 'critical' ] );
-        } );
+        return $query->where(function ($q) {
+            $q->whereIn('action', ['login_failed', 'password_changed', 'two_factor_enabled', 'two_factor_disabled'])
+                ->orWhere('category', 'security')
+                ->orWhereIn('severity', ['high', 'critical']);
+        });
     }
 
     /**
      * Scope for data modification logs.
      */
-    public function scopeDataModifications( $query )
+    public function scopeDataModifications($query)
     {
-        return $query->where( function ( $q ) {
-            $q->whereIn( 'action', [ 'created', 'updated', 'deleted', 'restored' ] )
-                ->orWhere( 'category', 'data_modification' );
-        } );
+        return $query->where(function ($q) {
+            $q->whereIn('action', ['created', 'updated', 'deleted', 'restored'])
+                ->orWhere('category', 'data_modification');
+        });
     }
 
     /**
      * Scope for recent logs.
      */
-    public function scopeRecent( $query, int $days = 7 )
+    public function scopeRecent($query, int $days = 7)
     {
-        return $query->where( 'created_at', '>=', now()->subDays( $days ) );
+        return $query->where('created_at', '>=', now()->subDays($days));
     }
-
 }

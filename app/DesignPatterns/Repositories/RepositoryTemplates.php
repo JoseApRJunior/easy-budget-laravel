@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Repositories;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em RepositoryPattern.
- *
- * @package App\DesignPatterns
  */
 class RepositoryTemplates
 {
@@ -981,5 +979,4 @@ public function getStatsByTenant(int $tenantId): array
 - Mantenha estrutura similar entre repositories
 - Documente exceções quando necessário';
     }
-
 }

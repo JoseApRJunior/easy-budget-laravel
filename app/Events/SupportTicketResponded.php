@@ -19,22 +19,23 @@ class SupportTicketResponded
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public array   $ticket;
-    public string  $response;
+    public array $ticket;
+
+    public string $response;
+
     public ?Tenant $tenant;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param array $ticket Dados do ticket de suporte
-     * @param string $response Resposta enviada para o ticket
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  array  $ticket  Dados do ticket de suporte
+     * @param  string  $response  Resposta enviada para o ticket
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
-    public function __construct( array $ticket, string $response, ?Tenant $tenant = null )
+    public function __construct(array $ticket, string $response, ?Tenant $tenant = null)
     {
-        $this->ticket   = $ticket;
+        $this->ticket = $ticket;
         $this->response = $response;
-        $this->tenant   = $tenant;
+        $this->tenant = $tenant;
     }
-
 }

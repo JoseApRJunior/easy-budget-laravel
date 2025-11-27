@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
 use App\Enums\BudgetStatus;
-use App\Http\Requests\BudgetStoreRequest;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\BudgetStoreRequest;
 use App\Models\Budget;
 use App\Models\User;
 use App\Services\Domain\BudgetService;
@@ -31,7 +32,7 @@ class BudgetController extends Controller
         $budgets = $this->budgetService->getBudgetsForProvider($user->id, $request->all());
 
         return view('pages.budget.index', [
-            'budgets' => $budgets
+            'budgets' => $budgets,
         ]);
     }
 
@@ -64,7 +65,7 @@ class BudgetController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar orçamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao criar orçamento: '.$e->getMessage());
         }
     }
 
@@ -103,7 +104,7 @@ class BudgetController extends Controller
             ->firstOrFail();
 
         return view('pages.budget.edit', [
-            'budget' => $budget
+            'budget' => $budget,
         ]);
     }
 
@@ -118,7 +119,7 @@ class BudgetController extends Controller
 
             $result = $this->budgetService->updateByCode($code, $data);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', $result->getMessage());
@@ -130,11 +131,11 @@ class BudgetController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao atualizar orçamento: '.$e->getMessage());
         }
     }
 
-    public function print( Request $request, Budget $budget )
+    public function print(Request $request, Budget $budget)
     {
         /** @var User $user */
         $user = Auth::user();
@@ -150,38 +151,38 @@ class BudgetController extends Controller
             'services.items',
         ]);
 
-        if ( $request->boolean( 'pdf' ) ) {
-            $html = view( 'pages.budget.pdf_budget', [
+        if ($request->boolean('pdf')) {
+            $html = view('pages.budget.pdf_budget', [
                 'budget' => $budget,
-            ] )->render();
+            ])->render();
 
-            $mpdf = new \Mpdf\Mpdf( [
-                'mode'          => 'utf-8',
-                'format'        => 'A4',
-                'margin_left'   => 12,
-                'margin_right'  => 12,
-                'margin_top'    => 14,
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 12,
+                'margin_right' => 12,
+                'margin_top' => 14,
                 'margin_bottom' => 14,
-            ] );
+            ]);
 
-            $mpdf->SetHeader( 'Orçamento ' . $budget->code . ' - ' . config( 'app.name' ) . '||Gerado em: ' . now()->format( 'd/m/Y' ) );
-            $mpdf->SetFooter( 'Página {PAGENO} de {nb}|Usuário: ' . ( $user->name ?? 'N/A' ) . '|' . config( 'app.url' ) );
-            $mpdf->WriteHTML( $html );
+            $mpdf->SetHeader('Orçamento '.$budget->code.' - '.config('app.name').'||Gerado em: '.now()->format('d/m/Y'));
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.($user->name ?? 'N/A').'|'.config('app.url'));
+            $mpdf->WriteHTML($html);
 
-            $filename = 'orcamento_' . $budget->code . '_' . now()->format( 'Ymd_His' ) . '.pdf';
-            $content  = $mpdf->Output( '', 'S' );
+            $filename = 'orcamento_'.$budget->code.'_'.now()->format('Ymd_His').'.pdf';
+            $content = $mpdf->Output('', 'S');
 
-            $disposition = $request->boolean( 'download' ) ? 'attachment' : 'inline';
+            $disposition = $request->boolean('download') ? 'attachment' : 'inline';
 
-            return response( $content, 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => $disposition . '; filename="' . $filename . '"'
-            ] );
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => $disposition.'; filename="'.$filename.'"',
+            ]);
         }
 
-        return view( 'pages.budget.pdf_budget', [
+        return view('pages.budget.pdf_budget', [
             'budget' => $budget,
-        ] );
+        ]);
     }
 
     /**

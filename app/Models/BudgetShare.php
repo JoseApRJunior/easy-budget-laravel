@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Budget;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -52,18 +50,18 @@ class BudgetShare extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'        => 'integer',
-        'budget_id'        => 'integer',
-        'share_token'      => 'string',
-        'permissions'      => 'array',
-        'expires_at'       => 'datetime',
-        'is_active'        => 'boolean',
-        'status'           => 'string',
-        'access_count'     => 'integer',
+        'tenant_id' => 'integer',
+        'budget_id' => 'integer',
+        'share_token' => 'string',
+        'permissions' => 'array',
+        'expires_at' => 'datetime',
+        'is_active' => 'boolean',
+        'status' => 'string',
+        'access_count' => 'integer',
         'last_accessed_at' => 'datetime',
-        'rejected_at'      => 'datetime',
-        'created_at'       => 'immutable_datetime',
-        'updated_at'       => 'datetime',
+        'rejected_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -72,17 +70,17 @@ class BudgetShare extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'       => 'required|integer|exists:tenants,id',
-            'budget_id'       => 'required|integer|exists:budgets,id',
-            'share_token'     => 'required|string|size:43|unique:budget_shares,share_token', // base64url format: 32 bytes = 43 caracteres
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'budget_id' => 'required|integer|exists:budgets,id',
+            'share_token' => 'required|string|size:43|unique:budget_shares,share_token', // base64url format: 32 bytes = 43 caracteres
             'recipient_email' => 'nullable|email|max:255',
-            'recipient_name'  => 'nullable|string|max:255',
-            'message'         => 'nullable|string|max:1000',
-            'permissions'     => 'nullable|array',
-            'expires_at'      => 'nullable|date|after:now',
-            'is_active'       => 'required|boolean',
-            'status'          => 'required|string|in:active,rejected,expired',
-            'access_count'    => 'required|integer|min:0',
+            'recipient_name' => 'nullable|string|max:255',
+            'message' => 'nullable|string|max:1000',
+            'permissions' => 'nullable|array',
+            'expires_at' => 'nullable|date|after:now',
+            'is_active' => 'required|boolean',
+            'status' => 'required|string|in:active,rejected,expired',
+            'access_count' => 'required|integer|min:0',
         ];
     }
 
@@ -91,7 +89,7 @@ class BudgetShare extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -99,35 +97,35 @@ class BudgetShare extends Model
      */
     public function budget(): BelongsTo
     {
-        return $this->belongsTo( Budget::class);
+        return $this->belongsTo(Budget::class);
     }
 
     /**
      * Scope para compartilhamentos ativos.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
 
     /**
      * Scope para compartilhamentos expirados.
      */
-    public function scopeExpired( $query )
+    public function scopeExpired($query)
     {
-        return $query->where( 'expires_at', '<=', now() );
+        return $query->where('expires_at', '<=', now());
     }
 
     /**
      * Scope para compartilhamentos válidos (ativos e não expirados).
      */
-    public function scopeValid( $query )
+    public function scopeValid($query)
     {
-        return $query->where( 'is_active', true )
-            ->where( function ( $q ) {
-                $q->whereNull( 'expires_at' )
-                    ->orWhere( 'expires_at', '>', now() );
-            } );
+        return $query->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
     }
 
     /**
@@ -135,8 +133,9 @@ class BudgetShare extends Model
      */
     public function incrementAccessCount(): bool
     {
-        $this->increment( 'access_count' );
+        $this->increment('access_count');
         $this->last_accessed_at = now();
+
         return $this->save();
     }
 
@@ -146,22 +145,22 @@ class BudgetShare extends Model
     public function isValid(): bool
     {
         return $this->is_active &&
-            ( $this->expires_at === null || $this->expires_at->isFuture() );
+            ($this->expires_at === null || $this->expires_at->isFuture());
     }
 
     /**
      * Verifica se o usuário tem permissão específica.
      */
-    public function hasPermission( string $permission ): bool
+    public function hasPermission(string $permission): bool
     {
         $permissions = $this->permissions ?? [];
 
         // Se não há permissões definidas, permitir apenas visualização
-        if ( empty( $permissions ) ) {
+        if (empty($permissions)) {
             return $permission === 'view';
         }
 
-        return in_array( $permission, $permissions );
+        return in_array($permission, $permissions);
     }
 
     /**
@@ -170,15 +169,17 @@ class BudgetShare extends Model
     public function deactivate(): bool
     {
         $this->is_active = false;
+
         return $this->save();
     }
 
     /**
      * Estende a validade do compartilhamento.
      */
-    public function extendValidity( int $days ): bool
+    public function extendValidity(int $days): bool
     {
-        $this->expires_at = now()->addDays( $days );
+        $this->expires_at = now()->addDays($days);
+
         return $this->save();
     }
 
@@ -187,7 +188,7 @@ class BudgetShare extends Model
      */
     public static function getDefaultViewPermissions(): array
     {
-        return [ 'view', 'download' ];
+        return ['view', 'download'];
     }
 
     /**
@@ -195,7 +196,6 @@ class BudgetShare extends Model
      */
     public static function getFullPermissions(): array
     {
-        return [ 'view', 'download', 'approve', 'reject' ];
+        return ['view', 'download', 'approve', 'reject'];
     }
-
 }

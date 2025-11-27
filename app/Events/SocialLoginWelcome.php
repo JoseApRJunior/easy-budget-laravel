@@ -20,25 +20,26 @@ class SocialLoginWelcome
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public User    $user;
+    public User $user;
+
     public ?Tenant $tenant;
-    public string  $provider;
+
+    public string $provider;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param User $user Usuário que fez login social
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string $provider Provedor social usado (ex: 'google')
+     * @param  User  $user  Usuário que fez login social
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $provider  Provedor social usado (ex: 'google')
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
         string $provider = 'google',
     ) {
-        $this->user     = $user;
-        $this->tenant   = $tenant;
+        $this->user = $user;
+        $this->tenant = $tenant;
         $this->provider = $provider;
     }
-
 }

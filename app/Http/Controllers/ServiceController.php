@@ -8,11 +8,7 @@ use App\Enums\ServiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
-use App\Models\Category;
-use App\Models\Customer;
-use App\Models\Product;
 use App\Models\Service;
-use App\Models\UserConfirmationToken;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
@@ -31,10 +27,13 @@ use Illuminate\View\View;
  */
 class ServiceController extends Controller
 {
-    protected ServiceService  $serviceService;
+    protected ServiceService $serviceService;
+
     protected CategoryService $categoryService;
-    protected BudgetService   $budgetService;
-    protected ProductService  $productService;
+
+    protected BudgetService $budgetService;
+
+    protected ProductService $productService;
 
     public function __construct(
         ServiceService $serviceService,
@@ -42,10 +41,10 @@ class ServiceController extends Controller
         BudgetService $budgetService,
         ProductService $productService,
     ) {
-        $this->serviceService  = $serviceService;
+        $this->serviceService = $serviceService;
         $this->categoryService = $categoryService;
-        $this->budgetService   = $budgetService;
-        $this->productService  = $productService;
+        $this->budgetService = $budgetService;
+        $this->productService = $productService;
     }
 
     /**
@@ -98,16 +97,16 @@ class ServiceController extends Controller
             }
 
             return view('pages.service.create', [
-                'budget'        => $budget,
-                'categories'    => $this->categoryService->getActive(),
-                'products'      => $this->productService->getActive(),
-                'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatus::cases()
+                'budget' => $budget,
+                'categories' => $this->categoryService->getActive(),
+                'products' => $this->productService->getActive(),
+                'budgets' => $this->budgetService->getNotCompleted(),
+                'statusOptions' => ServiceStatus::cases(),
             ]);
         } catch (Exception $e) {
             Log::error('Erro ao carregar formulário de criação', [
-                'error'      => $e->getMessage(),
-                'budgetCode' => $budgetCode
+                'error' => $e->getMessage(),
+                'budgetCode' => $budgetCode,
             ]);
             abort(500, 'Erro ao carregar formulário de criação');
         }
@@ -127,12 +126,12 @@ class ServiceController extends Controller
             if (filled($filters['date_from'] ?? null) && filled($filters['date_to'] ?? null)) {
                 try {
                     $from = new \DateTime((string) $filters['date_from']);
-                    $to   = new \DateTime((string) $filters['date_to']);
+                    $to = new \DateTime((string) $filters['date_to']);
                     if ($from > $to) {
                         // Inverte ou ignora o intervalo incorreto
                         $tmp = $filters['date_from'];
                         $filters['date_from'] = $filters['date_to'];
-                        $filters['date_to']   = $tmp;
+                        $filters['date_to'] = $tmp;
                         Log::info('Ajuste de intervalo de datas em filtros de serviços', ['from' => (string) $to->format('Y-m-d'), 'to' => (string) $from->format('Y-m-d')]);
                     }
                 } catch (\Exception $e) {
@@ -141,9 +140,9 @@ class ServiceController extends Controller
                 }
             }
 
-            $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
+            $hasFilters = collect($filters)->filter(fn ($v) => filled($v))->isNotEmpty();
             $confirmAll = (bool) $request->boolean('all');
-            $attempt    = (bool) $request->boolean('attempt');
+            $attempt = (bool) $request->boolean('attempt');
 
             if ($hasFilters || $confirmAll) {
                 $result = $this->serviceService->getFilteredServices($filters, [
@@ -151,7 +150,7 @@ class ServiceController extends Controller
                     'budget.customer.commonData',
                 ]);
 
-                if (!$result->isSuccess()) {
+                if (! $result->isSuccess()) {
                     $errorMessage = $result->getMessage() ?: 'Erro ao carregar lista de serviços';
                     Log::warning('Falha ao filtrar serviços', ['message' => $errorMessage, 'filters' => $filters]);
                     $services = collect();
@@ -162,21 +161,21 @@ class ServiceController extends Controller
                 $services = collect();
             }
         } catch (Exception $e) {
-            $errorMessage = 'Erro ao carregar serviços: ' . $e->getMessage();
+            $errorMessage = 'Erro ao carregar serviços: '.$e->getMessage();
             Log::error('Erro ao carregar serviços', [
-                'error'   => $e->getMessage(),
-                'filters' => $request->only(['status', 'category_id', 'date_from', 'date_to', 'search'])
+                'error' => $e->getMessage(),
+                'filters' => $request->only(['status', 'category_id', 'date_from', 'date_to', 'search']),
             ]);
             $services = collect();
         }
 
         return view('pages.service.index', [
-            'services'      => $services,
-            'filters'       => $filters ?? [],
+            'services' => $services,
+            'filters' => $filters ?? [],
             'statusOptions' => ServiceStatus::cases(),
-            'categories'    => $this->categoryService->getActive(),
-            'errorMessage'  => $errorMessage,
-            'showAllPrompt' => ($attempt && !($hasFilters || $confirmAll))
+            'categories' => $this->categoryService->getActive(),
+            'errorMessage' => $errorMessage,
+            'showAllPrompt' => ($attempt && ! ($hasFilters || $confirmAll)),
         ]);
     }
 
@@ -195,26 +194,28 @@ class ServiceController extends Controller
                 ->with(['customer', 'status', 'userConfirmationToken', 'budget'])
                 ->first();
 
-            if (!$service) {
+            if (! $service) {
                 Log::warning('Service not found or token expired', [
-                    'code'  => $code,
+                    'code' => $code,
                     'token' => $token,
-                    'ip'    => request()->ip()
+                    'ip' => request()->ip(),
                 ]);
+
                 return redirect()->route('error.not-found');
             }
 
             return view('pages.service.public.view-status', [
                 'service' => $service,
-                'token'   => $token
+                'token' => $token,
             ]);
         } catch (Exception $e) {
             Log::error('Error in viewServiceStatus', [
-                'code'  => $code,
+                'code' => $code,
                 'token' => $token,
                 'error' => $e->getMessage(),
-                'ip'    => request()->ip()
+                'ip' => request()->ip(),
             ]);
+
             return redirect()->route('error.internal');
         }
     }
@@ -226,18 +227,18 @@ class ServiceController extends Controller
     {
         try {
             $validated = $request->validate([
-                'service_code'      => 'required|string',
-                'token'             => 'required|string|size:43',
+                'service_code' => 'required|string',
+                'token' => 'required|string|size:43',
                 'service_status_id' => [
                     'required',
                     'string',
-                    'in:' . implode(',', [
+                    'in:'.implode(',', [
                         ServiceStatus::APPROVED->value,
                         ServiceStatus::REJECTED->value,
-                        ServiceStatus::CANCELLED->value
-                    ])
+                        ServiceStatus::CANCELLED->value,
+                    ]),
                 ],
-                'reason'            => 'nullable|string|max:500'
+                'reason' => 'nullable|string|max:500',
             ]);
 
             $result = $this->serviceService->updateStatusByToken(
@@ -247,20 +248,21 @@ class ServiceController extends Controller
                 $validated['reason'] ?? null
             );
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->with('error', $result->getMessage());
             }
 
             return redirect()->route('services.public.view-status', [
-                'code'  => $validated['service_code'],
-                'token' => $validated['token']
+                'code' => $validated['service_code'],
+                'token' => $validated['token'],
             ])->with('success', 'Status do serviço atualizado com sucesso!');
         } catch (Exception $e) {
             Log::error('Error in chooseServiceStatus', [
-                'error'   => $e->getMessage(),
-                'request' => $request->all()
+                'error' => $e->getMessage(),
+                'request' => $request->all(),
             ]);
+
             return redirect()->route('error.internal');
         }
     }
@@ -282,29 +284,31 @@ class ServiceController extends Controller
                     'serviceStatus',
                     'items.product',
                     'userConfirmationToken',
-                    'budget.tenant'
+                    'budget.tenant',
                 ])
                 ->first();
 
-            if (!$service) {
+            if (! $service) {
                 Log::warning('Service not found or token expired for print', [
-                    'code'  => $code,
+                    'code' => $code,
                     'token' => $token,
-                    'ip'    => request()->ip()
+                    'ip' => request()->ip(),
                 ]);
+
                 return redirect()->route('error.not-found');
             }
 
             return view('pages.service.public.print', [
-                'service' => $service
+                'service' => $service,
             ]);
         } catch (Exception $e) {
             Log::error('Error in service print', [
-                'code'  => $code,
+                'code' => $code,
                 'token' => $token,
                 'error' => $e->getMessage(),
-                'ip'    => request()->ip()
+                'ip' => request()->ip(),
             ]);
+
             return redirect()->route('error.internal');
         }
     }
@@ -317,7 +321,7 @@ class ServiceController extends Controller
         try {
             $result = $this->serviceService->createService($request->getValidatedData());
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', $result->getMessage());
@@ -330,7 +334,7 @@ class ServiceController extends Controller
         } catch (Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar serviço: ' . $e->getMessage());
+                ->with('error', 'Erro ao criar serviço: '.$e->getMessage());
         }
     }
 
@@ -345,7 +349,7 @@ class ServiceController extends Controller
                 Log::warning('Código de serviço inválido', [
                     'code' => $code,
                     'user_id' => auth()->id(),
-                    'tenant_id' => auth()->user()->tenant_id ?? null
+                    'tenant_id' => auth()->user()->tenant_id ?? null,
                 ]);
                 abort(404, 'Código de serviço inválido');
             }
@@ -357,15 +361,15 @@ class ServiceController extends Controller
                 'serviceItems.product',
                 'schedules' => function ($q) {
                     $q->latest()->limit(1);
-                }
+                },
             ]);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 Log::warning('Serviço não encontrado', [
                     'code' => $code,
                     'user_id' => auth()->id(),
                     'tenant_id' => auth()->user()->tenant_id ?? null,
-                    'message' => $result->getMessage()
+                    'message' => $result->getMessage(),
                 ]);
                 abort(404, 'Serviço não encontrado');
             }
@@ -379,13 +383,13 @@ class ServiceController extends Controller
                     'code' => $code,
                     'service_tenant_id' => $service->tenant_id,
                     'user_tenant_id' => $userTenantId,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
                 abort(404, 'Serviço não encontrado');
             }
 
             return view('pages.service.show', [
-                'service' => $service
+                'service' => $service,
             ]);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
             // Re-throw 404 exceptions
@@ -393,9 +397,9 @@ class ServiceController extends Controller
         } catch (Exception $e) {
             Log::error('Erro ao carregar serviço', [
                 'error' => $e->getMessage(),
-                'code'  => $code,
+                'code' => $code,
                 'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()->tenant_id ?? null
+                'tenant_id' => auth()->user()->tenant_id ?? null,
             ]);
             abort(500, 'Erro ao carregar serviço');
         }
@@ -409,31 +413,31 @@ class ServiceController extends Controller
         try {
             $result = $this->serviceService->findByCode($code, [
                 'serviceItems.product',
-                'budget'
+                'budget',
             ]);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 abort(404, 'Serviço não encontrado');
             }
 
             $service = $result->getData();
 
             // Verificar se pode editar
-            if (!$service->status->canEdit()) {
+            if (! $service->status->canEdit()) {
                 abort(403, 'Serviço não pode ser editado no status atual');
             }
 
             return view('pages.service.edit', [
-                'service'       => $service,
-                'categories'    => $this->categoryService->getActive(),
-                'products'      => $this->productService->getActive(),
-                'budgets'       => $this->budgetService->getNotCompleted(),
-                'statusOptions' => ServiceStatus::cases()
+                'service' => $service,
+                'categories' => $this->categoryService->getActive(),
+                'products' => $this->productService->getActive(),
+                'budgets' => $this->budgetService->getNotCompleted(),
+                'statusOptions' => ServiceStatus::cases(),
             ]);
         } catch (Exception $e) {
             Log::error('Erro ao carregar formulário de edição', [
                 'error' => $e->getMessage(),
-                'code'  => $code
+                'code' => $code,
             ]);
             abort(500, 'Erro ao carregar formulário de edição');
         }
@@ -459,11 +463,12 @@ class ServiceController extends Controller
 
             $result = $this->serviceService->updateServiceByCode($code, $payload);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 Log::warning('Service update failed', [
                     'code' => $code,
                     'message' => $result->getMessage(),
                 ]);
+
                 return redirect()->back()
                     ->withInput()
                     ->with('error', $result->getMessage());
@@ -487,9 +492,10 @@ class ServiceController extends Controller
                 'tenant_id' => auth()->user()->tenant_id ?? null,
                 'request' => $request->all(),
             ]);
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar serviço: ' . $e->getMessage());
+                ->with('error', 'Erro ao atualizar serviço: '.$e->getMessage());
         }
     }
 
@@ -499,13 +505,13 @@ class ServiceController extends Controller
     public function change_status(string $code, Request $request): RedirectResponse
     {
         $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($status) => $status->value, ServiceStatus::cases()))]
+            'status' => ['required', 'string', 'in:'.implode(',', array_map(fn ($status) => $status->value, ServiceStatus::cases()))],
         ]);
 
         try {
             $result = $this->serviceService->changeStatus($code, $request->status);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->with('error', $result->getMessage());
             }
@@ -514,7 +520,7 @@ class ServiceController extends Controller
                 ->with('success', 'Status alterado com sucesso!');
         } catch (Exception $e) {
             return redirect()->back()
-                ->with('error', 'Erro ao alterar status: ' . $e->getMessage());
+                ->with('error', 'Erro ao alterar status: '.$e->getMessage());
         }
     }
 
@@ -529,7 +535,7 @@ class ServiceController extends Controller
         try {
             $result = $this->serviceService->deleteByCode($code);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->with('error', $result->getMessage());
             }
@@ -538,7 +544,7 @@ class ServiceController extends Controller
                 ->with('success', 'Serviço excluído com sucesso!');
         } catch (Exception $e) {
             return redirect()->back()
-                ->with('error', 'Erro ao excluir serviço: ' . $e->getMessage());
+                ->with('error', 'Erro ao excluir serviço: '.$e->getMessage());
         }
     }
 
@@ -550,7 +556,7 @@ class ServiceController extends Controller
         try {
             $result = $this->serviceService->cancelService($code);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return redirect()->back()
                     ->with('error', $result->getMessage());
             }
@@ -561,7 +567,7 @@ class ServiceController extends Controller
                 ->with('success', 'Serviço cancelado com sucesso!');
         } catch (Exception $e) {
             return redirect()->back()
-                ->with('error', 'Erro ao cancelar serviço: ' . $e->getMessage());
+                ->with('error', 'Erro ao cancelar serviço: '.$e->getMessage());
         }
     }
 }

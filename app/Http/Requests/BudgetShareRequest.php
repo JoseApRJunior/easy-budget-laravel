@@ -67,12 +67,12 @@ class BudgetShareRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Define permissões padrão se não fornecidas
-        if (!$this->has('permissions')) {
+        if (! $this->has('permissions')) {
             $this->merge(['permissions' => ['view']]);
         }
 
         // Define expiração padrão de 7 dias se não fornecida
-        if (!$this->has('expires_at')) {
+        if (! $this->has('expires_at')) {
             $this->merge(['expires_at' => now()->addDays(7)]);
         }
     }

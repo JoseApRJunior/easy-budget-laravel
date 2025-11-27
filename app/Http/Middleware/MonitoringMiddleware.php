@@ -7,16 +7,19 @@ namespace App\Http\Middleware;
 use App\Models\MiddlewareMetricsHistory;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class MonitoringMiddleware
 {
     private float $startTime;
+
     private int $startMemory;
+
     private int $startQueries;
+
     private array $startCacheStats;
 
     public function handle(Request $request, Closure $next): Response
@@ -45,11 +48,11 @@ class MonitoringMiddleware
             $endTime = microtime(true);
             $endMemory = memory_get_usage(true);
             $endQueries = DB::getQueryLog() ? count(DB::getQueryLog()) : 0;
-            
+
             $responseTime = ($endTime - $this->startTime) * 1000; // ms
             $memoryUsage = max(0, $endMemory - $this->startMemory);
             $databaseQueries = max(0, $endQueries - $this->startQueries);
-            
+
             // Calcular cache hits/misses
             $endCacheHits = Cache::get('cache_hits', 0);
             $endCacheMisses = Cache::get('cache_misses', 0);
@@ -112,7 +115,7 @@ class MonitoringMiddleware
 
         // Tentar do header ou parâmetro
         $tenantId = $request->header('X-Tenant-ID') ?? $request->input('tenant_id');
-        
+
         if ($tenantId) {
             return (int) $tenantId;
         }
@@ -130,6 +133,7 @@ class MonitoringMiddleware
         try {
             if (function_exists('sys_getloadavg')) {
                 $load = sys_getloadavg();
+
                 return $load[0] ?? null;
             }
         } catch (\Exception $e) {
@@ -146,7 +150,7 @@ class MonitoringMiddleware
         int $statusCode,
         int $databaseQueries
     ): void {
-        if (!$tenantId) {
+        if (! $tenantId) {
             return;
         }
 
@@ -162,7 +166,7 @@ class MonitoringMiddleware
                         'endpoint' => request()->path(),
                         'method' => request()->method(),
                         'threshold' => 5000,
-                        'unit' => 'ms'
+                        'unit' => 'ms',
                     ]
                 );
             }
@@ -176,7 +180,7 @@ class MonitoringMiddleware
                     $memoryUsage / 1048576, // Converter para MB
                     [
                         'threshold' => 128,
-                        'unit' => 'MB'
+                        'unit' => 'MB',
                     ]
                 );
             }
@@ -191,7 +195,7 @@ class MonitoringMiddleware
                     [
                         'endpoint' => request()->path(),
                         'method' => request()->method(),
-                        'status_code' => $statusCode
+                        'status_code' => $statusCode,
                     ]
                 );
             }
@@ -206,7 +210,7 @@ class MonitoringMiddleware
                     [
                         'endpoint' => request()->path(),
                         'method' => request()->method(),
-                        'threshold' => 50
+                        'threshold' => 50,
                     ]
                 );
             }
@@ -214,7 +218,7 @@ class MonitoringMiddleware
         } catch (\Exception $e) {
             Log::error('Erro ao verificar alertas', [
                 'tenant_id' => $tenantId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

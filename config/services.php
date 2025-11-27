@@ -53,4 +53,6 @@ return [
         'redirect'      => env( 'GOOGLE_REDIRECT_URI' ),
     ],
 
+    'cacert_path' => env( 'CACERT_PATH' ),
+
 ];

@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Customer;
 use App\Models\Invoice;
-use App\Models\Plan;
 use App\Models\Provider;
 use App\Models\Subscription;
-use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -64,32 +62,32 @@ class AIMetricsController extends Controller
                 'current_month' => $this->predictRevenue($currentMonth),
                 'next_month' => $this->predictRevenue($nextMonth),
                 'confidence' => 92.1,
-                'trend' => 'upward'
+                'trend' => 'upward',
             ],
             'churn_prediction' => [
                 'high_risk_customers' => $this->predictHighRiskCustomers(),
                 'churn_rate_forecast' => 5.2,
                 'confidence' => 87.3,
-                'top_factors' => ['Usage frequency', 'Support tickets', 'Payment delays']
+                'top_factors' => ['Usage frequency', 'Support tickets', 'Payment delays'],
             ],
             'growth_prediction' => [
                 'user_growth' => $this->predictUserGrowth(),
                 'provider_growth' => $this->predictProviderGrowth(),
                 'revenue_growth' => $this->predictRevenueGrowth(),
-                'confidence' => 89.7
+                'confidence' => 89.7,
             ],
             'subscription_forecast' => [
                 'new_subscriptions' => $this->predictNewSubscriptions(),
                 'renewals' => $this->predictRenewals(),
                 'upgrades' => $this->predictUpgrades(),
-                'confidence' => 91.2
+                'confidence' => 91.2,
             ],
             'market_trends' => [
                 'seasonal_patterns' => $this->analyzeSeasonalPatterns(),
                 'emerging_markets' => $this->identifyEmergingMarkets(),
                 'competitive_threats' => $this->assessCompetitiveThreats(),
-                'confidence' => 79.3
-            ]
+                'confidence' => 79.3,
+            ],
         ];
     }
 
@@ -152,7 +150,7 @@ class AIMetricsController extends Controller
     {
         // AI model simulation
         $customers = Customer::with(['planSubscriptions', 'invoices'])
-            ->whereHas('planSubscriptions', function($query) {
+            ->whereHas('planSubscriptions', function ($query) {
                 $query->where('status', 'active');
             })
             ->limit(10)
@@ -191,7 +189,7 @@ class AIMetricsController extends Controller
         return [
             'current_trend' => $growthRate,
             'predicted_next_month' => round($currentMonthUsers * (1 + $growthRate / 100)),
-            'confidence' => 89.7
+            'confidence' => 89.7,
         ];
     }
 
@@ -209,7 +207,7 @@ class AIMetricsController extends Controller
         return [
             'current_trend' => $growthRate,
             'predicted_next_month' => round($currentMonthProviders * (1 + $growthRate / 100)),
-            'confidence' => 89.7
+            'confidence' => 89.7,
         ];
     }
 
@@ -232,7 +230,7 @@ class AIMetricsController extends Controller
         return [
             'current_trend' => $growthRate,
             'predicted_next_month' => round($currentMonthRevenue * (1 + $growthRate / 100), 2),
-            'confidence' => 89.7
+            'confidence' => 89.7,
         ];
     }
 
@@ -249,7 +247,7 @@ class AIMetricsController extends Controller
 
         return [
             'predicted_count' => round($currentMonthSubscriptions * (1 + $growthRate / 100)),
-            'confidence' => 91.2
+            'confidence' => 91.2,
         ];
     }
 
@@ -268,7 +266,7 @@ class AIMetricsController extends Controller
         return [
             'expiring_soon' => $expiringSubscriptions,
             'predicted_renewals' => round($expiringSubscriptions * $predictedRenewalRate),
-            'confidence' => 91.2
+            'confidence' => 91.2,
         ];
     }
 
@@ -284,7 +282,7 @@ class AIMetricsController extends Controller
 
         return [
             'predicted_upgrades' => round($activeSubscriptions * $predictedUpgradeRate),
-            'confidence' => 91.2
+            'confidence' => 91.2,
         ];
     }
 
@@ -313,7 +311,7 @@ class AIMetricsController extends Controller
             'current_season_factor' => $seasonalFactors[$currentMonth] ?? 1.0,
             'peak_months' => [6, 11, 12],
             'low_months' => [1, 2],
-            'confidence' => 79.3
+            'confidence' => 79.3,
         ];
     }
 
@@ -360,9 +358,9 @@ class AIMetricsController extends Controller
                 'Enhance product features',
                 'Improve customer service',
                 'Expand market reach',
-                'Optimize pricing strategy'
+                'Optimize pricing strategy',
             ],
-            'confidence' => 79.3
+            'confidence' => 79.3,
         ];
     }
 
@@ -393,7 +391,7 @@ class AIMetricsController extends Controller
                     'revenue' => $day->revenue,
                     'deviation' => $zScore,
                     'type' => $day->revenue > $avgRevenue ? 'spike' : 'drop',
-                    'severity' => $zScore > 3 ? 'high' : 'medium'
+                    'severity' => $zScore > 3 ? 'high' : 'medium',
                 ];
             }
         }
@@ -412,13 +410,13 @@ class AIMetricsController extends Controller
                 'type' => 'unusual_login_pattern',
                 'description' => 'Unusual login times detected for user',
                 'severity' => 'medium',
-                'confidence' => 94.8
+                'confidence' => 94.8,
             ],
             [
                 'type' => 'spike_in_activity',
                 'description' => 'Abnormal increase in system activity',
                 'severity' => 'low',
-                'confidence' => 94.8
+                'confidence' => 94.8,
             ],
         ];
     }
@@ -435,7 +433,7 @@ class AIMetricsController extends Controller
                 'description' => 'Significant change in user behavior detected',
                 'affected_users' => 23,
                 'severity' => 'medium',
-                'confidence' => 94.8
+                'confidence' => 94.8,
             ],
         ];
     }
@@ -453,7 +451,7 @@ class AIMetricsController extends Controller
                 'ip_address' => '192.168.1.100',
                 'attempts' => 15,
                 'severity' => 'high',
-                'confidence' => 96.7
+                'confidence' => 96.7,
             ],
         ];
     }
@@ -470,7 +468,7 @@ class AIMetricsController extends Controller
                 'description' => 'Unusual increase in response times',
                 'affected_endpoints' => ['/api/users', '/api/invoices'],
                 'severity' => 'medium',
-                'confidence' => 94.8
+                'confidence' => 94.8,
             ],
         ];
     }
@@ -487,7 +485,7 @@ class AIMetricsController extends Controller
                 'description' => 'Abnormal billing pattern detected',
                 'affected_invoices' => 5,
                 'severity' => 'medium',
-                'confidence' => 94.8
+                'confidence' => 94.8,
             ],
         ];
     }
@@ -504,7 +502,7 @@ class AIMetricsController extends Controller
                 'description' => 'Transaction pattern indicates potential fraud',
                 'amount' => 1250.00,
                 'severity' => 'high',
-                'confidence' => 96.7
+                'confidence' => 96.7,
             ],
         ];
     }
@@ -516,14 +514,14 @@ class AIMetricsController extends Controller
     {
         return [
             'segmentation' => [
-                'high_value_customers' => Customer::whereHas('invoices', function($query) {
+                'high_value_customers' => Customer::whereHas('invoices', function ($query) {
                     $query->where('status', 'paid')
-                          ->where('created_at', '>=', Carbon::now()->subMonths(6));
+                        ->where('created_at', '>=', Carbon::now()->subMonths(6));
                 }, '>=', 5)->count(),
                 'at_risk_customers' => 23,
-                'loyal_customers' => Customer::whereHas('planSubscriptions', function($query) {
+                'loyal_customers' => Customer::whereHas('planSubscriptions', function ($query) {
                     $query->where('status', 'active')
-                          ->where('created_at', '<=', Carbon::now()->subYear());
+                        ->where('created_at', '<=', Carbon::now()->subYear());
                 })->count(),
             ],
             'behavior_patterns' => [
@@ -535,7 +533,7 @@ class AIMetricsController extends Controller
                 'net_promoter_score' => 72,
                 'customer_satisfaction' => 4.2,
                 'retention_rate' => 87.3,
-            ]
+            ],
         ];
     }
 
@@ -559,7 +557,7 @@ class AIMetricsController extends Controller
                 'pricing_optimization' => 'Potential 12% increase',
                 'upselling_opportunities' => '25% of customers eligible',
                 'churn_reduction' => 'Save 8% of revenue',
-            ]
+            ],
         ];
     }
 
@@ -583,7 +581,7 @@ class AIMetricsController extends Controller
                 'manual_processes' => 23,
                 'automation_potential' => 78.5,
                 'cost_savings' => 'R$ 15,000/month',
-            ]
+            ],
         ];
     }
 
@@ -607,7 +605,7 @@ class AIMetricsController extends Controller
                 'ai_development' => 'High priority',
                 'infrastructure' => 'Medium priority',
                 'marketing' => 'High priority',
-            ]
+            ],
         ];
     }
 
@@ -636,7 +634,7 @@ class AIMetricsController extends Controller
                 'diversification' => 'Expand to new markets',
                 'insurance' => 'Increase coverage',
                 'contingency_planning' => 'Develop backup systems',
-            ]
+            ],
         ];
     }
 
@@ -660,7 +658,7 @@ class AIMetricsController extends Controller
                 'pricing_optimization' => '15% potential increase',
                 'new_revenue_streams' => 4,
                 'cross_selling_potential' => 'R$ 500,000',
-            ]
+            ],
         ];
     }
 
@@ -698,7 +696,7 @@ class AIMetricsController extends Controller
             'Low usage frequency',
             'Multiple support tickets',
             'Payment delays',
-            'Low feature adoption'
+            'Low feature adoption',
         ];
     }
 
@@ -718,7 +716,7 @@ class AIMetricsController extends Controller
         $seasonalFactors = [
             1 => 0.85, 2 => 0.90, 3 => 1.05, 4 => 1.10,
             5 => 1.15, 6 => 1.20, 7 => 1.18, 8 => 1.12,
-            9 => 1.05, 10 => 1.08, 11 => 1.25, 12 => 1.30
+            9 => 1.05, 10 => 1.08, 11 => 1.25, 12 => 1.30,
         ];
 
         return $seasonalFactors[$period->month] ?? 1.0;
@@ -746,7 +744,7 @@ class AIMetricsController extends Controller
     protected function calculateStandardDeviation(array $values): float
     {
         $mean = array_sum($values) / count($values);
-        $squaredDiffs = array_map(function($value) use ($mean) {
+        $squaredDiffs = array_map(function ($value) use ($mean) {
             return pow($value - $mean, 2);
         }, $values);
 
@@ -874,14 +872,14 @@ class AIMetricsController extends Controller
             $results[$model] = [
                 'status' => 'success',
                 'accuracy_improvement' => rand(1, 5) / 10,
-                'training_time' => rand(30, 120) . ' minutes',
+                'training_time' => rand(30, 120).' minutes',
                 'new_accuracy' => 85 + rand(1, 10),
             ];
         }
 
         return response()->json([
             'message' => 'AI models retrained successfully',
-            'results' => $results
+            'results' => $results,
         ]);
     }
 
@@ -904,13 +902,13 @@ class AIMetricsController extends Controller
         // CSV export
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=ai_{$type}_" . date('Y-m-d') . '.csv'
+            'Content-Disposition' => "attachment; filename=ai_{$type}_".date('Y-m-d').'.csv',
         ];
 
-        return response()->stream(function() use ($data) {
+        return response()->stream(function () use ($data) {
             $handle = fopen('php://output', 'w');
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 // Headers
                 fputcsv($handle, array_keys(reset($data)));
 

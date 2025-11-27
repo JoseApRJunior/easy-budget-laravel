@@ -35,15 +35,15 @@ class SupportConfirmationEmail extends Mailable implements ShouldQueue
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param array $confirmationData Dados da confirmação
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  array  $confirmationData  Dados da confirmação
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      */
     public function __construct(
         array $confirmationData,
         ?Tenant $tenant = null,
     ) {
         $this->confirmationData = $confirmationData;
-        $this->tenant           = $tenant;
+        $this->tenant = $tenant;
     }
 
     /**
@@ -51,10 +51,10 @@ class SupportConfirmationEmail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $subject = 'Confirmação de recebimento - ' . ( $this->confirmationData[ 'subject' ] ?? 'Mensagem de contato' );
+        $subject = 'Confirmação de recebimento - '.($this->confirmationData['subject'] ?? 'Mensagem de contato');
 
         return new Envelope(
-            to: $this->confirmationData[ 'email' ],
+            to: $this->confirmationData['email'],
             subject: $subject,
         );
     }
@@ -68,9 +68,9 @@ class SupportConfirmationEmail extends Mailable implements ShouldQueue
             view: 'emails.support_confirmation',
             with: [
                 'confirmationData' => $this->confirmationData,
-                'tenant'           => $this->tenant,
-                'appName'          => config( 'app.name', 'Easy Budget' ),
-                'appUrl'           => config( 'app.url' ),
+                'tenant' => $this->tenant,
+                'appName' => config('app.name', 'Easy Budget'),
+                'appUrl' => config('app.url'),
             ],
         );
     }
@@ -84,5 +84,4 @@ class SupportConfirmationEmail extends Mailable implements ShouldQueue
     {
         return [];
     }
-
 }

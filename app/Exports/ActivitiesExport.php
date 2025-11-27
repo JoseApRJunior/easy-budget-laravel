@@ -2,15 +2,14 @@
 
 namespace App\Exports;
 
-use App\Models\Activity;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ActivitiesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class ActivitiesExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     protected $activities;
 
@@ -64,9 +63,9 @@ class ActivitiesExport implements FromCollection, WithHeadings, WithMapping, Wit
             $activity->code,
             $this->getTypeLabel($activity->type),
             $activity->is_active ? 'Sim' : 'Não',
-            $activity->price ? 'R$ ' . number_format($activity->price, 2, ',', '.') : '-',
-            $activity->cost ? 'R$ ' . number_format($activity->cost, 2, ',', '.') : '-',
-            $activity->duration ? $activity->duration . ' ' . ($activity->unit ?? 'un') : '-',
+            $activity->price ? 'R$ '.number_format($activity->price, 2, ',', '.') : '-',
+            $activity->cost ? 'R$ '.number_format($activity->cost, 2, ',', '.') : '-',
+            $activity->duration ? $activity->duration.' '.($activity->unit ?? 'un') : '-',
             $activity->unit ?? '-',
             $activity->color ?? '-',
             $activity->icon ?? '-',

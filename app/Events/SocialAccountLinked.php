@@ -19,22 +19,23 @@ class SocialAccountLinked
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public User   $user;
+    public User $user;
+
     public string $provider;
-    public array  $socialData;
+
+    public array $socialData;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param User $user Usuário que teve a conta vinculada
-     * @param string $provider Provedor social (google, facebook, etc.)
-     * @param array $socialData Dados do provedor social
+     * @param  User  $user  Usuário que teve a conta vinculada
+     * @param  string  $provider  Provedor social (google, facebook, etc.)
+     * @param  array  $socialData  Dados do provedor social
      */
-    public function __construct( User $user, string $provider, array $socialData )
+    public function __construct(User $user, string $provider, array $socialData)
     {
-        $this->user       = $user;
-        $this->provider   = $provider;
+        $this->user = $user;
+        $this->provider = $provider;
         $this->socialData = $socialData;
     }
-
 }

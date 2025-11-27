@@ -50,29 +50,29 @@ class ScheduleRequest extends FormRequest
         return [
             'provider_id.required' => 'O prestador é obrigatório.',
             'provider_id.exists' => 'Prestador não encontrado.',
-            
+
             'customer_id.required' => 'O cliente é obrigatório.',
             'customer_id.exists' => 'Cliente não encontrado.',
-            
+
             'service_date.required' => 'A data do serviço é obrigatória.',
             'service_date.date' => 'A data do serviço deve ser uma data válida.',
             'service_date.after' => 'A data do serviço deve ser futura.',
-            
+
             'service_time.required' => 'O horário do serviço é obrigatório.',
             'service_time.date_format' => 'O horário deve estar no formato HH:MM.',
-            
+
             'service_duration.required' => 'A duração do serviço é obrigatória.',
             'service_duration.integer' => 'A duração deve ser um número inteiro (em minutos).',
             'service_duration.min' => 'A duração mínima é de 30 minutos.',
             'service_duration.max' => 'A duração máxima é de 8 horas (480 minutos).',
-            
+
             'service_type.required' => 'O tipo de serviço é obrigatório.',
             'service_type.string' => 'O tipo de serviço deve ser um texto.',
             'service_type.max' => 'O tipo de serviço não pode ter mais de 100 caracteres.',
-            
+
             'notes.string' => 'As observações devem ser um texto.',
             'notes.max' => 'As observações não podem ter mais de 1000 caracteres.',
-            
+
             'price.numeric' => 'O preço deve ser um valor numérico.',
             'price.min' => 'O preço não pode ser negativo.',
             'price.max' => 'O preço não pode ser maior que R$ 999.999,99.',
@@ -102,7 +102,7 @@ class ScheduleRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Se o usuário for cliente, define o customer_id automaticamente
-        if (auth()->user()->isCustomer() && !$this->has('customer_id')) {
+        if (auth()->user()->isCustomer() && ! $this->has('customer_id')) {
             $this->merge(['customer_id' => auth()->user()->id]);
         }
 

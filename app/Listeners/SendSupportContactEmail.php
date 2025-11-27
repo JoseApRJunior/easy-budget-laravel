@@ -65,7 +65,7 @@ class SendSupportContactEmail implements ShouldQueue
      * - Tratamento de exceções
      * - Métricas de performance
      *
-     * @param SupportTicketCreated $event Evento de criação de ticket
+     * @param  SupportTicketCreated  $event  Evento de criação de ticket
      */
     final public function handle(SupportTicketCreated $event): void
     {
@@ -91,7 +91,6 @@ class SendSupportContactEmail implements ShouldQueue
 
             // Relança a exceção para que seja tratada pela queue
             throw $e;
-
         } finally {
             // Finalizar métricas de performance
             $this->endPerformanceTracking($event);
@@ -101,7 +100,8 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Processa o envio do email de contato.
      *
-     * @param SupportTicketCreated $event Evento de criação de ticket
+     * @param  SupportTicketCreated  $event  Evento de criação de ticket
+     *
      * @throws \Exception Se houver erro no envio
      */
     private function processEmailSending(SupportTicketCreated $event): void
@@ -138,7 +138,7 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Envia email de confirmação para o usuário que enviou a mensagem.
      *
-     * @param SupportTicketCreated $event Evento de criação de ticket
+     * @param  SupportTicketCreated  $event  Evento de criação de ticket
      */
     private function sendConfirmationEmailToUser(SupportTicketCreated $event): void
     {
@@ -167,7 +167,7 @@ class SendSupportContactEmail implements ShouldQueue
             Log::info('Email de confirmação enviado para usuário', [
                 'support_id' => $event->support->id,
                 'user_email' => $event->contactData['email'],
-                'subject' => 'Confirmação de recebimento - ' . $event->contactData['subject'],
+                'subject' => 'Confirmação de recebimento - '.$event->contactData['subject'],
             ]);
 
         } catch (\Throwable $e) {
@@ -189,18 +189,20 @@ class SendSupportContactEmail implements ShouldQueue
     {
         $yearMonth = date('Y-m');
         $seq = str_pad((string) $supportId, 4, '0', STR_PAD_LEFT);
+
         return "SUP-{$yearMonth}-{$seq}";
     }
 
     /**
      * Valida os dados do evento antes do processamento.
      *
-     * @param SupportTicketCreated $event Evento a ser validado
+     * @param  SupportTicketCreated  $event  Evento a ser validado
+     *
      * @throws \InvalidArgumentException Se os dados forem inválidos
      */
     private function validateEventData(SupportTicketCreated $event): void
     {
-        if (!$event->support || !$event->support->id) {
+        if (! $event->support || ! $event->support->id) {
             throw new \InvalidArgumentException('Ticket de suporte inválido no evento.');
         }
 
@@ -220,7 +222,7 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Logging inicial estruturado e detalhado.
      *
-     * @param SupportTicketCreated $event Evento recebido
+     * @param  SupportTicketCreated  $event  Evento recebido
      */
     private function logEventStart(SupportTicketCreated $event): void
     {
@@ -240,7 +242,7 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Log de sucesso do processamento.
      *
-     * @param SupportTicketCreated $event Evento processado
+     * @param  SupportTicketCreated  $event  Evento processado
      */
     private function logSuccess(SupportTicketCreated $event): void
     {
@@ -257,8 +259,8 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Tratamento padronizado de exceções.
      *
-     * @param SupportTicketCreated $event Evento que estava sendo processado
-     * @param Throwable $exception Exceção ocorrida
+     * @param  SupportTicketCreated  $event  Evento que estava sendo processado
+     * @param  Throwable  $exception  Exceção ocorrida
      */
     private function handleException(SupportTicketCreated $event, Throwable $exception): void
     {
@@ -278,8 +280,8 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Tratamento padronizado de falha crítica do job.
      *
-     * @param SupportTicketCreated $event Evento que estava sendo processado
-     * @param Throwable $exception Última exceção ocorrida
+     * @param  SupportTicketCreated  $event  Evento que estava sendo processado
+     * @param  Throwable  $exception  Última exceção ocorrida
      */
     final public function failed(SupportTicketCreated $event, Throwable $exception): void
     {
@@ -311,7 +313,7 @@ class SendSupportContactEmail implements ShouldQueue
     /**
      * Finaliza rastreamento de performance.
      *
-     * @param SupportTicketCreated $event Evento processado
+     * @param  SupportTicketCreated  $event  Evento processado
      */
     private function endPerformanceTracking(SupportTicketCreated $event): void
     {
@@ -337,7 +339,7 @@ class SendSupportContactEmail implements ShouldQueue
      */
     private function getProcessingTime(): float
     {
-        if (!isset($this->performanceMetrics['start_time'])) {
+        if (! isset($this->performanceMetrics['start_time'])) {
             return 0.0;
         }
 

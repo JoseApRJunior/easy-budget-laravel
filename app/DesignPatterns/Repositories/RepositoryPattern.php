@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Repositories;
  *
  * Define convenções consistentes para desenvolvimento de repositories,
  * garantindo uniformidade, manutenibilidade e reutilização de código.
- *
- * @package App\DesignPatterns
  */
 class RepositoryPattern
 {
@@ -976,5 +974,4 @@ public function getStatsByTenant(int $tenantId): array
 - Mantenha estrutura similar entre repositories
 - Documente exceções quando necessário';
     }
-
 }

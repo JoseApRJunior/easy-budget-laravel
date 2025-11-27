@@ -21,11 +21,11 @@ class OptimizeAuthUser
 
             // Eager load de relacionamentos que serão usados frequentemente
             // Tenant já está no $with do model
-            if (!$user->relationLoaded('roles')) {
+            if (! $user->relationLoaded('roles')) {
                 $user->load([
                     'roles' => function ($query) use ($user) {
                         $query->wherePivot('tenant_id', $user->tenant_id);
-                    }
+                    },
                 ]);
             }
         }

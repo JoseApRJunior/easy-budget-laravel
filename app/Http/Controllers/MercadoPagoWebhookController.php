@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Queue;
  * and invoice payments. Implements asynchronous processing via queues for
  * reliability and performance.
  *
- * @package App\Http\Controllers
  *
  * @example Webhook endpoints:
  * ```
@@ -32,95 +31,100 @@ class MercadoPagoWebhookController extends Controller
     /**
      * Processes plan subscription payment webhooks.
      *
-     * @param Request $request Webhook notification data
+     * @param  Request  $request  Webhook notification data
      * @return JsonResponse Acknowledgment response
      */
-    public function handlePlanWebhook( Request $request ): JsonResponse
+    public function handlePlanWebhook(Request $request): JsonResponse
     {
-        return $this->processWebhook( $request, 'plan' );
+        return $this->processWebhook($request, 'plan');
     }
 
     /**
      * Processes invoice payment webhooks.
      *
-     * @param Request $request Webhook notification data
+     * @param  Request  $request  Webhook notification data
      * @return JsonResponse Acknowledgment response
      */
-    public function handleInvoiceWebhook( Request $request ): JsonResponse
+    public function handleInvoiceWebhook(Request $request): JsonResponse
     {
-        return $this->processWebhook( $request, 'invoice' );
+        return $this->processWebhook($request, 'invoice');
     }
 
     /**
      * Processes webhook notification asynchronously.
      *
-     * @param Request $request Webhook data
-     * @param string $type Payment type (plan|invoice)
+     * @param  Request  $request  Webhook data
+     * @param  string  $type  Payment type (plan|invoice)
      * @return JsonResponse Acknowledgment response
      */
-    private function processWebhook( Request $request, string $type ): JsonResponse
+    private function processWebhook(Request $request, string $type): JsonResponse
     {
         $webhookData = $request->all();
 
-        $requestId = $request->header( 'X-Request-Id' );
-        if ( !$requestId ) {
-            Log::warning( 'mp_webhook_missing_request_id' );
-            return response()->json( [ 'status' => 'error', 'message' => 'Missing X-Request-Id' ], 400 );
+        $requestId = $request->header('X-Request-Id');
+        if (! $requestId) {
+            Log::warning('mp_webhook_missing_request_id');
+
+            return response()->json(['status' => 'error', 'message' => 'Missing X-Request-Id'], 400);
         }
 
-        $signature = $request->header( 'X-Signature' );
-        $secret    = config( 'services.mercadopago.webhook_secret' );
-        if ( $signature && $secret ) {
-            $computed = hash_hmac( 'sha256', $request->getContent(), $secret );
-            if ( !hash_equals( $computed, $signature ) ) {
-                Log::warning( 'mp_webhook_invalid_signature', [ 'request_id' => $requestId ] );
-                return response()->json( [ 'status' => 'error', 'message' => 'Invalid signature' ], 403 );
+        $signature = $request->header('X-Signature');
+        $secret = config('services.mercadopago.webhook_secret');
+        if ($signature && $secret) {
+            $computed = hash_hmac('sha256', $request->getContent(), $secret);
+            if (! hash_equals($computed, $signature)) {
+                Log::warning('mp_webhook_invalid_signature', ['request_id' => $requestId]);
+
+                return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 403);
             }
         }
 
-        $cacheKey = 'mp_webhook_req_' . $requestId;
-        if ( Cache::has( $cacheKey ) ) {
-            Log::info( 'mp_webhook_duplicate', [ 'request_id' => $requestId ] );
-            return response()->json( [ 'status' => 'ignored' ], 200 );
-        }
-        Cache::put( $cacheKey, true, now()->addMinutes( 10 ) );
+        $cacheKey = 'mp_webhook_req_'.$requestId;
+        if (Cache::has($cacheKey)) {
+            Log::info('mp_webhook_duplicate', ['request_id' => $requestId]);
 
-        $payloadHash = hash( 'sha256', $request->getContent() );
-        $existing    = \App\Models\WebhookRequest::where( 'request_id', $requestId )->where( 'type', $type )->first();
-        if ( $existing ) {
-            Log::info( 'mp_webhook_duplicate_db', [ 'request_id' => $requestId ] );
-            return response()->json( [ 'status' => 'ignored' ], 200 );
+            return response()->json(['status' => 'ignored'], 200);
         }
-        \App\Models\WebhookRequest::create( [
-            'request_id'   => $requestId,
-            'type'         => $type,
+        Cache::put($cacheKey, true, now()->addMinutes(10));
+
+        $payloadHash = hash('sha256', $request->getContent());
+        $existing = \App\Models\WebhookRequest::where('request_id', $requestId)->where('type', $type)->first();
+        if ($existing) {
+            Log::info('mp_webhook_duplicate_db', ['request_id' => $requestId]);
+
+            return response()->json(['status' => 'ignored'], 200);
+        }
+        \App\Models\WebhookRequest::create([
+            'request_id' => $requestId,
+            'type' => $type,
             'payload_hash' => $payloadHash,
-            'status'       => 'received',
-            'received_at'  => now(),
-        ] );
+            'status' => 'received',
+            'received_at' => now(),
+        ]);
 
-        Log::info( "Mercado Pago webhook received", [
-            'type'  => $type,
-            'topic' => $webhookData[ 'topic' ] ?? null,
-            'id'    => $webhookData[ 'id' ] ?? null,
-        ] );
+        Log::info('Mercado Pago webhook received', [
+            'type' => $type,
+            'topic' => $webhookData['topic'] ?? null,
+            'id' => $webhookData['id'] ?? null,
+        ]);
 
         // Validate webhook structure
-        if ( !isset( $webhookData[ 'type' ] ) || !isset( $webhookData[ 'data' ][ 'id' ] ) ) {
-            Log::warning( "Invalid webhook structure", [ 'data' => $webhookData ] );
-            return response()->json( [ 'status' => 'error', 'message' => 'Invalid webhook structure' ], 400 );
+        if (! isset($webhookData['type']) || ! isset($webhookData['data']['id'])) {
+            Log::warning('Invalid webhook structure', ['data' => $webhookData]);
+
+            return response()->json(['status' => 'error', 'message' => 'Invalid webhook structure'], 400);
         }
 
         // Only process payment notifications
-        if ( $webhookData[ 'type' ] !== 'payment' ) {
-            Log::info( "Ignoring non-payment webhook", [ 'type' => $webhookData[ 'type' ] ] );
-            return response()->json( [ 'status' => 'ignored' ], 200 );
+        if ($webhookData['type'] !== 'payment') {
+            Log::info('Ignoring non-payment webhook', ['type' => $webhookData['type']]);
+
+            return response()->json(['status' => 'ignored'], 200);
         }
 
         // Dispatch to queue for async processing
         Queue::connection('null')->push(new ProcessMercadoPagoWebhook($webhookData, $type, $requestId));
 
-        return response()->json( [ 'status' => 'accepted' ], 200 );
+        return response()->json(['status' => 'accepted'], 200);
     }
-
 }

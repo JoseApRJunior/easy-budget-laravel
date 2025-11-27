@@ -29,20 +29,17 @@ class SendSupportResponse implements ShouldQueue
 
     /**
      * Handle the event.
-     *
-     * @param SupportTicketResponded $event
-     * @return void
      */
-    public function handle( SupportTicketResponded $event ): void
+    public function handle(SupportTicketResponded $event): void
     {
         try {
-            Log::info( 'Processando evento SupportTicketResponded para envio de resposta de suporte', [
-                'ticket_id'      => $event->ticket[ 'id' ] ?? null,
-                'ticket_subject' => $event->ticket[ 'subject' ] ?? 'Sem assunto',
-                'tenant_id'      => $event->tenant?->id,
-            ] );
+            Log::info('Processando evento SupportTicketResponded para envio de resposta de suporte', [
+                'ticket_id' => $event->ticket['id'] ?? null,
+                'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',
+                'tenant_id' => $event->tenant?->id,
+            ]);
 
-            $mailerService = app( MailerService::class);
+            $mailerService = app(MailerService::class);
 
             $result = $mailerService->sendSupportResponse(
                 $event->ticket,
@@ -50,30 +47,30 @@ class SendSupportResponse implements ShouldQueue
                 $event->tenant,
             );
 
-            if ( $result->isSuccess() ) {
-                Log::info( 'Resposta de suporte enviada com sucesso via evento', [
-                    'ticket_id'      => $event->ticket[ 'id' ] ?? null,
-                    'ticket_subject' => $event->ticket[ 'subject' ] ?? 'Sem assunto',
-                    'sent_at'        => $result->getData()[ 'sent_at' ] ?? null,
-                ] );
+            if ($result->isSuccess()) {
+                Log::info('Resposta de suporte enviada com sucesso via evento', [
+                    'ticket_id' => $event->ticket['id'] ?? null,
+                    'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',
+                    'sent_at' => $result->getData()['sent_at'] ?? null,
+                ]);
             } else {
-                Log::error( 'Falha ao enviar resposta de suporte via evento', [
-                    'ticket_id'      => $event->ticket[ 'id' ] ?? null,
-                    'ticket_subject' => $event->ticket[ 'subject' ] ?? 'Sem assunto',
-                    'error'          => $result->getMessage(),
-                ] );
+                Log::error('Falha ao enviar resposta de suporte via evento', [
+                    'ticket_id' => $event->ticket['id'] ?? null,
+                    'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',
+                    'error' => $result->getMessage(),
+                ]);
 
                 // Relança a exceção para que seja tratada pela queue
-                throw new \Exception( 'Falha no envio de resposta de suporte: ' . $result->getMessage() );
+                throw new \Exception('Falha no envio de resposta de suporte: '.$result->getMessage());
             }
 
-        } catch ( \Throwable $e ) {
-            Log::error( 'Erro crítico no listener SendSupportResponse', [
-                'ticket_id'      => $event->ticket[ 'id' ] ?? null,
-                'ticket_subject' => $event->ticket[ 'subject' ] ?? 'Sem assunto',
-                'error'          => $e->getMessage(),
-                'trace'          => $e->getTraceAsString(),
-            ] );
+        } catch (\Throwable $e) {
+            Log::error('Erro crítico no listener SendSupportResponse', [
+                'ticket_id' => $event->ticket['id'] ?? null,
+                'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             // Relança a exceção para que seja tratada pela queue
             throw $e;
@@ -82,22 +79,17 @@ class SendSupportResponse implements ShouldQueue
 
     /**
      * Handle a job failure.
-     *
-     * @param SupportTicketResponded $event
-     * @param \Throwable $exception
-     * @return void
      */
-    public function failed( SupportTicketResponded $event, \Throwable $exception ): void
+    public function failed(SupportTicketResponded $event, \Throwable $exception): void
     {
-        Log::critical( 'Listener SendSupportResponse falhou após todas as tentativas', [
-            'ticket_id'      => $event->ticket[ 'id' ] ?? null,
-            'ticket_subject' => $event->ticket[ 'subject' ] ?? 'Sem assunto',
-            'error'          => $exception->getMessage(),
-            'attempts'       => $this->tries,
-        ] );
+        Log::critical('Listener SendSupportResponse falhou após todas as tentativas', [
+            'ticket_id' => $event->ticket['id'] ?? null,
+            'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',
+            'error' => $exception->getMessage(),
+            'attempts' => $this->tries,
+        ]);
 
         // Em produção, poderia notificar administradores sobre a falha
         // ou implementar lógica de fallback
     }
-
 }

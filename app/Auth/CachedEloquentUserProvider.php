@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Auth;
 
 use Illuminate\Auth\EloquentUserProvider;
-use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
 /**
  * User Provider otimizado com cache em memória para evitar queries duplicadas
@@ -14,8 +13,6 @@ class CachedEloquentUserProvider extends EloquentUserProvider
 {
     /**
      * Cache de usuários carregados durante o request
-     *
-     * @var array
      */
     protected array $userCache = [];
 
@@ -45,7 +42,6 @@ class CachedEloquentUserProvider extends EloquentUserProvider
     /**
      * Retrieve a user by the given credentials.
      *
-     * @param  array  $credentials
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveByCredentials(array $credentials)
@@ -55,7 +51,7 @@ class CachedEloquentUserProvider extends EloquentUserProvider
         }
 
         // Criar chave de cache baseada nas credenciais
-        $cacheKey = "cred:" . md5(json_encode($credentials));
+        $cacheKey = 'cred:'.md5(json_encode($credentials));
 
         if (isset($this->userCache[$cacheKey])) {
             return $this->userCache[$cacheKey];

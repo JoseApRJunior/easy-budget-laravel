@@ -17,11 +17,11 @@ class MonitoringController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        $tenantId = (int)($user->tenant_id ?? 0);
+        $tenantId = (int) ($user->tenant_id ?? 0);
 
         $totalAlerts = MonitoringAlertHistory::where('tenant_id', $tenantId)->count();
         $unresolved = MonitoringAlertHistory::where('tenant_id', $tenantId)->where('is_resolved', false)->count();
-        $critical = MonitoringAlertHistory::where('tenant_id', $tenantId)->whereIn('severity', ['high','critical'])->count();
+        $critical = MonitoringAlertHistory::where('tenant_id', $tenantId)->whereIn('severity', ['high', 'critical'])->count();
         $recent = MonitoringAlertHistory::where('tenant_id', $tenantId)->latest('created_at')->limit(10)->get();
 
         $stats = [
@@ -48,20 +48,20 @@ class MonitoringController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        $tenantId = (int)($user->tenant_id ?? 0);
+        $tenantId = (int) ($user->tenant_id ?? 0);
 
         $byType = MonitoringAlertHistory::where('tenant_id', $tenantId)
             ->selectRaw('alert_type, COUNT(*) as count')
             ->groupBy('alert_type')
             ->get()
-            ->mapWithKeys(fn($r) => [$r->alert_type => (int)$r->count])
+            ->mapWithKeys(fn ($r) => [$r->alert_type => (int) $r->count])
             ->all();
 
         $bySeverity = MonitoringAlertHistory::where('tenant_id', $tenantId)
             ->selectRaw('severity, COUNT(*) as count')
             ->groupBy('severity')
             ->get()
-            ->mapWithKeys(fn($r) => [$r->severity => (int)$r->count])
+            ->mapWithKeys(fn ($r) => [$r->severity => (int) $r->count])
             ->all();
 
         $recent = MonitoringAlertHistory::where('tenant_id', $tenantId)

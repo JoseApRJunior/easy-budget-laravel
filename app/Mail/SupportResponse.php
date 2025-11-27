@@ -45,10 +45,10 @@ class SupportResponse extends Mailable implements ShouldQueue
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param array $ticket Dados do ticket de suporte
-     * @param string $response Resposta do suporte
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
+     * @param  array  $ticket  Dados do ticket de suporte
+     * @param  string  $response  Resposta do suporte
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
      */
     public function __construct(
         array $ticket,
@@ -56,10 +56,10 @@ class SupportResponse extends Mailable implements ShouldQueue
         ?Tenant $tenant = null,
         ?array $company = null,
     ) {
-        $this->ticket   = $ticket;
+        $this->ticket = $ticket;
         $this->response = $response;
-        $this->tenant   = $tenant;
-        $this->company  = $company ?? [];
+        $this->tenant = $tenant;
+        $this->company = $company ?? [];
     }
 
     /**
@@ -68,7 +68,7 @@ class SupportResponse extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Resposta do Suporte - ' . ( $this->ticket[ 'subject' ] ?? 'Ticket #' . ( $this->ticket[ 'id' ] ?? '' ) ),
+            subject: 'Resposta do Suporte - '.($this->ticket['subject'] ?? 'Ticket #'.($this->ticket['id'] ?? '')),
         );
     }
 
@@ -80,25 +80,25 @@ class SupportResponse extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.support',
             with: [
-                'ticket'        => [
-                    'id'               => $this->ticket[ 'id' ] ?? null,
-                    'subject'          => $this->ticket[ 'subject' ] ?? 'Sem assunto',
-                    'status'           => $this->ticket[ 'status' ] ?? 'open',
-                    'priority'         => $this->ticket[ 'priority' ] ?? 'normal',
-                    'created_at'       => $this->ticket[ 'created_at' ] ?? now()->format( 'd/m/Y H:i:s' ),
-                    'updated_at'       => $this->ticket[ 'updated_at' ] ?? now()->format( 'd/m/Y H:i:s' ),
-                    'category'         => $this->ticket[ 'category' ] ?? 'Geral',
-                    'first_name'       => $this->ticket[ 'first_name' ] ?? 'Usuário',
-                    'last_name'        => $this->ticket[ 'last_name' ] ?? '',
-                    'email'            => $this->ticket[ 'email' ] ?? '',
-                    'original_message' => $this->ticket[ 'message' ] ?? '',
+                'ticket' => [
+                    'id' => $this->ticket['id'] ?? null,
+                    'subject' => $this->ticket['subject'] ?? 'Sem assunto',
+                    'status' => $this->ticket['status'] ?? 'open',
+                    'priority' => $this->ticket['priority'] ?? 'normal',
+                    'created_at' => $this->ticket['created_at'] ?? now()->format('d/m/Y H:i:s'),
+                    'updated_at' => $this->ticket['updated_at'] ?? now()->format('d/m/Y H:i:s'),
+                    'category' => $this->ticket['category'] ?? 'Geral',
+                    'first_name' => $this->ticket['first_name'] ?? 'Usuário',
+                    'last_name' => $this->ticket['last_name'] ?? '',
+                    'email' => $this->ticket['email'] ?? '',
+                    'original_message' => $this->ticket['message'] ?? '',
                 ],
-                'response'      => $this->response,
-                'response_date' => now()->format( 'd/m/Y H:i:s' ),
-                'company'       => $this->getCompanyData(),
-                'tenant'        => $this->tenant,
+                'response' => $this->response,
+                'response_date' => now()->format('d/m/Y H:i:s'),
+                'company' => $this->getCompanyData(),
+                'tenant' => $this->tenant,
                 'support_email' => $this->getSupportEmail(),
-                'ticket_url'    => $this->generateTicketUrl(),
+                'ticket_url' => $this->generateTicketUrl(),
             ],
         );
     }
@@ -118,26 +118,26 @@ class SupportResponse extends Mailable implements ShouldQueue
      */
     private function getCompanyData(): array
     {
-        if ( !empty( $this->company ) ) {
+        if (! empty($this->company)) {
             return $this->company;
         }
 
         // Tentar obter dados da empresa através do tenant
-        if ( $this->tenant ) {
+        if ($this->tenant) {
             return [
-                'company_name'   => $this->tenant->name,
-                'email'          => null,
+                'company_name' => $this->tenant->name,
+                'email' => null,
                 'email_business' => null,
-                'phone'          => null,
+                'phone' => null,
                 'phone_business' => null,
             ];
         }
 
         return [
-            'company_name'   => 'Easy Budget',
-            'email'          => null,
+            'company_name' => 'Easy Budget',
+            'email' => null,
             'email_business' => null,
-            'phone'          => null,
+            'phone' => null,
             'phone_business' => null,
         ];
     }
@@ -150,12 +150,12 @@ class SupportResponse extends Mailable implements ShouldQueue
     private function getSupportEmail(): string
     {
         // Tentar obter e-mail de suporte do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) ) {
-            return $this->tenant->settings[ 'support_email' ];
+        if ($this->tenant && isset($this->tenant->settings['support_email'])) {
+            return $this->tenant->settings['support_email'];
         }
 
         // E-mail padrão de suporte
-        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
+        return config('mail.support_email', 'suporte@easybudget.net.br');
     }
 
     /**
@@ -165,13 +165,12 @@ class SupportResponse extends Mailable implements ShouldQueue
      */
     private function generateTicketUrl(): string
     {
-        $ticketId = $this->ticket[ 'id' ] ?? null;
+        $ticketId = $this->ticket['id'] ?? null;
 
-        if ( !$ticketId ) {
-            return config( 'app.url' ) . '/support';
+        if (! $ticketId) {
+            return config('app.url').'/support';
         }
 
-        return config( 'app.url' ) . '/support/ticket/' . $ticketId;
+        return config('app.url').'/support/ticket/'.$ticketId;
     }
-
 }

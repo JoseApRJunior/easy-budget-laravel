@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Controllers;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em ControllerPattern.
- *
- * @package App\DesignPatterns
  */
 class ControllerTemplates
 {
@@ -725,5 +723,4 @@ Route::resource(\'{module}\', {Module}Controller::class)->names([
 ✅ **Qualidade**: Tratamento de erro e logging inclusos
 ✅ **Flexibilidade**: Fáceis de personalizar quando necessário';
     }
-
 }

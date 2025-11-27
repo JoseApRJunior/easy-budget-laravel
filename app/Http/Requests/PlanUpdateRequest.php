@@ -26,20 +26,20 @@ class PlanUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $entityId = $this->route( 'plan' ); // parâmetro de rota com ID
+        $entityId = $this->route('plan'); // parâmetro de rota com ID
 
         return [
-            'name'        => 'sometimes|required|string|max:255',
-            'slug'        => [
+            'name' => 'sometimes|required|string|max:255',
+            'slug' => [
                 'sometimes', 'required', 'string', 'max:50',
-                \Illuminate\Validation\Rule::unique( 'plans' )->ignore( $entityId )
+                \Illuminate\Validation\Rule::unique('plans')->ignore($entityId),
             ],
             'description' => 'sometimes|nullable|string|max:500',
-            'price'       => 'sometimes|required|numeric|min:0',
-            'status'      => 'sometimes|boolean',
-            'features'    => 'sometimes|nullable|array',
+            'price' => 'sometimes|required|numeric|min:0',
+            'status' => 'sometimes|boolean',
+            'features' => 'sometimes|nullable|array',
             'max_budgets' => 'sometimes|required|integer|min:0',
-            'max_clients' => 'sometimes|required|integer|min:0'
+            'max_clients' => 'sometimes|required|integer|min:0',
         ];
     }
 
@@ -51,14 +51,13 @@ class PlanUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'        => 'O nome é obrigatório.',
-            'slug.unique'          => 'O slug informado já está em uso.',
-            'price.required'       => 'O preço é obrigatório.',
-            'price.numeric'        => 'O preço deve ser numérico.',
-            'price.min'            => 'O preço deve ser no mínimo 0.',
+            'name.required' => 'O nome é obrigatório.',
+            'slug.unique' => 'O slug informado já está em uso.',
+            'price.required' => 'O preço é obrigatório.',
+            'price.numeric' => 'O preço deve ser numérico.',
+            'price.min' => 'O preço deve ser no mínimo 0.',
             'max_budgets.required' => 'O máximo de orçamentos é obrigatório.',
-            'max_clients.required' => 'O máximo de clientes é obrigatório.'
+            'max_clients.required' => 'O máximo de clientes é obrigatório.',
         ];
     }
-
 }

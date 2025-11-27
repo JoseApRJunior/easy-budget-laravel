@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Models\SystemSettings;
-use App\Models\Plan;
-use App\Models\Category;
 use App\Models\AreaOfActivity;
+use App\Models\Category;
+use App\Models\Plan;
 use App\Models\Profession;
+use App\Models\SystemSettings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class GlobalSettingsController extends Controller
 {
@@ -24,7 +24,7 @@ class GlobalSettingsController extends Controller
     public function index(): View
     {
         $settings = SystemSettings::pluck('value', 'key')->toArray();
-        
+
         return view('admin.settings.global', [
             'settings' => $settings,
             'categories' => Category::count(),
@@ -286,7 +286,7 @@ class GlobalSettingsController extends Controller
             // This would typically send a test email
             return redirect()->back()->with('success', 'Email de teste enviado com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao enviar email de teste: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao enviar email de teste: '.$e->getMessage());
         }
     }
 
@@ -300,7 +300,7 @@ class GlobalSettingsController extends Controller
             // This would typically create a test payment
             return redirect()->back()->with('success', 'Configuração de pagamento testada com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao testar configuração de pagamento: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao testar configuração de pagamento: '.$e->getMessage());
         }
     }
 
@@ -310,7 +310,7 @@ class GlobalSettingsController extends Controller
     public function clearCache(): RedirectResponse
     {
         Cache::flush();
-        
+
         return redirect()->back()->with('success', 'Cache do sistema limpo com sucesso!');
     }
 
@@ -320,11 +320,11 @@ class GlobalSettingsController extends Controller
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $settings = SystemSettings::all()->toArray();
-        $filename = 'system-settings-' . date('Y-m-d-His') . '.json';
-        
+        $filename = 'system-settings-'.date('Y-m-d-His').'.json';
+
         $tempFile = tempnam(sys_get_temp_dir(), 'settings');
         file_put_contents($tempFile, json_encode($settings, JSON_PRETTY_PRINT));
-        
+
         return response()->download($tempFile, $filename)->deleteFileAfterSend();
     }
 
@@ -358,7 +358,7 @@ class GlobalSettingsController extends Controller
 
             return redirect()->back()->with('success', 'Configurações importadas com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao importar configurações: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao importar configurações: '.$e->getMessage());
         }
     }
 }

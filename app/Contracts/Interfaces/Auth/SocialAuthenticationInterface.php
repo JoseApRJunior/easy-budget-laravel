@@ -19,62 +19,54 @@ interface SocialAuthenticationInterface
     /**
      * Autentica usuário através de provedor social
      *
-     * @param string $provider Nome do provedor (google, facebook, etc.)
-     * @param array $userData Dados do usuário do provedor
-     * @return ServiceResult
+     * @param  string  $provider  Nome do provedor (google, facebook, etc.)
+     * @param  array  $userData  Dados do usuário do provedor
      */
-    public function authenticateWithSocialProvider( string $provider, array $userData ): ServiceResult;
+    public function authenticateWithSocialProvider(string $provider, array $userData): ServiceResult;
 
     /**
      * Cria novo usuário a partir de dados sociais
      *
-     * @param string $provider Nome do provedor
-     * @param array $userData Dados do usuário do provedor
-     * @return ServiceResult
+     * @param  string  $provider  Nome do provedor
+     * @param  array  $userData  Dados do usuário do provedor
      */
-    public function createUserFromSocialData( string $provider, array $userData ): ServiceResult;
+    public function createUserFromSocialData(string $provider, array $userData): ServiceResult;
 
     /**
      * Vincula conta social a usuário existente
      *
-     * @param User $user Usuário existente
-     * @param string $provider Nome do provedor
-     * @param array $userData Dados do usuário do provedor
-     * @return ServiceResult
+     * @param  User  $user  Usuário existente
+     * @param  string  $provider  Nome do provedor
+     * @param  array  $userData  Dados do usuário do provedor
      */
-    public function linkSocialAccountToUser( User $user, string $provider, array $userData ): ServiceResult;
+    public function linkSocialAccountToUser(User $user, string $provider, array $userData): ServiceResult;
 
     /**
      * Busca usuário por ID social
      *
-     * @param string $provider Nome do provedor
-     * @param string $socialId ID do usuário no provedor social
-     * @return User|null
+     * @param  string  $provider  Nome do provedor
+     * @param  string  $socialId  ID do usuário no provedor social
      */
-    public function findUserBySocialId( string $provider, string $socialId ): ?User;
+    public function findUserBySocialId(string $provider, string $socialId): ?User;
 
     /**
      * Sincroniza dados do perfil social com usuário existente
      *
-     * @param User $user Usuário existente
-     * @param array $socialData Dados atualizados do provedor social
-     * @return ServiceResult
+     * @param  User  $user  Usuário existente
+     * @param  array  $socialData  Dados atualizados do provedor social
      */
-    public function syncSocialProfileData( User $user, array $socialData ): ServiceResult;
+    public function syncSocialProfileData(User $user, array $socialData): ServiceResult;
 
     /**
      * Valida se o e-mail do provedor social já está em uso
      *
-     * @param string $email E-mail do provedor social
-     * @param string|null $excludeUserId ID do usuário para excluir da validação (para updates)
-     * @return bool
+     * @param  string  $email  E-mail do provedor social
+     * @param  string|null  $excludeUserId  ID do usuário para excluir da validação (para updates)
      */
-    public function isSocialEmailInUse( string $email, ?string $excludeUserId = null ): bool;
+    public function isSocialEmailInUse(string $email, ?string $excludeUserId = null): bool;
 
     /**
      * Obtém lista de provedores sociais suportados
-     *
-     * @return array
      */
     public function getSupportedProviders(): array;
 }

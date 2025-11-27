@@ -7,9 +7,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\AuditLog;
 use App\Services\Domain\AuditService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AuditController extends Controller
@@ -34,8 +34,8 @@ class AuditController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('old_values', 'like', "%{$search}%")
-                  ->orWhere('new_values', 'like', "%{$search}%");
+                    ->orWhere('old_values', 'like', "%{$search}%")
+                    ->orWhere('new_values', 'like', "%{$search}%");
             });
         }
 
@@ -56,9 +56,9 @@ class AuditController extends Controller
         }
 
         $logs = $query->with(['user'])
-                       ->latest()
-                       ->paginate(50)
-                       ->appends($request->query());
+            ->latest()
+            ->paginate(50)
+            ->appends($request->query());
 
         return view('admin.audit.index', compact('logs', 'search', 'user', 'action', 'dateFrom', 'dateTo'));
     }
@@ -69,7 +69,7 @@ class AuditController extends Controller
     public function show(AuditLog $log): View
     {
         $log->load(['user']);
-        
+
         return view('admin.audit.show', compact('log'));
     }
 
@@ -79,21 +79,21 @@ class AuditController extends Controller
     public function export(Request $request): mixed
     {
         $format = $request->get('format', 'excel');
-        
+
         try {
             $exportData = $this->auditService->prepareExportData($request->all());
-            
+
             if ($format === 'excel') {
-                return Excel::download($exportData, "audit_logs.xlsx");
+                return Excel::download($exportData, 'audit_logs.xlsx');
             } elseif ($format === 'csv') {
-                return Excel::download($exportData, "audit_logs.csv");
+                return Excel::download($exportData, 'audit_logs.csv');
             } elseif ($format === 'pdf') {
                 return $this->auditService->generatePdfExport($exportData);
             }
-            
+
             return back()->with('error', 'Formato de exportação não suportado.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exportar logs: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao exportar logs: '.$e->getMessage());
         }
     }
 
@@ -104,11 +104,11 @@ class AuditController extends Controller
     {
         try {
             $log->delete();
-            
+
             return redirect()->route('admin.audit.logs')
-                           ->with('success', 'Log de auditoria excluído com sucesso!');
+                ->with('success', 'Log de auditoria excluído com sucesso!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao excluir log: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao excluir log: '.$e->getMessage());
         }
     }
 }

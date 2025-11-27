@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProvidersExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Provider;
 use App\Models\Tenant;
 use App\Services\Shared\CacheService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ProvidersExport;
 
 class ProviderManagementController extends Controller
 {
@@ -123,7 +123,7 @@ class ProviderManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $provider = new Provider();
+            $provider = new Provider;
             $provider->fill($validated);
             $provider->save();
 
@@ -166,7 +166,7 @@ class ProviderManagementController extends Controller
             'customers',
             'budgets',
             'services',
-            'invoices'
+            'invoices',
         ]);
 
         $statistics = $this->getProviderDetailedStatistics($provider);
@@ -198,9 +198,9 @@ class ProviderManagementController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:providers,email,' . $provider->id,
+            'email' => 'required|email|max:255|unique:providers,email,'.$provider->id,
             'phone' => 'nullable|string|max:20',
-            'document' => 'nullable|string|max:20|unique:providers,document,' . $provider->id,
+            'document' => 'nullable|string|max:20|unique:providers,document,'.$provider->id,
             'company_name' => 'nullable|string|max:255',
             'trading_name' => 'nullable|string|max:255',
             'state_registration' => 'nullable|string|max:50',
@@ -258,28 +258,28 @@ class ProviderManagementController extends Controller
         if ($provider->customers()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um fornecedor que possui clientes associados.'
+                'message' => 'Não é possível excluir um fornecedor que possui clientes associados.',
             ], 422);
         }
 
         if ($provider->budgets()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um fornecedor que possui orçamentos associados.'
+                'message' => 'Não é possível excluir um fornecedor que possui orçamentos associados.',
             ], 422);
         }
 
         if ($provider->services()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um fornecedor que possui serviços associados.'
+                'message' => 'Não é possível excluir um fornecedor que possui serviços associados.',
             ], 422);
         }
 
         if ($provider->invoices()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir um fornecedor que possui faturas associadas.'
+                'message' => 'Não é possível excluir um fornecedor que possui faturas associadas.',
             ], 422);
         }
 
@@ -300,7 +300,7 @@ class ProviderManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Fornecedor excluído com sucesso!'
+                'message' => 'Fornecedor excluído com sucesso!',
             ]);
 
         } catch (\Exception $e) {
@@ -313,7 +313,7 @@ class ProviderManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao excluir fornecedor. Por favor, tente novamente.'
+                'message' => 'Erro ao excluir fornecedor. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -323,7 +323,7 @@ class ProviderManagementController extends Controller
         $this->authorize('manage-providers');
 
         try {
-            $provider->is_active = !$provider->is_active;
+            $provider->is_active = ! $provider->is_active;
             $provider->save();
 
             $this->cacheService->forgetPattern('providers.*');
@@ -338,7 +338,7 @@ class ProviderManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Status alterado com sucesso!',
-                'is_active' => $provider->is_active
+                'is_active' => $provider->is_active,
             ]);
 
         } catch (\Exception $e) {
@@ -350,7 +350,7 @@ class ProviderManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.'
+                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -400,7 +400,7 @@ class ProviderManagementController extends Controller
 
         return Excel::download(
             new ProvidersExport($providers),
-            'fornecedores_' . now()->format('Y-m-d_H-i-s') . '.' . $format
+            'fornecedores_'.now()->format('Y-m-d_H-i-s').'.'.$format
         );
     }
 

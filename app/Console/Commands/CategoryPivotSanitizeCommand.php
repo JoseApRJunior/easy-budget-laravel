@@ -23,8 +23,9 @@ class CategoryPivotSanitizeCommand extends Command
         if ($tenantOption !== null && $tenantOption !== '') {
             $tenantId = (int) $tenantOption;
             $exists = DB::table('tenants')->where('id', $tenantId)->exists();
-            if (!$exists) {
+            if (! $exists) {
                 $this->error("Tenant {$tenantId} não existe.");
+
                 return self::FAILURE;
             }
             $tenantIds = [$tenantId];
@@ -58,12 +59,14 @@ class CategoryPivotSanitizeCommand extends Command
 
         if ($dryRun) {
             $this->info("Dry-run: nenhum anexo foi removido. Total inconsistentes: {$totalInconsistent}");
+
             return self::SUCCESS;
         }
 
-        if (!$force) {
-            if (!$this->confirm('Deseja realmente remover todos os anexos inconsistentes listados?', false)) {
+        if (! $force) {
+            if (! $this->confirm('Deseja realmente remover todos os anexos inconsistentes listados?', false)) {
                 $this->warn('Operação cancelada.');
+
                 return self::SUCCESS;
             }
         }
@@ -91,12 +94,13 @@ class CategoryPivotSanitizeCommand extends Command
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->error('Falha ao remover anexos inconsistentes: ' . $e->getMessage());
+            $this->error('Falha ao remover anexos inconsistentes: '.$e->getMessage());
+
             return self::FAILURE;
         }
 
         $this->info('Anexos inconsistentes removidos com sucesso.');
+
         return self::SUCCESS;
     }
 }
-

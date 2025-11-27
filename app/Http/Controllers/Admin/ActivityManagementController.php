@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ActivitiesExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Activity;
 use App\Models\Category;
 use App\Models\Tenant;
 use App\Services\Shared\CacheService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ActivitiesExport;
 
 class ActivityManagementController extends Controller
 {
@@ -140,13 +140,13 @@ class ActivityManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $activity = new Activity();
+            $activity = new Activity;
             $activity->fill($validated);
-            
+
             if (empty($validated['code'])) {
                 $activity->code = $this->generateUniqueCode($validated['name']);
             }
-            
+
             $activity->slug = $this->generateUniqueSlug($validated['name']);
             $activity->save();
 
@@ -187,7 +187,7 @@ class ActivityManagementController extends Controller
             'products',
             'services',
             'products.tenant',
-            'services.tenant'
+            'services.tenant',
         ]);
 
         $statistics = $this->getActivityDetailedStatistics($activity);
@@ -234,7 +234,7 @@ class ActivityManagementController extends Controller
             'category_id' => 'required|exists:categories,id',
             'tenant_id' => 'nullable|exists:tenants,id',
             'type' => 'required|string|max:50',
-            'code' => 'nullable|string|max:50|unique:activities,code,' . $activity->id,
+            'code' => 'nullable|string|max:50|unique:activities,code,'.$activity->id,
             'is_active' => 'boolean',
             'price' => 'nullable|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
@@ -294,14 +294,14 @@ class ActivityManagementController extends Controller
         if ($activity->products()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir uma atividade que possui produtos associados.'
+                'message' => 'Não é possível excluir uma atividade que possui produtos associados.',
             ], 422);
         }
 
         if ($activity->services()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir uma atividade que possui serviços associados.'
+                'message' => 'Não é possível excluir uma atividade que possui serviços associados.',
             ], 422);
         }
 
@@ -322,7 +322,7 @@ class ActivityManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Atividade excluída com sucesso!'
+                'message' => 'Atividade excluída com sucesso!',
             ]);
 
         } catch (\Exception $e) {
@@ -335,7 +335,7 @@ class ActivityManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao excluir atividade. Por favor, tente novamente.'
+                'message' => 'Erro ao excluir atividade. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -345,7 +345,7 @@ class ActivityManagementController extends Controller
         $this->authorize('manage-activities');
 
         try {
-            $activity->is_active = !$activity->is_active;
+            $activity->is_active = ! $activity->is_active;
             $activity->save();
 
             $this->cacheService->forgetPattern('activities.*');
@@ -360,7 +360,7 @@ class ActivityManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Status alterado com sucesso!',
-                'is_active' => $activity->is_active
+                'is_active' => $activity->is_active,
             ]);
 
         } catch (\Exception $e) {
@@ -372,7 +372,7 @@ class ActivityManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.'
+                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
             ], 500);
         }
     }
@@ -385,7 +385,7 @@ class ActivityManagementController extends Controller
             DB::beginTransaction();
 
             $newActivity = $activity->replicate();
-            $newActivity->name = $activity->name . ' (Cópia)';
+            $newActivity->name = $activity->name.' (Cópia)';
             $newActivity->code = $this->generateUniqueCode($newActivity->name);
             $newActivity->slug = $this->generateUniqueSlug($newActivity->name);
             $newActivity->is_active = false;
@@ -458,7 +458,7 @@ class ActivityManagementController extends Controller
 
         return Excel::download(
             new ActivitiesExport($activities),
-            'atividades_' . now()->format('Y-m-d_H-i-s') . '.' . $format
+            'atividades_'.now()->format('Y-m-d_H-i-s').'.'.$format
         );
     }
 
@@ -487,26 +487,26 @@ class ActivityManagementController extends Controller
         $this->authorize('manage-activities');
 
         $activityId = $request->get('activity_id');
-        
+
         $activity = Activity::find($activityId, ['id', 'name', 'price', 'cost', 'duration', 'unit']);
 
-        if (!$activity) {
+        if (! $activity) {
             return response()->json([
                 'success' => false,
-                'message' => 'Atividade não encontrada.'
+                'message' => 'Atividade não encontrada.',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $activity
+            'data' => $activity,
         ]);
     }
 
     protected function generateUniqueCode(string $name, ?int $excludeId = null): string
     {
         $code = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 6));
-        
+
         if (empty($code)) {
             $code = 'ATV';
         }
@@ -516,16 +516,16 @@ class ActivityManagementController extends Controller
 
         while (true) {
             $query = Activity::where('code', $code);
-            
+
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
 
-            $code = $baseCode . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $code = $baseCode.str_pad($counter, 2, '0', STR_PAD_LEFT);
             $counter++;
         }
 
@@ -540,16 +540,16 @@ class ActivityManagementController extends Controller
 
         while (true) {
             $query = Activity::where('slug', $slug);
-            
+
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
 
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 
