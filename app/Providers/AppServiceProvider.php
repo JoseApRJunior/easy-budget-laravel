@@ -100,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
         Service::observe(ServiceObserver::class);
         \App\Models\Tenant::observe(TenantObserver::class);
+        \App\Models\Category::observe(\App\Observers\CategoryObserver::class);
 
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);

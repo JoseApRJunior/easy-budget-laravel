@@ -13,16 +13,13 @@
             <form action="{{ route('categories.update', $category->id) }}" method="POST">
                 @csrf
                 @method( 'PUT' )
-
+                <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
                 <div class="row g-4">
                     <div class="col-md-12">
                         <div class="form-floating mb-3">
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
                                 name="name" placeholder="Nome da Categoria" value="{{ old('name', $category->name) }}" required>
                             <label for="name">Nome da Categoria *</label>
-                            @error( 'name' )
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-floating mb-3">
                             <select class="form-control" id="parent_id" name="parent_id">
@@ -39,6 +36,11 @@
                             <label for="slugPreview">Slug (gerado automaticamente)</label>
                         </div>
                         <div class="form-text" id="slugStatus"></div>
+                        <input type="hidden" name="is_active" value="0">
+                        <div class="form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active">Ativo</label>
+                        </div>
                     </div>
                 </div>
 
@@ -63,7 +65,8 @@
         var slugInput = document.getElementById('slugPreview');
         var statusEl = document.getElementById('slugStatus');
         var submitBtn = document.querySelector('form button[type="submit"]');
-        var tenantId = @json(optional(auth()->user())->tenant_id);
+        var tenantIdEl = document.getElementById('tenantId');
+        var tenantId = tenantIdEl && tenantIdEl.value ? parseInt(tenantIdEl.value) : null;
         var isAdmin = false;
         @role('admin')
         isAdmin = true;

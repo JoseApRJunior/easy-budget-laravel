@@ -15,8 +15,10 @@ use Illuminate\Support\Str;
 
 class CategoryService extends AbstractBaseService
 {
-    public function __construct(CategoryRepository $repository)
-    {
+    public function __construct(
+        CategoryRepository $repository,
+        private CategoryManagementService $managementService
+    ) {
         parent::__construct($repository);
     }
 
@@ -128,11 +130,16 @@ class CategoryService extends AbstractBaseService
         if ($categoryResult->isError()) {
             return $categoryResult;
         }
+
         /** @var Category $category */
         $category = $categoryResult->getData();
-        if ($category->services()->exists()) {
-            return $this->error('Não é possível excluir: possui serviços associados');
+
+        // Usar CategoryManagementService para validação completa
+        $canDeleteResult = $this->managementService->canDelete($category);
+        if ($canDeleteResult->isError()) {
+            return $canDeleteResult;
         }
+
         return $this->delete($id);
     }
 

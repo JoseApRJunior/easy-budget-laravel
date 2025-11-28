@@ -9,8 +9,7 @@ class TenantObserver
 {
     public function created(Tenant $tenant): void
     {
-        $categories = Category::query()
-            ->whereNull('tenant_id')
+        $categories = Category::globalOnly()
             ->orderBy('name')
             ->get(['id']);
         $tenant->categories()->syncWithoutDetaching(

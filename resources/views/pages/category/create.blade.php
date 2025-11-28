@@ -19,6 +19,15 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
+            @if($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
             <form action="{{ route('categories.store') }}" method="POST">
                 @csrf
                 <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
@@ -47,6 +56,14 @@
                             <label for="slugPreview">Slug (gerado automaticamente)</label>
                         </div>
                         <div class="form-text" id="slugStatus"></div>
+                        <input type="hidden" name="is_active" value="0">
+                        <div class="form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', ($defaults['is_active'] ?? true)) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active">Ativo</label>
+                            @error('is_active')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 

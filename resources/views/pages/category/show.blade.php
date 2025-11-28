@@ -30,6 +30,24 @@
                     </div>
                 </div>
 
+                @if($category->parent)
+                <div class="col-md-3">
+                    <div class="d-flex flex-column">
+                        <label class="text-muted small mb-1">Categoria Pai</label>
+                        <h5 class="mb-0">
+                            <a href="{{ route('categories.show', $category->parent->slug) }}" class="text-decoration-none">
+                                {{ $category->parent->name }}
+                            </a>
+                            @if($category->parent->tenant_id === null)
+                                <span class="badge bg-secondary ms-2">Sistema</span>
+                            @else
+                                <span class="badge bg-primary ms-2">Pessoal</span>
+                            @endif
+                        </h5>
+                    </div>
+                </div>
+                @endif
+
                 @if($isAdmin)
                 <div class="col-md-3">
                     <div class="d-flex flex-column">

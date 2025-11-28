@@ -96,12 +96,13 @@ class BudgetTestSeeder extends Seeder
                 ServiceStatus::APPROVED,
             ];
 
-            $categories = Category::all(); // Categorias são globais, não por tenant
+            $categories = Category::all(); // Categorias são globais
             if ($categories->isEmpty()) {
-                // Criar uma categoria se não existir nenhuma
+                // Criar uma categoria global se não existir nenhuma
                 $category   = Category::create([
                     'name' => 'Categoria Teste',
                     'slug' => 'categoria-teste',
+                    'is_active' => true,
                 ]);
                 $categories = collect([$category]);
             }

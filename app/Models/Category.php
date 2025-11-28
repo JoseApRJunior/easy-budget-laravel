@@ -12,13 +12,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Model para representar categorias, com tenant_id opcional para compatibilidade com sistema legado.
+ * Model para representar categorias em sistema multitenancy via pivot table.
+ *
+ * Categorias podem ser:
+ * - Globais: Sem vínculo em category_tenant (disponíveis para todos)
+ * - Custom: Com vínculo em category_tenant onde is_custom = true
  */
 class Category extends Model
 {
-    use Auditable, HasFactory;
+    use Auditable, HasFactory, SoftDeletes;
 
     /**
      * Boot the model.
@@ -34,7 +39,6 @@ class Category extends Model
         'slug',
         'name',
         'parent_id',
-        'tenant_id',
         'is_active',
     ];
 
@@ -50,6 +54,7 @@ class Category extends Model
         'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -58,6 +63,7 @@ class Category extends Model
     protected $dates = [
         'created_at',
         'updated_at',
+        'deleted_at',
     ];
 
     /**
@@ -129,34 +135,78 @@ class Category extends Model
         return $this->children()->where('is_active', true)->count();
     }
 
-    public function scopeOwnedByTenant(Builder $query, int $tenantId): Builder
-    {
-        return $query
-            ->whereHas('tenants', function ($t) use ($tenantId) {
-                $t->where('tenant_id', $tenantId);
-            })
-            ->where(function ($q) use ($tenantId) {
-                $q->whereNull('categories.tenant_id')
-                    ->orWhere('categories.tenant_id', $tenantId);
-            });
-    }
-
-    public function scopeForTenantWithGlobals(Builder $query, ?int $tenantId): Builder
+    public function scopeForTenant(Builder $query, ?int $tenantId): Builder
     {
         if ($tenantId === null) {
             return $query;
         }
 
         return $query->where(function ($q) use ($tenantId) {
+            // Categorias vinculadas ao tenant via pivot
             $q->whereHas('tenants', function ($t) use ($tenantId) {
                 $t->where('tenant_id', $tenantId);
             })
-                ->orWhereNull('categories.tenant_id');
+            // OU categorias globais (sem vínculo com nenhum tenant)
+            ->orWhereDoesntHave('tenants');
         });
     }
 
+    /**
+     * Scope para apenas categorias globais (não vinculadas a nenhum tenant)
+     */
+    public function scopeGlobalOnly(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('tenants');
+    }
+
+    /**
+     * Scope para apenas categorias custom de um tenant
+     */
+    public function scopeCustomOnly(Builder $query, int $tenantId): Builder
+    {
+        return $query->whereHas('tenants', function ($t) use ($tenantId) {
+            $t->where('tenant_id', $tenantId)
+              ->where('is_custom', true);
+        });
+    }
+
+    /**
+     * Verifica se é categoria global (sem vínculo com tenants)
+     */
+    public function isGlobal(): bool
+    {
+        return !$this->tenants()->exists();
+    }
+
+    /**
+     * Verifica se é custom de um tenant específico
+     */
+    public function isCustomFor(int $tenantId): bool
+    {
+        return $this->tenants()
+            ->where('tenant_id', $tenantId)
+            ->wherePivot('is_custom', true)
+            ->exists();
+    }
+
+    /**
+     * Verifica se categoria está disponível para um tenant
+     */
+    public function isAvailableFor(int $tenantId): bool
+    {
+        // Global OU vinculada ao tenant
+        return $this->isGlobal() || $this->tenants()->where('tenant_id', $tenantId)->exists();
+    }
+
+    /**
+     * Relacionamento com Tenant (legado - mantido para compatibilidade)
+     *
+     * @deprecated Use tenants() many-to-many ao invés deste belongsTo
+     */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Tenant::class, 'tenant_id');
+        // Retorna relacionamento vazio para evitar quebrar código legado
+        return $this->belongsTo(\App\Models\Tenant::class, 'id', 'id')
+            ->whereRaw('1 = 0'); // Nunca retorna resultados
     }
 }

@@ -13,9 +13,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Services\Domain\CategoryManagementService;
+
 class CategoryController extends Controller
 {
-    public function __construct(private CategoryRepository $repository) {}
+    public function __construct(
+        private CategoryRepository $repository,
+        private CategoryManagementService $managementService
+    ) {}
 
     public function index(Request $request)
     {
@@ -34,25 +41,33 @@ class CategoryController extends Controller
 
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if ($isAdmin && ! $hasFilters) {
-            $confirmAll = true;
-        }
 
-        if ($hasFilters || $confirmAll) {
-            $serviceFilters = [
-                'search' => $filters['search'] ?? '',
-                'active' => $filters['active'] ?? '',
-            ];
-            $service = app(\App\Services\Domain\CategoryService::class);
-            $result = $isAdmin
-                ? $service->paginateGlobalOnly($serviceFilters, $perPage)
-                : $service->paginateWithGlobals($serviceFilters, $perPage);
+        $serviceFilters = [
+            'search' => $filters['search'] ?? '',
+            'active' => $filters['active'] ?? '',
+        ];
+        $service = app(\App\Services\Domain\CategoryService::class);
+
+        if ($isAdmin) {
+            $result = $service->paginateGlobalOnly($serviceFilters, $perPage);
             $categories = $this->getServiceData($result, collect());
             if (method_exists($categories, 'appends')) {
                 $categories = $categories->appends($request->query());
             }
         } else {
-            $categories = collect();
+            if (! $hasFilters) {
+                $confirmAll = true;
+            }
+
+            if ($hasFilters || $confirmAll) {
+                $result = $service->paginateWithGlobals($serviceFilters, $perPage);
+                $categories = $this->getServiceData($result, collect());
+                if (method_exists($categories, 'appends')) {
+                    $categories = $categories->appends($request->query());
+                }
+            } else {
+                $categories = collect();
+            }
         }
 
         return view('pages.category.index', [
@@ -78,101 +93,19 @@ class CategoryController extends Controller
         return view('pages.category.create', compact('parents', 'defaults'));
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $this->authorize('manage-custom-categories');
-        $validated = $this->validateRequest($request, [
-            'name' => ['required', 'string', 'max:255'],
-            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
-        ]);
-
-        $slug = Str::slug($validated['name']);
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        $tenantId = $isAdmin ? null : ($request->integer('tenant_id') ?: (TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null)));
+        $tenantId = $isAdmin ? null : (TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null));
 
-        if ($isAdmin) {
-            $exists = Category::query()->where('slug', $slug)->exists();
-            if ($exists) {
-                return back()->withErrors(['name' => 'Este nome já está em uso.'])->withInput();
-            }
-            if (($validated['parent_id'] ?? null) !== null) {
-                $parentId = (int) $validated['parent_id'];
-                $isBaseParent = Category::query()->where('id', $parentId)->whereNull('tenant_id')->exists();
-                if (! $isBaseParent) {
-                    return back()->withErrors(['parent_id' => 'Admin só pode selecionar categoria pai base.'])->withInput();
-                }
-            }
-            $category = Category::create([
-                'name' => $validated['name'],
-                'slug' => $slug,
-                'parent_id' => $validated['parent_id'] ?? null,
-                'tenant_id' => null,
-                'is_active' => true,
-            ]);
-            $tenantIds = \App\Models\Tenant::query()->pluck('id')->all();
-            $attach = [];
-            foreach ($tenantIds as $tid) {
-                $attach[$tid] = ['is_default' => false, 'is_custom' => false];
-            }
-            $category->tenants()->syncWithoutDetaching($attach);
-        } else {
-            $existingInTenant = Category::query()
-                ->where('slug', $slug)
-                ->where(function ($q) use ($tenantId) {
-                    if ($tenantId !== null) {
-                        $q->where('tenant_id', $tenantId)
-                            ->orWhereExists(function ($sub) use ($tenantId) {
-                                $sub->selectRaw(1)
-                                    ->from('category_tenant')
-                                    ->whereColumn('category_tenant.category_id', 'categories.id')
-                                    ->where('category_tenant.tenant_id', $tenantId);
-                            });
-                    } else {
-                        $q->whereRaw('1=0');
-                    }
-                })
-                ->exists();
-            if ($existingInTenant) {
-                return back()->withErrors(['name' => 'Este nome já está em uso.'])->withInput();
-            }
-            if (($validated['parent_id'] ?? null) !== null) {
-                if ($tenantId === null) {
-                    return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
-                }
-                $parentId = (int) $validated['parent_id'];
-                $parent = Category::query()->find($parentId);
-                $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
-                    ->where('tenant_id', $tenantId)
-                    ->where('category_id', $parentId)
-                    ->exists();
-                $isGlobalParent = $parent && $parent->tenant_id === null;
-                if (! $isGlobalParent && ! $parentAttached) {
-                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
-                }
-            }
-            $category = Category::create([
-                'name' => $validated['name'],
-                'slug' => $slug,
-                'parent_id' => $validated['parent_id'] ?? null,
-                'tenant_id' => $tenantId,
-                'is_active' => true,
-            ]);
-            if ($tenantId !== null) {
-                $category->tenants()->syncWithoutDetaching([
-                    $tenantId => ['is_default' => false, 'is_custom' => true],
-                ]);
-            }
+        $result = $this->managementService->createCategory($request->validated(), $tenantId);
+
+        if ($result->isError()) {
+            return back()->withErrors(['error' => $result->getMessage()])->withInput();
         }
 
-        \App\Models\AuditLog::log(
-            'created',
-            $category,
-            [],
-            $category->only(['id', 'name', 'slug', 'parent_id', 'tenant_id', 'is_active']),
-            ['context' => 'categories_store']
-        );
-
+        $category = $result->getData();
         $this->logOperation('categories_store', ['id' => $category->id, 'name' => $category->name]);
 
         return $this->redirectSuccess('categories.index', 'Categoria criada com sucesso.');
@@ -183,7 +116,7 @@ class CategoryController extends Controller
         $tenantId = auth()->user()->tenant_id ?? null;
         $category = $this->repository->findBySlug($slug);
         abort_unless($category, 404);
-        $category->load(['tenants' => function ($q) use ($tenantId) {
+        $category->load(['parent', 'tenants' => function ($q) use ($tenantId) {
             if ($tenantId !== null) {
                 $q->where('tenant_id', $tenantId);
             }
@@ -216,63 +149,15 @@ class CategoryController extends Controller
         return view('pages.category.edit', compact('category', 'parents'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateCategoryRequest $request, int $id)
     {
-        $this->authorize('manage-custom-categories');
-        $validated = $this->validateRequest($request, [
-            'name' => ['required', 'string', 'max:255'],
-            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
-        ]);
-
         $category = Category::findOrFail($id);
-        $user = auth()->user();
-        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if (! $isAdmin && $category->tenant_id === null) {
-            return back()->withErrors(['category' => 'Categorias globais só podem ser editadas por administradores.']);
-        }
-        if ($isAdmin && $category->tenant_id !== null) {
-            return back()->withErrors(['category' => 'Admin só pode editar categorias globais.']);
-        }
-        $slug = Str::slug($validated['name']);
-        if (! Category::validateUniqueSlug($slug, $category->id)) {
-            return back()->withErrors(['name' => 'Slug já existe'])->withInput();
-        }
-        $tenantId = $user->tenant_id ?? null;
-        if (($validated['parent_id'] ?? null) !== null) {
-            $parentId = (int) $validated['parent_id'];
-            if ($isAdmin) {
-                $isBaseParent = Category::query()->where('id', $parentId)->whereNull('tenant_id')->exists();
-                if (! $isBaseParent) {
-                    return back()->withErrors(['parent_id' => 'Admin só pode selecionar categoria pai base.'])->withInput();
-                }
-            } else {
-                if ($tenantId === null) {
-                    return back()->withErrors(['parent_id' => 'Selecione uma categoria pai disponível.'])->withInput();
-                }
-                $parent = Category::query()->find($parentId);
-                $parentAttached = \Illuminate\Support\Facades\DB::table('category_tenant')
-                    ->where('tenant_id', $tenantId)
-                    ->where('category_id', $parentId)
-                    ->exists();
-                $isGlobalParent = $parent && $parent->tenant_id === null;
-                if (! $isGlobalParent && ! $parentAttached) {
-                    return back()->withErrors(['parent_id' => 'A categoria pai deve pertencer ao seu espaço ou ser global.'])->withInput();
-                }
-            }
-        }
 
-        $category->name = $validated['name'];
-        $category->slug = $slug;
-        $category->parent_id = $validated['parent_id'] ?? null;
-        $before = $category->only(['id', 'name', 'slug', 'parent_id', 'tenant_id', 'is_active']);
-        $category->save();
-        \App\Models\AuditLog::log(
-            'updated',
-            $category,
-            $before,
-            $category->only(['id', 'name', 'slug', 'parent_id', 'tenant_id', 'is_active']),
-            ['context' => 'categories_update']
-        );
+        $result = $this->managementService->updateCategory($category, $request->validated());
+
+        if ($result->isError()) {
+            return back()->withErrors(['error' => $result->getMessage()])->withInput();
+        }
 
         $this->logOperation('categories_update', ['id' => $category->id, 'name' => $category->name]);
 
@@ -283,26 +168,13 @@ class CategoryController extends Controller
     {
         $this->authorize('manage-custom-categories');
         $category = Category::findOrFail($id);
-        $user = auth()->user();
-        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if (! $isAdmin && $category->tenant_id === null) {
-            return $this->redirectError('categories.index', 'Categorias globais só podem ser excluídas por administradores.');
+
+        $result = $this->managementService->deleteCategory($category);
+
+        if ($result->isError()) {
+            return $this->redirectError('categories.index', $result->getMessage());
         }
-        if ($isAdmin && $category->tenant_id !== null) {
-            return $this->redirectError('categories.index', 'Admin só pode excluir categorias globais.');
-        }
-        if ($category->services()->exists()) {
-            return $this->redirectError('categories.index', 'Não é possível excluir: possui serviços associados');
-        }
-        $before = $category->only(['id', 'name', 'slug', 'parent_id', 'tenant_id', 'is_active']);
-        $category->delete();
-        \App\Models\AuditLog::log(
-            'deleted',
-            $category,
-            $before,
-            [],
-            ['context' => 'categories_destroy']
-        );
+
         $this->logOperation('categories_destroy', ['id' => $id]);
 
         return $this->redirectSuccess('categories.index', 'Categoria excluída com sucesso.');
@@ -343,22 +215,11 @@ class CategoryController extends Controller
             return redirect()->route('categories.index')->with('status', 'Não foi possível determinar o tenant.');
         }
 
-        $oldDefault = \Illuminate\Support\Facades\DB::table('category_tenant')
-            ->where('tenant_id', $tenantId)
-            ->where('is_default', true)
-            ->first();
+        $result = $this->managementService->setDefaultCategory($category, $tenantId);
 
-        $category->tenants()->syncWithoutDetaching([
-            $tenantId => ['is_default' => true, 'is_custom' => false],
-        ]);
-
-        \App\Models\AuditLog::log(
-            'updated',
-            $category,
-            ['default_category_id' => $oldDefault->category_id ?? null],
-            ['default_category_id' => $category->id],
-            ['context' => 'set_default_category']
-        );
+        if ($result->isError()) {
+            return $this->redirectError('categories.index', $result->getMessage());
+        }
 
         $this->logOperation('categories_set_default', ['id' => $category->id, 'tenant_id' => $tenantId]);
 
@@ -377,22 +238,20 @@ class CategoryController extends Controller
         $editUrl = null;
 
         if ($slug !== '') {
-            $exists = Category::query()
-                ->where('slug', $slug)
-                ->where(function ($q) use ($tenantId) {
-                    if ($tenantId !== null) {
-                        $q->where('tenant_id', $tenantId)
-                            ->orWhereExists(function ($sub) use ($tenantId) {
-                                $sub->selectRaw(1)
-                                    ->from('category_tenant')
-                                    ->whereColumn('category_tenant.category_id', 'categories.id')
-                                    ->where('category_tenant.tenant_id', $tenantId);
-                            });
-                    } else {
-                        $q->whereRaw('1=0');
-                    }
-                })
-                ->exists();
+            $query = Category::where('slug', $slug);
+
+            if ($tenantId !== null) {
+                // Se for tenant, conflita se existir global ou vinculada a ele
+                $query->where(function($q) use ($tenantId) {
+                    $q->globalOnly()
+                      ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
+                });
+            }
+            // Se for admin (tenantId null), conflita se existir qualquer uma com esse slug?
+            // A lógica anterior do store para admin era: Category::query()->where('slug', $slug)->exists();
+            // Então para admin, qualquer slug duplicado é conflito.
+
+            $exists = $query->exists();
         }
 
         $this->logOperation('categories_check_slug', ['slug' => $slug, 'exists' => $exists]);

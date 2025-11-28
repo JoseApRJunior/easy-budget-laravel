@@ -90,7 +90,13 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('categories')->cascadeOnDelete();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();  // Soft deletes adicionado
+
+            // Índices de performance
             $table->index(['parent_id', 'is_active']);
+            $table->index(['slug', 'is_active'], 'idx_categories_slug_active');
+            $table->index('is_active', 'idx_categories_active');
+            $table->index('deleted_at', 'idx_categories_deleted_at');
         });
 
         Schema::create('category_tenant', function (Blueprint $table) {
@@ -101,6 +107,12 @@ return new class extends Migration
             $table->boolean('is_custom')->default(false);
             $table->timestamps();
             $table->unique(['category_id', 'tenant_id']);
+
+            // Índices de performance
+            $table->index(['tenant_id', 'is_default'], 'idx_ct_tenant_default');
+            $table->index(['tenant_id', 'is_custom'], 'idx_ct_tenant_custom');
+            $table->index('is_default', 'idx_ct_default');
+            $table->index('is_custom', 'idx_ct_custom');
         });
 
         // 2) Usuários e RBAC

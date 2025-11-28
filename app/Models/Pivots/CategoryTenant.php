@@ -21,21 +21,17 @@ class CategoryTenant extends Pivot
 
     public $timestamps = true;
 
+    protected $casts = [
+        'is_default' => 'boolean',
+        'is_custom' => 'boolean',
+    ];
+
     protected static function boot()
     {
         parent::boot();
 
-        static::saving(function (CategoryTenant $pivot) {
-            if ($pivot->isDirty('is_default') && (bool) $pivot->is_default === true) {
-                DB::table('category_tenant')
-                    ->where('tenant_id', $pivot->tenant_id)
-                    ->where('category_id', '!=', $pivot->category_id)
-                    ->update([
-                        'is_default' => false,
-                        'updated_at' => now(),
-                    ]);
-            }
-        });
+        // Apenas logs de auditoria
+        // Lógica de negócio (como set default) está em CategoryManagementService
 
         static::created(function (CategoryTenant $pivot) {
             Log::info('category_tenant created', [
@@ -56,4 +52,3 @@ class CategoryTenant extends Pivot
         });
     }
 }
-
