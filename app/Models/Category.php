@@ -142,11 +142,12 @@ class Category extends Model
         }
 
         return $query->where(function ($q) use ($tenantId) {
-            // Categorias vinculadas ao tenant via pivot
             $q->whereHas('tenants', function ($t) use ($tenantId) {
                 $t->where('tenant_id', $tenantId);
             })
-            // OU categorias globais (sem vínculo com nenhum tenant)
+            ->orWhereHas('tenants', function ($t) {
+                $t->where('is_custom', false);
+            })
             ->orWhereDoesntHave('tenants');
         });
     }
@@ -156,7 +157,9 @@ class Category extends Model
      */
     public function scopeGlobalOnly(Builder $query): Builder
     {
-        return $query->whereDoesntHave('tenants');
+        return $query->whereDoesntHave('tenants', function ($t) {
+            $t->where('is_custom', true);
+        });
     }
 
     /**
@@ -175,7 +178,7 @@ class Category extends Model
      */
     public function isGlobal(): bool
     {
-        return !$this->tenants()->exists();
+        return !$this->tenants()->wherePivot('is_custom', true)->exists();
     }
 
     /**
@@ -194,8 +197,8 @@ class Category extends Model
      */
     public function isAvailableFor(int $tenantId): bool
     {
-        // Global OU vinculada ao tenant
-        return $this->isGlobal() || $this->tenants()->where('tenant_id', $tenantId)->exists();
+        return $this->isGlobal()
+            || $this->tenants()->where('tenant_id', $tenantId)->exists();
     }
 
     /**

@@ -75,17 +75,16 @@ class CategoryPivotSanitizeCommand extends Command
         try {
             foreach ($tenantIds as $tid) {
                 $query = DB::table('category_tenant')
-                    ->join('categories', 'categories.id', '=', 'category_tenant.category_id')
-                    ->where('category_tenant.tenant_id', $tid)
-                    ->whereNotNull('categories.tenant_id')
-                    ->whereColumn('categories.tenant_id', '!=', 'category_tenant.tenant_id')
-                    ->select(['category_tenant.category_id', 'category_tenant.tenant_id']);
+                    ->where('tenant_id', $tid)
+                    ->select(['category_id', 'tenant_id']);
 
                 $query->chunkById(500, function ($chunk) {
                     foreach ($chunk as $row) {
+
                         DB::table('category_tenant')
                             ->where('tenant_id', $row->tenant_id)
                             ->where('category_id', $row->category_id)
+                            ->limit(1)
                             ->delete();
                     }
                 }, 'category_id');
@@ -94,7 +93,7 @@ class CategoryPivotSanitizeCommand extends Command
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->error('Falha ao remover anexos inconsistentes: '.$e->getMessage());
+            $this->error('Falha ao remover anexos inconsistentes: ' . $e->getMessage());
 
             return self::FAILURE;
         }

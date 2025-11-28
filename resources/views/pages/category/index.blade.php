@@ -117,6 +117,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @php($tenantId = auth()->user()->tenant_id ?? null)
                                 @forelse($categories as $category)
                                 <tr>
                                     <td class="text-center">
@@ -125,20 +126,22 @@
                                     <td>
                                         {{ $category->parent ? $category->parent->name : $category->name }}
                                         @if(!$category->parent)
-                                        @if($category->tenant_id === null)
-                                        <span class="badge bg-secondary ms-2">Sistema</span>
-                                        @else
+                                        @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
+                                        @if($isCustom)
                                         <span class="badge bg-primary ms-2">Pessoal</span>
+                                        @else
+                                        <span class="badge bg-secondary ms-2">Sistema</span>
                                         @endif
                                         @endif
                                     </td>
                                     <td>
                                         @if($category->parent)
                                         {{ $category->name }}
-                                        @if($category->tenant_id === null)
-                                        <span class="badge bg-secondary ms-2">Sistema</span>
-                                        @else
+                                        @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
+                                        @if($isCustom)
                                         <span class="badge bg-primary ms-2">Pessoal</span>
+                                        @else
+                                        <span class="badge bg-secondary ms-2">Sistema</span>
                                         @endif
                                         @else
                                         —
@@ -155,7 +158,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @php($isGlobalDate = $category->tenant_id === null)
+                                        @php($isGlobalDate = $category->isGlobal())
                                         @php($isAdminDate = false)
                                         @role('admin')
                                         @php($isAdminDate = true)
@@ -172,30 +175,38 @@
                                                 class="btn btn-info" title="Visualizar" aria-label="Visualizar">
                                                 <i class="bi bi-eye" aria-hidden="true"></i>
                                             </a>
-                                            @php($isGlobal = $category->tenant_id === null)
+                                            @php($isGlobal = $category->isGlobal())
                                             @php($isAdmin = false)
                                             @role('admin')
                                             @php($isAdmin = true)
                                             @endrole
+                                            @php($hasChildren = $category->hasChildren())
+                                            @php($hasServices = $category->services()->exists())
+                                            @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
+                                            @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
                                             @if($isAdmin)
                                             <a href="{{ route('categories.edit', $category->id) }}"
                                                 class="btn btn-warning" title="Editar" aria-label="Editar">
                                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                             </a>
+                                            @if($canDelete)
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                                 data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
                                                 <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
+                                            @endif
                                             @else
                                             @if(!$isGlobal)
                                             <a href="{{ route('categories.edit', $category->id) }}"
                                                 class="btn btn-warning" title="Editar" aria-label="Editar">
                                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                             </a>
+                                            @if($canDelete)
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                                 data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
                                                 <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
+                                            @endif
                                             @endif
                                             @endif
                                         </div>
@@ -214,6 +225,36 @@
                         </table>
                     </div>
                 </div>
+                @foreach($categories as $category)
+                @php($hasChildren = $category->hasChildren())
+                @php($hasServices = $category->services()->exists())
+                @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
+                @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
+                @if($canDelete)
+                <div class="modal fade" id="deleteModal-{{ $category->id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $category->id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel-{{ $category->id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                Tem certeza de que deseja excluir a categoria <strong>"{{ $category->name }}"</strong>?
+                                <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                @endforeach
                 @php($p = method_exists($categories, 'appends') ? $categories->appends(request()->query()) : null)
                 @include('partials.components.paginator', ['p' => $p, 'size' => 'sm', 'show_info' => true])
             </div>

@@ -6,16 +6,19 @@ namespace App\Http\Controllers;
 
 use App\Exports\CategoriesExport;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Repositories\CategoryRepository;
+
+use App\Services\Core\PermissionService;
+use App\Services\Domain\CategoryManagementService;
+use App\Services\Domain\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
-use App\Services\Domain\CategoryManagementService;
 
 class CategoryController extends Controller
 {
@@ -40,13 +43,13 @@ class CategoryController extends Controller
         }
 
         $user = auth()->user();
-        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+        $isAdmin = $user ? app(PermissionService::class)->canManageGlobalCategories($user) : false;
 
         $serviceFilters = [
             'search' => $filters['search'] ?? '',
             'active' => $filters['active'] ?? '',
         ];
-        $service = app(\App\Services\Domain\CategoryService::class);
+        $service = app(CategoryService::class);
 
         if ($isAdmin) {
             $result = $service->paginateGlobalOnly($serviceFilters, $perPage);
@@ -65,6 +68,15 @@ class CategoryController extends Controller
                 if (method_exists($categories, 'appends')) {
                     $categories = $categories->appends($request->query());
                 }
+
+                // Fallback: se não houver resultados, tenta globais somente
+                if (method_exists($categories, 'total') && (int) $categories->total() === 0) {
+                    $result = $service->paginateGlobalOnly($serviceFilters, $perPage);
+                    $categories = $this->getServiceData($result, collect());
+                    if (method_exists($categories, 'appends')) {
+                        $categories = $categories->appends($request->query());
+                    }
+                }
             } else {
                 $categories = collect();
             }
@@ -81,11 +93,24 @@ class CategoryController extends Controller
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
         if ($isAdmin) {
-            $parents = Category::query()->whereNull('tenant_id')->orderBy('name')->get(['id', 'name']);
+            $parents = Category::query()
+                ->globalOnly()
+                ->orderBy('name')
+                ->get(['id', 'name']);
         } else {
             $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
             $parents = $tenantId !== null
-                ? Category::query()->forTenantWithGlobals($tenantId)->orderBy('name')->get(['id', 'name'])
+                ? Category::query()
+                ->forTenant($tenantId)
+                ->where(function ($q) use ($tenantId) {
+                    $q->where('is_active', true)
+                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
+                            $t->where('tenant_id', $tenantId)
+                                ->where('is_custom', true);
+                        });
+                })
+                ->orderBy('name')
+                ->get(['id', 'name'])
                 : collect();
         }
         $defaults = ['is_active' => true];
@@ -102,7 +127,7 @@ class CategoryController extends Controller
         $result = $this->managementService->createCategory($request->validated(), $tenantId);
 
         if ($result->isError()) {
-            return back()->withErrors(['error' => $result->getMessage()])->withInput();
+            return back()->with('error', $result->getMessage())->withInput();
         }
 
         $category = $result->getData();
@@ -130,19 +155,31 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        if ($isAdmin && $category->tenant_id !== null) {
+        if ($isAdmin && !$category->isGlobal()) {
             return $this->redirectError('categories.index', 'Admin só pode editar categorias globais.');
         }
         if ($isAdmin) {
-            $parents = Category::query()->whereNull('tenant_id')
+            $parents = Category::query()
+                ->globalOnly()
                 ->where('id', '!=', $id)
-                ->orderBy('name')->get(['id', 'name']);
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']);
         } else {
             $tenantId = $user->tenant_id ?? null;
             $parents = $tenantId !== null
-                ? Category::query()->forTenantWithGlobals($tenantId)
+                ? Category::query()
+                ->forTenant($tenantId)
                 ->where('id', '!=', $id)
-                ->orderBy('name')->get(['id', 'name'])
+                ->where(function ($q) use ($tenantId) {
+                    $q->where('is_active', true)
+                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
+                            $t->where('tenant_id', $tenantId)
+                                ->where('is_custom', true);
+                        });
+                })
+                ->orderBy('name')
+                ->get(['id', 'name'])
                 : collect();
         }
 
@@ -190,7 +227,33 @@ class CategoryController extends Controller
             default => 'categories.xlsx',
         };
 
-        return Excel::download(new CategoriesExport, $fileName);
+        $user = auth()->user();
+        $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+        if ($isAdmin) {
+            $categories = Category::query()
+                ->globalOnly()
+                ->with('parent')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
+            $categories = $tenantId !== null
+                ? Category::query()
+                ->forTenant($tenantId)
+                ->where(function ($q) use ($tenantId) {
+                    $q->where('is_active', true)
+                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
+                            $t->where('tenant_id', $tenantId)
+                                ->where('is_custom', true);
+                        });
+                })
+                ->with('parent')
+                ->orderBy('name')
+                ->get()
+                : collect();
+        }
+
+        return Excel::download(new CategoriesExport($categories), $fileName);
     }
 
     public function setDefault(Request $request, int $id)
@@ -242,9 +305,9 @@ class CategoryController extends Controller
 
             if ($tenantId !== null) {
                 // Se for tenant, conflita se existir global ou vinculada a ele
-                $query->where(function($q) use ($tenantId) {
+                $query->where(function ($q) use ($tenantId) {
                     $q->globalOnly()
-                      ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
+                        ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
                 });
             }
             // Se for admin (tenantId null), conflita se existir qualquer uma com esse slug?

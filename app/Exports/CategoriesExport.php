@@ -28,19 +28,10 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
         return [
             'ID',
             'Nome',
-            'Descrição',
-            'Tipo',
             'Categoria Pai',
-            'Tenant',
             'Slug',
             'Ativo',
-            'Cor',
-            'Ícone',
-            'Ordem',
-            'Meta Título',
-            'Meta Descrição',
-            'Total Subcategorias',
-            'Total Atividades',
+            'Subcategorias Ativas',
             'Data Criação',
             'Data Atualização',
         ];
@@ -51,19 +42,12 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
         return [
             $category->id,
             $category->name,
-            $category->description,
-            $this->getTypeLabel($category->type),
             $category->parent ? $category->parent->name : '-',
-            $category->tenant ? $category->tenant->name : 'Global',
             $category->slug,
             $category->is_active ? 'Sim' : 'Não',
-            $category->color ?? '-',
-            $category->icon ?? '-',
-            $category->order ?? 0,
-            $category->meta_title ?? '-',
-            $category->meta_description ?? '-',
-            $category->children_count,
-            $category->activities_count,
+            method_exists($category, 'getActiveChildrenCountAttribute')
+                ? $category->active_children_count
+                : $category->children()->where('is_active', true)->count(),
             $category->created_at->format('d/m/Y H:i:s'),
             $category->updated_at->format('d/m/Y H:i:s'),
         ];
@@ -78,17 +62,6 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
 
     protected function getTypeLabel($type): string
     {
-        $types = [
-            'product' => 'Produto',
-            'service' => 'Serviço',
-            'expense' => 'Despesa',
-            'income' => 'Receita',
-            'asset' => 'Ativo',
-            'liability' => 'Passivo',
-            'equity' => 'Patrimônio Líquido',
-            'other' => 'Outro',
-        ];
-
-        return $types[$type] ?? ucfirst($type);
+        return is_string($type) ? ucfirst($type) : '-';
     }
 }

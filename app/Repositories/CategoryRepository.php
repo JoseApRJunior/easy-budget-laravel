@@ -94,12 +94,23 @@ class CategoryRepository extends AbstractGlobalRepository
 
         // Usar novo scope simplificado do model
         $query = $this->model->newQuery()
-            ->forTenant($tenantId)  // Scope atualizado
+            ->forTenant($tenantId)
             ->leftJoin('categories as parent', 'parent.id', '=', 'categories.parent_id')
             ->select('categories.*')
-            ->orderByRaw('CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END')
             ->orderByRaw('COALESCE(parent.name, categories.name) ASC')
+            ->orderByRaw('CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END')
             ->orderBy('categories.name', 'ASC');
+
+        // Ocultar categorias globais inativas para prestador
+        if ($tenantId !== null) {
+            $query->where(function ($q) use ($tenantId) {
+                $q->where('categories.is_active', true)
+                  ->orWhereHas('tenants', function ($t) use ($tenantId) {
+                      $t->where('tenant_id', $tenantId)
+                        ->where('is_custom', true);
+                  });
+            });
+        }
 
         if (!empty($filters['search'])) {
             $search = (string) $filters['search'];
@@ -143,16 +154,8 @@ class CategoryRepository extends AbstractGlobalRepository
 
         unset($filters['per_page']);
 
-        // Cache Key Generation
-        $globalVersion = \Illuminate\Support\Facades\Cache::get('global_categories_version', 1);
-        $tenantVersion = $tenantId ? \Illuminate\Support\Facades\Cache::get("tenant_{$tenantId}_categories_version", 1) : 0;
-
-        $cacheKey = "categories_list_tenant_{$tenantId}_v{$tenantVersion}_gv{$globalVersion}_p{$perPage}_" . md5(json_encode($filters) . json_encode($orderBy));
-
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($query, $filters, $perPage) {
-            $this->applyFilters($query, $filters);
-            return $query->paginate($perPage);
-        });
+        $this->applyFilters($query, $filters);
+        return $query->paginate($perPage);
     }
 
     /**
@@ -167,11 +170,11 @@ class CategoryRepository extends AbstractGlobalRepository
     {
         // Usar novo scope globalOnly() do model
         $query = $this->model->newQuery()
-            ->globalOnly()  // Categorias sem vínculo em category_tenant
+            ->globalOnly()
             ->leftJoin('categories as parent', 'parent.id', '=', 'categories.parent_id')
             ->select('categories.*')
-            ->orderByRaw('CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END')
             ->orderByRaw('COALESCE(parent.name, categories.name) ASC')
+            ->orderByRaw('CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END')
             ->orderBy('categories.name', 'ASC');
 
         unset($filters['tenant_id']);  // Remover filtro tenant_id se presente
@@ -218,14 +221,7 @@ class CategoryRepository extends AbstractGlobalRepository
 
         unset($filters['per_page']);
 
-        // Cache Key Generation (Only Global Version matters here)
-        $globalVersion = \Illuminate\Support\Facades\Cache::get('global_categories_version', 1);
-
-        $cacheKey = "categories_list_global_v{$globalVersion}_p{$perPage}_" . md5(json_encode($filters) . json_encode($orderBy));
-
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($query, $filters, $perPage) {
-            $this->applyFilters($query, $filters);
-            return $query->paginate($perPage);
-        });
+        $this->applyFilters($query, $filters);
+        return $query->paginate($perPage);
     }
 }

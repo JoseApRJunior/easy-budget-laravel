@@ -36,11 +36,20 @@
                             <label for="slugPreview">Slug (gerado automaticamente)</label>
                         </div>
                         <div class="form-text" id="slugStatus"></div>
+                        @php($hasChildren = $category->hasChildren())
+                        @php($hasServices = $category->services()->exists())
+                        @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
+                        @php($canDeactivate = !($hasChildren || $hasServices || $hasProducts))
                         <input type="hidden" name="is_active" value="0">
                         <div class="form-check form-switch mt-3">
-                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }}>
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }} {{ $canDeactivate ? '' : 'disabled' }}>
                             <label class="form-check-label" for="is_active">Ativo</label>
                         </div>
+                        @if(!$canDeactivate)
+                        <div class="alert alert-warning mt-2" role="alert">
+                            Não é possível desativar esta categoria: possui subcategorias ou está vinculada a produtos/serviços.
+                        </div>
+                        @endif
                     </div>
                 </div>
 

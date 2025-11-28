@@ -26,6 +26,24 @@ class CategoryPolicy
         return $user->hasPermission('manage-categories');
     }
 
+    public function manageGlobal(User $user): bool
+    {
+        return app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user);
+    }
+
+    public function manageCustom(User $user, Category $category): bool
+    {
+        $permission = app(\App\Services\Core\PermissionService::class);
+        if ($permission->canManageCustomCategories($user)) {
+            if ($user->tenant_id) {
+                return $category->isCustomFor((int) $user->tenant_id) || $category->isAvailableFor((int) $user->tenant_id);
+            }
+            return false;
+        }
+        return false;
+    }
+}
+
     /**
      * Determine whether the user can create categories.
      */

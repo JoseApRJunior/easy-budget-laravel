@@ -54,16 +54,8 @@ class CategoryObserver
     protected function invalidateCache(Category $category): void
     {
         try {
-            if ($category->tenant_id === null) {
-                // Global category changed: Increment global version
-                Cache::increment('global_categories_version');
-                Log::info('Global category cache invalidated', ['category_id' => $category->id]);
-            } else {
-                // Tenant category changed: Increment tenant version
-                $key = "tenant_{$category->tenant_id}_categories_version";
-                Cache::increment($key);
-                Log::info('Tenant category cache invalidated', ['category_id' => $category->id, 'tenant_id' => $category->tenant_id]);
-            }
+            Cache::increment('global_categories_version');
+            Log::info('Category cache invalidated (pivot-only)', ['category_id' => $category->id]);
         } catch (\Exception $e) {
             Log::error('Failed to invalidate category cache', [
                 'category_id' => $category->id,

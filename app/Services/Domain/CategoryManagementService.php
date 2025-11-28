@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Enums\OperationStatus;
+use App\Events\CategoryCreated;
+use App\Events\CategoryDeleted;
+use App\Events\CategoryUpdated;
+use App\Events\DefaultCategoryChanged;
 use App\Models\Category;
 use App\Support\ServiceResult;
-use App\Enums\OperationStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -59,8 +63,11 @@ class CategoryManagementService
                 'tenant_id' => $tenantId,
             ]);
 
-            return ServiceResult::success($category, 'Categoria definida como padrão');
+            if (class_exists(DefaultCategoryChanged::class)) {
+                event(new DefaultCategoryChanged($category->id, $tenantId));
+            }
 
+            return ServiceResult::success($category, 'Categoria definida como padrão');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -136,25 +143,22 @@ class CategoryManagementService
      */
     public function getDescendantIds(int $categoryId): array
     {
-        $descendants = DB::select("
-            WITH RECURSIVE category_tree AS (
-                -- Anchor: filhos diretos
-                SELECT id FROM categories
-                WHERE parent_id = ?
-                  AND deleted_at IS NULL
-
-                UNION ALL
-
-                -- Recursão: filhos dos filhos
-                SELECT c.id
-                FROM categories c
-                INNER JOIN category_tree ct ON c.parent_id = ct.id
-                WHERE c.deleted_at IS NULL
-            )
-            SELECT id FROM category_tree
-        ", [$categoryId]);
-
-        return array_column($descendants, 'id');
+        $all = [];
+        $queue = [$categoryId];
+        while (!empty($queue)) {
+            $children = \App\Models\Category::query()
+                ->whereIn('parent_id', $queue)
+                ->whereNull('deleted_at')
+                ->pluck('id')
+                ->all();
+            $children = array_values(array_diff($children, $all));
+            if (empty($children)) {
+                break;
+            }
+            $all = array_merge($all, $children);
+            $queue = $children;
+        }
+        return $all;
     }
 
     /**
@@ -233,7 +237,6 @@ class CategoryManagementService
             ]);
 
             return ServiceResult::success(true, 'Categoria vinculada ao tenant');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -283,7 +286,6 @@ class CategoryManagementService
             ]);
 
             return ServiceResult::success(true, 'Categoria desvinculada do tenant');
-
         } catch (\Exception $e) {
             Log::error('Failed to detach category from tenant', [
                 'category_id' => $category->id,
@@ -332,6 +334,10 @@ class CategoryManagementService
                     'is_global' => $tenantId === null,
                 ]);
 
+                if (class_exists(CategoryCreated::class)) {
+                    event(new CategoryCreated($category->id));
+                }
+
                 return ServiceResult::success($category, 'Categoria criada com sucesso');
             });
         } catch (\Exception $e) {
@@ -361,8 +367,13 @@ class CategoryManagementService
     {
         try {
             return DB::transaction(function () use ($category, $data) {
-                // Verificar desativação
                 if ($category->is_active && isset($data['is_active']) && !$data['is_active']) {
+                    if ($category->hasChildren()) {
+                        return ServiceResult::error(
+                            OperationStatus::VALIDATION_ERROR,
+                            'Não é possível desativar: categoria possui subcategorias.'
+                        );
+                    }
                     if ($this->isInUse($category)) {
                         return ServiceResult::error(
                             OperationStatus::VALIDATION_ERROR,
@@ -381,6 +392,10 @@ class CategoryManagementService
                 Log::info('Category updated', [
                     'category_id' => $category->id,
                 ]);
+
+                if (class_exists(CategoryUpdated::class)) {
+                    event(new CategoryUpdated($category->id));
+                }
 
                 return ServiceResult::success($category, 'Categoria atualizada com sucesso');
             });
@@ -420,6 +435,10 @@ class CategoryManagementService
                 Log::info('Category deleted', [
                     'category_id' => $category->id,
                 ]);
+
+                if (class_exists(CategoryDeleted::class)) {
+                    event(new CategoryDeleted($category->id));
+                }
 
                 return ServiceResult::success(null, 'Categoria excluída com sucesso');
             });
