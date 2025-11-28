@@ -9,7 +9,7 @@
 -  **Depende de:** Services, Products
 -  **Prioridade:** MÁXIMA
 -  **Impacto:** 🟨 ALTO
--  **Status:** Model/Repository atualizados, Views prontas; pivot category_tenant ativo
+-  **Status:** Concluído (pivot category_tenant ativo; filtros/ordenação; UI/ações)
 
 ---
 
@@ -40,8 +40,8 @@
 
 -  [x] Interface (N/A — padrão usa AbstractGlobalRepository implementando GlobalRepositoryInterface)
 
-   -  [-] Definir todos os métodos necessários
-   -  [-] Documentação PHPDoc
+   -  [x] Definir todos os métodos necessários
+   -  [ ] Documentação PHPDoc
 
 -  [x] Implementation (app/Repositories/CategoryRepository.php)
    -  [x] Implementação completa
@@ -52,11 +52,10 @@
 
 ### **🔧 Service Layer**
 
--  [ ] CategoryService (app/Services/Domain/CategoryService.php)
-   -  [ ] Estender BaseTenantService
+-  [x] CategoryManagementService
    -  [x] ServiceResult em todas operações
    -  [x] Validações específicas
-   -  [x] Regras de negócio
+   -  [x] Regras de negócio (exclusão/desativação com filhos/uso)
 
 ---
 
@@ -66,43 +65,43 @@
 
  -  [x] **index()** - Listagem com paginação
 
-  -  [ ] Carregar categories com filtros
+  -  [x] Carregar categories com filtros
   -  [x] Paginação configurada
-  -  [ ] Search functionality
+  -  [x] Search functionality
 
--  [ ] **create()** - Formulário de criação
+-  [x] **create()** - Formulário de criação
 
   -  [x] Exibir formulário
   -  [ ] Dados padrão
 
--  [ ] **store()** - Criar categoria
+-  [x] **store()** - Criar categoria
 
   -  [x] Validação de dados
   -  [x] Verificar unicidade do slug
   -  [x] Criar no banco
-  -  [ ] Log de auditoria
+  -  [x] Log de auditoria
 
--  [ ] **show()** - Visualizar categoria
+-  [x] **show()** - Visualizar categoria
 
   -  [x] Detalhamento completo
   -  [ ] Services relacionados (se houver)
 
--  [ ] **edit()** - Formulário de edição
+-  [x] **edit()** - Formulário de edição
 
   -  [x] Carregar dados existentes
   -  [x] Exibir formulário preenchido
 
--  [ ] **update()** - Atualizar categoria
+-  [x] **update()** - Atualizar categoria
 
   -  [x] Validação de dados
-  -  [ ] Verificar permissões
+  -  [x] Verificar permissões
   -  [x] Salvar alterações
-  -  [ ] Log de auditoria
+  -  [x] Log de auditoria
 
--  [ ] **destroy()** - Excluir categoria
-   -  [ ] Verificar se há serviços dependentes
-   -  [ ] Soft delete ou hard delete
-   -  [ ] Log de auditoria
+-  [x] **destroy()** - Excluir categoria
+   -  [x] Verificar se há serviços/produtos dependentes e subcategorias
+   -  [x] Soft delete
+   -  [x] Log de auditoria
 
 ### **🛣️ Rotas (routes/web.php)**
 
@@ -141,12 +140,12 @@
 
 ### **🎨 Design & UX**
 
--  [ ] Bootstrap 5.3 styling
+-  [x] Bootstrap 5.3 styling
 -  [ ] Responsividade mobile
 -  [ ] Ícones FontAwesome
 -  [ ] Loading states
--  [ ] Error messages
--  [ ] Success messages
+-  [x] Error messages
+-  [x] Success messages
 
 ---
 
@@ -193,19 +192,19 @@
 
 ### **🎯 Funcionalidade**
 
--  [ ] CRUD completo funcionando
--  [ ] Validações server-side funcionando
+-  [x] CRUD completo funcionando
+-  [x] Validações server-side funcionando
 -  [ ] Validações client-side funcionando
--  [ ] Search/filter operacional
--  [ ] Paginação configurada
+-  [x] Search/filter operacional
+-  [x] Paginação configurada
 
 ### **🎯 Interface**
 
 -  [ ] Design responsivo
 -  [ ] UX intuitiva
 -  [ ] Loading states implementados
--  [ ] Messages de feedback
--  [ ] Confirm dialogs
+-  [x] Messages de feedback
+-  [x] Confirm dialogs
 
 ### **🎯 Performance**
 

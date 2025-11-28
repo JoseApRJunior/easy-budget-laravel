@@ -16,7 +16,7 @@
 
 ### **📊 Informações do Módulo:**
 
--  **Status Atual:** Schema unificado, Model/Repository atualizados, Views prontas
+-  **Status Atual:** Concluído (pivot-only ativo, filtros, ordenação, UI e regras)
 -  **Dependências:** Nenhuma (independente)
 -  **Impacto:** 🟨 ALTO - Services e Products precisam de categories
 -  **Tempo Estimado:** 3 dias
@@ -54,7 +54,7 @@
    -  [x] show() - visualização individual
    -  [x] edit() - formulário de edição
    -  [x] update() - validação e atualização
-   -  [ ] destroy() - exclusão segura
+-  [x] destroy() - exclusão segura
 
 -  [x] Verificar rotas em routes/web.php
    -  [x] Rotas RESTful configuradas
@@ -68,19 +68,19 @@
    -  [x] create.blade.php - formulário de criação
    -  [x] edit.blade.php - formulário de edição
    -  [x] show.blade.php - visualização detalhada
-   -  [ ] partials para filtros e ações
+-  [ ] partials para filtros e ações
 
 #### **🧪 Testes**
 
 -  [x] Criar CategoryFactory
 -  [x] Implementar CategorySeeder
--  [ ] Testes unitários CategoryService
+-  [x] Testes unitários CategoryService (CategoryManagementServiceTest)
 -  [x] Testes de Feature CategoryController
 -  [ ] Testes de integração com UI
 
 #### **✅ Validação Final**
 
--  [ ] CRUD funcionando completamente
+-  [x] CRUD funcionando completamente
 -  [ ] Validações client-side e server-side
 -  [ ] Responsividade testada
 -  [ ] Performance adequada

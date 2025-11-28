@@ -191,7 +191,7 @@
                                             </a>
                                             @if($canDelete)
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
+                                                data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
                                                 <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
                                             @endif
@@ -203,7 +203,7 @@
                                             </a>
                                             @if($canDelete)
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal-{{ $category->id }}" title="Excluir" aria-label="Excluir">
+                                                data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
                                                 <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
                                             @endif
@@ -225,26 +225,20 @@
                         </table>
                     </div>
                 </div>
-                @foreach($categories as $category)
-                @php($hasChildren = $category->hasChildren())
-                @php($hasServices = $category->services()->exists())
-                @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
-                @if($canDelete)
-                <div class="modal fade" id="deleteModal-{{ $category->id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $category->id }}" aria-hidden="true">
+                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="deleteModalLabel-{{ $category->id }}">Confirmar Exclusão</h5>
+                                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
                             <div class="modal-body">
-                                Tem certeza de que deseja excluir a categoria <strong>"{{ $category->name }}"</strong>?
+                                Tem certeza de que deseja excluir a categoria <strong id="deleteCategoryName"></strong>?
                                 <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline">
+                                <form id="deleteForm" action="#" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">Excluir</button>
@@ -253,8 +247,6 @@
                         </div>
                     </div>
                 </div>
-                @endif
-                @endforeach
                 @php($p = method_exists($categories, 'appends') ? $categories->appends(request()->query()) : null)
                 @include('partials.components.paginator', ['p' => $p, 'size' => 'sm', 'show_info' => true])
             </div>
@@ -262,6 +254,26 @@
     </div>
 </div>
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var deleteModal = document.getElementById('deleteModal');
+        if (deleteModal && deleteModal.parentElement !== document.body) {
+            document.body.appendChild(deleteModal);
+        }
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget;
+            if (!button) return;
+            var deleteUrl = button.getAttribute('data-delete-url');
+            var categoryName = button.getAttribute('data-category-name');
+            var form = document.getElementById('deleteForm');
+            var nameEl = document.getElementById('deleteCategoryName');
+            if (form && deleteUrl) form.setAttribute('action', deleteUrl);
+            if (nameEl) nameEl.textContent = '"' + (categoryName || '') + '"';
+        });
+    });
+</script>
+@endpush
 <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
