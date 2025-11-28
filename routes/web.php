@@ -522,13 +522,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'monitoring
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
     Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
     Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
     Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
-    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
 });
 
     // Activity Management
@@ -675,27 +675,27 @@ Route::prefix('plans')->name('plans.public.')->group(function () {
 Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
     Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
+    Route::get('/ajax/check-slug', [\App\Http\Controllers\CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
     Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
     Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
-    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
-    Route::get('/ajax/check-slug', [\App\Http\Controllers\CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
 });
 
 // Admin Category Management (espelhado)
 Route::middleware(['auth'])->prefix('admin/categories')->name('admin.categories.')->group(function () {
     Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
     Route::get('/create', [\App\Http\Controllers\CategoryController::class, 'create'])->name('create');
+    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
     Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
     Route::get('/{slug}', [\App\Http\Controllers\CategoryController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [\App\Http\Controllers\CategoryController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
-    Route::get('/export', [\App\Http\Controllers\CategoryController::class, 'export'])->name('export');
 });
 
 // Queues routes group

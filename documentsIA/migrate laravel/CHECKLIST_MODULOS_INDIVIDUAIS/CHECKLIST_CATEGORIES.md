@@ -9,7 +9,7 @@
 -  **Depende de:** Services, Products
 -  **Prioridade:** MÁXIMA
 -  **Impacto:** 🟨 ALTO
--  **Status:** Concluído (pivot category_tenant ativo; filtros/ordenação; UI/ações)
+ -  **Status:** Concluído (pivot category_tenant ativo; filtros/ordenação; UI/ações; export XLSX/CSV/PDF)
 
 ---
 
@@ -63,7 +63,7 @@
 
 ### **🎯 CategoryController (app/Http/Controllers/CategoryController.php)**
 
- -  [x] **index()** - Listagem com paginação
+-  [x] **index()** - Listagem com paginação
 
   -  [x] Carregar categories com filtros
   -  [x] Paginação configurada
@@ -103,11 +103,19 @@
    -  [x] Soft delete
    -  [x] Log de auditoria
 
+-  [x] **export()** - Exportação
+   -  [x] Formatos: XLSX, CSV, PDF
+   -  [x] Filtros da tela aplicados (search, active)
+   -  [x] Ordenação pt-BR
+   -  [x] Prestador: sem coluna Slug
+   -  [x] Admin: com coluna Slug
+
 ### **🛣️ Rotas (routes/web.php)**
 
 -  [x] Rotas RESTful configuradas
 -  [x] Middleware de autenticação aplicado
 -  [x] Namespacing adequado
+ -  [x] Prioridade da rota `/categories/export` antes de `/{slug}`
 
 ---
 
@@ -120,7 +128,7 @@
    -  [x] Tabela com categories
    -  [x] Search/filter functionality
    -  [x] Paginação
-   -  [x] Botões de ação (criar, editar, excluir)
+   -  [x] Botões de ação (criar, editar, excluir, exportar Excel/PDF)
    -  [x] Confirm dialog para exclusão
 
 -  [x] **create.blade.php** - Formulário de criação

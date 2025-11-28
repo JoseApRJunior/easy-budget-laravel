@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Exports\CategoriesExport;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\Tenant;
-use App\Models\Traits\TenantScoped;
+
 use App\Repositories\CategoryRepository;
 
 use App\Services\Core\PermissionService;
@@ -18,7 +17,11 @@ use App\Services\Domain\CategoryManagementService;
 use App\Services\Domain\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
+use Mpdf\Mpdf;
+use Collator;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class CategoryController extends Controller
 {
@@ -27,12 +30,26 @@ class CategoryController extends Controller
         private CategoryManagementService $managementService
     ) {}
 
+    private function resolveTenantId(): ?int
+    {
+        $testing = config('tenant.testing_id');
+        if ($testing !== null) {
+            return (int) $testing;
+        }
+        $user = auth()->user();
+        if ($user && isset($user->tenant_id)) {
+            return (int) $user->tenant_id;
+        }
+        $tenantParam = request()->integer('tenant_id');
+        return $tenantParam > 0 ? $tenantParam : null;
+    }
+
+    /**
+     * Lista categorias com filtros e paginação.
+     */
     public function index(Request $request)
     {
-        $tenantId = TenantScoped::getCurrentTenantId();
-        if ($tenantId === null) {
-            $tenantId = (int) (auth()->user()->tenant_id ?? 0) ?: null;
-        }
+        $tenantId = $this->resolveTenantId();
         $filters = $request->only(['search', 'active', 'per_page']);
         $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
         $confirmAll = $request->has('all') && in_array((string) $request->input('all'), ['1', 'true', 'on', 'yes'], true);
@@ -88,6 +105,9 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * Form para criar categoria.
+     */
     public function create()
     {
         $user = auth()->user();
@@ -98,7 +118,7 @@ class CategoryController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name']);
         } else {
-            $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
+            $tenantId = $this->resolveTenantId();
             $parents = $tenantId !== null
                 ? Category::query()
                 ->forTenant($tenantId)
@@ -118,11 +138,14 @@ class CategoryController extends Controller
         return view('pages.category.create', compact('parents', 'defaults'));
     }
 
+    /**
+     * Persiste nova categoria.
+     */
     public function store(StoreCategoryRequest $request)
     {
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
-        $tenantId = $isAdmin ? null : (TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null));
+        $tenantId = $isAdmin ? null : $this->resolveTenantId();
 
         $result = $this->managementService->createCategory($request->validated(), $tenantId);
 
@@ -136,6 +159,9 @@ class CategoryController extends Controller
         return $this->redirectSuccess('categories.index', 'Categoria criada com sucesso.');
     }
 
+    /**
+     * Mostra detalhes da categoria por slug.
+     */
     public function show(string $slug)
     {
         $tenantId = auth()->user()->tenant_id ?? null;
@@ -150,6 +176,9 @@ class CategoryController extends Controller
         return view('pages.category.show', compact('category'));
     }
 
+    /**
+     * Form para editar categoria.
+     */
     public function edit(int $id)
     {
         $category = Category::findOrFail($id);
@@ -186,6 +215,9 @@ class CategoryController extends Controller
         return view('pages.category.edit', compact('category', 'parents'));
     }
 
+    /**
+     * Atualiza categoria.
+     */
     public function update(UpdateCategoryRequest $request, int $id)
     {
         $category = Category::findOrFail($id);
@@ -201,6 +233,9 @@ class CategoryController extends Controller
         return $this->redirectSuccess('categories.index', 'Categoria atualizada com sucesso.');
     }
 
+    /**
+     * Exclui categoria.
+     */
     public function destroy(int $id)
     {
         $this->authorize('manage-custom-categories');
@@ -217,6 +252,9 @@ class CategoryController extends Controller
         return $this->redirectSuccess('categories.index', 'Categoria excluída com sucesso.');
     }
 
+    /**
+     * Exporta categorias em xlsx, csv ou pdf.
+     */
     public function export(Request $request)
     {
         $format = $request->get('format', 'xlsx');
@@ -224,38 +262,188 @@ class CategoryController extends Controller
         $fileName = match ($format) {
             'csv' => 'categories.csv',
             'xlsx' => 'categories.xlsx',
+            'pdf' => 'categories.pdf',
             default => 'categories.xlsx',
         };
 
         $user = auth()->user();
         $isAdmin = $user ? app(\App\Services\Core\PermissionService::class)->canManageGlobalCategories($user) : false;
+        $tenantId = null;
+        $search = trim((string) $request->get('search', ''));
+        $active = $request->get('active');
+
+        $search = trim((string) $request->get('search', ''));
+        $active = $request->get('active');
         if ($isAdmin) {
-            $categories = Category::query()
+            $query = Category::query()
                 ->globalOnly()
-                ->with('parent')
-                ->orderBy('name')
-                ->get();
-        } else {
-            $tenantId = TenantScoped::getCurrentTenantId() ?? ($user->tenant_id ?? null);
-            $categories = $tenantId !== null
-                ? Category::query()
-                ->forTenant($tenantId)
-                ->where(function ($q) use ($tenantId) {
-                    $q->where('is_active', true)
-                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
-                            $t->where('tenant_id', $tenantId)
-                                ->where('is_custom', true);
+                ->with('parent');
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhereHas('parent', function ($p) use ($search) {
+                            $p->where('name', 'like', "%{$search}%");
                         });
-                })
-                ->with('parent')
-                ->orderBy('name')
-                ->get()
+                });
+            }
+            if (in_array($active, ['0', '1'], true)) {
+                $query->where('is_active', $active === '1');
+            }
+            $categories = $query->orderBy('name')->get();
+        } else {
+            $tenantId = $this->resolveTenantId();
+            $categories = $tenantId !== null
+                ? (function () use ($tenantId, $search, $active) {
+                    $query = Category::query()
+                        ->forTenant($tenantId)
+                        ->where(function ($q) use ($tenantId) {
+                            $q->where('is_active', true)
+                                ->orWhereHas('tenants', function ($t) use ($tenantId) {
+                                    $t->where('tenant_id', $tenantId)
+                                        ->where('is_custom', true);
+                                });
+                        })
+                        ->with('parent');
+                    if ($search !== '') {
+                        $query->where(function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('slug', 'like', "%{$search}%")
+                                ->orWhereHas('parent', function ($p) use ($search) {
+                                    $p->where('name', 'like', "%{$search}%");
+                                });
+                        });
+                    }
+                    if (in_array($active, ['0', '1'], true)) {
+                        $query->where('is_active', $active === '1');
+                    }
+                    return $query->orderBy('name')->get();
+                })()
                 : collect();
         }
 
-        return Excel::download(new CategoriesExport($categories), $fileName);
+        $collator = class_exists(Collator::class) ? new Collator('pt_BR') : null;
+        $categories = $categories->sort(function ($a, $b) use ($collator) {
+            if ($collator) {
+                return $collator->compare($a->name, $b->name);
+            }
+            return strcasecmp($a->name, $b->name);
+        })->values();
+
+        if ($format === 'pdf') {
+            $rows = '';
+            foreach ($categories as $category) {
+                $createdAt = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format('d/m/Y H:i:s') : '';
+                $updatedAt = $category->updated_at instanceof \DateTimeInterface ? $category->updated_at->format('d/m/Y H:i:s') : '';
+                $slugVal = $category->slug ?: Str::slug($category->name);
+                $childrenCount = $isAdmin
+                    ? $category->children()->where('is_active', true)->count()
+                    : $category->children()
+                    ->where('is_active', true)
+                    ->where(function ($q) use ($tenantId) {
+                        $q->whereHas('tenants', function ($t) use ($tenantId) {
+                            $t->where('tenant_id', $tenantId);
+                        })
+                            ->orWhereHas('tenants', function ($t) {
+                                $t->where('is_custom', false);
+                            })
+                            ->orWhereDoesntHave('tenants');
+                    })
+                    ->count();
+                $rows .= '<tr>'
+                    . '<td>' . e($category->name) . '</td>'
+                    . '<td>' . e($category->parent ? $category->parent->name : '-') . '</td>'
+                    . ($isAdmin ? ('<td>' . e($slugVal) . '</td>') : '')
+                    . '<td>' . ($category->is_active ? 'Sim' : 'Não') . '</td>'
+                    . '<td>' . $childrenCount . '</td>'
+                    . '<td>' . e($createdAt) . '</td>'
+                    . '<td>' . e($updatedAt) . '</td>'
+                    . '</tr>';
+            }
+
+            $thead = '<thead><tr><th>Nome</th><th>Categoria Pai</th>' . ($isAdmin ? '<th>Slug</th>' : '') . '<th>Ativo</th><th>Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
+            $html = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f5f5f5}</style></head><body>'
+                . '<h3>Categorias</h3>'
+                . '<table>'
+                . $thead
+                . '<tbody>' . $rows . '</tbody>'
+                . '</table>'
+                . '</body></html>';
+
+            return response()->streamDownload(function () use ($html) {
+                $mpdf = new Mpdf();
+                $mpdf->WriteHTML($html);
+                echo $mpdf->Output('', 'S');
+            }, $fileName, [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $headers = $isAdmin
+            ? ['Nome', 'Categoria Pai', 'Slug', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização']
+            : ['Nome', 'Categoria Pai', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
+        $sheet->fromArray([$headers]);
+        $row = 2;
+        foreach ($categories as $category) {
+            $createdAt = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format('d/m/Y H:i:s') : '';
+            $updatedAt = $category->updated_at instanceof \DateTimeInterface ? $category->updated_at->format('d/m/Y H:i:s') : '';
+            $childrenCount = $isAdmin
+                ? $category->children()->where('is_active', true)->count()
+                : $category->children()
+                ->where('is_active', true)
+                ->where(function ($q) use ($tenantId) {
+                    $q->whereHas('tenants', function ($t) use ($tenantId) {
+                        $t->where('tenant_id', $tenantId);
+                    })
+                        ->orWhereHas('tenants', function ($t) {
+                            $t->where('is_custom', false);
+                        })
+                        ->orWhereDoesntHave('tenants');
+                })
+                ->count();
+            $dataRow = $isAdmin
+                ? [
+                    $category->name,
+                    $category->parent ? $category->parent->name : '-',
+                    ($category->slug ?: Str::slug($category->name)),
+                    $category->is_active ? 'Sim' : 'Não',
+                    $childrenCount,
+                    $createdAt,
+                    $updatedAt,
+                ]
+                : [
+                    $category->name,
+                    $category->parent ? $category->parent->name : '-',
+                    $category->is_active ? 'Sim' : 'Não',
+                    $childrenCount,
+                    $createdAt,
+                    $updatedAt,
+                ];
+            $sheet->fromArray([$dataRow], null, 'A' . $row);
+            $row++;
+        }
+        foreach (range('A', $isAdmin ? 'G' : 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $contentType = $format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        return response()->streamDownload(function () use ($spreadsheet, $format) {
+            if ($format === 'csv') {
+                $writer = new Csv($spreadsheet);
+            } else {
+                $writer = new Xlsx($spreadsheet);
+            }
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => $contentType,
+        ]);
     }
 
+    /**
+     * Define categoria padrão do tenant.
+     */
     public function setDefault(Request $request, int $id)
     {
         $this->authorize('manage-custom-categories');
@@ -289,6 +477,9 @@ class CategoryController extends Controller
         return $this->redirectSuccess('categories.index', 'Categoria definida como padrão com sucesso.');
     }
 
+    /**
+     * Valida e normaliza slug informado.
+     */
     public function checkSlug(Request $request)
     {
         $slugInput = (string) $request->get('slug', '');

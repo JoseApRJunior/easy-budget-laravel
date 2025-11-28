@@ -91,7 +91,10 @@
                             <i class="bi bi-plus me-1" aria-hidden="true"></i>Nova Categoria
                         </a>
                         <a href="{{ route('categories.export', ['format' => 'xlsx']) }}" class="btn btn-outline-success btn-sm">
-                            <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar
+                            <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Excel
+                        </a>
+                        <a href="{{ route('categories.export', ['format' => 'pdf']) }}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-file-pdf me-1" aria-hidden="true"></i>PDF
                         </a>
                     </div>
                 </div>
