@@ -63,15 +63,21 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="min_price">Preço Mínimo</label>
-                                    <input type="number" class="form-control" id="min_price" name="min_price"
-                                        value="{{ $filters['min_price'] ?? '' }}" step="0.01" min="0">
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" class="form-control currency-brl" id="min_price" name="min_price"
+                                            value="{{ $filters['min_price'] ?? '' }}" inputmode="decimal" placeholder="0,00">
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="max_price">Preço Máximo</label>
-                                    <input type="number" class="form-control" id="max_price" name="max_price"
-                                        value="{{ $filters['max_price'] ?? '' }}" step="0.01" min="0">
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" class="form-control currency-brl" id="max_price" name="max_price"
+                                            value="{{ $filters['max_price'] ?? '' }}" inputmode="decimal" placeholder="0,00">
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12">
@@ -258,8 +264,55 @@
             // Opcional: auto-submit após 500ms de inatividade
             clearTimeout(window.filterTimeout);
             window.filterTimeout = setTimeout(function() {
+                // Normaliza moeda antes de enviar
+                normalizeCurrencyInputs(element.closest('form'));
                 element.closest('form').submit();
             }, 500);
+        });
+    });
+
+    // Máscara BRL simples e normalização
+    function formatBRL(value) {
+        if (value === null || value === undefined) return '';
+        var onlyDigits = String(value).replace(/[^0-9,\.]/g, '');
+        if (onlyDigits.indexOf('.') !== -1 && onlyDigits.indexOf(',') === -1) {
+            onlyDigits = onlyDigits.replace(/\./g, ',');
+        }
+        var digits = onlyDigits.replace(/[^0-9]/g, '');
+        if (digits.length === 0) return '';
+        while (digits.length < 3) digits = '0' + digits;
+        var intPart = digits.slice(0, -2);
+        var decPart = digits.slice(-2);
+        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return intPart + ',' + decPart;
+    }
+
+    function normalizeCurrency(val) {
+        if (!val) return '';
+        var digits = String(val).replace(/[^0-9]/g, '');
+        if (digits.length === 0) return '';
+        if (digits.length === 1) digits = '0' + digits;
+        var intPart = digits.slice(0, -2);
+        var decPart = digits.slice(-2);
+        return (intPart.length ? intPart : '0') + '.' + decPart;
+    }
+
+    function normalizeCurrencyInputs(form) {
+        form.querySelectorAll('.currency-brl').forEach(function(inp) {
+            var normalized = normalizeCurrency(inp.value);
+            inp.value = normalized;
+        });
+    }
+
+    document.querySelectorAll('.currency-brl').forEach(function(inp) {
+        if (inp.value) {
+            inp.value = formatBRL(inp.value);
+        }
+        inp.addEventListener('focus', function() {
+            inp.value = normalizeCurrency(inp.value);
+        });
+        inp.addEventListener('blur', function() {
+            inp.value = formatBRL(inp.value);
         });
     });
 

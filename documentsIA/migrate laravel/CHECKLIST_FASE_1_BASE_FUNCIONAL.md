@@ -92,30 +92,35 @@
 
 ### **📊 Informações do Módulo:**
 
--  **Status Atual:** Estrutura existe, funcionalidades limitadas
+-  **Status Atual:** CRUD e inventário operando; alertas implementados; pendências menores
 -  **Dependências:** Nenhuma (independente)
 -  **Impacto:** 🟨 ALTO - Base para precificação de serviços
 -  **Tempo Estimado:** 4 dias
 
 ### **✅ Checklist de Desenvolvimento:**
 
-#### **🔧 Backend (Models, Repositories, Services)**
+#### **Padrão de Repositório (Arquitetura Dual)**
+
+-  [x] Products usam `AbstractTenantRepository` (dados isolados por `tenant_id`)
+-  [x] Categories usam `AbstractGlobalRepository` (dados compartilhados)
+
+#### **� Backend (Models, Repositories, Services)**
 
 -  [x] Verificar e atualizar Product Model
 
    -  [x] Relationships corretas (category, inventory)
    -  [x] Fillable/casts adequados
-   -  [ ] Traits TenantScoped e Auditable
+   -  [x] Traits TenantScoped e Auditable
 
 -  [x] Implementar ProductRepository
 
-   -  [ ] Interface definida
+   -  [ ] Interface definida (opcional na arquitetura atual)
    -  [x] CRUD completo
    -  [x] Busca por categoria/preço
    -  [x] Filtros avançados
 
 -  [x] Implementar ProductService
-   -  [ ] ServiceResult padronizado
+   -  [x] ServiceResult padronizado
    -  [ ] Gestão de estoque (ProductInventory)
    -  [ ] Gestão de preços
    -  [ ] Validações de negócio
@@ -139,11 +144,11 @@
 
 #### **📦 Gestão de Inventário**
 
--  [ ] Implementar ProductInventory controller
-   -  [ ] Adicionar estoque
-   -  [ ] Remover estoque
+  -  [x] ProductInventory controller (entrada, saída, ajuste)
+   -  [x] Adicionar estoque
+   -  [x] Remover estoque
    -  [x] Histórico de movimentações
-   -  [ ] Alertas de estoque mínimo
+   -  [x] Alertas de estoque (baixa/alta) com paginação
 
 #### **🎨 Interface (Views)**
 
@@ -153,15 +158,15 @@
    -  [x] edit.blade.php - formulário de edição
    -  [x] show.blade.php - visualização detalhada
    -  [x] dashboard.blade.php - visão geral do inventário
-   -  [ ] Componentes para gestão de estoque
+   -  [x] Componentes para gestão de estoque (entry/exit/adjust, alerts)
 
 #### **🧪 Testes**
 
 -  [x] Criar ProductFactory
 -  [x] Implementar ProductSeeder
--  [ ] Testes unitários ProductService
--  [ ] Testes de Feature ProductController
--  [ ] Testes de gestão de estoque
+  -  [ ] Testes unitários ProductService
+  -  [ ] Testes de Feature ProductController
+  -  [ ] Testes de gestão de estoque
 -  [ ] Testes de integração UI
 
 #### **✅ Validação Final**

@@ -86,10 +86,7 @@ class StoreCategoryRequest extends FormRequest
                 // But we need to check by slug.
 
                 $conflict = Category::where('slug', $slug)
-                    ->where(function($q) use ($tenantId) {
-                        $q->globalOnly()
-                          ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
-                    })
+                    ->whereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId))
                     ->exists();
 
                 if ($conflict) {
@@ -122,6 +119,14 @@ class StoreCategoryRequest extends FormRequest
                             $validator->errors()->add('parent_id', 'A categoria pai deve pertencer ao seu espaço ou ser global.');
                         }
                     }
+                }
+
+                // Validação adicional: Verificar se parent forma loop consigo mesmo
+                // Para criação, verificamos se o parent tem ancestrais que formam loop
+                // (Embora raro, pode acontecer se dados foram corrompidos)
+                $tempCategory = new Category(['id' => PHP_INT_MAX]); // ID temporário alto
+                if ($tempCategory->wouldCreateCircularReference($parentId)) {
+                    $validator->errors()->add('parent_id', 'A categoria pai selecionada possui hierarquia circular.');
                 }
             }
         });

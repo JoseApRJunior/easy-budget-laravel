@@ -111,7 +111,7 @@ class CategoryControllerTest extends TestCase
         ]);
     }
 
-    public function test_tenant_cannot_create_duplicate_slug_if_exists()
+    public function test_tenant_can_create_duplicate_slug_if_global_exists()
     {
         // Create a global category
         $global = Category::create(['name' => 'Global', 'slug' => 'global', 'is_active' => true]);
@@ -119,8 +119,19 @@ class CategoryControllerTest extends TestCase
         $response = $this->actingAs($this->tenantUser)
             ->post(route('categories.store'), [
                 'name' => 'Global', // Same name -> same slug
+                'is_active' => true,
             ]);
 
-        $response->assertSessionHasErrors('name');
+        $response->assertRedirect(route('categories.index'));
+        $response->assertSessionHasNoErrors();
+
+        // Tenant should have its own custom category with same slug
+        $category = Category::where('slug', 'global')->orderByDesc('id')->first();
+        $this->assertNotNull($category);
+        $this->assertDatabaseHas('category_tenant', [
+            'category_id' => $category->id,
+            'tenant_id' => $this->tenant->id,
+            'is_custom' => true,
+        ]);
     }
 }

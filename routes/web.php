@@ -529,6 +529,7 @@ Route::prefix('categories')->name('categories.')->group(function () {
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
+    Route::post('/{id}/restore', [\App\Http\Controllers\CategoryController::class, 'restore'])->name('restore');
 });
 
     // Activity Management
@@ -683,6 +684,7 @@ Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(fu
     Route::put('/{id}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/set-default', [\App\Http\Controllers\CategoryController::class, 'setDefault'])->name('set-default');
+    Route::post('/{id}/restore', [\App\Http\Controllers\CategoryController::class, 'restore'])->name('restore');
 });
 
 // Admin Category Management (espelhado)

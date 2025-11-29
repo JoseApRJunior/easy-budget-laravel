@@ -73,7 +73,7 @@ class Category extends Model
     {
         return [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories,slug',
+            'slug' => 'required|string|max:255',
         ];
     }
 
@@ -174,7 +174,12 @@ class Category extends Model
     }
 
     /**
-     * Verifica se é categoria global (sem vínculo com tenants)
+     * Verifica se a categoria é global (disponível para todos os tenants).
+     *
+     * Uma categoria é considerada global quando não possui nenhum
+     * relacionamento na tabela pivot `category_tenant` marcado como custom.
+     *
+     * @return bool True se for global, false se for custom de algum tenant
      */
     public function isGlobal(): bool
     {
@@ -182,7 +187,10 @@ class Category extends Model
     }
 
     /**
-     * Verifica se é custom de um tenant específico
+     * Verifica se a categoria é custom de um tenant específico.
+     *
+     * @param int $tenantId ID do tenant a verificar
+     * @return bool True se for custom deste tenant, false caso contrário
      */
     public function isCustomFor(int $tenantId): bool
     {
@@ -193,12 +201,84 @@ class Category extends Model
     }
 
     /**
-     * Verifica se categoria está disponível para um tenant
+     * Verifica se a categoria está disponível para um tenant.
+     *
+     * Uma categoria está disponível se:
+     * - For global (disponível para todos), OU
+     * - Tiver relacionamento específico com o tenant na pivot
+     *
+     * @param int $tenantId ID do tenant a verificar
+     * @return bool True se disponível, false caso contrário
      */
     public function isAvailableFor(int $tenantId): bool
     {
         return $this->isGlobal()
             || $this->tenants()->where('tenant_id', $tenantId)->exists();
+    }
+
+    /**
+     * Verifica se definir um parent_id criaria uma referência circular.
+     *
+     * Este método percorre a cadeia de ancestrais do parent proposto para detectar
+     * se a categoria atual já existe nessa cadeia, o que criaria um loop infinito.
+     *
+     * Implementa proteção contra loops infinitos com:
+     * - Array de IDs visitados
+     * - Limite máximo de 20 níveis de profundidade
+     * - Suporte a soft deletes (usa withTrashed)
+     *
+     * @param int $proposedParentId ID do parent que se deseja definir
+     * @return bool True se criar loop, false caso contrário
+     *
+     * @example
+     * // Cenário válido: A → B → C
+     * $categoryA->wouldCreateCircularReference($categoryC->id); // false
+     *
+     * @example
+     * // Cenário inválido: A → B → C, tentando fazer C → A
+     * $categoryC->wouldCreateCircularReference($categoryA->id); // true (criaria C → A → B → C)
+     *
+     * @example
+     * // Self-reference
+     * $category->wouldCreateCircularReference($category->id); // true
+     */
+    public function wouldCreateCircularReference(int $proposedParentId): bool
+    {
+        // Se não tem parent proposto, não há loop
+        if (!$proposedParentId) {
+            return false;
+        }
+
+        // Se o parent proposto é a própria categoria, é loop direto
+        if ($proposedParentId === $this->id) {
+            return true;
+        }
+
+        // Percorrer ancestrais do parent proposto
+        $visited = [$this->id]; // Evitar loops infinitos
+        $currentId = $proposedParentId;
+        $maxDepth = 20; // Limite de segurança
+        $depth = 0;
+
+        while ($currentId && $depth < $maxDepth) {
+            // Se encontramos a categoria atual na cadeia de ancestrais, é loop
+            if (in_array($currentId, $visited)) {
+                return true;
+            }
+
+            $visited[] = $currentId;
+
+            // Buscar próximo ancestral (incluindo deletados)
+            $parent = Category::withTrashed()->find($currentId);
+            if (!$parent) {
+                break; // Parent não existe, não há loop
+            }
+
+            $currentId = $parent->parent_id;
+            $depth++;
+        }
+
+        return false;
     }
 
     /**

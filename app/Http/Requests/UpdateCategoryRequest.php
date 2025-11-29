@@ -29,9 +29,10 @@ class UpdateCategoryRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
-            $category = $this->route('category'); // Assumes route model binding or ID
+            $category = $this->route('category');
             if (!$category instanceof Category) {
-                $category = Category::find($this->route('category'));
+                $categoryId = $this->route('id') ?? $this->route('category');
+                $category = Category::find($categoryId);
             }
 
             if (!$category) {
@@ -61,10 +62,7 @@ class UpdateCategoryRequest extends FormRequest
             } else {
                 $conflict = Category::where('slug', $slug)
                     ->where('id', '!=', $category->id)
-                    ->where(function($q) use ($tenantId) {
-                        $q->globalOnly()
-                          ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
-                    })
+                    ->whereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId))
                     ->exists();
 
                 if ($conflict) {
@@ -82,6 +80,12 @@ class UpdateCategoryRequest extends FormRequest
                     return;
                 }
 
+                // Prevent circular reference
+                if ($category->wouldCreateCircularReference($parentId)) {
+                    $validator->errors()->add('parent_id', 'Esta operação criaria uma hierarquia circular.');
+                    return;
+                }
+
                 $parent = Category::find($parentId);
                 if (!$parent) return;
 
@@ -91,7 +95,7 @@ class UpdateCategoryRequest extends FormRequest
                     }
                 } else {
                     if ($tenantId === null) {
-                         $validator->errors()->add('parent_id', 'Selecione uma categoria pai disponível.');
+                        $validator->errors()->add('parent_id', 'Selecione uma categoria pai disponível.');
                     } else {
                         if (!$parent->isAvailableFor($tenantId)) {
                             $validator->errors()->add('parent_id', 'A categoria pai deve pertencer ao seu espaço ou ser global.');

@@ -320,7 +320,25 @@ class InventoryController extends Controller
      */
     public function alerts(): View
     {
-        return view('pages.inventory.alerts');
+        $tenantId = auth()->user()->tenant_id ?? null;
+        $perPage = 15;
+
+        $lowStockProducts = \App\Models\ProductInventory::query()
+            ->byTenant($tenantId)
+            ->lowStock()
+            ->with(['product.category'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate($perPage);
+
+        $highStockProducts = \App\Models\ProductInventory::query()
+            ->byTenant($tenantId)
+            ->whereNotNull('max_quantity')
+            ->highStock()
+            ->with(['product.category'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate($perPage);
+
+        return view('pages.inventory.alerts', compact('lowStockProducts', 'highStockProducts'));
     }
 
     /**

@@ -41,15 +41,26 @@ class CategoryRepository extends AbstractGlobalRepository
     /**
      * Lista categorias ativas.
      *
+     * Exclui categorias órfãs (com parent deletado).
+     *
      * @param array<string, string>|null $orderBy Ordenação
      * @return Collection<Category> Categorias ativas
      */
     public function listActive(?array $orderBy = null): Collection
     {
-        return $this->getAllGlobal(
-            ['is_active' => true],
-            $orderBy,
-        );
+        $query = $this->model->newQuery()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                // Incluir categorias sem parent OU com parent não deletado
+                $q->whereNull('parent_id')
+                    ->orWhereHas('parent', function ($parentQuery) {
+                        $parentQuery->withoutTrashed();
+                    });
+            });
+
+        $this->applyOrderBy($query, $orderBy);
+
+        return $query->get();
     }
 
     /**
@@ -101,14 +112,32 @@ class CategoryRepository extends AbstractGlobalRepository
             ->orderByRaw('CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END')
             ->orderBy('categories.name', 'ASC');
 
-        // Ocultar categorias globais inativas para prestador
+        // Regras para prestador:
+        // - Exibir categorias ativas
+        // - Incluir categorias custom do tenant mesmo que não ativas globais
+        // - Precedência: se existir custom do tenant com mesmo slug, ocultar a global
         if ($tenantId !== null) {
             $query->where(function ($q) use ($tenantId) {
-                $q->where('categories.is_active', true)
-                  ->orWhereHas('tenants', function ($t) use ($tenantId) {
-                      $t->where('tenant_id', $tenantId)
-                        ->where('is_custom', true);
-                  });
+                // Sempre incluir categorias custom do tenant
+                $q->whereHas('tenants', function ($t) use ($tenantId) {
+                    $t->where('tenant_id', $tenantId)
+                      ->where('is_custom', true);
+                })
+                // Ou incluir globais ativas APENAS quando não houver custom com mesmo slug
+                ->orWhere(function ($q2) use ($tenantId) {
+                    $q2->where('categories.is_active', true)
+                       ->whereDoesntHave('tenants', function ($t) {
+                           $t->where('is_custom', true);
+                       })
+                       ->whereNotExists(function ($sub) use ($tenantId) {
+                           $sub->selectRaw(1)
+                               ->from('categories as c2')
+                               ->join('category_tenant as ct2', 'ct2.category_id', '=', 'c2.id')
+                               ->where('ct2.tenant_id', $tenantId)
+                               ->where('ct2.is_custom', true)
+                               ->whereColumn('c2.slug', 'categories.slug');
+                       });
+                });
             });
         }
 

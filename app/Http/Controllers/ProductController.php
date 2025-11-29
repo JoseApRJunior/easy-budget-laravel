@@ -27,6 +27,18 @@ class ProductController extends Controller
 
     private CategoryService $categoryService;
 
+    private function normalizeCurrencyFilter(?string $val): ?float
+    {
+        if ($val === null) return null;
+        $digits = preg_replace('/[^0-9]/', '', $val);
+        if ($digits === null || $digits === '') return null;
+        if (strlen($digits) === 1) $digits = '0' . $digits;
+        $intPart = substr($digits, 0, -2);
+        $decPart = substr($digits, -2);
+        $normalized = ($intPart !== '' ? $intPart : '0') . '.' . $decPart;
+        return (float) $normalized;
+    }
+
     public function __construct(ProductService $productService, CategoryService $categoryService)
     {
         $this->productService = $productService;
@@ -43,7 +55,7 @@ class ProductController extends Controller
         $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price']);
 
         try {
-            $hasFilters = collect($filters)->filter(fn ($v) => filled($v))->isNotEmpty();
+            $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
             $confirmAll = (bool) $request->boolean('all');
 
             if ($hasFilters || $confirmAll) {
@@ -108,7 +120,7 @@ class ProductController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar produto: '.$e->getMessage());
+                ->with('error', 'Erro ao criar produto: ' . $e->getMessage());
         }
     }
 
@@ -183,7 +195,7 @@ class ProductController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar produto: '.$e->getMessage());
+                ->with('error', 'Erro ao atualizar produto: ' . $e->getMessage());
         }
     }
 
@@ -192,27 +204,40 @@ class ProductController extends Controller
      *
      * Rota: products.toggle-status (PATCH)
      */
-    public function toggle_status(string $sku): JsonResponse
+    public function toggle_status(string $sku, Request $request)
     {
         try {
             $result = $this->productService->toggleProductStatus($sku);
 
             if (! $result->isSuccess()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400);
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $result->getMessage(),
+                    ], 400);
+                }
+                return redirect()->back()->with('error', $result->getMessage());
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => $result->getMessage(),
-            ]);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result->getMessage(),
+                ]);
+            }
+
+            $product = $result->getData();
+            return redirect()
+                ->route('provider.products.show', $product->sku)
+                ->with('success', $result->getMessage());
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao alterar status do produto: '.$e->getMessage(),
-            ], 500);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao alterar status do produto: ' . $e->getMessage(),
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Erro ao alterar status do produto: ' . $e->getMessage());
         }
     }
 
@@ -238,7 +263,7 @@ class ProductController extends Controller
         } catch (Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Erro ao excluir produto: '.$e->getMessage());
+                ->with('error', 'Erro ao excluir produto: ' . $e->getMessage());
         }
     }
 
@@ -282,6 +307,12 @@ class ProductController extends Controller
     public function ajaxSearch(Request $request): JsonResponse
     {
         $filters = $request->only(['search', 'active', 'min_price', 'max_price', 'category_id']);
+        if (isset($filters['min_price'])) {
+            $filters['min_price'] = $this->normalizeCurrencyFilter($filters['min_price']);
+        }
+        if (isset($filters['max_price'])) {
+            $filters['max_price'] = $this->normalizeCurrencyFilter($filters['max_price']);
+        }
         $result = $this->productService->getFilteredProducts($filters, ['category']);
 
         return $result->isSuccess()

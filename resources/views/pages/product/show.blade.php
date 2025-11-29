@@ -4,6 +4,13 @@
 
 @section('content')
 <div class="container-fluid py-1">
+    @push('styles')
+    <style>
+      .nav-tabs .nav-link { background-color: #f8f9fa; color: #212529; }
+      .nav-tabs .nav-link.active { background-color: #ffffff; border-color: #dee2e6 #dee2e6 #fff; color: #000; }
+      .nav-tabs { border-bottom: 1px solid #dee2e6; }
+    </style>
+    @endpush
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>

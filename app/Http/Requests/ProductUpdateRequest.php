@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class ProductUpdateRequest extends FormRequest
 {
@@ -63,5 +65,19 @@ class ProductUpdateRequest extends FormRequest
             'image.image' => 'O arquivo deve ser uma imagem.',
             'image.max' => 'A imagem não pode ter mais de 2MB.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->filled('category_id')) {
+                $categoryId = (int) $this->input('category_id');
+                $category = Category::withTrashed()->find($categoryId);
+
+                if ($category && $category->trashed()) {
+                    $validator->errors()->add('category_id', 'A categoria selecionada foi removida. Por favor, escolha outra categoria.');
+                }
+            }
+        });
     }
 }

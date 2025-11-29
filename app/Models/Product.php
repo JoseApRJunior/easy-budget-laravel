@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ class Product extends Model
 {
     use HasFactory;
     use TenantScoped, Auditable;
+    use SoftDeletes;
 
     /**
      * Boot the model.
@@ -74,6 +76,7 @@ class Product extends Model
         'image'       => 'string',
         'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
+        'deleted_at'  => 'datetime',
     ];
 
     /**

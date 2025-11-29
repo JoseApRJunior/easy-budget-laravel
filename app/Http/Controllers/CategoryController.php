@@ -50,7 +50,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $tenantId = $this->resolveTenantId();
-        $filters = $request->only(['search', 'active', 'per_page']);
+        $filters = $request->only(['search', 'active', 'per_page', 'deleted']);
         $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
         $confirmAll = $request->has('all') && in_array((string) $request->input('all'), ['1', 'true', 'on', 'yes'], true);
         $perPage = (int) ($filters['per_page'] ?? $request->input('per_page', 10));
@@ -69,7 +69,12 @@ class CategoryController extends Controller
         $service = app(CategoryService::class);
 
         if ($isAdmin) {
-            $result = $service->paginateGlobalOnly($serviceFilters, $perPage);
+            // Admin pode ver deletados
+            if (isset($filters['deleted']) && $filters['deleted'] === 'only') {
+                $result = $service->paginateOnlyTrashed($serviceFilters, $perPage);
+            } else {
+                $result = $service->paginateGlobalOnly($serviceFilters, $perPage);
+            }
             $categories = $this->getServiceData($result, collect());
             if (method_exists($categories, 'appends')) {
                 $categories = $categories->appends($request->query());
@@ -115,13 +120,15 @@ class CategoryController extends Controller
         if ($isAdmin) {
             $parents = Category::query()
                 ->globalOnly()
+                ->withTrashed()
                 ->orderBy('name')
-                ->get(['id', 'name']);
+                ->get(['id', 'name', 'deleted_at']);
         } else {
             $tenantId = $this->resolveTenantId();
             $parents = $tenantId !== null
                 ? Category::query()
                 ->forTenant($tenantId)
+                ->withTrashed()
                 ->where(function ($q) use ($tenantId) {
                     $q->where('is_active', true)
                         ->orWhereHas('tenants', function ($t) use ($tenantId) {
@@ -130,7 +137,7 @@ class CategoryController extends Controller
                         });
                 })
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'deleted_at'])
                 : collect();
         }
         $defaults = ['is_active' => true];
@@ -199,6 +206,7 @@ class CategoryController extends Controller
             $parents = $tenantId !== null
                 ? Category::query()
                 ->forTenant($tenantId)
+                ->withTrashed()
                 ->where('id', '!=', $id)
                 ->where(function ($q) use ($tenantId) {
                     $q->where('is_active', true)
@@ -208,7 +216,7 @@ class CategoryController extends Controller
                         });
                 })
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'deleted_at'])
                 : collect();
         }
 
@@ -250,6 +258,27 @@ class CategoryController extends Controller
         $this->logOperation('categories_destroy', ['id' => $id]);
 
         return $this->redirectSuccess('categories.index', 'Categoria excluída com sucesso.');
+    }
+
+    /**
+     * Restaura categoria deletada (soft delete).
+     * Apenas admin pode restaurar.
+     */
+    public function restore(int $id)
+    {
+        $user = auth()->user();
+        $isAdmin = app(PermissionService::class)->canManageGlobalCategories($user);
+
+        if (!$isAdmin) {
+            return $this->redirectError('categories.index', 'Apenas administradores podem restaurar categorias.');
+        }
+
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->restore();
+
+        $this->logOperation('categories_restore', ['id' => $id, 'name' => $category->name]);
+
+        return $this->redirectSuccess('categories.index', 'Categoria restaurada com sucesso!');
     }
 
     /**
@@ -463,7 +492,13 @@ class CategoryController extends Controller
         }
 
         if ($tenantId === null) {
-            return redirect()->route('categories.index')->with('status', 'Não foi possível determinar o tenant.');
+            return $this->redirectError('categories.index', 'Não foi possível determinar o tenant.');
+        }
+
+        // Bloquear quando a categoria não está vinculada ao tenant
+        $hasPivot = $category->tenants()->where('tenant_id', $tenantId)->exists();
+        if (! $hasPivot) {
+            return $this->redirectError('categories.index', 'Categoria não disponível para este espaço.');
         }
 
         $result = $this->managementService->setDefaultCategory($category, $tenantId);
