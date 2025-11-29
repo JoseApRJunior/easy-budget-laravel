@@ -58,6 +58,17 @@
                                     </select>
                                 </div>
                             </div>
+                            @role('admin')
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="deleted">Registros</label>
+                                    <select class="form-control" id="deleted" name="deleted">
+                                        <option value="">Atuais</option>
+                                        <option value="only" {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>Deletados</option>
+                                    </select>
+                                </div>
+                            </div>
+                            @endrole
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
                                     <button type="submit" id="btnFilterCategories" class="btn btn-primary" aria-label="Filtrar">
@@ -327,7 +338,7 @@
             });
         }
 
-        document.querySelectorAll('#search, #active, #per_page').forEach(function(element) {
+        document.querySelectorAll('#search, #active, #per_page, #deleted').forEach(function(element) {
             element.addEventListener('change', function() {
                 clearTimeout(window.filterTimeout);
                 window.filterTimeout = setTimeout(function() {

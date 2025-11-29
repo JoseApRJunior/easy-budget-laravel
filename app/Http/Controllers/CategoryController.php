@@ -130,10 +130,23 @@ class CategoryController extends Controller
                 ->forTenant($tenantId)
                 ->withTrashed()
                 ->where(function ($q) use ($tenantId) {
-                    $q->where('is_active', true)
-                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
-                            $t->where('tenant_id', $tenantId)
-                                ->where('is_custom', true);
+                    $q->whereHas('tenants', function ($t) use ($tenantId) {
+                        $t->where('tenant_id', $tenantId)
+                            ->where('is_custom', true);
+                    })
+                        ->orWhere(function ($q2) use ($tenantId) {
+                            $q2->where('is_active', true)
+                                ->whereDoesntHave('tenants', function ($t) {
+                                    $t->where('is_custom', true);
+                                })
+                                ->whereNotExists(function ($sub) use ($tenantId) {
+                                    $sub->selectRaw(1)
+                                        ->from('categories as c2')
+                                        ->join('category_tenant as ct2', 'ct2.category_id', '=', 'c2.id')
+                                        ->where('ct2.tenant_id', $tenantId)
+                                        ->where('ct2.is_custom', true)
+                                        ->whereColumn('c2.slug', 'categories.slug');
+                                });
                         });
                 })
                 ->orderBy('name')
@@ -209,10 +222,23 @@ class CategoryController extends Controller
                 ->withTrashed()
                 ->where('id', '!=', $id)
                 ->where(function ($q) use ($tenantId) {
-                    $q->where('is_active', true)
-                        ->orWhereHas('tenants', function ($t) use ($tenantId) {
-                            $t->where('tenant_id', $tenantId)
-                                ->where('is_custom', true);
+                    $q->whereHas('tenants', function ($t) use ($tenantId) {
+                        $t->where('tenant_id', $tenantId)
+                            ->where('is_custom', true);
+                    })
+                        ->orWhere(function ($q2) use ($tenantId) {
+                            $q2->where('is_active', true)
+                                ->whereDoesntHave('tenants', function ($t) {
+                                    $t->where('is_custom', true);
+                                })
+                                ->whereNotExists(function ($sub) use ($tenantId) {
+                                    $sub->selectRaw(1)
+                                        ->from('categories as c2')
+                                        ->join('category_tenant as ct2', 'ct2.category_id', '=', 'c2.id')
+                                        ->where('ct2.tenant_id', $tenantId)
+                                        ->where('ct2.is_custom', true)
+                                        ->whereColumn('c2.slug', 'categories.slug');
+                                });
                         });
                 })
                 ->orderBy('name')
@@ -327,10 +353,23 @@ class CategoryController extends Controller
                     $query = Category::query()
                         ->forTenant($tenantId)
                         ->where(function ($q) use ($tenantId) {
-                            $q->where('is_active', true)
-                                ->orWhereHas('tenants', function ($t) use ($tenantId) {
-                                    $t->where('tenant_id', $tenantId)
-                                        ->where('is_custom', true);
+                            $q->whereHas('tenants', function ($t) use ($tenantId) {
+                                $t->where('tenant_id', $tenantId)
+                                    ->where('is_custom', true);
+                            })
+                                ->orWhere(function ($q2) use ($tenantId) {
+                                    $q2->where('is_active', true)
+                                        ->whereDoesntHave('tenants', function ($t) {
+                                            $t->where('is_custom', true);
+                                        })
+                                        ->whereNotExists(function ($sub) use ($tenantId) {
+                                            $sub->selectRaw(1)
+                                                ->from('categories as c2')
+                                                ->join('category_tenant as ct2', 'ct2.category_id', '=', 'c2.id')
+                                                ->where('ct2.tenant_id', $tenantId)
+                                                ->where('ct2.is_custom', true)
+                                                ->whereColumn('c2.slug', 'categories.slug');
+                                        });
                                 });
                         })
                         ->with('parent');
@@ -530,15 +569,13 @@ class CategoryController extends Controller
             $query = Category::where('slug', $slug);
 
             if ($tenantId !== null) {
-                // Se for tenant, conflita se existir global ou vinculada a ele
                 $query->where(function ($q) use ($tenantId) {
-                    $q->globalOnly()
-                        ->orWhereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId));
+                    $q->whereHas('tenants', fn($t) => $t->where('tenant_id', $tenantId))
+                        ->orWhere(function ($q2) {
+                            $q2->globalOnly()->where('is_active', true);
+                        });
                 });
             }
-            // Se for admin (tenantId null), conflita se existir qualquer uma com esse slug?
-            // A lógica anterior do store para admin era: Category::query()->where('slug', $slug)->exists();
-            // Então para admin, qualquer slug duplicado é conflito.
 
             $exists = $query->exists();
         }
