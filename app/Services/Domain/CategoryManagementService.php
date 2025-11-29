@@ -367,7 +367,7 @@ class CategoryManagementService
     {
         try {
             return DB::transaction(function () use ($category, $data) {
-                if ($category->is_active && isset($data['is_active']) && !$data['is_active']) {
+                if ($category->is_active && array_key_exists('is_active', $data) && $data['is_active'] === false) {
                     if ($category->hasChildren()) {
                         return ServiceResult::error(
                             OperationStatus::VALIDATION_ERROR,
@@ -382,12 +382,21 @@ class CategoryManagementService
                     }
                 }
 
-                $category->update([
-                    'name' => $data['name'],
-                    'slug' => \Illuminate\Support\Str::slug($data['name']),
-                    'parent_id' => $data['parent_id'] ?? null,
-                    'is_active' => $data['is_active'] ?? $category->is_active,
-                ]);
+                $updates = [];
+                if (isset($data['name'])) {
+                    $updates['name'] = $data['name'];
+                    // Não alterar slug automaticamente; manter existente
+                }
+                if (array_key_exists('parent_id', $data)) {
+                    $updates['parent_id'] = $data['parent_id'] ?? null;
+                }
+                if (array_key_exists('is_active', $data)) {
+                    $updates['is_active'] = (bool) $data['is_active'];
+                }
+
+                if (!empty($updates)) {
+                    $category->update($updates);
+                }
 
                 Log::info('Category updated', [
                     'category_id' => $category->id,

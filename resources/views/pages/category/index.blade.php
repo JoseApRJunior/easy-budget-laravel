@@ -23,6 +23,12 @@
 
     <div class="row">
         <div class="col-12">
+            @if(session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+            @endif
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
@@ -58,7 +64,6 @@
                                     </select>
                                 </div>
                             </div>
-                            @role('admin')
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="deleted">Registros</label>
@@ -68,7 +73,6 @@
                                     </select>
                                 </div>
                             </div>
-                            @endrole
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
                                     <button type="submit" id="btnFilterCategories" class="btn btn-primary" aria-label="Filtrar">

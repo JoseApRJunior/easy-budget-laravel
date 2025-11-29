@@ -8,6 +8,13 @@
         </h1>
     </div>
 
+    @if(session('success'))
+    <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+    @endif
+
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             <form action="{{ route('categories.update', $category->id) }}" method="POST">
@@ -32,7 +39,7 @@
                         </div>
                         <div class="form-floating">
                             <input type="text" class="form-control" id="slugPreview" name="slugPreview"
-                                value="{{ Str::slug(old('name', $category->name)) }}" placeholder="slug" disabled>
+                                value="{{ $category->slug }}" placeholder="slug" disabled>
                             <label for="slugPreview">Slug (gerado automaticamente)</label>
                         </div>
                         <div class="form-text" id="slugStatus"></div>
@@ -40,7 +47,11 @@
                         @php($hasServices = $category->services()->exists())
                         @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
                         @php($canDeactivate = !($hasChildren || $hasServices || $hasProducts))
+                        @if($canDeactivate)
                         <input type="hidden" name="is_active" value="0">
+                        @else
+                        <input type="hidden" name="is_active" value="1">
+                        @endif
                         <div class="form-check form-switch mt-3">
                             <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }} {{ $canDeactivate ? '' : 'disabled' }}>
                             <label class="form-check-label" for="is_active">Ativo</label>
@@ -101,7 +112,7 @@
                     return r.json();
                 })
                 .then(function(data) {
-                    if (data.exists && slug !== '{{ Str::slug($category->name) }}') {
+                    if (data.exists && slug !== '{{ $category->slug }}') {
                         statusEl.textContent = 'Este nome já está em uso.';
                         statusEl.className = 'form-text text-danger';
                         submitBtn.disabled = true;
