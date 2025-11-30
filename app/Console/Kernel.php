@@ -12,18 +12,19 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\LogSizeMonitor::class,
         \App\Console\Commands\LimparCachesEFecharServicos::class,
         \App\Console\Commands\ResetDevDatabase::class,
+        \App\Console\Commands\CheckDeletedCategories::class,
     ];
 
-    protected function schedule(Schedule $schedule)
+    protected function schedule( Schedule $schedule )
     {
         // Limpeza automática de logs antigos (diariamente às 2:00)
-        $schedule->command('clean:directories')
-            ->dailyAt('02:00')
+        $schedule->command( 'clean:directories' )
+            ->dailyAt( '02:00' )
             ->withoutOverlapping()
             ->runInBackground();
 
         // Monitoramento do tamanho do arquivo de log (a cada 6 horas)
-        $schedule->command('logs:monitor-size')
+        $schedule->command( 'logs:monitor-size' )
             ->everySixHours()
             ->withoutOverlapping()
             ->runInBackground();
@@ -31,8 +32,9 @@ class Kernel extends ConsoleKernel
 
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load( __DIR__ . '/Commands' );
 
-        require base_path('routes/console.php');
+        require base_path( 'routes/console.php' );
     }
+
 }

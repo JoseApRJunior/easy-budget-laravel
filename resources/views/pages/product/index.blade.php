@@ -62,6 +62,15 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
+                                    <label for="deleted">Registros</label>
+                                    <select class="form-control" id="deleted" name="deleted">
+                                        <option value="">Atuais</option>
+                                        <option value="only" {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>Deletados</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
                                     <label for="min_price">Preço Mínimo</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
@@ -78,6 +87,15 @@
                                         <input type="text" class="form-control currency-brl" id="max_price" name="max_price"
                                             value="{{ $filters['max_price'] ?? '' }}" inputmode="decimal" placeholder="0,00">
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="deleted">Registros</label>
+                                    <select class="form-control" id="deleted" name="deleted">
+                                        <option value="">Atuais</option>
+                                        <option value="only" {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>Deletados</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-12">
@@ -150,33 +168,44 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ route('provider.products.show', $product->sku) }}"
-                                                class="btn btn-info" title="Visualizar" aria-label="Visualizar">
-                                                <i class="bi bi-eye" aria-hidden="true"></i>
-                                            </a>
-                                            <a href="{{ route('provider.products.edit', $product->sku) }}"
-                                                class="btn btn-warning" title="Editar" aria-label="Editar">
-                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                            </a>
-                                            <form action="{{ route('provider.products.toggle-status', $product->sku) }}"
-                                                method="POST" class="d-inline toggle-status-form"
-                                                onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
-                                                    title="{{ $product->active ? 'Desativar' : 'Ativar' }}" aria-label="{{ $product->active ? 'Desativar' : 'Ativar' }}">
-                                                    <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }}" aria-hidden="true"></i>
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('provider.products.destroy', $product->sku) }}"
-                                                method="POST" class="d-inline"
-                                                onsubmit="return confirm('Excluir este produto permanentemente?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger" title="Excluir" aria-label="Excluir">
-                                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                                </button>
-                                            </form>
+                                            @if($product->deleted_at)
+                                                {{-- Produto deletado: apenas restaurar --}}
+                                                <form action="{{ route('provider.products.restore', $product->sku) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-success" title="Restaurar" aria-label="Restaurar">
+                                                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                {{-- Produto ativo: show, edit, toggle, delete --}}
+                                                <a href="{{ route('provider.products.show', $product->sku) }}"
+                                                    class="btn btn-info" title="Visualizar" aria-label="Visualizar">
+                                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                                </a>
+                                                <a href="{{ route('provider.products.edit', $product->sku) }}"
+                                                    class="btn btn-warning" title="Editar" aria-label="Editar">
+                                                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                </a>
+                                                <form action="{{ route('provider.products.toggle-status', $product->sku) }}"
+                                                    method="POST" class="d-inline toggle-status-form"
+                                                    onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
+                                                        title="{{ $product->active ? 'Desativar' : 'Ativar' }}" aria-label="{{ $product->active ? 'Desativar' : 'Ativar' }}">
+                                                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }}" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('provider.products.destroy', $product->sku) }}"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Excluir este produto permanentemente?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger" title="Excluir" aria-label="Excluir">
+                                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -185,7 +214,13 @@
                                     <td colspan="7" class="text-center text-muted">
                                         <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
                                         <br>
-                                        Nenhum produto encontrado.
+                                        @if(($filters['deleted'] ?? '') === 'only')
+                                            Nenhum produto deletado encontrado.
+                                            <br>
+                                            <small>Você ainda não deletou nenhum produto.</small>
+                                        @else
+                                            Nenhum produto encontrado.
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforelse

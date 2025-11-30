@@ -222,6 +222,7 @@ Route::prefix('provider')->name('provider.')->middleware(['auth', 'verified', 'p
         // Status e exclusão via SKU
         Route::patch('/{sku}/toggle-status', [ProductController::class, 'toggle_status'])->name('toggle-status');
         Route::delete('/{sku}', [ProductController::class, 'delete_store'])->name('destroy');
+        Route::post('/{sku}/restore', [ProductController::class, 'restore'])->name('restore');
 
         // Inventory Management
         Route::post('/{id}/inventory/add', [InventoryController::class, 'add'])->name('inventory.add');

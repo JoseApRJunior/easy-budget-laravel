@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Serviço para gerenciamento complexo de categorias
@@ -32,57 +33,57 @@ class CategoryManagementService
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function setDefaultCategory(Category $category, int $tenantId): ServiceResult
+    public function setDefaultCategory( Category $category, int $tenantId ): ServiceResult
     {
         try {
             DB::beginTransaction();
 
             // Remover default de todas as outras categorias deste tenant
-            DB::table('category_tenant')
-                ->where('tenant_id', $tenantId)
-                ->where('category_id', '!=', $category->id)
-                ->update([
+            DB::table( 'category_tenant' )
+                ->where( 'tenant_id', $tenantId )
+                ->where( 'category_id', '!=', $category->id )
+                ->update( [
                     'is_default' => false,
                     'updated_at' => now(),
-                ]);
+                ] );
 
             // Definir esta como default
             // syncWithoutDetaching mantém outros tenants que já têm essa categoria
-            $category->tenants()->syncWithoutDetaching([
+            $category->tenants()->syncWithoutDetaching( [
                 $tenantId => [
                     'is_default' => true,
-                    'is_custom' => $category->isCustomFor($tenantId), // Preserva se é custom
+                    'is_custom'  => $category->isCustomFor( $tenantId ), // Preserva se é custom
                 ],
-            ]);
+            ] );
 
             DB::commit();
 
-            Log::info('Default category set', [
-                'category_id' => $category->id,
+            Log::info( 'Default category set', [
+                'category_id'   => $category->id,
                 'category_name' => $category->name,
-                'tenant_id' => $tenantId,
-            ]);
+                'tenant_id'     => $tenantId,
+            ] );
 
-            if (class_exists(DefaultCategoryChanged::class)) {
-                event(new DefaultCategoryChanged($category->id, $tenantId));
+            if ( class_exists( DefaultCategoryChanged::class) ) {
+                event( new DefaultCategoryChanged( $category->id, $tenantId ) );
             }
 
-            return ServiceResult::success($category, 'Categoria definida como padrão');
-        } catch (\Exception $e) {
+            return ServiceResult::success( $category, 'Categoria definida como padrão' );
+        } catch ( \Exception $e ) {
             DB::rollBack();
 
-            Log::error('Failed to set default category', [
+            Log::error( 'Failed to set default category', [
                 'category_id' => $category->id,
-                'tenant_id' => $tenantId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+                'tenant_id'   => $tenantId,
+                'error'       => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao definir categoria padrão: ' . $e->getMessage(),
                 null,
-                $e
+                $e,
             );
         }
     }
@@ -98,38 +99,38 @@ class CategoryManagementService
      * @param Category $category
      * @return ServiceResult
      */
-    public function canDelete(Category $category): ServiceResult
+    public function canDelete( Category $category ): ServiceResult
     {
         // Verificar services
-        if ($category->services()->exists()) {
+        if ( $category->services()->exists() ) {
             return ServiceResult::error(
                 OperationStatus::VALIDATION_ERROR,
-                'Categoria possui serviços associados'
+                'Categoria possui serviços associados',
             );
         }
 
         // Verificar products
-        $hasProducts = DB::table('products')
-            ->where('category_id', $category->id)
-            ->whereNull('deleted_at') // Considerar apenas produtos não deletados
+        $hasProducts = DB::table( 'products' )
+            ->where( 'category_id', $category->id )
+            ->whereNull( 'deleted_at' ) // Considerar apenas produtos não deletados
             ->exists();
 
-        if ($hasProducts) {
+        if ( $hasProducts ) {
             return ServiceResult::error(
                 OperationStatus::VALIDATION_ERROR,
-                'Categoria possui produtos associados'
+                'Categoria possui produtos associados',
             );
         }
 
         // Verificar subcategorias
-        if ($category->hasChildren()) {
+        if ( $category->hasChildren() ) {
             return ServiceResult::error(
                 OperationStatus::VALIDATION_ERROR,
-                'Categoria possui subcategorias'
+                'Categoria possui subcategorias',
             );
         }
 
-        return ServiceResult::success(true, 'Categoria pode ser deletada');
+        return ServiceResult::success( true, 'Categoria pode ser deletada' );
     }
 
     /**
@@ -141,21 +142,21 @@ class CategoryManagementService
      * @param int $categoryId
      * @return array Array de IDs dos descendentes
      */
-    public function getDescendantIds(int $categoryId): array
+    public function getDescendantIds( int $categoryId ): array
     {
-        $all = [];
-        $queue = [$categoryId];
-        while (!empty($queue)) {
+        $all   = [];
+        $queue = [ $categoryId ];
+        while ( !empty( $queue ) ) {
             $children = \App\Models\Category::query()
-                ->whereIn('parent_id', $queue)
-                ->whereNull('deleted_at')
-                ->pluck('id')
+                ->whereIn( 'parent_id', $queue )
+                ->whereNull( 'deleted_at' )
+                ->pluck( 'id' )
                 ->all();
-            $children = array_values(array_diff($children, $all));
-            if (empty($children)) {
+            $children = array_values( array_diff( $children, $all ) );
+            if ( empty( $children ) ) {
                 break;
             }
-            $all = array_merge($all, $children);
+            $all   = array_merge( $all, $children );
             $queue = $children;
         }
         return $all;
@@ -169,26 +170,26 @@ class CategoryManagementService
      * @param Category $category
      * @return bool
      */
-    public function isInUse(Category $category): bool
+    public function isInUse( Category $category ): bool
     {
         $categoryIds = array_merge(
-            [$category->id],
-            $this->getDescendantIds($category->id)
+            [ $category->id ],
+            $this->getDescendantIds( $category->id ),
         );
 
         // Verificar services
-        $hasServices = DB::table('services')
-            ->whereIn('category_id', $categoryIds)
+        $hasServices = DB::table( 'services' )
+            ->whereIn( 'category_id', $categoryIds )
             ->exists();
 
-        if ($hasServices) {
+        if ( $hasServices ) {
             return true;
         }
 
         // Verificar products
-        $hasProducts = DB::table('products')
-            ->whereIn('category_id', $categoryIds)
-            ->whereNull('deleted_at')
+        $hasProducts = DB::table( 'products' )
+            ->whereIn( 'category_id', $categoryIds )
+            ->whereNull( 'deleted_at' )
             ->exists();
 
         return $hasProducts;
@@ -207,50 +208,50 @@ class CategoryManagementService
         Category $category,
         int $tenantId,
         bool $isCustom = false,
-        bool $isDefault = false
+        bool $isDefault = false,
     ): ServiceResult {
         try {
             DB::beginTransaction();
 
             // Se deve ser default, remover flag de outras
-            if ($isDefault) {
-                DB::table('category_tenant')
-                    ->where('tenant_id', $tenantId)
-                    ->update(['is_default' => false]);
+            if ( $isDefault ) {
+                DB::table( 'category_tenant' )
+                    ->where( 'tenant_id', $tenantId )
+                    ->update( [ 'is_default' => false ] );
             }
 
             // Anexar categoria ao tenant
-            $category->tenants()->syncWithoutDetaching([
+            $category->tenants()->syncWithoutDetaching( [
                 $tenantId => [
-                    'is_custom' => $isCustom,
+                    'is_custom'  => $isCustom,
                     'is_default' => $isDefault,
                 ],
-            ]);
+            ] );
 
             DB::commit();
 
-            Log::info('Category attached to tenant', [
+            Log::info( 'Category attached to tenant', [
                 'category_id' => $category->id,
-                'tenant_id' => $tenantId,
-                'is_custom' => $isCustom,
-                'is_default' => $isDefault,
-            ]);
+                'tenant_id'   => $tenantId,
+                'is_custom'   => $isCustom,
+                'is_default'  => $isDefault,
+            ] );
 
-            return ServiceResult::success(true, 'Categoria vinculada ao tenant');
-        } catch (\Exception $e) {
+            return ServiceResult::success( true, 'Categoria vinculada ao tenant' );
+        } catch ( \Exception $e ) {
             DB::rollBack();
 
-            Log::error('Failed to attach category to tenant', [
+            Log::error( 'Failed to attach category to tenant', [
                 'category_id' => $category->id,
-                'tenant_id' => $tenantId,
-                'error' => $e->getMessage(),
-            ]);
+                'tenant_id'   => $tenantId,
+                'error'       => $e->getMessage(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao vincular categoria: ' . $e->getMessage(),
                 null,
-                $e
+                $e,
             );
         }
     }
@@ -262,45 +263,46 @@ class CategoryManagementService
      * @param int $tenantId
      * @return ServiceResult
      */
-    public function detachFromTenant(Category $category, int $tenantId): ServiceResult
+    public function detachFromTenant( Category $category, int $tenantId ): ServiceResult
     {
         try {
             // Verificar se categoria está em uso por este tenant
-            $inUseByTenant = DB::table('services')
-                ->where('category_id', $category->id)
-                ->where('tenant_id', $tenantId)
+            $inUseByTenant = DB::table( 'services' )
+                ->where( 'category_id', $category->id )
+                ->where( 'tenant_id', $tenantId )
                 ->exists();
 
-            if ($inUseByTenant) {
+            if ( $inUseByTenant ) {
                 return ServiceResult::error(
                     OperationStatus::VALIDATION_ERROR,
-                    'Categoria está em uso por este tenant'
+                    'Categoria está em uso por este tenant',
                 );
             }
 
-            $category->tenants()->detach($tenantId);
+            $category->tenants()->detach( $tenantId );
 
-            Log::info('Category detached from tenant', [
+            Log::info( 'Category detached from tenant', [
                 'category_id' => $category->id,
-                'tenant_id' => $tenantId,
-            ]);
+                'tenant_id'   => $tenantId,
+            ] );
 
-            return ServiceResult::success(true, 'Categoria desvinculada do tenant');
-        } catch (\Exception $e) {
-            Log::error('Failed to detach category from tenant', [
+            return ServiceResult::success( true, 'Categoria desvinculada do tenant' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Failed to detach category from tenant', [
                 'category_id' => $category->id,
-                'tenant_id' => $tenantId,
-                'error' => $e->getMessage(),
-            ]);
+                'tenant_id'   => $tenantId,
+                'error'       => $e->getMessage(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao desvincular categoria',
                 null,
-                $e
+                $e,
             );
         }
     }
+
     /**
      * Cria uma nova categoria
      *
@@ -308,50 +310,50 @@ class CategoryManagementService
      * @param int|null $tenantId ID do tenant (null se for admin/global)
      * @return ServiceResult
      */
-    public function createCategory(array $data, ?int $tenantId = null): ServiceResult
+    public function createCategory( array $data, ?int $tenantId = null ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($data, $tenantId) {
+            return DB::transaction( function () use ($data, $tenantId) {
                 // Criar categoria
-                $category = Category::create([
-                    'name' => $data['name'],
-                    'slug' => \Illuminate\Support\Str::slug($data['name']), // Garantir slug atualizado
-                    'parent_id' => $data['parent_id'] ?? null,
-                    'is_active' => $data['is_active'] ?? true,
-                ]);
+                $category = Category::create( [
+                    'name'      => $data[ 'name' ],
+                    'slug'      => \Illuminate\Support\Str::slug( $data[ 'name' ] ), // Garantir slug atualizado
+                    'parent_id' => $data[ 'parent_id' ] ?? null,
+                    'is_active' => $data[ 'is_active' ] ?? true,
+                ] );
 
                 // Se for tenant, vincular como custom
-                if ($tenantId !== null) {
-                    $this->attachToTenant($category, $tenantId, true, false);
+                if ( $tenantId !== null ) {
+                    $this->attachToTenant( $category, $tenantId, true, false );
                 }
 
                 // Se for Admin (Global), não vinculamos a ninguém inicialmente.
                 // Ela será visível para todos via scopeGlobalOnly/forTenant.
 
-                Log::info('Category created', [
+                Log::info( 'Category created', [
                     'category_id' => $category->id,
-                    'tenant_id' => $tenantId,
-                    'is_global' => $tenantId === null,
-                ]);
+                    'tenant_id'   => $tenantId,
+                    'is_global'   => $tenantId === null,
+                ] );
 
-                if (class_exists(CategoryCreated::class)) {
-                    event(new CategoryCreated($category->id));
+                if ( class_exists( CategoryCreated::class) ) {
+                    event( new CategoryCreated( $category->id ) );
                 }
 
-                return ServiceResult::success($category, 'Categoria criada com sucesso');
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to create category', [
-                'data' => $data,
+                return ServiceResult::success( $category, 'Categoria criada com sucesso' );
+            } );
+        } catch ( \Exception $e ) {
+            Log::error( 'Failed to create category', [
+                'data'      => $data,
                 'tenant_id' => $tenantId,
-                'error' => $e->getMessage(),
-            ]);
+                'error'     => $e->getMessage(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao criar categoria: ' . $e->getMessage(),
                 null,
-                $e
+                $e,
             );
         }
     }
@@ -363,62 +365,67 @@ class CategoryManagementService
      * @param array $data
      * @return ServiceResult
      */
-    public function updateCategory(Category $category, array $data): ServiceResult
+    public function updateCategory( Category $category, array $data ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($category, $data) {
-                if ($category->is_active && array_key_exists('is_active', $data) && $data['is_active'] === false) {
-                    if ($category->hasChildren()) {
+            return DB::transaction( function () use ($category, $data) {
+                if ( $category->is_active && array_key_exists( 'is_active', $data ) && $data[ 'is_active' ] === false ) {
+                    if ( $category->hasChildren() ) {
                         return ServiceResult::error(
                             OperationStatus::VALIDATION_ERROR,
-                            'Não é possível desativar: categoria possui subcategorias.'
+                            'Não é possível desativar: categoria possui subcategorias.',
                         );
                     }
-                    if ($this->isInUse($category)) {
+                    if ( $this->isInUse( $category ) ) {
                         return ServiceResult::error(
                             OperationStatus::VALIDATION_ERROR,
-                            'Não é possível desativar: categoria ou subcategoria em uso.'
+                            'Não é possível desativar: categoria ou subcategoria em uso.',
                         );
                     }
                 }
 
                 $updates = [];
-                if (isset($data['name'])) {
-                    $updates['name'] = $data['name'];
-                    // Não alterar slug automaticamente; manter existente
+                if ( isset( $data[ 'name' ] ) ) {
+                    $updates[ 'name' ] = $data[ 'name' ];
+                    // Gerar slug automaticamente baseado no novo nome
+                    $updates[ 'slug' ] = Str::slug( $data[ 'name' ] );
                 }
-                if (array_key_exists('parent_id', $data)) {
-                    $updates['parent_id'] = $data['parent_id'] ?? null;
+                if ( array_key_exists( 'slug', $data ) && !empty( $data[ 'slug' ] ) ) {
+                    // Permite customizar slug se fornecido explicitamente
+                    $updates[ 'slug' ] = $data[ 'slug' ];
                 }
-                if (array_key_exists('is_active', $data)) {
-                    $updates['is_active'] = (bool) $data['is_active'];
+                if ( array_key_exists( 'parent_id', $data ) ) {
+                    $updates[ 'parent_id' ] = $data[ 'parent_id' ] ?? null;
+                }
+                if ( array_key_exists( 'is_active', $data ) ) {
+                    $updates[ 'is_active' ] = (bool) $data[ 'is_active' ];
                 }
 
-                if (!empty($updates)) {
-                    $category->update($updates);
+                if ( !empty( $updates ) ) {
+                    $category->update( $updates );
                 }
 
-                Log::info('Category updated', [
+                Log::info( 'Category updated', [
                     'category_id' => $category->id,
-                ]);
+                ] );
 
-                if (class_exists(CategoryUpdated::class)) {
-                    event(new CategoryUpdated($category->id));
+                if ( class_exists( CategoryUpdated::class) ) {
+                    event( new CategoryUpdated( $category->id ) );
                 }
 
-                return ServiceResult::success($category, 'Categoria atualizada com sucesso');
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to update category', [
+                return ServiceResult::success( $category, 'Categoria atualizada com sucesso' );
+            } );
+        } catch ( \Exception $e ) {
+            Log::error( 'Failed to update category', [
                 'category_id' => $category->id,
-                'error' => $e->getMessage(),
-            ]);
+                'error'       => $e->getMessage(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao atualizar categoria: ' . $e->getMessage(),
                 null,
-                $e
+                $e,
             );
         }
     }
@@ -429,40 +436,41 @@ class CategoryManagementService
      * @param Category $category
      * @return ServiceResult
      */
-    public function deleteCategory(Category $category): ServiceResult
+    public function deleteCategory( Category $category ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($category) {
+            return DB::transaction( function () use ($category) {
                 // Validar deleção
-                $canDelete = $this->canDelete($category);
-                if ($canDelete->isError()) {
+                $canDelete = $this->canDelete( $category );
+                if ( $canDelete->isError() ) {
                     return $canDelete;
                 }
 
                 $category->delete();
 
-                Log::info('Category deleted', [
+                Log::info( 'Category deleted', [
                     'category_id' => $category->id,
-                ]);
+                ] );
 
-                if (class_exists(CategoryDeleted::class)) {
-                    event(new CategoryDeleted($category->id));
+                if ( class_exists( CategoryDeleted::class) ) {
+                    event( new CategoryDeleted( $category->id ) );
                 }
 
-                return ServiceResult::success(null, 'Categoria excluída com sucesso');
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to delete category', [
+                return ServiceResult::success( null, 'Categoria excluída com sucesso' );
+            } );
+        } catch ( \Exception $e ) {
+            Log::error( 'Failed to delete category', [
                 'category_id' => $category->id,
-                'error' => $e->getMessage(),
-            ]);
+                'error'       => $e->getMessage(),
+            ] );
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 'Erro ao excluir categoria: ' . $e->getMessage(),
                 null,
-                $e
+                $e,
             );
         }
     }
+
 }

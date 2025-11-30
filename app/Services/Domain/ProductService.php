@@ -345,6 +345,67 @@ class ProductService extends AbstractBaseService
         }
     }
 
+    public function getDeletedProducts( array $filters = [], array $with = [] ): ServiceResult
+    {
+        try {
+            $query = Product::onlyTrashed();
+
+            if (!empty($with)) {
+                $query->with($with);
+            }
+
+            if (!empty($filters['search'])) {
+                $search = $filters['search'];
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+                });
+            }
+
+            if (!empty($filters['category_id'])) {
+                $query->where('category_id', $filters['category_id']);
+            }
+
+            $products = $query->orderBy('deleted_at', 'desc')
+                             ->orderBy('name', 'asc')
+                             ->paginate(15);
+
+            return $this->success( $products, 'Produtos deletados carregados' );
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao carregar produtos deletados',
+                null,
+                $e,
+            );
+        }
+    }
+
+    public function restoreProductBySku( string $sku ): ServiceResult
+    {
+        try {
+            $product = Product::onlyTrashed()->where('sku', $sku)->first();
+
+            if ( !$product ) {
+                return $this->error(
+                    OperationStatus::NOT_FOUND,
+                    "Produto deletado com SKU {$sku} não encontrado",
+                );
+            }
+
+            $product->restore();
+
+            return $this->success( $product, 'Produto restaurado com sucesso' );
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao restaurar produto',
+                null,
+                $e,
+            );
+        }
+    }
+
     private function resolveRelativeStoragePath( ?string $image ): ?string
     {
         if ( empty( $image ) ) {

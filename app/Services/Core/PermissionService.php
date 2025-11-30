@@ -234,24 +234,16 @@ class PermissionService
             $permissions = [];
 
             // Carrega permissões baseadas na role do usuário
-            switch ( $user->role ) {
-                case 'admin':
-                    $permissions = $this->getAdminPermissions();
-                    break;
-
-                case 'provider':
-                    $permissions = $this->getProviderPermissions();
-                    break;
-
-                case 'user':
-                default:
-                    $permissions = $this->getBasicUserPermissions();
-                    break;
+            if ( $user->isAdmin() ) {
+                $permissions = $this->getAdminPermissions();
+            } elseif ( $user->isProvider() ) {
+                $permissions = $this->getProviderPermissions();
+            } else {
+                $permissions = $this->getBasicUserPermissions();
             }
 
             Log::info( 'User permissions loaded', [
                 'user_id'           => $user->id,
-                'role'              => $user->role,
                 'permissions_count' => count( $permissions )
             ] );
 

@@ -1,4 +1,4 @@
-# 📋 **CHECKLIST FASE 3 - FLUXO FINANCEIRO (Semanas 6-7)**
+# 📋 **CHECKLIST FASE 3 - FLUXO FINANCEIRO (Semanas 6-8)**
 
 [⬅️ Voltar ao Índice](./INDICE_CHECKLISTS.md)
 
@@ -6,236 +6,216 @@
 
 ### **Status Geral da Fase:**
 
--  **Prazo:** Semanas 6-7
--  **Prioridade:** MÉDIA-ALTA
--  **Impacto:** 🟩 MÉDIO - Importante para fluxo financeiro
+-  **Prazo:** Semanas 6-8
+-  **Prioridade:** CRÍTICA
+-  **Impacto:** 🟥 CRÍTICO - Monetização e fechamento do ciclo de vendas
 -  **Pré-requisitos:** FASE 2 100% concluída
 
 ---
 
-## 🧾 **6. INVOICES (FATURAS) - PRIORIDADE MÉDIA**
+## 💰 **6. INVOICES (FATURAS) - PRIORIDADE CRÍTICA**
 
 ### **📊 Informações do Módulo:**
 
--  **Status Atual:** Estrutura implementada, integração incompleta
--  **Dependências:** Services (obrigatório)
--  **Impacto:** 🟩 MÉDIO - Importante para fluxo financeiro
--  **Tempo Estimado:** 10 dias
+-  **Status Atual:** Estrutura básica existe
+-  **Dependências:** Budgets + Services + Customers (todos obrigatórios)
+-  **Impacto:** 🟥 CRÍTICO - Faturamento e cobrança
+-  **Tempo Estimado:** 8 dias
 
 ### **✅ Checklist de Desenvolvimento:**
 
 #### **🔧 Backend (Models, Repositories, Services)**
 
 -  [ ] Verificar e atualizar Invoice Model
-
-   -  [ ] Relationships corretas (service, customer, items, payments)
+   -  [ ] Relationships corretas (budget, customer, items)
    -  [ ] Fillable/casts adequados
    -  [ ] Traits TenantScoped e Auditable
-   -  [ ] PDF generation support
+   -  [ ] Status workflow (draft, sent, paid, overdue, cancelled)
+   -  [ ] Cálculos automáticos de totais
 
 -  [ ] Implementar InvoiceRepository completo
-
    -  [ ] Interface definida
    -  [ ] CRUD completo
-   -  [ ] Busca por customer/service/status/datas
-   -  [ ] Filtros financeiros
-   -  [ ] Relatórios de contas a receber
+   -  [ ] Busca por customer/status/datas
+   -  [ ] Filtros avançados
+   -  [ ] Relatórios financeiros
 
 -  [ ] Implementar InvoiceService
    -  [ ] ServiceResult padronizado
-   -  [ ] Cálculos de totais e impostos
+   -  [ ] Geração automática a partir de orçamentos
+   -  [ ] Cálculos de juros e multas
    -  [ ] Geração de códigos únicos
-   -  [ ] Validações de negócio
-   -  [ ] Workflow de pagamento
+   -  [ ] Workflow de cobrança
 
 #### **🎮 Controller - CRUD Completo**
 
-##### **Métodos CRUD Básicos:**
+-  [ ] **create()** - Criar fatura
+   -  [ ] Formulário de criação manual
+   -  [ ] Criação a partir de orçamento aprovado
+   -  [ ] Seleção de itens/serviços
+   -  [ ] Cálculo automático de totais
 
--  [ ] **create()** - Exibir formulário
-
-   -  [ ] Carregar lista de services (dropdown)
-   -  [ ] Carregar dados do customer do service
-   -  [ ] Carregar products para itens
-   -  [ ] Formulário de criação
-   -  [ ] Preenchimento automático do service
-
--  [ ] **store()** - Criar fatura
-
+-  [ ] **store()** - Salvar fatura
    -  [ ] Validação de dados
-   -  [ ] Verificar service_id obrigatório
    -  [ ] Gerar código único
-   -  [ ] Copiar itens do service
-   -  [ ] Calcular totais
-   -  [ ] Gerar InvoiceItems
+   -  [ ] Criar InvoiceItems
+   -  [ ] Calcular totais e impostos
 
 -  [ ] **show()** - Visualizar fatura
-
    -  [ ] Detalhamento completo
-   -  [ ] InvoiceItems relacionados
-   -  [ ] Service relacionado
-   -  [ ] Pagamentos recebidos
-   -  [ ] Status de pagamento
+   -  [ ] Histórico de pagamentos
+   -  [ ] Status de cobrança
+   -  [ ] Botões de ação (enviar, imprimir, cancelar)
 
 -  [ ] **edit()** - Editar fatura
-
-   -  [ ] Carregar dados existentes
-   -  [ ] Formulário de edição
-   -  [ ] Manter itens existentes
+   -  [ ] Permitir edição apenas em status draft
+   -  [ ] Atualizar itens
+   -  [ ] Recalcular totais
 
 -  [ ] **update()** - Atualizar fatura
-   -  [ ] Validação de dados
-   -  [ ] Verificar permissões
+   -  [ ] Validações por status
    -  [ ] Atualizar InvoiceItems
-   -  [ ] Recalcular totais
-   -  [ ] Log de auditoria
-
-##### **Métodos de Pagamento:**
-
--  [ ] **mark_as_paid()** - Marcar como paga
-
-   -  [ ] Validar valor recebido
-   -  [ ] Atualizar status
-   -  [ ] Registrar pagamento
-   -  [ ] Enviar confirmação (opcional)
-
--  [ ] **cancel()** - Cancelar fatura
-   -  [ ] Validar permissões
-   -  [ ] Verificar se há pagamentos
-   -  [ ] Atualizar status
-   -  [ ] Log de auditoria
-
-#### **🎨 Interface (Views)**
-
--  [ ] Criar/atualizar views em resources/views/pages/invoice/
-   -  [ ] index.blade.php - listagem com filtros financeiros
-   -  [ ] create.blade.php - formulário de criação
-   -  [ ] show.blade.php - visualização detalhada
-   -  [ ] edit.blade.php - formulário de edição
-   -  [ ] partials para filtros por status
-
-#### **💰 InvoiceItems Management**
-
--  [ ] Implementar InvoiceItem controller/methods
-   -  [ ] Copiar itens do service automaticamente
-   -  [ ] Adicionar produtos extras
-   -  [ ] Editar quantidades e valores
-   -  [ ] Recálculo automático de totais
-   -  [ ] Aplicar descontos
-
-#### **🔗 Integrações Críticas**
-
--  [ ] **Integration com Services**
-
-   -  [ ] Carregar service na criação
-   -  [ ] Copiar ServiceItems para InvoiceItems
-   -  [ ] Atualizar status do service
-   -  [ ] Sync de status (service executado → fatura gerada)
-
--  [ ] **Integration com Customers**
-   -  [ ] Dados automáticos do customer
-   -  [ ] Endereço para faturamento
-   -  [ ] Histórico de pagamentos
-
-#### **💳 Integração com MercadoPago (Já Implementado)**
-
--  [ ] Verificar integração existente
-
-   -  [ ] PaymentController funcionando
-   -  [ ] Webhooks processando
-   -  [ ] Status sync automático
-   -  [ ] Confirmação de pagamento
-
--  [ ] Melhorar integração
-   -  [ ] Payment redirect na fatura
-   -  [ ] Status em tempo real
-   -  [ ] Notificações de pagamento
-   -  [ ] Histórico completo
+   -  [ ] Log de alterações
 
 #### **📄 PDF Generation**
 
--  [ ] Implementar Invoice PDF
-   -  [ ] Layout profissional
-   -  [ ] Dados da empresa
-   -  [ ] Dados do customer
-   -  [ ] Itens detalhados
+-  [ ] Implementar Invoice PDF profissional
+   -  [ ] Layout similar ao orçamento
+   -  [ ] Dados de cobrança
+   -  [ ] QR Code para pagamento (PIX)
+   -  [ ] Código de barras (boleto)
    -  [ ] Condições de pagamento
-   -  [ ] Informações do MercadoPago
 
-#### **📊 Dashboard Financeiro**
+#### **💳 Payment Integration**
 
--  [ ] Implementar financial dashboard
-   -  [ ] Contas a receber
-   -  [ ] Receitas do mês
-   -  [ ] Pendências de pagamento
-   -  [ ] Gráficos de performance
+-  [ ] Integração Mercado Pago
+   -  [ ] Geração de PIX
+   -  [ ] Geração de boleto
+   -  [ ] Cartão de crédito/débito
+   -  [ ] Webhook para confirmação
 
-#### **🔔 Notificações Automáticas**
+-  [ ] Payment Tracking
+   -  [ ] Registro de tentativas
+   -  [ ] Status de pagamento
+   -  [ ] Conciliação automática
 
--  [ ] Implementar email notifications
-   -  [ ] Fatura gerada
-   -  [ ] Vencimento próximo
-   -  [ ] Pagamento confirmado
-   -  [ ] Fatura em atraso
+#### **🎨 Interface (Views)**
 
-#### **🧪 Testes**
-
--  [ ] Criar InvoiceFactory
--  [ ] Implementar InvoiceSeeder
--  [ ] Testes unitários InvoiceService
--  [ ] Testes de Feature InvoiceController
--  [ ] Testes de integração com MercadoPago
--  [ ] Testes de workflow de pagamento
-
-#### **✅ Validação Final Invoices**
-
--  [ ] CRUD completo funcionando
--  [ ] InvoiceItems management 100%
--  [ ] Integração com Services operacional
--  [ ] Integração com MercadoPago 100%
--  [ ] PDF generation profissional
--  [ ] Interface financeira completa
--  [ ] Notificações automáticas funcionando
+-  [ ] Criar views em resources/views/pages/invoice/
+   -  [ ] index.blade.php - listagem com filtros
+   -  [ ] create.blade.php - formulário de criação
+   -  [ ] show.blade.php - visualização detalhada
+   -  [ ] edit.blade.php - formulário de edição
+   -  [ ] dashboard.blade.php - métricas financeiras
 
 ---
 
-## 💳 **7. MERCADOPAGO OPTIMIZATION**
+## 💳 **7. PAYMENTS (PAGAMENTOS) - PRIORIDADE CRÍTICA**
 
-### **📊 Otimizações Necessárias:**
+### **📊 Informações do Módulo:**
 
--  **Status:** Implementado, mas pode ser melhorado
--  **Impacto:** 🟩 MÉDIO - Importante para conversão
--  **Tempo Estimado:** 3 dias
+-  **Status Atual:** Não implementado
+-  **Dependências:** Invoices (obrigatório)
+-  **Impacto:** 🟥 CRÍTICO - Recebimento de pagamentos
+-  **Tempo Estimado:** 6 dias
 
-### **✅ Checklist de Otimização:**
+### **✅ Checklist de Desenvolvimento:**
 
-#### **🔧 Melhorias no PaymentController**
+#### **🔧 Backend (Models, Repositories, Services)**
 
--  [ ] Verificar e otimizar PaymentController existente
--  [ ] Implementar retry automático
--  [ ] Melhorar tratamento de erros
--  [ ] Status tracking avançado
+-  [ ] Criar Payment Model
+   -  [ ] Relationships (invoice, customer)
+   -  [ ] Status (pending, processing, completed, failed, refunded)
+   -  [ ] Métodos de pagamento (pix, boleto, card, cash)
+   -  [ ] Dados do gateway (transaction_id, gateway_response)
 
-#### **🔔 Notificações Melhoradas**
+-  [ ] Implementar PaymentRepository
+   -  [ ] CRUD completo
+   -  [ ] Busca por invoice/customer/status
+   -  [ ] Relatórios de recebimento
 
--  [ ] Email notifications para pagamentos
--  [ ] SMS notifications (se aplicável)
--  [ ] Dashboard notifications
--  [ ] Webhook notifications
+-  [ ] Implementar PaymentService
+   -  [ ] Processamento de pagamentos
+   -  [ ] Integração com gateways
+   -  [ ] Conciliação automática
+   -  [ ] Estornos e reembolsos
 
-#### **📊 Analytics de Pagamentos**
+#### **🎮 Controller - Payment Processing**
 
--  [ ] Taxa de conversão de pagamentos
--  [ ] Tempo médio de pagamento
--  [ ] Métodos de pagamento preferidos
--  [ ] Relatórios de inadimplência
+-  [ ] **process()** - Processar pagamento
+   -  [ ] Validação de dados
+   -  [ ] Integração com gateway
+   -  [ ] Atualização de status
 
-#### **🧪 Testes de Pagamento**
+-  [ ] **webhook()** - Receber confirmações
+   -  [ ] Validação de assinatura
+   -  [ ] Atualização automática de status
+   -  [ ] Notificações ao cliente
 
--  [ ] Testes de sandbox MercadoPago
--  [ ] Testes de webhook
--  [ ] Testes de fallback
--  [ ] Testes de concurência
+-  [ ] **refund()** - Processar estornos
+   -  [ ] Validações de segurança
+   -  [ ] Integração com gateway
+   -  [ ] Atualização de registros
+
+#### **💰 Gateway Integration**
+
+-  [ ] Mercado Pago Service
+   -  [ ] Configuração de credenciais
+   -  [ ] Geração de pagamentos
+   -  [ ] Processamento de webhooks
+   -  [ ] Tratamento de erros
+
+---
+
+## 📊 **8. FINANCIAL REPORTS (RELATÓRIOS FINANCEIROS) - PRIORIDADE ALTA**
+
+### **📊 Informações do Módulo:**
+
+-  **Status Atual:** Não implementado
+-  **Dependências:** Invoices + Payments (obrigatórios)
+-  **Impacto:** 🟨 ALTO - Gestão financeira e tomada de decisão
+-  **Tempo Estimado:** 4 dias
+
+### **✅ Checklist de Desenvolvimento:**
+
+#### **📈 Dashboards Financeiros**
+
+-  [ ] Dashboard de Receitas
+   -  [ ] Receita mensal/anual
+   -  [ ] Comparativo períodos
+   -  [ ] Gráficos de tendência
+   -  [ ] Top clientes
+
+-  [ ] Dashboard de Cobrança
+   -  [ ] Faturas em aberto
+   -  [ ] Faturas vencidas
+   -  [ ] Taxa de inadimplência
+   -  [ ] Previsão de recebimento
+
+#### **📋 Relatórios Detalhados**
+
+-  [ ] Relatório de Vendas
+   -  [ ] Por período
+   -  [ ] Por cliente
+   -  [ ] Por serviço/produto
+   -  [ ] Margem de lucro
+
+-  [ ] Relatório de Recebimentos
+   -  [ ] Por método de pagamento
+   -  [ ] Tempo médio de recebimento
+   -  [ ] Taxa de conversão
+
+-  [ ] Relatório de Inadimplência
+   -  [ ] Clientes em atraso
+   -  [ ] Valor total em aberto
+   -  [ ] Histórico de pagamentos
+
+#### **📤 Export e Integração**
+
+-  [ ] Export para Excel/PDF
+-  [ ] Agendamento de relatórios
+-  [ ] Envio por email automático
+-  [ ] API para integrações externas
 
 ---
 
@@ -243,27 +223,27 @@
 
 ### **🎯 Validação Técnica:**
 
--  [ ] Invoice: CRUD completo + InvoiceItems
--  [ ] Integração com Services 100%
--  [ ] Integração com MercadoPago otimizada
--  [ ] PDF generation funcionando
--  [ ] Testes passando (>90% cobertura)
+-  [ ] Invoices: CRUD completo + PDF + Status workflow
+-  [ ] Payments: Processamento + Gateways + Webhooks
+-  [ ] Reports: Dashboards + Relatórios + Export
+-  [ ] Integração Mercado Pago funcionando
+-  [ ] Conciliação automática operacional
 
 ### **🎯 Validação de Negócio:**
 
--  [ ] Usuário pode gerar faturas de serviços
--  [ ] Usuário pode receber pagamentos pelo MercadoPago
--  [ ] Usuário pode acompanhar status de pagamentos
--  [ ] Fluxo financeiro completo operacional
--  [ ] Notificações automáticas funcionando
+-  [ ] Usuário pode gerar faturas de orçamentos
+-  [ ] Cliente pode pagar via PIX/Boleto/Cartão
+-  [ ] Sistema atualiza status automaticamente
+-  [ ] Relatórios financeiros precisos
+-  [ ] Fluxo de cobrança completo
 
 ### **🎯 Valor para o Usuário:**
 
 -  [ ] Sistema de faturamento 100% funcional
--  [ ] Pagamentos integrados e seguros
--  [ ] Dashboard financeiro completo
--  [ ] Automação de notificações
--  [ ] Pronto para gestão completa de receitas
+-  [ ] Recebimento automatizado
+-  [ ] Controle financeiro completo
+-  [ ] Relatórios gerenciais
+-  [ ] Integração com meios de pagamento
 
 ---
 
@@ -271,31 +251,22 @@
 
 ### **⚠️ Dependências Críticas:**
 
--  **Invoices** depende 100% de Services da Fase 2
+-  **Invoices** depende 100% de Budgets + Services da Fase 2
+-  **Payments** depende 100% de Invoices
+-  **Reports** depende de Invoices + Payments
 
 ### **🔍 Pontos de Atenção:**
 
--  **MercadoPago:** Testes em sandbox antes de produção
--  **PDF Generation:** Layout profissional para faturas
--  **Payment Security:** Validações robustas de pagamentos
--  **Webhook Processing:** Confirmação de recebimento
+-  Integração com Mercado Pago pode ser complexa
+-  Webhooks precisam ser testados em produção
+-  Conciliação automática é crítica
+-  Relatórios devem ser performáticos
 
 ### **📞 Escalação:**
 
-Se MercadoPago tiver problemas, contatar suporte ou implementar gateway alternativo.
+Se qualquer integração de pagamento falhar, **PARAR** e resolver antes de continuar.
 
 ---
 
-## 🎯 **PRÓXIMOS PASSOS**
-
-### **📈 Preparação para Fase 4:**
-
--  Garantir que todos os dados financeiros estão sendo coletados
--  Implementar logs para analytics
--  Preparar estruturas para relatórios
--  Validar performance com dados reais
-
----
-
-**✅ Prévia Fase:** [CHECKLIST_FASE_2_CORE_BUSINESS.md](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
-**✅ Próxima Fase:** [CHECKLIST_FASE_4_INSIGHTS.md](./CHECKLIST_FASE_4_INSIGHTS.md)
+**✅ Fase Anterior:** [CHECKLIST_FASE_2_CORE_BUSINESS.md](./CHECKLIST_FASE_2_CORE_BUSINESS.md)
+**✅ Próxima Fase:** [CHECKLIST_FASE_4_ADVANCED_FEATURES.md](./CHECKLIST_FASE_4_ADVANCED_FEATURES.md)

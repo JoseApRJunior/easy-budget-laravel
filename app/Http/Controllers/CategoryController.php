@@ -9,16 +9,14 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\Tenant;
-
 use App\Repositories\CategoryRepository;
-
 use App\Services\Core\PermissionService;
 use App\Services\Domain\CategoryManagementService;
 use App\Services\Domain\CategoryService;
+use Collator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
-use Collator;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -37,7 +35,7 @@ class CategoryController extends Controller
             return (int) $testing;
         }
         $user = auth()->user();
-        if ( $user && isset( $user->tenant_id ) ) {
+        if ( $user && isset( $user->tenant_id ) && $user->tenant_id > 0 ) {
             return (int) $user->tenant_id;
         }
         $tenantParam = request()->integer( 'tenant_id' );
@@ -80,23 +78,43 @@ class CategoryController extends Controller
                 $categories = $categories->appends( $request->query() );
             }
         } else {
-            if ( !$hasFilters ) {
-                $confirmAll = true;
-            }
+            // Verificar se o filtro "deleted" está ativo
+            $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
-            // Prestadores NÃO podem ver categorias deletadas
-            // Apenas administradores têm acesso a registros deletados
-            if ( ( $filters[ 'deleted' ] ?? '' ) === 'only' ) {
-                // Remover filtro de deletados para prestadores e redirecionar para listagem normal
-                $redirectFilters = $filters;
-                unset( $redirectFilters[ 'deleted' ] );
+            if ( $showOnlyTrashed ) {
+                // Apenas usuários autenticados podem ver categorias deletadas
+                if ( !auth()->check() ) {
+                    return redirect()->route( 'login' )->with( 'error', 'Você deve estar logado para acessar essa funcionalidade.' );
+                }
 
-                return redirect()
-                    ->route( 'categories.index', $redirectFilters )
-                    ->with( 'info', 'Prestadores não podem visualizar categorias deletadas. Apenas administradores têm acesso a essa funcionalidade.' );
-            }
+                // Prestadores sempre podem ver categorias custom deletadas do próprio tenant
+                $userTenantId = $user ? $user->tenant_id : null;
+                if ( $userTenantId === null ) {
+                    // Fallback para resolver tenant_id do usuário se não estiver disponível
+                    $userTenantId = $this->resolveTenantId();
+                }
 
-            if ( $hasFilters || $confirmAll ) {
+                if ( $userTenantId !== null ) {
+                    $result     = $service->paginateOnlyTrashedForTenant( $serviceFilters, $perPage, $userTenantId );
+                    $categories = $this->getServiceData( $result, collect() );
+                    if ( method_exists( $categories, 'appends' ) ) {
+                        $categories = $categories->appends( $request->query() );
+                    }
+                } else {
+                    // Último fallback: usar o primeiro tenant ativo se for necessário
+                    $firstTenant = Tenant::where( 'is_active', true )->first();
+                    if ( $firstTenant ) {
+                        $result     = $service->paginateOnlyTrashedForTenant( $serviceFilters, $perPage, $firstTenant->id );
+                        $categories = $this->getServiceData( $result, collect() );
+                        if ( method_exists( $categories, 'appends' ) ) {
+                            $categories = $categories->appends( $request->query() );
+                        }
+                    } else {
+                        // Sem tenant válido, mostrar listagem vazia
+                        $categories = collect();
+                    }
+                }
+            } else if ( $hasFilters || $confirmAll ) {
                 $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
                 $categories = $this->getServiceData( $result, collect() );
                 if ( method_exists( $categories, 'appends' ) ) {
@@ -111,7 +129,20 @@ class CategoryController extends Controller
                     }
                 }
             } else {
-                $categories = collect();
+                // Prestadores sempre veem suas categorias ativas por padrão quando não há filtros
+                $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
+                $categories = $this->getServiceData( $result, collect() );
+                if ( method_exists( $categories, 'appends' ) ) {
+                    $categories = $categories->appends( $request->query() );
+                }
+
+                if ( method_exists( $categories, 'total' ) && (int) $categories->total() === 0 ) {
+                    $result     = $service->paginateGlobalOnly( $serviceFilters, $perPage );
+                    $categories = $this->getServiceData( $result, collect() );
+                    if ( method_exists( $categories, 'appends' ) ) {
+                        $categories = $categories->appends( $request->query() );
+                    }
+                }
             }
         }
 
@@ -127,7 +158,7 @@ class CategoryController extends Controller
     public function create()
     {
         $user    = auth()->user();
-        $isAdmin = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         if ( $isAdmin ) {
             $parents = Category::query()
                 ->globalOnly()
@@ -175,7 +206,7 @@ class CategoryController extends Controller
     public function store( StoreCategoryRequest $request )
     {
         $user     = auth()->user();
-        $isAdmin  = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         $tenantId = $isAdmin ? null : $this->resolveTenantId();
 
         $result = $this->managementService->createCategory( $request->validated(), $tenantId );
@@ -214,7 +245,7 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail( $id );
         $user     = auth()->user();
-        $isAdmin  = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         if ( $isAdmin && !$category->isGlobal() ) {
             return $this->redirectError( 'categories.index', 'Admin só pode editar categorias globais.' );
         }
@@ -301,18 +332,31 @@ class CategoryController extends Controller
 
     /**
      * Restaura categoria deletada (soft delete).
-     * Apenas admin pode restaurar.
+     * Admin pode restaurar qualquer categoria.
+     * Prestadores podem restaurar apenas categorias custom do próprio tenant.
      */
     public function restore( int $id )
     {
         $user    = auth()->user();
         $isAdmin = app( PermissionService::class)->canManageGlobalCategories( $user );
 
+        $category = Category::onlyTrashed()->findOrFail( $id );
+
+        // Se não é admin, verificar se é categoria custom do próprio tenant
         if ( !$isAdmin ) {
-            return $this->redirectError( 'categories.index', 'Apenas administradores podem restaurar categorias.' );
+            $tenantId = $user->tenant_id ?? null;
+
+            // Verificar se a categoria é custom do tenant do usuário
+            $isOwnCustomCategory = $category->tenants()
+                ->where( 'tenant_id', $tenantId )
+                ->where( 'is_custom', true )
+                ->exists();
+
+            if ( !$isOwnCustomCategory ) {
+                return $this->redirectError( 'categories.index', 'Você só pode restaurar categorias custom do seu próprio tenant.' );
+            }
         }
 
-        $category = Category::onlyTrashed()->findOrFail( $id );
         $category->restore();
 
         $this->logOperation( 'categories_restore', [ 'id' => $id, 'name' => $category->name ] );
@@ -335,7 +379,7 @@ class CategoryController extends Controller
         };
 
         $user     = auth()->user();
-        $isAdmin  = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         $tenantId = null;
         $search   = trim( (string) $request->get( 'search', '' ) );
         $active   = $request->get( 'active' );
@@ -536,7 +580,7 @@ class CategoryController extends Controller
             $this->authorize( 'manage-global-categories' );
             $tenantCandidate = (int) $request->input( 'tenant_id' );
             if ( $tenantCandidate > 0 ) {
-                $exists = \App\Models\Tenant::query()->where( 'id', $tenantCandidate )->exists();
+                $exists = Tenant::query()->where( 'id', $tenantCandidate )->exists();
                 if ( $exists ) {
                     $tenantId = $tenantCandidate;
                 }

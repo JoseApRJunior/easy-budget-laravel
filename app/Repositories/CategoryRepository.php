@@ -41,8 +41,8 @@ class CategoryRepository extends AbstractGlobalRepository
     /**
      * Verifica se slug existe no scope especificado.
      *
-     * Para providers: verifica apenas dentro do tenant específico
-     * Para admins: verifica apenas categorias globais
+     * Para providers: verifica apenas categorias custom do tenant específico
+     * Para admins: permite qualquer slug (não há restrição de unicidade entre tenants)
      *
      * @param string $slug Slug a ser verificado
      * @param int|null $tenantId Tenant ID (null para admin/sistema)
@@ -51,6 +51,12 @@ class CategoryRepository extends AbstractGlobalRepository
      */
     public function existsBySlug( string $slug, ?int $tenantId = null, ?int $excludeId = null ): bool
     {
+        // Para admins (tenantId = null): não há restrição de unicidade de slug
+        // Admins podem usar qualquer slug, mesmo que já exista em outros tenants
+        if ( $tenantId === null ) {
+            return false;
+        }
+
         $query = $this->model->where( 'slug', $slug );
 
         // Excluir categoria específica (para updates)
@@ -58,16 +64,11 @@ class CategoryRepository extends AbstractGlobalRepository
             $query->where( 'id', '!=', $excludeId );
         }
 
-        // Lógica correta para scoping por tenant
-        if ( $tenantId !== null ) {
-            // Para providers: verificar apenas categorias do tenant específico
-            $query->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
-                $t->where( 'tenant_id', $tenantId );
-            } );
-        } else {
-            // Para admins: verificar apenas categorias globais
-            $query->whereDoesntHave( 'tenants' );
-        }
+        // Para providers: verificar apenas categorias custom do tenant específico
+        $query->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
+            $t->where( 'tenant_id', $tenantId )
+                ->where( 'is_custom', true );
+        } );
 
         return $query->exists();
     }
@@ -285,6 +286,42 @@ class CategoryRepository extends AbstractGlobalRepository
         unset( $filters[ 'per_page' ] );
 
         $this->applyFilters( $query, $filters );
+        return $query->paginate( $perPage );
+    }
+
+    /**
+     * Pagina apenas categorias deletadas (soft delete) de um tenant específico.
+     *
+     * Mostra APENAS categorias custom do tenant que foram deletadas.
+     * Prestadores NÃO podem ver categorias globais deletadas.
+     *
+     * @param int $perPage Itens por página
+     * @param array $filters Filtros de busca
+     * @param int $tenantId ID do tenant
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function paginateOnlyTrashedForTenant( int $perPage = 15, array $filters = [], int $tenantId ): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = $this->model->newQuery()
+            ->onlyTrashed()
+            ->join( 'category_tenant', 'category_tenant.category_id', '=', 'categories.id' )
+            ->where( 'category_tenant.tenant_id', $tenantId )
+            ->where( 'category_tenant.is_custom', true )
+            ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
+            ->select( 'categories.*' )
+            ->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
+            ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
+            ->orderBy( 'categories.name', 'ASC' );
+
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $search = (string) $filters[ 'search' ];
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'categories.name', 'like', "%{$search}%" )
+                    ->orWhere( 'categories.slug', 'like', "%{$search}%" )
+                    ->orWhere( 'parent.name', 'like', "%{$search}%" );
+            } );
+        }
+
         return $query->paginate( $perPage );
     }
 

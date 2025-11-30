@@ -7,6 +7,7 @@ namespace App\Http\Requests;
 use App\Models\Category;
 use App\Models\Traits\TenantScoped;
 use App\Repositories\CategoryRepository;
+use App\Services\Core\PermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Validator;
@@ -31,7 +32,7 @@ class StoreCategoryRequest extends FormRequest
     {
         $validator->after( function ( $validator ) {
             $user    = $this->user();
-            $isAdmin = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+            $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
 
             // Definir o tenant scope para validação:
             // - Admin (global): null (vai verificar apenas categorias globais)

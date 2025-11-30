@@ -52,22 +52,29 @@ class ProductController extends Controller
      */
     public function index(Request $request): View
     {
-        $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price']);
+        $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price', 'deleted']);
 
         try {
-            $hasFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty();
-            $confirmAll = (bool) $request->boolean('all');
-
-            if ($hasFilters || $confirmAll) {
-                $result = $this->productService->getFilteredProducts($filters, ['category']);
-
-                if (! $result->isSuccess()) {
-                    abort(500, 'Erro ao carregar lista de produtos');
-                }
-
-                $products = $result->getData();
+            $showOnlyTrashed = ($filters['deleted'] ?? '') === 'only';
+            
+            if ($showOnlyTrashed) {
+                $result = $this->productService->getDeletedProducts($filters, ['category']);
+                $products = $result->isSuccess() ? $result->getData() : collect();
             } else {
-                $products = collect();
+                $hasFilters = collect($filters)->except('deleted')->filter(fn($v) => filled($v))->isNotEmpty();
+                $confirmAll = (bool) $request->boolean('all');
+
+                if ($hasFilters || $confirmAll) {
+                    $result = $this->productService->getFilteredProducts($filters, ['category']);
+
+                    if (! $result->isSuccess()) {
+                        abort(500, 'Erro ao carregar lista de produtos');
+                    }
+
+                    $products = $result->getData();
+                } else {
+                    $products = collect();
+                }
             }
 
             return view('pages.product.index', [
@@ -298,6 +305,32 @@ class ProductController extends Controller
             return view('pages.product.dashboard', compact('stats'));
         } catch (Exception) {
             abort(500, 'Erro ao carregar dashboard de produtos');
+        }
+    }
+
+    /**
+     * Restaura um produto deletado.
+     *
+     * Rota: products.restore (POST)
+     */
+    public function restore(string $sku): RedirectResponse
+    {
+        try {
+            $result = $this->productService->restoreProductBySku($sku);
+
+            if (! $result->isSuccess()) {
+                return redirect()
+                    ->route('provider.products.index')
+                    ->with('error', $result->getMessage());
+            }
+
+            return redirect()
+                ->route('provider.products.index')
+                ->with('success', 'Produto restaurado com sucesso!');
+        } catch (Exception $e) {
+            return redirect()
+                ->route('provider.products.index')
+                ->with('error', 'Erro ao restaurar produto: ' . $e->getMessage());
         }
     }
 

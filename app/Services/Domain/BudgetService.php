@@ -6,6 +6,7 @@ namespace App\Services\Domain;
 
 use App\Enums\BudgetStatus;
 use App\Enums\OperationStatus;
+use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
 use App\Models\User;
 use App\Repositories\BudgetRepository;
@@ -224,7 +225,9 @@ class BudgetService extends AbstractBaseService
             }
 
             // Usa transação para atomicidade
-            $updatedBudget = DB::transaction(function () use ($budgetId, $status, $comment) {
+            $updatedBudget = DB::transaction(function () use ($budget, $budgetId, $status, $comment) {
+                $oldStatus = $budget->status->value;
+                
                 // Atualiza status e comentário
                 $updated = $this->repository->update($budgetId, [
                     'status'            => $status,
@@ -237,11 +240,13 @@ class BudgetService extends AbstractBaseService
                     throw new \Exception('Falha ao alterar status do orçamento.');
                 }
 
-                // TODO: Atualizar serviços relacionados se necessário
-                // Por exemplo, se aprovado, atualizar status dos serviços
-
                 // Recarrega o orçamento atualizado
-                return $this->repository->find($budgetId);
+                $updatedBudget = $this->repository->find($budgetId);
+                
+                // Disparar evento para notificação por email
+                event(new BudgetStatusChanged($updatedBudget, $oldStatus, $status, $comment));
+
+                return $updatedBudget;
             });
 
             return ServiceResult::success($updatedBudget, 'Status do orçamento alterado com sucesso.');

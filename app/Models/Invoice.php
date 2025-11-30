@@ -187,6 +187,14 @@ class Invoice extends Model
     }
 
     /**
+     * Get the payments for the Invoice.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
      * Accessor para tratar valores zero-date no updated_at.
      */
     public function getUpdatedAtAttribute( $value )

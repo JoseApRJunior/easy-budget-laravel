@@ -23,12 +23,6 @@
 
     <div class="row">
         <div class="col-12">
-            @if(session('success'))
-            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
-            @endif
-            @if(session('error'))
-            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
-            @endif
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
@@ -189,43 +183,54 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ route('categories.show', $category->slug) }}"
-                                                class="btn btn-info" title="Visualizar" aria-label="Visualizar">
-                                                <i class="bi bi-eye" aria-hidden="true"></i>
-                                            </a>
-                                            @php($isGlobal = $category->isGlobal())
-                                            @php($isAdmin = false)
-                                            @role('admin')
-                                            @php($isAdmin = true)
-                                            @endrole
-                                            @php($hasChildren = $category->hasChildren())
-                                            @php($hasServices = $category->services()->exists())
-                                            @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                                            @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
-                                            @if($isAdmin)
-                                            <a href="{{ route('categories.edit', $category->id) }}"
-                                                class="btn btn-warning" title="Editar" aria-label="Editar">
-                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                            </a>
-                                            @if($canDelete)
-                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
-                                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                            </button>
-                                            @endif
+                                            @if($category->deleted_at)
+                                                {{-- Categoria deletada: apenas restaurar --}}
+                                                <form action="{{ route('categories.restore', $category->id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-success" title="Restaurar" aria-label="Restaurar">
+                                                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
                                             @else
-                                            @if(!$isGlobal)
-                                            <a href="{{ route('categories.edit', $category->id) }}"
-                                                class="btn btn-warning" title="Editar" aria-label="Editar">
-                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                            </a>
-                                            @if($canDelete)
-                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
-                                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                            </button>
-                                            @endif
-                                            @endif
+                                                {{-- Categoria ativa: show, edit, delete --}}
+                                                <a href="{{ route('categories.show', $category->slug) }}"
+                                                    class="btn btn-info" title="Visualizar" aria-label="Visualizar">
+                                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                                </a>
+                                                @php($isGlobal = $category->isGlobal())
+                                                @php($isAdmin = false)
+                                                @role('admin')
+                                                @php($isAdmin = true)
+                                                @endrole
+                                                @php($hasChildren = $category->hasChildren())
+                                                @php($hasServices = $category->services()->exists())
+                                                @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
+                                                @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
+                                                @if($isAdmin)
+                                                <a href="{{ route('categories.edit', $category->id) }}"
+                                                    class="btn btn-warning" title="Editar" aria-label="Editar">
+                                                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                </a>
+                                                @if($canDelete)
+                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
+                                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                                </button>
+                                                @endif
+                                                @else
+                                                @if(!$isGlobal)
+                                                <a href="{{ route('categories.edit', $category->id) }}"
+                                                    class="btn btn-warning" title="Editar" aria-label="Editar">
+                                                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                </a>
+                                                @if($canDelete)
+                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal" data-delete-url="{{ route('categories.destroy', $category->id) }}" data-category-name="{{ $category->name }}" title="Excluir" aria-label="Excluir">
+                                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                                </button>
+                                                @endif
+                                                @endif
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
@@ -235,7 +240,13 @@
                                     <td colspan="6" class="text-center text-muted">
                                         <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
                                         <br>
-                                        Nenhuma categoria encontrada.
+                                        @if(($filters['deleted'] ?? '') === 'only')
+                                            Nenhuma categoria deletada encontrada.
+                                            <br>
+                                            <small>Você ainda não deletou nenhuma categoria personalizada.</small>
+                                        @else
+                                            Nenhuma categoria encontrada.
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforelse

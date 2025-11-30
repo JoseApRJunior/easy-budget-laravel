@@ -152,7 +152,7 @@ class BudgetController extends Controller
         ]);
 
         if ($request->boolean('pdf')) {
-            $html = view('pages.budget.pdf_budget', [
+            $html = view('pages.budget.pdf_budget_professional', [
                 'budget' => $budget,
             ])->render();
 
@@ -226,5 +226,104 @@ class BudgetController extends Controller
         ];
 
         return view('pages.budget.dashboard', compact('stats'));
+    }
+
+    /**
+     * Remove o orçamento especificado.
+     */
+    public function destroy(string $code): RedirectResponse
+    {
+        try {
+            $result = $this->budgetService->deleteByCode($code);
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->with('error', $result->getMessage());
+            }
+
+            return redirect()->route('provider.budgets.index')
+                ->with('success', 'Orçamento excluído com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erro ao excluir orçamento: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Altera o status do orçamento.
+     */
+    public function change_status(string $code, Request $request): RedirectResponse
+    {
+        $request->validate([
+            'status' => 'required|string|in:' . implode(',', array_column(BudgetStatus::cases(), 'value')),
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $result = $this->budgetService->changeStatusByCode(
+                $code,
+                $request->status,
+                $request->comment ?? ''
+            );
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->with('error', $result->getMessage());
+            }
+
+            return redirect()->route('provider.budgets.show', $code)
+                ->with('success', 'Status do orçamento alterado com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erro ao alterar status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Processa a escolha de status do orçamento pelo cliente (acesso público).
+     */
+    public function choose_budget_status_store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'budget_code' => 'required|string',
+            'token' => 'required|string|size:43',
+            'status' => 'required|string|in:approved,rejected',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Buscar orçamento pelo código e token
+            $budget = Budget::where('code', $request->budget_code)
+                ->whereHas('userConfirmationToken', function ($query) use ($request) {
+                    $query->where('token', $request->token)
+                        ->where('expires_at', '>', now());
+                })
+                ->first();
+
+            if (!$budget) {
+                return redirect()->route('error.not-found')
+                    ->with('error', 'Orçamento não encontrado ou token expirado.');
+            }
+
+            // Alterar status
+            $result = $this->budgetService->changeStatusByCode(
+                $request->budget_code,
+                $request->status,
+                $request->comment ?? ''
+            );
+
+            if (!$result->isSuccess()) {
+                return redirect()->back()
+                    ->with('error', $result->getMessage());
+            }
+
+            return redirect()->route('budgets.public.view-status', [
+                'code' => $request->budget_code,
+                'token' => $request->token,
+            ])->with('success', 'Status do orçamento atualizado com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erro ao processar solicitação: ' . $e->getMessage());
+        }
     }
 }

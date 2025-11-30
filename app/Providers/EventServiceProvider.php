@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\BudgetStatusChanged;
 use App\Events\EmailVerificationRequested;
 use App\Events\InvoiceCreated;
 use App\Events\PasswordResetRequested;
@@ -15,6 +16,7 @@ use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketResponded;
 use App\Events\UserRegistered;
 use App\Listeners\LogReportGeneration;
+use App\Listeners\SendBudgetNotification;
 use App\Listeners\SendEmailVerification;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendPasswordResetNotification;
@@ -93,6 +95,10 @@ class EventServiceProvider extends ServiceProvider
 
         ReportGenerated::class            => [
             LogReportGeneration::class,
+        ],
+
+        BudgetStatusChanged::class        => [
+            SendBudgetNotification::class,
         ],
     ];
 

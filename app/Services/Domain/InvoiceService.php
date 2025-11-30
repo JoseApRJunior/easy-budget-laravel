@@ -499,7 +499,7 @@ class InvoiceService extends AbstractBaseService
                 $qrDataUri = $qrService->generateDataUri( $publicUrl, 180 );
             }
 
-            $html = view( 'invoices.pdf', [
+            $html = view( 'pages.invoice.pdf_professional', [
                 'invoice'   => $invoice,
                 'publicUrl' => $publicUrl,
                 'qrDataUri' => $qrDataUri,

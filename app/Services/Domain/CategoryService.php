@@ -107,12 +107,15 @@ class CategoryService extends AbstractBaseService
             $paginator = $this->categoryRepository->paginateOnlyGlobals( $perPage, $normalized, [ 'name' => 'asc' ] );
             return $this->success( $paginator, 'Categorias globais paginadas com sucesso.' );
         } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::INTERNAL_ERROR, 'Erro ao paginar categorias globais: ' . $e->getMessage() );
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias globais: ' . $e->getMessage() );
         }
     }
 
     /**
-     * Pagina apenas categorias deletadas (soft delete).
+     * Pagina apenas categorias globais deletadas (soft delete) - PARA ADMINS.
+     *
+     * Retorna apenas categorias globais (tenant_id NULL) que foram deletadas,
+     * mantendo isolamento entre tenants.
      *
      * @param array $filters Filtros de busca
      * @param int $perPage Itens por página
@@ -121,7 +124,8 @@ class CategoryService extends AbstractBaseService
     public function paginateOnlyTrashed( array $filters, int $perPage = 15 ): ServiceResult
     {
         try {
-            $query = Category::onlyTrashed();
+            $query = Category::onlyTrashed()
+                ->globalOnly();  // APENAS categorias globais, nunca custom dos tenants!
 
             // Aplicar filtros
             if ( !empty( $filters[ 'search' ] ) ) {
@@ -136,33 +140,19 @@ class CategoryService extends AbstractBaseService
                 ->orderBy( 'name', 'asc' )
                 ->paginate( $perPage );
 
-            return $this->success( $paginator, 'Categorias deletadas paginadas com sucesso.' );
+            return $this->success( $paginator, 'Categorias globais deletadas paginadas com sucesso.' );
         } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::INTERNAL_ERROR, 'Erro ao paginar categorias deletadas: ' . $e->getMessage() );
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias globais deletadas: ' . $e->getMessage() );
         }
     }
 
     public function paginateOnlyTrashedForTenant( array $filters, int $perPage, int $tenantId ): ServiceResult
     {
         try {
-            $query = Category::onlyTrashed()
-                ->forTenant( $tenantId );
-
-            if ( !empty( $filters[ 'search' ] ) ) {
-                $term = '%' . $filters[ 'search' ] . '%';
-                $query->where( function ( $q ) use ( $term ) {
-                    $q->where( 'name', 'like', $term )
-                        ->orWhere( 'slug', 'like', $term );
-                } );
-            }
-
-            $paginator = $query->orderBy( 'deleted_at', 'desc' )
-                ->orderBy( 'name', 'asc' )
-                ->paginate( $perPage );
-
+            $paginator = $this->categoryRepository->paginateOnlyTrashedForTenant( $perPage, $filters, $tenantId );
             return $this->success( $paginator, 'Categorias deletadas do tenant paginadas com sucesso.' );
         } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::INTERNAL_ERROR, 'Erro ao paginar categorias deletadas do tenant: ' . $e->getMessage() );
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias deletadas do tenant: ' . $e->getMessage() );
         }
     }
 
