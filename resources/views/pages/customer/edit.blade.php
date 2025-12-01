@@ -385,16 +385,13 @@
         <!-- Botões -->
         <div class="d-flex justify-content-between mt-4">
             <div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Atualizar Cliente
-                </button>
                 <a href="{{ route( 'provider.customers.show', $customer ) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                    <i class="bi bi-arrow-left me-2"></i>Cancelar
                 </a>
             </div>
-            <small class="text-muted align-self-center">
-                Última atualização: {{ \Carbon\Carbon::parse( $customer->updated_at )->format( 'd/m/Y H:i' ) }}
-            </small>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Atualizar Cliente
+            </button>
         </div>
     </form>
 </div>
