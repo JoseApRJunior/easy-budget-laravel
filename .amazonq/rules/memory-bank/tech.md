@@ -1,382 +1,341 @@
-# Technology Stack
+# Tech - Easy Budget Laravel
 
-## Programming Languages
+## 🛠️ Tecnologias Utilizadas
 
-### PHP 8.2+
-- **Version**: PHP 8.2 or higher (optimized for PHP 8.3+)
-- **Features Used**:
-  - Typed properties and return types
-  - Constructor property promotion
-  - Named arguments
-  - Match expressions
-  - Enumerations (Enums)
-  - Readonly properties
-  - Null-safe operator
+### **🏗️ Backend**
 
-### JavaScript ES6+
-- Modern JavaScript with ES6+ features
-- Module-based architecture with Vite
-- Async/await for asynchronous operations
-- Arrow functions and destructuring
-- Alpine.js 3.15 for reactive components
+-  **Framework:** Laravel 12 (PHP 8.2+)
+-  **Linguagem:** PHP 8.2+
+-  **Web Server:** Apache/Nginx
+-  **Banco de Dados:** MySQL 8.0+
+-  **Cache:** Redis 7.0+
+-  **Queue:** Laravel Queue (Database driver)
 
-### SQL
-- MySQL 8.0+ compatible
-- InnoDB storage engine
-- Foreign key constraints
-- Full-text search capabilities
+### **🎨 Frontend**
 
-## Backend Framework
+-  **Framework:** Blade Templates
+-  **CSS:** Bootstrap 5.3
+-  **JavaScript:** Vanilla JS (máscaras) + jQuery 3.7 (Bootstrap)
+-  **Gráficos:** Chart.js 4.4
+-  **Ícones:** Font Awesome 6.4
 
-### Laravel 12
-- **Version**: ^12.0
-- **Core Features**:
-  - Eloquent ORM for database operations
-  - Blade templating engine
-  - Artisan CLI for commands
-  - Migration system for database versioning
-  - Seeding for test data
-  - Queue system for background jobs
-  - Event-driven architecture
-  - Service container for dependency injection
+### **🔧 Ferramentas de Desenvolvimento**
 
-### Laravel Packages
+-  **Composer:** Gerenciamento de dependências PHP
+-  **NPM:** Gerenciamento de dependências JavaScript
+-  **Artisan:** CLI do Laravel
+-  **Git:** Controle de versão
+-  **VS Code:** IDE principal
 
-#### Authentication & Authorization
-- **Laravel Sanctum** (^4.2) - API token authentication
-- **Laravel Socialite** (^5.23) - Social authentication (Google, Facebook, etc.)
+### **📊 Ambiente de Desenvolvimento**
 
-#### Multi-tenancy
-- **Stancl/Tenancy** (^3.7) - Multi-tenant architecture with automatic tenant scoping
+-  **Sistema Operacional:** Windows 11 / Linux
+-  **XAMPP/LAMP:** Ambiente local
+-  **Docker:** Containerização (opcional)
+-  **phpMyAdmin:** Administração de banco
 
-#### Development Tools
-- **Laravel Breeze** (^2.3) - Authentication scaffolding
-- **Laravel Pail** (^1.2.2) - Log viewer
-- **Laravel Pint** (^1.24) - Code style fixer
-- **Laravel Sail** (^1.41) - Docker development environment
-- **Laravel Tinker** (^2.10.1) - REPL for Laravel
+## ⚙️ Configuração de Desenvolvimento
 
-#### Utilities
-- **Spatie Laravel Directory Cleanup** (^1.10) - Automatic directory cleanup
+### **📋 Requisitos de Sistema**
 
-### PHP Libraries
-
-#### Database & ORM
-- **Doctrine DBAL** (^4.3) - Database abstraction layer
-- **Doctrine ORM** (3.5) - Object-relational mapping
-
-#### Image Processing
-- **Intervention Image** (3) - Image manipulation and processing
-
-#### Payment Integration
-- **Mercado Pago DX PHP** (3) - Payment gateway integration
-
-#### Document Generation
-- **mPDF** (8.2) - PDF generation
-- **PhpSpreadsheet** (4) - Excel file generation and manipulation
-
-#### Development & Testing
-- **PHPUnit** (^11.5.3) - Unit testing framework
-- **Mockery** (^1.6) - Mocking framework
-- **PHPStan** (^2.1) - Static analysis tool
-- **Faker** (^1.23) - Fake data generation
-- **Barryvdh Laravel Debugbar** (^3.16) - Debug toolbar
-
-## Frontend Technologies
-
-### Build Tools
-- **Vite** (^5.0.0) - Modern build tool with HMR (Hot Module Replacement)
-- **Laravel Vite Plugin** (^1.0.0) - Laravel integration for Vite
-- **Hot Module Replacement** - Instant updates during development
-- **Asset Versioning** - Automatic cache busting
-
-### CSS Frameworks & Tools
-- **Tailwind CSS** (^3.1.0) - Utility-first CSS framework
-- **@tailwindcss/forms** (^0.5.2) - Form styling plugin
-- **PostCSS** (^8.4.31) - CSS processing
-- **Autoprefixer** (^10.4.2) - CSS vendor prefixing
-- **Custom CSS** - Component-specific styles in resources/css/
-
-### JavaScript Libraries
-- **Alpine.js** (^3.15.0) - Lightweight JavaScript framework for reactive components
-- **Axios** (^1.6.4) - HTTP client for API requests
-- **Bootstrap Icons** (^1.13.1) - Comprehensive icon library
-- **Vanilla JavaScript** - Modern ES6+ for form validation and interactions
-
-## Database
-
-### MySQL 8.0+
-- **Storage Engine**: InnoDB
-- **Features**:
-  - ACID compliance
-  - Foreign key constraints
-  - Full-text indexing
-  - JSON data type support
-  - Spatial data support
-
-### Redis 7.0+
-- **Usage**:
-  - Session storage
-  - Cache management
-  - Queue backend
-  - Real-time data
-
-## Development Environment
-
-### Local Development
-- **XAMPP** - Apache, MySQL, PHP stack
-- **Composer** - PHP dependency management
-- **NPM** - Node.js package management
-- **Git** - Version control
-
-### Development Commands
-
-#### PHP/Laravel Commands
 ```bash
-# Install PHP dependencies
-composer install
+# PHP Requirements
+PHP >= 8.2
+PDO Extension
+Mbstring Extension
+OpenSSL Extension
+Tokenizer Extension
+XML Extension
+Ctype Extension
+JSON Extension
+BCMath Extension
 
-# Run database migrations
-php artisan migrate
+# Database
+MySQL >= 8.0
+InnoDB Engine
 
-# Seed database with test data
-php artisan db:seed
+# Cache (Optional)
+Redis >= 7.0
 
-# Start development server
-php artisan serve
-
-# Run queue worker
-php artisan queue:listen
-
-# View logs in real-time
-php artisan pail
-
-# Run tests
-php artisan test
-
-# Code style fixing
-./vendor/bin/pint
-
-# Static analysis
-./vendor/bin/phpstan analyse
+# Web Server
+Apache 2.4+ / Nginx 1.20+
+mod_rewrite enabled
 ```
 
-#### Node.js/Frontend Commands
+### **🚀 Instalação e Setup**
+
 ```bash
-# Install Node.js dependencies
+# 1. Clone do projeto
+git clone <repository-url>
+cd easy-budget-laravel
+
+# 2. Instalação de dependências
+composer install
 npm install
 
-# Start Vite development server (with HMR)
-npm run dev
+# 3. Configuração de ambiente
+cp .env.example .env
+php artisan key:generate
 
-# Build for production
-npm run build
-```
+# 4. Configuração do banco de dados
+# Editar .env com as credenciais do banco
 
-#### Combined Development
-```bash
-# Run all development services concurrently
-composer dev
-# This runs: server, queue worker, log viewer, and Vite
-```
+# 5. Execução das migrations
+php artisan migrate
+php artisan db:seed
 
-### Testing Tools
-- **PHPUnit** - Unit and feature testing
-- **Pest** - Alternative testing framework (optional)
-- **Browser Testing** - Laravel Dusk (if needed)
-
-### Code Quality Tools
-- **Laravel Pint** - Opinionated PHP code style fixer
-- **PHPStan** - Static analysis for type safety
-- **PHP CS Fixer** - Code style fixer (alternative)
-
-## Third-Party Services
-
-### Payment Gateway
-- **Mercado Pago** - Payment processing for Latin America
-  - Credit/debit card processing
-  - Boleto bancário
-  - PIX integration
-  - Subscription management
-
-### Email Services
-- **SMTP** - Configurable email sending
-- **Mailtrap** - Email testing in development
-- **Queue-based sending** - Asynchronous email delivery
-
-### Social Authentication
-- **Google OAuth** - Google login integration
-- **Facebook OAuth** - Facebook login integration
-- Extensible for other providers via Socialite
-
-## Asset Management
-
-### Vite Configuration
-- **Entry Points**: 
-  - `resources/js/app.js` - Main JavaScript with Alpine.js
-  - `resources/css/app.css` - Main CSS with Tailwind
-- **Features**:
-  - Hot Module Replacement (HMR) for instant updates
-  - Automatic asset versioning with cache busting
-  - CSS/JS minification and optimization
-  - Tree shaking for optimal bundle size
-  - Source maps for debugging
-  - ES6+ module support
-
-### Asset Structure
-```
-resources/
-├── css/
-│   └── app.css (Tailwind + custom styles)
-├── js/
-│   ├── app.js (Alpine.js + global scripts)
-│   └── bootstrap.js (Axios configuration)
-└── views/ (Blade templates with inline scripts)
-```
-
-### Public Assets
-```
-public/
-├── assets/
-│   ├── css/ (legacy assets)
-│   ├── js/ (legacy assets)
-│   └── img/ (images and icons)
-├── build/ (generated by Vite)
-└── hot (Vite HMR indicator)
-```
-
-### Development Commands
-```bash
-# Start Vite development server with HMR
-npm run dev
-
-# Build for production
+# 6. Build dos assets
 npm run build
 
-# Combined development (server + queue + logs + vite)
-composer dev
+# 7. Inicialização do servidor
+php artisan serve
 ```
 
-## Environment Configuration
+## 📦 Dependências Principais
 
-### Required Environment Variables
+### **🔧 Laravel Packages**
+
+```json
+{
+   "require": {
+      "php": "^8.3",
+      "laravel/framework": "^12.0",
+      "laravel/sanctum": "^4.2",
+      "laravel/tinker": "^2.10.1",
+      "mercadopago/dx-php": "3",
+      "mpdf/mpdf": "8.2",
+      "phpoffice/phpspreadsheet": "4",
+      "stancl/tenancy": "^3.7"
+   },
+   "require-dev": {
+      "barryvdh/laravel-debugbar": "^3.16",
+      "fakerphp/faker": "^1.23",
+      "laravel/breeze": "^2.3",
+      "laravel/pail": "^1.2.2",
+      "laravel/pint": "^1.24",
+      "laravel/sail": "^1.41",
+      "mockery/mockery": "^1.6",
+      "nunomaduro/collision": "^8.6",
+      "phpstan/phpstan": "^2.1",
+      "phpunit/phpunit": "^11.5.3"
+   }
+}
+```
+
+### **🎨 Frontend Dependencies**
+
+```json
+{
+   "dependencies": {
+      "bootstrap": "^5.3.0",
+      "jquery": "^3.7.0",
+      "chart.js": "^4.4.0",
+      "@fortawesome/fontawesome-free": "^6.4.0"
+   },
+   "devDependencies": {
+      "vite": "^5.0.0",
+      "laravel-vite-plugin": "^1.0.0"
+   }
+}
+```
+
+## 🔒 Configurações de Segurança
+
+### **🔐 Environment Variables**
+
 ```env
 # Application
 APP_NAME="Easy Budget Laravel"
 APP_ENV=local
-APP_KEY=base64:...
-APP_DEBUG=true
-APP_URL=http://localhost
+APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxx
+APP_DEBUG=false
+APP_URL=https://dev.easybudget.net.br
 
 # Database
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=easy_budget
-DB_USERNAME=root
-DB_PASSWORD=
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+# Cache
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=database
 
 # Redis
 REDIS_HOST=127.0.0.1
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 
-# Mail
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
+# Mail (para notificações)
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
 MAIL_PORT=2525
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
-
-# Mercado Pago
-MERCADOPAGO_PUBLIC_KEY=
-MERCADOPAGO_ACCESS_TOKEN=
-
-# Social Authentication
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=
-
-# Queue
-QUEUE_CONNECTION=redis
+MAIL_ENCRYPTION=null
 ```
 
-## Performance Optimization
+### **🛡️ Configurações de Segurança**
 
-### Caching
-- **Redis** - Application cache
-- **OPcache** - PHP opcode caching
-- **Query caching** - Database query results
-- **View caching** - Compiled Blade templates
+-  **APP_DEBUG=false** em produção
+-  **Rate limiting** implementado via middleware
+-  **CSRF protection** ativa em formulários
+-  **XSS protection** via Blade directives
+-  **SQL injection** prevenida pelo Eloquent ORM
 
-### Database Optimization
-- **Eager loading** - Prevent N+1 queries
-- **Indexing** - Optimized database indexes
-- **Query optimization** - Efficient query building
+## 📊 Configurações de Banco de Dados
 
-### Asset Optimization
-- **Vite bundling** - Optimized asset delivery
-- **Lazy loading** - On-demand resource loading
-- **CDN ready** - Asset URL configuration
+### **🏗️ Estrutura do Banco**
 
-## Security Features
+```sql
+-- Main database: easy_budget
+-- Charset: utf8mb4
+-- Collation: utf8mb4_unicode_ci
+-- Engine: InnoDB
 
-### Application Security
-- **CSRF Protection** - Token-based form protection
-- **XSS Prevention** - Blade template escaping
-- **SQL Injection Prevention** - Eloquent ORM parameterization
-- **Password Hashing** - Bcrypt algorithm
-- **Rate Limiting** - API and route throttling
+-- Tabelas principais:
+-- tenants, users, customers, products, budgets,
+-- budget_items, invoices, payments, audit_logs,
+-- permissions, roles, sessions, jobs, etc.
+```
 
-### Authentication Security
-- **Token-based authentication** - Sanctum tokens
-- **Email verification** - Confirmed email addresses
-- **Password reset** - Secure token-based reset
-- **Session management** - Secure session handling
+### **⚡ Configurações de Performance**
 
-## Deployment
+```php
+// config/database.php
+'connections' => [
+    'mysql' => [
+        'host' => env('DB_HOST', '127.0.0.1'),
+        'port' => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', 'easy_budget'),
+        'username' => env('DB_USERNAME', 'forge'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset' => 'utf8mb4',
+        'collation' => 'utf8mb4_unicode_ci',
+        'prefix' => '',
+        'strict' => true,
+        'engine' => 'InnoDB',
+        'options' => [
+            PDO::ATTR_TIMEOUT => 30,
+        ],
+    ],
+],
+```
 
-### Production Requirements
-- PHP 8.2+ with required extensions
-- MySQL 8.0+ or compatible database
-- Redis 7.0+ for caching and queues
-- Composer for dependency management
-- Node.js for asset compilation
-- Web server (Apache/Nginx)
+## 🔧 Padrões de Desenvolvimento
 
-### Production Optimization
+### **📝 Coding Standards**
+
+-  **PSR-12** para código PHP
+-  **Laravel Pint** para formatação automática
+-  **Blade templates** para views
+-  **Semantic commit messages** para Git
+
+### **🏗️ Arquitetura Patterns**
+
+-  **Repository Pattern** para acesso a dados
+-  **Service Layer** para lógica de negócio
+-  **Observer Pattern** para eventos
+-  **Strategy Pattern** para algoritmos variáveis
+
+### **🧪 Testing Standards**
+
+-  **PHPUnit** para testes unitários
+-  **Feature tests** para integração
+-  **Browser tests** com Laravel Dusk (futuro)
+-  **Cobertura mínima 80%** (meta futura)
+
+## 📋 Comandos Úteis
+
+### **🚀 Desenvolvimento Diário**
+
 ```bash
-# Optimize autoloader
-composer install --optimize-autoloader --no-dev
+# Servidor de desenvolvimento
+php artisan serve --host=0.0.0.0 --port=8000
 
-# Cache configuration
-php artisan config:cache
+# Limpeza de cache
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
-# Cache routes
-php artisan route:cache
+# Monitoramento de logs
+tail -f storage/logs/laravel.log
 
-# Cache views
-php artisan view:cache
-
-# Build production assets
-npm run build
+# Queue worker (se necessário)
+php artisan queue:work
 ```
 
-## Version Control
+### **📦 Deploy**
 
-### Git Configuration
-- `.gitignore` - Excludes vendor, node_modules, .env, etc.
-- `.gitattributes` - Line ending normalization
-- Branch strategy for feature development
+```bash
+# Build de produção
+composer install --optimize-autoloader --no-dev
+npm run build
 
-## Documentation Tools
+# Migrations
+php artisan migrate --force
 
-### Code Documentation
-- PHPDoc comments for classes and methods
-- Inline comments for complex logic
-- README files in key directories
+# Cache de configuração
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
 
-### API Documentation
-- Route documentation
-- API endpoint specifications
-- Request/response examples
+## 🔍 Debugging e Troubleshooting
+
+### **🐛 Problemas Comuns**
+
+```bash
+# Permissões de storage
+chmod -R 755 storage
+chmod -R 755 bootstrap/cache
+
+# Problemas de composer
+composer dump-autoload
+
+# Problemas de migração
+php artisan migrate:status
+php artisan migrate:rollback
+
+# Problemas de cache
+php artisan cache:forget "tenant:*"
+```
+
+### **📊 Monitoramento**
+
+```bash
+# Logs de auditoria
+tail -f storage/logs/audit.log
+
+# Performance queries (se habilitado)
+DB::enableQueryLog();
+dd(DB::getQueryLog());
+
+# Monitoramento de memória
+memory_get_usage()
+```
+
+## 🚀 Performance Optimization
+
+### **⚡ Estratégias Implementadas**
+
+-  **Eager Loading** para relacionamentos N+1
+-  **Cache inteligente** com Redis
+-  **Índices compostos** para queries frequentes
+-  **Pagination** para grandes datasets
+-  **Processamento assíncrono** para tarefas pesadas
+
+### **📈 Métricas de Performance**
+
+-  **Response time** < 200ms para APIs
+-  **Page load** < 2s para views
+-  **Database queries** otimizadas
+-  **Memory usage** monitorado
+
+Este documento detalha toda a stack tecnológica utilizada no Easy Budget Laravel, incluindo configurações, dependências e padrões de desenvolvimento estabelecidos.
+
+**Última atualização:** 19/11/2025 - ✅ **Atualização com migração parcial para Vanilla JS (máscaras)**
