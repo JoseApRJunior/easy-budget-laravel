@@ -1,0 +1,66 @@
+{
+  "name": "q_ide_default",
+  "description": "Default agent configuration",
+  "prompt": "",
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "php",
+      "disabled": false,
+      "timeout": 0,
+      "args": [
+        "artisan",
+        "boost:mcp"
+      ]
+    }
+  },
+  "tools": [
+    "fs_read",
+    "execute_bash",
+    "fs_write",
+    "report_issue",
+    "use_aws",
+    "@laravel-boost"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "fs_read",
+    "report_issue",
+    "use_aws",
+    "execute_bash",
+    "fs_write",
+    "@laravel-boost/application-info",
+    "@laravel-boost/browser-logs",
+    "@laravel-boost/database-connections",
+    "@laravel-boost/database-query",
+    "@laravel-boost/database-schema",
+    "@laravel-boost/get-absolute-url",
+    "@laravel-boost/get-config",
+    "@laravel-boost/last-error",
+    "@laravel-boost/list-artisan-commands",
+    "@laravel-boost/list-available-config-keys",
+    "@laravel-boost/list-available-env-vars",
+    "@laravel-boost/list-routes",
+    "@laravel-boost/read-log-entries",
+    "@laravel-boost/report-feedback",
+    "@laravel-boost/search-docs",
+    "@laravel-boost/tinker"
+  ],
+  "toolsSettings": {
+    "use_aws": {
+      "preset": "readOnly"
+    },
+    "execute_bash": {
+      "preset": "readOnly"
+    }
+  },
+  "resources": [
+    "file://AmazonQ.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {
+    "agentSpawn": [],
+    "userPromptSubmit": []
+  },
+  "useLegacyMcpJson": true
+}

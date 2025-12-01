@@ -233,6 +233,53 @@ class NovoModeloService extends BaseTenantService
 -  Verificar changelog das dependências por breaking changes
 -  Ter estratégia de rollback em caso de problemas
 
+### **🌳 Implementar Sistema Hierárquico com Soft Delete**
+
+**Última execução:** Durante desenvolvimento do módulo Categories (02/01/2025)
+**Arquivos modificados:**
+
+-  `app/Models/Category.php` - Modelo com estrutura hierárquica
+-  `app/Repositories/CategoryRepository.php` - Repository com filtros e Soft Delete
+-  `app/Services/CategoryService.php` - Service para operações hierárquicas
+-  `app/Http/Controllers/CategoryController.php` - Controller com filtros e Soft Delete
+-  `database/migrations/2025_01_01_000000_create_categories_table.php` - Tabela com parent_id
+-  `resources/views/pages/categories/` - Views com filtros e gestão de Soft Delete
+-  `resources/js/categories.js` - JavaScript para interface com filtros
+
+**Passos:**
+
+1. Criar modelo com trait SoftDeletes e relacionamento hierárquico
+2. Implementar relacionamento parent/children com eager loading
+3. Criar migration com campo parent_id e índice adequado
+4. Implementar Repository com métodos específicos para hierarquia:
+   -  getAllByTenantWithHierarchy() - Lista com estrutura hierárquica
+   -  getRootCategories() - Categorias de nível superior
+   -  getChildrenByParentId() - Categorias filhas de um pai
+5. Implementar Service com operações hierárquicas:
+   -  buildCategoryTree() - Constrói árvore hierárquica
+   -  validateParentCategory() - Valida categoria pai
+   -  moveCategory() - Move categoria na hierarquia
+6. Criar Controller com filtros específicos:
+   -  currentDeleted() - Filtro para "Atuais/Deletados"
+   -  byParent() - Filtro por categoria pai
+7. Implementar views com interface para Soft Delete e hierarquia
+8. Adicionar JavaScript para interatividade e filtros
+9. Implementar exportação com filtros aplicados
+10.   Testar todos os cenários de hierarquia e Soft Delete
+
+**Considerações importantes:**
+
+-  **Estrutura hierárquica:** Usar parent_id com índices adequados para performance
+-  **Eager loading:** Sempre usar with('children') para evitar N+1 queries
+-  **Soft Delete granular:** Implementar filtros diferentes para Prestador vs Admin
+-  **Pivot Tables:** Considerar category_tenant para multi-tenant mais robusto
+-  **Validações hierárquicas:** Não permitir categoria ser pai de si mesma
+-  **Cache de hierarquia:** Implementar cache para estruturas hierárquicas grandes
+-  **Interface responsiva:** Garantir que interface funcione bem em diferentes dispositivos
+-  **JavaScript eficiente:** Otimizar scripts para grandes volumes de dados
+-  **Formato brasileiro:** Implementar formatação de datas e valores
+-  **Exportação filtrada:** Manter filtros na exportação (XLSX, CSV, PDF)
+
 ## 📊 Tarefas de Monitoramento
 
 ### **📈 Análise de Performance**
