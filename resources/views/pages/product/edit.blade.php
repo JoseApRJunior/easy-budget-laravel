@@ -141,7 +141,6 @@
                         </div>
 
                         <!-- Imagem Atual -->
-                        @if($product->image)
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -163,13 +162,12 @@
                                 </div>
                             </div>
                         </div>
-                        @endif
 
                         <!-- Nova Imagem -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="image">{{ $product->image ? 'Substituir' : 'Adicionar' }} Imagem</label>
+                                    <label for="image">Imagem do Produto</label>
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input @error('image') is-invalid @enderror"
                                             id="image" name="image" accept="image/*">
@@ -180,9 +178,6 @@
                                     </div>
                                     <small class="form-text text-muted">
                                         Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 2MB
-                                        @if($product->image)
-                                        <br><strong>Nota:</strong> Selecionar uma nova imagem substituirá a atual
-                                        @endif
                                     </small>
                                 </div>
                             </div>

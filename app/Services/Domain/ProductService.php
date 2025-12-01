@@ -133,21 +133,21 @@ class ProductService extends AbstractBaseService
                     $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
                 }
 
-                if ( empty( $data['tenant_id'] ) ) {
-                    $resolvedTenantId = auth()->user()->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
-                    $data['tenant_id'] = $resolvedTenantId;
+                if ( empty( $data[ 'tenant_id' ] ) ) {
+                    $resolvedTenantId    = auth()->user()->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+                    $data[ 'tenant_id' ] = $resolvedTenantId;
                 }
 
                 $product = $this->productRepository->create( $data );
 
                 // Criar registro de inventário automaticamente
-                \App\Models\ProductInventory::create([
-                    'tenant_id' => $product->tenant_id,
-                    'product_id' => $product->id,
-                    'quantity' => 0,
+                \App\Models\ProductInventory::create( [
+                    'tenant_id'    => $product->tenant_id,
+                    'product_id'   => $product->id,
+                    'quantity'     => 0,
                     'min_quantity' => 0,
                     'max_quantity' => null,
-                ]);
+                ] );
 
                 return $this->success( $product, 'Produto criado com sucesso' );
             } );
@@ -194,9 +194,14 @@ class ProductService extends AbstractBaseService
             return null;
         }
 
-        $tenantId = auth()->user()->tenant_id ?? ( function_exists('tenant') && tenant() ? tenant()->id : null );
-        $path     = 'products/' . ($tenantId ?? 'unknown');
+        $tenantId = auth()->user()->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+        $path     = 'products/' . ( $tenantId ?? 'unknown' );
         $filename = Str::random( 40 ) . '.' . $imageFile->getClientOriginalExtension();
+
+        // Verificar se o diretório existe, se não, criar
+        if ( !Storage::disk( 'public' )->exists( $path ) ) {
+            Storage::disk( 'public' )->makeDirectory( $path );
+        }
 
         // Redimensionar e salvar imagem
         // Usar uma biblioteca de imagem como Intervention Image ou similar
@@ -350,25 +355,25 @@ class ProductService extends AbstractBaseService
         try {
             $query = Product::onlyTrashed();
 
-            if (!empty($with)) {
-                $query->with($with);
+            if ( !empty( $with ) ) {
+                $query->with( $with );
             }
 
-            if (!empty($filters['search'])) {
-                $search = $filters['search'];
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('sku', 'like', "%{$search}%");
-                });
+            if ( !empty( $filters[ 'search' ] ) ) {
+                $search = $filters[ 'search' ];
+                $query->where( function ( $q ) use ( $search ) {
+                    $q->where( 'name', 'like', "%{$search}%" )
+                        ->orWhere( 'sku', 'like', "%{$search}%" );
+                } );
             }
 
-            if (!empty($filters['category_id'])) {
-                $query->where('category_id', $filters['category_id']);
+            if ( !empty( $filters[ 'category_id' ] ) ) {
+                $query->where( 'category_id', $filters[ 'category_id' ] );
             }
 
-            $products = $query->orderBy('deleted_at', 'desc')
-                             ->orderBy('name', 'asc')
-                             ->paginate(15);
+            $products = $query->orderBy( 'deleted_at', 'desc' )
+                ->orderBy( 'name', 'asc' )
+                ->paginate( 15 );
 
             return $this->success( $products, 'Produtos deletados carregados' );
         } catch ( Exception $e ) {
@@ -384,7 +389,7 @@ class ProductService extends AbstractBaseService
     public function restoreProductBySku( string $sku ): ServiceResult
     {
         try {
-            $product = Product::onlyTrashed()->where('sku', $sku)->first();
+            $product = Product::onlyTrashed()->where( 'sku', $sku )->first();
 
             if ( !$product ) {
                 return $this->error(
@@ -416,6 +421,166 @@ class ProductService extends AbstractBaseService
             return Str::after( $trimmed, 'storage/' );
         }
         return $trimmed;
+    }
+
+    // ========== VALIDAÇÕES DE NEGÓCIO ==========
+
+    /**
+     * Validate SKU uniqueness within tenant
+     */
+    private function validateUniqueSku( string $sku, int $tenantId, ?int $excludeProductId = null ): ServiceResult
+    {
+        $isUnique = $this->productRepository->isUniqueInTenant(
+            'sku',
+            $sku,
+            $excludeProductId,
+        );
+
+        if ( !$isUnique ) {
+            return $this->error( "SKU '{$sku}' já está em uso" );
+        }
+
+        return $this->success();
+    }
+
+    /**
+     * Validate price (must be positive)
+     */
+    private function validatePrice( float $price ): ServiceResult
+    {
+        if ( $price < 0 ) {
+            return $this->error( 'Preço não pode ser negativo' );
+        }
+
+        if ( $price == 0 ) {
+            return $this->error( 'Preço deve ser maior que zero' );
+        }
+
+        return $this->success();
+    }
+
+    /**
+     * Validate product name
+     */
+    private function validateName( string $name ): ServiceResult
+    {
+        if ( strlen( $name ) < 3 ) {
+            return $this->error( 'Nome do produto deve ter no mínimo 3 caracteres' );
+        }
+
+        if ( strlen( $name ) > 255 ) {
+            return $this->error( 'Nome do produto deve ter no máximo 255 caracteres' );
+        }
+
+        return $this->success();
+    }
+
+    /**
+     * Validate product can be deleted (not used in services/budgets)
+     */
+    private function validateCanDelete( int $productId, int $tenantId ): ServiceResult
+    {
+        // Check if product is used in service_items
+        $usedInServices = DB::table( 'service_items' )
+            ->where( 'product_id', $productId )
+            ->where( 'tenant_id', $tenantId )
+            ->exists();
+
+        if ( $usedInServices ) {
+            return $this->error( 'Produto não pode ser excluído pois está sendo usado em serviços' );
+        }
+
+        return $this->success();
+    }
+
+    /**
+     * Update product with validation
+     */
+    public function updateProduct( int $productId, array $data, int $tenantId ): ServiceResult
+    {
+        // Validate name if provided
+        if ( isset( $data[ 'name' ] ) ) {
+            $nameValidation = $this->validateName( $data[ 'name' ] );
+            if ( !$nameValidation->isSuccess() ) {
+                return $nameValidation;
+            }
+        }
+
+        // Validate price if provided
+        if ( isset( $data[ 'price' ] ) ) {
+            $priceValidation = $this->validatePrice( $data[ 'price' ] );
+            if ( !$priceValidation->isSuccess() ) {
+                return $priceValidation;
+            }
+        }
+
+        // Validate unique SKU if provided
+        if ( isset( $data[ 'sku' ] ) ) {
+            $skuValidation = $this->validateUniqueSku( $data[ 'sku' ], $tenantId, $productId );
+            if ( !$skuValidation->isSuccess() ) {
+                return $skuValidation;
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $product = $this->productRepository->find( $productId );
+            if ( !$product || $product->tenant_id !== $tenantId ) {
+                return $this->error( 'Produto não encontrado' );
+            }
+
+            $product->update( $data );
+
+            Log::info( 'Product updated', [
+                'product_id' => $productId,
+                'tenant_id'  => $tenantId,
+            ] );
+
+            DB::commit();
+            return $this->success( $product, 'Produto atualizado com sucesso' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+            Log::error( 'Error updating product', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao atualizar produto: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Delete product with validation
+     */
+    public function deleteProduct( int $productId, int $tenantId ): ServiceResult
+    {
+        // Validate can delete
+        $canDeleteValidation = $this->validateCanDelete( $productId, $tenantId );
+        if ( !$canDeleteValidation->isSuccess() ) {
+            return $canDeleteValidation;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $product = $this->productRepository->find( $productId );
+            if ( !$product || $product->tenant_id !== $tenantId ) {
+                return $this->error( 'Produto não encontrado' );
+            }
+
+            $product->delete();
+
+            Log::info( 'Product deleted', [
+                'product_id' => $productId,
+                'tenant_id'  => $tenantId,
+            ] );
+
+            DB::commit();
+            return $this->success( null, 'Produto excluído com sucesso' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+            Log::error( 'Error deleting product', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao excluir produto: ' . $e->getMessage() );
+        }
     }
 
 }

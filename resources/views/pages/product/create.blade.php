@@ -22,7 +22,7 @@
                     <div class="card-body">
                         <div class="row">
                             <!-- Nome do Produto -->
-                            <div class="col-md-6">
+                            <div class="col-12 col-lg-6 mb-3">
                                 <div class="form-group">
                                     <label for="name">Nome do Produto <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror"
@@ -35,21 +35,21 @@
                             </div>
 
                             <!-- SKU -->
-                            <div class="col-md-3">
+                            <div class="col-6 col-lg-3 mb-3">
                                 <div class="form-group">
                                     <label for="sku">SKU</label>
                                     <input type="text" class="form-control @error('sku') is-invalid @enderror"
                                         id="sku" name="sku" value="{{ old('sku') }}"
-                                        placeholder="Será gerado automaticamente se vazio">
+                                        placeholder="Auto-gerado">
                                     @error('sku')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="form-text text-muted">Deixe em branco para gerar automaticamente</small>
+                                    <small class="form-text text-muted d-none d-lg-block">Deixe em branco para gerar automaticamente</small>
                                 </div>
                             </div>
 
                             <!-- Preço -->
-                            <div class="col-md-3">
+                            <div class="col-6 col-lg-3 mb-3">
                                 <div class="form-group">
                                     <label for="price">Preço <span class="text-danger">*</span></label>
                                     <div class="input-group">

@@ -40,7 +40,6 @@
                                 <option value="">Todos</option>
                                 <option value="active" {{ ($filters['status'] ?? '') === 'active' ? 'selected' : '' }}>Ativo</option>
                                 <option value="inactive" {{ ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inativo</option>
-                                <option value="deleted" {{ ($filters['status'] ?? '') === 'deleted' ? 'selected' : '' }}>Excluído</option>
                             </select>
                         </div>
                     </div>
@@ -64,6 +63,15 @@
                                 <option value="{{ $area->id }}" {{ (string)($filters['area_of_activity_id'] ?? '') === (string)$area->id ? 'selected' : '' }}>{{ $area->name }}</option>
                                 @endforeach
                                 @endisset
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="deleted">Registros</label>
+                            <select class="form-control" id="deleted" name="deleted">
+                                <option value="">Atuais</option>
+                                <option value="only" {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>Deletados</option>
                             </select>
                         </div>
                     </div>
@@ -132,7 +140,7 @@
                                 <th>Telefone</th>
                                 <th>Cadastro</th>
                                 <th>Status</th>
-                                <th class="text-center">Ações</th>
+                                <th class="text-center text-nowrap">Ações</th>
                             </tr>
                         </thead>
                         <tbody>

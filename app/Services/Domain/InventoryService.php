@@ -1,215 +1,212 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Services\Domain;
 
-use App\Enums\OperationStatus;
-use App\Models\InventoryMovement;
 use App\Repositories\InventoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InventoryService extends AbstractBaseService
 {
-    private InventoryRepository $inventoryRepository;
-
-    public function __construct(InventoryRepository $inventoryRepository)
-    {
-        $this->inventoryRepository = $inventoryRepository;
+    public function __construct(
+        private InventoryRepository $inventoryRepository,
+    ) {
+        parent::__construct( $inventoryRepository );
     }
 
-    public function getInventoryByProduct(int $productId): ServiceResult
+    // ========== VALIDAÇÕES DE NEGÓCIO ==========
+
+    private function validateQuantity( int $quantity ): ServiceResult
     {
-        try {
-            $inventory = $this->inventoryRepository->findByProductId($productId);
+        if ( $quantity < 0 ) {
+            return $this->error( 'Quantidade não pode ser negativa' );
+        }
+        return $this->success();
+    }
 
-            if (!$inventory) {
-                // Se não existir, cria um zerado (lazy creation)
-                $inventory = $this->inventoryRepository->createForProduct($productId);
-            }
+    private function validateSufficientStock( int $productId, int $tenantId, int $quantity ): ServiceResult
+    {
+        $inventory = $this->inventoryRepository->findByProduct( $productId, $tenantId );
 
-            return $this->success($inventory, 'Inventário recuperado com sucesso');
-        } catch (Exception $e) {
+        if ( !$inventory ) {
+            return $this->error( 'Produto não encontrado no estoque' );
+        }
+
+        if ( $inventory->quantity < $quantity ) {
             return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao recuperar inventário',
-                null,
-                $e
+                "Estoque insuficiente. Disponível: {$inventory->quantity}, Solicitado: {$quantity}",
             );
         }
+
+        return $this->success( $inventory );
     }
 
-    public function addStock(int $productId, int $quantity, string $reason = ''): ServiceResult
+    private function validateMinMaxQuantity( ?int $minQuantity, ?int $maxQuantity ): ServiceResult
     {
-        return $this->adjustStock($productId, $quantity, 'in', $reason);
+        if ( $minQuantity !== null && $minQuantity < 0 ) {
+            return $this->error( 'Quantidade mínima não pode ser negativa' );
+        }
+
+        if ( $maxQuantity !== null && $maxQuantity < 0 ) {
+            return $this->error( 'Quantidade máxima não pode ser negativa' );
+        }
+
+        if ( $minQuantity !== null && $maxQuantity !== null && $minQuantity > $maxQuantity ) {
+            return $this->error( 'Quantidade mínima não pode ser maior que a máxima' );
+        }
+
+        return $this->success();
     }
 
-    public function removeStock(int $productId, int $quantity, string $reason = ''): ServiceResult
-    {
-        return $this->adjustStock($productId, $quantity, 'out', $reason);
-    }
+    // ========== MÉTODOS PÚBLICOS COM VALIDAÇÕES ==========
 
-    public function setStock(int $productId, int $newQuantity, string $reason = ''): ServiceResult
+    public function addStock( int $productId, int $tenantId, int $quantity, ?string $reason = null ): ServiceResult
     {
-        if ($newQuantity < 0) {
-             return $this->error(OperationStatus::VALIDATION_ERROR, 'A quantidade não pode ser negativa');
+        $validation = $this->validateQuantity( $quantity );
+        if ( !$validation->isSuccess() ) {
+            return $validation;
         }
 
         try {
-            return DB::transaction(function () use ($productId, $newQuantity, $reason) {
-                $inventory = $this->inventoryRepository->findByProductId($productId);
+            DB::beginTransaction();
 
-                if (!$inventory) {
-                    $inventory = $this->inventoryRepository->createForProduct($productId);
-                }
+            $inventory = $this->inventoryRepository->findByProduct( $productId, $tenantId );
 
-                $currentQuantity = $inventory->quantity;
-
-                if ($currentQuantity === $newQuantity) {
-                     return $this->success($inventory, 'Nenhuma alteração necessária');
-                }
-
-                $diff = $newQuantity - $currentQuantity;
-                $type = $diff > 0 ? 'in' : 'out';
-                $absDiff = abs($diff);
-
-                // Atualiza o estoque
-                $this->inventoryRepository->update($inventory->id, ['quantity' => $newQuantity]);
-
-                if (class_exists(\App\Models\InventoryMovement::class)) {
-                    $user = auth()->user();
-                    $tenantId = $user?->tenant_id ?? $inventory->tenant_id;
-
-                     \App\Models\InventoryMovement::create([
-                        'tenant_id' => $tenantId,
-                        'product_id' => $productId,
-                        'type' => $type,
-                        'quantity' => $absDiff,
-                        'previous_quantity' => $currentQuantity,
-                        'new_quantity' => $newQuantity,
-                        'reason' => $reason,
-                        'user_id' => $user?->id,
-                    ]);
-                }
-
-                return $this->success($inventory->fresh(), 'Estoque ajustado com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao ajustar estoque',
-                null,
-                $e
-            );
-        }
-    }
-
-    private function adjustStock(int $productId, int $quantity, string $type, string $reason): ServiceResult
-    {
-        if ($quantity <= 0) {
-            return $this->error(OperationStatus::VALIDATION_ERROR, 'A quantidade deve ser maior que zero');
-        }
-
-        try {
-            return DB::transaction(function () use ($productId, $quantity, $type, $reason) {
-                $inventory = $this->inventoryRepository->findByProductId($productId);
-
-                if (!$inventory) {
-                    $inventory = $this->inventoryRepository->createForProduct($productId);
-                }
-
-                $currentQuantity = $inventory->quantity;
-                $newQuantity = $type === 'in' ? $currentQuantity + $quantity : $currentQuantity - $quantity;
-
-                if ($newQuantity < 0) {
-                    return $this->error(OperationStatus::VALIDATION_ERROR, 'Estoque insuficiente para esta operação');
-                }
-
-                // Atualiza o estoque
-                $this->inventoryRepository->update($inventory->id, ['quantity' => $newQuantity]);
-
-                // Registra a movimentação (assumindo que existe InventoryMovement model, se não existir, precisaremos criar)
-                // O checklist mencionou "Histórico de movimentações", então deve existir ou precisar ser criado.
-                // Vou verificar se InventoryMovement existe antes de tentar usar.
-                // Por enquanto, vou comentar a criação do log se o model não existir, mas o ideal é ter.
-
-                if (class_exists(\App\Models\InventoryMovement::class)) {
-                    $user = auth()->user();
-                    $tenantId = $user?->tenant_id ?? $inventory->tenant_id; // Fallback to inventory tenant if user not auth (e.g. system job)
-
-                     \App\Models\InventoryMovement::create([
-                        'tenant_id' => $tenantId,
-                        'product_id' => $productId,
-                        'type' => $type,
-                        'quantity' => $quantity,
-                        'previous_quantity' => $currentQuantity,
-                        'new_quantity' => $newQuantity,
-                        'reason' => $reason,
-                        'user_id' => $user?->id,
-                    ]);
-                }
-
-                return $this->success($inventory->fresh(), 'Estoque atualizado com sucesso');
-            });
-        } catch (Exception $e) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao atualizar estoque',
-                null,
-                $e
-            );
-        }
-    }
-
-    /**
-     * Reserva produto sem alterar o estoque (apenas registra intenção quando aplicável).
-     * Mantemos estoque inalterado para evitar inconsistência sem sistema de reservas.
-     */
-    public function reserveProduct(int $productId, int $quantity, string $reason, string $referenceType, int $referenceId, int $tenantId): ServiceResult
-    {
-        try {
-            // Apenas validação básica; não altera quantidade
-            if ($quantity <= 0) {
-                return $this->error(OperationStatus::VALIDATION_ERROR, 'A quantidade deve ser maior que zero');
+            if ( !$inventory ) {
+                $inventory = $this->inventoryRepository->updateOrCreate( $productId, $tenantId, [
+                    'quantity'     => $quantity,
+                    'min_quantity' => 0,
+                    'max_quantity' => null,
+                ] );
+            } else {
+                $newQuantity = $inventory->quantity + $quantity;
+                $this->inventoryRepository->updateQuantity( $productId, $tenantId, $newQuantity );
+                $inventory->quantity = $newQuantity;
             }
-            // Opcionalmente poderíamos registrar um log separado de reserva; por ora, retornamos sucesso.
-            return $this->success(null, 'Reserva registrada (sem efeito no estoque)');
-        } catch (Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao reservar produto', null, $e);
+
+            Log::info( 'Stock added', [
+                'product_id' => $productId,
+                'tenant_id'  => $tenantId,
+                'quantity'   => $quantity,
+                'new_total'  => $inventory->quantity,
+                'reason'     => $reason,
+            ] );
+
+            DB::commit();
+            return $this->success( $inventory, 'Estoque adicionado com sucesso' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+            Log::error( 'Error adding stock', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao adicionar estoque: ' . $e->getMessage() );
         }
     }
 
-    /**
-     * Libera reserva sem alterar o estoque.
-     */
-    public function releaseReservation(int $productId, int $quantity, string $reason, string $referenceType, int $referenceId, int $tenantId): ServiceResult
+    public function removeStock( int $productId, int $tenantId, int $quantity, ?string $reason = null ): ServiceResult
+    {
+        $validation = $this->validateQuantity( $quantity );
+        if ( !$validation->isSuccess() ) {
+            return $validation;
+        }
+
+        $stockValidation = $this->validateSufficientStock( $productId, $tenantId, $quantity );
+        if ( !$stockValidation->isSuccess() ) {
+            return $stockValidation;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $inventory   = $stockValidation->getData();
+            $newQuantity = $inventory->quantity - $quantity;
+
+            $this->inventoryRepository->updateQuantity( $productId, $tenantId, $newQuantity );
+            $inventory->quantity = $newQuantity;
+
+            Log::info( 'Stock removed', [
+                'product_id' => $productId,
+                'tenant_id'  => $tenantId,
+                'quantity'   => $quantity,
+                'new_total'  => $inventory->quantity,
+                'reason'     => $reason,
+            ] );
+
+            DB::commit();
+            return $this->success( $inventory, 'Estoque removido com sucesso' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+            Log::error( 'Error removing stock', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao remover estoque: ' . $e->getMessage() );
+        }
+    }
+
+    public function setStock( int $productId, int $tenantId, int $quantity, ?string $reason = null ): ServiceResult
+    {
+        $validation = $this->validateQuantity( $quantity );
+        if ( !$validation->isSuccess() ) {
+            return $validation;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $inventory = $this->inventoryRepository->updateOrCreate( $productId, $tenantId, [
+                'quantity' => $quantity,
+            ] );
+
+            Log::info( 'Stock set', [ 'product_id' => $productId, 'tenant_id' => $tenantId, 'quantity' => $quantity, 'reason' => $reason ] );
+
+            DB::commit();
+            return $this->success( $inventory, 'Estoque ajustado com sucesso' );
+
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+            Log::error( 'Error setting stock', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao ajustar estoque: ' . $e->getMessage() );
+        }
+    }
+
+    public function updateMinMaxQuantities( int $productId, int $tenantId, ?int $minQuantity = null, ?int $maxQuantity = null ): ServiceResult
+    {
+        $validation = $this->validateMinMaxQuantity( $minQuantity, $maxQuantity );
+        if ( !$validation->isSuccess() ) {
+            return $validation;
+        }
+
+        try {
+            $data = [];
+            if ( $minQuantity !== null ) $data[ 'min_quantity' ] = $minQuantity;
+            if ( $maxQuantity !== null ) $data[ 'max_quantity' ] = $maxQuantity;
+
+            $inventory = $this->inventoryRepository->updateOrCreate( $productId, $tenantId, $data );
+            return $this->success( $inventory, 'Limites de estoque atualizados' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Error updating min/max', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao atualizar limites: ' . $e->getMessage() );
+        }
+    }
+
+    public function hasSufficientStock( int $productId, int $tenantId, int $requiredQuantity ): ServiceResult
+    {
+        $validation = $this->validateSufficientStock( $productId, $tenantId, $requiredQuantity );
+        return $validation->isSuccess()
+            ? $this->success( true, 'Estoque suficiente' )
+            : $this->error( $validation->getMessage() );
+    }
+
+    public function getLowStockAlerts( int $tenantId ): ServiceResult
     {
         try {
-            if ($quantity <= 0) {
-                return $this->error(OperationStatus::VALIDATION_ERROR, 'A quantidade deve ser maior que zero');
-            }
-            return $this->success(null, 'Reserva liberada (sem efeito no estoque)');
-        } catch (Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao liberar reserva', null, $e);
+            $lowStockItems = $this->inventoryRepository->getLowStockItems( $tenantId, 50 );
+            return $this->success( [ 'items' => $lowStockItems, 'count' => $lowStockItems->count() ] );
+        } catch ( \Exception $e ) {
+            Log::error( 'Error getting alerts', [ 'tenant_id' => $tenantId, 'error' => $e->getMessage() ] );
+            return $this->error( 'Erro ao buscar alertas: ' . $e->getMessage() );
         }
     }
 
-    /**
-     * Devolve produto ao estoque (entrada).
-     */
-    public function returnProduct(int $productId, int $quantity, string $reason, string $referenceType, int $referenceId, int $tenantId): ServiceResult
-    {
-        return $this->addStock($productId, $quantity, $reason);
-    }
-
-    /**
-     * Consome produto do estoque (saída).
-     */
-    public function consumeProduct(int $productId, int $quantity, string $reason, string $referenceType, int $referenceId, int $tenantId): ServiceResult
-    {
-        return $this->removeStock($productId, $quantity, $reason);
-    }
 }

@@ -62,7 +62,7 @@ class CustomerApiController extends Controller
     public function storePessoaFisica(CustomerPessoaFisicaRequest $request): JsonResponse
     {
         try {
-            $customer = $this->customerService->create($request->validated());
+            $customer = $this->customerService->createCustomer($request->validated());
 
             return response()->json([
                 'message' => 'Cliente pessoa física criado com sucesso',
@@ -83,7 +83,7 @@ class CustomerApiController extends Controller
     public function storePessoaJuridica(CustomerPessoaJuridicaRequest $request): JsonResponse
     {
         try {
-            $customer = $this->customerService->create($request->validated());
+            $customer = $this->customerService->createCustomer($request->validated());
 
             return response()->json([
                 'message' => 'Cliente pessoa jurídica criado com sucesso',
@@ -173,7 +173,7 @@ class CustomerApiController extends Controller
         }
 
         try {
-            $result = $this->customerService->deleteCustomer($customer->id);
+            $result = $this->customerService->delete($customer->id);
             if (! $result->isSuccess()) {
                 return response()->json([
                     'message' => 'Erro ao remover cliente',
@@ -235,7 +235,7 @@ class CustomerApiController extends Controller
         $request->validate(CustomerAddress::businessRules());
 
         try {
-            $address->update($request->validated());
+            $address->updateCustomer($request->validated());
 
             return response()->json([
                 'message' => 'Endereço atualizado com sucesso',
@@ -316,7 +316,7 @@ class CustomerApiController extends Controller
         $request->validate(CustomerContact::businessRules());
 
         try {
-            $contact->update($request->validated());
+            $contact->updateCustomer($request->validated());
 
             return response()->json([
                 'message' => 'Contato atualizado com sucesso',

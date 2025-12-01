@@ -105,7 +105,7 @@ class CustomerController extends Controller
             $validated = $request->validated();
 
             // Usar o serviço para criar cliente
-            $result = $this->customerService->create($validated);
+            $result = $this->customerService->createCustomer($validated);
 
             // Verificar resultado do serviço
             if (! $result->isSuccess()) {
@@ -231,7 +231,7 @@ class CustomerController extends Controller
             /** @var User $user */
             $user = Auth::user();
 
-            $result = $this->customerService->deleteCustomer((int) $customer->id);
+            $result = $this->customerService->delete((int) $customer->id);
 
             if (! $result->isSuccess()) {
                 return redirect()
@@ -367,6 +367,7 @@ class CustomerController extends Controller
         $type = $request->get('type');
         $status = $request->get('status');
         $areaId = $request->get('area_of_activity_id');
+        $deleted = $request->get('deleted');
 
         $query = \App\Models\Customer::with(['commonData', 'contact'])
             ->where('tenant_id', $user->tenant_id);
@@ -398,7 +399,9 @@ class CustomerController extends Controller
             });
         }
 
-        if (! empty($status)) {
+        if ($deleted === 'only') {
+            $query->onlyTrashed();
+        } elseif (! empty($status)) {
             $query->where('status', $status);
         }
 
@@ -426,6 +429,7 @@ class CustomerController extends Controller
                 'status' => $customer->status,
                 'status_label' => $customer->status_label ?? ucfirst((string) $customer->status),
                 'created_at' => $customer->created_at?->toISOString(),
+                'deleted_at' => $customer->deleted_at?->toISOString(),
             ];
         });
 

@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
    const statusSelect = document.getElementById("status");
    const typeSelect = document.getElementById("type");
    const areaSelect = document.getElementById("area_of_activity_id");
+   const deletedSelect = document.getElementById("deleted");
    const btnFilterCustomers = document.getElementById("btnFilterCustomers");
 
    // Verificação de elementos essenciais
@@ -33,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const status = statusSelect?.value?.trim() || "";
       const type = typeSelect?.value?.trim() || "";
       const area = areaSelect?.value?.trim() || "";
+      const deleted = deletedSelect?.value?.trim() || "";
 
       if (!initialMessage || !loadingSpinner || !resultsContainer) {
          console.error("Elementos da interface não encontrados");
@@ -61,6 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
          if (status) params.set("status", status);
          if (type) params.set("type", type);
          if (area) params.set("area_of_activity_id", area);
+         if (deleted) params.set("deleted", deleted);
          const qs = params.toString();
          const url = qs ? `/provider/customers/search?${qs}` : "/provider/customers/search";
          console.log("URL da requisição:", url);
@@ -143,9 +146,32 @@ document.addEventListener("DOMContentLoaded", function () {
       const customerTypeClass = customer.cnpj ? "text-info" : "text-success";
       const customerTypeIcon = customer.cnpj ? "bi-building" : "bi-person";
       const status = (customer.status || "").toLowerCase();
+      const isDeleted = status === "deleted" || !!customer.deleted_at;
       const statusLabel = customer.status_label || (status === "active" ? "Ativo" : status === "inactive" ? "Inativo" : "Excluído");
       const badgeClass = status === "active" ? "badge-success" : status === "inactive" ? "badge-secondary" : "badge-danger";
-      const toggleLabel = status === "active" ? "Desativar" : "Ativar";
+
+      const actionsHtml = isDeleted
+         ? `
+            <button type="button" class="btn btn-sm btn-success" title="Restaurar" onclick="restoreCustomer(${customer.id})">
+               <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+           `
+         : `
+            <a href="/provider/customers/${customer.id}"
+               class="btn btn-sm btn-info"
+               title="Visualizar">
+               <i class="bi bi-eye"></i>
+            </a>
+            <a href="/provider/customers/${customer.id}/edit"
+               class="btn btn-sm btn-warning"
+               title="Editar">
+               <i class="bi bi-pencil-square"></i>
+            </a>
+
+            <button type="button" class="btn btn-sm btn-danger" title="Excluir" onclick="confirmDelete(${customer.id})">
+               <i class="bi bi-trash"></i>
+            </button>
+           `;
 
       return `
       <tr class="table-row-hover">
@@ -166,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
                           "cpf"
                        )}</div>`
                      : ""
-               }
+  }
                ${
                   customer.cnpj
                      ? `<div class="text-dark"><i class="bi bi-building me-1"></i>${formatDocument(
@@ -235,23 +261,9 @@ document.addEventListener("DOMContentLoaded", function () {
          <td class="px-3 py-3 align-middle">
             <span class="badge ${badgeClass}">${statusLabel}</span>
          </td>
-         <td class="text-center align-middle">
-            <div class="btn-group" role="group">
-               <a href="/provider/customers/${customer.id}"
-                  class="btn btn-sm btn-outline-primary"
-                  data-bs-toggle="tooltip"
-                  title="Visualizar">
-                  <i class="bi bi-eye"></i>
-               </a>
-               <a href="/provider/customers/${customer.id}/edit"
-                  class="btn btn-sm btn-outline-success"
-                  data-bs-toggle="tooltip"
-                  title="Editar">
-                  <i class="bi bi-pencil"></i>
-               </a>
-               <button type="button" class="btn btn-sm btn-outline-warning toggle-status-btn" data-id="${customer.id}" data-current="${status}">
-                   <i class="bi bi-toggle2-on"></i> ${toggleLabel}
-               </button>
+         <td class="text-center align-middle text-nowrap">
+            <div class="d-inline-flex justify-content-center gap-2 flex-nowrap">
+               ${actionsHtml}
             </div>
          </td>
       </tr>`;
@@ -358,12 +370,21 @@ document.addEventListener("DOMContentLoaded", function () {
       clearMainSearch.addEventListener("click", clearFields);
    }
 
-   if (btnFilterCustomers) {
+  if (btnFilterCustomers) {
       btnFilterCustomers.addEventListener("click", (e) => {
          e.preventDefault();
          handleFilterSubmit();
       });
    }
+
+   // Auto-submeter ao alterar filtros
+   [statusSelect, typeSelect, areaSelect, deletedSelect].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("change", () => {
+         clearTimeout(window.filterTimeout);
+         window.filterTimeout = setTimeout(() => handleFilterSubmit(), 400);
+      });
+   });
 
    function handleFilterSubmit() {
       const hasFilters = !!(
@@ -441,45 +462,21 @@ function confirmDelete(customerId) {
    modal.show();
 }
 
-// Delegação para alternar status via AJAX
-document.addEventListener("click", async function (e) {
-   const target = e.target.closest(".toggle-status-btn");
-   if (!target) return;
-   e.preventDefault();
-   try {
-      const id = target.getAttribute("data-id");
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-      const response = await fetch(`/provider/customers/${id}/toggle-status`, {
-         method: "POST",
-         headers: {
-            "X-CSRF-TOKEN": csrfToken,
-            "X-Requested-With": "XMLHttpRequest",
-            "Accept": "application/json",
-         },
-      });
+// Restaurar cliente via POST com CSRF
+function restoreCustomer(customerId) {
+   const csrfToken = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
+   if (!csrfToken) return;
 
-      const json = await response.json().catch(() => null);
-      if (response.ok && json && json.success) {
-         window.easyAlert && window.easyAlert.success(json.message || "Status atualizado");
-         // Atualiza a badge e label do botão na linha
-         const row = target.closest("tr");
-         const badge = row && row.querySelector("td:nth-child(6) .badge");
-         // Determinar novo status alternando
-         const current = (target.getAttribute("data-current") || "").toLowerCase();
-         const next = current === "active" ? "inactive" : "active";
-         target.setAttribute("data-current", next);
-         target.innerHTML = `<i class="bi bi-toggle2-on"></i> ${next === "active" ? "Desativar" : "Ativar"}`;
-         if (badge) {
-            badge.textContent = next === "active" ? "Ativo" : "Inativo";
-            badge.classList.remove("badge-success", "badge-secondary", "badge-danger");
-            badge.classList.add(next === "active" ? "badge-success" : "badge-secondary");
-         }
-      } else {
-         const msg = (json && json.message) ? json.message : "Erro ao atualizar status";
-         window.easyAlert && window.easyAlert.error(msg);
-      }
-   } catch (err) {
-      window.easyAlert && window.easyAlert.error("Erro na requisição de status");
-      console.error(err);
-   }
-});
+   const form = document.createElement("form");
+   form.method = "POST";
+   form.action = `/provider/customers/${customerId}/restore`;
+   const csrfInput = document.createElement("input");
+   csrfInput.type = "hidden";
+   csrfInput.name = "_token";
+   csrfInput.value = csrfToken;
+   form.appendChild(csrfInput);
+   document.body.appendChild(form);
+   form.submit();
+}

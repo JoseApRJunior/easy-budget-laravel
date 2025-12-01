@@ -1,0 +1,1 @@
+'App\Models\Product::limit(3)- { echo "Nome: {$p->name}, Imagem: {$p->image}, ImageUrl: {$p->image_url}" . PHP_EOL; });' 

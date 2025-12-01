@@ -5,10 +5,10 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -40,7 +40,7 @@ class Product extends Model
      *
      * @var array
      */
-    protected $with = ['category'];
+    protected $with = [ 'category' ];
 
     /**
      * The attributes that are mass assignable.
@@ -116,7 +116,7 @@ class Product extends Model
         $rule = 'unique:products,sku';
 
         if ( $excludeId ) {
-            $rule  .= ',' . $excludeId . ',id';
+            $rule .= ',' . $excludeId . ',id';
         }
 
         return $rule . ',tenant_id,' . request()->user()->tenant_id;
@@ -279,7 +279,8 @@ class Product extends Model
     public function getImageUrlAttribute(): string
     {
         if ( empty( $this->image ) ) {
-            return asset( 'images/products/default.jpg' );
+            // Usar a imagem "não encontrada" como fallback
+            return asset( 'storage/img_not_found.png' );
         }
 
         // Se a imagem já for uma URL completa, retorna como está
@@ -289,9 +290,21 @@ class Product extends Model
 
         $p = ltrim( (string) $this->image, '/' );
         if ( Str::startsWith( $p, 'storage/' ) ) {
-            return asset( $p );
+            // Verificar se o arquivo existe antes de tentar acessá-lo
+            $fullPath = storage_path( 'app/public/' . Str::after( $p, 'storage/' ) );
+            if ( file_exists( $fullPath ) ) {
+                return asset( $p );
+            }
+        } else {
+            // Verificar se o arquivo existe antes de tentar acessá-lo
+            $fullPath = storage_path( 'app/public/' . $p );
+            if ( file_exists( $fullPath ) ) {
+                return asset( 'storage/' . $p );
+            }
         }
-        return asset( 'storage/' . $p );
+
+        // Se o arquivo não existir, retornar a imagem de fallback
+        return asset( 'storage/img_not_found.png' );
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
