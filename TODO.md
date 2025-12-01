@@ -200,3 +200,5 @@ Implementar Reports:
 A **nova ordem considera dependências reais** entre módulos, garantindo que cada implementação abra caminho para a próxima, evitando bloqueios e re-trabalho. Esta abordagem **reduce significativamente o risco** e **acelera a entrega de valor** ao usuário final.
 
 **Resultado:** Sistema 100% funcional em 7 semanas vs. implementação sequencial que resultaria em blocos de desenvolvimento com dependências quebradas.
+
+Tenho a tela C:\laragon\www\easy-budget-laravel\resources\views\pages\customer\edit.blade.php parece a que tem masi padrao com sistema, preciso que melhore a C:\laragon\www\easy-budget-laravel\resources\views\pages\category\edit.blade.php e C:\laragon\www\easy-budget-laravel\resources\views\pages\product\edit.blade.php, tem muitas inconsistencia de titulos, icones, class,cards uns usan outros nao, veja o melhor padrao de acordo com meu sistemas.

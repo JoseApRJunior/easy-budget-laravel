@@ -377,6 +377,7 @@
         </div>
 
         <div class="form-check form-switch mt-4">
+            <input type="hidden" name="status" value="inactive">
             <input class="form-check-input" type="checkbox" id="status" name="status" value="active" {{ old('status', $customer->status) === 'active' ? 'checked' : '' }}>
             <label class="form-check-label" for="status">Ativo</label>
         </div>
