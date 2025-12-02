@@ -153,6 +153,55 @@ class CategoryController extends Controller
     }
 
     /**
+     * Dashboard de categorias com métricas e estatísticas.
+     */
+    public function dashboard()
+    {
+        $user     = auth()->user();
+        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
+        $tenantId = $this->resolveTenantId();
+
+        $service = app( CategoryService::class);
+
+        // Métricas básicas
+        $totalCategories        = 0;
+        $activeCategories       = 0;
+        $inactiveCategories     = 0;
+        $deletedCategories      = 0;
+        $categoriesWithChildren = 0;
+        $recentCategories       = collect();
+
+        if ( $isAdmin ) {
+            // Métricas para admin (categorias globais)
+            $totalCategories        = Category::globalOnly()->count();
+            $activeCategories       = Category::globalOnly()->where( 'is_active', true )->count();
+            $inactiveCategories     = Category::globalOnly()->where( 'is_active', false )->count();
+            $deletedCategories      = Category::globalOnly()->onlyTrashed()->count();
+            $categoriesWithChildren = Category::globalOnly()->has( 'children' )->count();
+            $recentCategories       = Category::globalOnly()->latest()->take( 5 )->get();
+        } else {
+            // Métricas para provider (categorias do tenant + globais)
+            if ( $tenantId !== null ) {
+                $totalCategories        = Category::forTenant( $tenantId )->count();
+                $activeCategories       = Category::forTenant( $tenantId )->where( 'is_active', true )->count();
+                $inactiveCategories     = Category::forTenant( $tenantId )->where( 'is_active', false )->count();
+                $deletedCategories      = Category::forTenant( $tenantId )->onlyTrashed()->count();
+                $categoriesWithChildren = Category::forTenant( $tenantId )->has( 'children' )->count();
+                $recentCategories       = Category::forTenant( $tenantId )->latest()->take( 5 )->get();
+            }
+        }
+
+        return view( 'pages.category.dashboard', [
+            'totalCategories'        => $totalCategories,
+            'activeCategories'       => $activeCategories,
+            'inactiveCategories'     => $inactiveCategories,
+            'deletedCategories'      => $deletedCategories,
+            'categoriesWithChildren' => $categoriesWithChildren,
+            'recentCategories'       => $recentCategories,
+        ] );
+    }
+
+    /**
      * Form para criar categoria.
      */
     public function create()

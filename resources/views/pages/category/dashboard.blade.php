@@ -20,10 +20,7 @@
             <a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a>
           </li>
           <li class="breadcrumb-item">
-            <a href="{{ route( 'categories.index' ) }}">Categorias</a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">
-            Dashboard
+            <a href="{{ route( 'provider.categories.dashboard' ) }}">Categorias</a>
           </li>
         </ol>
       </nav>
@@ -242,7 +239,7 @@
             <a href="{{ route( 'categories.index' ) }}" class="btn btn-sm btn-outline-primary">
               <i class="bi bi-tags me-2"></i>Listar Categorias
             </a>
-            <a href="{{ route( 'provider.reports.categories' ) }}" class="btn btn-sm btn-outline-secondary">
+            <a href=""              class="btn btn-sm btn-outline-secondary">
               <i class="bi bi-file-earmark-text me-2"></i>Relatório de Categorias
             </a>
           </div>

@@ -55,7 +55,8 @@
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
                                             <option value="">Todos</option>
-                                            <option value="1" {{ ( $filters[ 'active' ] ?? '' ) === '1' ? 'selected' : '' }}>Ativo
+                                            <option value="1" {{ ( $filters[ 'active' ] ?? '' ) === '1' ? 'selected' : '' }}>
+                                                Ativo
                                             </option>
                                             <option value="0" {{ ( $filters[ 'active' ] ?? '' ) === '0' ? 'selected' : '' }}>
                                                 Inativo</option>
@@ -187,7 +188,8 @@
                                                             class="btn btn-warning" title="Editar" aria-label="Editar">
                                                             <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                                         </a>
-                                                        <form action="{{ route( 'provider.products.toggle-status', $product->sku ) }}"
+                                                        <form
+                                                            action="{{ route( 'provider.products.toggle-status', $product->sku ) }}"
                                                             method="POST" class="d-inline toggle-status-form"
                                                             onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
                                                             @csrf
@@ -264,154 +266,5 @@
 @endsection
 
 @push( 'scripts' )
-    <script>
-        // Confirmação antes de filtrar sem filtros
-        ( function () {
-            var form = document.getElementById( 'filtersFormProducts' );
-            if ( form ) {
-                form.addEventListener( 'submit', function ( e ) {
-                    if ( !e.submitter || e.submitter.id !== 'btnFilterProducts' ) return;
-                    var search = ( form.querySelector( '#search' )?.value || '' ).trim();
-                    var category = ( form.querySelector( '#category_id' )?.value || '' ).trim();
-                    var status = ( form.querySelector( '#active' )?.value || '' ).trim();
-                    var minPrice = ( form.querySelector( '#min_price' )?.value || '' ).trim();
-                    var maxPrice = ( form.querySelector( '#max_price' )?.value || '' ).trim();
-                    var hasFilters = !!( search || category || status || minPrice || maxPrice );
-                    if ( !hasFilters ) {
-                        e.preventDefault();
-                        var modalEl = document.getElementById( 'confirmAllProductsModal' );
-                        var confirmBtn = modalEl.querySelector( '.btn-confirm-all-products' );
-                        var modal = new bootstrap.Modal( modalEl );
-                        var handler = function () {
-                            confirmBtn.removeEventListener( 'click', handler );
-                            var hidden = document.createElement( 'input' );
-                            hidden.type = 'hidden';
-                            hidden.name = 'all';
-                            hidden.value = '1';
-                            form.appendChild( hidden );
-                            modal.hide();
-                            form.submit();
-                        };
-                        confirmBtn.addEventListener( 'click', handler );
-                        modal.show();
-                    }
-                } );
-            }
-        } )();
-        // Auto-submit do formulário de filtros (opcional - para busca em tempo real)
-        document.querySelectorAll( '#search, #category_id, #active, #min_price, #max_price' ).forEach( function ( element ) {
-            element.addEventListener( 'change', function () {
-                // Opcional: auto-submit após 500ms de inatividade
-                clearTimeout( window.filterTimeout );
-                window.filterTimeout = setTimeout( function () {
-                    // Normaliza moeda antes de enviar
-                    normalizeCurrencyInputs( element.closest( 'form' ) );
-                    element.closest( 'form' ).submit();
-                }, 500 );
-            } );
-        } );
-
-        // Máscara BRL simples e normalização
-        function formatBRL( value ) {
-            if ( value === null || value === undefined ) return '';
-            var onlyDigits = String( value ).replace( /[^0-9,\.]/g, '' );
-            if ( onlyDigits.indexOf( '.' ) !== -1 && onlyDigits.indexOf( ',' ) === -1 ) {
-                onlyDigits = onlyDigits.replace( /\./g, ',' );
-            }
-            var digits = onlyDigits.replace( /[^0-9]/g, '' );
-            if ( digits.length === 0 ) return '';
-            while ( digits.length < 3 ) digits = '0' + digits;
-            var intPart = digits.slice( 0, -2 );
-            var decPart = digits.slice( -2 );
-            intPart = intPart.replace( /\B(?=(\d{3})+(?!\d))/g, '.' );
-            return intPart + ',' + decPart;
-        }
-
-        function normalizeCurrency( val ) {
-            if ( !val ) return '';
-            var digits = String( val ).replace( /[^0-9]/g, '' );
-            if ( digits.length === 0 ) return '';
-            if ( digits.length === 1 ) digits = '0' + digits;
-            var intPart = digits.slice( 0, -2 );
-            var decPart = digits.slice( -2 );
-            return ( intPart.length ? intPart : '0' ) + '.' + decPart;
-        }
-
-        function normalizeCurrencyInputs( form ) {
-            form.querySelectorAll( '.currency-brl' ).forEach( function ( inp ) {
-                var normalized = normalizeCurrency( inp.value );
-                inp.value = normalized;
-            } );
-        }
-
-        document.querySelectorAll( '.currency-brl' ).forEach( function ( inp ) {
-            if ( inp.value ) {
-                inp.value = formatBRL( inp.value );
-            }
-            inp.addEventListener( 'focus', function () {
-                inp.value = normalizeCurrency( inp.value );
-            } );
-            inp.addEventListener( 'blur', function () {
-                inp.value = formatBRL( inp.value );
-            } );
-        } );
-
-        // Toggle de status via AJAX
-        document.querySelectorAll( '.toggle-status-form' ).forEach( function ( form ) {
-            form.addEventListener( 'submit', function ( e ) {
-                e.preventDefault();
-                const url = form.getAttribute( 'action' );
-                const btn = form.querySelector( 'button' );
-                btn.disabled = true;
-                const headers = {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                };
-                fetch( url, {
-                    method: 'PATCH',
-                    headers
-                } )
-                    .then( function ( res ) {
-                        return res.json();
-                    } )
-                    .then( function ( json ) {
-                        if ( json && json.success ) {
-                            window.easyAlert.success( json.message || 'Status atualizado' );
-                            const badge = form.closest( 'tr' ).querySelector( 'td:nth-child(6) .badge' );
-                            if ( badge ) {
-                                const isActive = badge.classList.contains( 'badge-success' );
-                                if ( isActive ) {
-                                    badge.classList.remove( 'badge-success' );
-                                    badge.classList.add( 'badge-danger' );
-                                    badge.textContent = 'Inativo';
-                                    btn.classList.remove( 'btn-warning' );
-                                    btn.classList.add( 'btn-success' );
-                                    btn.querySelector( 'i' ).className = 'bi bi-check-lg';
-                                    btn.setAttribute( 'aria-label', 'Ativar produto' );
-                                    form.setAttribute( 'onsubmit', "return confirm('Ativar este produto?')" );
-                                } else {
-                                    badge.classList.remove( 'badge-danger' );
-                                    badge.classList.add( 'badge-success' );
-                                    badge.textContent = 'Ativo';
-                                    btn.classList.remove( 'btn-success' );
-                                    btn.classList.add( 'btn-warning' );
-                                    btn.querySelector( 'i' ).className = 'bi bi-slash-circle';
-                                    btn.setAttribute( 'aria-label', 'Desativar produto' );
-                                    form.setAttribute( 'onsubmit', "return confirm('Desativar este produto?')" );
-                                }
-                            }
-                        } else {
-                            const msg = ( json && json.message ) ? json.message : 'Erro ao atualizar status';
-                            window.easyAlert.error( msg );
-                        }
-                    } )
-                    .catch( function () {
-                        window.easyAlert.error( 'Erro de comunicação' );
-                    } )
-                    .finally( function () {
-                        btn.disabled = false;
-                    } );
-            } );
-        } );
-    </script>
+    <script src="{{ asset( 'assets/js/product.js' ) }}"></script>
 @endpush

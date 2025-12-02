@@ -16,7 +16,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route( 'categories.index' ) }}">Categorias</a></li>
+                <li class="breadcrumb-item"><a href="{{ route( 'provider.categories.dashboard' ) }}">Categorias</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Listar</li>
             </ol>
         </nav>
@@ -44,7 +44,8 @@
                                     <label for="active">Status</label>
                                     <select class="form-control" id="active" name="active">
                                         <option value="">Todos</option>
-                                        <option value="1" {{ ( $filters[ 'active' ] ?? '' ) === '1' ? 'selected' : '' }}>Ativo
+                                        <option value="1" {{ ( $filters[ 'active' ] ?? '' ) === '1' ? 'selected' : '' }}>
+                                            Ativo
                                         </option>
                                         <option value="0" {{ ( $filters[ 'active' ] ?? '' ) === '0' ? 'selected' : '' }}>
                                             Inativo</option>
@@ -304,24 +305,7 @@
 </div>
 
 @push( 'scripts' )
-    <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            var deleteModal = document.getElementById( 'deleteModal' );
-            if ( deleteModal && deleteModal.parentElement !== document.body ) {
-                document.body.appendChild( deleteModal );
-            }
-            deleteModal.addEventListener( 'show.bs.modal', function ( event ) {
-                var button = event.relatedTarget;
-                if ( !button ) return;
-                var deleteUrl = button.getAttribute( 'data-delete-url' );
-                var categoryName = button.getAttribute( 'data-category-name' );
-                var form = document.getElementById( 'deleteForm' );
-                var nameEl = document.getElementById( 'deleteCategoryName' );
-                if ( form && deleteUrl ) form.setAttribute( 'action', deleteUrl );
-                if ( nameEl ) nameEl.textContent = '"' + ( categoryName || '' ) + '"';
-            } );
-        } );
-    </script>
+    <script src="{{ asset( 'assets/js/category.js' ) }}?v={{ time() }}"></script>
 @endpush
 <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -341,46 +325,3 @@
     </div>
 </div>
 @endsection
-
-@push( 'scripts' )
-    <script>
-        ( function () {
-            var form = document.getElementById( 'filtersFormCategories' );
-            if ( form ) {
-                form.addEventListener( 'submit', function ( e ) {
-                    if ( !e.submitter || e.submitter.id !== 'btnFilterCategories' ) return;
-                    var search = ( form.querySelector( '#search' )?.value || '' ).trim();
-                    var status = ( form.querySelector( '#active' )?.value || '' ).trim();
-                    var hasFilters = !!( search || status );
-                    if ( !hasFilters ) {
-                        e.preventDefault();
-                        var modalEl = document.getElementById( 'confirmAllCategoriesModal' );
-                        var confirmBtn = modalEl.querySelector( '.btn-confirm-all-categories' );
-                        var modal = new bootstrap.Modal( modalEl );
-                        var handler = function () {
-                            confirmBtn.removeEventListener( 'click', handler );
-                            var hidden = document.createElement( 'input' );
-                            hidden.type = 'hidden';
-                            hidden.name = 'all';
-                            hidden.value = '1';
-                            form.appendChild( hidden );
-                            modal.hide();
-                            form.submit();
-                        };
-                        confirmBtn.addEventListener( 'click', handler );
-                        modal.show();
-                    }
-                } );
-            }
-
-            document.querySelectorAll( '#search, #active, #per_page, #deleted' ).forEach( function ( element ) {
-                element.addEventListener( 'change', function () {
-                    clearTimeout( window.filterTimeout );
-                    window.filterTimeout = setTimeout( function () {
-                        element.closest( 'form' ).submit();
-                    }, 500 );
-                } );
-            } );
-        } )();
-    </script>
-@endpush
