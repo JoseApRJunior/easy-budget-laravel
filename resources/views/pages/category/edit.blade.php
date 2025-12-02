@@ -134,8 +134,8 @@
         <!-- Botões -->
         <div class="d-flex justify-content-between mt-4">
             <div>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                <a href="{{ route('categories.show', $category) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Cancelar
                 </a>
             </div>
             <button type="submit" class="btn btn-primary">

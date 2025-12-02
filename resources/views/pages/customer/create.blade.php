@@ -1,13 +1,13 @@
 @extends( 'layouts.app' )
 
-@section( 'title', 'Criar Novo Cliente' )
+@section( 'title', 'Novo Cliente' )
 
 @section( 'content' )
     <div class="container-fluid py-4">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">
-                <i class="bi bi-person-plus me-2"></i>Criar Novo Cliente
+                <i class="bi bi-person-plus me-2"></i>Novo Cliente
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
@@ -371,12 +371,14 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
+                    <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Cancelar
+                    </a>
+                </div>
+                <div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-circle me-2"></i>Criar Cliente
                     </button>
-                    <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
                 </div>
             </div>
         </form>
@@ -425,18 +427,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validação de data de nascimento
     function isValidBirthDate(value) {
         if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return false;
-        
+
         const parts = value.split('/');
         const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
         const today = new Date();
-        
+
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
-        
+
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
-        
+
         return age >= 18 && birthDate < today;
     }
 
