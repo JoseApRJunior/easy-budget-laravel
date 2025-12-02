@@ -9,8 +9,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/provider">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="/provider/reports">Relatórios</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.reports.index' ) }}">Relatórios</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
                 </ol>
             </nav>

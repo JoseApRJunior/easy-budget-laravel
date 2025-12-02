@@ -10,8 +10,12 @@
         <h1 class="h3 mb-0">
           <i class="bi bi-tags me-2"></i>Dashboard de Categorias
         </h1>
+        @php($isAdminView = false)
+        @role('admin')
+        @php($isAdminView = true)
+        @endrole
         <p class="text-muted mb-0">
-          Visão geral das categorias do seu sistema com atalhos rápidos para gestão.
+          {{ $isAdminView ? 'Visão geral das categorias globais do sistema com atalhos de gestão.' : 'Visão geral das suas categorias (custom + sistema) com atalhos de gestão.' }}
         </p>
       </div>
       <nav aria-label="breadcrumb">
@@ -20,7 +24,7 @@
             <a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a>
           </li>
           <li class="breadcrumb-item">
-            <a href="{{ route( 'provider.categories.dashboard' ) }}">Categorias</a>
+            <a href="{{ route( 'categories.dashboard' ) }}">Categorias</a>
           </li>
         </ol>
       </nav>
@@ -52,7 +56,7 @@
               </div>
             </div>
             <p class="text-muted small mb-0">
-              Quantidade total de categorias cadastradas para este tenant.
+              {{ $isAdminView ? 'Quantidade total de categorias globais do sistema.' : 'Quantidade total de categorias disponíveis neste espaço.' }}
             </p>
           </div>
         </div>
@@ -179,7 +183,18 @@
                             <span class="badge bg-danger-subtle text-danger">Inativa</span>
                           @endif
                         </td>
-                        <td>{{ optional( $category->created_at )->format( 'd/m/Y' ) }}</td>
+                        <td>
+                          @php($isAdminDate = false)
+                          @role('admin')
+                          @php($isAdminDate = true)
+                          @endrole
+                          @php($isGlobalDate = method_exists($category, 'isGlobal') ? $category->isGlobal() : false)
+                          @if( $isAdminDate || !$isGlobalDate )
+                            {{ optional( $category->created_at )->format( 'd/m/Y' ) }}
+                          @else
+                            —
+                          @endif
+                        </td>
                         <td class="text-end">
                           <a href="{{ route( 'categories.show', $category->slug ) }}"
                             class="btn btn-sm btn-outline-secondary">
@@ -209,20 +224,37 @@
             </h6>
           </div>
           <div class="card-body">
-            <ul class="list-unstyled mb-0 small text-muted">
-              <li class="mb-2">
-                <i class="bi bi-diagram-3-fill text-primary me-2"></i>
-                Mantenha a estrutura hierárquica organizada para facilitar a navegação.
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-tag-fill text-success me-2"></i>
-                Use categorias de sistema quando possível para padronizar com outros usuários.
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                Revise categorias inativas que ainda podem ser úteis para o negócio.
-              </li>
-            </ul>
+            @if($isAdminView)
+              <ul class="list-unstyled mb-0 small text-muted">
+                <li class="mb-2">
+                  <i class="bi bi-shield-lock-fill text-primary me-2"></i>
+                  Gerencie categorias globais com cautela; mudanças afetam todos os espaços.
+                </li>
+                <li class="mb-2">
+                  <i class="bi bi-code-slash text-success me-2"></i>
+                  Mantenha padronização em nomes e slugs para consistência.
+                </li>
+                <li class="mb-2">
+                  <i class="bi bi-diagram-3-fill text-warning me-2"></i>
+                  Revise hierarquias e subcategorias para garantir coerência.
+                </li>
+              </ul>
+            @else
+              <ul class="list-unstyled mb-0 small text-muted">
+                <li class="mb-2">
+                  <i class="bi bi-diagram-3-fill text-primary me-2"></i>
+                  Mantenha a estrutura hierárquica organizada para facilitar a navegação.
+                </li>
+                <li class="mb-2">
+                  <i class="bi bi-tag-fill text-success me-2"></i>
+                  Use categorias de sistema quando possível para padronizar com outros usuários.
+                </li>
+                <li class="mb-2">
+                  <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                  Revise categorias inativas que ainda podem ser úteis para o negócio.
+                </li>
+              </ul>
+            @endif
           </div>
         </div>
 
@@ -239,8 +271,8 @@
             <a href="{{ route( 'categories.index' ) }}" class="btn btn-sm btn-outline-primary">
               <i class="bi bi-tags me-2"></i>Listar Categorias
             </a>
-            <a href=""              class="btn btn-sm btn-outline-secondary">
-              <i class="bi bi-file-earmark-text me-2"></i>Relatório de Categorias
+            <a href="{{ route('categories.export', ['format' => 'xlsx']) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-file-earmark-text me-2"></i>Exportar (Excel)
             </a>
           </div>
         </div>

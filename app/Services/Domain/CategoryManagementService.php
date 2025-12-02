@@ -147,7 +147,7 @@ class CategoryManagementService
         $all   = [];
         $queue = [ $categoryId ];
         while ( !empty( $queue ) ) {
-            $children = \App\Models\Category::query()
+            $children = Category::query()
                 ->whereIn( 'parent_id', $queue )
                 ->whereNull( 'deleted_at' )
                 ->pluck( 'id' )

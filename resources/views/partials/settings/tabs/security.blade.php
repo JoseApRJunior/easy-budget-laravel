@@ -12,7 +12,7 @@
                 <div class="mb-4">
                     <h5 class="h6 text-primary mb-2">Alterar Senha</h5>
                     <p class="text-muted mb-2">Gerencie sua senha de acesso em uma página dedicada.</p>
-                    <a href="{{ url( '/provider/change-password' ) }}" class="link-secondary">
+                    <a href="{{ url( '/p/change-password' ) }}" class="link-secondary">
                         <i class="bi bi-key me-1"></i>Alterar Senha
                     </a>
                 </div>

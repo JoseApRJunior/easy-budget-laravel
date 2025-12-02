@@ -134,7 +134,7 @@
                                                         <i class="bi bi-people me-2"></i>Clientes</a></li>
                                         <li><a class="dropdown-item" href="{{ route( 'provider.products.dashboard' ) }}">
                                                         <i class="bi bi-box me-2"></i>Produtos</a></li>
-                                        <li><a class="dropdown-item" href="{{ route( 'provider.categories.dashboard' ) }}">
+                                        <li><a class="dropdown-item" href="{{ route( 'categories.dashboard' ) }}">
                                                         <i class="bi bi-tags me-2"></i>Categorias</a></li>
                                         <li><a class="dropdown-item" href="{{ route( 'provider.budgets.dashboard' ) }}">
                                                         <i class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
