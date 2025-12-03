@@ -10,10 +10,10 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}"
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}"
                             class="text-decoration-none">Dashboard</a>
                     </li>
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider/customers' ) }}"
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.customers.index' ) }}"
                             class="text-decoration-none">Clientes</a></li>
                     <li class="breadcrumb-item active">{{ $customer->commonData?->first_name }}
                         {{ $customer->commonData?->last_name }}

@@ -325,4 +325,82 @@ class CategoryRepository extends AbstractGlobalRepository
         return $query->paginate( $perPage );
     }
 
+    /**
+     * Count all global categories.
+     *
+     * @return int
+     */
+    public function countGlobalCategories(): int
+    {
+        return $this->model->newQuery()->globalOnly()->count();
+    }
+
+    /**
+     * Count active global categories.
+     *
+     * @return int
+     */
+    public function countActiveGlobalCategories(): int
+    {
+        return $this->model->newQuery()->globalOnly()->where( 'is_active', true )->count();
+    }
+
+    /**
+     * Get recent global categories.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getRecentGlobalCategories( int $limit = 10 ): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model->newQuery()
+            ->globalOnly()
+            ->orderBy( 'created_at', 'desc' )
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
+     * Count categories for a specific tenant.
+     *
+     * @param int $tenantId
+     * @return int
+     */
+    public function countCategoriesForTenant( int $tenantId ): int
+    {
+        return $this->model->newQuery()
+            ->forTenant( $tenantId )
+            ->count();
+    }
+
+    /**
+     * Count active categories for a specific tenant.
+     *
+     * @param int $tenantId
+     * @return int
+     */
+    public function countActiveCategoriesForTenant( int $tenantId ): int
+    {
+        return $this->model->newQuery()
+            ->forTenant( $tenantId )
+            ->where( 'is_active', true )
+            ->count();
+    }
+
+    /**
+     * Get recent categories for a specific tenant.
+     *
+     * @param int $tenantId
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getRecentCategoriesForTenant( int $tenantId, int $limit = 10 ): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model->newQuery()
+            ->forTenant( $tenantId )
+            ->orderBy( 'created_at', 'desc' )
+            ->limit( $limit )
+            ->get();
+    }
+
 }

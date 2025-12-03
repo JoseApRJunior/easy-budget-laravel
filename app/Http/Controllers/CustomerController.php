@@ -502,4 +502,9 @@ class CustomerController extends Controller
             'stats' => $result->getData(),
         ]);
     }
+
+        return view('pages.customer.dashboard', [
+            'stats' => $result->getData(),
+        ]);
+    }
 }

@@ -133,10 +133,20 @@ Route::prefix('email')->name('verification.')->group(function () {
 
 Route::get('/confirm-account', [CustomVerifyEmailController::class, 'confirmAccount'])->name('confirm-account');
 
-// Unified Categories Dashboard
-// Unified route for both provider and admin users
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/categories/dashboard', [CategoryController::class, 'dashboard'])->name('categories.dashboard');
+// Categories - unified (fora de provider/admin)
+Route::middleware(['auth', 'verified'])->prefix('categories')->name('categories.')->group(function () {
+    Route::get('/dashboard', [CategoryController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::get('/export', [CategoryController::class, 'export'])->name('export');
+    Route::get('/ajax/check-slug', [CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{slug}', [CategoryController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
+    Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
 });
 
 // Provider routes group
@@ -215,24 +225,6 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::post('/{customer}/duplicate', [CustomerController::class, 'duplicate'])->name('duplicate');
     });
 
-    // Categories (novo módulo baseado em slug + Service Layer)
-    Route::prefix('categories')->name('categories.')->group(function () {
-        // CRUD principal
-        Route::get('/', [CategoryController::class, 'index'])->name('index');
-        Route::get('/create', [CategoryController::class, 'create'])->name('create');
-        Route::post('/', [CategoryController::class, 'store'])->name('store');
-        Route::get('/{id}', [CategoryController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
-
-        // Status e exclusão
-        Route::patch('/{id}/toggle-status', [CategoryController::class, 'toggle_status'])->name('toggle-status');
-        Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
-
-        // Export
-        Route::get('/export', [CategoryController::class, 'export'])->name('export');
-    });
 
     // Products (novo módulo baseado em SKU + Service Layer)
     Route::prefix('products')->name('products.')->group(function () {
@@ -547,10 +539,6 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
         Route::get('/{user}/activity', [UserManagementController::class, 'activity'])->name('activity');
     });
 
-    // Category Management (Admin)
-    Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/dashboard', [CategoryController::class, 'dashboard'])->name('admin-dashboard');
-    });
 
     // Activity Management
     Route::prefix('activities')->name('activities.')->group(function () {
@@ -708,18 +696,6 @@ Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(fu
     Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
 });
 
-// Admin Category Management (espelhado)
-Route::middleware(['auth'])->prefix('admin/categories')->name('admin.categories.')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('index');
-    Route::get('/create', [CategoryController::class, 'create'])->name('create');
-    Route::get('/export', [CategoryController::class, 'export'])->name('export');
-    Route::post('/', [CategoryController::class, 'store'])->name('store');
-    Route::get('/{slug}', [CategoryController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
-    Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-    Route::post('/{id}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
-});
 
 // Queues routes group
 // Routes for queue management with auth and verified middlewares
