@@ -75,7 +75,7 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container py-4">
+<div class="container py-1">
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -235,7 +235,7 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container-fluid py-4">
+<div class="container-fluid py-1">
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -909,4 +909,5 @@ resources/views/
 - Documente funcionalidades complexas
 - Use nomes de classe descritivos';
     }
+
 }

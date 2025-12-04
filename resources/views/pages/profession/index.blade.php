@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
@@ -9,7 +9,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/admin' ) }}">Dashboard Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
                     <li class="breadcrumb-item active">Profissões</li>
                 </ol>
             </nav>
@@ -17,7 +17,7 @@
 
         <!-- Botão Adicionar -->
         <div class="mb-4">
-            <a href="{{ url( '/admin/professions/create' ) }}" class="btn btn-primary">
+            <a href="{{ url('/admin/professions/create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>Adicionar Profissão
             </a>
         </div>
@@ -25,7 +25,7 @@
         <!-- Tabela de Profissões -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
-                @if ( $professions && count( $professions ) > 0 )
+                @if ($professions && count($professions) > 0)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
@@ -38,7 +38,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ( $professions as $profession )
+                                @foreach ($professions as $profession)
                                     <tr>
                                         <td class="px-4 py-3 fw-medium">{{ $profession->id }}</td>
                                         <td class="px-4 py-3">
@@ -51,15 +51,15 @@
                                             <code class="text-muted">{{ $profession->slug }}</code>
                                         </td>
                                         <td class="px-4 py-3 text-muted">
-                                            {{ \Carbon\Carbon::parse( $profession->createdAt )->format( 'd/m/Y H:i' ) }}
+                                            {{ \Carbon\Carbon::parse($profession->createdAt)->format('d/m/Y H:i') }}
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ url( '/admin/professions/' . $profession->id ) }}"
+                                                <a href="{{ url('/admin/professions/' . $profession->id) }}"
                                                     class="btn btn-sm btn-outline-info" title="Visualizar">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="{{ url( '/admin/professions/' . $profession->id . '/edit' ) }}"
+                                                <a href="{{ url('/admin/professions/' . $profession->id . '/edit') }}"
                                                     class="btn btn-sm btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
@@ -79,7 +79,7 @@
                         <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
                         <h5 class="mt-3 text-muted">Nenhuma profissão encontrada</h5>
                         <p class="text-muted mb-4">Comece adicionando sua primeira profissão.</p>
-                        <a href="{{ url( '/admin/professions/create' ) }}" class="btn btn-primary">
+                        <a href="{{ url('/admin/professions/create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle me-2"></i>Adicionar Profissão
                         </a>
                     </div>
@@ -106,7 +106,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <form id="deleteForm" method="POST" style="display: inline;">
                         @csrf
-                        @method( 'DELETE' )
+                        @method('DELETE')
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-trash me-2"></i>Excluir
                         </button>
@@ -116,15 +116,15 @@
         </div>
     </div>
 
-    @section( 'scripts' )
-        <script>
-            function confirmDelete( professionId, professionName ) {
-                document.getElementById( 'professionName' ).textContent = professionName;
-                document.getElementById( 'deleteForm' ).action = '{{ url( "/admin/professions" ) }}/' + professionId;
+@section('scripts')
+    <script>
+        function confirmDelete(professionId, professionName) {
+            document.getElementById('professionName').textContent = professionName;
+            document.getElementById('deleteForm').action = '{{ url('/admin/professions') }}/' + professionId;
 
-                const modal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
-                modal.show();
-            }
-        </script>
-    @endsection
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+    </script>
+@endsection
 @endsection

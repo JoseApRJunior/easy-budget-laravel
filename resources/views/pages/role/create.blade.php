@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
@@ -9,8 +9,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/admin' ) }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url( '/admin/roles' ) }}">Funções</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/admin/roles') }}">Funções</a></li>
                     <li class="breadcrumb-item active">Nova</li>
                 </ol>
             </nav>
@@ -19,16 +19,17 @@
         <!-- Formulário -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <form action="{{ url( '/admin/roles/store' ) }}" method="POST">
+                <form action="{{ url('/admin/roles/store') }}" method="POST">
                     @csrf
                     <div class="row g-4">
                         <!-- Nome -->
                         <div class="col-12">
                             <div class="form-floating">
-                                <input type="text" class="form-control @error( 'name' ) is-invalid @enderror" id="name"
-                                    name="name" placeholder="Nome da Função" value="{{ old( 'name' ) }}" required>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                    id="name" name="name" placeholder="Nome da Função" value="{{ old('name') }}"
+                                    required>
                                 <label for="name">Nome da Função *</label>
-                                @error( 'name' )
+                                @error('name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <div class="form-text">Ex: Administrador, Usuário, Gerente, Operador, etc.</div>
@@ -39,7 +40,7 @@
                     </div>
 
                     <div class="mt-4 d-flex justify-content-between">
-                        <a href="{{ url( '/admin/roles' ) }}" class="btn btn-outline-secondary">
+                        <a href="{{ url('/admin/roles') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Voltar
                         </a>
                         <button type="submit" class="btn btn-primary">

@@ -1,15 +1,15 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', $pageTitle . ' - Easy Budget' )
+@section('title', $pageTitle . ' - Easy Budget')
 
-@section( 'content' )
+@section('content')
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-chart-line text-primary me-2"></i>
                 {{ $pageTitle }}
             </h1>
-            <a href="{{ url( '/admin/monitoring' ) }}" class="btn btn-outline-secondary">
+            <a href="{{ url('/admin/monitoring') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>
         </div>
@@ -19,7 +19,7 @@
                 <h6 class="m-0 font-weight-bold text-primary">Detalhes do Middleware</h6>
             </div>
             <div class="card-body">
-                <div class="text-center py-4">
+                <div class="text-center py-1">
                     <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
                     <h5 class="text-muted">Métricas específicas para {{ $middlewareName }}</h5>
                     <p class="text-muted">Dados detalhados em desenvolvimento</p>

@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Produtos')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -19,8 +19,11 @@
                     <li class="breadcrumb-item">
                         <a href="{{ route('provider.dashboard') }}">Dashboard</a>
                     </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('provider.products.index') }}">Produtos</a>
+                    </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        <a href="{{ route('provider.products.dashboard') }}">Produtos</a>
+                        Dashboard de Produtos
                     </li>
                 </ol>
             </nav>

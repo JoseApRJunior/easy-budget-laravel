@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -22,7 +22,7 @@
                             <i class="bi bi-plus-circle me-1"></i>
                             Novo Teste
                         </button>
-                        <a href="{{ route( 'mailtrap.index' ) }}" class="btn btn-secondary">
+                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-1"></i>
                             Voltar ao Dashboard
                         </a>
@@ -42,7 +42,7 @@
                                     Testes Executados
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $test_history ) ? count( $test_history ) : 0 }}
+                                    {{ isset($test_history) ? count($test_history) : 0 }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -62,7 +62,7 @@
                                     Tipos Disponíveis
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $test_types ) ? count( $test_types ) : 0 }}
+                                    {{ isset($test_types) ? count($test_types) : 0 }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -82,7 +82,7 @@
                                     Último Teste
                                 </div>
                                 <div class="h6 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $recent_results ) && count( $recent_results ) > 0 ? \Carbon\Carbon::parse( $recent_results[ 0 ][ 'cached_at' ] )->format( 'H:i' ) : 'Nunca' }}
+                                    {{ isset($recent_results) && count($recent_results) > 0 ? \Carbon\Carbon::parse($recent_results[0]['cached_at'])->format('H:i') : 'Nunca' }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -102,8 +102,9 @@
                                     Taxa de Sucesso
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $recent_results ) && count( $recent_results ) > 0 ?
-        number_format( collect( $recent_results )->where( 'is_success', true )->count() / count( $recent_results ) * 100, 1 ) : '0' }}%
+                                    {{ isset($recent_results) && count($recent_results) > 0
+                                        ? number_format((collect($recent_results)->where('is_success', true)->count() / count($recent_results)) * 100, 1)
+                                        : '0' }}%
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -126,25 +127,29 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        @if( isset( $test_types ) && count( $test_types ) > 0 )
+                        @if (isset($test_types) && count($test_types) > 0)
                             <div class="row">
-                                @foreach( $test_types as $testKey => $testInfo )
+                                @foreach ($test_types as $testKey => $testInfo)
                                     <div class="col-xl-6 col-lg-12 mb-4">
                                         <div class="card border-left-info h-100">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                                     <div class="flex-grow-1">
-                                                        <h5 class="card-title mb-2">{{ $testInfo[ 'name' ] }}</h5>
-                                                        <p class="card-text small text-muted mb-3">{{ $testInfo[ 'description' ] }}
+                                                        <h5 class="card-title mb-2">{{ $testInfo['name'] }}</h5>
+                                                        <p class="card-text small text-muted mb-3">
+                                                            {{ $testInfo['description'] }}
                                                         </p>
 
                                                         <!-- Status do último teste -->
                                                         @php
-                                                            $lastTest = collect( $recent_results ?? [] )->firstWhere( 'test_type', $testKey );
+                                                            $lastTest = collect($recent_results ?? [])->firstWhere(
+                                                                'test_type',
+                                                                $testKey,
+                                                            );
                                                         @endphp
-                                                        @if( $lastTest )
+                                                        @if ($lastTest)
                                                             <div class="test-status mb-3">
-                                                                @if( $lastTest[ 'is_success' ] )
+                                                                @if ($lastTest['is_success'])
                                                                     <span class="badge bg-success">
                                                                         <i class="bi bi-check-circle me-1"></i>
                                                                         Sucesso
@@ -157,7 +162,7 @@
                                                                 @endif
                                                                 <small class="text-muted ms-2">
                                                                     Último teste:
-                                                                    {{ \Carbon\Carbon::parse( $lastTest[ 'cached_at' ] )->format( 'd/m/Y H:i:s' ) }}
+                                                                    {{ \Carbon\Carbon::parse($lastTest['cached_at'])->format('d/m/Y H:i:s') }}
                                                                 </small>
                                                             </div>
                                                         @endif
@@ -172,21 +177,23 @@
                                                 </div>
 
                                                 <!-- Detalhes do teste -->
-                                                @if( isset( $testInfo[ 'parameters' ] ) && count( $testInfo[ 'parameters' ] ) > 0 )
+                                                @if (isset($testInfo['parameters']) && count($testInfo['parameters']) > 0)
                                                     <div class="test-parameters">
                                                         <h6 class="small text-muted mb-2">PARÂMETROS NECESSÁRIOS:</h6>
                                                         <div class="row">
-                                                            @foreach( $testInfo[ 'parameters' ] as $param )
+                                                            @foreach ($testInfo['parameters'] as $param)
                                                                 <div class="col-md-6 mb-2">
                                                                     <small class="d-block">
-                                                                        <i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>
-                                                                        {{ $param[ 'name' ] }}
-                                                                        @if( isset( $param[ 'required' ] ) && $param[ 'required' ] )
+                                                                        <i class="bi bi-circle-fill me-1"
+                                                                            style="font-size: 6px;"></i>
+                                                                        {{ $param['name'] }}
+                                                                        @if (isset($param['required']) && $param['required'])
                                                                             <span class="text-danger">*</span>
                                                                         @endif
                                                                     </small>
-                                                                    @if( isset( $param[ 'description' ] ) )
-                                                                        <small class="text-muted d-block">{{ $param[ 'description' ] }}</small>
+                                                                    @if (isset($param['description']))
+                                                                        <small
+                                                                            class="text-muted d-block">{{ $param['description'] }}</small>
                                                                     @endif
                                                                 </div>
                                                             @endforeach
@@ -199,7 +206,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <div class="text-center py-4">
+                            <div class="text-center py-1">
                                 <i class="bi bi-clipboard-x fs-1 text-muted mb-3"></i>
                                 <h6 class="text-muted">Nenhum tipo de teste disponível</h6>
                                 <p class="text-muted">Os tipos de teste serão carregados automaticamente.</p>
@@ -232,7 +239,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        @if( isset( $test_history ) && count( $test_history ) > 0 )
+                        @if (isset($test_history) && count($test_history) > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -245,13 +252,13 @@
                                         </tr>
                                     </thead>
                                     <tbody id="testHistoryBody">
-                                        @foreach( $test_history as $test )
-                                            <tr data-status="{{ $test[ 'is_success' ] ? 'success' : 'failed' }}">
+                                        @foreach ($test_history as $test)
+                                            <tr data-status="{{ $test['is_success'] ? 'success' : 'failed' }}">
                                                 <td>
-                                                    <strong>{{ $test[ 'name' ] ?? $test[ 'test_type' ] }}</strong>
+                                                    <strong>{{ $test['name'] ?? $test['test_type'] }}</strong>
                                                 </td>
                                                 <td>
-                                                    @if( $test[ 'is_success' ] )
+                                                    @if ($test['is_success'])
                                                         <span class="badge bg-success">
                                                             <i class="bi bi-check-circle me-1"></i>
                                                             Sucesso
@@ -264,16 +271,17 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <span class="text-muted">{{ Str::limit( $test[ 'message' ] ?? 'N/A', 50 ) }}</span>
+                                                    <span
+                                                        class="text-muted">{{ Str::limit($test['message'] ?? 'N/A', 50) }}</span>
                                                 </td>
                                                 <td>
                                                     <small class="text-muted">
-                                                        {{ isset( $test[ 'cached_at' ] ) ? \Carbon\Carbon::parse( $test[ 'cached_at' ] )->format( 'd/m/Y H:i:s' ) : 'N/A' }}
+                                                        {{ isset($test['cached_at']) ? \Carbon\Carbon::parse($test['cached_at'])->format('d/m/Y H:i:s') : 'N/A' }}
                                                     </small>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        onclick="runSpecificTest('{{ $test[ 'test_type' ] }}')">
+                                                        onclick="runSpecificTest('{{ $test['test_type'] }}')">
                                                         <i class="bi bi-play me-1"></i>
                                                         Repetir
                                                     </button>
@@ -284,7 +292,7 @@
                                 </table>
                             </div>
                         @else
-                            <div class="text-center py-4">
+                            <div class="text-center py-1">
                                 <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
                                 <h6 class="text-muted">Nenhum teste no histórico</h6>
                                 <p class="text-muted">Execute seu primeiro teste para ver o histórico aqui.</p>
@@ -310,9 +318,9 @@
                             <label for="testType" class="form-label">Tipo de Teste</label>
                             <select class="form-select" id="testType" name="test_type" required>
                                 <option value="">Selecione um tipo de teste...</option>
-                                @if( isset( $test_types ) )
-                                    @foreach( $test_types as $key => $test )
-                                        <option value="{{ $key }}">{{ $test[ 'name' ] }}</option>
+                                @if (isset($test_types))
+                                    @foreach ($test_types as $key => $test)
+                                        <option value="{{ $key }}">{{ $test['name'] }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -353,100 +361,99 @@
     </div>
 @endsection
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         function refreshTests() {
             window.location.reload();
         }
 
         function showTestModal() {
-            const modal = new bootstrap.Modal( document.getElementById( 'testModal' ) );
+            const modal = new bootstrap.Modal(document.getElementById('testModal'));
             modal.show();
         }
 
-        function runSpecificTest( testType ) {
+        function runSpecificTest(testType) {
             // Preencher o select com o tipo específico
-            document.getElementById( 'testType' ).value = testType;
+            document.getElementById('testType').value = testType;
 
             // Buscar parâmetros específicos do teste
-            loadTestParameters( testType );
+            loadTestParameters(testType);
 
             // Mostrar modal
             showTestModal();
         }
 
-        function loadTestParameters( testType ) {
-            const dynamicFieldsDiv = document.getElementById( 'dynamicFields' );
+        function loadTestParameters(testType) {
+            const dynamicFieldsDiv = document.getElementById('dynamicFields');
 
             // Simular busca de parâmetros (em produção seria via AJAX)
             const testParams = {
-                'connectivity': [
-                    {
-                        name: 'timeout',
-                        label: 'Timeout (segundos)',
-                        type: 'number',
-                        value: 30,
-                        required: false
-                    }
-                ],
-                'verification': [
-                    {
-                        name: 'template',
-                        label: 'Template de E-mail',
-                        type: 'select',
-                        options: [
-                            { value: 'default', label: 'Padrão' },
-                            { value: 'custom', label: 'Personalizado' }
-                        ],
-                        value: 'default',
-                        required: false
-                    }
-                ],
-                'budget_notification': [
-                    {
-                        name: 'budget_id',
-                        label: 'ID do Orçamento',
-                        type: 'number',
-                        value: '',
-                        required: true,
-                        placeholder: 'Digite o ID do orçamento para teste'
-                    }
-                ],
-                'invoice_notification': [
-                    {
-                        name: 'invoice_id',
-                        label: 'ID da Fatura',
-                        type: 'number',
-                        value: '',
-                        required: true,
-                        placeholder: 'Digite o ID da fatura para teste'
-                    }
-                ]
+                'connectivity': [{
+                    name: 'timeout',
+                    label: 'Timeout (segundos)',
+                    type: 'number',
+                    value: 30,
+                    required: false
+                }],
+                'verification': [{
+                    name: 'template',
+                    label: 'Template de E-mail',
+                    type: 'select',
+                    options: [{
+                            value: 'default',
+                            label: 'Padrão'
+                        },
+                        {
+                            value: 'custom',
+                            label: 'Personalizado'
+                        }
+                    ],
+                    value: 'default',
+                    required: false
+                }],
+                'budget_notification': [{
+                    name: 'budget_id',
+                    label: 'ID do Orçamento',
+                    type: 'number',
+                    value: '',
+                    required: true,
+                    placeholder: 'Digite o ID do orçamento para teste'
+                }],
+                'invoice_notification': [{
+                    name: 'invoice_id',
+                    label: 'ID da Fatura',
+                    type: 'number',
+                    value: '',
+                    required: true,
+                    placeholder: 'Digite o ID da fatura para teste'
+                }]
             };
 
-            if ( testParams[testType] ) {
+            if (testParams[testType]) {
                 let fieldsHtml = '';
 
-                testParams[testType].forEach( param => {
+                testParams[testType].forEach(param => {
                     fieldsHtml += `<div class="mb-3">`;
                     fieldsHtml += `<label for="${param.name}" class="form-label">${param.label}</label>`;
 
-                    if ( param.type === 'select' ) {
+                    if (param.type === 'select') {
                         fieldsHtml += `<select class="form-select" id="${param.name}" name="${param.name}">`;
-                        param.options.forEach( option => {
-                            fieldsHtml += `<option value="${option.value}" ${option.value === param.value ? 'selected' : ''}>${option.label}</option>`;
-                        } );
+                        param.options.forEach(option => {
+                            fieldsHtml +=
+                                `<option value="${option.value}" ${option.value === param.value ? 'selected' : ''}>${option.label}</option>`;
+                        });
                         fieldsHtml += `</select>`;
                     } else {
-                        fieldsHtml += `<input type="${param.type}" class="form-control" id="${param.name}" name="${param.name}" value="${param.value}" ${param.required ? 'required' : ''} placeholder="${param.placeholder || ''}">`;
+                        fieldsHtml +=
+                            `<input type="${param.type}" class="form-control" id="${param.name}" name="${param.name}" value="${param.value}" ${param.required ? 'required' : ''} placeholder="${param.placeholder || ''}">`;
                     }
 
-                    if ( param.description ) {
+                    if (param.description) {
                         fieldsHtml += `<div class="form-text">${param.description}</div>`;
                     }
 
                     fieldsHtml += `</div>`;
-                } );
+                });
 
                 dynamicFieldsDiv.innerHTML = fieldsHtml;
             } else {
@@ -455,116 +462,120 @@
         }
 
         function executeTest() {
-            const testType = document.getElementById( 'testType' ).value;
-            const recipientEmail = document.getElementById( 'recipientEmail' ).value;
+            const testType = document.getElementById('testType').value;
+            const recipientEmail = document.getElementById('recipientEmail').value;
 
-            if ( !testType ) {
-                showAlert( 'Selecione um tipo de teste', 'warning' );
+            if (!testType) {
+                showAlert('Selecione um tipo de teste', 'warning');
                 return;
             }
 
-            if ( !recipientEmail ) {
-                showAlert( 'Informe o e-mail do destinatário', 'warning' );
+            if (!recipientEmail) {
+                showAlert('Informe o e-mail do destinatário', 'warning');
                 return;
             }
 
-            showLoading( 'Executando teste...' );
+            showLoading('Executando teste...');
 
-            const formData = new FormData( document.getElementById( 'testForm' ) );
+            const formData = new FormData(document.getElementById('testForm'));
 
-            fetch( '{{ route( "mailtrap.run-test" ) }}', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            } )
-                .then( response => response.json() )
-                .then( data => {
-                    hideLoading();
-
-                    const resultDiv = document.getElementById( 'testResult' );
-                    const alertDiv = document.getElementById( 'testAlert' );
-                    const messageDiv = document.getElementById( 'testMessage' );
-
-                    resultDiv.style.display = 'block';
-
-                    if ( data.success ) {
-                        alertDiv.className = 'alert alert-success';
-                        messageDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + ( data.message || 'Teste executado com sucesso!' );
-
-                        // Fechar modal e atualizar página após sucesso
-                        setTimeout( () => {
-                            bootstrap.Modal.getInstance( document.getElementById( 'testModal' ) ).hide();
-                            window.location.reload();
-                        }, 2000 );
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        messageDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + ( data.error || 'Erro ao executar teste' );
-                    }
-                } )
-                .catch( error => {
-                    hideLoading();
-
-                    const resultDiv = document.getElementById( 'testResult' );
-                    const alertDiv = document.getElementById( 'testAlert' );
-                    const messageDiv = document.getElementById( 'testMessage' );
-
-                    resultDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    messageDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Erro interno: ' + error.message;
-                } );
-        }
-
-        function clearTestHistory() {
-            if ( confirm( 'Tem certeza que deseja limpar o histórico de testes? Esta ação não pode ser desfeita.' ) ) {
-                showLoading( 'Limpando histórico...' );
-
-                fetch( '{{ route( "mailtrap.clear-cache" ) }}', {
+            fetch('{{ route('mailtrap.run-test') }}', {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+
+                    const resultDiv = document.getElementById('testResult');
+                    const alertDiv = document.getElementById('testAlert');
+                    const messageDiv = document.getElementById('testMessage');
+
+                    resultDiv.style.display = 'block';
+
+                    if (data.success) {
+                        alertDiv.className = 'alert alert-success';
+                        messageDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + (data.message ||
+                            'Teste executado com sucesso!');
+
+                        // Fechar modal e atualizar página após sucesso
+                        setTimeout(() => {
+                            bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        alertDiv.className = 'alert alert-danger';
+                        messageDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + (data.error ||
+                            'Erro ao executar teste');
                     }
-                } )
-                    .then( response => response.json() )
-                    .then( data => {
-                        hideLoading();
-                        if ( data.success ) {
-                            showAlert( 'Histórico limpo com sucesso!', 'success' );
-                            setTimeout( () => window.location.reload(), 1500 );
-                        } else {
-                            showAlert( 'Erro ao limpar histórico: ' + ( data.error || 'Erro desconhecido' ), 'danger' );
+                })
+                .catch(error => {
+                    hideLoading();
+
+                    const resultDiv = document.getElementById('testResult');
+                    const alertDiv = document.getElementById('testAlert');
+                    const messageDiv = document.getElementById('testMessage');
+
+                    resultDiv.style.display = 'block';
+                    alertDiv.className = 'alert alert-danger';
+                    messageDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Erro interno: ' + error
+                        .message;
+                });
+        }
+
+        function clearTestHistory() {
+            if (confirm('Tem certeza que deseja limpar o histórico de testes? Esta ação não pode ser desfeita.')) {
+                showLoading('Limpando histórico...');
+
+                fetch('{{ route('mailtrap.clear-cache') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
-                    } )
-                    .catch( error => {
+                    })
+                    .then(response => response.json())
+                    .then(data => {
                         hideLoading();
-                        showAlert( 'Erro interno: ' + error.message, 'danger' );
-                    } );
+                        if (data.success) {
+                            showAlert('Histórico limpo com sucesso!', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            showAlert('Erro ao limpar histórico: ' + (data.error || 'Erro desconhecido'), 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        showAlert('Erro interno: ' + error.message, 'danger');
+                    });
             }
         }
 
         function filterTests() {
-            const filterValue = document.getElementById( 'filterStatus' ).value;
-            const rows = document.querySelectorAll( '#testHistoryBody tr' );
+            const filterValue = document.getElementById('filterStatus').value;
+            const rows = document.querySelectorAll('#testHistoryBody tr');
 
-            rows.forEach( row => {
-                const status = row.getAttribute( 'data-status' );
-                if ( filterValue === '' || status === filterValue ) {
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                if (filterValue === '' || status === filterValue) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
-            } );
+            });
         }
 
         // Adicionar event listener para o filtro
-        document.getElementById( 'filterStatus' ).addEventListener( 'change', filterTests );
+        document.getElementById('filterStatus').addEventListener('change', filterTests);
 
-        function showLoading( message = 'Carregando...' ) {
-            if ( !document.getElementById( 'loadingOverlay' ) ) {
-                const overlay = document.createElement( 'div' );
+        function showLoading(message = 'Carregando...') {
+            if (!document.getElementById('loadingOverlay')) {
+                const overlay = document.createElement('div');
                 overlay.id = 'loadingOverlay';
-                overlay.className = 'd-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-dark bg-opacity-50';
+                overlay.className =
+                    'd-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-dark bg-opacity-50';
                 overlay.style.zIndex = '9999';
                 overlay.style.top = '0';
                 overlay.style.left = '0';
@@ -578,19 +589,19 @@
                     </div>
                 </div>
             `;
-                document.body.appendChild( overlay );
+                document.body.appendChild(overlay);
             }
         }
 
         function hideLoading() {
-            const overlay = document.getElementById( 'loadingOverlay' );
-            if ( overlay ) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
                 overlay.remove();
             }
         }
 
-        function showAlert( message, type = 'info' ) {
-            const alertDiv = document.createElement( 'div' );
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
             alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
             alertDiv.innerHTML = `
@@ -598,13 +609,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
-            document.body.appendChild( alertDiv );
+            document.body.appendChild(alertDiv);
 
-            setTimeout( () => {
-                if ( alertDiv.parentNode ) {
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
                     alertDiv.remove();
                 }
-            }, 5000 );
+            }, 5000);
         }
     </script>
 @endpush

@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -21,18 +21,18 @@
                     </div>
 
                     <div class="card-body">
-                        @if( session( 'success' ) )
+                        @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="bi bi-check-circle me-2"></i>
-                                {{ session( 'success' ) }}
+                                {{ session('success') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
 
-                        @if( session( 'error' ) )
+                        @if (session('error'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                {{ session( 'error' ) }}
+                                {{ session('error') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
@@ -49,7 +49,7 @@
                                             {{ $invoice->customer->common_data->last_name }}
                                         </h5>
                                         <p class="text-muted mb-0">{{ $invoice->customer->contact->email }}</p>
-                                        @if( $invoice->customer->contact->phone )
+                                        @if ($invoice->customer->contact->phone)
                                             <p class="text-muted mb-0">{{ $invoice->customer->contact->phone }}</p>
                                         @endif
                                     </div>
@@ -67,7 +67,7 @@
                                         <p class="text-muted mb-0">{{ $invoice->service->description }}</p>
                                         <p class="mb-0">
                                             <strong>Total: R$
-                                                {{ number_format( $invoice->service->total, 2, ',', '.' ) }}</strong>
+                                                {{ number_format($invoice->service->total, 2, ',', '.') }}</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -86,28 +86,28 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <strong>Valor Subtotal:</strong><br>
-                                                R$ {{ number_format( $invoice->subtotal, 2, ',', '.' ) }}
+                                                R$ {{ number_format($invoice->subtotal, 2, ',', '.') }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Desconto:</strong><br>
-                                                R$ {{ number_format( $invoice->discount, 2, ',', '.' ) }}
+                                                R$ {{ number_format($invoice->discount, 2, ',', '.') }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong class="text-success fs-5">Total: R$
-                                                    {{ number_format( $invoice->total, 2, ',', '.' ) }}</strong>
+                                                    {{ number_format($invoice->total, 2, ',', '.') }}</strong>
                                             </div>
                                         </div>
 
-                                        @if( $invoice->due_date )
+                                        @if ($invoice->due_date)
                                             <div class="row mt-2">
                                                 <div class="col-md-4">
                                                     <strong>Vencimento:</strong><br>
-                                                    {{ \Carbon\Carbon::parse( $invoice->due_date )->format( 'd/m/Y' ) }}
+                                                    {{ \Carbon\Carbon::parse($invoice->due_date)->format('d/m/Y') }}
                                                 </div>
                                             </div>
                                         @endif
 
-                                        @if( $invoice->payment_method )
+                                        @if ($invoice->payment_method)
                                             <div class="row mt-2">
                                                 <div class="col-md-4">
                                                     <strong>Forma de Pagamento:</strong><br>
@@ -116,16 +116,16 @@
                                             </div>
                                         @endif
 
-                                        @if( $invoice->transaction_date )
+                                        @if ($invoice->transaction_date)
                                             <div class="row mt-2">
                                                 <div class="col-md-4">
                                                     <strong>Data do Pagamento:</strong><br>
-                                                    {{ \Carbon\Carbon::parse( $invoice->transaction_date )->format( 'd/m/Y H:i' ) }}
+                                                    {{ \Carbon\Carbon::parse($invoice->transaction_date)->format('d/m/Y H:i') }}
                                                 </div>
                                             </div>
                                         @endif
 
-                                        @if( $invoice->notes )
+                                        @if ($invoice->notes)
                                             <div class="row mt-3">
                                                 <div class="col-12">
                                                     <strong>Observações:</strong><br>
@@ -138,7 +138,7 @@
                             </div>
                         </div>
 
-                        @if( $invoiceStatus->value === 'pending' )
+                        @if ($invoiceStatus->value === 'pending')
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card border-warning">
@@ -149,7 +149,8 @@
                                             </h6>
                                             <p class="mb-3">Por favor, informe o status atual desta fatura:</p>
 
-                                            <form method="POST" action="{{ route( 'provider.invoices.public.choose-status' ) }}">
+                                            <form method="POST"
+                                                action="{{ route('provider.invoices.public.choose-status') }}">
                                                 @csrf
                                                 <input type="hidden" name="invoice_code" value="{{ $invoice->code }}">
                                                 <input type="hidden" name="token" value="{{ $token }}">
@@ -161,13 +162,14 @@
                                                         <select name="invoice_status_id" id="invoice_status_id"
                                                             class="form-select" required>
                                                             <option value="">Selecione o status...</option>
-                                                            @foreach( [ \App\Enums\InvoiceStatusEnum::PAID, \App\Enums\InvoiceStatusEnum::CANCELLED, \App\Enums\InvoiceStatusEnum::OVERDUE ] as $status )
-                                                                <option value="{{ $status->value }}" {{ old( 'invoice_status_id' ) == $status->value ? 'selected' : '' }}>
+                                                            @foreach ([\App\Enums\InvoiceStatusEnum::PAID, \App\Enums\InvoiceStatusEnum::CANCELLED, \App\Enums\InvoiceStatusEnum::OVERDUE] as $status)
+                                                                <option value="{{ $status->value }}"
+                                                                    {{ old('invoice_status_id') == $status->value ? 'selected' : '' }}>
                                                                     {{ $status->getName() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        @error( 'invoice_status_id' )
+                                                        @error('invoice_status_id')
                                                             <div class="text-danger small">{{ $message }}</div>
                                                         @enderror
                                                     </div>
@@ -188,7 +190,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route( 'provider.invoices.public.print', [ 'code' => $invoice->code, 'token' => $token ] ) }}"
+                                    <a href="{{ route('provider.invoices.public.print', ['code' => $invoice->code, 'token' => $token]) }}"
                                         class="btn btn-outline-secondary" target="_blank">
                                         <i class="bi bi-printer me-2"></i>
                                         Imprimir
@@ -197,7 +199,7 @@
                                     <div class="text-muted small">
                                         <i class="bi bi-info-circle me-1"></i>
                                         Link válido até:
-                                        {{ \Carbon\Carbon::parse( $invoice->userConfirmationToken->expires_at )->format( 'd/m/Y H:i' ) }}
+                                        {{ \Carbon\Carbon::parse($invoice->userConfirmationToken->expires_at)->format('d/m/Y H:i') }}
                                     </div>
                                 </div>
                             </div>
@@ -209,7 +211,7 @@
     </div>
 @endsection
 
-@push( 'styles' )
+@push('styles')
     <style>
         .card {
             border-radius: 12px;

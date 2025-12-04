@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -21,18 +21,18 @@
                     </div>
 
                     <div class="card-body">
-                        @if( session( 'success' ) )
+                        @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="bi bi-check-circle me-2"></i>
-                                {{ session( 'success' ) }}
+                                {{ session('success') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
 
-                        @if( session( 'error' ) )
+                        @if (session('error'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                {{ session( 'error' ) }}
+                                {{ session('error') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
@@ -49,7 +49,7 @@
                                             {{ $service->customer?->common_data?->last_name }}
                                         </h5>
                                         <p class="text-muted mb-0">{{ $service->customer?->contact?->email }}</p>
-                                        @if( $service->customer?->contact?->phone )
+                                        @if ($service->customer?->contact?->phone)
                                             <p class="text-muted mb-0">{{ $service->customer?->contact?->phone }}</p>
                                         @endif
                                     </div>
@@ -67,7 +67,7 @@
                                         <p class="text-muted mb-0">{{ $service->budget?->description }}</p>
                                         <p class="mb-0">
                                             <strong>Total: R$
-                                                {{ number_format( $service->budget?->total, 2, ',', '.' ) }}</strong>
+                                                {{ number_format($service->budget?->total, 2, ',', '.') }}</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -83,7 +83,7 @@
                                             Detalhes do Serviço
                                         </h6>
 
-                                        @if( $service->description )
+                                        @if ($service->description)
                                             <p class="mb-3">{{ $service->description }}</p>
                                         @endif
 
@@ -94,19 +94,19 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Valor:</strong><br>
-                                                R$ {{ number_format( $service->total, 2, ',', '.' ) }}
+                                                R$ {{ number_format($service->total, 2, ',', '.') }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Desconto:</strong><br>
-                                                R$ {{ number_format( $service->discount, 2, ',', '.' ) }}
+                                                R$ {{ number_format($service->discount, 2, ',', '.') }}
                                             </div>
                                         </div>
 
-                                        @if( $service->due_date )
+                                        @if ($service->due_date)
                                             <div class="row mt-2">
                                                 <div class="col-md-4">
                                                     <strong>Prazo:</strong><br>
-                                                    {{ \Carbon\Carbon::parse( $service->due_date )->format( 'd/m/Y' ) }}
+                                                    {{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}
                                                 </div>
                                             </div>
                                         @endif
@@ -115,7 +115,7 @@
                             </div>
                         </div>
 
-                        @if( $service->serviceStatus->slug === 'enviado' )
+                        @if ($service->serviceStatus->slug === 'enviado')
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card border-warning">
@@ -126,7 +126,7 @@
                                             </h6>
                                             <p class="mb-3">Por favor, informe o status atual deste serviço:</p>
 
-                                            <form method="POST" action="{{ route( 'services.public.choose-status' ) }}">
+                                            <form method="POST" action="{{ route('services.public.choose-status') }}">
                                                 @csrf
                                                 <input type="hidden" name="service_code" value="{{ $service->code }}">
                                                 <input type="hidden" name="token" value="{{ $token }}">
@@ -138,13 +138,14 @@
                                                         <select name="service_status_id" id="service_status_id"
                                                             class="form-select" required>
                                                             <option value="">Selecione o status...</option>
-                                                            @foreach( [ \App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED ] as $status )
-                                                                <option value="{{ $status->value }}" {{ old( 'service_status_id' ) == $status->value ? 'selected' : '' }}>
+                                                            @foreach ([\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED] as $status)
+                                                                <option value="{{ $status->value }}"
+                                                                    {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
                                                                     {{ $status->getDescription() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        @error( 'service_status_id' )
+                                                        @error('service_status_id')
                                                             <div class="text-danger small">{{ $message }}</div>
                                                         @enderror
                                                     </div>
@@ -165,7 +166,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route( 'services.public.print', [ 'code' => $service->code, 'token' => $token ] ) }}"
+                                    <a href="{{ route('services.public.print', ['code' => $service->code, 'token' => $token]) }}"
                                         class="btn btn-outline-secondary" target="_blank">
                                         <i class="bi bi-printer me-2"></i>
                                         Imprimir
@@ -174,7 +175,7 @@
                                     <div class="text-muted small">
                                         <i class="bi bi-info-circle me-1"></i>
                                         Link válido até:
-                                        {{ \Carbon\Carbon::parse( $service->userConfirmationToken?->expires_at )->format( 'd/m/Y H:i' ) }}
+                                        {{ \Carbon\Carbon::parse($service->userConfirmationToken?->expires_at)->format('d/m/Y H:i') }}
                                     </div>
                                 </div>
                             </div>
@@ -186,7 +187,7 @@
     </div>
 @endsection
 
-@push( 'styles' )
+@push('styles')
     <style>
         .card {
             border-radius: 12px;

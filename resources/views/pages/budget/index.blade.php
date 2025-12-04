@@ -1,8 +1,6 @@
+@extends('layouts.app')
 
-
-@extends( 'layouts.app' )
-
-@section( 'content' )
+@section('content')
     <div class="container-fluid py-1">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -12,7 +10,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
                 </ol>
             </nav>
@@ -26,7 +24,7 @@
                         <i class="bi bi-file-earmark-plus fs-2 text-primary"></i>
                         <h5 class="card-title mt-3">Novo Orçamento</h5>
                         <p class="card-text">Crie um novo orçamento detalhado para seus clientes.</p>
-                        <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary">Criar Agora</a>
+                        <a href="{{ route('provider.budgets.create') }}" class="btn btn-primary">Criar Agora</a>
                     </div>
                 </div>
             </div>
@@ -58,57 +56,68 @@
                 <h4 class="mb-0">Filtros</h4>
             </div>
             <div class="card-body p-4">
-                <form action="{{ route( 'provider.budgets.index' ) }}" method="GET">
+                <form action="{{ route('provider.budgets.index') }}" method="GET">
                     <div class="row g-3">
                         <div class="col-md-2">
                             <label for="filter_code" class="form-label">Código</label>
                             <input type="text" id="filter_code" name="filter_code" class="form-control"
-                                value="{{ request( 'filter_code' ) }}">
+                                value="{{ request('filter_code') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="filter_start_date" class="form-label">Data Início</label>
                             <input type="date" id="filter_start_date" name="filter_start_date" class="form-control"
-                                value="{{ request( 'filter_start_date' ) }}">
+                                value="{{ request('filter_start_date') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="filter_end_date" class="form-label">Data Fim</label>
                             <input type="date" id="filter_end_date" name="filter_end_date" class="form-control"
-                                value="{{ request( 'filter_end_date' ) }}">
+                                value="{{ request('filter_end_date') }}">
                         </div>
                         <div class="col-md-3">
                             <label for="filter_customer" class="form-label">Cliente</label>
                             <input type="text" id="filter_customer" name="filter_customer" class="form-control"
-                                value="{{ request( 'filter_customer' ) }}">
+                                value="{{ request('filter_customer') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="filter_min_value" class="form-label">Valor Mínimo</label>
                             <input type="number" id="filter_min_value" name="filter_min_value" class="form-control"
-                                step="0.01" value="{{ request( 'filter_min_value' ) }}">
+                                step="0.01" value="{{ request('filter_min_value') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="filter_status" class="form-label">Status</label>
                             <select id="filter_status" name="filter_status" class="form-select">
                                 <option value="">Todos os Status</option>
-                                <option value="DRAFT" {{ request('filter_status') == 'DRAFT' ? 'selected' : '' }}>Rascunho</option>
-                                <option value="SENT" {{ request('filter_status') == 'SENT' ? 'selected' : '' }}>Enviado</option>
-                                <option value="APPROVED" {{ request('filter_status') == 'APPROVED' ? 'selected' : '' }}>Aprovado</option>
-                                <option value="REJECTED" {{ request('filter_status') == 'REJECTED' ? 'selected' : '' }}>Rejeitado</option>
+                                <option value="DRAFT" {{ request('filter_status') == 'DRAFT' ? 'selected' : '' }}>Rascunho
+                                </option>
+                                <option value="SENT" {{ request('filter_status') == 'SENT' ? 'selected' : '' }}>Enviado
+                                </option>
+                                <option value="APPROVED" {{ request('filter_status') == 'APPROVED' ? 'selected' : '' }}>
+                                    Aprovado</option>
+                                <option value="REJECTED" {{ request('filter_status') == 'REJECTED' ? 'selected' : '' }}>
+                                    Rejeitado</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="filter_order_by" class="form-label">Ordenar por</label>
                             <select id="filter_order_by" name="filter_order_by" class="form-select">
-                                <option value="created_at_desc" {{ request( 'filter_order_by', 'created_at_desc' ) == 'created_at_desc' ? 'selected' : '' }}>Mais Recentes</option>
-                                <option value="created_at_asc" {{ request( 'filter_order_by' ) == 'created_at_asc' ? 'selected' : '' }}>Mais Antigos</option>
-                                <option value="total_desc" {{ request( 'filter_order_by' ) == 'total_desc' ? 'selected' : '' }}>
+                                <option value="created_at_desc"
+                                    {{ request('filter_order_by', 'created_at_desc') == 'created_at_desc' ? 'selected' : '' }}>
+                                    Mais Recentes</option>
+                                <option value="created_at_asc"
+                                    {{ request('filter_order_by') == 'created_at_asc' ? 'selected' : '' }}>Mais Antigos
+                                </option>
+                                <option value="total_desc"
+                                    {{ request('filter_order_by') == 'total_desc' ? 'selected' : '' }}>
                                     Maior Valor</option>
-                                <option value="total_asc" {{ request( 'filter_order_by' ) == 'total_asc' ? 'selected' : '' }}>
+                                <option value="total_asc"
+                                    {{ request('filter_order_by') == 'total_asc' ? 'selected' : '' }}>
                                     Menor Valor</option>
                             </select>
                         </div>
                         <div class="col-md-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary me-2">Filtrar</button>
-                            <a href="{{ route( 'provider.budgets.index' ) }}" class="btn btn-outline-secondary">Limpar</a>
+                            <a href="{{ route('provider.budgets.index') }}"
+                                class="btn btn-outline-secondary">Limpar</a>
                         </div>
                     </div>
                 </form>
@@ -129,15 +138,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse( $budgets as $budget )
+                            @forelse($budgets as $budget)
                                 <tr>
                                     <td>{{ $budget->code }}</td>
                                     <td>
-                                        @if($budget->customer && $budget->customer->commonData)
-                                            @if($budget->customer->commonData->company_name)
+                                        @if ($budget->customer && $budget->customer->commonData)
+                                            @if ($budget->customer->commonData->company_name)
                                                 {{ $budget->customer->commonData->company_name }}
                                             @else
-                                                {{ $budget->customer->commonData->first_name }} {{ $budget->customer->commonData->last_name }}
+                                                {{ $budget->customer->commonData->first_name }}
+                                                {{ $budget->customer->commonData->last_name }}
                                             @endif
                                         @else
                                             Cliente não informado
@@ -145,30 +155,32 @@
                                     </td>
                                     <td>{{ $budget->created_at->format('d/m/Y') }}</td>
                                     <td>{{ $budget->due_date ? $budget->due_date->format('d/m/Y') : '-' }}</td>
-                                    <td>R$ {{ number_format( $budget->total, 2, ',', '.' ) }}</td>
+                                    <td>R$ {{ number_format($budget->total, 2, ',', '.') }}</td>
                                     <td>
                                         <span class="badge bg-secondary">{{ $budget->status->value }}</span>
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route( 'provider.budgets.show', $budget->code ) }}"
+                                        <a href="{{ route('provider.budgets.show', $budget->code) }}"
                                             class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
                                             title="Ver Detalhes">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route( 'provider.budgets.edit', $budget->code ) }}"
-                                            class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar">
+                                        <a href="{{ route('provider.budgets.edit', $budget->code) }}"
+                                            class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
+                                            title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteBudgetModal" data-budget-code="{{ $budget->code }}"
-                                            data-budget-id="{{ $budget->id }}" data-bs-toggle="tooltip" title="Excluir">
+                                            data-budget-id="{{ $budget->id }}" data-bs-toggle="tooltip"
+                                            title="Excluir">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">Nenhum orçamento encontrado.</td>
+                                    <td colspan="7" class="text-center py-1">Nenhum orçamento encontrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -176,9 +188,9 @@
                 </div>
             </div>
 
-            @if( $budgets->hasPages() )
+            @if ($budgets->hasPages())
                 <div class="card-footer bg-transparent border-0 p-3">
-                    {{ $budgets->links( 'vendor.pagination.bootstrap-5' ) }}
+                    {{ $budgets->links('vendor.pagination.bootstrap-5') }}
                 </div>
             @endif
         </div>
@@ -201,7 +213,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <form id="deleteBudgetForm" method="POST">
                         @csrf
-                        @method( 'DELETE' )
+                        @method('DELETE')
                         <button type="submit" class="btn btn-danger">Excluir</button>
                     </form>
                 </div>
@@ -210,24 +222,24 @@
     </div>
 @endsection
 
-@push( 'scripts' )
+@push('scripts')
     <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            const deleteBudgetModal = document.getElementById( 'deleteBudgetModal' );
-            if ( deleteBudgetModal ) {
-                deleteBudgetModal.addEventListener( 'show.bs.modal', function ( event ) {
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteBudgetModal = document.getElementById('deleteBudgetModal');
+            if (deleteBudgetModal) {
+                deleteBudgetModal.addEventListener('show.bs.modal', function(event) {
                     const button = event.relatedTarget;
-                    const budgetCode = button.getAttribute( 'data-budget-code' );
-                    const budgetId = button.getAttribute( 'data-budget-id' );
+                    const budgetCode = button.getAttribute('data-budget-code');
+                    const budgetId = button.getAttribute('data-budget-id');
 
-                    const modalTitle = deleteBudgetModal.querySelector( '.modal-title' );
-                    const budgetCodeToDelete = deleteBudgetModal.querySelector( '#budgetCodeToDelete' );
-                    const deleteForm = deleteBudgetModal.querySelector( '#deleteBudgetForm' );
+                    const modalTitle = deleteBudgetModal.querySelector('.modal-title');
+                    const budgetCodeToDelete = deleteBudgetModal.querySelector('#budgetCodeToDelete');
+                    const deleteForm = deleteBudgetModal.querySelector('#deleteBudgetForm');
 
                     budgetCodeToDelete.textContent = budgetCode;
-                    deleteForm.action = `{{ url( 'provider/budgets' ) }}/${budgetId}`;
-                } );
+                    deleteForm.action = `{{ url('provider/budgets') }}/${budgetId}`;
+                });
             }
-        } );
+        });
     </script>
 @endpush

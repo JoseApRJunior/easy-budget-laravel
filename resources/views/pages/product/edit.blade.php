@@ -1,9 +1,9 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', 'Editar Produto: ' . $product->name )
+@section('title', 'Editar Produto: ' . $product->name)
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">
@@ -12,17 +12,19 @@
 
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.products.index' ) }}">Produtos</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.products.show', $product->sku ) }}">{{ $product->name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
+                    <li class="breadcrumb-item"><a
+                            href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
                     <li class="breadcrumb-item active">Editar</li>
                 </ol>
             </nav>
         </div>
 
-        <form action="{{ route( 'provider.products.update', $product->sku ) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('provider.products.update', $product->sku) }}" method="POST"
+            enctype="multipart/form-data">
             @csrf
-            @method( 'PUT' )
+            @method('PUT')
 
             <div class="row g-4">
                 <!-- Informações do Produto -->
@@ -38,10 +40,12 @@
                                 <!-- Nome -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="name" class="form-label">Nome do Produto <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error( 'name' ) is-invalid @enderror"
-                                            id="name" name="name" value="{{ old( 'name', $product->name ) }}" required>
-                                        @error( 'name' )
+                                        <label for="name" class="form-label">Nome do Produto <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                            id="name" name="name" value="{{ old('name', $product->name) }}"
+                                            required>
+                                        @error('name')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -51,9 +55,9 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label for="sku" class="form-label">SKU</label>
-                                        <input type="text" class="form-control @error( 'sku' ) is-invalid @enderror"
-                                            id="sku" name="sku" value="{{ old( 'sku', $product->sku ) }}">
-                                        @error( 'sku' )
+                                        <input type="text" class="form-control @error('sku') is-invalid @enderror"
+                                            id="sku" name="sku" value="{{ old('sku', $product->sku) }}">
+                                        @error('sku')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <div class="form-text">Código único para identificação</div>
@@ -63,14 +67,15 @@
                                 <!-- Preço -->
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label for="price" class="form-label">Preço <span class="text-danger">*</span></label>
+                                        <label for="price" class="form-label">Preço <span
+                                                class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-text">R$</div>
-                                            <input type="text" class="form-control @error( 'price' ) is-invalid @enderror"
+                                            <input type="text" class="form-control @error('price') is-invalid @enderror"
                                                 id="price" name="price"
-                                                value="{{ old( 'price', number_format( $product->price, 2, ',', '.' ) ) }}"
+                                                value="{{ old('price', number_format($product->price, 2, ',', '.')) }}"
                                                 inputmode="numeric" required>
-                                            @error( 'price' )
+                                            @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -81,17 +86,17 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="category_id" class="form-label">Categoria</label>
-                                        <select class="form-select @error( 'category_id' ) is-invalid @enderror"
+                                        <select class="form-select @error('category_id') is-invalid @enderror"
                                             id="category_id" name="category_id">
                                             <option value="">Selecione uma categoria</option>
-                                            @foreach( $categories as $category )
+                                            @foreach ($categories as $category)
                                                 <option value="{{ $category->id }}"
-                                                    {{ ( old( 'category_id', $product->category_id ) == $category->id ) ? 'selected' : '' }}>
+                                                    {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                                                     {{ $category->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error( 'category_id' )
+                                        @error('category_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -103,9 +108,8 @@
                                         <label class="form-label">Status</label>
                                         <div class="form-check form-switch mt-2">
                                             <input type="hidden" name="active" value="0">
-                                            <input class="form-check-input" type="checkbox"
-                                                id="active" name="active" value="1"
-                                                {{ old( 'active', $product->active ) ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox" id="active" name="active"
+                                                value="1" {{ old('active', $product->active) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="active">
                                                 Produto ativo
                                             </label>
@@ -117,10 +121,9 @@
                                 <div class="col-12">
                                     <div class="mb-3">
                                         <label for="description" class="form-label">Descrição</label>
-                                        <textarea class="form-control @error( 'description' ) is-invalid @enderror"
-                                            id="description" name="description" rows="3"
-                                            placeholder="Detalhe o produto">{{ old( 'description', $product->description ) }}</textarea>
-                                        @error( 'description' )
+                                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
+                                            rows="3" placeholder="Detalhe o produto">{{ old('description', $product->description) }}</textarea>
+                                        @error('description')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -140,17 +143,18 @@
                         </div>
                         <div class="card-body">
                             <!-- Imagem Atual -->
-                            @if( $product->image )
+                            @if ($product->image)
                                 <div class="mb-3">
                                     <label class="form-label">Imagem Atual</label>
                                     <div class="d-flex align-items-center mb-3">
                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                                            class="img-thumbnail me-3" style="width: 100px; height: 100px; object-fit: cover;">
+                                            class="img-thumbnail me-3"
+                                            style="width: 100px; height: 100px; object-fit: cover;">
                                         <div>
                                             <p class="mb-2">Imagem atual do produto</p>
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox"
-                                                    id="remove_image" name="remove_image" value="1">
+                                                <input class="form-check-input" type="checkbox" id="remove_image"
+                                                    name="remove_image" value="1">
                                                 <label class="form-check-label text-danger" for="remove_image">
                                                     Remover imagem atual
                                                 </label>
@@ -163,9 +167,9 @@
                             <!-- Nova Imagem -->
                             <div class="mb-3">
                                 <label for="image" class="form-label">Nova Imagem</label>
-                                <input type="file" class="form-control @error( 'image' ) is-invalid @enderror"
+                                <input type="file" class="form-control @error('image') is-invalid @enderror"
                                     id="image" name="image" accept="image/*">
-                                @error( 'image' )
+                                @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <div class="form-text">Formatos: JPG, PNG, GIF. Máximo: 2MB</div>
@@ -189,7 +193,7 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ route( 'provider.products.show', $product->sku ) }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('provider.products.show', $product->sku) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Cancelar
                     </a>
                 </div>
@@ -201,7 +205,7 @@
     </div>
 @endsection
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         // Máscara para preço
         if (window.VanillaMask) {
@@ -227,7 +231,8 @@
                 if (window.parseCurrencyBRLToNumber) {
                     num = window.parseCurrencyBRLToNumber(price.value) || 0;
                 } else {
-                    num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g, '')) || 0;
+                    num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
+                        '')) || 0;
                 }
                 price.value = num.toFixed(2);
             }

@@ -4,9 +4,12 @@
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-person-plus me-2"></i>Clientes
-            </h1>
+            <div>
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="bi bi-person-plus me-2"></i>Clientes
+                </h1>
+                <p class="text-muted">Lista de todos os clientes registrados no sistema</p>
+            </div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
@@ -15,8 +18,6 @@
                 </ol>
             </nav>
         </div>
-
-
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -38,8 +39,7 @@
                                 <label for="status">Status</label>
                                 <select class="form-control" id="status" name="status">
                                     <option value="">Todos</option>
-                                    <option value="active"
-                                        {{ ($filters['status'] ?? '') === 'active' ? 'selected' : '' }}>
+                                    <option value="active" {{ ($filters['status'] ?? '') === 'active' ? 'selected' : '' }}>
                                         Ativo</option>
                                     <option value="inactive"
                                         {{ ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inativo
@@ -81,8 +81,7 @@
                                 <label for="deleted">Registros</label>
                                 <select class="form-control" id="deleted" name="deleted">
                                     <option value="">Atuais</option>
-                                    <option value="only"
-                                        {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
+                                    <option value="only" {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
                                         Deletados</option>
                                 </select>
                             </div>

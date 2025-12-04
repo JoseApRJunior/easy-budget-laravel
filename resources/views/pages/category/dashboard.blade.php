@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Categorias')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -28,7 +28,10 @@
                         <a href="{{ route('provider.dashboard') }}">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('categories.dashboard') }}">Categorias</a>
+                        <a href="{{ route('categories.index') }}">Categorias</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Dashboard de Categorias
                     </li>
                 </ol>
             </nav>

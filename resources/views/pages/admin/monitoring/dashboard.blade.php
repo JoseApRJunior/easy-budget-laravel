@@ -1,9 +1,9 @@
-@extends( 'layouts.admin' )
+@extends('layouts.admin')
 
-@section( 'title', 'Dashboard de Monitoramento' )
+@section('title', 'Dashboard de Monitoramento')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
@@ -13,7 +13,7 @@
                 <button class="btn btn-outline-primary btn-sm" onclick="refreshMetrics()">
                     <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
                 </button>
-                <a href="{{ url( '/admin/monitoring/metrics' ) }}" class="btn btn-primary btn-sm">
+                <a href="{{ url('/admin/monitoring/metrics') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-graph-up me-1"></i>Métricas Detalhadas
                 </a>
             </div>
@@ -31,7 +31,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Tempo Médio de Resposta</div>
                                 <div class="fs-4 fw-bold text-primary" id="avg-response-time">
-                                    {{ number_format( $summary[ 'average_response_time' ] ?? 0, 4 ) }}s
+                                    {{ number_format($summary['average_response_time'] ?? 0, 4) }}s
                                 </div>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Taxa de Sucesso</div>
                                 <div class="fs-4 fw-bold text-success" id="success-rate">
-                                    {{ number_format( $summary[ 'success_rate' ] ?? 100, 2 ) }}%
+                                    {{ number_format($summary['success_rate'] ?? 100, 2) }}%
                                 </div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Uso Médio de Memória</div>
                                 <div class="fs-4 fw-bold text-info" id="avg-memory">
-                                    {{ number_format( ( $summary[ 'average_memory' ] ?? 0 ) / 1024 / 1024, 2 ) }}MB
+                                    {{ number_format(($summary['average_memory'] ?? 0) / 1024 / 1024, 2) }}MB
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Total de Execuções</div>
                                 <div class="fs-4 fw-bold text-warning" id="total-executions">
-                                    {{ number_format( $summary[ 'total_executions' ] ?? 0 ) }}
+                                    {{ number_format($summary['total_executions'] ?? 0) }}
                                 </div>
                             </div>
                         </div>
@@ -116,24 +116,24 @@
                                     </tr>
                                 </thead>
                                 <tbody id="middleware-status-table">
-                                    @forelse ( $middleware_status as $middleware )
+                                    @forelse ($middleware_status as $middleware)
                                         <tr>
                                             <td>
-                                                <strong>{{ $middleware[ 'name' ] }}</strong>
+                                                <strong>{{ $middleware['name'] }}</strong>
                                             </td>
                                             <td>
-                                                @if ( $middleware[ 'status' ] == 'healthy' )
+                                                @if ($middleware['status'] == 'healthy')
                                                     <span class="badge bg-success">Saudável</span>
-                                                @elseif ( $middleware[ 'status' ] == 'warning' )
+                                                @elseif ($middleware['status'] == 'warning')
                                                     <span class="badge bg-warning">Atenção</span>
                                                 @else
                                                     <span class="badge bg-danger">Crítico</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $middleware[ 'success_rate' ] }}%</td>
-                                            <td>{{ number_format( $middleware[ 'average_time' ], 4 ) }}s</td>
+                                            <td>{{ $middleware['success_rate'] }}%</td>
+                                            <td>{{ number_format($middleware['average_time'], 4) }}s</td>
                                             <td>
-                                                <small class="text-muted">{{ $middleware[ 'last_execution' ] }}</small>
+                                                <small class="text-muted">{{ $middleware['last_execution'] }}</small>
                                             </td>
                                         </tr>
                                     @empty
@@ -159,17 +159,17 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        @if ( empty( $alerts ) )
+                        @if (empty($alerts))
                             <div class="text-center text-muted py-3">
                                 <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
                                 <p class="mb-0">Nenhum alerta ativo</p>
                                 <small>Sistema funcionando normalmente</small>
                             </div>
                         @else
-                            @foreach ( $alerts as $alert )
-                                <div class="alert alert-{{ $alert[ 'type' ] }} alert-dismissible fade show" role="alert">
-                                    <strong>{{ $alert[ 'title' ] }}</strong><br>
-                                    <small>{{ $alert[ 'message' ] }}</small>
+                            @foreach ($alerts as $alert)
+                                <div class="alert alert-{{ $alert['type'] }} alert-dismissible fade show" role="alert">
+                                    <strong>{{ $alert['title'] }}</strong><br>
+                                    <small>{{ $alert['message'] }}</small>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             @endforeach
@@ -188,10 +188,10 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span>Tempo de Resposta</span>
                             <span
-                                class="badge bg-{{ $performance_trends[ 'response_time_trend' ] == 'stable' ? 'success' : ( $performance_trends[ 'response_time_trend' ] == 'increasing' ? 'warning' : 'danger' ) }}">
-                                @if ( $performance_trends[ 'response_time_trend' ] == 'stable' )
+                                class="badge bg-{{ $performance_trends['response_time_trend'] == 'stable' ? 'success' : ($performance_trends['response_time_trend'] == 'increasing' ? 'warning' : 'danger') }}">
+                                @if ($performance_trends['response_time_trend'] == 'stable')
                                     <i class="bi bi-dash"></i> Estável
-                                @elseif ( $performance_trends[ 'response_time_trend' ] == 'increasing' )
+                                @elseif ($performance_trends['response_time_trend'] == 'increasing')
                                     <i class="bi bi-arrow-up"></i> Aumentando
                                 @else
                                     <i class="bi bi-arrow-down"></i> Diminuindo
@@ -202,10 +202,10 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span>Uso de Memória</span>
                             <span
-                                class="badge bg-{{ $performance_trends[ 'memory_usage_trend' ] == 'stable' ? 'success' : ( $performance_trends[ 'memory_usage_trend' ] == 'increasing' ? 'warning' : 'danger' ) }}">
-                                @if ( $performance_trends[ 'memory_usage_trend' ] == 'stable' )
+                                class="badge bg-{{ $performance_trends['memory_usage_trend'] == 'stable' ? 'success' : ($performance_trends['memory_usage_trend'] == 'increasing' ? 'warning' : 'danger') }}">
+                                @if ($performance_trends['memory_usage_trend'] == 'stable')
                                     <i class="bi bi-dash"></i> Estável
-                                @elseif ( $performance_trends[ 'memory_usage_trend' ] == 'increasing' )
+                                @elseif ($performance_trends['memory_usage_trend'] == 'increasing')
                                     <i class="bi bi-arrow-up"></i> Aumentando
                                 @else
                                     <i class="bi bi-arrow-down"></i> Diminuindo
@@ -216,10 +216,10 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Taxa de Erro</span>
                             <span
-                                class="badge bg-{{ $performance_trends[ 'error_rate_trend' ] == 'stable' ? 'success' : ( $performance_trends[ 'error_rate_trend' ] == 'increasing' ? 'danger' : 'success' ) }}">
-                                @if ( $performance_trends[ 'error_rate_trend' ] == 'stable' )
+                                class="badge bg-{{ $performance_trends['error_rate_trend'] == 'stable' ? 'success' : ($performance_trends['error_rate_trend'] == 'increasing' ? 'danger' : 'success') }}">
+                                @if ($performance_trends['error_rate_trend'] == 'stable')
                                     <i class="bi bi-dash"></i> Estável
-                                @elseif ( $performance_trends[ 'error_rate_trend' ] == 'increasing' )
+                                @elseif ($performance_trends['error_rate_trend'] == 'increasing')
                                     <i class="bi bi-arrow-up"></i> Aumentando
                                 @else
                                     <i class="bi bi-arrow-down"></i> Diminuindo
@@ -255,60 +255,60 @@
     </div>
 @endsection
 
-@section( 'scripts' )
+@section('scripts')
     <script>
         /**
          * Atualiza as métricas do dashboard via AJAX.
          */
         function refreshMetrics() {
-            const button = document.querySelector( '[onclick="refreshMetrics()"]' );
+            const button = document.querySelector('[onclick="refreshMetrics()"]');
             const originalText = button.innerHTML;
 
             // Mostra loading
             button.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Atualizando...';
             button.disabled = true;
 
-            fetch( '{{ url( "/admin/monitoring/api/metrics" ) }}' )
-                .then( response => response.json() )
-                .then( data => {
-                    updateDashboardMetrics( data );
-                } )
-                .catch( error => {
-                    console.error( 'Erro ao atualizar métricas:', error );
-                    showAlert( 'Erro ao atualizar métricas', 'danger' );
-                } )
-                .finally( () => {
+            fetch('{{ url('/admin/monitoring/api/metrics') }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateDashboardMetrics(data);
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar métricas:', error);
+                    showAlert('Erro ao atualizar métricas', 'danger');
+                })
+                .finally(() => {
                     // Restaura botão
                     button.innerHTML = originalText;
                     button.disabled = false;
-                } );
+                });
         }
 
         /**
          * Atualiza os elementos do dashboard com novas métricas.
          */
-        function updateDashboardMetrics( data ) {
+        function updateDashboardMetrics(data) {
             // Atualiza cards de resumo
-            if ( data.summary ) {
-                const avgTime = document.getElementById( 'avg-response-time' );
-                const successRate = document.getElementById( 'success-rate' );
-                const avgMemory = document.getElementById( 'avg-memory' );
-                const totalExec = document.getElementById( 'total-executions' );
+            if (data.summary) {
+                const avgTime = document.getElementById('avg-response-time');
+                const successRate = document.getElementById('success-rate');
+                const avgMemory = document.getElementById('avg-memory');
+                const totalExec = document.getElementById('total-executions');
 
-                if ( avgTime ) avgTime.textContent = ( data.summary.average_response_time || 0 ).toFixed( 4 ) + 's';
-                if ( successRate ) successRate.textContent = ( data.summary.success_rate || 100 ).toFixed( 2 ) + '%';
-                if ( avgMemory ) avgMemory.textContent = ( ( data.summary.average_memory || 0 ) / 1024 / 1024 ).toFixed( 2 ) + 'MB';
-                if ( totalExec ) totalExec.textContent = ( data.summary.total_executions || 0 ).toLocaleString();
+                if (avgTime) avgTime.textContent = (data.summary.average_response_time || 0).toFixed(4) + 's';
+                if (successRate) successRate.textContent = (data.summary.success_rate || 100).toFixed(2) + '%';
+                if (avgMemory) avgMemory.textContent = ((data.summary.average_memory || 0) / 1024 / 1024).toFixed(2) + 'MB';
+                if (totalExec) totalExec.textContent = (data.summary.total_executions || 0).toLocaleString();
             }
 
-            showAlert( 'Métricas atualizadas com sucesso', 'success' );
+            showAlert('Métricas atualizadas com sucesso', 'success');
         }
 
         /**
          * Mostra alerta temporário.
          */
-        function showAlert( message, type = 'info' ) {
-            const alertDiv = document.createElement( 'div' );
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
             alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             alertDiv.innerHTML = `
@@ -316,21 +316,21 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
 
-            document.body.appendChild( alertDiv );
+            document.body.appendChild(alertDiv);
 
             // Remove automaticamente após 3 segundos
-            setTimeout( () => {
-                if ( alertDiv.parentNode ) {
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
                     alertDiv.remove();
                 }
-            }, 3000 );
+            }, 3000);
         }
 
         // Atualização automática a cada 30 segundos
-        setInterval( refreshMetrics, 30000 );
+        setInterval(refreshMetrics, 30000);
 
         // CSS para animação de loading
-        const style = document.createElement( 'style' );
+        const style = document.createElement('style');
         style.textContent = `
       .spin {
         animation: spin 1s linear infinite;
@@ -346,6 +346,6 @@
         transition: box-shadow 0.15s ease-in-out;
       }
     `;
-        document.head.appendChild( style );
+        document.head.appendChild(style);
     </script>
 @endsection

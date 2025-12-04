@@ -1,7 +1,7 @@
-@extends( 'layouts.admin' )
+@extends('layouts.admin')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
@@ -9,7 +9,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/admin' ) }}">Dashboard Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
                     <li class="breadcrumb-item active">Logs</li>
                 </ol>
             </nav>
@@ -18,19 +18,19 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Visualizador de Logs</h5>
-                <form id="log-date-filter" method="GET" action="{{ url( '/admin/logs' ) }}"
+                <form id="log-date-filter" method="GET" action="{{ url('/admin/logs') }}"
                     class="d-flex align-items-center">
                     <label for="log-date" class="form-label me-2 mb-0">Selecionar Data:</label>
                     <select name="date" id="log-date" class="form-select form-select-sm" style="width: auto;"
                         onchange="this.form.submit()">
-                        @foreach ( $logDates as $date )
-                            <option value="{{ $date }}" @if ( $date == $selectedDate ) selected @endif>
-                                {{ \Carbon\Carbon::parse( $date )->format( 'd/m/Y' ) }}
+                        @foreach ($logDates as $date)
+                            <option value="{{ $date }}" @if ($date == $selectedDate) selected @endif>
+                                {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}
                             </option>
                         @endforeach
-                        @if ( !in_array( $selectedDate, $logDates ) )
+                        @if (!in_array($selectedDate, $logDates))
                             <option value="{{ $selectedDate }}" selected>
-                                {{ \Carbon\Carbon::parse( $selectedDate )->format( 'd/m/Y' ) }} (Vazio)
+                                {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }} (Vazio)
                             </option>
                         @endif
                     </select>
@@ -38,36 +38,37 @@
                 </form>
             </div>
             <div class="card-body">
-                @if ( $logs )
+                @if ($logs)
                     <div class="accordion" id="logAccordion">
-                        @foreach ( $logs as $log )
+                        @foreach ($logs as $log)
                             @php
-                                $level_class = [
-                                    'ERROR'   => 'danger',
-                                    'WARNING' => 'warning',
-                                    'INFO'    => 'info',
-                                    'DEBUG'   => 'secondary'
-                                ][ $log[ 'level' ] ] ?? 'light';
+                                $level_class =
+                                    [
+                                        'ERROR' => 'danger',
+                                        'WARNING' => 'warning',
+                                        'INFO' => 'info',
+                                        'DEBUG' => 'secondary',
+                                    ][$log['level']] ?? 'light';
                             @endphp
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading-{{ $loop->index }}">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                         data-bs-target="#collapse-{{ $loop->index }}" aria-expanded="false"
                                         aria-controls="collapse-{{ $loop->index }}">
-                                        <span class="badge bg-{{ $level_class }} me-3">{{ $log[ 'level' ] }}</span>
-                                        <span class="fw-bold me-3">{{ $log[ 'datetime' ] }}</span>
-                                        <span class="text-truncate">{{ $log[ 'message' ] }}</span>
+                                        <span class="badge bg-{{ $level_class }} me-3">{{ $log['level'] }}</span>
+                                        <span class="fw-bold me-3">{{ $log['datetime'] }}</span>
+                                        <span class="text-truncate">{{ $log['message'] }}</span>
                                     </button>
                                 </h2>
                                 <div id="collapse-{{ $loop->index }}" class="accordion-collapse collapse"
                                     aria-labelledby="heading-{{ $loop->index }}" data-bs-parent="#logAccordion">
                                     <div class="accordion-body bg-light">
-                                        @if ( $log[ 'is_html' ] )
-                                            <iframe srcdoc="{{ $log[ 'details' ] }}"
+                                        @if ($log['is_html'])
+                                            <iframe srcdoc="{{ $log['details'] }}"
                                                 style="width: 100%; height: 500px; border: 1px solid #ccc; border-radius: 5px;"></iframe>
                                         @else
                                             <pre
-                                                style="background-color: #2d2d2d; color: #f1f1f1; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word;">{{ $log[ 'message' ] }}<br>{{ trim( $log[ 'details' ] ) ?: 'Nenhum detalhe adicional.' }}</pre>
+                                                style="background-color: #2d2d2d; color: #f1f1f1; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word;">{{ $log['message'] }}<br>{{ trim($log['details']) ?: 'Nenhum detalhe adicional.' }}</pre>
                                         @endif
                                     </div>
                                 </div>
