@@ -19,7 +19,7 @@
                     @endphp
                 @endrole
                 <p class="text-muted mb-0">
-                    {{ $isAdminView ? 'Visão geral das categorias globais do sistema com atalhos de gestão.' : 'Visão geral das suas categorias (custom + sistema) com atalhos de gestão.' }}
+                    {{ $isAdminView ? 'Visão geral das categorias globais do sistema com atalhos de gestão.' : 'Visão geral das suas categorias (custom + sistema).' }}
                 </p>
             </div>
             <nav aria-label="breadcrumb">
@@ -51,7 +51,7 @@
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
-                            Quantidade total de categorias cadastradas e disponíveis para uso.
+                            Total de categorias cadastradas.
                         </p>
                     </div>
                 </div>
@@ -251,7 +251,7 @@
                                 </li>
                                 <li class="mb-2">
                                     <i class="bi bi-tag-fill text-success me-2"></i>
-                                    Use categorias de sistema quando possível para padronizar com outros usuários.
+                                    Use categorias de sistema quando possível.
                                 </li>
                                 <li class="mb-2">
                                     <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>

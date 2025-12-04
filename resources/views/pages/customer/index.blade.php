@@ -1,6 +1,6 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
+@section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,8 +9,8 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.customers.index' ) }}">Clientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Listar</li>
                 </ol>
             </nav>
@@ -24,13 +24,13 @@
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
             </div>
             <div class="card-body">
-                <form id="filtersFormCustomers" method="GET" action="{{ route( 'provider.customers.index' ) }}">
+                <form id="filtersFormCustomers" method="GET" action="{{ route('provider.customers.index') }}">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="search">Buscar</label>
                                 <input type="text" class="form-control" id="search" name="search"
-                                    value="{{ $filters[ 'search' ] ?? '' }}" placeholder="Nome, e-mail ou documento">
+                                    value="{{ $filters['search'] ?? '' }}" placeholder="Nome, e-mail ou documento">
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -38,9 +38,12 @@
                                 <label for="status">Status</label>
                                 <select class="form-control" id="status" name="status">
                                     <option value="">Todos</option>
-                                    <option value="active" {{ ( $filters[ 'status' ] ?? '' ) === 'active' ? 'selected' : '' }}>
+                                    <option value="active"
+                                        {{ ($filters['status'] ?? '') === 'active' ? 'selected' : '' }}>
                                         Ativo</option>
-                                    <option value="inactive" {{ ( $filters[ 'status' ] ?? '' ) === 'inactive' ? 'selected' : '' }}>Inativo</option>
+                                    <option value="inactive"
+                                        {{ ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inativo
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -49,9 +52,11 @@
                                 <label for="type">Tipo</label>
                                 <select class="form-control" id="type" name="type">
                                     <option value="">Todos</option>
-                                    <option value="pf" {{ ( $filters[ 'type' ] ?? '' ) === 'pf' ? 'selected' : '' }}>Pessoa Física
+                                    <option value="pf" {{ ($filters['type'] ?? '') === 'pf' ? 'selected' : '' }}>
+                                        Pessoa Física
                                     </option>
-                                    <option value="pj" {{ ( $filters[ 'type' ] ?? '' ) === 'pj' ? 'selected' : '' }}>Pessoa
+                                    <option value="pj" {{ ($filters['type'] ?? '') === 'pj' ? 'selected' : '' }}>
+                                        Pessoa
                                         Jurídica</option>
                                 </select>
                             </div>
@@ -61,9 +66,11 @@
                                 <label for="area_of_activity_id">Área de Atuação</label>
                                 <select class="form-control" id="area_of_activity_id" name="area_of_activity_id">
                                     <option value="">Todas</option>
-                                    @isset( $areas_of_activity )
-                                        @foreach( $areas_of_activity as $area )
-                                            <option value="{{ $area->id }}" {{ (string) ( $filters[ 'area_of_activity_id' ] ?? '' ) === (string) $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
+                                    @isset($areas_of_activity)
+                                        @foreach ($areas_of_activity as $area)
+                                            <option value="{{ $area->id }}"
+                                                {{ (string) ($filters['area_of_activity_id'] ?? '') === (string) $area->id ? 'selected' : '' }}>
+                                                {{ $area->name }}</option>
                                         @endforeach
                                     @endisset
                                 </select>
@@ -74,7 +81,8 @@
                                 <label for="deleted">Registros</label>
                                 <select class="form-control" id="deleted" name="deleted">
                                     <option value="">Atuais</option>
-                                    <option value="only" {{ ( $filters[ 'deleted' ] ?? '' ) === 'only' ? 'selected' : '' }}>
+                                    <option value="only"
+                                        {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
                                         Deletados</option>
                                 </select>
                             </div>
@@ -84,7 +92,7 @@
                                 <button type="button" id="btnFilterCustomers" class="btn btn-primary" aria-label="Filtrar">
                                     <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                                 </button>
-                                <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-secondary"
+                                <a href="{{ route('provider.customers.index') }}" class="btn btn-secondary"
                                     aria-label="Limpar filtros">
                                     <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
                                 </a>
@@ -98,7 +106,8 @@
 
 
         {{-- Mensagem Inicial --}}
-        <div id="initial-message" class="card border-0 shadow-sm text-center py-1 @if( isset( $customers ) ) d-none @endif">
+        <div id="initial-message"
+            class="card border-0 shadow-sm text-center py-1 @if (isset($customers)) d-none @endif">
             <div class="card-body">
                 <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
                 <h5 class="text-gray-800 mb-3">Utilize os filtros acima</h5>
@@ -119,18 +128,18 @@
         </div>
 
         {{-- Resultados --}}
-        <div id="results-container" class="{{ isset( $customers ) ? '' : 'd-none' }}">
+        <div id="results-container" class="{{ isset($customers) ? '' : 'd-none' }}">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="bi bi-list-ul me-1"></i> Lista de Clientes
-                        @if( isset( $customers ) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator )
+                        @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator)
                             ({{ $customers->total() }} registros)
-                        @elseif( isset( $customers ) )
+                        @elseif(isset($customers))
                             ({{ $customers->count() }} registros)
                         @endif
                     </h5>
-                    <a href="{{ route( 'provider.customers.create' ) }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('provider.customers.create') }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus me-1" aria-hidden="true"></i>Novo Cliente
                     </a>
                 </div>
@@ -155,9 +164,9 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    @if( isset( $customers ) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator )
+                    @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         <div class="d-flex justify-content-center">
-                            {{ $customers->appends( request()->query() )->links() }}
+                            {{ $customers->appends(request()->query())->links() }}
                         </div>
                     @else
                         <div id="pagination" class="pagination justify-content-center"></div>
@@ -205,10 +214,10 @@
     </div>
 @endsection
 
-@push( 'styles' )
+@push('styles')
 @endpush
 
-@push( 'scripts' )
-    <script src="{{ asset( 'assets/js/modules/table-paginator.js' ) }}"></script>
-    <script src="{{ asset( 'assets/js/customer.js' ) }}?v={{ time() }}"></script>
+@push('scripts')
+    <script src="{{ asset('assets/js/modules/table-paginator.js') }}"></script>
+    <script src="{{ asset('assets/js/customer.js') }}?v={{ time() }}"></script>
 @endpush
