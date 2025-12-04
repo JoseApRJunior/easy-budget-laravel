@@ -63,7 +63,7 @@ class CategoryController extends Controller
             // Estatísticas por tenant para providers
             $totalCategories  = $this->repository->countCategoriesForTenant( $tenantId );
             $activeCategories = $this->repository->countActiveCategoriesForTenant( $tenantId );
-            $recentCategories = $this->repository->getRecentCategoriesForTenant( $tenantId, 10 );
+            $recentCategories = $this->repository->getRecentCategoriesForTenant( $tenantId, 5 );
         }
 
         // Cálculo de categorias inativas
@@ -78,7 +78,7 @@ class CategoryController extends Controller
             'active_categories'   => $activeCategories,
             'inactive_categories' => $inactiveCategories,
             'recent_categories'   => $recentCategories,
-            'activity_rate' => $activityRate
+            'activity_rate'       => $activityRate
         ] );
     }
 
@@ -614,22 +614,22 @@ class CategoryController extends Controller
                     ->count();
             $dataRow       = $isAdmin
                 ? [
-                $category->name,
-                $category->parent ? $category->parent->name : '-',
-                ( $category->slug ?: Str::slug( $category->name ) ),
-                $category->is_active ? 'Sim' : 'Não',
-                $childrenCount,
-                $createdAt,
-                $updatedAt,
-            ]
+                    $category->name,
+                    $category->parent ? $category->parent->name : '-',
+                    ( $category->slug ?: Str::slug( $category->name ) ),
+                    $category->is_active ? 'Sim' : 'Não',
+                    $childrenCount,
+                    $createdAt,
+                    $updatedAt,
+                ]
                 : [
-                $category->name,
-                $category->parent ? $category->parent->name : '-',
-                $category->is_active ? 'Sim' : 'Não',
-                $childrenCount,
-                $createdAt,
-                $updatedAt,
-            ];
+                    $category->name,
+                    $category->parent ? $category->parent->name : '-',
+                    $category->is_active ? 'Sim' : 'Não',
+                    $childrenCount,
+                    $createdAt,
+                    $updatedAt,
+                ];
             $sheet->fromArray( [ $dataRow ], null, 'A' . $row );
             $row++;
         }

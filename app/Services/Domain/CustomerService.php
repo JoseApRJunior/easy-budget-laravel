@@ -141,7 +141,6 @@ class CustomerService extends AbstractBaseService
         }
     }
 
-
     /**
      * Valida dados do cliente
      */
@@ -248,8 +247,6 @@ class CustomerService extends AbstractBaseService
         return $this->success();
     }
 
-
-
     /**
      * Validate customer can be deleted
      */
@@ -320,8 +317,6 @@ class CustomerService extends AbstractBaseService
             default                              => CommonData::TYPE_INDIVIDUAL,
         };
     }
-
-
 
     /**
      * Remove cliente
@@ -408,7 +403,7 @@ class CustomerService extends AbstractBaseService
 
             $recentCustomers = Customer::where( 'tenant_id', $tenantId )
                 ->latest()
-                ->limit( 10 )
+                ->limit( 5 )
                 ->with( [ 'commonData', 'contact' ] )
                 ->get();
 
@@ -447,7 +442,6 @@ class CustomerService extends AbstractBaseService
             return $this->error( OperationStatus::ERROR, 'Erro ao obter clientes: ' . $e->getMessage(), null, $e );
         }
     }
-
 
     /**
      * Busca cliente por ID
@@ -507,7 +501,7 @@ class CustomerService extends AbstractBaseService
     {
         try {
             $tenantId = auth()->user()->tenant_id;
-            
+
             // Fórmula de Haversine para distância entre coordenadas
             $customers = Customer::where( 'tenant_id', $tenantId )
                 ->where( 'status', 'active' )
@@ -522,7 +516,7 @@ class CustomerService extends AbstractBaseService
                         $latitude,
                         $longitude,
                         $customer->address->latitude,
-                        $customer->address->longitude
+                        $customer->address->longitude,
                     );
 
                     return $distance <= $radiusKm;
@@ -547,8 +541,8 @@ class CustomerService extends AbstractBaseService
         $dLon = deg2rad( $lon2 - $lon1 );
 
         $a = sin( $dLat / 2 ) * sin( $dLat / 2 ) +
-             cos( deg2rad( $lat1 ) ) * cos( deg2rad( $lat2 ) ) *
-             sin( $dLon / 2 ) * sin( $dLon / 2 );
+            cos( deg2rad( $lat1 ) ) * cos( deg2rad( $lat2 ) ) *
+            sin( $dLon / 2 ) * sin( $dLon / 2 );
 
         $c = 2 * atan2( sqrt( $a ), sqrt( 1 - $a ) );
 
@@ -561,9 +555,9 @@ class CustomerService extends AbstractBaseService
     public function searchCustomers( array $filters = [] ): ServiceResult
     {
         try {
-            $tenantId = auth()->user()->tenant_id;
-            $filters['tenant_id'] = $tenantId;
-            
+            $tenantId             = auth()->user()->tenant_id;
+            $filters[ 'tenant_id' ] = $tenantId;
+
             $customers = $this->customerRepository->getPaginated( $filters );
             return $this->success( $customers, 'Clientes encontrados' );
         } catch ( \Exception $e ) {
@@ -580,12 +574,12 @@ class CustomerService extends AbstractBaseService
         try {
             $tenantId = auth()->user()->tenant_id;
             $customer = $this->customerRepository->findByIdAndTenantId( $id, $tenantId );
-            
+
             if ( !$customer ) {
                 return $this->error( OperationStatus::NOT_FOUND, 'Cliente não encontrado' );
             }
 
-            $oldStatus = $customer->status;
+            $oldStatus        = $customer->status;
             $customer->status = $customer->status === 'active' ? 'inactive' : 'active';
             $customer->save();
 
@@ -616,28 +610,28 @@ class CustomerService extends AbstractBaseService
     {
         try {
             $tenantId = auth()->user()->tenant_id;
-            
+
             $customers = Customer::where( 'tenant_id', $tenantId )
                 ->where( 'status', 'active' )
                 ->with( [ 'commonData', 'contact' ] )
                 ->where( function ( $q ) use ( $query ) {
                     $q->whereHas( 'commonData', function ( $subQ ) use ( $query ) {
                         $subQ->where( 'first_name', 'like', "%$query%" )
-                             ->orWhere( 'last_name', 'like', "%$query%" )
-                             ->orWhere( 'company_name', 'like', "%$query%" );
+                            ->orWhere( 'last_name', 'like', "%$query%" )
+                            ->orWhere( 'company_name', 'like', "%$query%" );
                     } )
-                    ->orWhereHas( 'contact', function ( $subQ ) use ( $query ) {
-                        $subQ->where( 'email_personal', 'like', "%$query%" )
-                             ->orWhere( 'phone_personal', 'like', "%$query%" );
-                    } );
+                        ->orWhereHas( 'contact', function ( $subQ ) use ( $query ) {
+                            $subQ->where( 'email_personal', 'like', "%$query%" )
+                                ->orWhere( 'phone_personal', 'like', "%$query%" );
+                        } );
                 } )
                 ->limit( $limit )
                 ->get()
                 ->map( function ( $customer ) {
                     return [
-                        'id'   => $customer->id,
-                        'name' => $customer->commonData?->full_name ?? $customer->commonData?->company_name,
-                        'type' => $customer->commonData?->type,
+                        'id'    => $customer->id,
+                        'name'  => $customer->commonData?->full_name ?? $customer->commonData?->company_name,
+                        'type'  => $customer->commonData?->type,
                         'email' => $customer->contact?->email_personal,
                     ];
                 } );
@@ -655,15 +649,16 @@ class CustomerService extends AbstractBaseService
     public function exportCustomers( array $filters = [] ): ServiceResult
     {
         try {
-            $tenantId = auth()->user()->tenant_id;
-            $filters['tenant_id'] = $tenantId;
-            
+            $tenantId             = auth()->user()->tenant_id;
+            $filters[ 'tenant_id' ] = $tenantId;
+
             $customers = $this->customerRepository->getAllByTenant( $tenantId, $filters );
-            
+
             return $this->success( $customers, 'Clientes exportados com sucesso' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro ao exportar clientes', [ 'error' => $e->getMessage() ] );
             return $this->error( OperationStatus::ERROR, 'Erro ao exportar: ' . $e->getMessage(), null, $e );
         }
     }
+
 }

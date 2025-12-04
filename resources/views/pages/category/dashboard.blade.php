@@ -27,9 +27,6 @@
                     <li class="breadcrumb-item">
                         <a href="{{ route('provider.dashboard') }}">Dashboard</a>
                     </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('categories.index') }}">Categorias</a>
-                    </li>
                     <li class="breadcrumb-item active" aria-current="page">
                         Dashboard de Categorias
                     </li>

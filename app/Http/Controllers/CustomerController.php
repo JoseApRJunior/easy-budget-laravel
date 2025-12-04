@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Controller de Clientes
@@ -462,7 +463,7 @@ class CustomerController extends Controller
     /**
      * Exportar clientes.
      */
-    public function export( Request $request ): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function export( Request $request ): BinaryFileResponse
     {
         /** @var User $user */
         $user = Auth::user();

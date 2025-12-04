@@ -19,9 +19,6 @@
                     <li class="breadcrumb-item">
                         <a href="{{ route('provider.dashboard') }}">Dashboard</a>
                     </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.products.index') }}">Produtos</a>
-                    </li>
                     <li class="breadcrumb-item active" aria-current="page">
                         Dashboard de Produtos
                     </li>
