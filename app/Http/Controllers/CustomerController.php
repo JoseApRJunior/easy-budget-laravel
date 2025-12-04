@@ -463,15 +463,12 @@ class CustomerController extends Controller
     /**
      * Exportar clientes.
      */
-    public function export( Request $request ): BinaryFileResponse
+    public function export( Request $request ): BinaryFileResponse|\Illuminate\Http\JsonResponse
     {
-        /** @var User $user */
-        $user = Auth::user();
 
         $filters = $request->only( [ 'search', 'status', 'type' ] );
-        $format  = $request->get( 'format', 'excel' );
 
-        $result = $this->customerService->exportCustomers( $filters, $format, $user->tenant_id );
+        $result = $this->customerService->exportCustomers( $filters );
 
         if ( !$result->isSuccess() ) {
             return response()->json( [
@@ -479,7 +476,9 @@ class CustomerController extends Controller
             ], 400 );
         }
 
-        return $result->getData();
+        return response()->json( [
+            'data' => $result->getData(),
+        ] );
     }
 
     /**

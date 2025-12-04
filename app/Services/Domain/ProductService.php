@@ -581,6 +581,54 @@ class ProductService extends AbstractBaseService
             Log::error( 'Error deleting product', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
             return $this->error( 'Erro ao excluir produto: ' . $e->getMessage() );
         }
+
+        /**
+         * Retorna dados para o dashboard de produtos.
+         */
+        public function getDashboardData( int $tenantId ): ServiceResult
+        {
+            try {
+                $data = [
+                    'total_products' => $this->productRepository->countByTenant( $tenantId ),
+                    'active_products' => $this->productRepository->countActiveByTenant( $tenantId ),
+                    'recent_products' => $this->productRepository->getRecentByTenant( $tenantId, 5 ),
+                    'low_stock_products' => $this->productRepository->getLowStockByTenant( $tenantId )
+                ];
+
+                return $this->success( $data, 'Dashboard data loaded' );
+            } catch ( Exception $e ) {
+                return $this->error(
+                    OperationStatus::ERROR,
+                    'Erro ao carregar dados do dashboard',
+                    null,
+                    $e,
+                );
+            }
+
+            /**
+             * Retorna dados para o dashboard de produtos.
+             */
+            public function getDashboardData( int $tenantId ): ServiceResult
+            {
+                try {
+                    $data = [
+                        'total_products' => $this->productRepository->countByTenant( $tenantId ),
+                        'active_products' => $this->productRepository->countActiveByTenant( $tenantId ),
+                        'recent_products' => $this->productRepository->getRecentByTenant( $tenantId, 5 ),
+                        'low_stock_products' => $this->productRepository->getLowStockByTenant( $tenantId )
+                    ];
+
+                    return $this->success( $data, 'Dashboard data loaded' );
+                } catch ( Exception $e ) {
+                    return $this->error(
+                        OperationStatus::ERROR,
+                        'Erro ao carregar dados do dashboard',
+                        null,
+                        $e,
+                    );
+                }
+            }
+        }
     }
 
 }

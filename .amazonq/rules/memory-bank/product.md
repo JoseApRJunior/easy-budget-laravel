@@ -1,229 +1,153 @@
-# Product - Easy Budget Laravel
-
-## 🎯 Por que este projeto existe?
-
-O **Easy Budget Laravel** foi criado para resolver um problema crítico enfrentado por provedores de serviços e pequenas/médias empresas: a **falta de ferramentas integradas e acessíveis** para gestão empresarial completa.
-
-### **🔍 Problemas que resolve:**
-
-#### **❌ Antes (Problemas comuns):**
-
--  **Gestão fragmentada** - Empresas usando múltiplas ferramentas desconectadas
--  **Falta de controle financeiro** - Dificuldade em acompanhar receitas e despesas
--  **Processos manuais** - Muito tempo gasto em tarefas administrativas repetitivas
--  **Ausência de relatórios** - Dificuldade em tomar decisões baseadas em dados
--  **Controle de clientes inadequado** - Perda de informações importantes sobre clientes
--  **Falta de auditoria** - Impossibilidade de rastrear ações e mudanças
-
-#### **✅ Depois (Soluções oferecidas):**
-
--  **Plataforma integrada** - Todas as funcionalidades em um único sistema
--  **Controle financeiro completo** - Orçamentos, faturas, pagamentos e relatórios
--  **Automação de processos** - Redução significativa do trabalho manual
--  **Relatórios avançados** - Dashboards executivos com KPIs em tempo real
--  **CRM poderoso** - Gestão completa do relacionamento com clientes
--  **Auditoria total** - Rastreamento completo de todas as ações do sistema
-
-## 🚀 Como deve funcionar?
-
-### **💡 Experiência do Usuário Ideal:**
-
-#### **🏢 Para Provedores de Serviços:**
-
-1. **Cadastro rápido** e configuração inicial automatizada
-2. **Interface intuitiva** que não requer treinamento extensivo
-3. **Workflow otimizado** para tarefas diárias (orçamentos, faturas, clientes)
-4. **Relatórios automáticos** enviados por email periodicamente
-5. **Acesso mobile** para gestão em qualquer lugar
-
-#### **🏢 Para Pequenas/Médias Empresas:**
-
-1. **Controle total** sobre finanças e operações
-2. **Visão executiva** através de dashboards informativos
-3. **Processos padronizados** para toda a equipe
-4. **Integração** com ferramentas existentes quando necessário
-5. **Suporte técnico** ágil e especializado
-
-### **🎨 Princípios de Design:**
-
-#### **🎯 Simplicidade:**
-
--  Interface **clean** e funcional
--  Workflow lógico e intuitivo
--  Terminologia clara e acessível
--  Curva de aprendizado mínima
-
-#### **⚡ Performance:**
-
--  **Carregamento rápido** de todas as páginas
--  **Otimização de queries** para grandes volumes de dados
--  **Cache inteligente** para informações frequentemente acessadas
--  **Processamento assíncrono** para tarefas pesadas
-
-#### **🔒 Segurança:**
-
--  **Autenticação robusta** com múltiplos fatores
--  **Auditoria completa** de todas as ações
--  **Criptografia** de dados sensíveis
--  **Backup automático** e recovery
-
-#### **📱 Acessibilidade:**
-
--  **Responsividade total** (desktop, tablet, mobile)
--  **Suporte a navegação por teclado**
--  **Contraste adequado** para melhor legibilidade
--  **Compatibilidade** com leitores de tela
-
-## 🎯 Metas e Objetivos
-
-### **📊 Objetivos de Produto:**
-
-#### **🏆 Objetivo Principal:**
-
-**Ser a ferramenta de gestão empresarial mais utilizada por provedores de serviços no Brasil**, oferecendo uma solução completa, acessível e fácil de usar.
-
-#### **🎯 Objetivos Específicos:**
-
--  **Atingir 1000+ empresas ativas** nos primeiros 24 meses
--  **Manter índice de satisfação > 95%** entre usuários
--  **Reduzir tempo de gestão administrativa em 60%** para clientes
--  **Alcançar 99.5% de uptime** mensal
--  **Processar 1M+ de transações financeiras** por mês
-
-### **📈 Métricas de Sucesso:**
-
-#### **💼 Métricas de Negócio:**
-
--  **Taxa de conversão** de trial para pago > 25%
--  **Churn rate mensal** < 3%
--  **LTV médio** > R$ 5.000 por cliente
--  **CAC payback** < 6 meses
-
-#### **👥 Métricas de Produto:**
-
--  **DAU/MAU ratio** > 0.7 (usuários altamente engajados)
--  **Session duration média** > 15 minutos
--  **Feature adoption rate** > 80% para funcionalidades principais
--  **Support ticket resolution** < 4 horas
-
-#### **⚡ Métricas Técnicas:**
-
--  **Page load time** < 2 segundos
--  **API response time** < 200ms
--  **Error rate** < 0.1%
--  **Database query performance** otimizada
-
-## 🎨 User Experience Vision
-
-### **✨ Jornada do Usuário:**
-
-#### **🚀 Onboarding:**
-
-1. **Cadastro simplificado** (menos de 2 minutos)
-2. **Configuração guiada** com assistente inteligente
-3. **Importação automática** de dados existentes
-4. **Treinamento contextual** durante o uso
-
-#### **💼 Uso Diário:**
-
-1. **Dashboard informativo** com visão geral do negócio
-2. **Workflow otimizado** para tarefas recorrentes
-3. **Notificações inteligentes** sobre ações importantes
-4. **Suporte proativo** quando dificuldades são detectadas
-
-#### **📊 Análise e Decisão:**
-
-1. **Relatórios visuais** fáceis de interpretar
-2. **Insights acionáveis** destacados automaticamente
-3. **Comparativos** com períodos anteriores
-4. **Exportação** para ferramentas externas
-
-### **🎭 Personas de Usuário:**
-
-#### **👨‍💼 Pedro - Provedor de Serviços (Usuário Principal):**
-
--  **Perfil:** 35 anos, dono de empresa de TI com 15 funcionários
--  **Objetivo:** Controlar finanças e crescer o negócio
--  **Frustração:** Tempo excessivo gasto em administração
--  **Necessidade:** Sistema simples mas completo
-
-#### **👩‍💼 Ana - Gestora Administrativa:**
-
--  **Perfil:** 28 anos, responsável por processos administrativos
--  **Objetivo:** Otimizar processos e reduzir erros
--  **Frustração:** Sistemas complicados que atrapalham o trabalho
--  **Necessidade:** Interface intuitiva e treinamento mínimo
-
-#### **👨‍💼 Carlos - Empresário:**
-
--  **Perfil:** 45 anos, dono de múltiplas empresas
--  **Objetivo:** Visão consolidada de todos os negócios
--  **Frustração:** Dados espalhados em diferentes sistemas
--  **Necessidade:** Plataforma integrada com multi-tenant
-
-## 🔮 Visão de Produto
-
-### **🌟 Produto Ideal:**
-
-O **Easy Budget Laravel** será reconhecido como **a solução padrão para gestão empresarial de provedores de serviços**, oferecendo:
-
--  **🎯 Complete solution** - Todas as funcionalidades necessárias em um único produto
--  **🚀 Easy to use** - Interface intuitiva que não requer treinamento extensivo
--  **⚡ Fast and reliable** - Performance excepcional com uptime garantido
--  **🔒 Secure and compliant** - Segurança de nível empresarial
--  **📱 Accessible anywhere** - Funcionamento perfeito em qualquer dispositivo
--  **🎨 Beautifully designed** - Interface moderna e profissional
-
-### **💫 Diferenciais Competitivos:**
-
-#### **🏆 Vantagens únicas:**
-
--  **Arquitetura multi-tenant robusta** - Isolamento completo de dados por empresa
--  **Sistema de auditoria avançado** - Rastreamento completo de todas as ações
--  **Relatórios financeiros em tempo real** - Dashboards executivos com KPIs
--  **Interface responsiva e moderna** - Bootstrap com UX otimizada
--  **API RESTful completa** - Integração fácil com sistemas externos
-
-#### **🎯 Proposta de Valor:**
-
-**"Gestão empresarial completa, simples e segura para provedores de serviços que querem focar no crescimento do negócio, não na administração."**
-
-## 📋 Roadmap de Produto
-
-### **🚀 Fase 1 (Atual) - Core MVP:**
-
--  ✅ Sistema multi-tenant implementado
--  ✅ Módulos CRM funcionais
--  ✅ Gestão financeira completa
--  ✅ Sistema de auditoria ativo
--  ✅ Interface responsiva
--  ✅ **Módulo Categories** - Sistema hierárquico com Soft Delete (100% finalizado)
--  ✅ **Módulo Products** - Sistema completo com gestão de estoque (100% finalizado)
--  ✅ **Padrões arquiteturais** - Sistema completo implementado para todas as camadas
-
-### **📈 Fase 2 (Próximos 6 meses) - Expansão:**
-
--  🔄 Modernização do frontend (TailwindCSS + Vite)
--  🔄 Implementação de componentes React
--  🔄 Expansão da API com mais endpoints
--  🔄 Sistema de notificações avançado
--  🔄 Integrações com ferramentas externas
-
-### **🚀 Fase 3 (Próximos 12 meses) - Inovação:**
-
--  🔄 Aplicativo mobile nativo
--  🔄 Inteligência artificial para insights
--  🔄 Machine learning para previsões financeiras
--  🔄 Marketplace de integrações
--  🔄 API pública para desenvolvedores
-
-### **💡 Fase 4 (Próximos 24 meses) - Dominação:**
-
--  🔄 Expansão internacional
--  🔄 Múltiplos idiomas
--  🔄 White-label para grandes empresas
-**Última atualização:** 02/01/2025 - Atualização para refletir a finalização completa dos módulos Categories e Products, com adição de informações sobre os padrões arquiteturais implementados em todas as camadas do sistema Laravel.
--  🔄 Ecossistema de parceiros
--  🔄 Plataforma de desenvolvedores
-
-Este documento define a visão completa do produto Easy Budget Laravel, servindo como guia para todas as decisões de desenvolvimento e evolução da plataforma.
+# Easy Budget Laravel - Visão Geral do Produto
+
+## Identidade do Projeto
+
+**Nome:** Easy Budget Laravel  
+**Tipo:** Sistema de Gestão Empresarial  
+**Mercado-Alvo:** Prestadores de serviços, pequenas e médias empresas  
+**Licença:** MIT
+
+## Proposta de Valor
+
+Easy Budget Laravel é um sistema completo de gestão empresarial que oferece controle total sobre relacionamento com clientes, operações financeiras, estoque e inteligência de negócios. Construído em Laravel 12 com padrões arquiteturais modernos, entrega recursos de nível empresarial com isolamento multi-tenant para operações seguras e escaláveis.
+
+## Funcionalidades Principais
+
+### 🏢 Arquitetura Multi-Tenant
+- Isolamento completo de dados por empresa/tenant
+- Consultas e operações com escopo de tenant seguro
+- Arquitetura escalável suportando múltiplas organizações
+- Autenticação e autorização com consciência de tenant
+
+### 👥 CRM (Gestão de Relacionamento com Clientes)
+- Tipos duplos de clientes: Pessoa Física (CPF) e Jurídica (CNPJ)
+- Perfis completos de clientes com informações de contato
+- Rastreamento e histórico de interações com clientes
+- Marcação e categorização de clientes
+- Busca de clientes baseada em geolocalização (CEP)
+- Gestão de status de clientes (ativo/inativo)
+- Exclusão suave com capacidade de restauração
+
+### 💰 Gestão Financeira
+- **Orçamentos/Cotações:** Criar, gerenciar e rastrear propostas de orçamento
+- **Faturas:** Gerar faturas a partir de orçamentos ou independentes
+- **Integração de Pagamento:** Integração com Mercado Pago para pagamentos online
+- **Relatórios Financeiros:** Análises e relatórios financeiros abrangentes
+- **Rastreamento de Pagamentos:** Monitorar status e histórico de pagamentos
+- **Versionamento de Orçamentos:** Rastrear mudanças em orçamentos
+- **Templates de Orçamento:** Templates de orçamento reutilizáveis
+
+### 📦 Gestão de Estoque e Produtos
+- Gestão de catálogo de produtos e serviços
+- Rastreamento de estoque com histórico de movimentações
+- Monitoramento e alertas de níveis de estoque
+- Gestão de unidades (kg, litros, peças, etc.)
+- Organização baseada em categorias
+- Rastreamento de preços e custos de produtos
+
+### 📊 Inteligência de Negócios
+- Dashboards executivos com KPIs em tempo real
+- Análises e estatísticas de clientes
+- Métricas de desempenho financeiro
+- Relatórios e insights de estoque
+- Geração de relatórios personalizados
+- Serviços de visualização de gráficos
+
+### 🔐 Autenticação e Segurança
+- Verificação híbrida de e-mail (Laravel Sanctum + Customizado)
+- Login social (Google, Facebook via Socialite)
+- Controle de acesso baseado em funções (RBAC)
+- Sistema de gestão de permissões
+- Sistema de tokens únicos com expiração de 30 minutos
+- Registro de auditoria abrangente
+- Gestão e segurança de sessões
+
+### 📧 Comunicação e Notificações
+- Sistema de notificações por e-mail
+- Geração de e-mails baseada em templates
+- Notificações de status de orçamento
+- Notificações de faturas
+- Sistema de tickets de suporte
+- Registro e rastreamento de e-mails
+
+### 🎨 Experiência do Usuário
+- Interface responsiva Bootstrap 5.3
+- Pipeline de assets moderno com Vite
+- Hot Module Replacement (HMR) para desenvolvimento
+- Recursos interativos com AJAX
+- Validação de formulários em tempo real
+- Sistema de alertas e notificações
+- Layouts otimizados para mobile
+
+## Usuários-Alvo
+
+### Usuários Primários
+- **Prestadores de Serviços:** Empresas oferecendo serviços profissionais
+- **Pequenas Empresas:** Negócios de varejo, atacado e serviços
+- **Médias Empresas:** Empresas em crescimento precisando de soluções escaláveis
+- **Freelancers:** Profissionais individuais gerenciando múltiplos clientes
+
+### Funções de Usuário
+- **Administradores:** Acesso completo ao sistema e configuração
+- **Gerentes:** Operações de negócios e relatórios
+- **Equipe:** Operações do dia-a-dia e gestão de clientes
+- **Clientes:** Acesso limitado a faturas e pagamentos (área pública)
+
+## Casos de Uso Principais
+
+### Fluxo de Gestão de Orçamentos
+1. Criar perfil de cliente (pessoa física ou jurídica)
+2. Gerar orçamento/cotação com itens de linha
+3. Compartilhar orçamento com cliente
+4. Rastrear status do orçamento (pendente, aprovado, rejeitado)
+5. Converter orçamento aprovado em fatura
+6. Processar pagamento via Mercado Pago
+7. Gerar relatórios financeiros
+
+### Fluxo de Gestão de Estoque
+1. Adicionar produtos/serviços ao catálogo
+2. Definir níveis iniciais de estoque
+3. Rastrear movimentações de estoque (entrada/saída)
+4. Monitorar alertas de estoque
+5. Gerar relatórios de estoque
+6. Atualizar preços e custos
+
+### Fluxo de Relacionamento com Clientes
+1. Registrar novo cliente (CPF/CNPJ)
+2. Registrar interações com clientes
+3. Rastrear histórico de clientes
+4. Gerenciar status de clientes
+5. Buscar clientes por localização
+6. Gerar análises de clientes
+
+### Fluxo de Relatórios Financeiros
+1. Acessar dashboard executivo
+2. Visualizar KPIs financeiros em tempo real
+3. Gerar relatórios personalizados
+4. Exportar dados para análise
+5. Monitorar status de pagamentos
+6. Rastrear tendências de receita
+
+## Vantagens Competitivas
+
+- **Stack Tecnológico Moderno:** Laravel 12, PHP 8.2+, Vite, Bootstrap 5.3
+- **Pronto para Multi-Tenant:** Isolamento integrado para múltiplas organizações
+- **Conjunto Abrangente de Recursos:** CRM + Finanças + Estoque em uma plataforma
+- **Arquitetura Extensível:** Separação clara de responsabilidades com camada de serviço
+- **Integração de Pagamento:** Integração pronta para uso com Mercado Pago
+- **Amigável para Desenvolvedores:** Padrões e diretrizes de design bem documentados
+- **Código Aberto:** Licença MIT permite customização e extensão
+- **Desenvolvimento Ativo:** Atualizações e melhorias regulares
+
+## Destaques Técnicos
+
+- **PHP 8.2+** com recursos modernos da linguagem
+- **Laravel 12** framework com recursos mais recentes
+- **Vite** para bundling de assets rápido e moderno
+- **MySQL 8.0+** com InnoDB para confiabilidade
+- **Redis 7.0+** para cache e sessões
+- **Multi-tenant** via pacote stancl/tenancy
+- **Arquitetura orientada a eventos** para escalabilidade
+- **Padrão repository** para abstração de dados
+- **Camada de serviço** para lógica de negócio
+- **Testes abrangentes** com PHPUnit e Dusk

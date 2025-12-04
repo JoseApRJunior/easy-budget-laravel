@@ -216,4 +216,29 @@ class CategoryService extends AbstractBaseService
         return $this->success( $list );
     }
 
+    /**
+     * Retorna dados para o dashboard de categorias.
+     */
+    public function getDashboardData( int $tenantId ): ServiceResult
+    {
+        try {
+            $data = [
+                'total_categories'  => $this->categoryRepository->countByTenant( $tenantId ),
+                'active_categories' => $this->categoryRepository->countActiveByTenant( $tenantId ),
+                'category_tree'     => $this->categoryRepository->getHierarchyByTenant( $tenantId ),
+                'recent_categories' => $this->categoryRepository->getRecentByTenant( $tenantId, 5 )
+            ];
+
+            return $this->success( $data, 'Dashboard data loaded' );
+        } catch ( Exception $e ) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao carregar dados do dashboard',
+                null,
+                $e,
+            );
+        }
+
+    }
+
 }

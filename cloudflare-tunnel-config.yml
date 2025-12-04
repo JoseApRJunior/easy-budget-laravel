@@ -11,7 +11,7 @@ credentials-file: C:/Users/junio/.cloudflared/37375574-f138-4588-b38d-6953da23a1
 ingress:
   # Mapeia o domínio principal para o servidor PHP local
   - hostname: dev.easybudget.net.br
-    service: http://127.0.0.1:80
+    service: http://127.0.0.1:443
 
   # Regra catch-all obrigatória (deve ser a última)
   - service: http_status:404
