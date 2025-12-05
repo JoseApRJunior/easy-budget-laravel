@@ -78,31 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
    });
 
    function handleFilterSubmit() {
-      const hasFilters = !!(
-         (searchInput?.value || "").trim() ||
-         (statusSelect?.value || "").trim() ||
-         (typeSelect?.value || "").trim() ||
-         (areaSelect?.value || "").trim()
-      );
-
-      if (!hasFilters) {
-         const modalEl = document.getElementById("confirmAllCustomersModal");
-         if (!modalEl) {
-            document.getElementById("filtersFormCustomers").submit();
-            return;
-         }
-         const confirmBtn = modalEl.querySelector(".btn-confirm-all-customers");
-         const modal = new bootstrap.Modal(modalEl);
-         const handler = function () {
-            confirmBtn.removeEventListener("click", handler);
-            modal.hide();
-            document.getElementById("filtersFormCustomers").submit();
-         };
-         confirmBtn.addEventListener("click", handler);
-         modal.show();
-      } else {
-         document.getElementById("filtersFormCustomers").submit();
-      }
+      document.getElementById("filtersFormCustomers").submit();
    }
 });
 

@@ -136,8 +136,17 @@ class CategoryController extends Controller
                     }
                 }
             } else {
-                // Quando não há filtros, mostrar tabela vazia inicialmente
-                $categories = collect();
+                // Quando há filtros aplicados, buscar categorias
+                if ( $hasFilters ) {
+                    $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
+                    $categories = $this->getServiceData( $result, collect() );
+                    if ( method_exists( $categories, 'appends' ) ) {
+                        $categories = $categories->appends( $request->query() );
+                    }
+                } else {
+                    // Quando não há filtros, mostrar tabela vazia inicialmente
+                    $categories = collect();
+                }
             }
         }
 

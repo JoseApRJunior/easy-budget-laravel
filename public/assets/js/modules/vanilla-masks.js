@@ -840,46 +840,27 @@ if (typeof window !== "undefined" && document.readyState === "loading") {
    initializeMasks();
 }
 ;(function(){
-  try {
-    if (typeof window !== 'undefined') {
-      window.VANILLA_DEBUG = true;
-      if (window.VANILLA_DEBUG) {
-        console.info('[vanilla-masks] module initializing');
-      }
-      if (typeof VanillaMask !== 'undefined') {
-        window.VanillaMask = window.VanillaMask || VanillaMask;
-        if (window.VANILLA_DEBUG) {
-          console.info('[vanilla-masks] VanillaMask exported to window');
-        }
-      }
-      if (!window.parseCurrencyBRLToNumber) {
-        window.parseCurrencyBRLToNumber = function(str){
-          var digits = String(str||'').replace(/\D/g,'');
-          return parseInt(digits||'0',10)/100;
-        };
-        if (window.VANILLA_DEBUG) {
-          console.info('[vanilla-masks] parseCurrencyBRLToNumber attached');
-        }
-      }
-      if (!window.formatCurrencyBRL) {
-        window.formatCurrencyBRL = function(num){
-          var n = Number(num||0);
-          var value = Math.floor(Math.max(0, Math.round(n*100)));
-          var cents = (value % 100).toString().padStart(2,'0');
-          var integer = Math.floor(value/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-          return 'R$ ' + integer + ',' + cents;
-        };
-        if (window.VANILLA_DEBUG) {
-          console.info('[vanilla-masks] formatCurrencyBRL attached');
-        }
-      }
-      if (window.VANILLA_DEBUG) {
-        console.info('[vanilla-masks] module ready', {
-          hasVanillaMask: !!window.VanillaMask,
-          hasParse: !!window.parseCurrencyBRLToNumber,
-          hasFormat: !!window.formatCurrencyBRL
-        });
-      }
-    }
-  } catch(e) {}
+   try {
+     if (typeof window !== 'undefined') {
+       window.VANILLA_DEBUG = false;
+       if (typeof VanillaMask !== 'undefined') {
+         window.VanillaMask = window.VanillaMask || VanillaMask;
+       }
+       if (!window.parseCurrencyBRLToNumber) {
+         window.parseCurrencyBRLToNumber = function(str){
+           var digits = String(str||'').replace(/\D/g,'');
+           return parseInt(digits||'0',10)/100;
+         };
+       }
+       if (!window.formatCurrencyBRL) {
+         window.formatCurrencyBRL = function(num){
+           var n = Number(num||0);
+           var value = Math.floor(Math.max(0, Math.round(n*100)));
+           var cents = (value % 100).toString().padStart(2,'0');
+           var integer = Math.floor(value/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+           return 'R$ ' + integer + ',' + cents;
+         };
+       }
+     }
+   } catch(e) {}
 })();

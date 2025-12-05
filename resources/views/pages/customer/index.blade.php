@@ -166,8 +166,109 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- Preenchido via JavaScript --}}
-                                        @if (isset($customers) && $customers->isEmpty())
+                                        @forelse($customers as $customer)
+                                            <tr>
+                                                <td>
+                                                    @if ($customer->commonData)
+                                                        @if ($customer->commonData->isCompany())
+                                                            <strong>{{ $customer->commonData->company_name }}</strong>
+                                                            @if ($customer->commonData->fantasy_name)
+                                                                <br><small
+                                                                    class="text-muted">{{ $customer->commonData->fantasy_name }}</small>
+                                                            @endif
+                                                        @else
+                                                            <strong>{{ $customer->commonData->first_name }}
+                                                                {{ $customer->commonData->last_name }}</strong>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">Nome não informado</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($customer->commonData)
+                                                        @if ($customer->commonData->isCompany())
+                                                            <span
+                                                                class="text-code">{{ $customer->commonData->cnpj ?? 'N/A' }}</span>
+                                                        @else
+                                                            <span
+                                                                class="text-code">{{ $customer->commonData->cpf ?? 'N/A' }}</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($customer->contact)
+                                                        {{ $customer->contact->email_personal ?? ($customer->contact->email_business ?? 'N/A') }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($customer->contact)
+                                                        {{ $customer->contact->phone_personal ?? ($customer->contact->phone_business ?? 'N/A') }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $customer->created_at->format('d/m/Y') }}</td>
+                                                <td>
+                                                    @if ($customer->status === 'active')
+                                                        <span class="badge bg-success">Ativo</span>
+                                                    @else
+                                                        <span class="badge bg-danger">Inativo</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        @if ($customer->deleted_at)
+                                                            {{-- Cliente deletado: apenas restaurar --}}
+                                                            <form
+                                                                action="{{ route('provider.customers.restore', $customer->id) }}"
+                                                                method="POST" class="d-inline">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-success btn-sm"
+                                                                    title="Restaurar" aria-label="Restaurar">
+                                                                    <i class="bi bi-arrow-counterclockwise"
+                                                                        aria-hidden="true"></i>
+                                                                </button>
+                                                            </form>
+                                                        @else
+                                                            {{-- Cliente ativo: show, edit, toggle, delete --}}
+                                                            <a href="{{ route('provider.customers.show', $customer->id) }}"
+                                                                class="btn btn-info btn-sm" title="Visualizar"
+                                                                aria-label="Visualizar">
+                                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            </a>
+                                                            <a href="{{ route('provider.customers.edit', $customer->id) }}"
+                                                                class="btn btn-warning btn-sm" title="Editar"
+                                                                aria-label="Editar">
+                                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                            </a>
+                                                            <form
+                                                                action="{{ route('provider.customers.toggle-status', $customer->id) }}"
+                                                                method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <button type="submit"
+                                                                    class="btn {{ $customer->status === 'active' ? 'btn-warning' : 'btn-success' }} btn-sm"
+                                                                    title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
+                                                                    aria-label="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
+                                                                    onclick="return confirm('{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }} este cliente?')">
+                                                                    <i class="bi bi-{{ $customer->status === 'active' ? 'slash-circle' : 'check-lg' }}"
+                                                                        aria-hidden="true"></i>
+                                                                </button>
+                                                            </form>
+                                                            <button type="button" class="btn btn-danger btn-sm"
+                                                                onclick="confirmDelete({{ $customer->id }})"
+                                                                title="Excluir" aria-label="Excluir">
+                                                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
                                             <tr>
                                                 <td colspan="7" class="text-center text-muted">
                                                     <i class="bi bi-inbox mb-2" aria-hidden="true"
@@ -182,7 +283,7 @@
                                                     @endif
                                                 </td>
                                             </tr>
-                                        @endif
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
