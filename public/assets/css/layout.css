@@ -1063,7 +1063,11 @@ main .main-container {
    position: relative;
    padding-top: 3rem;
    padding-bottom: 3rem;
-   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+   background: linear-gradient(
+      135deg,
+      var(--primary-color) 0%,
+      var(--secondary-color) 100%
+   );
    color: var(--light-surface);
 }
 .hero-overlay {
@@ -1083,13 +1087,22 @@ main .main-container {
    position: absolute;
    inset: -6px;
    border-radius: 999px;
-   border: 2px solid rgba(255,255,255,0.4);
+   border: 2px solid rgba(255, 255, 255, 0.4);
    animation: pulse 1.8s ease-out infinite;
 }
 @keyframes pulse {
-   0% { transform: scale(0.95); opacity: 1; }
-   70% { transform: scale(1.1); opacity: 0; }
-   100% { transform: scale(1.1); opacity: 0; }
+   0% {
+      transform: scale(0.95);
+      opacity: 1;
+   }
+   70% {
+      transform: scale(1.1);
+      opacity: 0;
+   }
+   100% {
+      transform: scale(1.1);
+      opacity: 0;
+   }
 }
 .section-header h2 {
    line-height: 1.2;
@@ -1462,9 +1475,18 @@ main .main-container {
 /* Oculta spinners nativos dos inputs type=number para evitar duplicidade com botões customizados */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+   -webkit-appearance: none;
+   margin: 0;
 }
 input[type="number"] {
-  -moz-appearance: textfield;
+   -moz-appearance: textfield;
+}
+
+.avatar-circle {
+   width: 46px;
+   height: 46px;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
 }

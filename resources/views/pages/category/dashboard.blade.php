@@ -34,7 +34,13 @@
             </nav>
         </div>
 
-
+        @php
+            $total = $stats['total_categories'] ?? 0;
+            $active = $stats['active_categories'] ?? 0;
+            $inactive = $stats['inactive_categories'] ?? 0;
+            $recent = $stats['recent_categories'] ?? collect();
+            $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
+        @endphp
 
         <!-- Cards de Métricas -->
         <div class="row g-4 mb-4">
@@ -47,7 +53,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Total de Categorias</h6>
-                                <h3 class="mb-0">{{ $total_categories }}</h3>
+                                <h3 class="mb-0">{{ $total }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
@@ -66,7 +72,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Categorias Ativas</h6>
-                                <h3 class="mb-0">{{ $active_categories }}</h3>
+                                <h3 class="mb-0">{{ $active }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
@@ -85,7 +91,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Categorias Inativas</h6>
-                                <h3 class="mb-0">{{ $inactive_categories }}</h3>
+                                <h3 class="mb-0">{{ $inactive }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
@@ -104,7 +110,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Taxa de Atividade</h6>
-                                <h3 class="mb-0">{{ $activity_rate }}%</h3>
+                                <h3 class="mb-0">{{ $activityRate }}%</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
@@ -129,7 +135,7 @@
                         </a>
                     </div>
                     <div class="card-body">
-                        @if ($recent_categories instanceof \Illuminate\Support\Collection && $recent_categories->isNotEmpty())
+                        @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
@@ -142,7 +148,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($recent_categories as $category)
+                                        @foreach ($recent as $category)
                                             @php
                                                 $tenantId = auth()->user()->tenant_id ?? null;
                                                 $isCustom = $tenantId ? $category->isCustomFor($tenantId) : false;
@@ -287,14 +293,4 @@
 @endsection
 
 @push('styles')
-    <style>
-        .avatar-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
 @endpush

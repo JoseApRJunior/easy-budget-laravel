@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Product;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductRepository extends AbstractTenantRepository
@@ -74,6 +75,34 @@ class ProductRepository extends AbstractTenantRepository
     {
         // Verifica se o produto está associado a algum service_item
         return !$this->model->where( 'id', $productId )->has( 'serviceItems' )->exists();
+    }
+
+    /**
+     * Conta produtos ativos por tenant
+     */
+    public function countActiveByTenant(): int
+    {
+        return $this->countByTenant( [ 'active' => true ] );
+    }
+
+    /**
+     * Obtém produtos recentes por tenant
+     */
+    public function getRecentByTenant( int $limit = 5 ): Collection
+    {
+        return $this->getAllByTenant( [], [ 'created_at' => 'desc' ], $limit );
+    }
+
+    /**
+     * Obtém produtos com estoque baixo por tenant
+     */
+    public function getLowStockByTenant(): Collection
+    {
+        return $this->model->join( 'product_inventory', 'products.id', '=', 'product_inventory.product_id' )
+            ->where( 'products.active', true )
+            ->whereColumn( 'product_inventory.quantity', '<=', 'product_inventory.min_quantity' )
+            ->select( 'products.*', 'product_inventory.quantity', 'product_inventory.min_quantity' )
+            ->get();
     }
 
 }

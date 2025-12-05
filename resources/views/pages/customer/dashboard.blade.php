@@ -31,6 +31,7 @@
             $active = $stats['active_customers'] ?? 0;
             $inactive = $stats['inactive_customers'] ?? 0;
             $recent = $stats['recent_customers'] ?? collect();
+            $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
         @endphp
 
         <!-- Cards de Métricas -->
@@ -101,10 +102,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Taxa de Atividade</h6>
-                                @php
-                                    $activityRate =
-                                        $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
-                                @endphp
+
                                 <h3 class="mb-0">{{ $activityRate }}%</h3>
                             </div>
                         </div>
@@ -233,14 +231,4 @@
 @endsection
 
 @push('styles')
-    <style>
-        .avatar-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
 @endpush

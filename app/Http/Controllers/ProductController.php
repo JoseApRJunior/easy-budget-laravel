@@ -27,21 +27,21 @@ class ProductController extends Controller
 
     private CategoryService $categoryService;
 
-    private function normalizeCurrencyFilter(?string $val): ?float
+    private function normalizeCurrencyFilter( ?string $val ): ?float
     {
-        if ($val === null) return null;
-        $digits = preg_replace('/[^0-9]/', '', $val);
-        if ($digits === null || $digits === '') return null;
-        if (strlen($digits) === 1) $digits = '0' . $digits;
-        $intPart = substr($digits, 0, -2);
-        $decPart = substr($digits, -2);
-        $normalized = ($intPart !== '' ? $intPart : '0') . '.' . $decPart;
+        if ( $val === null ) return null;
+        $digits = preg_replace( '/[^0-9]/', '', $val );
+        if ( $digits === null || $digits === '' ) return null;
+        if ( strlen( $digits ) === 1 ) $digits = '0' . $digits;
+        $intPart    = substr( $digits, 0, -2 );
+        $decPart    = substr( $digits, -2 );
+        $normalized = ( $intPart !== '' ? $intPart : '0' ) . '.' . $decPart;
         return (float) $normalized;
     }
 
-    public function __construct(ProductService $productService, CategoryService $categoryService)
+    public function __construct( ProductService $productService, CategoryService $categoryService )
     {
-        $this->productService = $productService;
+        $this->productService  = $productService;
         $this->categoryService = $categoryService;
     }
 
@@ -50,25 +50,25 @@ class ProductController extends Controller
      *
      * Rota: products.index
      */
-    public function index(Request $request): View
+    public function index( Request $request ): View
     {
-        $filters = $request->only(['search', 'category_id', 'active', 'min_price', 'max_price', 'deleted']);
+        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
 
         try {
-            $showOnlyTrashed = ($filters['deleted'] ?? '') === 'only';
-            
-            if ($showOnlyTrashed) {
-                $result = $this->productService->getDeletedProducts($filters, ['category']);
+            $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+
+            if ( $showOnlyTrashed ) {
+                $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
                 $products = $result->isSuccess() ? $result->getData() : collect();
             } else {
-                $hasFilters = collect($filters)->except('deleted')->filter(fn($v) => filled($v))->isNotEmpty();
-                $confirmAll = (bool) $request->boolean('all');
+                $hasFilters = collect( $filters )->except( 'deleted' )->filter( fn( $v ) => filled( $v ) )->isNotEmpty();
+                $confirmAll = (bool) $request->boolean( 'all' );
 
-                if ($hasFilters || $confirmAll) {
-                    $result = $this->productService->getFilteredProducts($filters, ['category']);
+                if ( $hasFilters || $confirmAll ) {
+                    $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
-                    if (! $result->isSuccess()) {
-                        abort(500, 'Erro ao carregar lista de produtos');
+                    if ( !$result->isSuccess() ) {
+                        abort( 500, 'Erro ao carregar lista de produtos' );
                     }
 
                     $products = $result->getData();
@@ -77,13 +77,13 @@ class ProductController extends Controller
                 }
             }
 
-            return view('pages.product.index', [
-                'products' => $products,
-                'filters' => $filters,
+            return view( 'pages.product.index', [
+                'products'   => $products,
+                'filters'    => $filters,
                 'categories' => $this->categoryService->getActive(),
-            ]);
-        } catch (Exception) {
-            abort(500, 'Erro ao carregar produtos');
+            ] );
+        } catch ( Exception ) {
+            abort( 500, 'Erro ao carregar produtos' );
         }
     }
 
@@ -95,11 +95,11 @@ class ProductController extends Controller
     public function create(): View
     {
         try {
-            return view('pages.product.create', [
+            return view( 'pages.product.create', [
                 'categories' => $this->categoryService->getActive(),
-            ]);
-        } catch (Exception) {
-            abort(500, 'Erro ao carregar formulário de criação de produto');
+            ] );
+        } catch ( Exception ) {
+            abort( 500, 'Erro ao carregar formulário de criação de produto' );
         }
     }
 
@@ -108,26 +108,26 @@ class ProductController extends Controller
      *
      * Rota: products.store
      */
-    public function store(ProductStoreRequest $request): RedirectResponse
+    public function store( ProductStoreRequest $request ): RedirectResponse
     {
         try {
-            $result = $this->productService->createProduct($request->validated());
+            $result = $this->productService->createProduct( $request->validated() );
 
-            if (! $result->isSuccess()) {
+            if ( !$result->isSuccess() ) {
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->with('error', $result->getMessage());
+                    ->with( 'error', $result->getMessage() );
             }
 
             return redirect()
-                ->route('provider.products.create')
-                ->with('success', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.');
-        } catch (Exception $e) {
+                ->route( 'provider.products.create' )
+                ->with( 'success', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
+        } catch ( Exception $e ) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar produto: ' . $e->getMessage());
+                ->with( 'error', 'Erro ao criar produto: ' . $e->getMessage() );
         }
     }
 
@@ -136,20 +136,20 @@ class ProductController extends Controller
      *
      * Rota: products.show
      */
-    public function show(string $sku): View
+    public function show( string $sku ): View
     {
         try {
-            $result = $this->productService->findBySku($sku, ['category', 'productInventory']);
+            $result = $this->productService->findBySku( $sku, [ 'category', 'productInventory' ] );
 
-            if (! $result->isSuccess()) {
-                abort(404, 'Produto não encontrado');
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Produto não encontrado' );
             }
 
-            return view('pages.product.show', [
+            return view( 'pages.product.show', [
                 'product' => $result->getData(),
-            ]);
-        } catch (Exception) {
-            abort(500, 'Erro ao carregar detalhes do produto');
+            ] );
+        } catch ( Exception ) {
+            abort( 500, 'Erro ao carregar detalhes do produto' );
         }
     }
 
@@ -158,21 +158,21 @@ class ProductController extends Controller
      *
      * Rota: products.edit
      */
-    public function edit(string $sku): View
+    public function edit( string $sku ): View
     {
         try {
-            $result = $this->productService->findBySku($sku, ['category']);
+            $result = $this->productService->findBySku( $sku, [ 'category' ] );
 
-            if (! $result->isSuccess()) {
-                abort(404, 'Produto não encontrado');
+            if ( !$result->isSuccess() ) {
+                abort( 404, 'Produto não encontrado' );
             }
 
-            return view('pages.product.edit', [
-                'product' => $result->getData(),
+            return view( 'pages.product.edit', [
+                'product'    => $result->getData(),
                 'categories' => $this->categoryService->getActive(),
-            ]);
-        } catch (Exception) {
-            abort(500, 'Erro ao carregar formulário de edição de produto');
+            ] );
+        } catch ( Exception ) {
+            abort( 500, 'Erro ao carregar formulário de edição de produto' );
         }
     }
 
@@ -181,28 +181,28 @@ class ProductController extends Controller
      *
      * Rota: products.update
      */
-    public function update(string $sku, ProductUpdateRequest $request): RedirectResponse
+    public function update( string $sku, ProductUpdateRequest $request ): RedirectResponse
     {
         try {
-            $result = $this->productService->updateProductBySku($sku, $request->validated());
+            $result = $this->productService->updateProductBySku( $sku, $request->validated() );
 
-            if (! $result->isSuccess()) {
+            if ( !$result->isSuccess() ) {
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->with('error', $result->getMessage());
+                    ->with( 'error', $result->getMessage() );
             }
 
             $product = $result->getData();
 
             return redirect()
-                ->route('provider.products.show', $product->sku)
-                ->with('success', 'Produto atualizado com sucesso!');
-        } catch (Exception $e) {
+                ->route( 'provider.products.show', $product->sku )
+                ->with( 'success', 'Produto atualizado com sucesso!' );
+        } catch ( Exception $e ) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar produto: ' . $e->getMessage());
+                ->with( 'error', 'Erro ao atualizar produto: ' . $e->getMessage() );
         }
     }
 
@@ -211,40 +211,40 @@ class ProductController extends Controller
      *
      * Rota: products.toggle-status (PATCH)
      */
-    public function toggle_status(string $sku, Request $request)
+    public function toggle_status( string $sku, Request $request )
     {
         try {
-            $result = $this->productService->toggleProductStatus($sku);
+            $result = $this->productService->toggleProductStatus( $sku );
 
-            if (! $result->isSuccess()) {
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
+            if ( !$result->isSuccess() ) {
+                if ( $request->ajax() || $request->wantsJson() ) {
+                    return response()->json( [
                         'success' => false,
                         'message' => $result->getMessage(),
-                    ], 400);
+                    ], 400 );
                 }
-                return redirect()->back()->with('error', $result->getMessage());
+                return redirect()->back()->with( 'error', $result->getMessage() );
             }
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
+            if ( $request->ajax() || $request->wantsJson() ) {
+                return response()->json( [
                     'success' => true,
                     'message' => $result->getMessage(),
-                ]);
+                ] );
             }
 
             $product = $result->getData();
             return redirect()
-                ->route('provider.products.show', $product->sku)
-                ->with('success', $result->getMessage());
-        } catch (Exception $e) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
+                ->route( 'provider.products.show', $product->sku )
+                ->with( 'success', $result->getMessage() );
+        } catch ( Exception $e ) {
+            if ( $request->ajax() || $request->wantsJson() ) {
+                return response()->json( [
                     'success' => false,
                     'message' => 'Erro ao alterar status do produto: ' . $e->getMessage(),
-                ], 500);
+                ], 500 );
             }
-            return redirect()->back()->with('error', 'Erro ao alterar status do produto: ' . $e->getMessage());
+            return redirect()->back()->with( 'error', 'Erro ao alterar status do produto: ' . $e->getMessage() );
         }
     }
 
@@ -253,24 +253,24 @@ class ProductController extends Controller
      *
      * Rota: products.destroy (DELETE)
      */
-    public function delete_store(string $sku): RedirectResponse
+    public function delete_store( string $sku ): RedirectResponse
     {
         try {
-            $result = $this->productService->deleteProductBySku($sku);
+            $result = $this->productService->deleteProductBySku( $sku );
 
-            if (! $result->isSuccess()) {
+            if ( !$result->isSuccess() ) {
                 return redirect()
                     ->back()
-                    ->with('error', $result->getMessage());
+                    ->with( 'error', $result->getMessage() );
             }
 
             return redirect()
-                ->route('provider.products.index')
-                ->with('success', 'Produto excluído com sucesso!');
-        } catch (Exception $e) {
+                ->route( 'provider.products.index' )
+                ->with( 'success', 'Produto excluído com sucesso!' );
+        } catch ( Exception $e ) {
             return redirect()
                 ->back()
-                ->with('error', 'Erro ao excluir produto: ' . $e->getMessage());
+                ->with( 'error', 'Erro ao excluir produto: ' . $e->getMessage() );
         }
     }
 
@@ -283,29 +283,18 @@ class ProductController extends Controller
      */
     public function dashboard()
     {
-        try {
-            // Total de produtos
-            $total = $this->productService->getTotalCount();
+        $result = $this->productService->getDashboardData( auth()->user()->tenant_id );
 
-            // Total de produtos ativos
-            $active = $this->productService->getActiveCount();
-
-            $inactive = max(0, $total - $active);
-
-            // Produtos recentes
-            $recent = $this->productService->getRecentProducts(5, ['category']);
-
-            $stats = [
-                'total_products' => $total,
-                'active_products' => $active,
-                'inactive_products' => $inactive,
-                'recent_products' => $recent,
-            ];
-
-            return view('pages.product.dashboard', compact('stats'));
-        } catch (Exception) {
-            abort(500, 'Erro ao carregar dashboard de produtos');
+        if ( !$result->isSuccess() ) {
+            return view( 'pages.product.dashboard', [
+                'stats' => [],
+                'error' => $result->getMessage(),
+            ] );
         }
+
+        return view( 'pages.product.dashboard', [
+            'stats' => $result->getData(),
+        ] );
     }
 
     /**
@@ -313,43 +302,44 @@ class ProductController extends Controller
      *
      * Rota: products.restore (POST)
      */
-    public function restore(string $sku): RedirectResponse
+    public function restore( string $sku ): RedirectResponse
     {
         try {
-            $result = $this->productService->restoreProductBySku($sku);
+            $result = $this->productService->restoreProductBySku( $sku );
 
-            if (! $result->isSuccess()) {
+            if ( !$result->isSuccess() ) {
                 return redirect()
-                    ->route('provider.products.index')
-                    ->with('error', $result->getMessage());
+                    ->route( 'provider.products.index' )
+                    ->with( 'error', $result->getMessage() );
             }
 
             return redirect()
-                ->route('provider.products.index')
-                ->with('success', 'Produto restaurado com sucesso!');
-        } catch (Exception $e) {
+                ->route( 'provider.products.index' )
+                ->with( 'success', 'Produto restaurado com sucesso!' );
+        } catch ( Exception $e ) {
             return redirect()
-                ->route('provider.products.index')
-                ->with('error', 'Erro ao restaurar produto: ' . $e->getMessage());
+                ->route( 'provider.products.index' )
+                ->with( 'error', 'Erro ao restaurar produto: ' . $e->getMessage() );
         }
     }
 
     /**
      * AJAX endpoint para buscar produtos com filtros.
      */
-    public function ajaxSearch(Request $request): JsonResponse
+    public function ajaxSearch( Request $request ): JsonResponse
     {
-        $filters = $request->only(['search', 'active', 'min_price', 'max_price', 'category_id']);
-        if (isset($filters['min_price'])) {
-            $filters['min_price'] = $this->normalizeCurrencyFilter($filters['min_price']);
+        $filters = $request->only( [ 'search', 'active', 'min_price', 'max_price', 'category_id' ] );
+        if ( isset( $filters[ 'min_price' ] ) ) {
+            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
         }
-        if (isset($filters['max_price'])) {
-            $filters['max_price'] = $this->normalizeCurrencyFilter($filters['max_price']);
+        if ( isset( $filters[ 'max_price' ] ) ) {
+            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
         }
-        $result = $this->productService->getFilteredProducts($filters, ['category']);
+        $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
         return $result->isSuccess()
-            ? response()->json(['success' => true, 'data' => $result->getData()])
-            : response()->json(['success' => false, 'message' => $result->getMessage()], 400);
+            ? response()->json( [ 'success' => true, 'data' => $result->getData() ] )
+            : response()->json( [ 'success' => false, 'message' => $result->getMessage() ], 400 );
     }
+
 }

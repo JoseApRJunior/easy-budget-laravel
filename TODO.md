@@ -75,3 +75,13 @@ Analisar rotas atuais relacionadas a categories no arquivo routes/web.php e Cate
 4. Mapear as funcionalidades atuais que precisam ser preservadas na rota unificada
 
 **Contexto:** O usuário mencionou que mudou os grupos de provider para 'p' e admin para 'a' para melhorar as URLs e quer que as rotas de categories fiquem fora dos grupos. Currently tem rotas separadas /provider/categories/dashboard e /admin/categories/dashboard que precisam ser unificadas em /categories/dashboard.
+
+Analise as estruturas dos seguintes arquivos index.blade.php:
+
+-  C:\laragon\www\easy-budget-laravel\resources\views\pages\category\index.blade.php
+-  C:\laragon\www\easy-budget-laravel\resources\views\pages\product\index.blade.php
+-  C:\laragon\www\easy-budget-laravel\resources\views\pages\customer\index.blade.php
+
+O arquivo de produto apresenta um visual superior inicialmente, especialmente com uma tabela vazia. Identifique as melhorias necessárias para padronizar visualmente os três arquivos.
+
+Indique exatamente o que precisa ser feito, com foco na consistência de títulos, ícones, divs, cards, forms e CSS.

@@ -540,10 +540,43 @@ class ProductService extends AbstractBaseService
             DB::commit();
             return $this->success( $product, 'Produto atualizado com sucesso' );
 
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             DB::rollBack();
             Log::error( 'Error updating product', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
             return $this->error( 'Erro ao atualizar produto: ' . $e->getMessage() );
+        }
+    }
+
+    /**
+     * Retorna dados do dashboard de produtos
+     *
+     * @param  int  $tenantId ID do tenant
+     * @return ServiceResult
+     */
+    public function getDashboardData( int $tenantId ): ServiceResult
+    {
+        try {
+            $total    = Product::where( 'tenant_id', $tenantId )->count();
+            $active   = Product::where( 'tenant_id', $tenantId )->where( 'active', true )->count();
+            $inactive = Product::where( 'tenant_id', $tenantId )->where( 'active', false )->count();
+
+            $recentProducts = Product::where( 'tenant_id', $tenantId )
+                ->latest()
+                ->limit( 5 )
+                ->with( [ 'category' ] )
+                ->get();
+
+            $stats = [
+                'total_products'    => $total,
+                'active_products'   => $active,
+                'inactive_products' => $inactive,
+                'recent_products'   => $recentProducts,
+            ];
+
+            return $this->success( $stats, 'Estatísticas obtidas com sucesso' );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao obter estatísticas de produtos', [ 'error' => $e->getMessage() ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage(), null, $e );
         }
     }
 
@@ -580,54 +613,6 @@ class ProductService extends AbstractBaseService
             DB::rollBack();
             Log::error( 'Error deleting product', [ 'product_id' => $productId, 'error' => $e->getMessage() ] );
             return $this->error( 'Erro ao excluir produto: ' . $e->getMessage() );
-        }
-
-        /**
-         * Retorna dados para o dashboard de produtos.
-         */
-        public function getDashboardData( int $tenantId ): ServiceResult
-        {
-            try {
-                $data = [
-                    'total_products' => $this->productRepository->countByTenant( $tenantId ),
-                    'active_products' => $this->productRepository->countActiveByTenant( $tenantId ),
-                    'recent_products' => $this->productRepository->getRecentByTenant( $tenantId, 5 ),
-                    'low_stock_products' => $this->productRepository->getLowStockByTenant( $tenantId )
-                ];
-
-                return $this->success( $data, 'Dashboard data loaded' );
-            } catch ( Exception $e ) {
-                return $this->error(
-                    OperationStatus::ERROR,
-                    'Erro ao carregar dados do dashboard',
-                    null,
-                    $e,
-                );
-            }
-
-            /**
-             * Retorna dados para o dashboard de produtos.
-             */
-            public function getDashboardData( int $tenantId ): ServiceResult
-            {
-                try {
-                    $data = [
-                        'total_products' => $this->productRepository->countByTenant( $tenantId ),
-                        'active_products' => $this->productRepository->countActiveByTenant( $tenantId ),
-                        'recent_products' => $this->productRepository->getRecentByTenant( $tenantId, 5 ),
-                        'low_stock_products' => $this->productRepository->getLowStockByTenant( $tenantId )
-                    ];
-
-                    return $this->success( $data, 'Dashboard data loaded' );
-                } catch ( Exception $e ) {
-                    return $this->error(
-                        OperationStatus::ERROR,
-                        'Erro ao carregar dados do dashboard',
-                        null,
-                        $e,
-                    );
-                }
-            }
         }
     }
 

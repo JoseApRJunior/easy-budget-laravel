@@ -318,8 +318,7 @@
                                 </a>
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.index') }}"
-                                    class="btn btn-outline-secondary w-100">
+                                <a href="{{ route('provider.budgets.index') }}" class="btn btn-outline-secondary w-100">
                                     <i class="bi bi-file-earmark-text me-2"></i>Ver Orçamentos
                                 </a>
                             </div>
@@ -338,15 +337,6 @@
 
 @push('styles')
     <style>
-        .avatar-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .text-code {
             font-family: 'Courier New', monospace;
             background-color: #f8f9fa;

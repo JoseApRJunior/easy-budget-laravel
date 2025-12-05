@@ -26,6 +26,7 @@ class CategoryController extends Controller
     public function __construct(
         private CategoryRepository $repository,
         private CategoryManagementService $managementService,
+        private CategoryService $categoryService,
     ) {}
 
     private function resolveTenantId(): ?int
@@ -47,38 +48,18 @@ class CategoryController extends Controller
      */
     public function dashboard()
     {
-        $user     = auth()->user();
-        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         $tenantId = $this->resolveTenantId();
+        $result   = $this->categoryService->getDashboardData( $tenantId );
 
-        $service = app( CategoryService::class);
-
-        // Coleta de estatísticas baseadas no tipo de usuário
-        if ( $isAdmin ) {
-            // Estatísticas globais para admin
-            $totalCategories  = $this->repository->countGlobalCategories();
-            $activeCategories = $this->repository->countActiveGlobalCategories();
-            $recentCategories = $this->repository->getRecentGlobalCategories( 10 );
-        } else {
-            // Estatísticas por tenant para providers
-            $totalCategories  = $this->repository->countCategoriesForTenant( $tenantId );
-            $activeCategories = $this->repository->countActiveCategoriesForTenant( $tenantId );
-            $recentCategories = $this->repository->getRecentCategoriesForTenant( $tenantId, 5 );
+        if ( !$result->isSuccess() ) {
+            return view( 'pages.category.dashboard', [
+                'stats' => [],
+                'error' => $result->getMessage(),
+            ] );
         }
 
-        // Cálculo de categorias inativas
-        $inactiveCategories = max( 0, $totalCategories - $activeCategories );
-
-        $activityRate = $totalCategories > 0
-            ? number_format( ( $activeCategories / $totalCategories ) * 100, 1, ',', '.' )
-            : '0,0';
-
         return view( 'pages.category.dashboard', [
-            'total_categories'    => $totalCategories,
-            'active_categories'   => $activeCategories,
-            'inactive_categories' => $inactiveCategories,
-            'recent_categories'   => $recentCategories,
-            'activity_rate'       => $activityRate
+            'stats' => $result->getData(),
         ] );
     }
 

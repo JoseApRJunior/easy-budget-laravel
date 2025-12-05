@@ -9,7 +9,9 @@ use App\Models\Category;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -222,23 +224,24 @@ class CategoryService extends AbstractBaseService
     public function getDashboardData( int $tenantId ): ServiceResult
     {
         try {
-            $data = [
-                'total_categories'  => $this->categoryRepository->countByTenant( $tenantId ),
-                'active_categories' => $this->categoryRepository->countActiveByTenant( $tenantId ),
-                'category_tree'     => $this->categoryRepository->getHierarchyByTenant( $tenantId ),
-                'recent_categories' => $this->categoryRepository->getRecentByTenant( $tenantId, 5 )
+            $total    = $this->categoryRepository->countCategoriesForTenant( $tenantId );
+            $active   = $this->categoryRepository->countActiveCategoriesForTenant( $tenantId );
+            $inactive = $total - $active;
+
+            $recentCategories = $this->categoryRepository->getRecentCategoriesForTenant( $tenantId, 5 );
+
+            $stats = [
+                'total_categories'    => $total,
+                'active_categories'   => $active,
+                'inactive_categories' => $inactive,
+                'recent_categories'   => $recentCategories,
             ];
 
-            return $this->success( $data, 'Dashboard data loaded' );
+            return $this->success( $stats, 'Estatísticas obtidas com sucesso' );
         } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao carregar dados do dashboard',
-                null,
-                $e,
-            );
+            Log::error( 'Erro ao obter estatísticas de categorias', [ 'error' => $e->getMessage() ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage(), null, $e );
         }
-
     }
 
 }

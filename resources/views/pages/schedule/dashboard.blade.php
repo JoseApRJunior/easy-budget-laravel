@@ -211,15 +211,6 @@
 
 @push('styles')
     <style>
-        .avatar-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center
-        }
-
         .chart-container {
             display: flex;
             justify-content: center;

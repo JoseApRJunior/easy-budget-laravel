@@ -394,7 +394,7 @@ class CustomerService extends AbstractBaseService
     /**
      * Obtém estatísticas de clientes para o dashboard
      */
-    public function getCustomerStats( int $tenantId ): ServiceResult
+    public function getDashboardData( int $tenantId ): ServiceResult
     {
         try {
             $total    = Customer::where( 'tenant_id', $tenantId )->count();
@@ -555,7 +555,7 @@ class CustomerService extends AbstractBaseService
     public function searchCustomers( array $filters = [] ): ServiceResult
     {
         try {
-            $tenantId             = auth()->user()->tenant_id;
+            $tenantId               = auth()->user()->tenant_id;
             $filters[ 'tenant_id' ] = $tenantId;
 
             $customers = $this->customerRepository->getPaginated( $filters );
@@ -649,7 +649,7 @@ class CustomerService extends AbstractBaseService
     public function exportCustomers( array $filters = [] ): ServiceResult
     {
         try {
-            $tenantId             = auth()->user()->tenant_id;
+            $tenantId               = auth()->user()->tenant_id;
             $filters[ 'tenant_id' ] = $tenantId;
 
             $customers = $this->customerRepository->getAllByTenant( $tenantId, $filters );

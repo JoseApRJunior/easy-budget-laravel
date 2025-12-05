@@ -351,7 +351,7 @@ class CategoryRepository extends AbstractGlobalRepository
      * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getRecentGlobalCategories( int $limit = 10 ): \Illuminate\Database\Eloquent\Collection
+    public function getRecentGlobalCategories( int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
             ->globalOnly()
@@ -394,7 +394,7 @@ class CategoryRepository extends AbstractGlobalRepository
      * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getRecentCategoriesForTenant( int $tenantId, int $limit = 10 ): \Illuminate\Database\Eloquent\Collection
+    public function getRecentCategoriesForTenant( int $tenantId, int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
             ->forTenant( $tenantId )

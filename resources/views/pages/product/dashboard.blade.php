@@ -29,7 +29,7 @@
         @php
             $total = $stats['total_products'] ?? 0;
             $active = $stats['active_products'] ?? 0;
-            $inactive = $stats['inactive_products'] ?? max(0, $total - $active);
+            $inactive = $stats['inactive_products'] ?? 0;
             $recent = $stats['recent_products'] ?? collect();
 
             $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
@@ -225,14 +225,4 @@
 @endsection
 
 @push('styles')
-    <style>
-        .avatar-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
 @endpush

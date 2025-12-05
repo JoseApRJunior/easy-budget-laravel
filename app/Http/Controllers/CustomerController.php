@@ -486,10 +486,7 @@ class CustomerController extends Controller
      */
     public function dashboard(): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $result = $this->customerService->getCustomerStats( $user->tenant_id );
+        $result = $this->customerService->getDashboardData( auth()->user()->tenant_id );
 
         if ( !$result->isSuccess() ) {
             return view( 'pages.customer.dashboard', [
