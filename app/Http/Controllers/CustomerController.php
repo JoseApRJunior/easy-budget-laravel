@@ -38,26 +38,37 @@ class CustomerController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $filters = $request->only( [ 'search', 'status', 'type' ] );
-        $result  = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+        $filters = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
 
-        if ( !$result->isSuccess() ) {
-            Log::error( 'Erro ao carregar clientes', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'error'     => $result->getMessage(),
-            ] );
+        // Verificar se há filtros aplicados
+        $hasFilters = collect( $filters )->filter( fn( $v ) => filled( $v ) )->isNotEmpty();
 
-            $areasOfActivity = AreaOfActivity::where( 'is_active', true )
-                ->orderBy( 'name' )
-                ->get();
+        if ( $hasFilters ) {
+            $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
 
-            return view( 'pages.customer.index', [
-                'customers'         => collect( [] ),
-                'filters'           => $filters,
-                'areas_of_activity' => $areasOfActivity,
-                'error'             => $result->getMessage(),
-            ] );
+            if ( !$result->isSuccess() ) {
+                Log::error( 'Erro ao carregar clientes', [
+                    'user_id'   => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'error'     => $result->getMessage(),
+                ] );
+
+                $areasOfActivity = AreaOfActivity::where( 'is_active', true )
+                    ->orderBy( 'name' )
+                    ->get();
+
+                return view( 'pages.customer.index', [
+                    'customers'         => collect( [] ),
+                    'filters'           => $filters,
+                    'areas_of_activity' => $areasOfActivity,
+                    'error'             => $result->getMessage(),
+                ] );
+            }
+
+            $customers = $result->getData();
+        } else {
+            // Quando não há filtros, mostrar tabela vazia inicialmente
+            $customers = collect();
         }
 
         $areasOfActivity = AreaOfActivity::where( 'is_active', true )
@@ -65,7 +76,7 @@ class CustomerController extends Controller
             ->get();
 
         return view( 'pages.customer.index', [
-            'customers'         => $result->getData(),
+            'customers'         => $customers,
             'filters'           => $filters,
             'areas_of_activity' => $areasOfActivity,
         ] );

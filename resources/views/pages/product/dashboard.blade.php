@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-0">
-                    <i class="bi bi-box-seam-fill me-2"></i>Dashboard de Produtos
+                    <i class="bi bi-box-seam me-2"></i>Dashboard de Produtos
                 </h1>
                 <p class="text-muted mb-0">
                     Visão geral do seu catálogo de produtos.

@@ -135,35 +135,9 @@ class CategoryController extends Controller
                         $categories = collect();
                     }
                 }
-            } else if ( $hasFilters || $confirmAll ) {
-                $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
-                $categories = $this->getServiceData( $result, collect() );
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
-
-                if ( method_exists( $categories, 'total' ) && (int) $categories->total() === 0 ) {
-                    $result     = $service->paginateGlobalOnly( $serviceFilters, $perPage );
-                    $categories = $this->getServiceData( $result, collect() );
-                    if ( method_exists( $categories, 'appends' ) ) {
-                        $categories = $categories->appends( $request->query() );
-                    }
-                }
             } else {
-                // Prestadores sempre veem suas categorias ativas por padrão quando não há filtros
-                $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
-                $categories = $this->getServiceData( $result, collect() );
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
-
-                if ( method_exists( $categories, 'total' ) && (int) $categories->total() === 0 ) {
-                    $result     = $service->paginateGlobalOnly( $serviceFilters, $perPage );
-                    $categories = $this->getServiceData( $result, collect() );
-                    if ( method_exists( $categories, 'appends' ) ) {
-                        $categories = $categories->appends( $request->query() );
-                    }
-                }
+                // Quando não há filtros, mostrar tabela vazia inicialmente
+                $categories = collect();
             }
         }
 

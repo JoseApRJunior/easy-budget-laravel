@@ -101,17 +101,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="deleted">Registros</label>
-                                        <select class="form-control" id="deleted" name="deleted">
-                                            <option value="">Atuais</option>
-                                            <option value="only"
-                                                {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
-                                                Deletados</option>
-                                        </select>
-                                    </div>
-                                </div>
                                 <div class="col-12">
                                     <div class="d-flex gap-2 flex-nowrap">
                                         <button type="submit" id="btnFilterProducts" class="btn btn-primary"
@@ -215,17 +204,13 @@
                                                                     aria-hidden="true"></i>
                                                             </button>
                                                         </form>
-                                                        <form
-                                                            action="{{ route('provider.products.destroy', $product->sku) }}"
-                                                            method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Excluir este produto permanentemente?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-danger" title="Excluir"
-                                                                aria-label="Excluir">
-                                                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-danger"
+                                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                            data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                                                            data-product-name="{{ $product->name }}"
+                                                            title="Excluir" aria-label="Excluir">
+                                                            <i class="bi bi-trash" aria-hidden="true"></i>
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </td>
@@ -257,6 +242,28 @@
                             </div>
                         </div>
                     @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
+                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" action="#" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
                 </div>
             </div>
         </div>

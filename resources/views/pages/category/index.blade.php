@@ -310,12 +310,13 @@
                             </div>
                         </div>
                     </div>
-                    @php($p = method_exists($categories, 'appends') ? $categories->appends(request()->query()) : null)
-                    @include('partials.components.paginator', [
-                        'p' => $p,
-                        'size' => 'sm',
-                        'show_info' => true,
-                    ])
+                    @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-center">
+                                {{ $categories->appends(request()->query())->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

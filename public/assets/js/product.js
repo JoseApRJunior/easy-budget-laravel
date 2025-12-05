@@ -19,6 +19,36 @@
    };
 
    /**
+    * Initialize delete modal functionality
+    */
+   function initializeDeleteModal() {
+      const deleteModal = document.getElementById("deleteModal");
+      if (!deleteModal) return;
+
+      // Move modal to body if not already there
+      if (deleteModal.parentElement !== document.body) {
+         document.body.appendChild(deleteModal);
+      }
+
+      deleteModal.addEventListener("show.bs.modal", function (event) {
+         const button = event.relatedTarget;
+         if (!button) return;
+
+         const deleteUrl = button.getAttribute("data-delete-url");
+         const productName = button.getAttribute("data-product-name");
+         const form = document.getElementById("deleteForm");
+         const nameEl = document.getElementById("deleteProductName");
+
+         if (form && deleteUrl) {
+            form.setAttribute("action", deleteUrl);
+         }
+         if (nameEl) {
+            nameEl.textContent = '"' + (productName || "") + '"';
+         }
+      });
+   }
+
+   /**
     * Initialize all product index functionality
     */
    function initializeProductIndex() {
@@ -26,6 +56,7 @@
       initializeAutoSubmit();
       initializeCurrencyFormatting();
       initializeStatusToggle();
+      initializeDeleteModal();
    }
 
    /**

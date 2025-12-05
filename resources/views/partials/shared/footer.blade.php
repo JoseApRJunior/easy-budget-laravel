@@ -4,7 +4,7 @@
         <div class="row gy-4">
             <div class="col-md-4">
                 <div class="footer-brand mb-3">
-                    <img src="{{ asset( 'assets/img/logo.png' ) }}" alt="Easy Budget Logo" class="logo-img me-2"
+                    <img src="{{ asset("assets/img/logo.png") }}" alt="Easy Budget Logo" class="logo-img me-2"
                         role="img" aria-label="Easy Budget Logo">
                     <span class="logo-text">Easy Budget</span>
                 </div>
