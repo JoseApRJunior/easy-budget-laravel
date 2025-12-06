@@ -17,13 +17,13 @@
         }
 
         /* Responsividade da tabela */
+        /* Layout mobile - cards em vez de tabela */
         @media (max-width: 768px) {
             .card-header .btn {
                 font-size: 0.75rem;
                 padding: 0.25rem 0.5rem;
             }
 
-            /* Layout mobile - cards em vez de tabela */
             .mobile-cards {
                 display: block !important;
             }
@@ -37,7 +37,6 @@
                 border-radius: 0.375rem;
                 margin-bottom: 0.75rem;
                 padding: 1rem;
-
             }
 
             .mobile-card-header {
@@ -274,7 +273,7 @@
                     <div class="card-body p-0">
 
                         <!-- Versão Mobile: Cards -->
-                        <div class="mobile-cards d-block d-md-none">
+                        <div class="mobile-cards">
                             @php($tenantId = auth()->user()->tenant_id ?? null)
                             @php($isAdminMobile = false)
                             @role('admin')
@@ -415,7 +414,7 @@
                         </div>
 
                         <!-- Versão Desktop: Tabela -->
-                        <div class="table-responsive d-none d-md-block">
+                        <div class="table-responsive d-md-block">
                             <table class="table table-bordered table-striped mb-0">
                                 @php($isAdminTable = false)
                                 @role('admin')
@@ -557,26 +556,29 @@
                                     @empty
                                         <tr>
                                             <td colspan="{{ $isAdminTable ? '7' : '6' }}" class="text-center text-muted">
-                                                <i class="bi bi-search mb-2" aria-hidden="true"
-                                                    style="font-size: 2rem;"></i>
-                                                <br>
-                                                @php($hasActiveFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty())
-                                                @if (($filters['deleted'] ?? '') === 'only')
-                                                    Nenhuma categoria deletada encontrada.
+                                                <div class="empty-table-message">
+                                                    <i class="bi bi-search mb-2" aria-hidden="true"
+                                                        style="font-size: 2rem;"></i>
                                                     <br>
-                                                    <small>Você ainda não deletou nenhuma categoria personalizada.</small>
-                                                @elseif ($hasActiveFilters)
-                                                    Nenhuma categoria encontrada com os filtros aplicados.
-                                                    <br>
-                                                    <small>Tente ajustar os filtros ou <a
-                                                            href="{{ route('categories.index') }}">limpar a
-                                                            busca</a>.</small>
-                                                @else
-                                                    Use os filtros acima para buscar categorias.
-                                                    <br>
-                                                    <small>Você pode buscar por nome, status ou visualizar categorias
-                                                        deletadas.</small>
-                                                @endif
+                                                    @php($hasActiveFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty())
+                                                    @if (($filters['deleted'] ?? '') === 'only')
+                                                        Nenhuma categoria deletada encontrada.
+                                                        <br>
+                                                        <small>Você ainda não deletou nenhuma categoria
+                                                            personalizada.</small>
+                                                    @elseif ($hasActiveFilters)
+                                                        Nenhuma categoria encontrada com os filtros aplicados.
+                                                        <br>
+                                                        <small>Tente ajustar os filtros ou <a
+                                                                href="{{ route('categories.index') }}">limpar a
+                                                                busca</a>.</small>
+                                                    @else
+                                                        Use os filtros acima para buscar categorias.
+                                                        <br>
+                                                        <small>Você pode buscar por nome, status ou visualizar categorias
+                                                            deletadas.</small>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforelse

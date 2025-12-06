@@ -1490,3 +1490,146 @@ input[type="number"] {
    align-items: center;
    justify-content: center;
 }
+
+/* Estilos de paginação personalizados */
+.pagination-container {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   padding: 1rem 0;
+   width: 100%;
+}
+
+.pagination {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 0.5rem;
+   list-style: none;
+   padding: 0;
+   margin: 0;
+}
+
+.pagination li {
+   display: inline-block;
+}
+
+.pagination .page-item {
+   margin: 0 0.25rem;
+}
+
+.pagination .page-link {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   min-width: 2.5rem;
+   height: 2.5rem;
+   padding: 0 0.75rem;
+   border-radius: var(--border-radius-sm);
+   background-color: var(--surface-color);
+   border: 1px solid var(--form-border);
+   color: var(--text-color);
+   text-decoration: none;
+   font-size: 0.875rem;
+   font-weight: 500;
+   transition: all var(--transition-speed) var(--transition-timing);
+   cursor: pointer;
+}
+
+.pagination .page-link:hover:not(.disabled) {
+   background-color: var(--hover-bg);
+   border-color: var(--primary-color);
+   color: var(--primary-color);
+   transform: translateY(-2px);
+}
+
+.pagination .page-link:focus {
+   outline: none;
+   box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.pagination .page-item.active .page-link {
+   background-color: var(--primary-color);
+   border-color: var(--primary-color);
+   color: var(--light-surface);
+   box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.pagination .page-item.disabled .page-link {
+   opacity: 0.5;
+   cursor: not-allowed;
+   pointer-events: none;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+   border-radius: var(--border-radius-md);
+}
+
+/* Estilo para tabela vazia */
+.empty-table-message {
+   text-align: center;
+   padding: 2rem 0;
+   color: var(--small-text);
+}
+
+.empty-table-icon {
+   font-size: 2.5rem;
+   margin-bottom: 1rem;
+   color: var(--secondary-color);
+   opacity: 0.6;
+}
+
+.empty-table-text {
+   font-size: 1.125rem;
+   font-weight: 500;
+   margin-bottom: 0.5rem;
+}
+
+.empty-table-subtext {
+   font-size: 0.875rem;
+   opacity: 0.8;
+}
+
+/* Ajustes para tema escuro */
+.theme-dark .pagination .page-link {
+   background-color: var(--dark-surface);
+   border-color: var(--form-border);
+   color: var(--dark-text);
+}
+
+.theme-dark .pagination .page-item.active .page-link {
+   background-color: var(--dark-primary);
+   color: var(--light-surface);
+}
+
+.theme-dark .empty-table-message {
+   color: var(--small-text);
+}
+
+/* Ajustes para tema claro */
+.theme-light .pagination .page-link {
+   background-color: var(--light-surface);
+   border-color: var(--form-border);
+   color: var(--light-text);
+}
+
+.theme-light .pagination .page-item.active .page-link {
+   background-color: var(--light-primary);
+   color: var(--light-surface);
+}
+
+/* Variáveis de cor para temas */
+:root {
+   --primary-color-rgb: 37, 99, 235;
+   --dark-primary-rgb: 9, 49, 114;
+   --light-primary-rgb: 9, 49, 114;
+}
+
+.theme-dark {
+   --primary-color-rgb: var(--dark-primary-rgb);
+}
+
+.theme-light {
+   --primary-color-rgb: var(--light-primary-rgb);
+}
