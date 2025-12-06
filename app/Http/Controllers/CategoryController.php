@@ -89,14 +89,19 @@ class CategoryController extends Controller
 
         if ( $isAdmin ) {
             // Admin pode ver deletados
-            if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
-                $result = $service->paginateOnlyTrashed( $serviceFilters, $perPage );
+            if ( $hasFilters ) {
+                if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
+                    $result = $service->paginateOnlyTrashed( $serviceFilters, $perPage );
+                } else {
+                    $result = $service->paginateGlobalOnly( $serviceFilters, $perPage );
+                }
+                $categories = $this->getServiceData( $result, collect() );
+                if ( method_exists( $categories, 'appends' ) ) {
+                    $categories = $categories->appends( $request->query() );
+                }
             } else {
-                $result = $service->paginateGlobalOnly( $serviceFilters, $perPage );
-            }
-            $categories = $this->getServiceData( $result, collect() );
-            if ( method_exists( $categories, 'appends' ) ) {
-                $categories = $categories->appends( $request->query() );
+                // Quando não há filtros, não carregar dados automaticamente
+                $categories = collect(); // Coleção vazia
             }
         } else {
             // Verificar se o filtro "deleted" está ativo
@@ -136,16 +141,18 @@ class CategoryController extends Controller
                     }
                 }
             } else {
-                // Quando há filtros aplicados, buscar categorias
-                if ( $hasFilters ) {
+                // Providers (não-admins) devem ver categorias globais + custom do próprio tenant
+                if ( $hasFilters || $showOnlyTrashed ) {
+                    // Usar paginateWithGlobals para incluir tanto globais quanto custom do tenant
                     $result     = $service->paginateWithGlobals( $serviceFilters, $perPage );
                     $categories = $this->getServiceData( $result, collect() );
                     if ( method_exists( $categories, 'appends' ) ) {
                         $categories = $categories->appends( $request->query() );
                     }
                 } else {
-                    // Quando não há filtros, mostrar tabela vazia inicialmente
-                    $categories = collect();
+                    // Quando não há filtros, não carregar dados automaticamente
+                    // Usuário deve usar filtros para ver categorias
+                    $categories = collect(); // Coleção vazia
                 }
             }
         }
