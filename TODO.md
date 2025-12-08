@@ -85,3 +85,7 @@ Analise as estruturas dos seguintes arquivos index.blade.php:
 O arquivo de produto apresenta um visual superior inicialmente, especialmente com uma tabela vazia. Identifique as melhorias necessárias para padronizar visualmente os três arquivos.
 
 Indique exatamente o que precisa ser feito, com foco na consistência de títulos, ícones, divs, cards, forms e CSS.
+
+
+
+quando for editar e uma categoria ja tiver sub, ela nao pode aparecer o dropdow de categoria Pai, pq ela ja e pai, ou somente desativa, e exibe mensagem

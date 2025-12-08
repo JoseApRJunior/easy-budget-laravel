@@ -119,22 +119,38 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-list-ul me-1"></i> Lista de Produtos
-                            @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                ({{ $products->total() }} registros)
-                            @else
-                                ({{ $products->count() }} registros)
-                            @endif
-                        </h5>
-                        <a href="{{ route('provider.products.create') }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus me-1" aria-hidden="true"></i>Novo Produto
-                        </a>
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                                <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                                    <span class="me-2">
+                                        <i class="bi bi-list-ul me-1"></i> 
+                                        <span class="d-none d-sm-inline">Lista de Produtos</span>
+                                        <span class="d-sm-none">Produtos</span>
+                                    </span>
+                                    <span class="text-muted" style="font-size: 0.875rem;">
+                                        @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                            ({{ $products->total() }})
+                                        @else
+                                            ({{ $products->count() }})
+                                        @endif
+                                    </span>
+                                </h5>
+                            </div>
+                            <div class="col-12 col-lg-4 mt-2 mt-lg-0">
+                                <div class="d-flex justify-content-start justify-content-lg-end">
+                                    <a href="{{ route('provider.products.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus" aria-hidden="true"></i>
+                                        <span class="ms-1">Novo</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped mb-0">
+                        <div class="desktop-view">
+                            <div class="table-responsive">
+                            <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
                                         <th>Imagem</th>
@@ -233,6 +249,7 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                     @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())

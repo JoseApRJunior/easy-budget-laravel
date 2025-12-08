@@ -173,15 +173,17 @@ class CategoryController extends Controller
         if ( $isAdmin ) {
             $parents = Category::query()
                 ->globalOnly()
-                ->withTrashed()
+                ->whereNull('parent_id')
+                ->whereNull('deleted_at')
                 ->orderBy( 'name' )
-                ->get( [ 'id', 'name', 'deleted_at' ] );
+                ->get( [ 'id', 'name' ] );
         } else {
             $tenantId = $this->resolveTenantId();
             $parents  = $tenantId !== null
                 ? Category::query()
                     ->forTenant( $tenantId )
-                    ->withTrashed()
+                    ->whereNull('parent_id')
+                    ->whereNull('deleted_at')
                     ->where( function ( $q ) use ( $tenantId ) {
                         $q->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
                             $t->where( 'tenant_id', $tenantId )
@@ -220,7 +222,12 @@ class CategoryController extends Controller
         $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         $tenantId = $isAdmin ? null : $this->resolveTenantId();
 
-        $result = $this->managementService->createCategory( $request->validated(), $tenantId );
+        $data = $request->validated();
+        if ( isset( $data[ 'name' ] ) ) {
+            $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+        }
+
+        $result = $this->managementService->createCategory( $data, $tenantId );
 
         if ( $result->isError() ) {
             return back()->with( 'error', $result->getMessage() )->withInput();
@@ -252,9 +259,10 @@ class CategoryController extends Controller
     /**
      * Form para editar categoria.
      */
-    public function edit( int $id )
+    public function edit( string $slug )
     {
-        $category = Category::findOrFail( $id );
+        $category = $this->repository->findBySlug( $slug );
+        abort_unless( $category, 404 );
         $user     = auth()->user();
         $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
         if ( $isAdmin && !$category->isGlobal() ) {
@@ -263,7 +271,9 @@ class CategoryController extends Controller
         if ( $isAdmin ) {
             $parents = Category::query()
                 ->globalOnly()
-                ->where( 'id', '!=', $id )
+                ->whereNull('parent_id')
+                ->whereNull('deleted_at')
+                ->where( 'id', '!=', $category->id )
                 ->where( 'is_active', true )
                 ->orderBy( 'name' )
                 ->get( [ 'id', 'name' ] );
@@ -272,8 +282,9 @@ class CategoryController extends Controller
             $parents  = $tenantId !== null
                 ? Category::query()
                     ->forTenant( $tenantId )
-                    ->withTrashed()
-                    ->where( 'id', '!=', $id )
+                    ->whereNull('parent_id')
+                    ->whereNull('deleted_at')
+                    ->where( 'id', '!=', $category->id )
                     ->where( function ( $q ) use ( $tenantId ) {
                         $q->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
                             $t->where( 'tenant_id', $tenantId )
@@ -307,11 +318,17 @@ class CategoryController extends Controller
     /**
      * Atualiza categoria.
      */
-    public function update( UpdateCategoryRequest $request, int $id )
+    public function update( UpdateCategoryRequest $request, string $slug )
     {
-        $category = Category::findOrFail( $id );
+        $category = $this->repository->findBySlug( $slug );
+        abort_unless( $category, 404 );
 
-        $result = $this->managementService->updateCategory( $category, $request->validated() );
+        $data = $request->validated();
+        if ( isset( $data[ 'name' ] ) ) {
+            $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+        }
+
+        $result = $this->managementService->updateCategory( $category, $data );
 
         if ( $result->isError() ) {
             return redirect()->back()->with( 'error', $result->getMessage() )->withInput();
@@ -325,10 +342,11 @@ class CategoryController extends Controller
     /**
      * Exclui categoria.
      */
-    public function destroy( int $id )
+    public function destroy( string $slug )
     {
         $this->authorize( 'manage-custom-categories' );
-        $category = Category::findOrFail( $id );
+        $category = $this->repository->findBySlug( $slug );
+        abort_unless( $category, 404 );
 
         $result = $this->managementService->deleteCategory( $category );
 
@@ -336,7 +354,7 @@ class CategoryController extends Controller
             return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
-        $this->logOperation( 'categories_destroy', [ 'id' => $id ] );
+        $this->logOperation( 'categories_destroy', [ 'id' => $category->id, 'slug' => $slug ] );
 
         return $this->redirectSuccess( 'categories.index', 'Categoria excluída com sucesso.' );
     }
@@ -344,9 +362,10 @@ class CategoryController extends Controller
     /**
      * Alterna status ativo/inativo da categoria.
      */
-    public function toggle_status( int $id )
+    public function toggle_status( string $slug )
     {
-        $category = Category::findOrFail( $id );
+        $category = $this->repository->findBySlug( $slug );
+        abort_unless( $category, 404 );
         $user     = auth()->user();
         $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
 
@@ -390,12 +409,12 @@ class CategoryController extends Controller
      * Admin pode restaurar qualquer categoria.
      * Prestadores podem restaurar apenas categorias custom do próprio tenant.
      */
-    public function restore( int $id )
+    public function restore( string $slug )
     {
         $user    = auth()->user();
         $isAdmin = app( PermissionService::class)->canManageGlobalCategories( $user );
 
-        $category = Category::onlyTrashed()->findOrFail( $id );
+        $category = Category::onlyTrashed()->where( 'slug', $slug )->firstOrFail();
 
         // Se não é admin, verificar se é categoria custom do próprio tenant
         if ( !$isAdmin ) {
@@ -414,7 +433,7 @@ class CategoryController extends Controller
 
         $category->restore();
 
-        $this->logOperation( 'categories_restore', [ 'id' => $id, 'name' => $category->name ] );
+        $this->logOperation( 'categories_restore', [ 'slug' => $slug, 'name' => $category->name ] );
 
         return $this->redirectSuccess( 'categories.index', 'Categoria restaurada com sucesso!' );
     }
@@ -530,19 +549,21 @@ class CategoryController extends Controller
                                 ->orWhereDoesntHave( 'tenants' );
                         } )
                         ->count();
+                $categoryName    = $category->parent_id ? $category->parent->name : $category->name;
+                $subcategoryName = $category->parent_id ? $category->name : '—';
                 $rows          .= '<tr>'
-                    . '<td>' . e( $category->name ) . '</td>'
-                    . '<td>' . e( $category->parent ? $category->parent->name : '-' ) . '</td>'
+                    . '<td>' . e( $categoryName ) . '</td>'
+                    . '<td>' . e( $subcategoryName ) . '</td>'
                     . ( $isAdmin ? ( '<td>' . e( $slugVal ) . '</td>' ) : '' )
                     . '<td>' . ( $category->is_active ? 'Sim' : 'Não' ) . '</td>'
-                    . '<td>' . $childrenCount . '</td>'
+                    . '<td class="text-center">' . $childrenCount . '</td>'
                     . '<td>' . e( $createdAt ) . '</td>'
                     . '<td>' . e( $updatedAt ) . '</td>'
                     . '</tr>';
             }
 
-            $thead = '<thead><tr><th>Nome</th><th>Categoria Pai</th>' . ( $isAdmin ? '<th>Slug</th>' : '' ) . '<th>Ativo</th><th>Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
-            $html  = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f5f5f5}</style></head><body>'
+            $thead = '<thead><tr><th>Categoria</th><th>Subcategoria</th>' . ( $isAdmin ? '<th>Slug</th>' : '' ) . '<th>Ativo</th><th style="text-align:center">Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
+            $html  = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f5f5f5}.text-center{text-align:center}</style></head><body>'
                 . '<h3>Categorias</h3>'
                 . '<table>'
                 . $thead
@@ -562,9 +583,14 @@ class CategoryController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet       = $spreadsheet->getActiveSheet();
         $headers     = $isAdmin
-            ? [ 'Nome', 'Categoria Pai', 'Slug', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização' ]
-            : [ 'Nome', 'Categoria Pai', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização' ];
+            ? [ 'Categoria', 'Subcategoria', 'Slug', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização' ]
+            : [ 'Categoria', 'Subcategoria', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização' ];
         $sheet->fromArray( [ $headers ] );
+        
+        // Centralizar coluna "Subcategorias Ativas"
+        $subCatCol = $isAdmin ? 'E' : 'D';
+        $sheet->getStyle( $subCatCol . '1' )->getAlignment()->setHorizontal( \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER );
+        
         $row = 2;
         foreach ( $categories as $category ) {
             $createdAt     = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format( 'd/m/Y H:i:s' ) : '';
@@ -583,10 +609,12 @@ class CategoryController extends Controller
                             ->orWhereDoesntHave( 'tenants' );
                     } )
                     ->count();
+            $categoryName    = $category->parent_id ? $category->parent->name : $category->name;
+            $subcategoryName = $category->parent_id ? $category->name : '—';
             $dataRow       = $isAdmin
                 ? [
-                    $category->name,
-                    $category->parent ? $category->parent->name : '-',
+                    $categoryName,
+                    $subcategoryName,
                     ( $category->slug ?: Str::slug( $category->name ) ),
                     $category->is_active ? 'Sim' : 'Não',
                     $childrenCount,
@@ -594,14 +622,19 @@ class CategoryController extends Controller
                     $updatedAt,
                 ]
                 : [
-                    $category->name,
-                    $category->parent ? $category->parent->name : '-',
+                    $categoryName,
+                    $subcategoryName,
                     $category->is_active ? 'Sim' : 'Não',
                     $childrenCount,
                     $createdAt,
                     $updatedAt,
                 ];
             $sheet->fromArray( [ $dataRow ], null, 'A' . $row );
+            
+            // Centralizar valor da coluna "Subcategorias Ativas"
+            $subCatCol = $isAdmin ? 'E' : 'D';
+            $sheet->getStyle( $subCatCol . $row )->getAlignment()->setHorizontal( \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER );
+            
             $row++;
         }
         foreach ( range( 'A', $isAdmin ? 'G' : 'F' ) as $col ) {
@@ -624,10 +657,11 @@ class CategoryController extends Controller
     /**
      * Define categoria padrão do tenant.
      */
-    public function setDefault( Request $request, int $id )
+    public function setDefault( Request $request, string $slug )
     {
         $this->authorize( 'manage-custom-categories' );
-        $category = Category::findOrFail( $id );
+        $category = $this->repository->findBySlug( $slug );
+        abort_unless( $category, 404 );
         $tenantId = auth()->user()->tenant_id ?? null;
         $user     = auth()->user();
 

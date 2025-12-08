@@ -138,6 +138,11 @@ class CategoryService extends AbstractBaseService
                 } );
             }
 
+            // Aplicar filtro de status (ativo/inativo)
+            if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
+                $query->where( 'is_active', (string) $filters[ 'active' ] === '1' );
+            }
+
             $paginator = $query->orderBy( 'deleted_at', 'desc' )
                 ->orderBy( 'name', 'asc' )
                 ->paginate( $perPage );

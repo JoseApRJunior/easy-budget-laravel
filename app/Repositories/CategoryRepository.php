@@ -322,6 +322,11 @@ class CategoryRepository extends AbstractGlobalRepository
             } );
         }
 
+        // Aplicar filtro de status (ativo/inativo)
+        if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
+            $query->where( 'categories.is_active', (string) $filters[ 'active' ] === '1' );
+        }
+
         return $query->paginate( $perPage );
     }
 

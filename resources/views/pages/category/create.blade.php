@@ -48,7 +48,7 @@
                                         <option value="{{ $p->id }}" {{ (string) old( 'parent_id' ) === (string) $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
                                     @endforeach
                                 </select>
-                                <label for="parent_id">Categoria (opcional)</label>
+                                <label for="parent_id">Categoria Pai (opcional)</label>
                             </div>
                             <div class="form-floating">
                                 <input type="text" class="form-control" id="slugPreview" name="slugPreview"

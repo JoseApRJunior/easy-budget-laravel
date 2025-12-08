@@ -142,11 +142,11 @@ Route::middleware(['auth', 'verified'])->prefix('categories')->name('categories.
     Route::get('/ajax/check-slug', [CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
     Route::post('/', [CategoryController::class, 'store'])->name('store');
     Route::get('/{slug}', [CategoryController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
-    Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-    Route::post('/{id}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
-    Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
+    Route::get('/{slug}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{slug}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{slug}', [CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{slug}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
+    Route::post('/{slug}/restore', [CategoryController::class, 'restore'])->name('restore');
 });
 
 // Provider routes group
@@ -681,20 +681,7 @@ Route::prefix('plans')->name('plans.public.')->group(function () {
     Route::get('/status', [PlanController::class, 'paymentStatus'])->name('status');
 });
 
-Route::middleware(['auth'])->prefix('categories')->name('categories.')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('index');
-    Route::get('/create', [CategoryController::class, 'create'])->name('create');
-    Route::get('/export', [CategoryController::class, 'export'])->name('export');
-    Route::get('/ajax/check-slug', [CategoryController::class, 'checkSlug'])->name('ajax.check-slug');
-    Route::get('/dashboard', [CategoryController::class, 'dashboard'])->name('dashboard');
-    Route::post('/', [CategoryController::class, 'store'])->name('store');
-    Route::get('/{slug}', [CategoryController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
-    Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-    Route::post('/{id}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
-    Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
-});
+
 
 
 // Queues routes group

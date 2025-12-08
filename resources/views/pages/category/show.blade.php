@@ -83,46 +83,93 @@
                     @endif
                 </div>
 
-                <div class="mt-4 d-flex justify-content-between">
-                    <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Voltar
-                    </a>
-                    <div>
-                        @php($tenantId = auth()->user()->tenant_id ?? null)
-                        @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
-                        @php($isGlobal = $category->isGlobal())
-                        @php($isAdmin = false)
-                        @role('admin')
-                            @php($isAdmin = true)
-                        @endrole
-                        @php($hasChildren = $category->hasChildren())
-                        @php($hasServices = $category->services()->exists())
-                        @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                        @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
-                        @if (($isAdmin && $isGlobal) || (!$isAdmin && $isCustom))
-                            <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-secondary">
-                                <i class="bi bi-pencil me-2"></i>Editar
-                            </a>
-                            @if ($canDelete)
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal-{{ $category->id }}">
-                                    <i class="bi bi-trash me-2"></i>Excluir
-                                </button>
-                            @endif
-                        @endif
-                    </div>
-                </div>
+                @if (!$category->parent_id)
+                    @php($children = $category->children()->where('is_active', true)->get())
+                    @if ($children->isNotEmpty())
+                        <div class="mt-4">
+                            <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Subcategorias ({{ $children->count() }})
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Status</th>
+                                            <th>Criado em</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($children as $child)
+                                            <tr>
+                                                <td>{{ $child->name }}</td>
+                                                <td>
+                                                    <span
+                                                        class="modern-badge {{ $child->is_active ? 'badge-active' : 'badge-inactive' }}">
+                                                        {{ $child->is_active ? 'Ativo' : 'Inativo' }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
+                                                <td class="text-center">
+                                                    <a href="{{ route('categories.show', $child->slug) }}"
+                                                        class="btn btn-sm btn-info" title="Visualizar">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
         </div>
 
+        <!-- Botões de Ação -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+                <small class="text-muted">
+                    Última atualização: {{ $category->updated_at?->format('d/m/Y H:i') }}
+                </small>
+                <div class="d-flex gap-2">
+                    @php($tenantId = auth()->user()->tenant_id ?? null)
+                    @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
+                    @php($isGlobal = $category->isGlobal())
+                    @php($isAdmin = false)
+                    @role('admin')
+                        @php($isAdmin = true)
+                    @endrole
+                    @php($hasChildren = $category->hasChildren())
+                    @php($hasServices = $category->services()->exists())
+                    @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
+                    @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
+                    @if (($isAdmin && $isGlobal) || (!$isAdmin && $isCustom))
+                        <a href="{{ route('categories.edit', $category->slug) }}" class="btn btn-primary">
+                            <i class="bi bi-pencil-fill me-2"></i>Editar
+                        </a>
+                        @if ($canDelete)
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteModal-{{ $category->slug }}">
+                                <i class="bi bi-trash-fill me-2"></i>Excluir
+                            </button>
+                        @endif
+                    @endif
+            </div>
+        </div>
     </div>
 
-    <div class="modal fade" id="deleteModal-{{ $category->id }}" tabindex="-1"
-        aria-labelledby="deleteModalLabel-{{ $category->id }}" aria-hidden="true">
+    <div class="modal fade" id="deleteModal-{{ $category->slug }}" tabindex="-1"
+        aria-labelledby="deleteModalLabel-{{ $category->slug }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel-{{ $category->id }}">Confirmar Exclusão</h5>
+                    <h5 class="modal-title" id="deleteModalLabel-{{ $category->slug }}">Confirmar Exclusão</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -131,7 +178,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('categories.destroy', $category->slug) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Excluir</button>

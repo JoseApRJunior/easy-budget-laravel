@@ -35,7 +35,14 @@
             </div>
         @endif
 
-        <form action="{{ route('categories.update', $category->id) }}" method="POST">
+        @php
+            $hasChildren = $category->hasChildren();
+            $hasServices = $category->services()->exists();
+            $hasProducts = \App\Models\Product::where('category_id', $category->id)->whereNull('deleted_at')->exists();
+            $canDeactivate = !($hasChildren || $hasServices || $hasProducts);
+        @endphp
+
+        <form action="{{ route('categories.update', $category->slug) }}" method="POST">
             @csrf
             @method('PUT')
             <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
@@ -99,15 +106,6 @@
 
                                 <!-- Status -->
                                 <div class="col-12">
-                                    @php
-                                        $hasChildren = $category->hasChildren();
-                                        $hasServices = $category->services()->exists();
-                                        $hasProducts = \App\Models\Product::where('category_id', $category->id)
-                                            ->whereNull('deleted_at')
-                                            ->exists();
-                                        $canDeactivate = !($hasChildren || $hasServices || $hasProducts);
-                                    @endphp
-
                                     @if ($canDeactivate)
                                         <input type="hidden" name="is_active" value="0">
                                     @else
