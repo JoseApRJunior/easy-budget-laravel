@@ -388,7 +388,7 @@ input:-webkit-autofill:hover {
    transform: none;
 }
 .d-none {
-   display: none !important;
+    display: none;
 }
 
 .password-toggle i {
