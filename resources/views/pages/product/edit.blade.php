@@ -4,19 +4,19 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-pencil-square me-2"></i>Editar Produto
-            </h1>
-
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Produto
+                </h1>
+                <p class="text-muted mb-0">Atualize as informações do produto</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
-                    <li class="breadcrumb-item active">Editar</li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar</li>
                 </ol>
             </nav>
         </div>
@@ -82,19 +82,36 @@
                                     </div>
                                 </div>
 
-                                <!-- Categoria -->
+                                <!-- Categoria Principal -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="category_id" class="form-label">Categoria</label>
-                                        <select class="form-select @error('category_id') is-invalid @enderror"
-                                            id="category_id" name="category_id">
+                                        <label for="parent_category_id" class="form-label">Categoria Principal</label>
+                                        <select class="form-select" id="parent_category_id">
                                             <option value="">Selecione uma categoria</option>
-                                            @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}"
-                                                    {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                            @foreach ($categories->whereNull('parent_id') as $category)
+                                                @php($isSelected = $product->category && ($product->category->parent_id == $category->id || $product->category_id == $category->id))
+                                                <option value="{{ $category->id }}" {{ $isSelected ? 'selected' : '' }}>
                                                     {{ $category->name }}
                                                 </option>
                                             @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Subcategoria -->
+                                <div class="col-md-6" id="subcategory-wrapper" style="display: {{ $product->category && $product->category->parent_id ? 'block' : 'none' }};">
+                                    <div class="mb-3">
+                                        <label for="category_id" class="form-label">Subcategoria</label>
+                                        <select class="form-select @error('category_id') is-invalid @enderror"
+                                            id="category_id" name="category_id">
+                                            <option value="">Selecione uma subcategoria</option>
+                                            @if($product->category && $product->category->parent_id)
+                                                @foreach ($categories->where('parent_id', $product->category->parent_id) as $child)
+                                                    <option value="{{ $child->id }}" {{ $product->category_id == $child->id ? 'selected' : '' }}>
+                                                        {{ $child->name }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
                                         </select>
                                         @error('category_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -190,15 +207,14 @@
                 </div>
             </div>
 
-            <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ route('provider.products.show', $product->sku) }}" class="btn btn-outline-secondary">
+                    <a href="{{ url()->previous(route('provider.products.index')) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Cancelar
                     </a>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Atualizar Produto
+                    <i class="bi bi-check-circle me-2"></i>Salvar
                 </button>
             </div>
         </form>
@@ -224,51 +240,97 @@
         }
 
         // Converter para decimal no submit
-        document.querySelector('form[action*="provider/products"]').addEventListener('submit', function(e) {
-            const price = document.getElementById('price');
-            if (price) {
-                let num = 0;
-                if (window.parseCurrencyBRLToNumber) {
-                    num = window.parseCurrencyBRLToNumber(price.value) || 0;
-                } else {
-                    num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
-                        '')) || 0;
+        const productForm = document.querySelector('form[action*="products"]');
+        if (productForm) {
+            productForm.addEventListener('submit', function(e) {
+                const price = document.getElementById('price');
+                if (price) {
+                    let num = 0;
+                    if (window.parseCurrencyBRLToNumber) {
+                        num = window.parseCurrencyBRLToNumber(price.value) || 0;
+                    } else {
+                        num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
+                            '')) || 0;
+                    }
+                    price.value = num.toFixed(2);
                 }
-                price.value = num.toFixed(2);
-            }
-        });
+            });
+        }
 
         // Preview da nova imagem
-        document.getElementById('image').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('image-preview');
+        const imageInput = document.getElementById('image');
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('image-preview');
 
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview"
+                                 style="width: 150px; height: 150px; object-fit: cover; border-radius: 5px;">
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
                     preview.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview"
-                             style="width: 150px; height: 150px; object-fit: cover; border-radius: 5px;">
+                        <div class="bg-light d-flex align-items-center justify-content-center"
+                             style="width: 150px; height: 150px; border: 2px dashed #dee2e6; border-radius: 5px; margin: 0 auto;">
+                            <small class="text-muted">Selecione uma nova imagem</small>
+                        </div>
                     `;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.innerHTML = `
-                    <div class="bg-light d-flex align-items-center justify-content-center"
-                         style="width: 150px; height: 150px; border: 2px dashed #dee2e6; border-radius: 5px; margin: 0 auto;">
-                        <small class="text-muted">Selecione uma nova imagem</small>
-                    </div>
-                `;
-            }
-        });
+                }
+            });
+        }
 
         // Confirmação para remoção de imagem
-        document.getElementById('remove_image')?.addEventListener('change', function(e) {
-            if (e.target.checked) {
-                if (!confirm('Tem certeza que deseja remover a imagem atual? Esta ação não pode ser desfeita.')) {
-                    e.target.checked = false;
+        const removeImageCheckbox = document.getElementById('remove_image');
+        if (removeImageCheckbox) {
+            removeImageCheckbox.addEventListener('change', function(e) {
+                if (e.target.checked) {
+                    if (!confirm('Tem certeza que deseja remover a imagem atual? Esta ação não pode ser desfeita.')) {
+                        e.target.checked = false;
+                    }
                 }
+            });
+        }
+
+        // Categoria dinâmica
+        const parentCategorySelect = document.getElementById('parent_category_id');
+        const subcategoryWrapper = document.getElementById('subcategory-wrapper');
+        const subcategorySelect = document.getElementById('category_id');
+
+        parentCategorySelect.addEventListener('change', function() {
+            const parentId = this.value;
+            
+            if (!parentId) {
+                subcategoryWrapper.style.display = 'none';
+                subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                return;
             }
+
+            fetch(`/categories/${parentId}/children`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.children && data.children.length > 0) {
+                        subcategoryWrapper.style.display = 'block';
+                        subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                        data.children.forEach(child => {
+                            const option = document.createElement('option');
+                            option.value = child.id;
+                            option.textContent = child.name;
+                            subcategorySelect.appendChild(option);
+                        });
+                    } else {
+                        subcategoryWrapper.style.display = 'none';
+                        subcategorySelect.innerHTML = `<option value="${parentId}" selected>${this.options[this.selectedIndex].text}</option>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar subcategorias:', error);
+                    subcategoryWrapper.style.display = 'none';
+                });
         });
     </script>
 @endpush

@@ -147,6 +147,7 @@ Route::middleware(['auth', 'verified'])->prefix('categories')->name('categories.
     Route::delete('/{slug}', [CategoryController::class, 'destroy'])->name('destroy');
     Route::post('/{slug}/set-default', [CategoryController::class, 'setDefault'])->name('set-default');
     Route::post('/{slug}/restore', [CategoryController::class, 'restore'])->name('restore');
+    Route::get('/{id}/children', [CategoryController::class, 'getChildren'])->name('children');
 });
 
 // Provider routes group

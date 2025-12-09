@@ -739,4 +739,44 @@ class CategoryController extends Controller
         ] );
     }
 
+    /**
+     * Retorna subcategorias de uma categoria pai.
+     */
+    public function getChildren( int $id )
+    {
+        $tenantId = auth()->user()->tenant_id ?? null;
+        $user     = auth()->user();
+        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
+
+        if ( $isAdmin ) {
+            $children = Category::where( 'parent_id', $id )
+                ->where( 'is_active', true )
+                ->whereNull( 'deleted_at' )
+                ->orderBy( 'name' )
+                ->get( [ 'id', 'name' ] );
+        } else {
+            $children = Category::where( 'parent_id', $id )
+                ->where( 'is_active', true )
+                ->whereNull( 'deleted_at' )
+                ->where( function ( $q ) use ( $tenantId ) {
+                    $q->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
+                        $t->where( 'tenant_id', $tenantId )
+                            ->where( 'is_custom', true );
+                    } )
+                        ->orWhere( function ( $q2 ) use ( $tenantId ) {
+                            $q2->where( 'is_active', true )
+                                ->whereDoesntHave( 'tenants', function ( $t ) {
+                                    $t->where( 'is_custom', true );
+                                } );
+                        } );
+                } )
+                ->orderBy( 'name' )
+                ->get( [ 'id', 'name' ] );
+        }
+
+        return response()->json( [
+            'children' => $children,
+        ] );
+    }
+
 }

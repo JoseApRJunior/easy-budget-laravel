@@ -4,27 +4,24 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-bag-plus me-2"></i>Novo Produto
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-bag-plus me-2"></i>Novo Produto
+                </h1>
+                <p class="text-muted mb-0">Preencha os dados para criar um novo produto</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item active">Novo</li>
+                    <li class="breadcrumb-item active" aria-current="page">Novo</li>
                 </ol>
             </nav>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <form action="{{ route('provider.products.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-
-                    <form action="{{ route('provider.products.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
+        <form action="{{ route('provider.products.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
 
                         <div class="row g-4">
                             <!-- Informações do Produto -->
@@ -84,19 +81,28 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Categoria -->
+                                            <!-- Categoria Principal -->
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="category_id" class="form-label">Categoria</label>
-                                                    <select class="form-select @error('category_id') is-invalid @enderror"
-                                                        id="category_id" name="category_id">
+                                                    <label for="parent_category_id" class="form-label">Categoria Principal</label>
+                                                    <select class="form-select" id="parent_category_id">
                                                         <option value="">Selecione uma categoria</option>
-                                                        @foreach ($categories as $category)
-                                                            <option value="{{ $category->id }}"
-                                                                {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                        @foreach ($categories->whereNull('parent_id') as $category)
+                                                            <option value="{{ $category->id }}">
                                                                 {{ $category->name }}
                                                             </option>
                                                         @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                                            <!-- Subcategoria -->
+                                            <div class="col-md-6" id="subcategory-wrapper">
+                                                <div class="mb-3">
+                                                    <label for="category_id" class="form-label">Subcategoria</label>
+                                                    <select class="form-select @error('category_id') is-invalid @enderror"
+                                                        id="category_id" name="category_id">
+                                                        <option value="">Selecione uma categoria principal primeiro</option>
                                                     </select>
                                                     @error('category_id')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -174,20 +180,17 @@
                             </div>
                         </div>
 
-                        <!-- Botões -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <div>
-                                <a href="{{ route('provider.products.index') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>Cancelar
-                                </a>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Criar Produto
-                            </button>
-                        </div>
-                    </form>
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <a href="{{ url()->previous(route('provider.products.index')) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Cancelar
+                    </a>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Criar
+                </button>
             </div>
-        </div>
+        </form>
     </div>
 @endsection
 
@@ -210,21 +213,26 @@
         }
 
         // Converter para decimal no submit
-        document.querySelector('form[action*="provider/products"]').addEventListener('submit', function(e) {
-            const price = document.getElementById('price');
-            if (price) {
-                let num = 0;
-                if (window.parseCurrencyBRLToNumber) {
-                    num = window.parseCurrencyBRLToNumber(price.value) || 0;
-                } else {
-                    num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
-                        '')) || 0;
+        const productForm = document.querySelector('form[action*="products"]');
+        if (productForm) {
+            productForm.addEventListener('submit', function(e) {
+                const price = document.getElementById('price');
+                if (price) {
+                    let num = 0;
+                    if (window.parseCurrencyBRLToNumber) {
+                        num = window.parseCurrencyBRLToNumber(price.value) || 0;
+                    } else {
+                        num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
+                            '')) || 0;
+                    }
+                    price.value = num.toFixed(2);
                 }
-                price.value = num.toFixed(2);
-            }
-        });
+            });
+        }
         // Preview da imagem
-        document.getElementById('image').addEventListener('change', function(e) {
+        const imageInput = document.getElementById('image');
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('image-preview');
 
@@ -245,13 +253,50 @@
             </div>
         `;
             }
-        });
+            });
+        }
 
-        // Atualizar label do file input
-        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'Escolher arquivo';
-            const label = e.target.nextElementSibling;
-            label.textContent = fileName;
-        });
+        // Categoria dinâmica
+        const parentCategorySelect = document.getElementById('parent_category_id');
+        const subcategoryWrapper = document.getElementById('subcategory-wrapper');
+        const subcategorySelect = document.getElementById('category_id');
+
+        if (parentCategorySelect && subcategoryWrapper && subcategorySelect) {
+            parentCategorySelect.addEventListener('change', function() {
+                const parentId = this.value;
+                
+                if (!parentId) {
+                    subcategorySelect.innerHTML = '<option value="">Selecione uma categoria principal primeiro</option>';
+                    subcategorySelect.disabled = true;
+                    return;
+                }
+
+                subcategorySelect.disabled = true;
+                subcategorySelect.innerHTML = '<option value="">Carregando...</option>';
+
+                fetch(`/categories/${parentId}/children`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.children && data.children.length > 0) {
+                            subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                            data.children.forEach(child => {
+                                const option = document.createElement('option');
+                                option.value = child.id;
+                                option.textContent = child.name;
+                                subcategorySelect.appendChild(option);
+                            });
+                            subcategorySelect.disabled = false;
+                        } else {
+                            subcategorySelect.innerHTML = `<option value="${parentId}" selected>${this.options[this.selectedIndex].text}</option>`;
+                            subcategorySelect.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar subcategorias:', error);
+                        subcategorySelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                        subcategorySelect.disabled = true;
+                    });
+            });
+        }
     </script>
 @endpush
