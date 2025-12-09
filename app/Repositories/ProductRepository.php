@@ -32,7 +32,7 @@ class ProductRepository extends AbstractTenantRepository
             $query->where( function ( $q ) use ( $filters ) {
                 $q->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' )
                     ->orWhere( 'sku', 'like', '%' . $filters[ 'search' ] . '%' )
-                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' ); // Adicionado description
+                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
             } );
         }
 
@@ -52,7 +52,10 @@ class ProductRepository extends AbstractTenantRepository
             $query->where( 'price', '<=', $filters[ 'max_price' ] );
         }
 
-        return $query->orderBy( 'name', 'asc' )->paginate( $perPage );
+        // Usar per_page do filtro se fornecido
+        $itemsPerPage = !empty( $filters[ 'per_page' ] ) ? (int) $filters[ 'per_page' ] : $perPage;
+
+        return $query->orderBy( 'name', 'asc' )->paginate( $itemsPerPage );
     }
 
     public function findBySku( string $sku, array $with = [] ): ?Model

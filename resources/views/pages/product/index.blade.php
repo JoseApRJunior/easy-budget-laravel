@@ -303,11 +303,7 @@
                         </div>
                     </div>
                     @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
-                        <div class="card-footer">
-                            <div class="d-flex justify-content-center">
-                                {{ $products->appends(request()->query())->links() }}
-                            </div>
-                        </div>
+                        @include('partials.components.paginator', ['p' => $products->appends(request()->query()), 'show_info' => true])
                     @endif
                 </div>
             </div>

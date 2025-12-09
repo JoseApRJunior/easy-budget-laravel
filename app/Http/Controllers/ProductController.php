@@ -52,7 +52,13 @@ class ProductController extends Controller
      */
     public function index( Request $request ): View
     {
-        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] );
+        $filters        = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] );
+        $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
+        $allowedPerPage = [ 10, 20, 50 ];
+        if ( !in_array( $perPage, $allowedPerPage, true ) ) {
+            $perPage = 10;
+        }
+        $filters[ 'per_page' ] = $perPage;
 
         try {
             $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
@@ -61,19 +67,15 @@ class ProductController extends Controller
                 $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
                 $products = $result->isSuccess() ? $result->getData() : collect();
             } else {
-                $hasFilters = collect( $filters )->except( 'deleted' )->filter( fn( $v ) => filled( $v ) )->isNotEmpty();
-                $confirmAll = (bool) $request->boolean( 'all' );
+                $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
-                if ( $hasFilters || $confirmAll ) {
-                    $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+                if ( !$result->isSuccess() ) {
+                    abort( 500, 'Erro ao carregar lista de produtos' );
+                }
 
-                    if ( !$result->isSuccess() ) {
-                        abort( 500, 'Erro ao carregar lista de produtos' );
-                    }
-
-                    $products = $result->getData();
-                } else {
-                    $products = collect();
+                $products = $result->getData();
+                if ( method_exists( $products, 'appends' ) ) {
+                    $products = $products->appends( $request->query() );
                 }
             }
 

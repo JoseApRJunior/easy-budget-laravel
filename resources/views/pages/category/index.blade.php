@@ -411,11 +411,7 @@
                         </div>
                     </div>
                     @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
-                        <div class="card-footer">
-                            <div class="d-flex justify-content-center">
-                                {{ $categories->appends(request()->query())->links() }}
-                            </div>
-                        </div>
+                        @include('partials.components.paginator', ['p' => $categories->appends(request()->query()), 'show_info' => true])
                     @endif
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
                         aria-hidden="true">
