@@ -5,34 +5,26 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="row">
-                <div class="col-lg-8 col-md-12">
-                    <h1 class="h4 mb-1 d-md-none">
-                        <i class="bi bi-tags me-2"></i>
-                        Categorias
-                    </h1>
-                    <h1 class="h3 mb-2 d-none d-md-block">
-                        <i class="bi bi-tags me-2"></i>
-                        Categorias
-                    </h1>
-                    <p class="text-muted mb-0 small">Lista de categorias do sistema</p>
-                </div>
-                <div class="col-lg-4 col-md-12 text-lg-end mt-3 mt-lg-0">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb breadcrumb-sm mb-0 justify-content-lg-end">
-                            <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('categories.dashboard') }}">Categorias</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                        </ol>
-                    </nav>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-tags me-2"></i>
+                    Categorias
+                </h1>
+                <p class="text-muted">Lista de categorias do sistema</p>
             </div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('categories.dashboard') }}">Categorias</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
+                </ol>
+            </nav>
         </div>
 
-        <!-- Filtros de Busca -->
         <div class="row">
             <div class="col-12">
+                <!-- Filtros de Busca -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
@@ -40,7 +32,7 @@
                     <div class="card-body">
                         <form id="filtersFormCategories" method="GET" action="{{ route('categories.index') }}">
                             <div class="row g-3">
-                                <div class="col-lg-6 col-md-12">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="search">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
@@ -48,7 +40,7 @@
                                             placeholder="Categoria, Subcategoria, Slug">
                                     </div>
                                 </div>
-                                <div class="col-lg-2 col-md-6 col-6">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
@@ -63,7 +55,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-lg-2 col-md-6 col-6">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="per_page" class="text-nowrap">Por página</label>
                                         <select class="form-control" id="per_page" name="per_page">
@@ -74,7 +66,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-lg-2 col-md-6 col-6">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select class="form-control" id="deleted" name="deleted">
@@ -86,18 +78,14 @@
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <div class="d-flex flex-wrap gap-2">
+                                    <div class="d-flex gap-2 flex-nowrap">
                                         <button type="submit" id="btnFilterCategories" class="btn btn-primary"
                                             aria-label="Filtrar">
-                                            <i class="bi bi-search me-1" aria-hidden="true"></i>
-                                            <span class="d-none d-md-inline">Filtrar</span>
-                                            <span class="d-md-none">Filtrar</span>
+                                            <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                                         </button>
                                         <a href="{{ route('categories.index') }}" class="btn btn-secondary"
                                             aria-label="Limpar filtros">
-                                            <i class="bi bi-x me-1" aria-hidden="true"></i>
-                                            <span class="d-none d-md-inline">Limpar</span>
-                                            <span class="d-md-none">Limpar</span>
+                                            <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
                                         </a>
                                     </div>
                                 </div>
@@ -193,7 +181,7 @@
                                         <div class="card-actions-mobile">
                                             @if ($category->deleted_at)
                                                 {{-- Categoria deletada: apenas restaurar --}}
-                                                <form action="{{ route('categories.restore', $category->id) }}"
+                                                <form action="{{ route('categories.restore', $category->slug) }}"
                                                     method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-success" title="Restaurar"
@@ -338,7 +326,7 @@
                                                         @if ($category->deleted_at)
                                                             {{-- Categoria deletada: apenas restaurar --}}
                                                             <form
-                                                                action="{{ route('categories.restore', $category->id) }}"
+                                                                action="{{ route('categories.restore', $category->slug) }}"
                                                                 method="POST" class="d-inline">
                                                                 @csrf
                                                                 <button type="submit" class="btn btn-success"
@@ -403,16 +391,17 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7">
-                                                    <div class="empty-state">
-                                                        <div class="empty-state-icon">
-                                                            <i class="bi bi-inbox"></i>
-                                                        </div>
-                                                        <div class="empty-state-title">Nenhuma categoria encontrada</div>
-                                                        <div class="empty-state-text">
-                                                            Tente ajustar os filtros ou criar uma nova categoria
-                                                        </div>
-                                                    </div>
+                                                <td colspan="7" class="text-center text-muted">
+                                                    <i class="bi bi-inbox mb-2" aria-hidden="true"
+                                                        style="font-size: 2rem;"></i>
+                                                    <br>
+                                                    @if (($filters['deleted'] ?? '') === 'only')
+                                                        Nenhuma categoria deletada encontrada.
+                                                        <br>
+                                                        <small>Você ainda não deletou nenhuma categoria.</small>
+                                                    @else
+                                                        Nenhuma categoria encontrada.
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -422,12 +411,11 @@
                         </div>
                     </div>
                     @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
-                        @php($p = $categories->appends(request()->query()))
-                        @include('partials.components.paginator', [
-                            'p' => $p,
-                            'size' => 'sm',
-                            'show_info' => true,
-                        ])
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-center">
+                                {{ $categories->appends(request()->query())->links() }}
+                            </div>
+                        </div>
                     @endif
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
                         aria-hidden="true">
