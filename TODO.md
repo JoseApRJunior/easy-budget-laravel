@@ -40,14 +40,16 @@
 ## 🎨 Padrão de Ícones
 
 ### Ícones de Ação "Novo/Criar"
-- Use ícone **específico** quando existir no Bootstrap Icons
-- Fallback para `bi-plus-circle` quando não houver específico
+
+-  Use ícone **específico** quando existir no Bootstrap Icons
+-  Fallback para `bi-plus-circle` quando não houver específico
 
 **Exemplos:**
-- Cliente: `bi-person-plus`
-- Produto: `bi-bag-plus`
-- Categoria: `bi-plus-circle`
-- Serviço: `bi-plus-circle`
+
+-  Cliente: `bi-person-plus`
+-  Produto: `bi-bag-plus`
+-  Categoria: `bi-plus-circle`
+-  Serviço: `bi-plus-circle`
 
 ---
 
@@ -335,12 +337,8 @@
             </div>
         </div>
     </div>
-    @if ($items->hasPages())
-        <div class="card-footer">
-            <div class="d-flex justify-content-center">
-                {{ $items->appends(request()->query())->links() }}
-            </div>
-        </div>
+    @if ($items instanceof \Illuminate\Pagination\LengthAwarePaginator && $items->hasPages())
+        @include('partials.components.paginator', ['p' => $items->appends(request()->query()), 'show_info' => true])
     @endif
 </div>
 ```
@@ -383,10 +381,10 @@
                 </ul>
             </div>
         @endif
-        
+
         <form action="{{ route('[modulo].store') }}" method="POST">
             @csrf
-            
+
             <div class="row g-4">
                 <div class="col-md-12">
                     <div class="form-floating mb-3">
@@ -744,6 +742,13 @@ Ao criar uma nova view, verificar:
 -  Empty state padronizado e contextual
 -  Grid responsivo unificado
 
+✅ **Componente de Paginação Customizado**
+
+-  Implementado componente `partials.components.paginator` reutilizável
+-  Substituído paginação padrão do Laravel em category e product
+-  Parâmetros: `'p'` (paginador) e `'show_info' => true`
+-  Padrão atualizado no TODO.md para novos módulos
+
 ✅ **Uso Consistente de SLUG**
 
 -  Todas as rotas de categoria usam slug
@@ -901,7 +906,7 @@ touch resources/views/pages/[modulo]/show.blade.php
             <h1 class="h3 mb-0"><i class="bi bi-[icone] me-2"></i>[Módulo Plural]</h1>
             <p class="text-muted">Lista de todos os [itens] registrados no sistema</p>
         </div>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                 <li class="breadcrumb-item active">Listar</li>
@@ -922,7 +927,7 @@ touch resources/views/pages/[modulo]/show.blade.php
 <div class="container-fluid py-1">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0"><i class="bi bi-[icone]-plus me-2"></i>Novo [Item]</h1>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('[modulo].index') }}">[Módulo]</a></li>

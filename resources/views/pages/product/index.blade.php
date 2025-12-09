@@ -13,7 +13,7 @@
                 </h1>
                 <p class="text-muted">Lista de todos os produtos registrados no sistema</p>
             </div>
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.products.dashboard') }}">Produtos</a></li>

@@ -13,7 +13,7 @@
                 </h1>
                 <p class="text-muted">Lista de categorias do sistema</p>
             </div>
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('categories.dashboard') }}">Categorias</a></li>

@@ -12,7 +12,7 @@
                 </h1>
                 <p class="text-muted">Lista de todos os clientes registrados no sistema</p>
             </div>
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.customers.dashboard') }}">Clientes</a></li>
@@ -113,31 +113,7 @@
 
 
 
-                {{-- Mensagem Inicial --}}
-                <div id="initial-message"
-                    class="card border-0 shadow-sm text-center py-1 @if (isset($customers)) d-none @endif">
-                    <div class="card-body">
-                        <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="text-gray-800 mb-3">Utilize os filtros acima</h5>
-                        <p class="text-muted mb-0">Procure por clientes usando busca, status, tipo e área de atuação.</p>
-                    </div>
-                </div>
-
-                {{-- Loading Spinner --}}
-                <div id="loading-spinner" class="d-none">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center py-1">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Carregando...</span>
-                            </div>
-                            <p class="text-muted mt-3 mb-0">Processando sua solicitação...</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Resultados --}}
-                <div id="results-container" class="{{ isset($customers) ? '' : 'd-none' }}">
-                    <div class="card">
+                <div class="card">
                         <div class="card-header">
                             <div class="row align-items-center">
                                 <div class="col-12 col-lg-8 mb-2 mb-lg-0">
@@ -167,11 +143,104 @@
                             </div>
                         </div>
                         <div class="card-body p-0">
+                            <!-- Versão Mobile: Cards -->
+                            <div class="mobile-view">
+                                <div class="p-3">
+                                    @forelse($customers as $customer)
+                                        <div class="modern-card">
+                                            <div class="card-header-mobile">
+                                                <div class="card-title-mobile">
+                                                    <i class="bi bi-person-fill"></i>
+                                                    @if ($customer->deleted_at)
+                                                        <span class="badge bg-danger me-2">Deletado</span>
+                                                    @endif
+                                                    @if ($customer->commonData)
+                                                        @if ($customer->commonData->isCompany())
+                                                            {{ $customer->commonData->company_name }}
+                                                        @else
+                                                            {{ $customer->commonData->first_name }} {{ $customer->commonData->last_name }}
+                                                        @endif
+                                                    @else
+                                                        Nome não informado
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body-mobile">
+                                                <div class="info-row">
+                                                    <span class="info-label">Documento</span>
+                                                    <span class="info-value">
+                                                        @if ($customer->commonData)
+                                                            @if ($customer->commonData->isCompany())
+                                                                {{ $customer->commonData->cnpj ?? 'N/A' }}
+                                                            @else
+                                                                {{ $customer->commonData->cpf ?? 'N/A' }}
+                                                            @endif
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Status</span>
+                                                    <span class="info-value">
+                                                        <span class="modern-badge {{ $customer->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
+                                                            {{ $customer->status === 'active' ? 'Ativo' : 'Inativo' }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">Cadastro</span>
+                                                    <span class="info-value">{{ $customer->created_at->format('d/m/Y') }}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="card-actions-mobile">
+                                                @if ($customer->deleted_at)
+                                                    <form action="{{ route('provider.customers.restore', $customer->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success" title="Restaurar">
+                                                            <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <a href="{{ route('provider.customers.show', $customer->id) }}" class="btn btn-info" title="Visualizar">
+                                                        <i class="bi bi-eye-fill me-1"></i>Ver
+                                                    </a>
+                                                    <a href="{{ route('provider.customers.edit', $customer->id) }}" class="btn btn-warning" title="Editar">
+                                                        <i class="bi bi-pencil-fill me-1"></i>Editar
+                                                    </a>
+                                                    <button type="button" class="btn btn-danger" onclick="confirmDelete({{ $customer->id }})" title="Excluir">
+                                                        <i class="bi bi-trash"></i> Excluir
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">
+                                                <i class="bi bi-inbox"></i>
+                                            </div>
+                                            <div class="empty-state-title">Nenhum cliente encontrado</div>
+                                            <div class="empty-state-text">
+                                                @if (($filters['deleted'] ?? '') === 'only')
+                                                    Você ainda não deletou nenhum cliente
+                                                @else
+                                                    Tente ajustar os filtros ou limpar a busca
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            <!-- Versão Desktop: Tabela -->
                             <div class="desktop-view">
                                 <div class="table-responsive">
-                                <table id="results-table" class="modern-table table mb-0">
+                                <table class="modern-table table mb-0">
                                     <thead>
                                         <tr>
+                                            <th width="60"><i class="bi bi-person" aria-hidden="true"></i></th>
                                             <th>Cliente</th>
                                             <th>Documento</th>
                                             <th>E-mail</th>
@@ -184,6 +253,11 @@
                                     <tbody>
                                         @forelse($customers as $customer)
                                             <tr>
+                                                <td>
+                                                    <div class="item-icon">
+                                                        <i class="bi bi-person-fill"></i>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     @if ($customer->commonData)
                                                         @if ($customer->commonData->isCompany())
@@ -229,56 +303,35 @@
                                                 </td>
                                                 <td>{{ $customer->created_at->format('d/m/Y') }}</td>
                                                 <td>
-                                                    @if ($customer->status === 'active')
-                                                        <span class="badge bg-success">Ativo</span>
-                                                    @else
-                                                        <span class="badge bg-danger">Inativo</span>
-                                                    @endif
+                                                    <span class="modern-badge {{ $customer->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
+                                                        {{ $customer->status === 'active' ? 'Ativo' : 'Inativo' }}
+                                                    </span>
                                                 </td>
-                                                <td class="text-center">
-                                                    <div class="d-flex justify-content-center gap-2">
+                                                <td>
+                                                    <div class="action-btn-group">
                                                         @if ($customer->deleted_at)
-                                                            {{-- Cliente deletado: apenas restaurar --}}
-                                                            <form
-                                                                action="{{ route('provider.customers.restore', $customer->id) }}"
-                                                                method="POST" class="d-inline">
+                                                            <form action="{{ route('provider.customers.restore', $customer->id) }}" method="POST" class="d-inline">
                                                                 @csrf
-                                                                <button type="submit" class="btn btn-success btn-sm"
-                                                                    title="Restaurar" aria-label="Restaurar">
-                                                                    <i class="bi bi-arrow-counterclockwise"
-                                                                        aria-hidden="true"></i>
+                                                                <button type="submit" class="btn btn-success" title="Restaurar">
+                                                                    <i class="bi bi-arrow-counterclockwise"></i>
                                                                 </button>
                                                             </form>
                                                         @else
-                                                            {{-- Cliente ativo: show, edit, toggle, delete --}}
-                                                            <a href="{{ route('provider.customers.show', $customer->id) }}"
-                                                                class="btn btn-info btn-sm" title="Visualizar"
-                                                                aria-label="Visualizar">
-                                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            <a href="{{ route('provider.customers.show', $customer->id) }}" class="action-btn action-btn-view" title="Visualizar">
+                                                                <i class="bi bi-eye-fill"></i>
                                                             </a>
-                                                            <a href="{{ route('provider.customers.edit', $customer->id) }}"
-                                                                class="btn btn-warning btn-sm" title="Editar"
-                                                                aria-label="Editar">
-                                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                            <a href="{{ route('provider.customers.edit', $customer->id) }}" class="action-btn action-btn-edit" title="Editar">
+                                                                <i class="bi bi-pencil-fill"></i>
                                                             </a>
-                                                            <form
-                                                                action="{{ route('provider.customers.toggle-status', $customer->id) }}"
-                                                                method="POST" class="d-inline">
+                                                            <form action="{{ route('provider.customers.toggle-status', $customer->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('PATCH')
-                                                                <button type="submit"
-                                                                    class="btn {{ $customer->status === 'active' ? 'btn-warning' : 'btn-success' }} btn-sm"
-                                                                    title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
-                                                                    aria-label="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
-                                                                    onclick="return confirm('{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }} este cliente?')">
-                                                                    <i class="bi bi-{{ $customer->status === 'active' ? 'slash-circle' : 'check-lg' }}"
-                                                                        aria-hidden="true"></i>
+                                                                <button type="submit" class="action-btn {{ $customer->status === 'active' ? 'action-btn-warning' : 'action-btn-success' }}" title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}" onclick="return confirm('{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }} este cliente?')">
+                                                                    <i class="bi bi-{{ $customer->status === 'active' ? 'slash-circle' : 'check-lg' }}"></i>
                                                                 </button>
                                                             </form>
-                                                            <button type="button" class="btn btn-danger btn-sm"
-                                                                onclick="confirmDelete({{ $customer->id }})"
-                                                                title="Excluir" aria-label="Excluir">
-                                                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                                            <button type="button" class="action-btn action-btn-delete" onclick="confirmDelete({{ $customer->id }})" title="Excluir">
+                                                                <i class="bi bi-trash-fill"></i>
                                                             </button>
                                                         @endif
                                                     </div>
@@ -286,7 +339,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted">
+                                                <td colspan="8" class="text-center text-muted">
                                                     <i class="bi bi-inbox mb-2" aria-hidden="true"
                                                         style="font-size: 2rem;"></i>
                                                     <br>
@@ -305,30 +358,31 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer">
-                            @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator && $customers->hasPages())
-                                <div class="d-flex justify-content-center">
-                                    {{ $customers->appends(request()->query())->links() }}
-                                </div>
-                            @endif
-                        </div>
                     </div>
+                    @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator && $customers->hasPages())
+                        @include('partials.components.paginator', ['p' => $customers->appends(request()->query()), 'show_info' => true])
+                    @endif
                 </div>
             </div>
             <!-- Modal de Confirmação -->
-            <div class="modal fade" id="deleteModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header border-0">
-                            <h5 class="modal-title">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                         </div>
                         <div class="modal-body">
-                            Tem certeza que deseja excluir este cliente?
+                            Tem certeza de que deseja excluir o cliente <strong id="deleteCustomerName"></strong>?
+                            <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
                         </div>
-                        <div class="modal-footer border-0">
+                        <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Excluir</a>
+                            <form id="deleteForm" action="#" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
                         </div>
                     </div>
                 </div>
