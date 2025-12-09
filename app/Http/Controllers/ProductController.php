@@ -52,7 +52,7 @@ class ProductController extends Controller
      */
     public function index( Request $request ): View
     {
-        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
+        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] );
 
         try {
             $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';

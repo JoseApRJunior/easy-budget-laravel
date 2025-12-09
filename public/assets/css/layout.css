@@ -126,7 +126,7 @@ header {
    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-.nav-link {
+.navbar .nav-link {
    color: var(--light-surface) !important;
    font-weight: 500;
    padding: var(--spacing-sm) var(--spacing-md);
@@ -136,12 +136,32 @@ header {
    transition: opacity var(--transition-speed) var(--transition-timing);
 }
 
-.nav-link:hover {
+.navbar .nav-link:hover {
    opacity: var(--opacity-hover);
 }
 
-.nav-link.active {
+.navbar .nav-link.active {
    opacity: var(--opacity-active);
+}
+
+/* Tabs específicas */
+.nav-tabs .nav-link {
+   color: var(--text-color) !important;
+   background-color: transparent;
+   border: 1px solid transparent;
+   border-top-left-radius: var(--border-radius-sm);
+   border-top-right-radius: var(--border-radius-sm);
+}
+
+.nav-tabs .nav-link:hover {
+   border-color: var(--form-border);
+   isolation: isolate;
+}
+
+.nav-tabs .nav-link.active {
+   color: var(--text-color) !important;
+   background-color: var(--card-bg);
+   border-color: var(--form-border) var(--form-border) var(--card-bg);
 }
 
 /* Tema escuro para o dropdown no navbar */

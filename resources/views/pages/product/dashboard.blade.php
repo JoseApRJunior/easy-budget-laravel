@@ -5,25 +5,27 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-box-seam me-2"></i>Dashboard de Produtos
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral do seu catálogo de produtos.
-                </p>
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h1 class="h4 h3-md mb-1">
+                        <i class="bi bi-box-seam me-2"></i>
+                        <span class="d-none d-sm-inline">Dashboard de Produtos</span>
+                        <span class="d-sm-none">Produtos</span>
+                    </h1>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Dashboard de Produtos
+                        </li>
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard de Produtos
-                    </li>
-                </ol>
-            </nav>
+            <p class="text-muted mb-0 small">Visão geral do seu catálogo de produtos com atalhos de gestão.</p>
         </div>
 
         @php
@@ -118,58 +120,90 @@
         <div class="row g-4">
             <!-- Produtos Recentes -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
                         <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Produtos Recentes
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span class="d-none d-sm-inline">Produtos Recentes</span>
+                            <span class="d-sm-none">Recentes</span>
                         </h5>
-                        <a href="{{ route('provider.products.index') }}" class="btn btn-sm btn-outline-primary">
-                            Ver todos
-                        </a>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Produto</th>
-                                            <th>SKU</th>
-                                            <th>Categoria</th>
-                                            <th>Status</th>
-                                            <th>Cadastrado em</th>
-                                            <th class="text-end">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recent as $product)
+                            <!-- Desktop View -->
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
+                                        <thead>
                                             <tr>
-                                                <td>{{ $product->name }}</td>
-                                                <td><span class="text-code">{{ $product->sku }}</span></td>
-                                                <td>{{ $product->category->name ?? '—' }}</td>
-                                                <td>
-                                                    @if ($product->active)
-                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
-                                                <td class="text-end">
-                                                    <a href="{{ route('provider.products.show', $product->sku) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </td>
+                                                <th>Produto</th>
+                                                <th>Categoria</th>
+                                                <th>Status</th>
+                                                <th>Criado em</th>
+                                                <th class="text-center">Ações</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($recent as $product)
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="bi bi-box-seam me-2 text-muted"></i>
+                                                            <span>{{ $product->name }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $product->category->name ?? '—' }}</td>
+                                                    <td>
+                                                        @if ($product->active)
+                                                            <span class="badge bg-success-subtle text-success">Ativo</span>
+                                                        @else
+                                                            <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('provider.products.show', $product->sku) }}"
+                                                            class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Mobile View -->
+                            <div class="mobile-view">
+                                <div class="list-group list-group-flush">
+                                    @foreach ($recent as $product)
+                                        <a href="{{ route('provider.products.show', $product->sku) }}"
+                                            class="list-group-item list-group-item-action py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $product->name }}</div>
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        @if ($product->active)
+                                                            <span class="badge bg-success-subtle text-success">Ativo</span>
+                                                        @else
+                                                            <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         @else
-                            <p class="text-muted mb-0">
-                                Nenhum produto recente encontrado. Cadastre novos produtos para visualizar aqui.
-                            </p>
+                            <div class="p-4">
+                                <p class="text-muted mb-0">
+                                    Nenhum produto recente encontrado. Cadastre novos produtos para visualizar aqui.
+                                </p>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -214,8 +248,9 @@
                         <a href="{{ route('provider.products.index') }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-box-seam me-2"></i>Listar Produtos
                         </a>
-                        <a href="{{ route('provider.reports.products') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Produtos
+                        <a href="{{ route('provider.products.index', ['deleted' => 'only']) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-archive me-2"></i>Ver Deletados
                         </a>
                     </div>
                 </div>

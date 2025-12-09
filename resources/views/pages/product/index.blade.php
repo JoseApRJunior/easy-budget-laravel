@@ -70,6 +70,17 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
+                                        <label for="per_page" class="text-nowrap">Por página</label>
+                                        <select class="form-control" id="per_page" name="per_page">
+                                            @php($pp = (int) ($filters['per_page'] ?? 10))
+                                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
+                                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
+                                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select class="form-control" id="deleted" name="deleted">
                                             <option value="">Atuais</option>
@@ -148,6 +159,7 @@
                         </div>
                     </div>
                     <div class="card-body p-0">
+                        <!-- Desktop View -->
                         <div class="desktop-view">
                             <div class="table-responsive">
                             <table class="modern-table table mb-0">
@@ -249,6 +261,44 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                            </div>
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="mobile-view">
+                            <div class="list-group list-group-flush">
+                                @forelse($products as $product)
+                                    <a href="{{ route('provider.products.show', $product->sku) }}"
+                                        class="list-group-item list-group-item-action py-3">
+                                        <div class="d-flex align-items-start">
+                                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                                                class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-2">{{ $product->name }}</div>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <span class="badge bg-secondary">{{ $product->sku }}</span>
+                                                    @if ($product->active)
+                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
+                                                    @else
+                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-muted">R$ {{ number_format($product->price, 2, ',', '.') }}</small>
+                                            </div>
+                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-4 text-center text-muted">
+                                        <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                        <br>
+                                        @if (($filters['deleted'] ?? '') === 'only')
+                                            Nenhum produto deletado encontrado.
+                                        @else
+                                            Nenhum produto encontrado.
+                                        @endif
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
                     </div>

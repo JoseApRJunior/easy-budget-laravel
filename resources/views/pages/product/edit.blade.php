@@ -99,18 +99,20 @@
                                 </div>
 
                                 <!-- Subcategoria -->
-                                <div class="col-md-6" id="subcategory-wrapper" style="display: {{ $product->category && $product->category->parent_id ? 'block' : 'none' }};">
+                                <div class="col-md-6" id="subcategory-wrapper">
                                     <div class="mb-3">
                                         <label for="category_id" class="form-label">Subcategoria</label>
                                         <select class="form-select @error('category_id') is-invalid @enderror"
-                                            id="category_id" name="category_id">
-                                            <option value="">Selecione uma subcategoria</option>
+                                            id="category_id" name="category_id" {{ $product->category && $product->category->parent_id ? '' : 'disabled' }}>
                                             @if($product->category && $product->category->parent_id)
+                                                <option value="">Selecione uma subcategoria</option>
                                                 @foreach ($categories->where('parent_id', $product->category->parent_id) as $child)
                                                     <option value="{{ $child->id }}" {{ $product->category_id == $child->id ? 'selected' : '' }}>
                                                         {{ $child->name }}
                                                     </option>
                                                 @endforeach
+                                            @else
+                                                <option value="">Selecione uma categoria principal primeiro</option>
                                             @endif
                                         </select>
                                         @error('category_id')
@@ -301,36 +303,42 @@
         const subcategoryWrapper = document.getElementById('subcategory-wrapper');
         const subcategorySelect = document.getElementById('category_id');
 
-        parentCategorySelect.addEventListener('change', function() {
-            const parentId = this.value;
-            
-            if (!parentId) {
-                subcategoryWrapper.style.display = 'none';
-                subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
-                return;
-            }
+        if (parentCategorySelect && subcategoryWrapper && subcategorySelect) {
+            parentCategorySelect.addEventListener('change', function() {
+                const parentId = this.value;
+                
+                if (!parentId) {
+                    subcategorySelect.innerHTML = '<option value="">Selecione uma categoria principal primeiro</option>';
+                    subcategorySelect.disabled = true;
+                    return;
+                }
 
-            fetch(`/categories/${parentId}/children`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.children && data.children.length > 0) {
-                        subcategoryWrapper.style.display = 'block';
-                        subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
-                        data.children.forEach(child => {
-                            const option = document.createElement('option');
-                            option.value = child.id;
-                            option.textContent = child.name;
-                            subcategorySelect.appendChild(option);
-                        });
-                    } else {
-                        subcategoryWrapper.style.display = 'none';
-                        subcategorySelect.innerHTML = `<option value="${parentId}" selected>${this.options[this.selectedIndex].text}</option>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao buscar subcategorias:', error);
-                    subcategoryWrapper.style.display = 'none';
-                });
-        });
+                subcategorySelect.disabled = true;
+                subcategorySelect.innerHTML = '<option value="">Carregando...</option>';
+
+                fetch(`/categories/${parentId}/children`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.children && data.children.length > 0) {
+                            subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                            data.children.forEach(child => {
+                                const option = document.createElement('option');
+                                option.value = child.id;
+                                option.textContent = child.name;
+                                subcategorySelect.appendChild(option);
+                            });
+                            subcategorySelect.disabled = false;
+                        } else {
+                            subcategorySelect.innerHTML = `<option value="${parentId}" selected>${this.options[this.selectedIndex].text}</option>`;
+                            subcategorySelect.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar subcategorias:', error);
+                        subcategorySelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                        subcategorySelect.disabled = true;
+                    });
+            });
+        }
     </script>
 @endpush
