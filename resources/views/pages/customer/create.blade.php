@@ -6,10 +6,13 @@
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-person-plus me-2"></i>Novo Cliente
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-person-plus me-2"></i>Novo Cliente
+                </h1>
+                <p class="text-muted mb-0 small">Preencha os dados para criar um novo cliente</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
@@ -386,13 +389,13 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ route('provider.customers.index') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url()->previous(route('provider.customers.index')) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Cancelar
                     </a>
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>Criar Cliente
+                        <i class="bi bi-check-circle me-2"></i>Criar
                     </button>
                 </div>
             </div>

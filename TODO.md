@@ -20,6 +20,7 @@
 8. [Responsividade](#-responsividade) - Classes responsivas
 9. [Checklist](#-checklist-de-implementação) - Verificação antes do commit
 10.   [Referência Rápida](#-referência-rápida---copy--paste) - Templates prontos
+11.   [Integração com Backend](#-integração-com-backend) - Controllers, Services e Repositories
 
 ## 🎯 Estrutura Geral de Views
 
@@ -618,6 +619,17 @@
 
 ## 🎯 Ícones Bootstrap Icons por Contexto
 
+### ⚠️ Regra Geral de Ícones
+
+**SEMPRE use ícones SEM `-fill`** exceto em casos específicos de badges/status.
+
+**Exemplos:**
+
+-  ✅ `bi-person` (correto)
+-  ❌ `bi-person-fill` (incorreto)
+-  ✅ `bi-tag` (correto)
+-  ❌ `bi-tag-fill` (incorreto)
+
 ### Ações
 
 -  `bi-plus` / `bi-plus-circle` - Criar/Adicionar
@@ -984,3 +996,277 @@ touch resources/views/pages/[modulo]/show.blade.php
 -  Este documento é a **fonte única de verdade** para padrões de interface
 -  Qualquer desvio deve ser documentado e justificado
 -  Atualize este documento ao criar novos padrões aprovados
+
+---
+
+## 🔗 11. Integração com Backend
+
+### Arquitetura Completa
+
+```blade
+{{-- Exemplo de como views se integram com controllers, services e repositories --}}
+
+{{-- 1. Controller (app/Http/Controllers/CategoryController.php) --}}
+{{-- @see app/Http/Controllers/CategoryController.php --}}
+{{-- - Recebe requisições HTTP --}}
+{{-- - Chama métodos do Service --}}
+{{-- - Retorna views com dados processados --}}
+
+{{-- 2. Service (app/Services/CategoryService.php) --}}
+{{-- @see app/Services/CategoryService.php --}}
+{{-- - Contém lógica de negócio --}}
+{{-- - Usa Repository para acesso a dados --}}
+{{-- - Retorna ServiceResult padronizado --}}
+
+{{-- 3. Repository (app/Repositories/CategoryRepository.php) --}}
+{{-- @see app/Repositories/CategoryRepository.php --}}
+{{-- - Acesso direto ao banco de dados --}}
+{{-- - Implementa métodos de consulta --}}
+{{-- - Usa Eloquent ORM --}}
+
+{{-- 4. View (resources/views/pages/category/index.blade.php) --}}
+{{-- - Recebe dados do Controller --}}
+{{-- - Renderiza interface para usuário --}}
+{{-- - Usa componentes Blade --}}
+```
+
+### Exemplo de Fluxo Completo
+
+```blade
+{{-- 1. Rota (routes/web.php) --}}
+{{-- Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index'); --}}
+
+{{-- 2. Controller --}}
+{{-- public function index(Request $request) --}}
+{{-- { --}}
+{{--     $result = $this->categoryService->listWithFilters($request->all()); --}}
+{{--     return view('pages.category.index', ['categories' => $result->getData()]); --}}
+{{-- } --}}
+
+{{-- 3. Service --}}
+{{-- public function listWithFilters(array $filters): ServiceResult --}}
+{{-- { --}}
+{{--     $query = $this->repository->getQueryBuilder(); --}}
+{{--     if (!empty($filters['search'])) { --}}
+{{--         $query->where('name', 'like', '%'.$filters['search'].'%'); --}}
+{{--     } --}}
+{{--     return $this->success($query->paginate(15)); --}}
+{{-- } --}}
+
+{{-- 4. Repository --}}
+{{-- public function getQueryBuilder() --}}
+{{-- { --}}
+{{--     return Category::query() --}}
+{{--         ->where('tenant_id', auth()->user()->tenant_id) --}}
+{{--         ->orderBy('name'); --}}
+{{-- } --}}
+
+{{-- 5. View (index.blade.php) --}}
+{{-- @foreach($categories as $category) --}}
+{{--     <tr> --}}
+{{--         <td>{{ $category->name }}</td> --}}
+{{--         <td>{{ $category->slug }}</td> --}}
+{{--         <td> --}}
+{{--             <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-outline-primary"> --}}
+{{--                 <i class="bi bi-pencil"></i> --}}
+{{--             </a> --}}
+{{--         </td> --}}
+{{--     </tr> --}}
+{{-- @endforeach --}}
+```
+
+### Padrões de Integração
+
+```blade
+{{-- ✅ Padrão Recomendado: --}}
+{{-- 1. Controller → Service → Repository → Model --}}
+{{-- 2. Usar ServiceResult para respostas padronizadas --}}
+{{-- 3. Injeção de dependência via constructor --}}
+{{-- 4. Validação via Form Requests --}}
+{{-- 5. Autorização via Gates/Policies --}}
+
+{{-- ❌ Evitar: --}}
+{{-- 1. Acesso direto ao Model na View --}}
+{{-- 2. Lógica de negócio na View --}}
+{{-- 3. Queries SQL diretas na View --}}
+{{-- 4. Cálculos complexos na View --}}
+```
+
+### Exemplo de Formulário com Integração
+
+```blade
+{{-- Formulário de criação com validação --}}
+<form action="{{ route('categories.store') }}" method="POST">
+    @csrf
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Nome *</label>
+        <input type="text" class="form-control @error('name') is-invalid @enderror"
+               id="name" name="name" value="{{ old('name') }}" required>
+        @error('name')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-circle me-2"></i>Criar Categoria
+    </button>
+</form>
+
+{{-- Validação via Form Request --}}
+{{-- @see app/Http/Requests/CategoryStoreRequest.php --}}
+{{-- - Valida campos obrigatórios --}}
+{{-- - Valida formatos de dados --}}
+{{-- - Retorna mensagens de erro --}}
+```
+
+### Exemplo de Tabela com Dados do Backend
+
+```blade
+{{-- Tabela com dados paginados --}}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Slug</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($categories as $category)
+            <tr>
+                <td>{{ $category->name }}</td>
+                <td>{{ $category->slug }}</td>
+                <td>
+                    <span class="badge bg-{{ $category->is_active ? 'success' : 'secondary' }}">
+                        {{ $category->is_active ? 'Ativo' : 'Inativo' }}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('categories.edit', $category->id) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{{ route('categories.destroy', $category->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Tem certeza?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mb-0">Nenhuma categoria encontrada.</p>
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
+{{-- Paginação --}}
+<div class="mt-4">
+    {{ $categories->links() }}
+</div>
+```
+
+### Melhores Práticas
+
+```blade
+{{-- ✅ Fazer: --}}
+{{-- 1. Usar @foreach para listagens --}}
+{{-- 2. Usar @if/@unless para condicionais --}}
+{{-- 3. Usar @error para mensagens de validação --}}
+{{-- 4. Usar componentes Blade para reutilização --}}
+{{-- 5. Manter views focadas apenas na apresentação --}}
+
+{{-- ❌ Evitar: --}}
+{{-- 1. Lógica complexa na view --}}
+{{-- 2. Queries diretas ao banco --}}
+{{-- 3. Cálculos matemáticos complexos --}}
+{{-- 4. Manipulação de dados brutos --}}
+{{-- 5. Chamadas a serviços externos --}}
+```
+
+---
+
+---
+
+<!-- /**
+ * TODO: IMPLEMENTAR SISTEMA DE RESERVAS COMPLETO
+ *
+ * Funcionalidades pendentes:
+ * 1. Criar tabela inventory_reservations (product_id, quantity, reserved_by_type, reserved_by_id, status, expires_at)
+ * 2. Implementar lógica de reserva real (diminuir estoque disponível)
+ * 3. Implementar expiração automática de reservas
+ * 4. Adicionar campo reserved_quantity na tabela inventories
+ * 5. Calcular estoque disponível = quantity - reserved_quantity
+ * 6. Criar job para limpar reservas expiradas
+ * 7. Atualizar métodos reserveProduct() e releaseReservation() com lógica real
+ */ -->
+
+## 🔄 Sistema de Reservas de Estoque (PENDENTE)
+
+### Objetivo
+
+Implementar sistema completo de reservas de estoque para controlar produtos reservados vs disponíveis.
+
+### Tarefas
+
+#### 1. Estrutura de Banco de Dados
+
+-  [ ] Criar migration para tabela `inventory_reservations`
+   -  Campos: `id`, `tenant_id`, `product_id`, `quantity`, `reserved_by_type`, `reserved_by_id`, `status`, `expires_at`, `created_at`, `updated_at`
+-  [ ] Adicionar campo `reserved_quantity` na tabela `inventories`
+-  [ ] Criar índices para performance (product_id, tenant_id, status, expires_at)
+
+#### 2. Models e Relacionamentos
+
+-  [ ] Criar model `InventoryReservation`
+-  [ ] Adicionar relacionamentos em `Product` e `Inventory`
+-  [ ] Implementar scopes (active, expired, byProduct)
+
+#### 3. Lógica de Negócio
+
+-  [ ] Atualizar `InventoryService::reserveProduct()` com lógica real
+   -  Validar estoque disponível (quantity - reserved_quantity)
+   -  Criar registro em inventory_reservations
+   -  Incrementar reserved_quantity
+-  [ ] Atualizar `InventoryService::releaseReservation()` com lógica real
+   -  Marcar reserva como liberada
+   -  Decrementar reserved_quantity
+-  [ ] Criar método `InventoryService::getAvailableStock()` (quantity - reserved_quantity)
+
+#### 4. Expiração de Reservas
+
+-  [ ] Criar job `ExpireInventoryReservations`
+-  [ ] Agendar job no Kernel (rodar a cada hora)
+-  [ ] Implementar lógica de expiração automática
+-  [ ] Notificar quando reserva expirar
+
+#### 5. Testes
+
+-  [ ] Testes unitários para InventoryService
+-  [ ] Testes de integração para fluxo completo
+-  [ ] Testes de expiração de reservas
+
+#### 6. Documentação
+
+-  [ ] Documentar fluxo de reservas
+-  [ ] Atualizar diagramas de banco de dados
+-  [ ] Criar guia de uso para desenvolvedores
+
+### Prioridade
+
+**Média** - Sistema funciona sem reservas reais, mas implementação futura melhora controle de estoque.
+
+### Estimativa
+
+**8-12 horas** de desenvolvimento + testes

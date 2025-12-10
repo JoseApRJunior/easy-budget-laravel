@@ -60,23 +60,30 @@ class ProductController extends Controller
         }
         $filters[ 'per_page' ] = $perPage;
 
+        $hasFilters = $request->has(['search', 'category_id', 'active', 'min_price', 'max_price', 'deleted']);
+        $showAll = $request->boolean('all');
+
         try {
-            $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+            if ( $hasFilters || $showAll ) {
+                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
-            if ( $showOnlyTrashed ) {
-                $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
-                $products = $result->isSuccess() ? $result->getData() : collect();
-            } else {
-                $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+                if ( $showOnlyTrashed ) {
+                    $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
+                    $products = $result->isSuccess() ? $result->getData() : collect();
+                } else {
+                    $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
-                if ( !$result->isSuccess() ) {
-                    abort( 500, 'Erro ao carregar lista de produtos' );
+                    if ( !$result->isSuccess() ) {
+                        abort( 500, 'Erro ao carregar lista de produtos' );
+                    }
+
+                    $products = $result->getData();
+                    if ( method_exists( $products, 'appends' ) ) {
+                        $products = $products->appends( $request->query() );
+                    }
                 }
-
-                $products = $result->getData();
-                if ( method_exists( $products, 'appends' ) ) {
-                    $products = $products->appends( $request->query() );
-                }
+            } elseif ( !$showAll ) {
+                $products = collect();
             }
 
             return view( 'pages.product.index', [
@@ -98,7 +105,7 @@ class ProductController extends Controller
     {
         try {
             return view( 'pages.product.create', [
-                'categories' => $this->categoryService->getActive(),
+                'categories' => $this->categoryService->getActiveWithChildren(),
             ] );
         } catch ( Exception ) {
             abort( 500, 'Erro ao carregar formulário de criação de produto' );
@@ -171,7 +178,7 @@ class ProductController extends Controller
 
             return view( 'pages.product.edit', [
                 'product'    => $result->getData(),
-                'categories' => $this->categoryService->getActive(),
+                'categories' => $this->categoryService->getActiveWithChildren(),
             ] );
         } catch ( Exception ) {
             abort( 500, 'Erro ao carregar formulário de edição de produto' );

@@ -40,11 +40,32 @@ class CustomerController extends Controller
 
         $filters = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
 
-        // Verificar se há filtros aplicados
-        $hasFilters = collect( $filters )->filter( fn( $v ) => filled( $v ) )->isNotEmpty();
+        Log::info('CustomerController::index - Filtros recebidos', [
+            'filters' => $filters,
+            'query_string' => $request->query(),
+            'tenant_id' => $user->tenant_id,
+        ]);
+
+        // Verificar se há filtros aplicados - se qualquer parâmetro existe na query string
+        $hasFilters = $request->has(['search', 'status', 'type', 'area_of_activity_id', 'deleted']);
+
+        Log::info('CustomerController::index - hasFilters', [
+            'hasFilters' => $hasFilters,
+        ]);
 
         if ( $hasFilters ) {
-            $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+            $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+
+            Log::info('CustomerController::index - Tipo de busca', [
+                'showOnlyTrashed' => $showOnlyTrashed,
+                'deleted_filter' => $filters[ 'deleted' ] ?? 'não definido',
+            ]);
+
+            if ( $showOnlyTrashed ) {
+                $result = $this->customerService->getDeletedCustomers( $filters, $user->tenant_id );
+            } else {
+                $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+            }
 
             if ( !$result->isSuccess() ) {
                 Log::error( 'Erro ao carregar clientes', [
@@ -66,9 +87,13 @@ class CustomerController extends Controller
             }
 
             $customers = $result->getData();
+            Log::info('CustomerController::index - Clientes retornados', [
+                'count' => $customers instanceof \Illuminate\Pagination\LengthAwarePaginator ? $customers->total() : $customers->count(),
+            ]);
         } else {
             // Quando não há filtros, mostrar tabela vazia inicialmente
             $customers = collect();
+            Log::info('CustomerController::index - Sem filtros, retornando vazio');
         }
 
         $areasOfActivity = AreaOfActivity::where( 'is_active', true )

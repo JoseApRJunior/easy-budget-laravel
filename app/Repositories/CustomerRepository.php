@@ -293,6 +293,18 @@ class CustomerRepository extends AbstractTenantRepository
             });
         }
 
+        // Filtro por registros deletados
+        if (isset($filters['deleted']) && $filters['deleted'] === 'only') {
+            Log::info('CustomerRepository::getPaginated - Aplicando onlyTrashed', [
+                'deleted_filter' => $filters['deleted'],
+            ]);
+            $query->onlyTrashed();
+        } else {
+            Log::info('CustomerRepository::getPaginated - Buscando apenas ativos (sem trashed)', [
+                'deleted_filter' => $filters['deleted'] ?? 'não definido',
+            ]);
+        }
+
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 

@@ -209,4 +209,60 @@ class InventoryService extends AbstractBaseService
         }
     }
 
+    public function consumeProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $relatedType,
+        int $relatedId,
+        int $tenantId,
+    ): ServiceResult {
+        return $this->removeStock( $productId, $tenantId, (int) $quantity, $reason );
+    }
+
+    public function reserveProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $relatedType,
+        int $relatedId,
+        int $tenantId,
+    ): ServiceResult {
+        Log::info( 'Product reserved', [
+            'product_id' => $productId,
+            'quantity'   => $quantity,
+            'reason'     => $reason,
+            'tenant_id'  => $tenantId
+        ] );
+        return $this->success( null, 'Produto reservado' );
+    }
+
+    public function releaseReservation(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $relatedType,
+        int $relatedId,
+        int $tenantId,
+    ): ServiceResult {
+        Log::info( 'Reservation released', [
+            'product_id' => $productId,
+            'quantity'   => $quantity,
+            'reason'     => $reason,
+            'tenant_id'  => $tenantId
+        ] );
+        return $this->success( null, 'Reserva liberada' );
+    }
+
+    public function returnProduct(
+        int $productId,
+        float $quantity,
+        string $reason,
+        string $relatedType,
+        int $relatedId,
+        int $tenantId,
+    ): ServiceResult {
+        return $this->addStock( $productId, $tenantId, (int) $quantity, $reason );
+    }
+
 }

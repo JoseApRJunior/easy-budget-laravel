@@ -98,7 +98,7 @@ class ServiceController extends Controller
 
             return view('pages.service.create', [
                 'budget' => $budget,
-                'categories' => $this->categoryService->getActive(),
+                'categories' => $this->categoryService->getActiveWithChildren(),
                 'products' => $this->productService->getActive(),
                 'budgets' => $this->budgetService->getNotCompleted(),
                 'statusOptions' => ServiceStatus::cases(),
@@ -173,7 +173,7 @@ class ServiceController extends Controller
             'services' => $services,
             'filters' => $filters ?? [],
             'statusOptions' => ServiceStatus::cases(),
-            'categories' => $this->categoryService->getActive(),
+            'categories' => $this->categoryService->getActiveWithChildren(),
             'errorMessage' => $errorMessage,
             'showAllPrompt' => ($attempt && ! ($hasFilters || $confirmAll)),
         ]);
@@ -429,7 +429,7 @@ class ServiceController extends Controller
 
             return view('pages.service.edit', [
                 'service' => $service,
-                'categories' => $this->categoryService->getActive(),
+                'categories' => $this->categoryService->getActiveWithChildren(),
                 'products' => $this->productService->getActive(),
                 'budgets' => $this->budgetService->getNotCompleted(),
                 'statusOptions' => ServiceStatus::cases(),

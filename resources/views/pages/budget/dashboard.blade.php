@@ -5,28 +5,32 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-file-earmark-text-fill me-2"></i>Dashboard de Orçamentos
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.
-                </p>
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h1 class="h4 h3-md mb-1">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        <span class="d-none d-sm-inline">Dashboard de Orçamentos</span>
+                        <span class="d-sm-none">Orçamentos</span>
+                    </h1>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Dashboard
+                        </li>
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard
-                    </li>
-                </ol>
-            </nav>
+            <p class="text-muted mb-0 small">
+                Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.
+            </p>
         </div>
 
         @php
@@ -181,18 +185,19 @@
             <!-- Orçamentos Recentes -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-transparent border-0">
                         <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Orçamentos Recentes
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span class="d-none d-sm-inline">Orçamentos Recentes</span>
+                            <span class="d-sm-none">Recentes</span>
                         </h5>
-                        <a href="{{ route('provider.budgets.index') }}" class="btn btn-sm btn-outline-primary">
-                            Ver todos
-                        </a>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
+                            <!-- Desktop View -->
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Código</th>
@@ -218,20 +223,20 @@
                                                     ) ?:
                                                     'Cliente não informado';
 
-                                                $statusBadge = match ($budget->status ?? 'pending') {
-                                                    \App\Enums\BudgetStatus::APPROVED->value
-                                                        => '<span class="badge bg-success-subtle text-success">Aprovado</span>',
-                                                    \App\Enums\BudgetStatus::REJECTED->value
-                                                        => '<span class="badge bg-danger-subtle text-danger">Rejeitado</span>',
-                                                    \App\Enums\BudgetStatus::COMPLETED->value
-                                                        => '<span class="badge bg-info-subtle text-info">Concluído</span>',
-                                                    \App\Enums\BudgetStatus::CANCELLED->value
-                                                        => '<span class="badge bg-secondary-subtle text-secondary">Cancelado</span>',
-                                                    \App\Enums\BudgetStatus::DRAFT->value
-                                                        => '<span class="badge bg-light-subtle text-muted">Rascunho</span>',
-                                                    default
-                                                        => '<span class="badge bg-warning-subtle text-warning">Pendente</span>',
+                                                $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
+                                                $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
+                                                $statusLabel = $statusEnum?->label() ?? 'Rascunho';
+                                                
+                                                $statusClass = match ($budget->status) {
+                                                    'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
+                                                    'pending' => 'bg-warning-subtle text-warning',
+                                                    'approved' => 'bg-success-subtle text-success',
+                                                    'rejected' => 'bg-danger-subtle text-danger',
+                                                    'completed' => 'bg-info-subtle text-info',
+                                                    default => 'bg-secondary-subtle text-secondary',
                                                 };
+                                                
+                                                $statusBadge = '<span class="badge ' . $statusClass . '">' . $statusLabel . '</span>';
                                             @endphp
                                             <tr>
                                                 <td>{{ $budget->code }}</td>
@@ -250,11 +255,59 @@
                                     </tbody>
                                 </table>
                             </div>
-                        @else
-                            <p class="text-muted mb-0">
-                                Nenhum orçamento recente encontrado. Crie novos orçamentos para visualizar aqui.
-                            </p>
-                        @endif
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="mobile-view">
+                            <div class="list-group list-group-flush">
+                                @foreach ($recent as $budget)
+                                    @php
+                                        $customer = $budget->customer ?? null;
+                                        $commonData = $customer?->commonData ?? null;
+                                        $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
+                                        
+                                        $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
+                                        $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
+                                        $statusLabel = $statusEnum?->label() ?? 'Rascunho';
+                                        
+                                        $statusClass = match ($budget->status) {
+                                            'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
+                                            'pending' => 'bg-warning-subtle text-warning',
+                                            'approved' => 'bg-success-subtle text-success',
+                                            'rejected' => 'bg-danger-subtle text-danger',
+                                            'completed' => 'bg-info-subtle text-info',
+                                            default => 'bg-secondary-subtle text-secondary',
+                                        };
+                                        
+                                        $statusConfig = ['class' => $statusClass, 'text' => $statusLabel];
+                                    @endphp
+                                    <a href="{{ route('provider.budgets.show', $budget->code) }}" class="list-group-item list-group-item-action py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-file-earmark-text text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-1">{{ $budget->code }}</div>
+                                                <div class="small text-muted mb-2">{{ Str::limit($customerName, 30) }}</div>
+                                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                                    <span class="badge {{ $statusConfig['class'] }}">{{ $statusConfig['text'] }}</span>
+                                                    <span class="small text-muted">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
+                                                    <span class="small text-muted">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
+                                                </div>
+                                            </div>
+                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                            <br>
+                            Nenhum orçamento recente encontrado.
+                            <br>
+                            <small>Crie novos orçamentos para visualizar aqui.</small>
+                        </div>
+                    @endif
                     </div>
                 </div>
             </div>

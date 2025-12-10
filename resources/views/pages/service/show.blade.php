@@ -1,52 +1,35 @@
 @extends('layouts.app')
-
+@section('title', 'Detalhes do Serviço')
 @section('content')
     <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                {{-- Breadcrumbs --}}
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item">
-                                    <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                                </li>
-                                <li class="breadcrumb-item">
-                                    <a href="{{ route('provider.services.index') }}">Serviços</a>
-                                </li>
-                                <li class="breadcrumb-item active">{{ $service->code }}</li>
-                            </ol>
-                        </nav>
-                    </div>
-                    <div class="d-flex gap-2">
-                        @if ($service->canBeEdited())
-                            <a href="{{ route('provider.services.edit', $service->code) }}"
-                                class="btn btn-outline-primary">
-                                <i class="bi bi-pencil me-2"></i>
-                                Editar
-                            </a>
-                        @endif
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>
-                            Voltar
-                        </a>
-                    </div>
-                </div>
-
-                {{-- Alerta de Faturas Existentes --}}
-                @if ($service->invoices && $service->invoices->count() > 0)
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Este serviço já possui {{ $service->invoices->count() }} fatura(s).
-                        <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">
-                            Ver faturas
-                        </a>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+        {{-- Cabeçalho --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-gear me-2"></i>Detalhes do Serviço
+                </h1>
+                <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
             </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
+                    <li class="breadcrumb-item active">{{ $service->code }}</li>
+                </ol>
+            </nav>
         </div>
+
+        {{-- Alerta de Faturas Existentes --}}
+        @if ($service->invoices && $service->invoices->count() > 0)
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                Este serviço já possui {{ $service->invoices->count() }} fatura(s).
+                <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">
+                    Ver faturas
+                </a>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
         <div class="row">
             <div class="col-lg-8">
@@ -336,6 +319,52 @@
                                 Imprimir
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Botões de Ação (Footer) --}}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+            <small class="text-muted">
+                Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
+            </small>
+            <div class="d-flex gap-2">
+                @if ($service->canBeEdited())
+                    <a href="{{ route('provider.services.edit', $service->code) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar
+                    </a>
+                @endif
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash-fill me-2"></i>Excluir
+                </button>
+            </div>
+        </div>
+
+        {{-- Modal de Confirmação de Exclusão --}}
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Tem certeza de que deseja excluir o serviço <strong>{{ $service->code }}</strong>?
+                        <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{{ route('provider.services.destroy', $service->code) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
                     </div>
                 </div>
             </div>

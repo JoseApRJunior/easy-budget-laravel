@@ -6,11 +6,13 @@
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-person-gear me-2"></i>Editar Cliente
-            </h1>
-
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Cliente
+                </h1>
+                <p class="text-muted mb-0">Atualize as informações do cliente</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
@@ -29,7 +31,7 @@
             <div class="row g-4">
                 <!-- Dados Pessoais -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent">
                             <h5 class="mb-0"><i class="bi bi-person me-2"></i>Dados Pessoais</h5>
                         </div>
@@ -91,7 +93,7 @@
 
                 <!-- Dados Profissionais -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent">
                             <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Dados Profissionais</h5>
                         </div>
@@ -202,7 +204,7 @@
 
                 <!-- Contato -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent">
                             <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Contato</h5>
                         </div>
@@ -242,7 +244,7 @@
 
                 <!-- Endereço -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent">
                             <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Endereço</h5>
                         </div>
@@ -317,7 +319,7 @@
 
                 <!-- Dados Empresariais Adicionais (PJ) -->
                 <div class="col-12" id="business-data-section" style="display: none;">
-                    <div class="card">
+                    <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent">
                             <h5 class="mb-0"><i class="bi bi-building-gear me-2"></i>Dados Empresariais Adicionais</h5>
                         </div>
@@ -426,12 +428,12 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ route('provider.customers.show', $customer) }}" class="btn btn-outline-secondary">
+                    <a href="{{ url()->previous(route('provider.customers.index')) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Cancelar
                     </a>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Atualizar Cliente
+                    <i class="bi bi-check-circle me-2"></i>Salvar
                 </button>
             </div>
         </form>

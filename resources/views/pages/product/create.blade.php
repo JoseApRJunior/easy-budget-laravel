@@ -81,28 +81,34 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Categoria Principal -->
+                                            <!-- Categoria -->
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="parent_category_id" class="form-label">Categoria Principal</label>
-                                                    <select class="form-select" id="parent_category_id">
-                                                        <option value="">Selecione uma categoria</option>
-                                                        @foreach ($categories->whereNull('parent_id') as $category)
-                                                            <option value="{{ $category->id }}">
-                                                                {{ $category->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                                            <!-- Subcategoria -->
-                                            <div class="col-md-6" id="subcategory-wrapper">
-                                                <div class="mb-3">
-                                                    <label for="category_id" class="form-label">Subcategoria</label>
+                                                    <label for="category_id" class="form-label">Categoria</label>
                                                     <select class="form-select @error('category_id') is-invalid @enderror"
                                                         id="category_id" name="category_id">
-                                                        <option value="">Selecione uma categoria principal primeiro</option>
+                                                        <option value="">Selecione uma categoria</option>
+                                                        @foreach ($categories as $category)
+                                                            @if ($category->children->isEmpty())
+                                                                <option value="{{ $category->id }}"
+                                                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                                    {{ $category->name }}
+                                                                </option>
+                                                            @else
+                                                                <optgroup label="{{ $category->name }}">
+                                                                    <option value="{{ $category->id }}"
+                                                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                                        {{ $category->name }} (Geral)
+                                                                    </option>
+                                                                    @foreach ($category->children as $subcategory)
+                                                                        <option value="{{ $subcategory->id }}"
+                                                                            {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
+                                                                            {{ $subcategory->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </optgroup>
+                                                            @endif
+                                                        @endforeach
                                                     </select>
                                                     @error('category_id')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -256,47 +262,6 @@
             });
         }
 
-        // Categoria dinâmica
-        const parentCategorySelect = document.getElementById('parent_category_id');
-        const subcategoryWrapper = document.getElementById('subcategory-wrapper');
-        const subcategorySelect = document.getElementById('category_id');
 
-        if (parentCategorySelect && subcategoryWrapper && subcategorySelect) {
-            parentCategorySelect.addEventListener('change', function() {
-                const parentId = this.value;
-                
-                if (!parentId) {
-                    subcategorySelect.innerHTML = '<option value="">Selecione uma categoria principal primeiro</option>';
-                    subcategorySelect.disabled = true;
-                    return;
-                }
-
-                subcategorySelect.disabled = true;
-                subcategorySelect.innerHTML = '<option value="">Carregando...</option>';
-
-                fetch(`/categories/${parentId}/children`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.children && data.children.length > 0) {
-                            subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
-                            data.children.forEach(child => {
-                                const option = document.createElement('option');
-                                option.value = child.id;
-                                option.textContent = child.name;
-                                subcategorySelect.appendChild(option);
-                            });
-                            subcategorySelect.disabled = false;
-                        } else {
-                            subcategorySelect.innerHTML = `<option value="${parentId}" selected>${this.options[this.selectedIndex].text}</option>`;
-                            subcategorySelect.disabled = false;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro ao buscar subcategorias:', error);
-                        subcategorySelect.innerHTML = '<option value="">Erro ao carregar</option>';
-                        subcategorySelect.disabled = true;
-                    });
-            });
-        }
     </script>
 @endpush

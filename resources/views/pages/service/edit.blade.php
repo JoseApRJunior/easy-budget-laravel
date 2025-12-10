@@ -4,37 +4,27 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    <!-- Page Header -->
+    {{-- Cabeçalho --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="bi bi-tools me-2"></i>
-            Editar Serviço
-        </h1>
-        <nav aria-label="breadcrumb">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-pencil-square me-2"></i>Editar Serviço
+            </h1>
+            <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
+        </div>
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Editar</li>
+                <li class="breadcrumb-item"><a href="{{ route('provider.services.show', $service->code) }}">{{ $service->code }}</a></li>
+                <li class="breadcrumb-item active">Editar</li>
             </ol>
         </nav>
     </div>
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="card-actions">
-                        <a href="{{ route('provider.services.show', $service->code) }}" class="btn btn-outline-info" aria-label="Visualizar">
-                            <i class="bi bi-eye me-1" aria-hidden="true"></i>
-                            Visualizar
-                        </a>
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-outline-secondary" aria-label="Voltar à Lista">
-                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
-                            Voltar à Lista
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
                         <strong>Código do Serviço:</strong> {{ $service->code }}
@@ -316,7 +306,7 @@
                                                 @else
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="create">
                                                 @endif
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
+                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
                                                     <i class="bi bi-trash" aria-hidden="true"></i>
                                                     <span>Excluir</span>
                                                 </button>
@@ -384,8 +374,8 @@
                                             <div class="col-md-2">
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
-                                                    <i class="fas fa-minus-circle text-danger"></i>
+                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
+                                                    <i class="bi bi-trash"></i>
                                                     <span>Excluir</span>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
@@ -404,20 +394,16 @@
                             </div>
                         </div>
 
-                        <!-- Botões de Ação -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('provider.services.show', $service->code) }}" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i>
-                                        Cancelar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>
-                                        Atualizar Serviço
-                                    </button>
-                                </div>
+                        {{-- Botões de Ação (Footer) --}}
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Cancelar
+                                </a>
                             </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Salvar
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -474,8 +460,8 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2" aria-label="Excluir">
-                    <i class="fas fa-minus-circle text-danger"></i>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
+                    <i class="bi bi-trash"></i>
                     <span>Excluir</span>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">

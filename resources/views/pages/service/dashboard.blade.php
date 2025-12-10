@@ -5,28 +5,32 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-tools me-2"></i>Dashboard de Serviços
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.
-                </p>
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h1 class="h4 h3-md mb-1">
+                        <i class="bi bi-tools me-2"></i>
+                        <span class="d-none d-sm-inline">Dashboard de Serviços</span>
+                        <span class="d-sm-none">Serviços</span>
+                    </h1>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.services.index') }}">Serviços</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Dashboard
+                        </li>
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.services.index') }}">Serviços</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard
-                    </li>
-                </ol>
-            </nav>
+            <p class="text-muted mb-0 small">
+                Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.
+            </p>
         </div>
 
         @php
@@ -168,18 +172,19 @@
             <!-- Serviços Recentes -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Serviços Recentes
-                        </h6>
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-sm btn-outline-primary">
-                            Ver Todos
-                        </a>
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span class="d-none d-sm-inline">Serviços Recentes</span>
+                            <span class="d-sm-none">Recentes</span>
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         @if ($recent->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                            <!-- Desktop View -->
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Código</th>
@@ -218,15 +223,39 @@
                                     </tbody>
                                 </table>
                             </div>
-                        @else
-                            <div class="text-center py-5">
-                                <i class="bi bi-tools display-4 text-muted mb-3"></i>
-                                <h6 class="text-muted">Nenhum serviço encontrado</h6>
-                                <p class="text-muted mb-3">
-                                    Crie novos serviços para visualizar aqui.
-                                </p>
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="mobile-view">
+                            <div class="list-group list-group-flush">
+                                @foreach ($recent as $service)
+                                    <a href="{{ route('provider.services.show', $service->code) }}" class="list-group-item list-group-item-action py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-tools text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-1">{{ $service->code }}</div>
+                                                <div class="small text-muted mb-2">{{ $service->budget->customer->commonData->first_name ?? 'N/A' }}</div>
+                                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                                    <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }}">{{ $service->serviceStatus->name ?? 'N/A' }}</span>
+                                                    <span class="small text-muted">R$ {{ number_format($service->total, 2, ',', '.') }}</span>
+                                                    <span class="small text-muted">{{ $service->created_at->format('d/m/Y') }}</span>
+                                                </div>
+                                            </div>
+                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                    </a>
+                                @endforeach
                             </div>
-                        @endif
+                        </div>
+                    @else
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                            <br>
+                            Nenhum serviço recente encontrado.
+                            <br>
+                            <small>Crie novos serviços para visualizar aqui.</small>
+                        </div>
+                    @endif
                     </div>
                 </div>
             </div>

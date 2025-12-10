@@ -4,30 +4,41 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">
-                            <i class="fas fa-plus-circle me-2"></i>
-                            Criar Novo Serviço
-                        </h3>
-                        <div class="card-actions">
-                            <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-1"></i>
-                                Voltar à Lista
-                            </a>
-                        </div>
-                    </div>
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Novo Serviço
+                </h1>
+                <p class="text-muted mb-0">Preencha os dados para criar um novo serviço</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Novo</li>
+                </ol>
+            </nav>
+        </div>
 
-                    <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                         @if ($budget)
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <i class="bi bi-info-circle me-2"></i>
                                 <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
                                 {{ Str::limit($budget->description, 50) }}
                                 <a href="{{ route('provider.services.create') }}" class="btn btn-sm btn-outline-info ms-2">
-                                    <i class="fas fa-times"></i> Remover
+                                    <i class="bi bi-x"></i> Remover
                                 </a>
                             </div>
                         @endif
@@ -68,10 +79,25 @@
                                             id="category_id" name="category_id" required>
                                             <option value="">Selecione uma categoria</option>
                                             @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}"
-                                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                    {{ $category->name }}
-                                                </option>
+                                                @if ($category->children->isEmpty())
+                                                    <option value="{{ $category->id }}"
+                                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                        {{ $category->name }}
+                                                    </option>
+                                                @else
+                                                    <optgroup label="{{ $category->name }}">
+                                                        <option value="{{ $category->id }}"
+                                                            {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                            {{ $category->name }} (Geral)
+                                                        </option>
+                                                        @foreach ($category->children as $subcategory)
+                                                            <option value="{{ $subcategory->id }}"
+                                                                {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
+                                                                {{ $subcategory->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             @endforeach
                                         </select>
                                         @error('category_id')
@@ -172,13 +198,13 @@
                             <div class="row">
                                 <div class="col-12">
                                     <h5 class="mb-3">
-                                        <i class="fas fa-box me-2"></i>
+                                        <i class="bi bi-box-seam me-2"></i>
                                         Produtos/Serviços
                                     </h5>
 
                                     <div class="mb-3">
-                                        <button type="button" class="btn btn-success btn-sm" id="addItem">
-                                            <i class="fas fa-plus me-1"></i>
+                                        <button type="button" class="btn btn-success btn-sm" id="addItem" disabled>
+                                            <i class="bi bi-plus me-1"></i>
                                             Adicionar Item
                                         </button>
                                     </div>
@@ -186,27 +212,25 @@
                                     <div id="itemsContainer">
                                         <!-- Itens serão adicionados dinamicamente -->
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Botões de Ação -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
-                                            <i class="fas fa-times me-1"></i>
-                                            Cancelar
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save me-1"></i>
-                                            Salvar Serviço
-                                        </button>
+                                    <div id="emptyState" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                        <p class="mb-0 mt-2">Nenhum item adicionado</p>
+                                        <small>Clique em "Adicionar Item" para começar</small>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <div>
+                                    <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-left me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>Criar
+                                </button>
+                            </div>
                         </form>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -231,22 +255,23 @@
                     <div class="input-group">
                         <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement">-</button>
                         <input type="number" class="form-control quantity-input" name="items[__INDEX__][quantity]"
-                            value="1" min="1" step="1" inputmode="numeric" required>
+                            value="1" min="0" step="1" inputmode="numeric" required>
                         <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment">+</button>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Valor Unit.</label>
-                    <input type="text" class="form-control unit-value" name="items[__INDEX__][unit_value]"
-                        inputmode="numeric" required readonly>
+                    <input type="text" inputmode="numeric" class="form-control unit-value" name="items[__INDEX__][unit_value]" required readonly>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Total</label>
-                    <input type="text" class="form-control item-total" inputmode="numeric" readonly>
+                    <input type="text" inputmode="numeric" class="form-control item-total" name="items[__INDEX__][total]" readonly>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-item">
-                        <i class="fas fa-trash"></i>
+                    <input type="hidden" name="items[__INDEX__][action]" value="create">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0">
+                        <i class="bi bi-trash"></i>
+                        <span>Excluir</span>
                     </button>
                 </div>
             </div>
@@ -266,6 +291,7 @@
                 function addItem() {
                     const template = document.getElementById('itemTemplate');
                     const container = document.getElementById('itemsContainer');
+                    const emptyState = document.getElementById('emptyState');
                     const clone = template.content.cloneNode(true);
 
                     // Atualizar índices
@@ -276,6 +302,11 @@
 
                     container.appendChild(clone);
                     itemIndex++;
+
+                    // Ocultar empty state
+                    if (emptyState) {
+                        emptyState.style.display = 'none';
+                    }
 
                     // Adicionar listeners para cálculos
                     addItemListeners();
@@ -350,9 +381,14 @@
                             if (!confirm('Deseja excluir este item?')) {
                                 return;
                             }
-                            if (document.querySelectorAll('#itemsContainer .item-row').length > 1) {
-                                lastItem.remove();
-                                updateFormTotal();
+                            lastItem.remove();
+                            updateFormTotal();
+                            
+                            // Mostrar empty state se não houver mais itens
+                            const container = document.getElementById('itemsContainer');
+                            const emptyState = document.getElementById('emptyState');
+                            if (container && emptyState && container.children.length === 0) {
+                                emptyState.style.display = 'block';
                             }
                         });
                     }
@@ -408,13 +444,25 @@
                 // Calcular total quando desconto mudar
                 document.getElementById('discount').addEventListener('input', updateFormTotal);
 
+                // Habilitar/desabilitar botão Adicionar Item baseado no orçamento
+                const budgetSelect = document.getElementById('budget_id');
+                const addItemBtn = document.getElementById('addItem');
+                
+                budgetSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        addItemBtn.disabled = false;
+                    } else {
+                        addItemBtn.disabled = true;
+                    }
+                });
+
                 // Auto-seleção de orçamento se fornecido
                 @if ($budget)
                     document.getElementById('budget_id').value = '{{ $budget->id }}';
+                    addItemBtn.disabled = false;
                 @endif
 
-                // Adicionar primeiro item automaticamente
-                addItem();
+                // NÃO adicionar item automaticamente - deixar empty state visível
 
                 if (window.VanillaMask) {
                     new VanillaMask('due_date', 'date');

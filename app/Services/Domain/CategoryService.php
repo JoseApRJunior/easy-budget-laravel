@@ -208,6 +208,17 @@ class CategoryService extends AbstractBaseService
         return $this->repository->listWithGlobals( [ 'name' => 'asc' ] );
     }
 
+    public function getActiveWithChildren(): Collection
+    {
+        return Category::whereNull('parent_id')
+            ->where('is_active', true)
+            ->with(['children' => function($query) {
+                $query->where('is_active', true)->orderBy('name', 'asc');
+            }])
+            ->orderBy('name', 'asc')
+            ->get();
+    }
+
     public function findBySlug( string $slug ): ServiceResult
     {
         $entity = $this->repository->findBySlug( $slug );

@@ -429,6 +429,8 @@ class CustomerService extends AbstractBaseService
         try {
             // Adicionar tenant_id aos filtros para garantir isolamento
             $filters[ 'tenant_id' ] = $tenantId;
+            // Remover filtro deleted para não interferir
+            unset( $filters[ 'deleted' ] );
 
             $customers = $this->customerRepository->getPaginated( $filters );
 
@@ -440,6 +442,28 @@ class CustomerService extends AbstractBaseService
                 'filters'   => $filters
             ] );
             return $this->error( OperationStatus::ERROR, 'Erro ao obter clientes: ' . $e->getMessage(), null, $e );
+        }
+    }
+
+    /**
+     * Obtém clientes deletados com paginação
+     */
+    public function getDeletedCustomers( array $filters, int $tenantId ): ServiceResult
+    {
+        try {
+            $filters[ 'tenant_id' ] = $tenantId;
+            $filters[ 'deleted' ]   = 'only';
+
+            $customers = $this->customerRepository->getPaginated( $filters );
+
+            return $this->success( $customers, 'Clientes deletados obtidos com sucesso' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter clientes deletados', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId,
+                'filters'   => $filters
+            ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter clientes deletados: ' . $e->getMessage(), null, $e );
         }
     }
 
