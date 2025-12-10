@@ -125,129 +125,39 @@
                     </div>
                     <div class="card-body p-0">
 
-                        <!-- Versão Mobile: Cards -->
+                        <!-- Mobile View -->
                         <div class="mobile-view">
-                            <div class="p-3">
-                                @php($tenantId = auth()->user()->tenant_id ?? null)
-                                @php($isAdminMobile = false)
-                                @role('admin')
-                                    @php($isAdminMobile = true)
-                                @endrole
-                                @forelse( $categories as $category )
-                                    @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
-                                    <div class="modern-card {{ $isCustom ? 'personal' : 'system' }}">
-                                        <div class="card-header-mobile">
-                                            <div class="card-title-mobile">
-                                                <i class="bi bi-tag-fill"></i>
-                                                @if ($category->deleted_at)
-                                                    <span class="badge bg-danger me-2">Deletada</span>
-                                                @endif
-                                                {{ $category->parent ? $category->parent->name : $category->name }}
-                                            </div>
-                                            @if ($category->parent)
-                                                <div class="card-subtitle-mobile">
-                                                    Subcategoria: {{ $category->name }}
+                            <div class="list-group list-group-flush">
+                                @forelse($categories as $category)
+                                    <a href="{{ route('categories.show', $category->slug) }}"
+                                        class="list-group-item list-group-item-action py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-tag-fill text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-2">{{ $category->parent ? $category->parent->name : $category->name }}</div>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    @if ($category->is_active)
+                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
+                                                    @else
+                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                                                    @endif
                                                 </div>
-                                            @endif
-                                        </div>
-
-
-                                        <div class="card-body-mobile">
-                                            <div class="info-row">
-                                                <span class="info-label">Tipo</span>
-                                                <span class="info-value">
-                                                    <span
-                                                        class="modern-badge {{ $isCustom ? 'badge-personal' : 'badge-system' }}">
-                                                        {{ $isCustom ? 'Pessoal' : 'Sistema' }}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Status</span>
-                                                <span class="info-value">
-                                                    <span
-                                                        class="modern-badge {{ $category->is_active ? 'badge-active' : 'badge-inactive' }}">
-                                                        {{ $category->is_active ? 'Ativo' : 'Inativo' }}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Criado em</span>
-                                                <span
-                                                    class="info-value">{{ $category->created_at?->format('d/m/Y') ?? '—' }}</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="card-actions-mobile">
-                                            @if ($category->deleted_at)
-                                                {{-- Categoria deletada: apenas restaurar --}}
-                                                <form action="{{ route('categories.restore', $category->slug) }}"
-                                                    method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success" title="Restaurar"
-                                                        aria-label="Restaurar">
-                                                        <i class="bi bi-arrow-counterclockwise"></i> Restaurar
-                                                    </button>
-                                                </form>
-                                            @else
-                                                {{-- Categoria ativa: show, edit, delete --}}
-                                                <a href="{{ route('categories.show', $category->slug) }}"
-                                                    class="btn btn-info" title="Visualizar" aria-label="Visualizar">
-                                                    <i class="bi bi-eye-fill me-1"></i>Ver
-                                                </a>
-                                                @php($isGlobal = $category->isGlobal())
-                                                @php($hasChildren = $category->hasChildren())
-                                                @php($hasServices = $category->services()->exists())
-                                                @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                                                @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
-                                                @if ($isAdminMobile)
-                                                    <a href="{{ route('categories.edit', $category->slug) }}"
-                                                        class="btn btn-warning" title="Editar" aria-label="Editar">
-                                                        <i class="bi bi-pencil-fill me-1"></i>Editar
-                                                    </a>
-                                                    @if ($canDelete)
-                                                        <button type="button" class="btn btn-danger"
-                                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                            data-delete-url="{{ route('categories.destroy', $category->slug) }}"
-                                                            data-category-name="{{ $category->name }}" title="Excluir"
-                                                            aria-label="Excluir">
-                                                            <i class="bi bi-trash"></i> Excluir
-                                                        </button>
-                                                    @endif
-                                                @else
-                                                    @if (!$isGlobal)
-                                                        <a href="{{ route('categories.edit', $category->slug) }}"
-                                                            class="btn btn-warning" title="Editar" aria-label="Editar">
-                                                            <i class="bi bi-pencil-fill me-1"></i>Editar
-                                                        </a>
-                                                        @if ($canDelete)
-                                                            <button type="button" class="btn btn-danger"
-                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                                data-delete-url="{{ route('categories.destroy', $category->slug) }}"
-                                                                data-category-name="{{ $category->name }}"
-                                                                title="Excluir" aria-label="Excluir">
-                                                                <i class="bi bi-trash"></i> Excluir
-                                                            </button>
-                                                        @endif
-                                                    @endif
+                                                @if ($category->parent)
+                                                    <small class="text-muted">Subcategoria: {{ $category->name }}</small>
                                                 @endif
-                                            @endif
+                                            </div>
+                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
                                         </div>
-                                    </div>
+                                    </a>
                                 @empty
-                                    <div class="empty-state">
-                                        <div class="empty-state-icon">
-                                            <i class="bi bi-inbox"></i>
-                                        </div>
-                                        <div class="empty-state-title">Nenhuma categoria encontrada</div>
-                                        <div class="empty-state-text">
-                                            @php($hasActiveFilters = collect($filters)->filter(fn($v) => filled($v))->isNotEmpty())
-                                            @if ($hasActiveFilters)
-                                                Tente ajustar os filtros ou limpar a busca
-                                            @else
-                                                Use os filtros acima para buscar categorias
-                                            @endif
-                                        </div>
+                                    <div class="p-4 text-center text-muted">
+                                        <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                        <br>
+                                        @if (($filters['deleted'] ?? '') === 'only')
+                                            Nenhuma categoria deletada encontrada.
+                                        @else
+                                            Nenhuma categoria encontrada.
+                                        @endif
                                     </div>
                                 @endforelse
                             </div>

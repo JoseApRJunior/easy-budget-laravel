@@ -5,25 +5,27 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-people me-2"></i>Dashboard de Clientes
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral dos clientes do seu negócio.
-                </p>
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h1 class="h4 h3-md mb-1">
+                        <i class="bi bi-people me-2"></i>
+                        <span class="d-none d-sm-inline">Dashboard de Clientes</span>
+                        <span class="d-sm-none">Clientes</span>
+                    </h1>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Dashboard de Clientes
+                        </li>
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard de Clientes
-                    </li>
-                </ol>
-            </nav>
+            <p class="text-muted mb-0 small">Visão geral dos clientes do seu negócio</p>
         </div>
 
         @php
@@ -118,64 +120,101 @@
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-transparent border-0">
                         <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Clientes Recentes
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span class="d-none d-sm-inline">Clientes Recentes</span>
+                            <span class="d-sm-none">Recentes</span>
                         </h5>
-                        <a href="{{ route('provider.customers.index') }}" class="btn btn-sm btn-outline-primary">
-                            Ver todos
-                        </a>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Cliente</th>
-                                            <th>E-mail</th>
-                                            <th>Telefone</th>
-                                            <th>Cadastrado em</th>
-                                            <th class="text-end">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recent as $customer)
-                                            @php
-                                                $common = $customer->commonData ?? ($customer->common_data ?? null);
-                                                $contact = $customer->contact ?? null;
-
-                                                $name =
-                                                    $common?->company_name ??
-                                                    trim(
-                                                        ($common->first_name ?? '') . ' ' . ($common->last_name ?? ''),
-                                                    ) ?:
-                                                    'Cliente';
-
-                                                $email = $contact->email_personal ?? ($contact->email_business ?? null);
-
-                                                $phone = $contact->phone_personal ?? ($contact->phone_business ?? null);
-                                            @endphp
+                            <!-- Desktop View -->
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
+                                        <thead>
                                             <tr>
-                                                <td>{{ $name }}</td>
-                                                <td>{{ $email ?? '—' }}</td>
-                                                <td>{{ $phone ?? '—' }}</td>
-                                                <td>{{ optional($customer->created_at)->format('d/m/Y') }}</td>
-                                                <td class="text-end">
-                                                    <a href="{{ route('provider.customers.show', $customer) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </td>
+                                                <th>Cliente</th>
+                                                <th>E-mail</th>
+                                                <th>Telefone</th>
+                                                <th>Cadastrado em</th>
+                                                <th class="text-center">Ações</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($recent as $customer)
+                                                @php
+                                                    $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                                    $contact = $customer->contact ?? null;
+                                                    $name =
+                                                        $common?->company_name ??
+                                                        trim(
+                                                            ($common->first_name ?? '') .
+                                                                ' ' .
+                                                                ($common->last_name ?? ''),
+                                                        ) ?:
+                                                        'Cliente';
+                                                    $email =
+                                                        $contact->email_personal ?? ($contact->email_business ?? null);
+                                                    $phone =
+                                                        $contact->phone_personal ?? ($contact->phone_business ?? null);
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="bi bi-person me-2 text-muted"></i>
+                                                            <span>{{ $name }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $email ?? '—' }}</td>
+                                                    <td>{{ $phone ?? '—' }}</td>
+                                                    <td>{{ optional($customer->created_at)->format('d/m/Y') }}</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('provider.customers.show', $customer) }}"
+                                                            class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Mobile View -->
+                            <div class="mobile-view">
+                                <div class="list-group">
+                                    @foreach ($recent as $customer)
+                                        @php
+                                            $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                            $name =
+                                                $common?->company_name ??
+                                                trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?:
+                                                'Cliente';
+                                        @endphp
+                                        <a href="{{ route('provider.customers.show', $customer) }}"
+                                            class="list-group-item list-group-item-action py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-person text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $name }}</div>
+                                                    <small
+                                                        class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</small>
+                                                </div>
+                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         @else
-                            <p class="text-muted mb-0">
-                                Nenhum cliente recente encontrado. Cadastre novos clientes para visualizar aqui.
-                            </p>
+                            <div class="p-4">
+                                <p class="text-muted mb-0">
+                                    Nenhum cliente recente encontrado. Cadastre novos clientes para visualizar aqui.
+                                </p>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -220,8 +259,9 @@
                         <a href="{{ route('provider.customers.index') }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-people me-2"></i>Listar Clientes
                         </a>
-                        <a href="{{ route('provider.reports.customers') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Clientes
+                        <a href="{{ route('provider.customers.index', ['deleted' => 'only']) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-archive me-2"></i>Ver Deletados
                         </a>
                     </div>
                 </div>

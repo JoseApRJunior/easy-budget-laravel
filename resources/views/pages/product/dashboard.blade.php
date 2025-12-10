@@ -176,7 +176,7 @@
 
                             <!-- Mobile View -->
                             <div class="mobile-view">
-                                <div class="list-group list-group-flush">
+                                <div class="list-group ">
                                     @foreach ($recent as $product)
                                         <a href="{{ route('provider.products.show', $product->sku) }}"
                                             class="list-group-item list-group-item-action py-3">
