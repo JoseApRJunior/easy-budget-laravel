@@ -4,22 +4,25 @@
 
 @section( 'content' )
     <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h3 class="mb-2">
+                <i class="bi bi-calendar-check me-2"></i>
+                Detalhes do Agendamento #{{ $schedule->id }}
+            </h3>
+            <p class="text-muted mb-3">Informações completas do agendamento</p>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
+                    <li class="breadcrumb-item active">Detalhes</li>
+                </ol>
+            </nav>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="card-title">Detalhes do Agendamento #{{ $schedule->id }}</h3>
-                            <div class="btn-group">
-                                <a href="{{ route( 'provider.schedules.index' ) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-list"></i> Lista
-                                </a>
-                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-calendar-alt"></i> Calendário
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
@@ -118,31 +121,29 @@
                             </div>
                         </div>
 
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="btn-group">
-                                    @can( 'update', $schedule )
-                                        <a href="{{ route( 'schedules.edit', $schedule ) }}" class="btn btn-warning">
-                                            <i class="fas fa-edit"></i> Editar
-                                        </a>
-                                    @endcan
-
-                                    @can( 'delete', $schedule )
-                                        <form action="{{ route( 'schedules.destroy', $schedule ) }}" method="POST"
-                                            class="d-inline">
-                                            @csrf
-                                            @method( 'DELETE' )
-                                            <button type="submit" class="btn btn-danger"
-                                                onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
-                                                <i class="fas fa-trash"></i> Excluir
-                                            </button>
-                                        </form>
-                                    @endcan
-
-                                    <a href="{{ route( 'services.show', $schedule->service ) }}" class="btn btn-info">
-                                        <i class="fas fa-arrow-left"></i> Ver Serviço
+                        <!-- Footer -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{{ url()->previous() }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Voltar
+                            </a>
+                            <small class="text-muted d-none d-md-block">
+                                Criado em: {{ $schedule->created_at->format('d/m/Y H:i') }}
+                            </small>
+                            <div class="d-flex gap-2">
+                                @can( 'update', $schedule )
+                                    <a href="{{ route( 'schedules.edit', $schedule ) }}" class="btn btn-warning">
+                                        <i class="bi bi-pencil me-2"></i>Editar
                                     </a>
-                                </div>
+                                @endcan
+                                @can( 'delete', $schedule )
+                                    <form action="{{ route( 'schedules.destroy', $schedule ) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method( 'DELETE' )
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
+                                            <i class="bi bi-trash me-2"></i>Excluir
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </div>
                     </div>

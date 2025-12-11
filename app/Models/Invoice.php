@@ -4,11 +4,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
+use App\Models\PaymentMercadoPagoInvoice;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -189,9 +190,9 @@ class Invoice extends Model
     /**
      * Get the payments for the Invoice.
      */
-    public function payments()
+    public function paymentMercadoPagoInvoice()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany( PaymentMercadoPagoInvoice::class, 'invoice_id' );
     }
 
     /**
@@ -232,6 +233,14 @@ class Invoice extends Model
     public function getDescriptionAttribute(): ?string
     {
         return $this->status?->getDescription();
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'code';
     }
 
 }

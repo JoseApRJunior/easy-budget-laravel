@@ -13,6 +13,7 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.dashboard') }}">Faturas</a></li>
                     <li class="breadcrumb-item active">Listar</li>
                 </ol>
             </nav>
@@ -28,8 +29,7 @@
                     <div class="col-md-3">
                         <label for="search" class="form-label">Buscar</label>
                         <input type="text" class="form-control" name="search" id="search"
-                            value="{{ old('search', $filters['search'] ?? '') }}"
-                            placeholder="Código, cliente...">
+                            value="{{ old('search', $filters['search'] ?? '') }}" placeholder="Código, cliente...">
                     </div>
                     <div class="col-md-2">
                         <label for="status" class="form-label">Status</label>
@@ -38,7 +38,7 @@
                             @foreach ($statusOptions as $status)
                                 <option value="{{ $status->value }}"
                                     {{ old('status', $filters['status'] ?? '') == $status->value ? 'selected' : '' }}>
-                                    {{ $status->name }}
+                                    {{ $status->getDescription() }}
                                 </option>
                             @endforeach
                         </select>
@@ -126,7 +126,8 @@
                                         <td><strong>{{ $invoice->code }}</strong></td>
                                         <td>{{ $invoice->customer->name ?? 'N/A' }}</td>
                                         <td>{{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}</td>
-                                        <td><strong>R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</strong></td>
+                                        <td><strong>R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</strong>
+                                        </td>
                                         <td>
                                             @php
                                                 $badgeClass = match ($invoice->status) {
@@ -138,16 +139,18 @@
                                                 };
                                             @endphp
                                             <span class="badge {{ $badgeClass }}">
-                                                {{ $invoice->status->name ?? ucfirst($invoice->status) }}
+                                                {{ $invoice->status->getDescription() ?? ucfirst($invoice->status) }}
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <div class="action-btn-group">
-                                                <a href="{{ route('provider.invoices.show', $invoice->code) }}" class="action-btn action-btn-view" title="Visualizar">
+                                                <a href="{{ route('provider.invoices.show', $invoice->code) }}"
+                                                    class="action-btn action-btn-view" title="Visualizar">
                                                     <i class="bi bi-eye-fill"></i>
                                                 </a>
                                                 @if ($invoice->status === 'pending')
-                                                    <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="action-btn action-btn-edit" title="Editar">
+                                                    <a href="{{ route('provider.invoices.edit', $invoice->code) }}"
+                                                        class="action-btn action-btn-edit" title="Editar">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
                                                 @endif
@@ -171,7 +174,8 @@
                 <div class="mobile-view">
                     <div class="list-group">
                         @forelse($invoices as $invoice)
-                            <a href="{{ route('provider.invoices.show', $invoice->code) }}" class="list-group-item list-group-item-action py-3">
+                            <a href="{{ route('provider.invoices.show', $invoice->code) }}"
+                                class="list-group-item list-group-item-action py-3">
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-receipt text-muted me-2 mt-1"></i>
                                     <div class="flex-grow-1">
@@ -187,7 +191,7 @@
                                                 };
                                             @endphp
                                             <span class="badge {{ $badgeClass }}">
-                                                {{ $invoice->status->name ?? ucfirst($invoice->status) }}
+                                                {{ $invoice->status->getDescription() ?? ucfirst($invoice->status) }}
                                             </span>
                                         </div>
                                         <div class="small text-muted">
@@ -208,7 +212,10 @@
                 </div>
             </div>
             @if (method_exists($invoices, 'hasPages') && $invoices->hasPages())
-                @include('partials.components.paginator', ['p' => $invoices->appends(request()->query()), 'show_info' => true])
+                @include('partials.components.paginator', [
+                    'p' => $invoices->appends(request()->query()),
+                    'show_info' => true,
+                ])
             @endif
         </div>
     </div>

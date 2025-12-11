@@ -54,6 +54,450 @@
 
 ---
 
+## 🔧 10. ENUM PATTERNS - Padrões para Uso de Enums
+
+> **📚 Documentação Completa de Padrões para Enums**
+>
+> Baseado na implementação de **InvoiceStatus** e outros Enums do sistema
+>
+> ✅ **OBRIGATÓRIO:** Todos os novos Enums devem seguir estes padrões
+>
+> 🎯 **Objetivo:** Consistência, segurança de tipos e manutenibilidade
+
+### 📋 Índice Rápido
+
+1. [Estrutura Básica de Enum](#-estrutura-básica-de-enum)
+2. [Métodos Úteis em Enums](#-métodos-úteis-em-enums)
+3. [Uso em Controllers](#-uso-em-controllers)
+4. [Uso em Views](#-uso-em-views)
+5. [Validação com Enums](#-validação-com-enums)
+6. [Case Sensitivity](#-case-sensitivity)
+7. [Exemplos Práticos](#-exemplos-práticos)
+
+---
+
+### 🏗️ Estrutura Básica de Enum
+
+```php
+<?php
+
+namespace App\Enums;
+
+enum InvoiceStatus: string
+{
+    case PENDING = 'pending';
+    case PAID = 'paid';
+    case CANCELLED = 'cancelled';
+    case OVERDUE = 'overdue';
+    case PARTIAL = 'partial';
+
+    // Métodos úteis serão adicionados aqui
+}
+```
+
+**Boas Práticas:**
+
+-  ✅ Usar **UPPER_CASE** para nomes de casos
+-  ✅ Usar **lowercase** para valores (backing values)
+-  ✅ Sempre definir tipo de backing (string, int)
+-  ✅ Manter consistência com valores no banco de dados
+-  ❌ Evitar espaços ou caracteres especiais nos valores
+
+---
+
+### 🔧 Métodos Úteis em Enums
+
+```php
+// Método para obter todos os valores
+public static function values(): array
+{
+    return array_column(self::cases(), 'value');
+}
+
+// Método para obter todas as opções para selects
+public static function options(): array
+{
+    return array_combine(self::values(), self::labels());
+}
+
+// Método para obter labels legíveis
+public static function labels(): array
+{
+    return [
+        self::PENDING->value => 'Pendente',
+        self::PAID->value => 'Pago',
+        self::CANCELLED->value => 'Cancelado',
+        self::OVERDUE->value => 'Vencido',
+        self::PARTIAL->value => 'Parcial',
+    ];
+}
+
+// Método para obter label de um valor específico
+public static function label(string $value): string
+{
+    return self::labels()[$value] ?? $value;
+}
+
+// Método para verificar se um valor é válido
+public static function isValid(string $value): bool
+{
+    return in_array($value, self::values());
+}
+
+// Método para obter cor associada ao status
+public static function color(string $value): string
+{
+    $colors = [
+        self::PENDING->value => 'warning',
+        self::PAID->value => 'success',
+        self::CANCELLED->value => 'danger',
+        self::OVERDUE->value => 'danger',
+        self::PARTIAL->value => 'info',
+    ];
+
+    return $colors[$value] ?? 'secondary';
+}
+
+// Método para obter ícone associado ao status
+public static function icon(string $value): string
+{
+    $icons = [
+        self::PENDING->value => 'bi-hourglass-split',
+        self::PAID->value => 'bi-check-circle',
+        self::CANCELLED->value => 'bi-x-circle',
+        self::OVERDUE->value => 'bi-exclamation-triangle',
+        self::PARTIAL->value => 'bi-cash-coin',
+    ];
+
+    return $icons[$value] ?? 'bi-question-circle';
+}
+```
+
+---
+
+### 🎯 Uso em Controllers
+
+```php
+// No controller - Exemplo de uso seguro com Enums
+
+public function updateStatus(Invoice $invoice, Request $request)
+{
+    $validated = $request->validate([
+        'status' => ['required', 'string', Rule::in(InvoiceStatus::values())],
+    ]);
+
+    $status = InvoiceStatus::from($validated['status']);
+
+    $invoice->update(['status' => $status]);
+
+    return redirect()->back()->with('success', 'Status atualizado com sucesso!');
+}
+
+// Exemplo com ServiceResult
+public function getInvoicesByStatus(string $status): ServiceResult
+{
+    if (!InvoiceStatus::isValid($status)) {
+        return $this->error('Status inválido', 400);
+    }
+
+    $invoices = Invoice::where('status', $status)
+        ->where('tenant_id', tenant('id'))
+        ->get();
+
+    return $this->success($invoices);
+}
+```
+
+---
+
+### 👁️ Uso em Views
+
+```blade
+{{-- Exemplo seguro de uso de Enums em views --}}
+
+{{-- Verificar se status existe antes de usar --}}
+@if($invoice->status)
+    <span class="badge bg-{{ \App\Enums\InvoiceStatus::color($invoice->status) }}">
+        <i class="{{ \App\Enums\InvoiceStatus::icon($invoice->status) }} me-1"></i>
+        {{ \App\Enums\InvoiceStatus::label($invoice->status) }}
+    </span>
+@else
+    <span class="badge bg-secondary">Sem status</span>
+@endif
+
+{{-- Select com opções do Enum --}}
+<select name="status" class="form-control">
+    @foreach(\App\Enums\InvoiceStatus::options() as $value => $label)
+        <option value="{{ $value }}" {{ $invoice->status === $value ? 'selected' : '' }}>
+            {{ $label }}
+        </option>
+    @endforeach
+</select>
+
+{{-- Uso em tabelas com verificação --}}
+@foreach($invoices as $invoice)
+    <tr>
+        <td>{{ $invoice->code }}</td>
+        <td>
+            @if($invoice->status)
+                <span class="badge bg-{{ \App\Enums\InvoiceStatus::color($invoice->status) }}">
+                    {{ \App\Enums\InvoiceStatus::label($invoice->status) }}
+                </span>
+            @else
+                <span class="badge bg-secondary">Sem status</span>
+            @endif
+        </td>
+    </tr>
+@endforeach
+```
+
+---
+
+### 🛡️ Validação com Enums
+
+```php
+// Em Form Requests
+public function rules()
+{
+    return [
+        'status' => ['required', 'string', Rule::in(InvoiceStatus::values())],
+    ];
+}
+
+// Em controllers
+$request->validate([
+    'status' => ['required', 'string', Rule::in(InvoiceStatus::values())],
+]);
+
+// Validação manual
+if (!InvoiceStatus::isValid($request->status)) {
+    return back()->withErrors(['status' => 'Status inválido']);
+}
+```
+
+---
+
+### 🔤 Case Sensitivity
+
+> **⚠️ IMPORTANTE:** PHP Enums são **case-sensitive** para os valores (backing values)
+
+```php
+// ❌ Isso causará erro:
+InvoiceStatus::from('PENDING'); // Erro! Valor deve ser 'pending'
+
+// ✅ Correto:
+InvoiceStatus::from('pending'); // OK
+
+// ✅ Melhor prática: Sempre usar o Enum diretamente
+$status = InvoiceStatus::PENDING; // Melhor abordagem
+$value = $status->value; // 'pending'
+
+// ✅ Comparação segura:
+if ($invoice->status === InvoiceStatus::PENDING->value) {
+    // Faz algo
+}
+
+// ✅ Verificação de igualdade:
+if (InvoiceStatus::isValid($someValue)) {
+    $status = InvoiceStatus::from($someValue);
+}
+```
+
+**Boas Práticas para Case Sensitivity:**
+
+1. ✅ **Sempre usar o Enum diretamente** quando possível
+2. ✅ **Validar valores de entrada** antes de converter para Enum
+3. ✅ **Usar métodos helper** como `isValid()` para verificar valores
+4. ✅ **Manter consistência** entre valores no banco e no Enum
+5. ❌ **Nunca assumir** que valores de entrada são válidos
+6. ❌ **Evitar comparações diretas** de strings sem validação
+
+---
+
+### 📋 Exemplos Práticos
+
+#### Exemplo 1: Filtro por Status
+
+```blade
+{{-- Filtro seguro por status --}}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtrar por Status</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ route('provider.invoices.index') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select name="status" class="form-control">
+                        <option value="">Todos os status</option>
+                        @foreach(\App\Enums\InvoiceStatus::options() as $value => $label)
+                            <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+```
+
+#### Exemplo 2: Badge de Status com Tooltip
+
+```blade
+@if($invoice->status)
+    <span class="badge bg-{{ \App\Enums\InvoiceStatus::color($invoice->status) }}"
+          title="{{ \App\Enums\InvoiceStatus::label($invoice->status) }}">
+        <i class="{{ \App\Enums\InvoiceStatus::icon($invoice->status) }} me-1"></i>
+        {{ \App\Enums\InvoiceStatus::label($invoice->status) }}
+    </span>
+@else
+    <span class="badge bg-secondary" title="Sem status definido">
+        <i class="bi-question-circle me-1"></i>
+        Sem status
+    </span>
+@endif
+```
+
+#### Exemplo 3: Tabela com Status Coloridos
+
+```blade
+<table class="table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($invoices as $invoice)
+            <tr>
+                <td>{{ $invoice->code }}</td>
+                <td>{{ $invoice->customer->name }}</td>
+                <td>{{ format_currency($invoice->total) }}</td>
+                <td>
+                    @if($invoice->status)
+                        <span class="badge bg-{{ \App\Enums\InvoiceStatus::color($invoice->status) }}">
+                            {{ \App\Enums\InvoiceStatus::label($invoice->status) }}
+                        </span>
+                    @else
+                        <span class="badge bg-secondary">Sem status</span>
+                    @endif
+                </td>
+                <td>
+                    <a href="{{ route('provider.invoices.show', $invoice->code) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                    <br>
+                    Nenhuma fatura encontrada.
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+```
+
+---
+
+### ⚠️ Erros Comuns e Soluções
+
+#### Erro 1: Valor vazio para Enum
+
+```php
+// ❌ Causa erro:
+$status = InvoiceStatus::from(''); // ValueError: "" is not a valid backing value
+
+// ✅ Solução:
+if (!empty($value) && InvoiceStatus::isValid($value)) {
+    $status = InvoiceStatus::from($value);
+}
+```
+
+#### Erro 2: Case sensitivity
+
+```php
+// ❌ Causa erro:
+$status = InvoiceStatus::from('PENDING'); // Erro! Deve ser 'pending'
+
+// ✅ Solução:
+$status = InvoiceStatus::from(strtolower($input)); // Se necessário converter
+// Ou melhor:
+$status = InvoiceStatus::PENDING; // Usar o Enum diretamente
+```
+
+#### Erro 3: Valor não válido
+
+```php
+// ❌ Causa erro:
+$status = InvoiceStatus::from('invalid_status');
+
+// ✅ Solução:
+if (InvoiceStatus::isValid($value)) {
+    $status = InvoiceStatus::from($value);
+} else {
+    // Tratar erro ou usar valor padrão
+    $status = InvoiceStatus::PENDING;
+}
+```
+
+---
+
+### 🎯 Checklist para Uso de Enums
+
+-  [ ] Definir Enum com backing type adequado (string/int)
+-  [ ] Implementar métodos helper (values, options, labels, etc.)
+-  [ ] Validar entradas de usuário antes de converter para Enum
+-  [ ] Usar Enum diretamente sempre que possível
+-  [ ] Implementar verificações de null/empty antes de usar
+-  [ ] Documentar todos os casos de uso do Enum
+-  [ ] Testar todos os valores do Enum
+-  [ ] Manter consistência entre banco de dados e Enum
+
+---
+
+### 📚 Referência Rápida
+
+```php
+// Obter todos os valores
+InvoiceStatus::values();
+
+// Obter opções para select
+InvoiceStatus::options();
+
+// Obter label legível
+InvoiceStatus::label('pending'); // "Pendente"
+
+// Verificar se valor é válido
+InvoiceStatus::isValid('pending'); // true
+
+// Obter cor para badge
+InvoiceStatus::color('pending'); // "warning"
+
+// Obter ícone
+InvoiceStatus::icon('pending'); // "bi-hourglass-split"
+
+// Usar Enum diretamente (melhor prática)
+$status = InvoiceStatus::PENDING;
+$value = $status->value; // "pending"
+```
+
+---
+
 ## 📊 1. DASHBOARD Pattern
 
 ### Cabeçalho (Responsivo)

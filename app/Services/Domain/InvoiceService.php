@@ -138,7 +138,6 @@ class InvoiceService extends AbstractBaseService
                     'customer',
                     'service',
                     'invoiceItems.product',
-                    'invoiceStatus'
                 ] ), 'Fatura criada com sucesso' );
 
             } );
@@ -330,7 +329,6 @@ class InvoiceService extends AbstractBaseService
 
                 return $this->success( $invoice->fresh( [
                     'invoiceItems.product',
-                    'invoiceStatus',
                     'customer',
                     'service'
                 ] ), 'Fatura atualizada' );

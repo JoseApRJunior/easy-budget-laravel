@@ -4,15 +4,32 @@
 
 @section( 'content' )
     <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h3 class="mb-2">
+                <i class="bi bi-calendar-check me-2"></i>
+                Agendamentos
+            </h3>
+            <p class="text-muted mb-3">Gerencie seus agendamentos de serviços</p>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Agendamentos</li>
+                </ol>
+            </nav>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="card-title">Agendamentos</h3>
-                            <div class="btn-group">
-                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-calendar-alt"></i> Calendário
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-8">
+                                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Agendamentos</h5>
+                            </div>
+                            <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-calendar me-1"></i> Calendário
                                 </a>
                             </div>
                         </div>
@@ -38,8 +55,9 @@
                             </div>
                         </form>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
+                        <!-- Desktop View -->
+                        <div class="table-responsive d-none d-md-block">
+                            <table class="table modern-table mb-0">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -75,8 +93,8 @@
                                             <td>
                                                 <div class="btn-group">
                                                     <a href="{{ route( 'provider.schedules.show', $schedule->id ) }}"
-                                                        class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i>
+                                                        class="action-btn-view">
+                                                        <i class="bi bi-eye"></i>
                                                     </a>
                                                 </div>
                                             </td>
@@ -88,6 +106,36 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="mobile-view d-md-none">
+                            @forelse( $schedules as $schedule )
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ $schedule->service->description ?? $schedule->service->code }}</h6>
+                                            <small class="text-muted">{{ $schedule->service->customer->commonData->first_name ?? $schedule->service->customer->name ?? 'N/A' }}</small>
+                                        </div>
+                                        <span class="badge bg-secondary">{{ ucfirst(str_replace('_',' ', $schedule->status ?? 'scheduled')) }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Início:</small> {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}<br>
+                                        <small class="text-muted">Fim:</small> {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('d/m/Y H:i') }}<br>
+                                        <small class="text-muted">Local:</small> {{ $schedule->location ?? 'Não definido' }}
+                                    </div>
+                                    <div class="action-btn-group">
+                                        <a href="{{ route( 'provider.schedules.show', $schedule->id ) }}" class="action-btn-view">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="list-group-item text-center text-muted py-5">
+                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">Nenhum agendamento encontrado</p>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
