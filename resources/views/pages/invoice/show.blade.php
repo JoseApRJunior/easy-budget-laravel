@@ -1,25 +1,24 @@
 @extends('layouts.app')
 
+@section('title', 'Detalhes da Fatura')
 @section('content')
     <div class="container-fluid py-1">
-        <!-- Header -->
+        {{-- Cabeçalho --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-receipt-cutoff me-2"></i>Fatura #{{ $invoice->code }}
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt me-2"></i>Detalhes da Fatura
+                </h1>
+                <p class="text-muted mb-0">Visualize todas as informações da fatura {{ $invoice->code }}</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">#{{ $invoice->code }}</li>
+                    <li class="breadcrumb-item active">{{ $invoice->code }}</li>
                 </ol>
             </nav>
         </div>
-
-        <!-- Ações -->
-        <div class="d-flex gap-2 mb-4">
-            <a href="{{ route('provider.invoices.index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Voltar à Lista
-            </a>
             <a href="{{ route('provider.invoices.print', $invoice->code) }}" class="btn btn-outline-secondary"
                 target="_blank">
                 <i class="bi bi-printer me-1"></i>Imprimir
@@ -142,8 +141,10 @@
                         <!-- Itens da Fatura -->
                         @if ($invoice->invoiceItems->count() > 0)
                             <h5 class="mb-3">Itens da Fatura</h5>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
+                            {{-- Desktop View --}}
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
                                     <thead>
                                         <tr>
                                             <th>Produto</th>
@@ -178,12 +179,40 @@
                                             </th>
                                         </tr>
                                     </tfoot>
-                                </table>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- Mobile View --}}
+                            <div class="mobile-view">
+                                <div class="list-group">
+                                    @foreach ($invoice->invoiceItems as $item)
+                                        <div class="list-group-item py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $item->product->name ?? 'N/A' }}</div>
+                                                    <div class="small text-muted mb-2">
+                                                        <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
+                                                        <span><strong>Unit:</strong> R$ {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="text-success fw-semibold">Total: R$ {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div class="list-group-item bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Subtotal:</strong>
+                                            <strong class="text-success">R$ {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         @else
-                            <div class="text-center py-1">
-                                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                                <p class="text-muted mt-2">Nenhum item encontrado nesta fatura</p>
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                <br>Nenhum item encontrado nesta fatura
                             </div>
                         @endif
                     </div>
@@ -285,6 +314,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        {{-- Botões de Ação (Footer) --}}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+            <small class="text-muted d-none d-md-block">
+                Última atualização: {{ $invoice->updated_at?->format('d/m/Y H:i') }}
+            </small>
+            <div class="d-flex gap-2">
+                @if ($invoice->status === 'pending')
+                    <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar
+                    </a>
+                @endif
+                <button type="button" class="btn btn-outline-danger" onclick="deleteInvoice()">
+                    <i class="bi bi-trash-fill me-2"></i>Excluir
+                </button>
             </div>
         </div>
     </div>

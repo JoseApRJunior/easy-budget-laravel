@@ -1,16 +1,21 @@
 @extends('layouts.app')
 
+@section('title', 'Editar Fatura')
 @section('content')
     <div class="container-fluid py-1">
+        {{-- Cabeçalho --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-pencil-square me-2"></i>Editar Fatura #{{ $invoice->code }}
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Fatura
+                </h1>
+                <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route('provider.invoices.show', $invoice->code) }}">#{{ $invoice->code }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.show', $invoice->code) }}">{{ $invoice->code }}</a></li>
                     <li class="breadcrumb-item active">Editar</li>
                 </ol>
             </nav>
@@ -193,18 +198,16 @@
                 </div>
             </div>
 
-            <!-- Ações -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-1"></i>Salvar Alterações
-                        </button>
-                        <a href="{{ route('provider.invoices.show', $invoice->code) }}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-1"></i>Cancelar
-                        </a>
-                    </div>
+            {{-- Botões de Ação (Footer) --}}
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Cancelar
+                    </a>
                 </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Salvar
+                </button>
             </div>
         </form>
     </div>

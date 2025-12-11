@@ -56,13 +56,13 @@ class InvoiceController extends Controller
 
         $invoices = $result->getData();
 
+        $customersResult = $this->customerService->listCustomers([]);
+
         return view('pages.invoice.index', [
             'invoices' => $invoices,
             'filters' => $filters,
             'statusOptions' => InvoiceStatus::cases(),
-            'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                : [],
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
         ]);
     }
 
@@ -120,11 +120,11 @@ class InvoiceController extends Controller
         $user = Auth::user();
         $products = Product::byTenant((int) ($user->tenant_id ?? 0))->active()->orderBy('name')->get();
 
+        $customersResult = $this->customerService->listCustomers([]);
+
         return view('pages.invoice.create', [
             'service' => null,
-            'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                : [],
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'services' => [],
             'products' => $products,
             'statusOptions' => InvoiceStatus::cases(),
@@ -182,11 +182,11 @@ class InvoiceController extends Controller
             'service',
         ]);
 
+        $customersResult = $this->customerService->listCustomers([]);
+
         return view('pages.invoice.edit', [
             'invoice' => $invoice,
-            'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                : [],
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'services' => [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
@@ -243,13 +243,13 @@ class InvoiceController extends Controller
             'services.serviceItems.product',
         ]);
 
+        $customersResult = $this->customerService->listCustomers([]);
+
         return view('pages.invoice.create-from-budget', [
             'budget' => $budget,
             'alreadyBilled' => 0,
             'remainingBalance' => 0,
-            'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                : [],
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -273,12 +273,12 @@ class InvoiceController extends Controller
 
             $invoiceData = $result->getData();
 
+            $customersResult = $this->customerService->listCustomers([]);
+
             return view('pages.invoice.create-partial-from-service', [
                 'invoiceData' => $invoiceData,
                 'serviceCode' => $serviceCode,
-                'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                    ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                    : [],
+                'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
                 'statusOptions' => InvoiceStatus::cases(),
             ]);
 
@@ -318,12 +318,12 @@ class InvoiceController extends Controller
                     ->with('error', 'Já existe uma fatura para este serviço.');
             }
 
+            $customersResult = $this->customerService->listCustomers([]);
+
             return view('pages.invoice.create-from-service', [
                 'invoiceData' => $invoiceData,
                 'serviceCode' => $serviceCode,
-                'customers' => $this->customerService->listCustomers($user->tenant_id)->isSuccess()
-                    ? $this->customerService->listCustomers($user->tenant_id)->getData()
-                    : [],
+                'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
                 'statusOptions' => InvoiceStatus::cases(),
             ]);
 

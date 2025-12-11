@@ -4,16 +4,19 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Alertas de Estoque</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Alertas</li>
-                </ol>
-            </nav>
-        </div>
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h3 class="mb-2">
+            <i class="bi bi-bell me-2"></i>
+            Alertas de Estoque
+        </h3>
+        <p class="text-muted mb-3">Produtos com estoque baixo ou alto que requerem atenção</p>
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Alertas</li>
+            </ol>
+        </nav>
     </div>
 
     <!-- Resumo dos Alertas -->
@@ -60,17 +63,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-warning">
-                    <h3 class="card-title">
-                        <i class="fas fa-exclamation-triangle"></i> Produtos com Estoque Baixo
-                    </h3>
-                    <div class="card-tools">
-                        <span class="badge badge-dark">{{ $lowStockProducts->total() }} produtos</span>
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Produtos com Estoque Baixo
+                            </h5>
+                        </div>
+                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                            <span class="badge bg-dark">{{ $lowStockProducts->total() }} produtos</span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($lowStockProducts->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
+                        <!-- Desktop View -->
+                        <div class="table-responsive d-none d-md-block">
+                            <table class="table modern-table mb-0">
                                 <thead>
                                     <tr>
                                         <th>SKU</th>
@@ -187,17 +195,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-info">
-                    <h3 class="card-title">
-                        <i class="fas fa-arrow-up"></i> Produtos com Estoque Alto
-                    </h3>
-                    <div class="card-tools">
-                        <span class="badge badge-dark">{{ $highStockProducts->total() }} produtos</span>
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-0">
+                                <i class="bi bi-arrow-up me-2"></i>Produtos com Estoque Alto
+                            </h5>
+                        </div>
+                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                            <span class="badge bg-dark">{{ $highStockProducts->total() }} produtos</span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($highStockProducts->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
+                        <!-- Desktop View -->
+                        <div class="table-responsive d-none d-md-block">
+                            <table class="table modern-table mb-0">
                                 <thead>
                                     <tr>
                                         <th>SKU</th>

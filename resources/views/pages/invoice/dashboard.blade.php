@@ -4,18 +4,24 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0"><i class="bi bi-receipt me-2"></i>Dashboard de Faturas</h1>
-                <p class="text-muted mb-0">Acompanhe suas faturas, recebimentos e pendências.</p>
+        {{-- Cabeçalho --}}
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h1 class="h4 h3-md mb-1">
+                        <i class="bi bi-receipt me-2"></i>
+                        <span class="d-none d-sm-inline">Dashboard de Faturas</span>
+                        <span class="d-sm-none">Faturas</span>
+                    </h1>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Dashboard de Faturas</li>
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">Dashboard</li>
-                </ol>
-            </nav>
+            <p class="text-muted mb-0 small">Acompanhe suas faturas, recebimentos e pendências.</p>
         </div>
 
         @php
@@ -145,15 +151,19 @@
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Faturas Recentes</h6>
-                        <a href="{{ route('provider.invoices.index') }}" class="btn btn-sm btn-outline-primary">Ver
-                            Todas</a>
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            <span class="d-none d-sm-inline">Faturas Recentes</span>
+                            <span class="d-sm-none">Recentes</span>
+                        </h5>
                     </div>
-                    <div class="card-body">
-                        @if ($recent->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                    <div class="card-body p-0">
+                        {{-- Desktop View --}}
+                        <div class="desktop-view">
+                            @if ($recent->isNotEmpty())
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Código</th>
@@ -181,14 +191,48 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-5"><i class="bi bi-receipt display-4 text-muted mb-3"></i>
-                                <h6 class="text-muted">Nenhuma fatura encontrada</h6>
-                                <p class="text-muted mb-0">Emita faturas para visualizar aqui.</p>
-                            </div>
-                        @endif
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-center py-5">
+                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                    <br>Nenhuma fatura encontrada.
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Mobile View --}}
+                        <div class="mobile-view">
+                            @if ($recent->isNotEmpty())
+                                <div class="list-group">
+                                    @foreach ($recent as $inv)
+                                        <a href="{{ route('provider.invoices.show', $inv->code) }}" class="list-group-item list-group-item-action py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-receipt text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $inv->code }}</div>
+                                                    <div class="d-flex gap-2 flex-wrap mb-2">
+                                                        <span class="badge" style="background: {{ $inv->invoiceStatus?->getColor() }}">
+                                                            {{ $inv->invoiceStatus?->getDescription() }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <div>Cliente: {{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</div>
+                                                        <div>Total: R$ {{ number_format($inv->total, 2, ',', '.') }}</div>
+                                                    </div>
+                                                </div>
+                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                    <br>Nenhuma fatura encontrada.
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

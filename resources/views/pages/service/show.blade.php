@@ -36,22 +36,20 @@
                 {{-- Informações Básicas do Serviço --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 py-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
+                        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                            <div class="flex-grow-1">
                                 <h5 class="mb-1">Serviço {{ $service->code }}</h5>
-                                <small class="text-muted">Criado em
-                                    {{ $service->created_at->format('d/m/Y H:i') }}</small>
+                                <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                             </div>
                             <div>
                                 @php($statusEnum = $service->serviceStatus)
                                 @if ($statusEnum)
-                                    <span class="badge fs-6 px-3 py-2"
-                                        style="background-color: {{ $statusEnum->getColor() }}">
+                                    <span class="badge px-3 py-2" style="background-color: {{ $statusEnum->getColor() }}">
                                         <i class="bi {{ $statusEnum->getIcon() }} me-1"></i>
                                         {{ $statusEnum->getDescription() }}
                                     </span>
                                 @else
-                                    <span class="badge bg-secondary fs-6 px-3 py-2">
+                                    <span class="badge bg-secondary px-3 py-2">
                                         <i class="bi bi-circle me-1"></i>
                                         Status não definido
                                     </span>
@@ -61,8 +59,8 @@
                     </div>
 
                     <div class="card-body">
-                        <div class="row mb-4">
-                            <div class="col-md-6">
+                        <div class="row g-4 mb-4">
+                            <div class="col-12 col-md-6">
                                 <h6 class="text-muted mb-3">
                                     <i class="bi bi-tag me-2"></i>
                                     Informações Gerais
@@ -87,7 +85,7 @@
                                     </div>
                                 @endif
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <h6 class="text-muted mb-3">
                                     <i class="bi bi-currency-dollar me-2"></i>
                                     Valores
@@ -132,46 +130,71 @@
                                 <span class="badge bg-primary ms-2">{{ $service->serviceItems->count() }}</span>
                             </h6>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Produto</th>
-                                            <th>Quantidade</th>
-                                            <th>Valor Unitário</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($service->serviceItems as $item)
+                        <div class="card-body p-0">
+                            {{-- Desktop View --}}
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
+                                        <thead>
                                             <tr>
-                                                <td>
-                                                    <div>
-                                                        <strong>{{ $item->product?->name ?? 'Produto não encontrado' }}</strong>
-                                                        @if ($item->product?->description)
-                                                            <br><small
-                                                                class="text-muted">{{ $item->product->description }}</small>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td>{{ $item->quantity }}</td>
-                                                <td>R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                                <td>
-                                                    <strong>R$ {{ number_format($item->total, 2, ',', '.') }}</strong>
-                                                </td>
+                                                <th>Produto</th>
+                                                <th>Quantidade</th>
+                                                <th>Valor Unitário</th>
+                                                <th>Total</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr class="table-light">
-                                            <th colspan="3">Total dos Itens:</th>
-                                            <th>R$
-                                                {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}
-                                            </th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($service->serviceItems as $item)
+                                                <tr>
+                                                    <td>
+                                                        <div>
+                                                            <strong>{{ $item->product?->name ?? 'Produto não encontrado' }}</strong>
+                                                            @if ($item->product?->description)
+                                                                <br><small class="text-muted">{{ $item->product->description }}</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $item->quantity }}</td>
+                                                    <td>R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
+                                                    <td><strong>R$ {{ number_format($item->total, 2, ',', '.') }}</strong></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-light">
+                                                <th colspan="3">Total dos Itens:</th>
+                                                <th>R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- Mobile View --}}
+                            <div class="mobile-view">
+                                <div class="list-group">
+                                    @foreach ($service->serviceItems as $item)
+                                        <div class="list-group-item py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
+                                                    <div class="small text-muted mb-2">
+                                                        <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
+                                                        <span><strong>Unit:</strong> R$ {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="text-success fw-semibold">Total: R$ {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div class="list-group-item bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total dos Itens:</strong>
+                                            <strong class="text-success">R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -331,7 +354,7 @@
                     <i class="bi bi-arrow-left me-2"></i>Voltar
                 </a>
             </div>
-            <small class="text-muted">
+            <small class="text-muted d-none d-md-block">
                 Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
             </small>
             <div class="d-flex gap-2">

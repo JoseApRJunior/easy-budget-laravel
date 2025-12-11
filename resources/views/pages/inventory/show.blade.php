@@ -4,12 +4,14 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0"><i class="bi bi-box-seam me-2"></i>Inventário do Produto</h1>
-                <p class="text-muted mb-0">Detalhes de estoque e movimentos.</p>
-            </div>
-            <nav aria-label="breadcrumb">
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h3 class="mb-2">
+                <i class="bi bi-box-seam me-2"></i>
+                Inventário do Produto
+            </h3>
+            <p class="text-muted mb-3">Detalhes de estoque e movimentos</p>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.products.dashboard') }}">Produtos</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.inventory.index') }}">Estoque</a></li>
@@ -90,14 +92,15 @@
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+            <div class="card-header bg-transparent border-0">
                 <h6 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Movimentos Recentes</h6>
             </div>
             <div class="card-body">
                 @if (!empty($movements) && $movements->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                    <!-- Desktop View -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table modern-table mb-0">
+                            <thead>
                                 <tr>
                                     <th>Data</th>
                                     <th>Tipo</th>
@@ -117,23 +120,42 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Mobile View -->
+                    <div class="mobile-view d-md-none">
+                        @foreach ($movements as $m)
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ $m->type }}</h6>
+                                        <small class="text-muted">{{ \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') }}</small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ $m->quantity }}</span>
+                                </div>
+                                <p class="mb-0 small">{{ $m->reason }}</p>
+                            </div>
+                        @endforeach
+                    </div>
                 @else
-                    <div class="text-center py-5"><i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
                         <h6 class="text-muted">Nenhum movimento encontrado</h6>
                     </div>
                 @endif
             </div>
         </div>
+
+        <!-- Footer -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{{ url()->previous() }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+            </a>
+            <small class="text-muted d-none d-md-block">
+                Última atualização: {{ $inventory->updated_at->format('d/m/Y H:i') }}
+            </small>
+            <a href="{{ route('provider.inventory.adjust', $product) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-2"></i>Ajustar Estoque
+            </a>
+        </div>
     </div>
 @endsection
-
-
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: .85em
-        }
-    </style>
-@endpush

@@ -34,13 +34,13 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="start_date">Data Inicial</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filters['start_date'] }}">
+                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filters['start_date'] ?? '' }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="end_date">Data Final</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $filters['end_date'] }}">
+                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $filters['end_date'] ?? '' }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -67,7 +67,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-12">
-                            <h4>{{ $products->count() }}</h4>
+                            <h4>{{ isset($products) ? $products->count() : 0 }}</h4>
                             <p>Produtos Analisados</p>
                         </div>
                     </div>
@@ -76,9 +76,9 @@
         </div>
 
         @php
-            $totalUsage = $products->sum('total_usage');
-            $totalValue = $products->sum('total_value');
-            $averageUsage = $products->avg('total_usage');
+            $totalUsage = isset($products) ? $products->sum('total_usage') : 0;
+            $totalValue = isset($products) ? $products->sum('total_value') : 0;
+            $averageUsage = isset($products) ? $products->avg('total_usage') : 0;
         @endphp
 
         <div class="col-lg-3 col-6">
@@ -134,7 +134,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($products->count() > 0)
+                    @if(isset($products) && $products->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped">
                                 <thead>

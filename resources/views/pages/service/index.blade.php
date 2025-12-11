@@ -4,20 +4,18 @@
 
 @section('content')
     <div class="container-fluid">
-        <!-- Page Header -->
+        {{-- Cabeçalho --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-0">
-                    <i class="bi bi-tools me-2"></i>
-                    Serviços
+                    <i class="bi bi-gear me-2"></i>Serviços
                 </h1>
                 <p class="text-muted">Lista de todos os serviços registrados no sistema</p>
             </div>
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
+                    <li class="breadcrumb-item active">Listar</li>
                 </ol>
             </nav>
         </div>
@@ -85,53 +83,56 @@
                             value="{{ request('date_to') }}">
                     </div>
 
-                    <div class="col-12 d-flex gap-2 flex-nowrap">
-                        <button type="submit" id="btnFilter" class="btn btn-primary" aria-label="Filtrar">
-                            <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                        </button>
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-secondary"
-                            aria-label="Limpar filtros">
-                            <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                        </a>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 flex-nowrap">
+                            <button type="submit" id="btnFilter" class="btn btn-primary">
+                                <i class="bi bi-search me-1"></i>Filtrar
+                            </button>
+                            <a href="{{ route('provider.services.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-x me-1"></i>Limpar
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Results Card -->
+        {{-- Card de Tabela --}}
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bi bi-list-ul me-1"></i> Lista de Serviços
-                    @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                        ({{ $services->total() }} registros)
-                    @else
-                        ({{ $services->count() }} registros)
-                    @endif
-                </h5>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportExcel()">
-                        <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel
-                    </button>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportPDF()">
-                        <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF
-                    </button>
-                    <a href="{{ route('provider.services.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus me-1" aria-hidden="true"></i>Novo Serviço
-                    </a>
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                        <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                            <span class="me-2">
+                                <i class="bi bi-list-ul me-1"></i>
+                                <span class="d-none d-sm-inline">Lista de Serviços</span>
+                                <span class="d-sm-none">Serviços</span>
+                            </span>
+                            <span class="text-muted" style="font-size: 0.875rem;">
+                                @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                    ({{ $services->total() }})
+                                @else
+                                    ({{ $services->count() }})
+                                @endif
+                            </span>
+                        </h5>
+                    </div>
+                    <div class="col-12 col-lg-4 mt-2 mt-lg-0">
+                        <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                            <a href="{{ route('provider.services.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus"></i>
+                                <span class="ms-1">Novo</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="card-body p-0">
-                @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator && $services->isEmpty())
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox text-muted mb-3" style="font-size: 2rem;" aria-hidden="true"></i>
-                        <h5 class="text-muted">Nenhum serviço encontrado</h5>
-                        <p class="text-muted">Tente ajustar os filtros ou cadastre um novo serviço.</p>
-                    </div>
-                @else
+                {{-- Desktop View --}}
+                <div class="desktop-view">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped mb-0">
+                        <table class="modern-table table mb-0">
                             <thead>
                                 <tr>
                                     <th>Código</th>
@@ -147,24 +148,17 @@
                             <tbody>
                                 @forelse($services as $service)
                                     <tr>
+                                        <td><strong>{{ $service->code }}</strong></td>
+                                        <td><span class="badge bg-info">{{ $service->budget?->code ?? 'N/A' }}</span></td>
                                         <td>
-                                            <strong>{{ $service->code }}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">{{ $service->budget?->code ?? 'N/A' }}</span>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong>{{ $service->budget?->customer?->commonData?->first_name ?? 'Cliente não informado' }}</strong>
-                                                <br>
-                                                <small class="text-muted">
-                                                    @if ($service->budget?->customer?->commonData?->cnpj)
-                                                        CNPJ: {{ $service->budget->customer->commonData->cnpj }}
-                                                    @elseif($service->budget?->customer?->commonData?->cpf)
-                                                        CPF: {{ $service->budget->customer->commonData->cpf }}
-                                                    @endif
-                                                </small>
-                                            </div>
+                                            <strong>{{ $service->budget?->customer?->commonData?->first_name ?? 'Cliente não informado' }}</strong>
+                                            <br><small class="text-muted">
+                                                @if ($service->budget?->customer?->commonData?->cnpj)
+                                                    CNPJ: {{ $service->budget->customer->commonData->cnpj }}
+                                                @elseif($service->budget?->customer?->commonData?->cpf)
+                                                    CPF: {{ $service->budget->customer->commonData->cpf }}
+                                                @endif
+                                            </small>
                                         </td>
                                         <td>
                                             @if ($service->category)
@@ -174,68 +168,78 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge"
-                                                style="background-color: {{ $service->serviceStatus->getColor() }}; color: white;">
+                                            <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}; color: white;">
                                                 {{ $service->serviceStatus->getDescription() }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <small>{{ $service->created_at->format('d/m/Y H:i') }}</small>
-                                        </td>
-                                        <td>
-                                            <strong>R$ {{ number_format($service->total, 2, ',', '.') }}</strong>
-                                        </td>
+                                        <td><small>{{ $service->created_at->format('d/m/Y H:i') }}</small></td>
+                                        <td><strong>R$ {{ number_format($service->total, 2, ',', '.') }}</strong></td>
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ route('provider.services.show', $service->code) }}"
-                                                    class="btn btn-info btn-sm" title="Visualizar"
-                                                    aria-label="Visualizar">
-                                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                            <div class="action-btn-group">
+                                                <a href="{{ route('provider.services.show', $service->code) }}" class="action-btn action-btn-view" title="Visualizar">
+                                                    <i class="bi bi-eye-fill"></i>
                                                 </a>
                                                 @if ($service->status->canEdit())
-                                                    <a href="{{ route('provider.services.edit', $service->code) }}"
-                                                        class="btn btn-warning btn-sm" title="Editar"
-                                                        aria-label="Editar">
-                                                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                    <a href="{{ route('provider.services.edit', $service->code) }}" class="action-btn action-btn-edit" title="Editar">
+                                                        <i class="bi bi-pencil-fill"></i>
                                                     </a>
                                                 @endif
-                                                <button type="button" class="btn btn-danger btn-sm" title="Excluir"
-                                                    aria-label="Excluir" onclick="confirmDelete('{{ $service->code }}')">
-                                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                                <button type="button" class="action-btn action-btn-delete" onclick="confirmDelete('{{ $service->code }}')"
+                                                    title="Excluir">
+                                                    <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-1">
-                                            <i class="bi bi-inbox text-muted mb-2" style="font-size: 2rem;"
-                                                aria-hidden="true"></i>
-                                            <br>
-                                            <span class="text-muted">Nenhum serviço encontrado</span>
+                                        <td colspan="8" class="text-center text-muted">
+                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                            <br>Nenhum serviço encontrado.
                                         </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                @endif
-            </div>
+                </div>
 
-            @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator && !$services->isEmpty())
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">
-                                Mostrando {{ $services->firstItem() }} a {{ $services->lastItem() }}
-                                de {{ $services->total() }} resultados
-                            </small>
-                        </div>
-                        <div>
-                            {{ $services->appends(request()->query())->links() }}
-                        </div>
+                {{-- Mobile View --}}
+                <div class="mobile-view">
+                    <div class="list-group">
+                        @forelse($services as $service)
+                            <a href="{{ route('provider.services.show', $service->code) }}" class="list-group-item list-group-item-action py-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-gear text-muted me-2 mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold mb-2">{{ $service->code }}</div>
+                                        <div class="d-flex gap-2 flex-wrap mb-2">
+                                            <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}">
+                                                {{ $service->serviceStatus->getDescription() }}
+                                            </span>
+                                            @if ($service->category)
+                                                <span class="badge bg-secondary">{{ $service->category->name }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="small text-muted">
+                                            <div>Cliente: {{ $service->budget?->customer?->commonData?->first_name ?? 'N/A' }}</div>
+                                            <div>Total: R$ {{ number_format($service->total, 2, ',', '.') }}</div>
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                </div>
+                            </a>
+                        @empty
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                <br>Nenhum serviço encontrado.
+                            </div>
+                        @endforelse
                     </div>
                 </div>
+            </div>
+            @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator && $services->hasPages())
+                @include('partials.components.paginator', ['p' => $services->appends(request()->query()), 'show_info' => true])
             @endif
         </div>
     </div>

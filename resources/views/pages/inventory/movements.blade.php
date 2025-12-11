@@ -4,16 +4,19 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Movimentações de Estoque</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                    <li class="breadcrumb-item active">Movimentações</li>
-                </ol>
-            </nav>
-        </div>
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h3 class="mb-2">
+            <i class="bi bi-arrow-left-right me-2"></i>
+            Movimentações de Estoque
+        </h3>
+        <p class="text-muted mb-3">Histórico completo de movimentações de estoque</p>
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
+                <li class="breadcrumb-item active">Movimentações</li>
+            </ol>
+        </nav>
     </div>
 
     <!-- Filtros -->
@@ -212,17 +215,25 @@
             </div>
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Movimentações de Estoque</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('provider.inventory.export-movements') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
-                            <i class="fas fa-file-excel"></i> Exportar
-                        </a>
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-ul me-2"></i>Movimentações de Estoque
+                                <span class="text-muted">({{ $movements->total() }} registros)</span>
+                            </h5>
+                        </div>
+                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                            <a href="{{ route('provider.inventory.export-movements') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Exportar
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($movements->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
+                    <!-- Desktop View -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table modern-table mb-0">
                             <thead>
                                 <tr>
                                     <th>Data/Hora</th>

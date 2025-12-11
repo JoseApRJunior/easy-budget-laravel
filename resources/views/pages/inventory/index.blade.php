@@ -5,15 +5,13 @@
 @section('content')
 <div class="container-fluid py-1">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-boxes me-2"></i>
-                Inventário de Produtos
-            </h1>
-            <p class="text-muted">Controle de estoque de produtos</p>
-        </div>
-        <nav aria-label="breadcrumb">
+    <div class="mb-4">
+        <h3 class="mb-2">
+            <i class="bi bi-boxes me-2"></i>
+            Inventário de Produtos
+        </h3>
+        <p class="text-muted mb-3">Controle de estoque de produtos</p>
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
@@ -81,18 +79,25 @@
 
             <!-- Tabela de Inventário -->
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-list-ul me-1"></i> Lista de Inventário
-                        ({{ $inventories->total() }} registros)
-                    </h5>
-                    <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-info btn-sm">
-                        <i class="bi bi-bar-chart me-1"></i>Dashboard
-                    </a>
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-ul me-1"></i> Lista de Inventário
+                                <span class="text-muted">({{ $inventories->total() }} registros)</span>
+                            </h5>
+                        </div>
+                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                            <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-info btn-sm">
+                                <i class="bi bi-bar-chart me-1"></i>Dashboard
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped mb-0">
+                    <!-- Desktop View -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table modern-table mb-0">
                             <thead>
                                 <tr>
                                     <th>Produto</th>
@@ -172,6 +177,63 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Mobile View -->
+                    <div class="mobile-view d-md-none">
+                        @forelse($inventories as $inventory)
+                            @php
+                                $product = $inventory->product;
+                                $currentQuantity = $inventory->quantity;
+                                $minQuantity = $inventory->min_quantity;
+                                $unitValue = $product->price;
+                                $totalValue = $currentQuantity * $unitValue;
+
+                                if ($currentQuantity <= 0) {
+                                    $statusLabel = 'Sem Estoque';
+                                    $statusClass = 'danger';
+                                } elseif ($currentQuantity <= $minQuantity) {
+                                    $statusLabel = 'Estoque Baixo';
+                                    $statusClass = 'warning';
+                                } else {
+                                    $statusLabel = 'Estoque OK';
+                                    $statusClass = 'success';
+                                }
+                            @endphp
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ $product->name }}</h6>
+                                        <small class="text-muted">SKU: {{ $product->sku }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ $statusClass }}">{{ $statusLabel }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Categoria:</small> {{ $product->category->name ?? 'Sem Categoria' }}<br>
+                                    <small class="text-muted">Quantidade:</small> <span class="badge bg-{{ $statusClass }}">{{ $currentQuantity }}</span> / Mín: {{ $minQuantity }}<br>
+                                    <small class="text-muted">Valor Total:</small> <strong>R$ {{ number_format($totalValue, 2, ',', '.') }}</strong>
+                                </div>
+                                <div class="action-btn-group">
+                                    <a href="{{ route('provider.products.show', $product->sku) }}" class="action-btn-view" title="Ver Produto">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('provider.inventory.entry', $product->sku) }}" class="btn btn-success btn-sm" title="Entrada">
+                                        <i class="bi bi-arrow-down"></i>
+                                    </a>
+                                    <a href="{{ route('provider.inventory.exit', $product->sku) }}" class="btn btn-warning btn-sm" title="Saída">
+                                        <i class="bi bi-arrow-up"></i>
+                                    </a>
+                                    <a href="{{ route('provider.inventory.adjust', $product->sku) }}" class="btn btn-secondary btn-sm" title="Ajustar">
+                                        <i class="bi bi-sliders"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-center text-muted py-5">
+                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                <p class="mb-0">Nenhum produto encontrado no inventário.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
                 @if($inventories->hasPages())
