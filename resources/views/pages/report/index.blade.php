@@ -25,7 +25,7 @@
         <div class="row">
             <div class="col-12">
                 <!-- Tipos de Relatório -->
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
                         <div class="row align-items-center">
                             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
@@ -36,18 +36,6 @@
                                         <span class="d-sm-none">Relatórios</span>
                                     </span>
                                 </h5>
-                            </div>
-                            <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm"
-                                        onclick="exportAllReports()">
-                                        <i class="bi bi-download me-1"></i>Exportar Todos
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm"
-                                        onclick="location.reload()">
-                                        <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -428,15 +416,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        function exportAllReports() {
-            if (confirm('Deseja exportar todos os relatórios? Isso pode levar alguns minutos.')) {
-                // Implementar lógica de exportação aqui
-                console.log('Iniciando exportação de relatórios...');
-                // Exemplo: window.location.href = '/provider/reports/export/all';
-            }
-        }
-    </script>
-@endpush

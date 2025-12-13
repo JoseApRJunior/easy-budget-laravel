@@ -440,7 +440,7 @@ class ReportController extends Controller
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ] )->deleteFileAfterSend( true );
 
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             Log::error( 'Erro ao gerar Excel de orçamentos', [ 'error' => $e->getMessage() ] );
 
             return response()->json( [ 'error' => 'Erro interno ao gerar Excel' ], 500 );

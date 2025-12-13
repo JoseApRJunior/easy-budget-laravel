@@ -237,7 +237,7 @@
                             'p' => $services->appends(request()->query()),
                             'show_info' => true,
                         ])
-                    @endif>
+                    @endif
                 </div>
         @endif
     </div>
