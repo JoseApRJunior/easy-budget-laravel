@@ -265,4 +265,52 @@ class InventoryService extends AbstractBaseService
         return $this->addStock( $productId, $tenantId, (int) $quantity, $reason );
     }
 
+    public function getFilteredInventory( array $filters = [] ): ServiceResult
+    {
+        try {
+            $query = $this->inventoryRepository->getQuery()
+                ->with( [ 'product' => function ( $query ) {
+                    $query->select( 'id', 'name', 'code' );
+                } ] )
+                ->where( 'tenant_id', auth()->user()->tenant_id );
+
+            // Aplicar filtros
+            if ( !empty( $filters[ 'product_name' ] ) ) {
+                $query->whereHas( 'product', function ( $q ) use ( $filters ) {
+                    $q->where( 'name', 'like', '%' . $filters[ 'product_name' ] . '%' );
+                } );
+            }
+
+            if ( !empty( $filters[ 'status' ] ) ) {
+                switch ( $filters[ 'status' ] ) {
+                    case 'in_stock':
+                        $query->where( 'quantity', '>', 0 );
+                        break;
+                    case 'low_stock':
+                        $query->whereRaw( 'quantity <= min_quantity' )->where( 'quantity', '>', 0 );
+                        break;
+                    case 'out_of_stock':
+                        $query->where( 'quantity', '=', 0 );
+                        break;
+                }
+            }
+
+            if ( isset( $filters[ 'min_quantity' ] ) && $filters[ 'min_quantity' ] !== '' ) {
+                $query->where( 'quantity', '>=', (int) $filters[ 'min_quantity' ] );
+            }
+
+            if ( isset( $filters[ 'max_quantity' ] ) && $filters[ 'max_quantity' ] !== '' ) {
+                $query->where( 'quantity', '<=', (int) $filters[ 'max_quantity' ] );
+            }
+
+            $inventory = $query->paginate( $filters[ 'per_page' ] ?? 10 );
+
+            return $this->success( $inventory, 'Dados de inventário recuperados com sucesso' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar dados de inventário', [ 'error' => $e->getMessage(), 'filters' => $filters ] );
+            return $this->error( 'Erro ao buscar dados de inventário: ' . $e->getMessage() );
+        }
+    }
+
 }

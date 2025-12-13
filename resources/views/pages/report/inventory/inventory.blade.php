@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Relatório de Orçamentos')
+@section('title', 'Relatório de Estoque')
 
 @section('content')
     <div class="container-fluid py-1">
@@ -8,16 +8,16 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-0">
-                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
-                    Relatório de Orçamentos
+                    <i class="bi bi-boxes me-2"></i>
+                    Relatório de Estoque
                 </h1>
-                <p class="text-muted">Visualize e analise todos os orçamentos gerados no sistema</p>
+                <p class="text-muted">Controle e análise de inventário de produtos</p>
             </div>
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
+                    <li class="breadcrumb-item active" aria-current="page">Estoque</li>
                 </ol>
             </nav>
         </div>
@@ -26,7 +26,7 @@
         <nav aria-label="breadcrumb" class="d-md-none mb-3">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Relatório de Orçamentos</li>
+                <li class="breadcrumb-item active" aria-current="page">Relatório de Estoque</li>
             </ol>
         </nav>
 
@@ -36,72 +36,53 @@
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
             </div>
             <div class="card-body">
-                <form id="filtersFormBudgets" method="GET" action="{{ route('provider.reports.budgets') }}">
+                <form id="filtersFormInventory" method="GET" action="{{ route('provider.inventory.report') }}">
                     <div class="row g-3">
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
-                                <label for="code">Nº Orçamento</label>
-                                <input type="text" class="form-control" id="code" name="code"
-                                    value="{{ request('code') ?? '' }}" placeholder="Digite o número">
+                                <label for="product_name">Nome do Produto</label>
+                                <input type="text" class="form-control" id="product_name" name="product_name"
+                                    value="{{ request('product_name') ?? '' }}" placeholder="Digite o nome">
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
-                                <label for="start_date">Data Inicial</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}">
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="end_date">Data Final</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}">
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="customer_name">Cliente</label>
-                                <input type="text" class="form-control" id="customer_name" name="customer_name"
-                                    value="{{ request('customer_name') ?? '' }}" placeholder="Nome, CPF ou CNPJ">
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="total_min">Valor Mínimo</label>
-                                <input type="text" class="form-control money-input" id="total_min" name="total_min"
-                                    value="{{ request('total_min') ? number_format(request('total_min'), 2, ',', '.') : '' }}"
-                                    placeholder="0,00" maxlength="20">
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="status">Status</label>
+                                <label for="status">Status do Estoque</label>
                                 <select class="form-control" id="status" name="status">
                                     <option value="">Todos os Status</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendente
-                                    </option>
-                                    <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>
-                                        Aprovado</option>
-                                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>
-                                        Rejeitado</option>
-                                    <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirado
-                                    </option>
+                                    <option value="in_stock" {{ request('status') == 'in_stock' ? 'selected' : '' }}>Em
+                                        Estoque</option>
+                                    <option value="low_stock" {{ request('status') == 'low_stock' ? 'selected' : '' }}>
+                                        Estoque Baixo</option>
+                                    <option value="out_of_stock"
+                                        {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>Sem Estoque</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="min_quantity">Quantidade Mínima</label>
+                                <input type="number" class="form-control" id="min_quantity" name="min_quantity"
+                                    value="{{ request('min_quantity') ?? '' }}" placeholder="0" min="0">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="max_quantity">Quantidade Máxima</label>
+                                <input type="number" class="form-control" id="max_quantity" name="max_quantity"
+                                    value="{{ request('max_quantity') ?? '' }}" placeholder="0" min="0">
                             </div>
                         </div>
 
                         <div class="col-12">
                             <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterBudgets" class="btn btn-primary" aria-label="Filtrar">
+                                <button type="submit" id="btnFilterInventory" class="btn btn-primary" aria-label="Filtrar">
                                     <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                                 </button>
-                                <a href="{{ route('provider.reports.budgets') }}" class="btn btn-secondary"
+                                <a href="{{ route('provider.inventory.report') }}" class="btn btn-secondary"
                                     aria-label="Limpar filtros">
                                     <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
                                 </a>
@@ -112,8 +93,8 @@
             </div>
         </div>
 
-        {{-- Empty State Inicial --}}
-        @if (!request()->hasAny(['code', 'start_date', 'end_date', 'customer_name', 'total_min', 'status']))
+        <!-- Empty State Inicial -->
+        @if (!request()->hasAny(['product_name', 'status', 'min_quantity', 'max_quantity']))
             <div class="card border-0 shadow-sm text-center py-4">
                 <div class="card-body">
                     <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
@@ -121,8 +102,8 @@
                     <p class="text-muted mb-3">
                         Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
                     </p>
-                    <a href="{{ route('provider.budgets.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Criar Primeiro Orçamento
+                    <a href="{{ route('provider.products.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Criar Primeiro Produto
                     </a>
                 </div>
             </div>
@@ -135,14 +116,14 @@
                             <h5 class="mb-0 d-flex align-items-center flex-wrap">
                                 <span class="me-2">
                                     <i class="bi bi-list-ul me-1"></i>
-                                    <span class="d-none d-sm-inline">Lista de Orçamentos</span>
-                                    <span class="d-sm-none">Orçamentos</span>
+                                    <span class="d-none d-sm-inline">Lista de Produtos em Estoque</span>
+                                    <span class="d-sm-none">Estoque</span>
                                 </span>
                                 <span class="text-muted" style="font-size: 0.875rem;">
-                                    @if (isset($budgets) && $budgets instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                        ({{ $budgets->total() }})
-                                    @elseif (isset($budgets))
-                                        ({{ $budgets->count() }})
+                                    @if (isset($inventory) && $inventory instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                        ({{ $inventory->total() }})
+                                    @elseif (isset($inventory))
+                                        ({{ $inventory->count() }})
                                     @endif
                                 </span>
                             </h5>
@@ -168,21 +149,32 @@
                     <!-- Mobile View -->
                     <div class="mobile-view">
                         <div class="list-group list-group-flush">
-                            @forelse($budgets ?? [] as $budget)
-                                <a href="{{ route('provider.budgets.show', $budget) }}"
+                            @forelse($inventory ?? [] as $item)
+                                <a href="{{ route('provider.products.show', $item->product->code ?? '#') }}"
                                     class="list-group-item list-group-item-action py-3">
                                     <div class="d-flex align-items-start">
-                                        <i class="bi bi-file-earmark-bar-graph text-muted me-3 mt-1"
-                                            style="font-size: 1.5rem;"></i>
+                                        <i class="bi bi-box-seam text-muted me-3 mt-1" style="font-size: 1.5rem;"></i>
                                         <div class="flex-grow-1">
-                                            <div class="fw-semibold mb-1">{{ $budget->code }}</div>
+                                            <div class="fw-semibold mb-1">
+                                                {{ $item->product->name ?? 'Produto não encontrado' }}</div>
                                             <p class="text-muted small mb-2">
-                                                {{ $budget->customer->name ?? 'Cliente não informado' }}</p>
+                                                {{ $item->product->code ?? 'Código não informado' }}</p>
                                             <small class="text-muted">
-                                                <span class="text-code">{{ $budget->created_at->format('d/m/Y') }}</span>
-                                                • R$ {{ number_format($budget->total, 2, ',', '.') }}
-                                                • {{ ucfirst($budget->status) }}
+                                                <span class="text-code">Quantidade: {{ $item->quantity }}</span>
+                                                • Mínimo: {{ $item->min_quantity }}
+                                                @if ($item->max_quantity)
+                                                    • Máximo: {{ $item->max_quantity }}
+                                                @endif
                                             </small>
+                                            <div class="mt-2">
+                                                @if ($item->quantity <= $item->min_quantity)
+                                                    <span class="badge bg-danger">Estoque Baixo</span>
+                                                @elseif($item->quantity == 0)
+                                                    <span class="badge bg-dark">Sem Estoque</span>
+                                                @else
+                                                    <span class="badge bg-success">Em Estoque</span>
+                                                @endif
+                                            </div>
                                         </div>
                                         <i class="bi bi-chevron-right text-muted ms-2"></i>
                                     </div>
@@ -191,10 +183,10 @@
                                 <div class="p-4 text-center text-muted">
                                     <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
                                     <br>
-                                    <strong>Nenhum orçamento encontrado</strong>
+                                    <strong>Nenhum produto encontrado</strong>
                                     <br>
-                                    <small>Ajuste os filtros ou <a href="{{ route('provider.budgets.create') }}">crie um
-                                            novo orçamento</a></small>
+                                    <small>Ajuste os filtros ou <a href="{{ route('provider.products.create') }}">cadastre
+                                            um novo produto</a></small>
                                 </div>
                             @endforelse
                         </div>
@@ -206,64 +198,59 @@
                             <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
-                                        <th width="50"><i class="bi bi-file-earmark-bar-graph"
-                                                aria-hidden="true"></i></th>
-                                        <th>Nº Orçamento</th>
-                                        <th>Cliente</th>
-                                        <th>Descrição</th>
-                                        <th width="100">Data Criação</th>
-                                        <th width="100">Vencimento</th>
-                                        <th width="120">Valor Total</th>
-                                        <th width="100">Status</th>
+                                        <th width="50"><i class="bi bi-box-seam" aria-hidden="true"></i></th>
+                                        <th>Produto</th>
+                                        <th>Código</th>
+                                        <th width="100">Quantidade</th>
+                                        <th width="100">Mínimo</th>
+                                        <th width="100">Máximo</th>
+                                        <th width="120">Status</th>
                                         <th width="150" class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($budgets ?? [] as $budget)
+                                    @forelse($inventory ?? [] as $item)
                                         <tr>
                                             <td>
                                                 <div class="item-icon">
-                                                    <i class="bi bi-file-earmark-bar-graph"></i>
+                                                    <i class="bi bi-box-seam"></i>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="item-name-cell">
-                                                    <span class="text-code">{{ $budget->code }}</span>
+                                                    {{ $item->product->name ?? 'Produto não encontrado' }}
                                                 </div>
                                             </td>
-                                            <td>{{ $budget->customer->name ?? 'Cliente não informado' }}</td>
+                                            <td><span class="text-code">{{ $item->product->code ?? 'N/A' }}</span></td>
                                             <td>
-                                                <div class="text-truncate" style="max-width: 200px;"
-                                                    title="{{ $budget->description }}">
-                                                    {{ $budget->description ?? 'Sem descrição' }}
-                                                </div>
+                                                <strong>{{ $item->quantity }}</strong>
                                             </td>
                                             <td>
                                                 <small class="text-muted">
-                                                    {{ $budget->created_at->format('d/m/Y') }}
+                                                    {{ $item->min_quantity }}
                                                 </small>
                                             </td>
                                             <td>
                                                 <small class="text-muted">
-                                                    {{ $budget->due_date ? $budget->due_date->format('d/m/Y') : '—' }}
+                                                    {{ $item->max_quantity ?? '—' }}
                                                 </small>
                                             </td>
                                             <td>
-                                                <strong>R$ {{ number_format($budget->total, 2, ',', '.') }}</strong>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="modern-badge {{ $budget->status == 'approved' ? 'badge-active' : ($budget->status == 'pending' ? 'badge-warning' : 'badge-inactive') }}">
-                                                    {{ ucfirst($budget->status) }}
-                                                </span>
+                                                @if ($item->quantity <= $item->min_quantity)
+                                                    <span class="modern-badge badge-warning">Estoque Baixo</span>
+                                                @elseif($item->quantity == 0)
+                                                    <span class="modern-badge badge-inactive">Sem Estoque</span>
+                                                @else
+                                                    <span class="modern-badge badge-active">Em Estoque</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="action-btn-group">
-                                                    <a href="{{ route('provider.budgets.show', $budget) }}"
+                                                    <a href="{{ route('provider.products.show', $item->product->code ?? '#') }}"
                                                         class="action-btn action-btn-view" title="Visualizar">
                                                         <i class="bi bi-eye-fill"></i>
                                                     </a>
-                                                    <a href="{{ route('provider.budgets.edit', $budget) }}"
+                                                    <a href="{{ route('provider.products.edit', $item->product->code ?? '#') }}"
                                                         class="action-btn action-btn-edit" title="Editar">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
@@ -272,14 +259,14 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center text-muted">
+                                            <td colspan="8" class="text-center text-muted">
                                                 <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
                                                 <br>
-                                                <strong>Nenhum orçamento encontrado</strong>
+                                                <strong>Nenhum produto encontrado</strong>
                                                 <br>
                                                 <small>Ajuste os filtros ou <a
-                                                        href="{{ route('provider.budgets.create') }}">crie um novo
-                                                        orçamento</a></small>
+                                                        href="{{ route('provider.products.create') }}">cadastre um novo
+                                                        produto</a></small>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -288,23 +275,23 @@
                         </div>
                     </div>
 
-                    @if ($budgets instanceof \Illuminate\Pagination\LengthAwarePaginator && $budgets->hasPages())
+                    @if ($inventory instanceof \Illuminate\Pagination\LengthAwarePaginator && $inventory->hasPages())
                         @include('partials.components.paginator', [
-                            'p' => $budgets->appends(request()->query()),
+                            'p' => $inventory->appends(request()->query()),
                             'show_info' => true,
                         ])
                     @endif>
                 </div>
+            </div>
         @endif
     </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
     <!-- Adicione a biblioteca SheetJS -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script src="{{ asset('assets/js/modules/table-paginator.js') }}"></script>
-    <script src="{{ asset('assets/js/budget.js') }}"></script>
-    <script src="{{ asset('assets/js/budget_report.js') }}"></script>
+    <script src="{{ asset('assets/js/inventory_report.js') }}"></script>
 
     <script>
         function updatePerPage(value) {
@@ -326,4 +313,4 @@
             });
         });
     </script>
-@endsection
+@endpush

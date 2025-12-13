@@ -8,6 +8,7 @@ use App\Enums\BudgetStatus;
 use App\Enums\OperationStatus;
 use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
+use App\Models\Budget as BudgetModel;
 use App\Models\User;
 use App\Repositories\BudgetRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -21,9 +22,9 @@ use InvalidArgumentException;
 
 class BudgetService extends AbstractBaseService
 {
-    public function __construct(BudgetRepository $budgetRepository)
+    public function __construct( BudgetRepository $budgetRepository )
     {
-        parent::__construct($budgetRepository);
+        parent::__construct( $budgetRepository );
     }
 
     /**
@@ -33,13 +34,13 @@ class BudgetService extends AbstractBaseService
      * @param array $filters Filtros a aplicar
      * @return LengthAwarePaginator
      */
-    public function getBudgetsForProvider(int $userId, array $filters = []): LengthAwarePaginator
+    public function getBudgetsForProvider( int $userId, array $filters = [] ): LengthAwarePaginator
     {
         // Busca o usuário para obter o tenant_id
-        $user = User::find($userId);
+        $user = User::find( $userId );
 
-        if (!$user || !$user->tenant_id) {
-            throw new InvalidArgumentException('Usuário ou tenant não encontrado.');
+        if ( !$user || !$user->tenant_id ) {
+            throw new InvalidArgumentException( 'Usuário ou tenant não encontrado.' );
         }
 
         // Note: Budgets are related to customers within the tenant, not directly to users
@@ -47,8 +48,8 @@ class BudgetService extends AbstractBaseService
         // Remove the incorrect user_id filter as budgets table doesn't have this column
 
         // Configura paginação padrão
-        $perPage = $filters['per_page'] ?? 10;
-        unset($filters['per_page']);
+        $perPage = $filters[ 'per_page' ] ?? 10;
+        unset( $filters[ 'per_page' ] );
 
         // Usa o repositório para buscar com filtros
         return $this->repository->getPaginatedBudgets(
@@ -71,50 +72,50 @@ class BudgetService extends AbstractBaseService
      * @param array $data Dados do orçamento
      * @return ServiceResult
      */
-    public function create(array $data): ServiceResult
+    public function create( array $data ): ServiceResult
     {
         $tenantId = $this->tenantId();
-        if (!$tenantId) {
-            return ServiceResult::error('Usuário não autenticado ou tenant não encontrado.');
+        if ( !$tenantId ) {
+            return ServiceResult::error( 'Usuário não autenticado ou tenant não encontrado.' );
         }
 
-        return $this->createBudget($data, $tenantId);
+        return $this->createBudget( $data, $tenantId );
     }
 
-    public function createBudget(array $data, int $tenantId): ServiceResult
+    public function createBudget( array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validações básicas
-            $this->validateBudgetData($data);
+            $this->validateBudgetData( $data );
 
             // Gera código único para o orçamento
-            $data['code']      = $this->generateUniqueBudgetCode($tenantId);
-            $data['tenant_id'] = $tenantId;
+            $data[ 'code' ]      = $this->generateUniqueBudgetCode( $tenantId );
+            $data[ 'tenant_id' ] = $tenantId;
 
             // Define status padrão se não fornecido
-            if (!isset($data['status'])) {
-                $data['status'] = BudgetStatus::DRAFT->value;
+            if ( !isset( $data[ 'status' ] ) ) {
+                $data[ 'status' ] = BudgetStatus::DRAFT->value;
             }
 
             // Valida status
-            if (!$this->isValidBudgetStatus($data['status'])) {
+            if ( !$this->isValidBudgetStatus( $data[ 'status' ] ) ) {
                 return ServiceResult::error(
-                    'Status de orçamento inválido: ' . $data['status']
+                    'Status de orçamento inválido: ' . $data[ 'status' ]
                 );
             }
 
             // Define valores padrão para campos obrigatórios
-            $data['discount'] = $data['discount'] ?? 0.00;
-            $data['total']    = $data['total'] ?? 0.00;
+            $data[ 'discount' ] = $data[ 'discount' ] ?? 0.00;
+            $data[ 'total' ]    = $data[ 'total' ] ?? 0.00;
 
             // Cria o orçamento
-            $budget = $this->repository->create($data);
+            $budget = $this->repository->create( $data );
 
-            return ServiceResult::success($budget, 'Orçamento criado com sucesso.');
-        } catch (InvalidArgumentException $e) {
-            return ServiceResult::invalidData($e->getMessage());
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao criar orçamento: ' . $e->getMessage());
+            return ServiceResult::success( $budget, 'Orçamento criado com sucesso.' );
+        } catch ( InvalidArgumentException $e ) {
+            return ServiceResult::invalidData( $e->getMessage() );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao criar orçamento: ' . $e->getMessage() );
         }
     }
 
@@ -126,43 +127,43 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function updateBudget(int $budgetId, array $data, int $tenantId): ServiceResult
+    public function updateBudget( int $budgetId, array $data, int $tenantId ): ServiceResult
     {
         try {
             // Validações básicas
-            $this->validateBudgetData($data, false);
+            $this->validateBudgetData( $data, false );
 
             // Busca o orçamento primeiro
-            $budget = $this->repository->find($budgetId);
+            $budget = $this->repository->find( $budgetId );
 
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Verifica se pertence ao tenant correto
-            if ($budget->tenant_id !== $tenantId) {
-                return ServiceResult::forbidden('Acesso negado a este orçamento.');
+            if ( $budget->tenant_id !== $tenantId ) {
+                return ServiceResult::forbidden( 'Acesso negado a este orçamento.' );
             }
 
             // Valida status se fornecido
-            if (isset($data['status']) && !$this->isValidBudgetStatus($data['status'])) {
+            if ( isset( $data[ 'status' ] ) && !$this->isValidBudgetStatus( $data[ 'status' ] ) ) {
                 return ServiceResult::error(
-                    'Status de orçamento inválido: ' . $data['status']
+                    'Status de orçamento inválido: ' . $data[ 'status' ]
                 );
             }
 
             // Atualiza o orçamento
-            $updatedBudget = $this->repository->update($budgetId, $data);
+            $updatedBudget = $this->repository->update( $budgetId, $data );
 
-            if (!$updatedBudget) {
-                return ServiceResult::error('Falha ao atualizar orçamento.');
+            if ( !$updatedBudget ) {
+                return ServiceResult::error( 'Falha ao atualizar orçamento.' );
             }
 
-            return ServiceResult::success($updatedBudget, 'Orçamento atualizado com sucesso.');
-        } catch (InvalidArgumentException $e) {
-            return ServiceResult::invalidData($e->getMessage());
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao atualizar orçamento: ' . $e->getMessage());
+            return ServiceResult::success( $updatedBudget, 'Orçamento atualizado com sucesso.' );
+        } catch ( InvalidArgumentException $e ) {
+            return ServiceResult::invalidData( $e->getMessage() );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao atualizar orçamento: ' . $e->getMessage() );
         }
     }
 
@@ -173,25 +174,25 @@ class BudgetService extends AbstractBaseService
      * @param string $status Novo status
      * @return ServiceResult
      */
-    public function changeStatusByCode(string $code, string $status): ServiceResult
+    public function changeStatusByCode( string $code, string $status ): ServiceResult
     {
         try {
             $tenantId = $this->tenantId();
-            if (!$tenantId) {
-                return ServiceResult::error('Usuário não autenticado ou tenant não encontrado.');
+            if ( !$tenantId ) {
+                return ServiceResult::error( 'Usuário não autenticado ou tenant não encontrado.' );
             }
 
             // Busca o orçamento por código
-            $budget = $this->repository->findByCode($code, $tenantId);
+            $budget = $this->repository->findByCode( $code, $tenantId );
 
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Usa o método changeStatus existente com comentário vazio
-            return $this->changeStatus($budget->id, $status, '', $tenantId);
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao alterar status: ' . $e->getMessage());
+            return $this->changeStatus( $budget->id, $status, '', $tenantId );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao alterar status: ' . $e->getMessage() );
         }
     }
 
@@ -204,54 +205,54 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function changeStatus(int $budgetId, string $status, string $comment, int $tenantId): ServiceResult
+    public function changeStatus( int $budgetId, string $status, string $comment, int $tenantId ): ServiceResult
     {
         try {
             // Valida status
-            if (!$this->isValidBudgetStatus($status)) {
-                return ServiceResult::error('Status de orçamento inválido: ' . $status);
+            if ( !$this->isValidBudgetStatus( $status ) ) {
+                return ServiceResult::error( 'Status de orçamento inválido: ' . $status );
             }
 
             // Busca o orçamento
-            $budget = $this->repository->find($budgetId);
+            $budget = $this->repository->find( $budgetId );
 
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Verifica se pertence ao tenant correto
-            if ($budget->tenant_id !== $tenantId) {
-                return ServiceResult::forbidden('Acesso negado a este orçamento.');
+            if ( $budget->tenant_id !== $tenantId ) {
+                return ServiceResult::forbidden( 'Acesso negado a este orçamento.' );
             }
 
             // Usa transação para atomicidade
-            $updatedBudget = DB::transaction(function () use ($budget, $budgetId, $status, $comment) {
+            $updatedBudget = DB::transaction( function () use ($budget, $budgetId, $status, $comment) {
                 $oldStatus = $budget->status->value;
-                
+
                 // Atualiza status e comentário
-                $updated = $this->repository->update($budgetId, [
+                $updated = $this->repository->update( $budgetId, [
                     'status'            => $status,
                     'status_comment'    => $comment,
                     'status_updated_at' => now(),
                     'status_updated_by' => $this->authUser()?->id
-                ]);
+                ] );
 
-                if (!$updated) {
-                    throw new \Exception('Falha ao alterar status do orçamento.');
+                if ( !$updated ) {
+                    throw new \Exception( 'Falha ao alterar status do orçamento.' );
                 }
 
                 // Recarrega o orçamento atualizado
-                $updatedBudget = $this->repository->find($budgetId);
-                
+                $updatedBudget = $this->repository->find( $budgetId );
+
                 // Disparar evento para notificação por email
-                event(new BudgetStatusChanged($updatedBudget, $oldStatus, $status, $comment));
+                event( new BudgetStatusChanged( $updatedBudget, $oldStatus, $status, $comment ) );
 
                 return $updatedBudget;
-            });
+            } );
 
-            return ServiceResult::success($updatedBudget, 'Status do orçamento alterado com sucesso.');
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao alterar status: ' . $e->getMessage());
+            return ServiceResult::success( $updatedBudget, 'Status do orçamento alterado com sucesso.' );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao alterar status: ' . $e->getMessage() );
         }
     }
 
@@ -262,14 +263,14 @@ class BudgetService extends AbstractBaseService
      * @param string $newStatus Novo status desejado
      * @return ServiceResult
      */
-    public function handleStatusChange(Budget $budget, string $newStatus): ServiceResult
+    public function handleStatusChange( Budget $budget, string $newStatus ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($budget, $newStatus) {
+            return DB::transaction( function () use ($budget, $newStatus) {
                 $oldStatus = $budget->status;
 
                 // Validar transição
-                if (!$oldStatus->canTransitionTo(BudgetStatus::from($newStatus))) {
+                if ( !$oldStatus->canTransitionTo( BudgetStatus::from( $newStatus ) ) ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Transição de {$oldStatus->value} para {$newStatus} não permitida",
@@ -277,14 +278,14 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Atualizar orçamento
-                $budget->update(['status' => $newStatus]);
+                $budget->update( [ 'status' => $newStatus ] );
 
                 // Atualizar serviços em cascata
-                $this->updateRelatedServices($budget, $newStatus);
+                $this->updateRelatedServices( $budget, $newStatus );
 
-                return $this->success($budget, 'Status alterado com sucesso');
-            });
-        } catch (\Exception $e) {
+                return $this->success( $budget, 'Status alterado com sucesso' );
+            } );
+        } catch ( \Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao alterar status',
@@ -301,16 +302,16 @@ class BudgetService extends AbstractBaseService
      * @param string $newStatus Novo status do orçamento
      * @return void
      */
-    private function updateRelatedServices(Budget $budget, string $newStatus): void
+    private function updateRelatedServices( Budget $budget, string $newStatus ): void
     {
-        $serviceStatus = match (strtolower($newStatus)) {
+        $serviceStatus = match ( strtolower( $newStatus ) ) {
             'approved'              => 'in-progress',
             'rejected', 'cancelled' => 'cancelled',
             default                 => null
         };
 
-        if ($serviceStatus) {
-            $budget->services()->update(['status' => $serviceStatus]);
+        if ( $serviceStatus ) {
+            $budget->services()->update( [ 'status' => $serviceStatus ] );
         }
     }
 
@@ -322,24 +323,24 @@ class BudgetService extends AbstractBaseService
      * @param string|null $verificationHash Hash de verificação (opcional)
      * @return ServiceResult
      */
-    public function printPDF(string $code, int $tenantId, ?string $verificationHash = null): ServiceResult
+    public function printPDF( string $code, int $tenantId, ?string $verificationHash = null ): ServiceResult
     {
         try {
             // Busca o orçamento completo com dados relacionados
-            $budget = $this->repository->getBudgetFullByCode($code, $tenantId);
+            $budget = $this->repository->getBudgetFullByCode( $code, $tenantId );
 
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Verifica hash de verificação se fornecido
-            if ($verificationHash && $budget->pdf_verification_hash !== $verificationHash) {
-                return ServiceResult::forbidden('Hash de verificação inválido.');
+            if ( $verificationHash && $budget->pdf_verification_hash !== $verificationHash ) {
+                return ServiceResult::forbidden( 'Hash de verificação inválido.' );
             }
 
             // Verifica se o orçamento pode ser visualizado (status apropriado)
-            $viewableStatuses = ['sent', 'approved', 'completed'];
-            if (!in_array($budget->status->value, $viewableStatuses)) {
+            $viewableStatuses = [ 'sent', 'approved', 'completed' ];
+            if ( !in_array( $budget->status->value, $viewableStatuses ) ) {
                 return ServiceResult::error(
                     'Orçamento não pode ser visualizado no status atual.',
                 );
@@ -363,45 +364,45 @@ class BudgetService extends AbstractBaseService
                 $pdfData,
                 'Dados do orçamento preparados para geração de PDF.',
             );
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao gerar PDF: ' . $e->getMessage());
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao gerar PDF: ' . $e->getMessage() );
         }
     }
 
     /**
      * Determina o novo status baseado na ação do usuário.
      */
-    private function determineNewStatusFromAction(string $currentStatus, string $action): ?string
+    private function determineNewStatusFromAction( string $currentStatus, string $action ): ?string
     {
-        return match ($action) {
-            'approve'  => match ($currentStatus) {
-                'sent'  => 'approved',
-                default => null,
-            },
-            'reject'   => match ($currentStatus) {
-                'sent'  => 'rejected',
-                default => null,
-            },
-            'revise'   => match ($currentStatus) {
-                'sent'  => 'revised',
-                default => null,
-            },
-            'cancel'   => match ($currentStatus) {
-                'draft', 'sent', 'approved' => 'cancelled',
-                default                     => null,
-            },
-            'complete' => match ($currentStatus) {
-                'approved' => 'completed',
-                default    => null,
-            },
-            'expire'   => match ($currentStatus) {
-                'sent', 'approved' => 'expired',
-                default            => null,
-            },
-            'reset'    => match ($currentStatus) {
-                'cancelled', 'rejected', 'expired' => 'draft',
-                default                            => null,
-            },
+        return match ( $action ) {
+            'approve'  => match ( $currentStatus ) {
+                    'sent'  => 'approved',
+                    default => null,
+                },
+            'reject'   => match ( $currentStatus ) {
+                    'sent'  => 'rejected',
+                    default => null,
+                },
+            'revise'   => match ( $currentStatus ) {
+                    'sent'  => 'revised',
+                    default => null,
+                },
+            'cancel'   => match ( $currentStatus ) {
+                    'draft', 'sent', 'approved' => 'cancelled',
+                    default                     => null,
+                },
+            'complete' => match ( $currentStatus ) {
+                    'approved' => 'completed',
+                    default    => null,
+                },
+            'expire'   => match ( $currentStatus ) {
+                    'sent', 'approved' => 'expired',
+                    default            => null,
+                },
+            'reset'    => match ( $currentStatus ) {
+                    'cancelled', 'rejected', 'expired' => 'draft',
+                    default                            => null,
+                },
             default    => null,
         };
     }
@@ -409,11 +410,11 @@ class BudgetService extends AbstractBaseService
     /**
      * Valida se a transição de status é permitida.
      */
-    private function isValidStatusTransition(string $currentStatus, string $newStatus): bool
+    private function isValidStatusTransition( string $currentStatus, string $newStatus ): bool
     {
-        $allowedTransitions = BudgetStatus::getAllowedTransitions($currentStatus);
+        $allowedTransitions = BudgetStatus::getAllowedTransitions( $currentStatus );
 
-        return in_array($newStatus, $allowedTransitions);
+        return in_array( $newStatus, $allowedTransitions );
     }
 
     /**
@@ -423,19 +424,19 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function duplicateBudget(int $budgetId, int $tenantId): ServiceResult
+    public function duplicateBudget( int $budgetId, int $tenantId ): ServiceResult
     {
         try {
             // Busca o orçamento original
-            $originalBudget = $this->repository->find($budgetId);
+            $originalBudget = $this->repository->find( $budgetId );
 
-            if (!$originalBudget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$originalBudget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Verifica se pertence ao tenant correto
-            if ($originalBudget->tenant_id !== $tenantId) {
-                return ServiceResult::forbidden('Acesso negado a este orçamento.');
+            if ( $originalBudget->tenant_id !== $tenantId ) {
+                return ServiceResult::forbidden( 'Acesso negado a este orçamento.' );
             }
 
             // Prepara dados para duplicação
@@ -443,27 +444,27 @@ class BudgetService extends AbstractBaseService
 
             // Remove campos que não devem ser duplicados
             unset(
-                $duplicateData['id'],
-                $duplicateData['code'],
-                $duplicateData['created_at'],
-                $duplicateData['updated_at'],
-                $duplicateData['status'] // Reseta para draft
+                $duplicateData[ 'id' ],
+                $duplicateData[ 'code' ],
+                $duplicateData[ 'created_at' ],
+                $duplicateData[ 'updated_at' ],
+                $duplicateData[ 'status' ] // Reseta para draft
             );
 
             // Define novo título e status
-            $duplicateData['title']     = 'Cópia de: ' . $originalBudget->title;
-            $duplicateData['status']    = BudgetStatus::DRAFT->value;
-            $duplicateData['tenant_id'] = $tenantId;
+            $duplicateData[ 'title' ]     = 'Cópia de: ' . $originalBudget->title;
+            $duplicateData[ 'status' ]    = BudgetStatus::DRAFT->value;
+            $duplicateData[ 'tenant_id' ] = $tenantId;
 
             // Gera novo código único
-            $duplicateData['code'] = $this->generateUniqueBudgetCode($tenantId);
+            $duplicateData[ 'code' ] = $this->generateUniqueBudgetCode( $tenantId );
 
             // Cria a duplicata
-            $duplicatedBudget = $this->repository->create($duplicateData);
+            $duplicatedBudget = $this->repository->create( $duplicateData );
 
-            return ServiceResult::success($duplicatedBudget, 'Orçamento duplicado com sucesso.');
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao duplicar orçamento: ' . $e->getMessage());
+            return ServiceResult::success( $duplicatedBudget, 'Orçamento duplicado com sucesso.' );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao duplicar orçamento: ' . $e->getMessage() );
         }
     }
 
@@ -474,13 +475,13 @@ class BudgetService extends AbstractBaseService
      * @param array $data Dados para atualização
      * @return ServiceResult
      */
-    public function updateByCode(string $code, array $data): ServiceResult
+    public function updateByCode( string $code, array $data ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($code, $data) {
-                $budget = Budget::where('code', $code)->first();
+            return DB::transaction( function () use ($code, $data) {
+                $budget = Budget::where( 'code', $code )->first();
 
-                if (!$budget) {
+                if ( !$budget ) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Orçamento {$code} não encontrado",
@@ -488,7 +489,7 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Verificar se pode editar
-                if (!$budget->status->canEdit()) {
+                if ( !$budget->status->canEdit() ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Orçamento não pode ser editado no status {$budget->status->value}",
@@ -496,24 +497,24 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Atualizar orçamento
-                $budget->update($data);
+                $budget->update( $data );
 
                 // Atualizar itens se fornecidos
-                if (isset($data['items'])) {
-                    $this->updateBudgetItems($budget, $data['items']);
+                if ( isset( $data[ 'items' ] ) ) {
+                    $this->updateBudgetItems( $budget, $data[ 'items' ] );
                 }
 
-                $servicesSubtotal = (float) $budget->services()->sum('total');
-                $discount         = (float) ($budget->discount ?? 0);
-                $newTotal         = max(0.0, $servicesSubtotal - $discount);
+                $servicesSubtotal = (float) $budget->services()->sum( 'total' );
+                $discount         = (float) ( $budget->discount ?? 0 );
+                $newTotal         = max( 0.0, $servicesSubtotal - $discount );
 
-                if ((float) $budget->total !== $newTotal) {
-                    $budget->update(['total' => $newTotal]);
+                if ( (float) $budget->total !== $newTotal ) {
+                    $budget->update( [ 'total' => $newTotal ] );
                 }
 
-                return $this->success($budget->fresh(), 'Orçamento atualizado');
-            });
-        } catch (\Exception $e) {
+                return $this->success( $budget->fresh(), 'Orçamento atualizado' );
+            } );
+        } catch ( \Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao atualizar orçamento',
@@ -523,14 +524,14 @@ class BudgetService extends AbstractBaseService
         }
     }
 
-    private function updateBudgetItems(Budget $budget, array $items): void
+    private function updateBudgetItems( Budget $budget, array $items ): void
     {
         // Deletar itens existentes
         $budget->items()->delete();
 
         // Criar novos itens
-        foreach ($items as $item) {
-            $budget->items()->create($item);
+        foreach ( $items as $item ) {
+            $budget->items()->create( $item );
         }
     }
 
@@ -540,13 +541,13 @@ class BudgetService extends AbstractBaseService
      * @param string $code Código do orçamento
      * @return ServiceResult
      */
-    public function deleteByCode(string $code): ServiceResult
+    public function deleteByCode( string $code ): ServiceResult
     {
         try {
-            return DB::transaction(function () use ($code) {
-                $budget = Budget::where('code', $code)->first();
+            return DB::transaction( function () use ($code) {
+                $budget = Budget::where( 'code', $code )->first();
 
-                if (!$budget) {
+                if ( !$budget ) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Orçamento {$code} não encontrado",
@@ -554,7 +555,7 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Verificar se pode deletar
-                if (!$budget->status->canDelete()) {
+                if ( !$budget->status->canDelete() ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Orçamento não pode ser excluído no status {$budget->status->value}",
@@ -562,7 +563,7 @@ class BudgetService extends AbstractBaseService
                 }
 
                 // Verificar relacionamentos
-                if ($budget->services()->exists()) {
+                if ( $budget->services()->exists() ) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Orçamento possui serviços associados e não pode ser excluído",
@@ -572,9 +573,9 @@ class BudgetService extends AbstractBaseService
                 // Soft delete
                 $budget->delete();
 
-                return $this->success(null, 'Orçamento excluído');
-            });
-        } catch (\Exception $e) {
+                return $this->success( null, 'Orçamento excluído' );
+            } );
+        } catch ( \Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao excluir orçamento',
@@ -591,26 +592,26 @@ class BudgetService extends AbstractBaseService
      * @param array $relations Relacionamentos a carregar
      * @return ServiceResult
      */
-    public function findByCode(string $code, array $with = []): ServiceResult
+    public function findByCode( string $code, array $with = [] ): ServiceResult
     {
         try {
-            $query = Budget::where('code', $code);
+            $query = Budget::where( 'code', $code );
 
-            if (!empty($with)) {
-                $query->with($with);
+            if ( !empty( $with ) ) {
+                $query->with( $with );
             }
 
             $budget = $query->first();
 
-            if (!$budget) {
+            if ( !$budget ) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
                     "Orçamento com código {$code} não encontrado",
                 );
             }
 
-            return $this->success($budget, 'Orçamento encontrado');
-        } catch (\Exception $e) {
+            return $this->success( $budget, 'Orçamento encontrado' );
+        } catch ( \Exception $e ) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao buscar orçamento',
@@ -629,18 +630,18 @@ class BudgetService extends AbstractBaseService
     {
         try {
             $tenantId = $this->tenantId();
-            if (!$tenantId) {
+            if ( !$tenantId ) {
                 return new Collection();
             }
 
-            return Budget::where('tenant_id', $tenantId)
-                ->whereNotIn('status', [BudgetStatus::COMPLETED->value])
-                ->orderBy('code')
-                ->get(['id', 'code', 'description', 'total']);
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar orçamentos não completados', [
+            return Budget::where( 'tenant_id', $tenantId )
+                ->whereNotIn( 'status', [ BudgetStatus::COMPLETED->value ] )
+                ->orderBy( 'code' )
+                ->get( [ 'id', 'code', 'description', 'total' ] );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar orçamentos não completados', [
                 'error' => $e->getMessage()
-            ]);
+            ] );
             return new Collection();
         }
     }
@@ -652,31 +653,31 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return ServiceResult
      */
-    public function deleteBudget(int $budgetId, int $tenantId): ServiceResult
+    public function deleteBudget( int $budgetId, int $tenantId ): ServiceResult
     {
         try {
             // Busca o orçamento
-            $budget = $this->repository->find($budgetId);
+            $budget = $this->repository->find( $budgetId );
 
-            if (!$budget) {
-                return ServiceResult::notFound('Orçamento');
+            if ( !$budget ) {
+                return ServiceResult::notFound( 'Orçamento' );
             }
 
             // Verifica se pertence ao tenant correto
-            if ($budget->tenant_id !== $tenantId) {
-                return ServiceResult::forbidden('Acesso negado a este orçamento.');
+            if ( $budget->tenant_id !== $tenantId ) {
+                return ServiceResult::forbidden( 'Acesso negado a este orçamento.' );
             }
 
             // Remove o orçamento
-            $deleted = $this->repository->delete($budgetId);
+            $deleted = $this->repository->delete( $budgetId );
 
-            if (!$deleted) {
-                return ServiceResult::error('Falha ao remover orçamento.');
+            if ( !$deleted ) {
+                return ServiceResult::error( 'Falha ao remover orçamento.' );
             }
 
-            return ServiceResult::success(null, 'Orçamento removido com sucesso.');
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao remover orçamento: ' . $e->getMessage());
+            return ServiceResult::success( null, 'Orçamento removido com sucesso.' );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao remover orçamento: ' . $e->getMessage() );
         }
     }
 
@@ -699,22 +700,22 @@ class BudgetService extends AbstractBaseService
     ): ServiceResult {
         try {
             // Valida status
-            if (!$this->isValidBudgetStatus($status)) {
-                return ServiceResult::error('Status de orçamento inválido: ' . $status);
+            if ( !$this->isValidBudgetStatus( $status ) ) {
+                return ServiceResult::error( 'Status de orçamento inválido: ' . $status );
             }
 
             // Usa o método do repositório para atualização em lote
-            $updatedCount = $this->repository->bulkUpdateStatus($budgetIds, $status, $tenantId, $this->authUser()?->id ?? 0);
+            $updatedCount = $this->repository->bulkUpdateStatus( $budgetIds, $status, $tenantId, $this->authUser()?->id ?? 0 );
 
             $result = [
                 'updated_count' => $updatedCount,
-                'failed_count'  => count($budgetIds) - $updatedCount,
-                'total_count'   => count($budgetIds)
+                'failed_count'  => count( $budgetIds ) - $updatedCount,
+                'total_count'   => count( $budgetIds )
             ];
 
-            return ServiceResult::success($result, 'Atualização em lote concluída.');
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro na atualização em lote: ' . $e->getMessage());
+            return ServiceResult::success( $result, 'Atualização em lote concluída.' );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro na atualização em lote: ' . $e->getMessage() );
         }
     }
 
@@ -725,29 +726,29 @@ class BudgetService extends AbstractBaseService
      * @param array $filters Filtros opcionais (date_from, date_to, etc.)
      * @return ServiceResult
      */
-    public function getBudgetStats(int $tenantId, array $filters = []): ServiceResult
+    public function getBudgetStats( int $tenantId, array $filters = [] ): ServiceResult
     {
         try {
             // Busca estatísticas básicas
-            $stats = $this->repository->getConversionStats($tenantId, $filters);
+            $stats = $this->repository->getConversionStats( $tenantId, $filters );
 
             // Busca breakdown por status
-            $statusBreakdown = $this->getStatusBreakdown($tenantId, $filters);
+            $statusBreakdown = $this->getStatusBreakdown( $tenantId, $filters );
 
-            $stats['status_breakdown'] = $statusBreakdown;
+            $stats[ 'status_breakdown' ] = $statusBreakdown;
 
             // Adiciona métricas adicionais
-            $stats['pending_rate'] = $stats['total'] > 0
-                ? round(($stats['pending'] / $stats['total']) * 100, 1)
+            $stats[ 'pending_rate' ] = $stats[ 'total' ] > 0
+                ? round( ( $stats[ 'pending' ] / $stats[ 'total' ] ) * 100, 1 )
                 : 0;
 
-            $stats['rejection_rate'] = $stats['total'] > 0
-                ? round(($stats['rejected'] / $stats['total']) * 100, 1)
+            $stats[ 'rejection_rate' ] = $stats[ 'total' ] > 0
+                ? round( ( $stats[ 'rejected' ] / $stats[ 'total' ] ) * 100, 1 )
                 : 0;
 
-            return ServiceResult::success($stats, 'Estatísticas obtidas com sucesso.');
-        } catch (\Exception $e) {
-            return ServiceResult::error('Erro ao obter estatísticas: ' . $e->getMessage());
+            return ServiceResult::success( $stats, 'Estatísticas obtidas com sucesso.' );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( 'Erro ao obter estatísticas: ' . $e->getMessage() );
         }
     }
 
@@ -758,10 +759,10 @@ class BudgetService extends AbstractBaseService
      * @param bool $isCreate Se é criação (true) ou atualização (false)
      * @throws InvalidArgumentException
      */
-    private function validateBudgetData(array $data, bool $isCreate = true): void
+    private function validateBudgetData( array $data, bool $isCreate = true ): void
     {
-        if ($isCreate && empty($data['customer_id'])) {
-            throw new InvalidArgumentException('Cliente é obrigatório.');
+        if ( $isCreate && empty( $data[ 'customer_id' ] ) ) {
+            throw new InvalidArgumentException( 'Cliente é obrigatório.' );
         }
     }
 
@@ -771,9 +772,9 @@ class BudgetService extends AbstractBaseService
      * @param string $status Status a validar
      * @return bool
      */
-    private function isValidBudgetStatus(string $status): bool
+    private function isValidBudgetStatus( string $status ): bool
     {
-        return BudgetStatus::tryFrom($status) !== null;
+        return BudgetStatus::tryFrom( $status ) !== null;
     }
 
     /**
@@ -782,24 +783,24 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return string Código único
      */
-    private function generateUniqueBudgetCode(int $tenantId): string
+    private function generateUniqueBudgetCode( int $tenantId ): string
     {
-        $date   = date('Ymd'); // YYYYMMDD
+        $date   = date( 'Ymd' ); // YYYYMMDD
         $prefix = 'ORC-' . $date;
 
         // Busca o último código do dia para determinar o sequencial
-        $lastCode = $this->repository->getLastBudgetCodeByPrefix($prefix, $tenantId);
+        $lastCode = $this->repository->getLastBudgetCodeByPrefix( $prefix, $tenantId );
 
-        if ($lastCode) {
+        if ( $lastCode ) {
             // Extrai o sequencial do último código (últimos 4 dígitos)
-            $lastSequential = (int) substr($lastCode, -4);
+            $lastSequential = (int) substr( $lastCode, -4 );
             $newSequential  = $lastSequential + 1;
         } else {
             $newSequential = 1;
         }
 
         // Garante que o sequencial tenha 4 dígitos
-        $code = $prefix . str_pad((string) $newSequential, 4, '0', STR_PAD_LEFT);
+        $code = $prefix . str_pad( (string) $newSequential, 4, '0', STR_PAD_LEFT );
 
         return $code;
     }
@@ -811,13 +812,13 @@ class BudgetService extends AbstractBaseService
      * @param array $filters Filtros opcionais
      * @return array
      */
-    private function getStatusBreakdown(int $tenantId, array $filters = []): array
+    private function getStatusBreakdown( int $tenantId, array $filters = [] ): array
     {
         $breakdown = [];
 
-        foreach (BudgetStatus::cases() as $status) {
-            $count                       = $this->repository->countByStatus($status->value, $filters);
-            $breakdown[$status->value] = $count;
+        foreach ( BudgetStatus::cases() as $status ) {
+            $count                       = $this->repository->countByStatus( $status->value, $filters );
+            $breakdown[ $status->value ] = $count;
         }
 
         return $breakdown;
@@ -852,26 +853,26 @@ class BudgetService extends AbstractBaseService
      */
     private function generateUniqueCode(): string
     {
-        return DB::transaction(function () {
-            $today  = date('Ymd');
+        return DB::transaction( function () {
+            $today  = date( 'Ymd' );
             $prefix = "ORC-{$today}";
 
             // Buscar último código do dia com lock
-            $lastBudget = Budget::where('code', 'LIKE', "{$prefix}%")
+            $lastBudget = Budget::where( 'code', 'LIKE', "{$prefix}%" )
                 ->lockForUpdate()
-                ->orderBy('code', 'desc')
+                ->orderBy( 'code', 'desc' )
                 ->first();
 
-            if (!$lastBudget) {
+            if ( !$lastBudget ) {
                 return "{$prefix}0001";
             }
 
             // Extrair sequencial e incrementar
-            $lastSequential = (int) substr($lastBudget->code, -4);
-            $newSequential  = str_pad((string) ($lastSequential + 1), 4, '0', STR_PAD_LEFT);
+            $lastSequential = (int) substr( $lastBudget->code, -4 );
+            $newSequential  = str_pad( (string) ( $lastSequential + 1 ), 4, '0', STR_PAD_LEFT );
 
             return "{$prefix}{$newSequential}";
-        });
+        } );
     }
 
     /**
@@ -880,13 +881,13 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return array
      */
-    public function getDashboardData(int $tenantId): array
+    public function getDashboardData( int $tenantId ): array
     {
         try {
             // Buscar estatísticas dos orçamentos
-            $statsResult = $this->getBudgetStats($tenantId);
+            $statsResult = $this->getBudgetStats( $tenantId );
 
-            if (!$statsResult->isSuccess()) {
+            if ( !$statsResult->isSuccess() ) {
                 return [
                     'total_budgets'      => 0,
                     'approved_budgets'   => 0,
@@ -900,22 +901,22 @@ class BudgetService extends AbstractBaseService
             $stats = $statsResult->getData();
 
             // Buscar orçamentos recentes (últimos 10)
-            $recentBudgets = $this->getRecentBudgetsForDashboard($tenantId);
+            $recentBudgets = $this->getRecentBudgetsForDashboard( $tenantId );
 
             return [
-                'total_budgets'      => $stats['total'],
-                'approved_budgets'   => $stats['approved'],
-                'pending_budgets'    => $stats['pending'],
-                'rejected_budgets'   => $stats['rejected'],
-                'total_budget_value' => $stats['total_value'],
-                'status_breakdown'   => $stats['status_breakdown'] ?? [],
+                'total_budgets'      => $stats[ 'total' ],
+                'approved_budgets'   => $stats[ 'approved' ],
+                'pending_budgets'    => $stats[ 'pending' ],
+                'rejected_budgets'   => $stats[ 'rejected' ],
+                'total_budget_value' => $stats[ 'total_value' ],
+                'status_breakdown'   => $stats[ 'status_breakdown' ] ?? [],
                 'recent_budgets'     => $recentBudgets
             ];
-        } catch (\Exception $e) {
-            Log::error('Erro ao obter dados do dashboard de orçamentos', [
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter dados do dashboard de orçamentos', [
                 'error'     => $e->getMessage(),
                 'tenant_id' => $tenantId
-            ]);
+            ] );
 
             return [
                 'total_budgets'      => 0,
@@ -934,20 +935,72 @@ class BudgetService extends AbstractBaseService
      * @param int $tenantId ID do tenant
      * @return Collection
      */
-    public function getRecentBudgetsForDashboard(int $tenantId): Collection
+    public function getRecentBudgetsForDashboard( int $tenantId ): Collection
     {
         try {
-            return Budget::where('tenant_id', $tenantId)
-                ->with(['customer.commonData'])
-                ->orderBy('created_at', 'desc')
-                ->limit(10)
+            return Budget::where( 'tenant_id', $tenantId )
+                ->with( [ 'customer.commonData' ] )
+                ->orderBy( 'created_at', 'desc' )
+                ->limit( 10 )
                 ->get();
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar orçamentos recentes para dashboard', [
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar orçamentos recentes para dashboard', [
                 'error'     => $e->getMessage(),
                 'tenant_id' => $tenantId
-            ]);
+            ] );
             return collect();
         }
     }
+
+    public function getFilteredBudgets( array $filters = [] ): ServiceResult
+    {
+        try {
+            $query = BudgetModel::query()
+                ->with( [ 'customer' => function ( $query ) {
+                    $query->select( 'id', 'common_data_id' )
+                        ->with( [ 'commonData' => function ( $subQuery ) {
+                            $subQuery->select( 'id', 'first_name', 'last_name', 'company_name' );
+                        } ] );
+                } ] )
+                ->where( 'tenant_id', auth()->user()->tenant_id );
+
+            // Aplicar filtros
+            if ( !empty( $filters[ 'code' ] ) ) {
+                $query->where( 'code', 'like', '%' . $filters[ 'code' ] . '%' );
+            }
+
+            if ( !empty( $filters[ 'start_date' ] ) ) {
+                $query->where( 'created_at', '>=', $filters[ 'start_date' ] . ' 00:00:00' );
+            }
+
+            if ( !empty( $filters[ 'end_date' ] ) ) {
+                $query->where( 'created_at', '<=', $filters[ 'end_date' ] . ' 23:59:59' );
+            }
+
+            if ( !empty( $filters[ 'customer_name' ] ) ) {
+                $query->whereHas( 'customer.commonData', function ( $q ) use ( $filters ) {
+                    $q->where( 'first_name', 'like', '%' . $filters[ 'customer_name' ] . '%' )
+                        ->orWhere( 'last_name', 'like', '%' . $filters[ 'customer_name' ] . '%' )
+                        ->orWhere( 'company_name', 'like', '%' . $filters[ 'customer_name' ] . '%' );
+                } );
+            }
+
+            if ( !empty( $filters[ 'status' ] ) ) {
+                $query->where( 'status', $filters[ 'status' ] );
+            }
+
+            if ( isset( $filters[ 'total_min' ] ) && $filters[ 'total_min' ] !== '' ) {
+                $query->where( 'total', '>=', (float) $filters[ 'total_min' ] );
+            }
+
+            $budgets = $query->orderBy( 'created_at', 'desc' )->paginate( $filters[ 'per_page' ] ?? 10 );
+
+            return $this->success( $budgets, 'Dados de orçamentos recuperados com sucesso' );
+
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao buscar dados de orçamentos', [ 'error' => $e->getMessage(), 'filters' => $filters ] );
+            return $this->error( 'Erro ao buscar dados de orçamentos: ' . $e->getMessage() );
+        }
+    }
+
 }

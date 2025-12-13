@@ -1,166 +1,294 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', 'Agendamentos' )
+@section('title', 'Agendamentos')
 
-@section( 'content' )
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h3 class="mb-2">
-                <i class="bi bi-calendar-check me-2"></i>
-                Agendamentos
-            </h3>
-            <p class="text-muted mb-3">Gerencie seus agendamentos de serviços</p>
+@section('content')
+    <div class="container-fluid py-1">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Agendamentos
+                </h1>
+                <p class="text-muted">Lista de agendamentos do sistema</p>
+            </div>
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Agendamentos</li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
                 </ol>
             </nav>
         </div>
 
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <!-- Filtros de Busca -->
+                <div class="card mb-4">
                     <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-8">
-                                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Agendamentos</h5>
-                            </div>
-                            <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                                <a href="{{ route( 'provider.schedules.calendar' ) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-calendar me-1"></i> Calendário
-                                </a>
-                            </div>
-                        </div>
+                        <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                     </div>
                     <div class="card-body">
-                        <form method="GET" action="{{ route( 'provider.schedules.index' ) }}" class="mb-4">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label for="start_date">Data Inicial:</label>
-                                    <input type="date" name="date_from" id="start_date" class="form-control"
-                                        value="{{ request('date_from', date('Y-m-d')) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="end_date">Data Final:</label>
-                                    <input type="date" name="date_to" id="end_date" class="form-control"
-                                        value="{{ request('date_to', date('Y-m-d', strtotime('+30 days'))) }}">
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search"></i> Filtrar
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <!-- Desktop View -->
-                        <div class="table-responsive d-none d-md-block">
-                            <table class="table modern-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Serviço</th>
-                                        <th>Cliente</th>
-                                        <th>Data/Hora Início</th>
-                                        <th>Data/Hora Fim</th>
-                                        <th>Local</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse( $schedules as $schedule )
-                                        <tr>
-                                            <td>{{ $schedule->id }}</td>
-                                            <td>
-                                                <a href="{{ route( 'provider.services.show', $schedule->service->code ) }}">
-                                                    {{ $schedule->service->description ?? $schedule->service->code }}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route( 'provider.customers.show', $schedule->service->customer->id ) }}">
-                                                    {{ $schedule->service->customer->commonData->first_name ?? $schedule->service->customer->name ?? 'N/A' }}
-                                                </a>
-                                            </td>
-                                            <td>{{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($schedule->end_date_time)->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $schedule->location ?? 'Não definido' }}</td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ ucfirst(str_replace('_',' ', $schedule->status ?? 'scheduled')) }}</span>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <a href="{{ route( 'provider.schedules.show', $schedule->id ) }}"
-                                                        class="action-btn-view">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center">Nenhum agendamento encontrado</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mobile View -->
-                        <div class="mobile-view d-md-none">
-                            @forelse( $schedules as $schedule )
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h6 class="mb-1">{{ $schedule->service->description ?? $schedule->service->code }}</h6>
-                                            <small class="text-muted">{{ $schedule->service->customer->commonData->first_name ?? $schedule->service->customer->name ?? 'N/A' }}</small>
-                                        </div>
-                                        <span class="badge bg-secondary">{{ ucfirst(str_replace('_',' ', $schedule->status ?? 'scheduled')) }}</span>
+                        <form method="GET" action="{{ route('provider.schedules.index') }}">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="date_from">Data Inicial</label>
+                                        <input type="date" class="form-control" id="date_from" name="date_from"
+                                            value="{{ request('date_from', date('Y-m-d')) }}">
                                     </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Início:</small> {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}<br>
-                                        <small class="text-muted">Fim:</small> {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('d/m/Y H:i') }}<br>
-                                        <small class="text-muted">Local:</small> {{ $schedule->location ?? 'Não definido' }}
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="date_to">Data Final</label>
+                                        <input type="date" class="form-control" id="date_to" name="date_to"
+                                            value="{{ request('date_to', date('Y-m-d', strtotime('+30 days'))) }}">
                                     </div>
-                                    <div class="action-btn-group">
-                                        <a href="{{ route( 'provider.schedules.show', $schedule->id ) }}" class="action-btn-view">
-                                            <i class="bi bi-eye"></i>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="per_page" class="text-nowrap">Por página</label>
+                                        <select class="form-control" id="per_page" name="per_page">
+                                            @php($pp = (int) (request('per_page') ?? 10))
+                                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
+                                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
+                                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 flex-nowrap">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search me-1"></i>Filtrar
+                                        </button>
+                                        <a href="{{ route('provider.schedules.index') }}" class="btn btn-secondary">
+                                            <i class="bi bi-x me-1"></i>Limpar
                                         </a>
                                     </div>
                                 </div>
-                            @empty
-                                <div class="list-group-item text-center text-muted py-5">
-                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                    <p class="mb-0">Nenhum agendamento encontrado</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                                <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                                    <span class="me-2">
+                                        <i class="bi bi-list-ul me-1"></i>
+                                        <span class="d-none d-sm-inline">Lista de Agendamentos</span>
+                                        <span class="d-sm-none">Agendamentos</span>
+                                    </span>
+                                    <span class="text-muted" style="font-size: 0.875rem;">
+                                        @if ($schedules instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                            ({{ $schedules->total() }})
+                                        @else
+                                            ({{ $schedules->count() }})
+                                        @endif
+                                    </span>
+                                </h5>
+                            </div>
+                            <div class="col-12 col-lg-4 mt-2 mt-lg-0">
+                                <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                                    <a href="{{ route('provider.schedules.calendar') }}"
+                                        class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-calendar me-1"></i> Calendário
+                                    </a>
                                 </div>
-                            @endforelse
+                            </div>
                         </div>
                     </div>
+                    <div class="card-body p-0">
+                        <!-- Mobile View -->
+                        <div class="mobile-view">
+                            <div class="list-group list-group-flush">
+                                @forelse($schedules as $schedule)
+                                    <a href="{{ route('provider.schedules.show', $schedule->id) }}"
+                                        class="list-group-item list-group-item-action py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-calendar-check text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-2">
+                                                    {{ $schedule->service->description ?? $schedule->service->code }}
+                                                </div>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <span class="badge bg-primary-subtle text-primary">
+                                                        {{ $schedule->service->customer->commonData->first_name ?? ($schedule->service->customer->name ?? 'N/A') }}
+                                                    </span>
+                                                    <span
+                                                        class="badge {{ $schedule->status ? 'bg-secondary' : 'bg-info-subtle text-info' }}">
+                                                        {{ $schedule->status ? ucfirst(str_replace('_', ' ', $schedule->status)) : 'Agendado' }}
+                                                    </span>
+                                                </div>
+                                                <small class="text-muted">
+                                                    {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}
+                                                    -
+                                                    {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
+                                                </small>
+                                                @if ($schedule->location)
+                                                    <br><small class="text-muted">{{ $schedule->location }}</small>
+                                                @endif
+                                            </div>
+                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-4 text-center text-muted">
+                                        <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                        <br>
+                                        Nenhum agendamento encontrado.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        <!-- Versão Desktop: Tabela -->
+                        <div class="desktop-view">
+                            <div class="table-responsive">
+                                <table class="modern-table table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th width="60"><i class="bi bi-calendar-check" aria-hidden="true"></i>
+                                            </th>
+                                            <th>Serviço</th>
+                                            <th>Cliente</th>
+                                            <th>Data/Hora Início</th>
+                                            <th>Data/Hora Fim</th>
+                                            <th>Local</th>
+                                            <th width="120">Status</th>
+                                            <th width="150" class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($schedules as $schedule)
+                                            <tr>
+                                                <td>
+                                                    <div class="item-icon">
+                                                        <i class="bi bi-calendar-check"></i>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="item-name-cell">
+                                                        <a
+                                                            href="{{ route('provider.services.show', $schedule->service->code) }}">
+                                                            {{ $schedule->service->description ?? $schedule->service->code }}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="item-name-cell">
+                                                        <a
+                                                            href="{{ route('provider.customers.show', $schedule->service->customer->id) }}">
+                                                            {{ $schedule->service->customer->commonData->first_name ?? ($schedule->service->customer->name ?? 'N/A') }}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y H:i') }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('d/m/Y H:i') }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ $schedule->location ?? 'Não definido' }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <span class="modern-badge badge-secondary">
+                                                        {{ $schedule->status ? ucfirst(str_replace('_', ' ', $schedule->status)) : 'Agendado' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="action-btn-group">
+                                                        <a href="{{ route('provider.schedules.show', $schedule->id) }}"
+                                                            class="action-btn action-btn-view" title="Visualizar">
+                                                            <i class="bi bi-eye-fill"></i>
+                                                        </a>
+                                                        @php($canEdit = true)
+                                                        @php($canDelete = true)
+                                                        @if ($canEdit)
+                                                            <a href="{{ route('provider.schedules.edit', $schedule->id) }}"
+                                                                class="action-btn action-btn-edit" title="Editar">
+                                                                <i class="bi bi-pencil-fill"></i>
+                                                            </a>
+                                                        @endif
+                                                        @if ($canDelete)
+                                                            <button type="button" class="action-btn action-btn-delete"
+                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"
+                                                                data-schedule-name="{{ $schedule->service->description ?? $schedule->service->code }}"
+                                                                title="Excluir">
+                                                                <i class="bi bi-trash-fill"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">
+                                                    <i class="bi bi-inbox mb-2" aria-hidden="true"
+                                                        style="font-size: 2rem;"></i>
+                                                    <br>
+                                                    Nenhum agendamento encontrado.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @if ($schedules instanceof \Illuminate\Pagination\LengthAwarePaginator && $schedules->hasPages())
+                        @include('partials.components.paginator', [
+                            'p' => $schedules->appends(request()->query()),
+                            'show_info' => true,
+                        ])
+                    @endif
                 </div>
             </div>
         </div>
 
-        @if( isset( $upcomingSchedules ) && $upcomingSchedules->count() > 0 )
+        @if (isset($upcomingSchedules) && $upcomingSchedules->count() > 0)
             <div class="row mt-4">
                 <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Próximos Agendamentos</h4>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock me-2"></i>
+                                <span class="d-none d-sm-inline">Próximos Agendamentos</span>
+                                <span class="d-sm-none">Próximos</span>
+                            </h5>
                         </div>
                         <div class="card-body">
-                            <div class="list-group">
-                                @foreach( $upcomingSchedules as $schedule )
-                                    <a href="{{ route( 'provider.schedules.show', $schedule ) }}"
-                                        class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1">{{ $schedule->service->title }}</h5>
-                                            <small>{{ $schedule->start_date_time->diffForHumans() }}</small>
+                            <div class="list-group list-group-flush">
+                                @foreach ($upcomingSchedules as $schedule)
+                                    <a href="{{ route('provider.schedules.show', $schedule) }}"
+                                        class="list-group-item list-group-item-action border-0 px-0">
+                                        <div class="d-flex w-100 justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    {{ $schedule->service->description ?? $schedule->service->code }}</h6>
+                                                <p class="mb-1 text-muted small">
+                                                    {{ $schedule->service->customer->commonData->first_name ?? ($schedule->service->customer->name ?? 'N/A') }}
+                                                </p>
+                                                <small class="text-muted">
+                                                    {{ $schedule->start_date_time->format('d/m/Y H:i') }} -
+                                                    {{ $schedule->end_date_time->format('H:i') }}
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ $schedule->start_date_time->diffForHumans() }}
+                                            </small>
                                         </div>
-                                        <p class="mb-1">{{ $schedule->service->customer->name }}</p>
-                                        <small>{{ $schedule->start_date_time->format( 'd/m/Y H:i' ) }} -
-                                            {{ $schedule->end_date_time->format( 'H:i' ) }}</small>
                                     </a>
                                 @endforeach
                             </div>
@@ -169,5 +297,51 @@
                 </div>
             </div>
         @endif
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        Tem certeza de que deseja excluir o agendamento <strong id="deleteScheduleName"></strong>?
+                        <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form id="deleteForm" action="#" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Modal de confirmação de exclusão
+                    const deleteModal = document.getElementById('deleteModal');
+                    if (deleteModal) {
+                        deleteModal.addEventListener('show.bs.modal', function(event) {
+                            const button = event.relatedTarget;
+                            const deleteUrl = button.getAttribute('data-delete-url');
+                            const scheduleName = button.getAttribute('data-schedule-name');
+
+                            const deleteForm = document.getElementById('deleteForm');
+                            const scheduleNameElement = document.getElementById('deleteScheduleName');
+
+                            deleteForm.action = deleteUrl;
+                            scheduleNameElement.textContent = scheduleName;
+                        });
+                    }
+                });
+            </script>
+        @endpush
     </div>
 @endsection

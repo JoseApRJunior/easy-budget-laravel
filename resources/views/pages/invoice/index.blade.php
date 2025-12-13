@@ -1,5 +1,19 @@
 @extends('layouts.app')
 @section('title', 'Faturas')
+
+@php
+    function formatInvoiceStatus($status)
+    {
+        return match ($status) {
+            'pending' => '<span class="badge bg-warning">Pendente</span>',
+            'paid' => '<span class="badge bg-success">Pago</span>',
+            'cancelled' => '<span class="badge bg-secondary">Cancelado</span>',
+            'overdue' => '<span class="badge bg-danger">Vencido</span>',
+            default => '<span class="badge bg-light text-dark">Indefinido</span>',
+        };
+    }
+@endphp
+
 @section('content')
     <div class="container-fluid py-1">
         {{-- Cabeçalho --}}
@@ -129,18 +143,7 @@
                                         <td><strong>R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</strong>
                                         </td>
                                         <td>
-                                            @php
-                                                $badgeClass = match ($invoice->status) {
-                                                    'pending' => 'bg-warning',
-                                                    'paid' => 'bg-success',
-                                                    'overdue' => 'bg-danger',
-                                                    'cancelled' => 'bg-secondary',
-                                                    default => 'bg-light text-dark',
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }}">
-                                                {{ $invoice->status->getDescription() ?? ucfirst($invoice->status) }}
-                                            </span>
+                                            {!! formatInvoiceStatus($invoice->status) !!}
                                         </td>
                                         <td class="text-center">
                                             <div class="action-btn-group">
@@ -181,18 +184,7 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-2">{{ $invoice->code }}</div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
-                                            @php
-                                                $badgeClass = match ($invoice->status) {
-                                                    'pending' => 'bg-warning',
-                                                    'paid' => 'bg-success',
-                                                    'overdue' => 'bg-danger',
-                                                    'cancelled' => 'bg-secondary',
-                                                    default => 'bg-light text-dark',
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }}">
-                                                {{ $invoice->status->getDescription() ?? ucfirst($invoice->status) }}
-                                            </span>
+                                            {!! formatInvoiceStatus($invoice->status) !!}
                                         </div>
                                         <div class="small text-muted">
                                             <div>Cliente: {{ $invoice->customer->name ?? 'N/A' }}</div>

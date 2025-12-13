@@ -1,105 +1,186 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
+    <div class="container-fluid py-1">
+        <!-- Cabeçalho Administrativo -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Gerenciamento de Alertas</li>
+                    </ol>
+                </nav>
+                <h1 class="h4">
                     <i class="bi bi-exclamation-triangle me-2"></i>Gerenciamento de Alertas
                 </h1>
-                <div class="btn-group" role="group">
-                    <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Novo Alerta
-                    </a>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-download me-2"></i>Exportar
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'excel') }}">
+                <p class="text-muted">Monitoramento e controle de alertas do sistema</p>
+            </div>
+            <div class="btn-group" role="group">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Exportar
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'excel') }}">
                                 <i class="bi bi-file-earmark-excel me-2"></i>Excel
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'csv') }}">
+                        <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'csv') }}">
                                 <i class="bi bi-file-earmark-text me-2"></i>CSV
                             </a></li>
-                        </ul>
-                    </div>
+                    </ul>
                 </div>
+                <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Novo Alerta
+                </a>
             </div>
         </div>
-    </div>
 
-    {{-- Cards de Estatísticas --}}
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Total de Alertas</h6>
-                            <h2 class="mb-0">{{ $stats['total'] }}</h2>
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">Total de Alertas</h6>
+                                <h2 class="mb-0">{{ $stats['total'] }}</h2>
+                            </div>
+                            <i class="bi bi-exclamation-triangle fs-1 opacity-75"></i>
                         </div>
-                        <i class="bi bi-exclamation-triangle fs-1 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">Alertas Ativos</h6>
+                                <h2 class="mb-0">{{ $stats['active'] }}</h2>
+                            </div>
+                            <i class="bi bi-bell fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">Resolvidos</h6>
+                                <h2 class="mb-0">{{ $stats['resolved'] }}</h2>
+                            </div>
+                            <i class="bi bi-check-circle fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title">Críticos</h6>
+                                <h2 class="mb-0">{{ $stats['critical'] }}</h2>
+                            </div>
+                            <i class="bi bi-lightning fs-1 opacity-75"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Alertas Ativos</h6>
-                            <h2 class="mb-0">{{ $stats['active'] }}</h2>
-                        </div>
-                        <i class="bi bi-bell fs-1 opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Resolvidos</h6>
-                            <h2 class="mb-0">{{ $stats['resolved'] }}</h2>
-                        </div>
-                        <i class="bi bi-check-circle fs-1 opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Críticos</h6>
-                            <h2 class="mb-0">{{ $stats['critical'] }}</h2>
-                        </div>
-                        <i class="bi bi-lightning fs-1 opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Tabela de Alertas --}}
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-list-ul me-2"></i>Lista de Alertas
-                    </h5>
-                </div>
-                <div class="card-body">
+        <!-- Card de Filtros (SEPARADO) -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="type">Tipo</label>
+                                <select class="form-control" name="type" id="type">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="system">Sistema</option>
+                                    <option value="security">Segurança</option>
+                                    <option value="performance">Performance</option>
+                                    <option value="business">Negócio</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="severity">Severidade</label>
+                                <select class="form-control" name="severity" id="severity">
+                                    <option value="">Todas</option>
+                                    <option value="danger">Crítico</option>
+                                    <option value="warning">Aviso</option>
+                                    <option value="info">Informativo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select class="form-control" name="status" id="status">
+                                    <option value="">Todos</option>
+                                    <option value="active">Ativo</option>
+                                    <option value="resolved">Resolvido</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="date_from">Data Início</label>
+                                <input type="date" class="form-control" name="date_from" id="date_from"
+                                    value="{{ request('date_from') }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="date_to">Data Fim</label>
+                                <input type="date" class="form-control" name="date_to" id="date_to"
+                                    value="{{ request('date_to') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="search">Buscar</label>
+                                <input type="text" class="form-control" name="search" id="search"
+                                    placeholder="Buscar por título ou mensagem..." value="{{ request('search') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search"></i> Filtrar
+                                    </button>
+                                    <a href="{{ route('admin.alerts.index') }}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i> Limpar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card Principal -->
+        <div class="card">
+            <div class="card-body">
+                @if ($alerts->count() > 0)
+                    <!-- Tabela responsiva -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>Tipo</th>
                                     <th>Título</th>
                                     <th>Mensagem</th>
@@ -110,8 +191,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($alerts as $alert)
+                                @foreach ($alerts as $alert)
                                     <tr>
+                                        <td>{{ $alert['id'] }}</td>
                                         <td>
                                             <span class="badge bg-secondary">
                                                 {{ ucfirst($alert['type']) }}
@@ -125,17 +207,17 @@
                                         </td>
                                         <td>
                                             @php
-                                                $badgeClass = match($alert['severity']) {
+                                                $badgeClass = match ($alert['severity']) {
                                                     'danger' => 'bg-danger',
                                                     'warning' => 'bg-warning text-dark',
                                                     'info' => 'bg-info',
-                                                    default => 'bg-secondary'
+                                                    default => 'bg-secondary',
                                                 };
-                                                $severityText = match($alert['severity']) {
+                                                $severityText = match ($alert['severity']) {
                                                     'danger' => 'Crítico',
                                                     'warning' => 'Aviso',
                                                     'info' => 'Informativo',
-                                                    default => 'Desconhecido'
+                                                    default => 'Desconhecido',
                                                 };
                                             @endphp
                                             <span class="badge {{ $badgeClass }}">
@@ -144,86 +226,191 @@
                                         </td>
                                         <td>
                                             @php
-                                                $statusClass = match($alert['status']) {
+                                                $statusClass = match ($alert['status']) {
                                                     'active' => 'bg-success',
                                                     'resolved' => 'bg-secondary',
-                                                    default => 'bg-light text-dark'
+                                                    default => 'bg-light text-dark',
                                                 };
-                                                $statusText = match($alert['status']) {
+                                                $statusText = match ($alert['status']) {
                                                     'active' => 'Ativo',
                                                     'resolved' => 'Resolvido',
-                                                    default => 'Desconhecido'
+                                                    default => 'Desconhecido',
                                                 };
                                             @endphp
                                             <span class="badge {{ $statusClass }}">
                                                 {{ $statusText }}
                                             </span>
                                         </td>
-                                        <td>
-                                            {{ $alert['created_at']->format('d/m/Y H:i') }}
-                                        </td>
+                                        <td>{{ $alert['created_at']->format('d/m/Y H:i') }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.alerts.show', $alert['id']) }}" 
-                                                   class="btn btn-sm btn-outline-primary" 
-                                                   title="Ver Detalhes">
+                                                <a href="{{ route('admin.alerts.show', $alert['id']) }}"
+                                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="{{ route('admin.alerts.edit', $alert['id']) }}" 
-                                                   class="btn btn-sm btn-outline-secondary" 
-                                                   title="Editar">
+                                                <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
+                                                    class="btn btn-sm btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('admin.alerts.destroy', $alert['id']) }}" 
-                                                      method="POST" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Tem certeza que deseja excluir este alerta?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="btn btn-sm btn-outline-danger" 
-                                                            title="Excluir">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmDelete({{ $alert['id'] }})" title="Excluir">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center">
-                                            <i class="bi bi-inbox display-4 text-muted"></i>
-                                            <p class="text-muted">Nenhum alerta encontrado</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Mobile view -->
+                    <div class="d-md-none">
+                        @foreach ($alerts as $alert)
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ $alert['title'] }}</h5>
+                                    <p class="card-text">
+                                        <strong>ID:</strong> {{ $alert['id'] }}<br>
+                                        <strong>Tipo:</strong>
+                                        <span class="badge bg-secondary">{{ ucfirst($alert['type']) }}</span><br>
+                                        <strong>Severidade:</strong>
+                                        @php
+                                            $badgeClass = match ($alert['severity']) {
+                                                'danger' => 'bg-danger',
+                                                'warning' => 'bg-warning text-dark',
+                                                'info' => 'bg-info',
+                                                default => 'bg-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">
+                                            {{ $severityText ?? 'Desconhecido' }}
+                                        </span><br>
+                                        <strong>Status:</strong>
+                                        @php
+                                            $statusClass = match ($alert['status']) {
+                                                'active' => 'bg-success',
+                                                'resolved' => 'bg-secondary',
+                                                default => 'bg-light text-dark',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $statusClass }}">
+                                            {{ $statusText ?? 'Desconhecido' }}
+                                        </span><br>
+                                        <strong>Data:</strong> {{ $alert['created_at']->format('d/m/Y H:i') }}
+                                    </p>
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="{{ route('admin.alerts.show', $alert['id']) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                        <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
+                                            class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete({{ $alert['id'] }})">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Paginação -->
+                    @if ($alerts->hasPages())
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <small class="text-muted">
+                                    Mostrando {{ $alerts->firstItem() }} a {{ $alerts->lastItem() }} de
+                                    {{ $alerts->total() }} resultados
+                                </small>
+                            </div>
+                            <div>
+                                {{ $alerts->links() }}
+                            </div>
+                            <div>
+                                <select class="form-control form-control-sm" onchange="changePerPage(this.value)">
+                                    <option value="10" {{ $alerts->perPage() == 10 ? 'selected' : '' }}>10 por página
+                                    </option>
+                                    <option value="20" {{ $alerts->perPage() == 20 ? 'selected' : '' }}>20 por página
+                                    </option>
+                                    <option value="50" {{ $alerts->perPage() == 50 ? 'selected' : '' }}>50 por página
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum alerta encontrado</h5>
+                        <p class="text-muted">Não há alertas para exibir com os filtros aplicados.</p>
+                        <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Criar Primeiro Alerta
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja excluir este alerta? Esta ação não pode ser desfeita.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @push('scripts')
-<script>
-    // Adicionar animação aos cards de estatísticas
-    document.addEventListener('DOMContentLoaded', function() {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'all 0.5s ease';
-                
+    <script>
+        function confirmDelete(id) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/admin/alerts/${id}`;
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        function changePerPage(perPage) {
+            const url = new URL(window.location);
+            url.searchParams.set('per_page', perPage);
+            window.location = url.toString();
+        }
+
+        // Adicionar animação aos cards de estatísticas
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
                 setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 100);
-            }, index * 100);
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
         });
-    });
-</script>
+    </script>
 @endpush

@@ -1,9 +1,9 @@
-@extends( 'layouts.admin' )
+@extends('layouts.admin')
 
-@section( 'title', 'Detalhes do Agendamento' )
+@section('title', 'Detalhes do Agendamento')
 
-@section( 'content' )
-    <div class="container-fluid">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Page Header -->
         <div class="mb-4">
             <h3 class="mb-2">
@@ -34,11 +34,11 @@
                                     </tr>
                                     <tr>
                                         <th>Data/Hora Início:</th>
-                                        <td>{{ $schedule->start_date_time->format( 'd/m/Y H:i' ) }}</td>
+                                        <td>{{ $schedule->start_date_time->format('d/m/Y H:i') }}</td>
                                     </tr>
                                     <tr>
                                         <th>Data/Hora Término:</th>
-                                        <td>{{ $schedule->end_date_time->format( 'd/m/Y H:i' ) }}</td>
+                                        <td>{{ $schedule->end_date_time->format('d/m/Y H:i') }}</td>
                                     </tr>
                                     <tr>
                                         <th>Local:</th>
@@ -47,9 +47,9 @@
                                     <tr>
                                         <th>Status:</th>
                                         <td>
-                                            @if( $schedule->start_date_time > now() )
+                                            @if ($schedule->start_date_time > now())
                                                 <span class="badge badge-primary">Agendado</span>
-                                            @elseif( $schedule->end_date_time < now() )
+                                            @elseif($schedule->end_date_time < now())
                                                 <span class="badge badge-success">Concluído</span>
                                             @else
                                                 <span class="badge badge-warning">Em Andamento</span>
@@ -58,7 +58,7 @@
                                     </tr>
                                     <tr>
                                         <th>Criado em:</th>
-                                        <td>{{ $schedule->created_at->format( 'd/m/Y H:i' ) }}</td>
+                                        <td>{{ $schedule->created_at->format('d/m/Y H:i') }}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -69,7 +69,7 @@
                                     <tr>
                                         <th>Código:</th>
                                         <td>
-                                            <a href="{{ route( 'services.show', $schedule->service ) }}">
+                                            <a href="{{ route('services.show', $schedule->service) }}">
                                                 {{ $schedule->service->code }}
                                             </a>
                                         </td>
@@ -89,14 +89,14 @@
                                     <tr>
                                         <th>Cliente:</th>
                                         <td>
-                                            <a href="{{ route( 'customers.show', $schedule->service->customer ) }}">
+                                            <a href="{{ route('customers.show', $schedule->service->customer) }}">
                                                 {{ $schedule->service->customer->name }}
                                             </a>
                                         </td>
                                     </tr>
                                 </table>
 
-                                @if( $schedule->userConfirmationToken )
+                                @if ($schedule->userConfirmationToken)
                                     <h5 class="mt-3">Token de Confirmação</h5>
                                     <table class="table table-sm">
                                         <tr>
@@ -105,12 +105,13 @@
                                         </tr>
                                         <tr>
                                             <th>Expira em:</th>
-                                            <td>{{ $schedule->userConfirmationToken->expires_at->format( 'd/m/Y H:i' ) }}</td>
+                                            <td>{{ $schedule->userConfirmationToken->expires_at->format('d/m/Y H:i') }}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th>Link Público:</th>
                                             <td>
-                                                <a href="{{ route( 'services.view-status', [ 'code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token ] ) }}"
+                                                <a href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}"
                                                     target="_blank" class="btn btn-sm btn-outline-info">
                                                     <i class="fas fa-external-link-alt"></i> Ver Status
                                                 </a>
@@ -130,16 +131,18 @@
                                 Criado em: {{ $schedule->created_at->format('d/m/Y H:i') }}
                             </small>
                             <div class="d-flex gap-2">
-                                @can( 'update', $schedule )
-                                    <a href="{{ route( 'schedules.edit', $schedule ) }}" class="btn btn-warning">
+                                @can('update', $schedule)
+                                    <a href="{{ route('schedules.edit', $schedule) }}" class="btn btn-warning">
                                         <i class="bi bi-pencil me-2"></i>Editar
                                     </a>
                                 @endcan
-                                @can( 'delete', $schedule )
-                                    <form action="{{ route( 'schedules.destroy', $schedule ) }}" method="POST" class="d-inline">
+                                @can('delete', $schedule)
+                                    <form action="{{ route('schedules.destroy', $schedule) }}" method="POST"
+                                        class="d-inline">
                                         @csrf
-                                        @method( 'DELETE' )
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger"
+                                            onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
                                             <i class="bi bi-trash me-2"></i>Excluir
                                         </button>
                                     </form>
