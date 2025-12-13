@@ -22,14 +22,6 @@
             </nav>
         </div>
 
-        <!-- Breadcrumb para Mobile -->
-        <nav aria-label="breadcrumb" class="d-md-none mb-3">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Relatório de Orçamentos</li>
-            </ol>
-        </nav>
-
         <!-- Filtros de Busca -->
         <div class="card mb-4">
             <div class="card-header">
@@ -181,7 +173,8 @@
                                             <small class="text-muted">
                                                 <span class="text-code">{{ $budget->created_at->format('d/m/Y') }}</span>
                                                 • R$ {{ number_format($budget->total, 2, ',', '.') }}
-                                                • {{ ucfirst($budget->status) }}
+                                                •
+                                                {{ is_string($budget->status) ? ucfirst($budget->status) : $budget->status->value }}
                                             </small>
                                         </div>
                                         <i class="bi bi-chevron-right text-muted ms-2"></i>
@@ -254,7 +247,7 @@
                                             <td>
                                                 <span
                                                     class="modern-badge {{ $budget->status == 'approved' ? 'badge-active' : ($budget->status == 'pending' ? 'badge-warning' : 'badge-inactive') }}">
-                                                    {{ ucfirst($budget->status) }}
+                                                    {{ is_string($budget->status) ? ucfirst($budget->status) : $budget->status->value }}
                                                 </span>
                                             </td>
                                             <td>
@@ -293,7 +286,7 @@
                             'p' => $budgets->appends(request()->query()),
                             'show_info' => true,
                         ])
-                    @endif>
+                    @endif
                 </div>
         @endif
     </div>

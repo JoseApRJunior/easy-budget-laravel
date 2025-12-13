@@ -22,14 +22,6 @@
             </nav>
         </div>
 
-        <!-- Breadcrumb para Mobile -->
-        <nav aria-label="breadcrumb" class="d-md-none mb-3">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Relatório de Estoque</li>
-            </ol>
-        </nav>
-
         <!-- Filtros de Busca -->
         <div class="card mb-4">
             <div class="card-header">

@@ -22,14 +22,6 @@
             </nav>
         </div>
 
-        <!-- Breadcrumb para Mobile -->
-        <nav aria-label="breadcrumb" class="d-md-none mb-3">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Relatório de Analytics</li>
-            </ol>
-        </nav>
-
         <!-- Botões de Ação -->
         <div class="d-flex justify-content-end mb-4">
             <div class="btn-group" role="group">

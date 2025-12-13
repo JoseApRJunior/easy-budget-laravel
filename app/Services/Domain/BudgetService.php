@@ -957,7 +957,7 @@ class BudgetService extends AbstractBaseService
         try {
             $query = BudgetModel::query()
                 ->with( [ 'customer' => function ( $query ) {
-                    $query->select( 'id', 'common_data_id' )
+                    $query->select( 'id' )
                         ->with( [ 'commonData' => function ( $subQuery ) {
                             $subQuery->select( 'id', 'first_name', 'last_name', 'company_name' );
                         } ] );
