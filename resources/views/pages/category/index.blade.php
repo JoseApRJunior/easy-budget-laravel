@@ -100,7 +100,7 @@
                             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                                 <h5 class="mb-0 d-flex align-items-center flex-wrap">
                                     <span class="me-2">
-                                        <i class="bi bi-list-ul me-1"></i> 
+                                        <i class="bi bi-list-ul me-1"></i>
                                         <span class="d-none d-sm-inline">Lista de Categorias</span>
                                         <span class="d-sm-none">Categorias</span>
                                     </span>
@@ -134,7 +134,9 @@
                                         <div class="d-flex align-items-start">
                                             <i class="bi bi-tag-fill text-muted me-2 mt-1"></i>
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-2">{{ $category->parent ? $category->parent->name : $category->name }}</div>
+                                                <div class="fw-semibold mb-2">
+                                                    {{ $category->parent ? $category->parent->name : $category->name }}
+                                                </div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
                                                     @if ($category->is_active)
                                                         <span class="badge bg-success-subtle text-success">Ativo</span>
@@ -196,7 +198,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="item-name-cell">
-                                                        @if($category->parent)
+                                                        @if ($category->parent)
                                                             {{ $category->parent->name }}
                                                         @else
                                                             {{ $category->name }}
@@ -204,7 +206,7 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    @if($category->parent)
+                                                    @if ($category->parent)
                                                         <span class="text-muted">{{ $category->name }}</span>
                                                     @else
                                                         <span class="text-muted">—</span>
@@ -214,10 +216,8 @@
                                                     <td><span class="text-code">{{ $category->slug }}</span></td>
                                                 @endif
                                                 <td>
-                                                    @php($isCustom = $tenantId ? $category->isCustomFor($tenantId) : false)
-                                                    <span
-                                                        class="modern-badge {{ $isCustom ? 'badge-personal' : 'badge-system' }}">
-                                                        {{ $isCustom ? 'Pessoal' : 'Sistema' }}
+                                                    <span class="modern-badge badge-system">
+                                                        Sistema
                                                     </span>
                                                 </td>
                                                 <td>
@@ -321,7 +321,10 @@
                         </div>
                     </div>
                     @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
-                        @include('partials.components.paginator', ['p' => $categories->appends(request()->query()), 'show_info' => true])
+                        @include('partials.components.paginator', [
+                            'p' => $categories->appends(request()->query()),
+                            'show_info' => true,
+                        ])
                     @endif
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
                         aria-hidden="true">

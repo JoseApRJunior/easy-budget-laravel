@@ -37,7 +37,7 @@ class CategoryService extends AbstractBaseService
         $slug = $base;
         $i    = 1;
 
-        while ( $this->categoryRepository->existsBySlug( $slug, null, $excludeId ) ) {
+        while ( $this->categoryRepository->existsBySlug( $slug, $excludeId ) ) {
             $slug = $base . '-' . $i;
             $i++;
         }
@@ -62,7 +62,7 @@ class CategoryService extends AbstractBaseService
         return $this->success( $data );
     }
 
-    public function paginateWithGlobals( array $filters, int $perPage = 15 ): ServiceResult
+    public function paginate( array $filters, int $perPage = 15, bool $isAdminGlobal = false, bool $onlyTrashed = false ): ServiceResult
     {
         try {
             $normalized = [];
@@ -81,85 +81,10 @@ class CategoryService extends AbstractBaseService
                 $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
             }
 
-            $paginator = $this->categoryRepository->paginateWithGlobals( $perPage, $normalized, [ 'name' => 'asc' ] );
+            $paginator = $this->categoryRepository->paginate( $perPage, $normalized, [ 'name' => 'asc' ], $isAdminGlobal, $onlyTrashed );
             return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
         } catch ( \Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e );
-        }
-    }
-
-    public function paginateGlobalOnly( array $filters, int $perPage = 15 ): ServiceResult
-    {
-        try {
-            $normalized = [];
-            if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
-                $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
-            }
-            if ( !empty( $filters[ 'name' ] ) ) {
-                $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
-            }
-            if ( !empty( $filters[ 'slug' ] ) ) {
-                $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
-            }
-            if ( !empty( $filters[ 'search' ] ) ) {
-                $term                 = '%' . $filters[ 'search' ] . '%';
-                $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => $term ];
-                $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
-            }
-            $paginator = $this->categoryRepository->paginateOnlyGlobals( $perPage, $normalized, [ 'name' => 'asc' ] );
-            return $this->success( $paginator, 'Categorias globais paginadas com sucesso.' );
-        } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias globais: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Pagina apenas categorias globais deletadas (soft delete) - PARA ADMINS.
-     *
-     * Retorna apenas categorias globais (tenant_id NULL) que foram deletadas,
-     * mantendo isolamento entre tenants.
-     *
-     * @param array $filters Filtros de busca
-     * @param int $perPage Itens por página
-     * @return ServiceResult
-     */
-    public function paginateOnlyTrashed( array $filters, int $perPage = 15 ): ServiceResult
-    {
-        try {
-            $query = Category::onlyTrashed()
-                ->globalOnly();  // APENAS categorias globais, nunca custom dos tenants!
-
-            // Aplicar filtros
-            if ( !empty( $filters[ 'search' ] ) ) {
-                $term = '%' . $filters[ 'search' ] . '%';
-                $query->where( function ( $q ) use ( $term ) {
-                    $q->where( 'name', 'like', $term )
-                        ->orWhere( 'slug', 'like', $term );
-                } );
-            }
-
-            // Aplicar filtro de status (ativo/inativo)
-            if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
-                $query->where( 'is_active', (string) $filters[ 'active' ] === '1' );
-            }
-
-            $paginator = $query->orderBy( 'deleted_at', 'desc' )
-                ->orderBy( 'name', 'asc' )
-                ->paginate( $perPage );
-
-            return $this->success( $paginator, 'Categorias globais deletadas paginadas com sucesso.' );
-        } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias globais deletadas: ' . $e->getMessage() );
-        }
-    }
-
-    public function paginateOnlyTrashedForTenant( array $filters, int $perPage, int $tenantId ): ServiceResult
-    {
-        try {
-            $paginator = $this->categoryRepository->paginateOnlyTrashedForTenant( $perPage, $filters, $tenantId );
-            return $this->success( $paginator, 'Categorias deletadas do tenant paginadas com sucesso.' );
-        } catch ( \Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias deletadas do tenant: ' . $e->getMessage() );
         }
     }
 
@@ -203,19 +128,14 @@ class CategoryService extends AbstractBaseService
         return $this->repository->listActive( [ 'name' => 'asc' ] );
     }
 
-    public function getWithGlobals(): Collection
-    {
-        return $this->repository->listWithGlobals( [ 'name' => 'asc' ] );
-    }
-
     public function getActiveWithChildren(): Collection
     {
-        return Category::whereNull('parent_id')
-            ->where('is_active', true)
-            ->with(['children' => function($query) {
-                $query->where('is_active', true)->orderBy('name', 'asc');
-            }])
-            ->orderBy('name', 'asc')
+        return Category::whereNull( 'parent_id' )
+            ->where( 'is_active', true )
+            ->with( [ 'children' => function ( $query ) {
+                $query->where( 'is_active', true )->orderBy( 'name', 'asc' );
+            } ] )
+            ->orderBy( 'name', 'asc' )
             ->get();
     }
 
@@ -237,14 +157,14 @@ class CategoryService extends AbstractBaseService
     /**
      * Retorna dados para o dashboard de categorias.
      */
-    public function getDashboardData( int $tenantId ): ServiceResult
+    public function getDashboardData(): ServiceResult
     {
         try {
-            $total    = $this->categoryRepository->countCategoriesForTenant( $tenantId );
-            $active   = $this->categoryRepository->countActiveCategoriesForTenant( $tenantId );
+            $total    = $this->categoryRepository->countGlobalCategories();
+            $active   = $this->categoryRepository->countActiveGlobalCategories();
             $inactive = $total - $active;
 
-            $recentCategories = $this->categoryRepository->getRecentCategoriesForTenant( $tenantId, 5 );
+            $recentCategories = $this->categoryRepository->getRecentGlobalCategories( 5 );
 
             $stats = [
                 'total_categories'    => $total,

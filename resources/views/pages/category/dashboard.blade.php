@@ -154,23 +154,17 @@
                                         </thead>
                                         <tbody>
                                             @foreach ($recent as $category)
-                                                @php
-                                                    $tenantId = auth()->user()->tenant_id ?? null;
-                                                    $isCustom = $tenantId ? $category->isCustomFor($tenantId) : false;
-                                                @endphp
                                                 <tr>
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             @if ($category->parent)
-                                                                <i class="bi bi-arrow-return-right text-muted me-2 subcategory-icon"></i>
+                                                                <i
+                                                                    class="bi bi-arrow-return-right text-muted me-2 subcategory-icon"></i>
                                                             @endif
                                                             <i class="bi bi-tag me-2 text-muted"></i>
                                                             <span>{{ $category->name }}</span>
-                                                            @if ($isCustom)
-                                                                <span class="badge bg-primary ms-2" title="Pessoal"><i class="bi bi-person-fill"></i></span>
-                                                            @else
-                                                                <span class="badge bg-secondary ms-2" title="Sistema"><i class="bi bi-gear-fill"></i></span>
-                                                            @endif
+                                                            <span class="badge bg-secondary ms-2" title="Sistema"><i
+                                                                    class="bi bi-gear-fill"></i></span>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -224,25 +218,19 @@
                             <div class="mobile-view">
                                 <div class="list-group">
                                     @foreach ($recent as $category)
-                                        @php
-                                            $tenantId = auth()->user()->tenant_id ?? null;
-                                            $isCustom = $tenantId ? $category->isCustomFor($tenantId) : false;
-                                        @endphp
                                         <a href="{{ route('categories.show', $category->slug) }}"
                                             class="list-group-item list-group-item-action py-3">
                                             <div class="d-flex align-items-start">
                                                 @if ($category->parent)
-                                                    <i class="bi bi-arrow-return-right text-muted me-2 mt-1 subcategory-icon-mobile"></i>
+                                                    <i
+                                                        class="bi bi-arrow-return-right text-muted me-2 mt-1 subcategory-icon-mobile"></i>
                                                 @endif
                                                 <i class="bi bi-tag text-muted me-2 mt-1"></i>
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold mb-2">{{ $category->name }}</div>
                                                     <div class="d-flex gap-2 flex-wrap">
-                                                        @if ($isCustom)
-                                                            <span class="badge bg-primary" title="Pessoal"><i class="bi bi-person-fill"></i></span>
-                                                        @else
-                                                            <span class="badge bg-secondary" title="Sistema"><i class="bi bi-gear-fill"></i></span>
-                                                        @endif
+                                                        <span class="badge bg-secondary" title="Sistema"><i
+                                                                class="bi bi-gear-fill"></i></span>
                                                         @if ($category->is_active)
                                                             <span class="badge bg-success-subtle text-success">Ativa</span>
                                                         @else
@@ -257,12 +245,12 @@
                                 </div>
                             </div>
                         @else
-                                <div class="p-4">
-                                    <p class="text-muted mb-0">
-                                        Nenhuma categoria recente encontrada. Cadastre novas categorias para visualizar
-                                        aqui.
-                                    </p>
-                                </div>
+                            <div class="p-4">
+                                <p class="text-muted mb-0">
+                                    Nenhuma categoria recente encontrada. Cadastre novas categorias para visualizar
+                                    aqui.
+                                </p>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -334,5 +322,3 @@
         </div>
     </div>
 @endsection
-
-
