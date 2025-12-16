@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
+/**
 /**
  * Seeder simplificado para categorias padrão por tenant.
  *
@@ -135,7 +135,7 @@ class CategorySeeder extends Seeder
                 ->first();
 
             if ( !$existing ) {
-                $id                                 = DB::table( 'categories' )->insertGetId( [
+                $id                                     = DB::table( 'categories' )->insertGetId( [
                     'tenant_id'  => $tenantId,
                     'slug'       => $categoryData[ 'slug' ],
                     'name'       => $categoryData[ 'name' ],

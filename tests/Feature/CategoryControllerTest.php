@@ -13,7 +13,6 @@ class CategoryControllerTest extends TestCase
     use \Illuminate\Foundation\Testing\RefreshDatabase;
 
     protected $tenant;
-    protected $adminUser;
     protected $tenantUser;
 
     protected function setUp(): void
@@ -24,114 +23,165 @@ class CategoryControllerTest extends TestCase
         $this->tenant = Tenant::factory()->create();
 
         // Setup Tenant User
-        $this->tenantUser = User::factory()->create([
-            'tenant_id' => $this->tenant->id,
-        ]);
+        $this->tenantUser = User::factory()->create( [
+            'tenant_id'         => $this->tenant->id,
+            'email_verified_at' => now(), // Mark as verified to avoid redirect
+        ] );
 
         // Assign 'provider' role to tenantUser
-        $providerRole = \App\Models\Role::firstOrCreate(['name' => 'provider'], ['description' => 'Provider']);
-        $this->tenantUser->roles()->attach($providerRole->id, ['tenant_id' => $this->tenant->id]);
-
-        // Setup Admin User
-        $adminTenant = Tenant::factory()->create();
-        $this->adminUser = User::factory()->create([
-            'tenant_id' => $adminTenant->id,
-        ]);
-
-        // Create 'admin' role and assign
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin']);
-        // Attach role manually or via helper if available
-        // User::attachRole uses getTenantScopedRoles()->attach...
-        // We need to ensure user_roles table is populated
-        $this->adminUser->roles()->attach($adminRole->id, ['tenant_id' => $adminTenant->id]);
+        $providerRole = \App\Models\Role::firstOrCreate( [ 'name' => 'provider' ], [ 'description' => 'Provider' ] );
+        $this->tenantUser->roles()->attach( $providerRole->id, [ 'tenant_id' => $this->tenant->id ] );
     }
 
     public function test_tenant_can_create_category()
     {
-        // Mock permissions if necessary, or assume factory user has them?
-        // Let's try actingAs first.
-
-        $response = $this->actingAs($this->tenantUser)
-            ->post(route('categories.store'), [
-                'name' => 'Minha Categoria Custom',
+        $response = $this->actingAs( $this->tenantUser )
+            ->post( route( 'categories.store' ), [
+                'name'      => 'Minha Categoria Custom',
                 'is_active' => true,
-            ]);
+            ] );
 
-        $response->assertRedirect(route('categories.index'));
+        $response->assertRedirect( route( 'categories.index' ) );
         $response->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('categories', [
-            'name' => 'Minha Categoria Custom',
-            'slug' => 'minha-categoria-custom',
-        ]);
-
-        $category = Category::where('slug', 'minha-categoria-custom')->first();
-        $this->assertNotNull($category);
-
-        // Verify pivot
-        $this->assertDatabaseHas('category_tenant', [
-            'category_id' => $category->id,
+        $this->assertDatabaseHas( 'categories', [
+            'name'      => 'Minha Categoria Custom',
+            'slug'      => 'minha-categoria-custom',
             'tenant_id' => $this->tenant->id,
-            'is_custom' => true,
-        ]);
+        ] );
+
+        $category = Category::where( 'slug', 'minha-categoria-custom' )->first();
+        $this->assertNotNull( $category );
+        $this->assertEquals( $this->tenant->id, $category->tenant_id );
     }
 
-    public function test_admin_can_create_global_category()
+    public function test_tenant_can_create_duplicate_names()
     {
-        // Need to ensure adminUser has 'manage-global-categories' permission
-        // This depends on how PermissionService works.
-        // For now, let's try.
+        // Create first category
+        $firstCategory = Category::create( [
+            'name'      => 'Serviços Gerais',
+            'slug'      => 'servicos-gerais',
+            'tenant_id' => $this->tenant->id,
+            'is_active' => true,
+        ] );
 
-        $response = $this->actingAs($this->adminUser)
-            ->post(route('categories.store'), [
-                'name' => 'Categoria Global Nova',
+        $response = $this->actingAs( $this->tenantUser )
+            ->post( route( 'categories.store' ), [
+                'name'      => 'Serviços Gerais', // Same name
                 'is_active' => true,
-            ]);
+            ] );
 
-        // If permission fails, it will be 403.
-        // If successful, redirect.
-
-        if ($response->status() === 403) {
-            $this->markTestSkipped('Admin user needs permissions setup.');
-        }
-
-        $response->assertRedirect(route('categories.index'));
-
-        $this->assertDatabaseHas('categories', [
-            'name' => 'Categoria Global Nova',
-            'slug' => 'categoria-global-nova',
-        ]);
-
-        $category = Category::where('slug', 'categoria-global-nova')->first();
-
-        // Global category should NOT have pivot for admin (unless logic changed)
-        // My service logic: if tenantId is null, do NOT attach.
-        $this->assertDatabaseMissing('category_tenant', [
-            'category_id' => $category->id,
-        ]);
-    }
-
-    public function test_tenant_can_create_duplicate_slug_if_global_exists()
-    {
-        // Create a global category
-        $global = Category::create(['name' => 'Global', 'slug' => 'global', 'is_active' => true]);
-
-        $response = $this->actingAs($this->tenantUser)
-            ->post(route('categories.store'), [
-                'name' => 'Global', // Same name -> same slug
-                'is_active' => true,
-            ]);
-
-        $response->assertRedirect(route('categories.index'));
+        $response->assertRedirect( route( 'categories.index' ) );
         $response->assertSessionHasNoErrors();
 
-        // Tenant should have its own custom category with same slug
-        $category = Category::where('slug', 'global')->orderByDesc('id')->first();
-        $this->assertNotNull($category);
-        $this->assertDatabaseHas('category_tenant', [
-            'category_id' => $category->id,
+        // Should create a new category with incremented slug
+        $this->assertDatabaseHas( 'categories', [
+            'name'      => 'Serviços Gerais',
             'tenant_id' => $this->tenant->id,
-            'is_custom' => true,
-        ]);
+        ] );
+
+        $categories = Category::where( 'tenant_id', $this->tenant->id )
+            ->where( 'name', 'Serviços Gerais' )
+            ->get();
+
+        $this->assertCount( 2, $categories );
     }
+
+    public function test_tenant_cannot_create_duplicate_slug_same_tenant()
+    {
+        // Create first category
+        $firstCategory = Category::create( [
+            'name'      => 'Serviços Gerais',
+            'slug'      => 'servicos-gerais',
+            'tenant_id' => $this->tenant->id,
+            'is_active' => true,
+        ] );
+
+        // Try to create category with explicit duplicate slug
+        $response = $this->actingAs( $this->tenantUser )
+            ->post( route( 'categories.store' ), [
+                'name'      => 'Serviços Diferentes',
+                'slug'      => 'servicos-gerais', // Explicit duplicate slug
+                'is_active' => true,
+            ] );
+
+        $response->assertSessionHasErrors( [ 'slug' ] );
+        $errors = $response->getSession()->get( 'errors' );
+        $this->assertTrue( $errors->has( 'slug' ) );
+        $this->assertStringContainsString( 'slug', $errors->first( 'slug' ) );
+    }
+
+    public function test_different_tenants_can_have_same_slug()
+    {
+        // Create category for first tenant
+        $firstCategory = Category::create( [
+            'name'      => 'Serviços Gerais',
+            'slug'      => 'servicos-gerais',
+            'tenant_id' => $this->tenant->id,
+            'is_active' => true,
+        ] );
+
+        // Create second tenant and user
+        $secondTenant = Tenant::factory()->create();
+        $secondUser   = User::factory()->create( [
+            'tenant_id'         => $secondTenant->id,
+            'email_verified_at' => now(),
+        ] );
+
+        // Assign role
+        $providerRole = \App\Models\Role::firstOrCreate( [ 'name' => 'provider' ], [ 'description' => 'Provider' ] );
+        $secondUser->roles()->attach( $providerRole->id, [ 'tenant_id' => $secondTenant->id ] );
+
+        // Second user can create category with same slug
+        $response = $this->actingAs( $secondUser )
+            ->post( route( 'categories.store' ), [
+                'name'      => 'Serviços Gerais',
+                'is_active' => true,
+            ] );
+
+        $response->assertRedirect( route( 'categories.index' ) );
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas( 'categories', [
+            'name'      => 'Serviços Gerais',
+            'slug'      => 'servicos-gerais',
+            'tenant_id' => $secondTenant->id,
+        ] );
+    }
+
+    public function test_tenant_can_view_own_categories()
+    {
+        // Create categories for this tenant
+        $category1 = Category::create( [
+            'name'      => 'Categoria A',
+            'slug'      => 'categoria-a',
+            'tenant_id' => $this->tenant->id,
+            'is_active' => true,
+        ] );
+
+        $category2 = Category::create( [
+            'name'      => 'Categoria B',
+            'slug'      => 'categoria-b',
+            'tenant_id' => $this->tenant->id,
+            'is_active' => false,
+        ] );
+
+        // Create category for different tenant
+        $otherTenant   = Tenant::factory()->create();
+        $otherCategory = Category::create( [
+            'name'      => 'Categoria Externa',
+            'slug'      => 'categoria-externa',
+            'tenant_id' => $otherTenant->id,
+            'is_active' => true,
+        ] );
+
+        $response = $this->actingAs( $this->tenantUser )
+            ->get( route( 'categories.index' ) );
+
+        $response->assertStatus( 200 );
+        $response->assertSee( 'Categoria A' );
+        $response->assertSee( 'Categoria B' );
+        $response->assertDontSee( 'Categoria Externa' );
+    }
+
 }

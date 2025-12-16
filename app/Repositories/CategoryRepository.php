@@ -97,7 +97,7 @@ class CategoryRepository extends AbstractTenantRepository
      */
     public function findOrderedByNameAndTenantId( int $tenantId, string $direction = 'asc' ): Collection
     {
-        return $this->getAllByTenantId( $tenantId, [], [ 'name' => $direction ] );
+        return $this->getAllByTenant( [], [ 'name' => $direction ] );
     }
 
     /**

@@ -25,16 +25,8 @@
                     </ol>
                 </nav>
             </div>
-            @php
-                $isAdminView = false;
-            @endphp
-            @role('admin')
-                @php
-                    $isAdminView = true;
-                @endphp
-            @endrole
             <p class="text-muted mb-0 small">
-                {{ $isAdminView ? 'Visão geral das categorias globais do sistema com atalhos de gestão.' : 'Visão geral das suas categorias (custom + sistema).' }}
+                Visão geral das suas categorias.
             </p>
         </div>
 
@@ -163,13 +155,8 @@
                                                             @endif
                                                             <i class="bi bi-tag me-2 text-muted"></i>
                                                             <span>{{ $category->name }}</span>
-                                                            @if ($category->isGlobal())
-                                                                <span class="badge bg-secondary ms-2" title="Sistema"><i
-                                                                        class="bi bi-gear-fill"></i></span>
-                                                            @else
-                                                                <span class="badge bg-primary ms-2" title="Custom"><i
-                                                                        class="bi bi-person-fill"></i></span>
-                                                            @endif
+                                                            <span class="badge bg-primary ms-2" title="Personalizada"><i
+                                                                    class="bi bi-person-fill"></i></span>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -187,24 +174,7 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @php
-                                                            $isAdminDate = false;
-                                                        @endphp
-                                                        @role('admin')
-                                                            @php
-                                                                $isAdminDate = true;
-                                                            @endphp
-                                                        @endrole
-                                                        @php
-                                                            $isGlobalDate = method_exists($category, 'isGlobal')
-                                                                ? $category->isGlobal()
-                                                                : false;
-                                                        @endphp
-                                                        @if ($isAdminDate || !$isGlobalDate)
-                                                            {{ optional($category->created_at)->format('d/m/Y') }}
-                                                        @else
-                                                            —
-                                                        @endif
+                                                        {{ optional($category->created_at)->format('d/m/Y') }}
                                                     </td>
                                                     <td class="text-center">
                                                         <a href="{{ route('categories.show', $category->slug) }}"
@@ -234,13 +204,8 @@
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold mb-2">{{ $category->name }}</div>
                                                     <div class="d-flex gap-2 flex-wrap">
-                                                        @if ($category->isGlobal())
-                                                            <span class="badge bg-secondary" title="Sistema"><i
-                                                                    class="bi bi-gear-fill"></i></span>
-                                                        @else
-                                                            <span class="badge bg-primary" title="Custom"><i
-                                                                    class="bi bi-person-fill"></i></span>
-                                                        @endif
+                                                        <span class="badge bg-primary" title="Personalizada"><i
+                                                                class="bi bi-person-fill"></i></span>
                                                         @if ($category->is_active)
                                                             <span class="badge bg-success-subtle text-success">Ativa</span>
                                                         @else
@@ -275,37 +240,20 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        @if ($isAdminView)
-                            <ul class="list-unstyled mb-0 small text-muted">
-                                <li class="mb-2">
-                                    <i class="bi bi-shield-lock-fill text-primary me-2"></i>
-                                    Gerencie categorias globais com cautela; mudanças afetam todos os espaços.
-                                </li>
-                                <li class="mb-2">
-                                    <i class="bi bi-code-slash text-success me-2"></i>
-                                    Mantenha padronização em nomes e slugs para consistência.
-                                </li>
-                                <li class="mb-2">
-                                    <i class="bi bi-diagram-3-fill text-warning me-2"></i>
-                                    Revise hierarquias e subcategorias para garantir coerência.
-                                </li>
-                            </ul>
-                        @else
-                            <ul class="list-unstyled mb-0 small text-muted">
-                                <li class="mb-2">
-                                    <i class="bi bi-diagram-3-fill text-primary me-2"></i>
-                                    Mantenha a estrutura hierárquica organizada para facilitar a navegação.
-                                </li>
-                                <li class="mb-2">
-                                    <i class="bi bi-tag-fill text-success me-2"></i>
-                                    Use categorias de sistema quando possível.
-                                </li>
-                                <li class="mb-2">
-                                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                    Revise categorias inativas que ainda podem ser úteis para o negócio.
-                                </li>
-                            </ul>
-                        @endif
+                        <ul class="list-unstyled mb-0 small text-muted">
+                            <li class="mb-2">
+                                <i class="bi bi-diagram-3-fill text-primary me-2"></i>
+                                Mantenha a estrutura hierárquica organizada para facilitar a navegação.
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-tag-fill text-success me-2"></i>
+                                Use nomes descritivos para suas categorias.
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                Revise categorias inativas que ainda podem ser úteis para o negócio.
+                            </li>
+                        </ul>
                     </div>
                 </div>
 

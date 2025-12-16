@@ -11,7 +11,7 @@
                     <i class="bi bi-tags me-2"></i>
                     Categorias
                 </h1>
-                <p class="text-muted">Lista de categorias do sistema</p>
+                <p class="text-muted">Lista de suas categorias </p>
             </div>
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
@@ -138,6 +138,8 @@
                                                     {{ $category->parent ? $category->parent->name : $category->name }}
                                                 </div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <span class="badge bg-primary" title="Personalizada"><i
+                                                            class="bi bi-person-fill"></i></span>
                                                     @if ($category->is_active)
                                                         <span class="badge bg-success-subtle text-success">Ativo</span>
                                                     @else
@@ -169,18 +171,11 @@
                         <div class="desktop-view">
                             <div class="table-responsive">
                                 <table class="modern-table table mb-0">
-                                    @php($isAdminTable = false)
-                                    @role('admin')
-                                        @php($isAdminTable = true)
-                                    @endrole
                                     <thead>
                                         <tr>
                                             <th width="60"><i class="bi bi-tag" aria-hidden="true"></i></th>
                                             <th>Categoria</th>
                                             <th>Subcategoria</th>
-                                            @if ($isAdminTable)
-                                                <th>Slug</th>
-                                            @endif
                                             <th width="120">Tipo</th>
                                             <th width="120">Status</th>
                                             <th width="150">Criado em</th>
@@ -188,7 +183,6 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php($tenantId = auth()->user()->tenant_id ?? null)
                                         @forelse( $categories as $category )
                                             <tr>
                                                 <td>
@@ -212,25 +206,10 @@
                                                         <span class="text-muted">—</span>
                                                     @endif
                                                 </td>
-                                                @if ($isAdminTable)
-                                                    <td><span class="text-code">{{ $category->slug }}</span></td>
-                                                @endif
                                                 <td>
-                                                    @if ($isAdminTable)
-                                                        <span class="modern-badge badge-system">
-                                                            Sistema
-                                                        </span>
-                                                    @else
-                                                        @if ($category->isCustomFor($tenantId))
-                                                            <span class="modern-badge badge-custom">
-                                                                Custom
-                                                            </span>
-                                                        @else
-                                                            <span class="modern-badge badge-system">
-                                                                Sistema
-                                                            </span>
-                                                        @endif
-                                                    @endif
+                                                    <span class="modern-badge badge-custom">
+                                                        Personalizada
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <span
@@ -263,49 +242,23 @@
                                                                 class="action-btn action-btn-view" title="Visualizar">
                                                                 <i class="bi bi-eye-fill"></i>
                                                             </a>
-                                                            @php($isGlobal = $category->isGlobal())
-                                                            @php($isAdmin = false)
-                                                            @role('admin')
-                                                                @php($isAdmin = true)
-                                                            @endrole
                                                             @php($hasChildren = $category->hasChildren())
                                                             @php($hasServices = $category->services()->exists())
                                                             @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
                                                             @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
-                                                            @if ($isAdmin)
-                                                                <a href="{{ route('categories.edit', $category->slug) }}"
-                                                                    class="action-btn action-btn-edit" title="Editar">
-                                                                    <i class="bi bi-pencil-fill"></i>
-                                                                </a>
-                                                                @if ($canDelete)
-                                                                    <button type="button"
-                                                                        class="action-btn action-btn-delete"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#deleteModal"
-                                                                        data-delete-url="{{ route('categories.destroy', $category->slug) }}"
-                                                                        data-category-name="{{ $category->name }}"
-                                                                        title="Excluir">
-                                                                        <i class="bi bi-trash-fill"></i>
-                                                                    </button>
-                                                                @endif
-                                                            @else
-                                                                @if (!$isGlobal)
-                                                                    <a href="{{ route('categories.edit', $category->slug) }}"
-                                                                        class="action-btn action-btn-edit" title="Editar">
-                                                                        <i class="bi bi-pencil-fill"></i>
-                                                                    </a>
-                                                                    @if ($canDelete)
-                                                                        <button type="button"
-                                                                            class="action-btn action-btn-delete"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#deleteModal"
-                                                                            data-delete-url="{{ route('categories.destroy', $category->slug) }}"
-                                                                            data-category-name="{{ $category->name }}"
-                                                                            title="Excluir">
-                                                                            <i class="bi bi-trash-fill"></i>
-                                                                        </button>
-                                                                    @endif
-                                                                @endif
+                                                            <a href="{{ route('categories.edit', $category->slug) }}"
+                                                                class="action-btn action-btn-edit" title="Editar">
+                                                                <i class="bi bi-pencil-fill"></i>
+                                                            </a>
+                                                            @if ($canDelete)
+                                                                <button type="button"
+                                                                    class="action-btn action-btn-delete"
+                                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                    data-delete-url="{{ route('categories.destroy', $category->slug) }}"
+                                                                    data-category-name="{{ $category->name }}"
+                                                                    title="Excluir">
+                                                                    <i class="bi bi-trash-fill"></i>
+                                                                </button>
                                                             @endif
                                                         @endif
                                                     </div>

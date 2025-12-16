@@ -139,12 +139,12 @@ Route::middleware( [ 'auth', 'verified' ] )->prefix( 'categories' )->name( 'cate
     Route::get( '/', [ CategoryController::class, 'index' ] )->name( 'index' );
     Route::get( '/create', [ CategoryController::class, 'create' ] )->name( 'create' );
     Route::get( '/export', [ CategoryController::class, 'export' ] )->name( 'export' );
-    Route::get( '/ajax/check-slug', [ CategoryController::class, 'checkSlug' ] )->name( 'ajax.check-slug' );
     Route::post( '/', [ CategoryController::class, 'store' ] )->name( 'store' );
     Route::get( '/{slug}', [ CategoryController::class, 'show' ] )->name( 'show' );
     Route::get( '/{slug}/edit', [ CategoryController::class, 'edit' ] )->name( 'edit' );
     Route::put( '/{slug}', [ CategoryController::class, 'update' ] )->name( 'update' );
     Route::delete( '/{slug}', [ CategoryController::class, 'destroy' ] )->name( 'destroy' );
+    Route::post( '/{slug}/toggle-status', [ CategoryController::class, 'toggleStatus' ] )->name( 'toggle-status' );
     Route::post( '/{slug}/set-default', [ CategoryController::class, 'setDefault' ] )->name( 'set-default' );
     Route::post( '/{slug}/restore', [ CategoryController::class, 'restore' ] )->name( 'restore' );
     Route::get( '/{id}/children', [ CategoryController::class, 'getChildren' ] )->name( 'children' );

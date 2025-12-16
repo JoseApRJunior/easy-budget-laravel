@@ -83,8 +83,16 @@ class CategoryController extends Controller
                 $categories = $categories->appends( $request->query() );
             }
         } else {
-            // Quando não há filtros, mostrar tabela vazia inicialmente
-            $categories = collect();
+            // Carregar categorias por padrão quando não há filtros
+            $result = $service->listAll();
+            if ( $result->isSuccess() ) {
+                $categories = $this->getServiceData( $result, collect() );
+                if ( method_exists( $categories, 'appends' ) ) {
+                    $categories = $categories->appends( $request->query() );
+                }
+            } else {
+                $categories = collect();
+            }
         }
 
         // Carregar categorias pai para filtros na view
@@ -138,17 +146,41 @@ class CategoryController extends Controller
      */
     public function store( StoreCategoryRequest $request )
     {
+        // DEBUG: Log what's happening
+        error_log( "=== CATEGORY STORE DEBUG START ===" );
+        error_log( "Request data: " . json_encode( $request->all() ) );
+
         $data = $request->validated();
         if ( isset( $data[ 'name' ] ) ) {
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
+        error_log( "Data after validation: " . json_encode( $data ) );
+
         $result = $this->categoryService->createCategory( $data );
 
+        error_log( "Service result isError: " . ( $result->isError() ? 'YES' : 'NO' ) );
+        error_log( "Service result message: " . $result->getMessage() );
+
         if ( $result->isError() ) {
-            return back()->with( 'error', $result->getMessage() )->withInput();
+            error_log( "ERROR: Service returned error, entering error handling" );
+
+            // Converter ServiceResult errors em validation errors para campos específicos
+            $message = $result->getMessage();
+
+            // Se for erro de slug duplicado, adicionar erro de validação específico
+            if ( strpos( $message, 'Slug já existe neste tenant' ) !== false ) {
+                error_log( "SLUG ERROR DETECTED - returning validation errors" );
+                return back()
+                    ->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa. Escolha outro slug.' ] )
+                    ->withInput();
+            }
+
+            error_log( "GENERAL ERROR - returning general error" );
+            return back()->with( 'error', $message )->withInput();
         }
 
+        error_log( "SUCCESS: Service returned success" );
         $category = $result->getData();
         $this->logOperation( 'categories_store', [ 'id' => $category->id, 'name' => $category->name ] );
 

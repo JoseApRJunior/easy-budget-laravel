@@ -43,7 +43,6 @@
                 <form action="{{ route('categories.update', $category->slug) }}" method="POST">
                     @csrf
                     @method('PUT')
-                    <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
                     <div class="row g-4">
                         <div class="col-md-12">
                             <div class="form-floating mb-3">
@@ -83,14 +82,11 @@
                                     <label for="parent_id">Categoria Pai (opcional)</label>
                                 @endif
                             </div>
-                            @role('admin')
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="slugPreview" name="slugPreview"
-                                        value="{{ $category->slug }}" placeholder="slug" disabled>
-                                    <label for="slugPreview">Slug (gerado automaticamente)</label>
-                                </div>
-                                <div class="form-text" id="slugStatus"></div>
-                            @endrole
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="slugPreview" name="slugPreview"
+                                    value="{{ $category->slug }}" placeholder="slug" disabled>
+                                <label for="slugPreview">Slug (gerado automaticamente)</label>
+                            </div>
                             @if ($canDeactivate)
                                 <input type="hidden" name="is_active" value="0">
                             @else
@@ -136,15 +132,6 @@
         (function() {
             var nameInput = document.getElementById('name');
             var slugInput = document.getElementById('slugPreview');
-            var statusEl = document.getElementById('slugStatus');
-            var submitBtn = document.querySelector('form button[type="submit"]');
-            var tenantIdEl = document.getElementById('tenantId');
-            var tenantId = tenantIdEl && tenantIdEl.value ? parseInt(tenantIdEl.value) : null;
-            var isAdmin = false;
-
-            @role('admin')
-                isAdmin = true;
-            @endrole
 
             function slugify(text) {
                 return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -155,53 +142,10 @@
                     .replace(/-+/g, '-');
             }
 
-            function checkSlug(slug) {
-                var url = window.location.origin + '/categories/ajax/check-slug' + '?slug=' + encodeURIComponent(slug) +
-                    (tenantId ? '&tenant_id=' + tenantId : '');
-
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(function(r) {
-                        return r.json();
-                    })
-                    .then(function(data) {
-                        if (data.exists && slug !== '{{ $category->slug }}') {
-                            statusEl.textContent = 'Este nome já está em uso.';
-                            statusEl.className = 'form-text text-danger';
-                            submitBtn.disabled = true;
-                            nameInput.classList.add('is-invalid');
-                        } else {
-                            statusEl.textContent = '';
-                            statusEl.className = 'form-text';
-                            submitBtn.disabled = false;
-                            nameInput.classList.remove('is-invalid');
-                        }
-                    })
-                    .catch(function() {
-                        statusEl.textContent = '';
-                        statusEl.className = 'form-text';
-                        submitBtn.disabled = false;
-                        nameInput.classList.remove('is-invalid');
-                    });
-            }
-
             if (nameInput && slugInput) {
                 nameInput.addEventListener('input', function() {
-                    if (isAdmin) {
-                        slugInput.value = slugify(nameInput.value || '');
-                        var s = slugInput.value;
-                        if (s) {
-                            checkSlug(s);
-                        }
-                    }
+                    slugInput.value = slugify(nameInput.value || '');
                 });
-
-                if (isAdmin && nameInput.value) {
-                    checkSlug(slugify(nameInput.value));
-                }
             }
         })();
     </script>

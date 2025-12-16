@@ -123,7 +123,7 @@ class CategoryService extends AbstractBaseService
                     $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId );
                 }
 
-                // Validar slug único
+                // Validar slug único - se falhar, retornar ServiceResult para o controller tratar
                 if ( !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId ) ) {
                     return ServiceResult::error(
                         OperationStatus::INVALID_DATA,

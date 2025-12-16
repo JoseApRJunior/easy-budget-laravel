@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Category;
-use App\Models\Traits\TenantScoped;
 use App\Repositories\CategoryRepository;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -19,9 +18,7 @@ class UpdateCategoryRequest extends FormRequest
         if ( !$user ) {
             return false;
         }
-        $perm = app( \App\Services\Core\PermissionService::class);
-        return $user->can( 'manage-custom-categories' )
-            || $perm->canManageGlobalCategories( $user );
+        return $user->can( 'manage-custom-categories' );
     }
 
     public function rules(): array
@@ -46,25 +43,18 @@ class UpdateCategoryRequest extends FormRequest
                 return; // 404 handled by controller
             }
 
-            $user    = $this->user();
-            $isAdmin = $user ? app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user ) : false;
+            $user     = $this->user();
+            $tenantId = $user->tenant_id ?? null;
 
-            // Definir o tenant scope para validação:
-            // - Admin (global): null (vai verificar apenas categorias globais)
-            // - Provider: tenant específico (vai verificar apenas dentro do próprio tenant)
-            $tenantId = $isAdmin ? null : ( $user->tenant_id ?? null );
-            $slug     = Str::slug( $this->input( 'name' ) );
-
-            // 1. Validate Permissions
-            if ( $isAdmin && !$category->isGlobal() ) {
-                $validator->errors()->add( 'category', 'Admin só pode editar categorias globais.' );
-            }
-            if ( !$isAdmin && $category->isGlobal() ) {
-                $validator->errors()->add( 'category', 'Categorias globais só podem ser editadas por administradores.' );
+            // Na nova lógica simplificada, todas as categorias pertencem ao tenant
+            // Verificar se categoria pertence ao mesmo tenant do usuário
+            if ( $category->tenant_id !== $tenantId ) {
+                $validator->errors()->add( 'category', 'Você não tem permissão para editar esta categoria.' );
+                return;
             }
 
-            // 2. Validate Slug Uniqueness (Ignoring current category)
-            // Usar CategoryRepository para validação tenant-aware
+            // Validar slug único (ignorando categoria atual)
+            $slug               = Str::slug( $this->input( 'name' ) );
             $categoryRepository = app( CategoryRepository::class);
             $slugExists         = $categoryRepository->existsBySlug( $slug, $tenantId, $category->id );
 
@@ -72,17 +62,17 @@ class UpdateCategoryRequest extends FormRequest
                 $validator->errors()->add( 'name', 'Este nome já está em uso.' );
             }
 
-            // 3. Validate Parent
+            // Validar parent (se fornecido)
             if ( $this->filled( 'parent_id' ) ) {
                 $parentId = (int) $this->input( 'parent_id' );
 
-                // Prevent self-parenting
+                // Prevenir auto-parenting
                 if ( $parentId === $category->id ) {
                     $validator->errors()->add( 'parent_id', 'Uma categoria não pode ser pai de si mesma.' );
                     return;
                 }
 
-                // Prevent circular reference
+                // Prevenir referência circular
                 if ( $category->wouldCreateCircularReference( $parentId ) ) {
                     $validator->errors()->add( 'parent_id', 'Esta operação criaria uma hierarquia circular.' );
                     return;
@@ -91,18 +81,9 @@ class UpdateCategoryRequest extends FormRequest
                 $parent = Category::find( $parentId );
                 if ( !$parent ) return;
 
-                if ( $isAdmin ) {
-                    if ( !$parent->isGlobal() ) {
-                        $validator->errors()->add( 'parent_id', 'Admin só pode selecionar categoria pai base (global).' );
-                    }
-                } else {
-                    if ( $tenantId === null ) {
-                        $validator->errors()->add( 'parent_id', 'Selecione uma categoria pai disponível.' );
-                    } else {
-                        if ( !$parent->isAvailableFor( $tenantId ) ) {
-                            $validator->errors()->add( 'parent_id', 'A categoria pai deve pertencer ao seu espaço ou ser global.' );
-                        }
-                    }
+                // Parent deve pertencer ao mesmo tenant
+                if ( $parent->tenant_id !== $tenantId ) {
+                    $validator->errors()->add( 'parent_id', 'A categoria pai deve pertencer à sua empresa.' );
                 }
             }
         } );

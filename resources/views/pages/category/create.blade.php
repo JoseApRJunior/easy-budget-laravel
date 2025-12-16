@@ -33,7 +33,6 @@
                 @endif
                 <form action="{{ route('categories.store') }}" method="POST">
                     @csrf
-                    <input type="hidden" id="tenantId" value="{{ optional(auth()->user())->tenant_id }}">
                     <div class="row g-4">
                         <div class="col-md-12">
                             <div class="form-floating mb-3">
@@ -61,12 +60,10 @@
                                     value="{{ Str::slug(old('name')) }}" placeholder="slug" disabled>
                                 <label for="slugPreview">Slug (gerado automaticamente)</label>
                             </div>
-                            <div class="form-text" id="slugStatus"></div>
                             <input type="hidden" name="is_active" value="0">
                             <div class="form-check form-switch mt-3">
                                 <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                    value="1"
-                                    {{ old('is_active', $defaults['is_active'] ?? true) ? 'checked' : '' }}>
+                                    value="1" {{ old('is_active', $defaults['is_active'] ?? true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_active">Ativo</label>
                                 @error('is_active')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -96,20 +93,6 @@
         (function() {
             var nameInput = document.getElementById('name');
             var slugInput = document.getElementById('slugPreview');
-            var statusEl = document.getElementById('slugStatus');
-            var submitBtn = document.querySelector('form button[type="submit"]');
-            var tenantIdEl = document.getElementById('tenantId');
-            var tenantId = tenantIdEl && tenantIdEl.value ? parseInt(tenantIdEl.value) : null;
-            var formEl = document.querySelector('form');
-            var lastCheck = {
-                slug: '',
-                attached: false,
-                exists: false
-            };
-            var isAdmin = false;
-            @role('admin')
-                isAdmin = true;
-            @endrole
 
             function slugify(text) {
                 return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -120,76 +103,10 @@
                     .replace(/-+/g, '-');
             }
 
-            function checkSlug(slug) {
-                var url = window.location.origin + '/categories/ajax/check-slug' + '?slug=' + encodeURIComponent(slug) +
-                    (tenantId ? '&tenant_id=' + tenantId : '');
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(function(r) {
-                        return r.json();
-                    })
-                    .then(function(data) {
-                        lastCheck = {
-                            slug: data.slug,
-                            attached: !!data.attached,
-                            exists: !!data.exists
-                        };
-                        if (data.exists) {
-                            statusEl.textContent = 'Este nome já está em uso.';
-                            statusEl.className = 'form-text text-danger';
-                            submitBtn.disabled = true;
-                            nameInput.classList.add('is-invalid');
-                        } else {
-                            statusEl.textContent = 'Slug disponível.';
-                            statusEl.className = 'form-text text-muted';
-                            submitBtn.disabled = false;
-                            nameInput.classList.remove('is-invalid');
-                        }
-                    })
-                    .catch(function() {
-                        statusEl.textContent = '';
-                        statusEl.className = 'form-text';
-                        submitBtn.disabled = false;
-                        nameInput.classList.remove('is-invalid');
-                    });
-            }
             if (nameInput && slugInput) {
                 nameInput.addEventListener('input', function() {
                     slugInput.value = slugify(nameInput.value || '');
-                    var s = slugInput.value;
-                    if (s) {
-                        checkSlug(s);
-                    }
                 });
-                if (nameInput.value) {
-                    checkSlug(slugify(nameInput.value));
-                }
-
-                if (formEl) {
-                    formEl.addEventListener('submit', function(e) {
-                        var currentSlug = slugify(nameInput.value || '');
-                        if (!currentSlug) {
-                            return;
-                        }
-                        if (lastCheck.slug !== currentSlug) {
-                            e.preventDefault();
-                            checkSlug(currentSlug);
-                            setTimeout(function() {
-                                if (lastCheck.attached) {
-                                    submitBtn.disabled = true;
-                                    return;
-                                }
-                                formEl.submit();
-                            }, 200);
-                        } else if (lastCheck.attached) {
-                            e.preventDefault();
-                            submitBtn.disabled = true;
-                        }
-                    });
-                }
             }
         })();
     </script>
