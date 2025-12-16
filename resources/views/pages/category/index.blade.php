@@ -216,9 +216,21 @@
                                                     <td><span class="text-code">{{ $category->slug }}</span></td>
                                                 @endif
                                                 <td>
-                                                    <span class="modern-badge badge-system">
-                                                        Sistema
-                                                    </span>
+                                                    @if ($isAdminTable)
+                                                        <span class="modern-badge badge-system">
+                                                            Sistema
+                                                        </span>
+                                                    @else
+                                                        @if ($category->isCustomFor($tenantId))
+                                                            <span class="modern-badge badge-custom">
+                                                                Custom
+                                                            </span>
+                                                        @else
+                                                            <span class="modern-badge badge-system">
+                                                                Sistema
+                                                            </span>
+                                                        @endif
+                                                    @endif
                                                 </td>
                                                 <td>
                                                     <span

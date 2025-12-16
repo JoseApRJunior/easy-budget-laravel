@@ -115,6 +115,19 @@ class CategoryRepository extends AbstractGlobalRepository
             $query->withTrashed();
         }
 
+        // Admin global deve ver apenas categorias globais
+        if ( $isAdminGlobal ) {
+            $query->where( function ( $q ) {
+                $q->whereNull( 'categories.tenant_id' )
+                    ->orWhere( function ( $q2 ) {
+                        $q2->where( 'categories.is_custom', false );
+                    } );
+            } );
+        } else {
+            // Para não-admins, mostrar apenas categorias globais (tenant_id = null)
+            $query->whereNull( 'categories.tenant_id' );
+        }
+
         if ( !empty( $filters[ 'search' ] ) ) {
             $search = (string) $filters[ 'search' ];
             unset( $filters[ 'search' ] );
@@ -159,16 +172,6 @@ class CategoryRepository extends AbstractGlobalRepository
 
         $this->applyFilters( $query, $filters );
 
-        // Admin global deve ver apenas categorias globais
-        if ( $isAdminGlobal ) {
-            $query->where( function ( $q ) {
-                $q->whereDoesntHave( 'tenants' )
-                    ->orWhereHas( 'tenants', function ( $t ) {
-                        $t->where( 'is_custom', false );
-                    } );
-            } );
-        }
-
         return $query->paginate( $perPage );
     }
 
@@ -179,7 +182,12 @@ class CategoryRepository extends AbstractGlobalRepository
      */
     public function countGlobalCategories(): int
     {
-        return $this->model->newQuery()->count();
+        return $this->model->newQuery()
+            ->where( function ( $q ) {
+                $q->whereNull( 'tenant_id' )
+                    ->orWhere( 'is_custom', false );
+            } )
+            ->count();
     }
 
     /**
@@ -189,7 +197,13 @@ class CategoryRepository extends AbstractGlobalRepository
      */
     public function countActiveGlobalCategories(): int
     {
-        return $this->model->newQuery()->where( 'is_active', true )->count();
+        return $this->model->newQuery()
+            ->where( 'is_active', true )
+            ->where( function ( $q ) {
+                $q->whereNull( 'tenant_id' )
+                    ->orWhere( 'is_custom', false );
+            } )
+            ->count();
     }
 
     /**
@@ -201,6 +215,61 @@ class CategoryRepository extends AbstractGlobalRepository
     public function getRecentGlobalCategories( int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
+            ->where( function ( $q ) {
+                $q->whereNull( 'tenant_id' )
+                    ->orWhere( 'is_custom', false );
+            } )
+            ->orderBy( 'created_at', 'desc' )
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
+     * Count custom categories by tenant.
+     *
+     * @param int $tenantId
+     * @return int
+     */
+    public function countCustomCategoriesByTenant( int $tenantId ): int
+    {
+        return $this->model->newQuery()
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'is_custom', true )
+            ->count();
+    }
+
+    /**
+     * Count active custom categories by tenant.
+     *
+     * @param int $tenantId
+     * @return int
+     */
+    public function countActiveCustomCategoriesByTenant( int $tenantId ): int
+    {
+        return $this->model->newQuery()
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'is_custom', true )
+            ->where( 'is_active', true )
+            ->count();
+    }
+
+    /**
+     * Get recent categories by tenant (global + custom).
+     *
+     * @param int $tenantId
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getRecentCategoriesByTenant( int $tenantId, int $limit = 10 ): Collection
+    {
+        return $this->model->newQuery()
+            ->where( function ( $query ) use ( $tenantId ) {
+                $query->whereNull( 'tenant_id' )
+                    ->orWhere( function ( $q ) use ( $tenantId ) {
+                        $q->where( 'tenant_id', $tenantId )
+                            ->where( 'is_custom', true );
+                    } );
+            } )
             ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();

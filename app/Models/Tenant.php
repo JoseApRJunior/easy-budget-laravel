@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
 use App\Models\Address;
 use App\Models\Budget;
 use App\Models\CommonData;
@@ -169,8 +168,7 @@ class Tenant extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany( Category::class, 'category_tenant')
-            ->withPivot(['is_default','is_custom'])
+        return $this->belongsToMany( Category::class, 'category_tenant' )
             ->withTimestamps();
     }
 

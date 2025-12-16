@@ -50,10 +50,7 @@ class CategoryManagementService
             // Definir esta como default
             // syncWithoutDetaching mantém outros tenants que já têm essa categoria
             $category->tenants()->syncWithoutDetaching( [
-                $tenantId => [
-                    'is_default' => true,
-                    'is_custom'  => $category->isCustomFor( $tenantId ), // Preserva se é custom
-                ],
+                $tenantId => [],
             ] );
 
             DB::commit();
@@ -222,10 +219,7 @@ class CategoryManagementService
 
             // Anexar categoria ao tenant
             $category->tenants()->syncWithoutDetaching( [
-                $tenantId => [
-                    'is_custom'  => $isCustom,
-                    'is_default' => $isDefault,
-                ],
+                $tenantId => [],
             ] );
 
             DB::commit();

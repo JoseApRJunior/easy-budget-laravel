@@ -14,12 +14,13 @@ class CategoryFactory extends Factory
 
     public function definition(): array
     {
-        $slug = $this->faker->unique()->slug(2);
+        $slug = $this->faker->slug( 2 ); // Remover unique()
 
         return [
-            'name'      => $this->faker->words(2, true),
+            'name'      => $this->faker->words( 2, true ),
             'slug'      => $slug,
             'is_active' => true,
         ];
     }
+
 }

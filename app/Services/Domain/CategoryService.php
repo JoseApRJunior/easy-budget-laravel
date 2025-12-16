@@ -11,6 +11,7 @@ use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -31,13 +32,13 @@ class CategoryService extends AbstractBaseService
         return [ 'id', 'name', 'slug', 'is_active', 'parent_id', 'created_at', 'updated_at' ];
     }
 
-    public function generateUniqueSlug( string $name, ?int $excludeId = null ): string
+    public function generateUniqueSlug( string $name, ?int $tenantId = null, ?int $excludeId = null ): string
     {
         $base = Str::slug( $name );
         $slug = $base;
         $i    = 1;
 
-        while ( $this->categoryRepository->existsBySlug( $slug, $excludeId ) ) {
+        while ( $this->categoryRepository->existsBySlug( $slug, $tenantId, $excludeId ) ) {
             $slug = $base . '-' . $i;
             $i++;
         }
@@ -49,7 +50,8 @@ class CategoryService extends AbstractBaseService
         $rules = Category::businessRules();
 
         if ( $isUpdate && isset( $data[ 'id' ] ) ) {
-            $rules[ 'slug' ] = 'required|string|max:255|unique:categories,slug,' . $data[ 'id' ];
+            // Remover validação de unicidade global
+            $rules[ 'slug' ] = 'required|string|max:255';
         }
 
         $validator = Validator::make( $data, $rules );
@@ -62,7 +64,7 @@ class CategoryService extends AbstractBaseService
         return $this->success( $data );
     }
 
-    public function paginate( array $filters, int $perPage = 15, bool $isAdminGlobal = false, bool $onlyTrashed = false ): ServiceResult
+    public function paginate( array $filters, int $perPage = 10, bool $isAdminGlobal = false, bool $onlyTrashed = false ): ServiceResult
     {
         try {
             $normalized = [];
@@ -83,25 +85,82 @@ class CategoryService extends AbstractBaseService
 
             $paginator = $this->categoryRepository->paginate( $perPage, $normalized, [ 'name' => 'asc' ], $isAdminGlobal, $onlyTrashed );
             return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e );
         }
     }
 
-    public function createCategory( array $data ): ServiceResult
+    public function createCategory( array $data, ?int $tenantId = null ): ServiceResult
     {
-        if ( !isset( $data[ 'slug' ] ) || empty( $data[ 'slug' ] ) ) {
-            $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ] ?? '' );
+        try {
+            return DB::transaction( function () use ($data, $tenantId) {
+                // Gerar slug único considerando o contexto
+                if ( !isset( $data[ 'slug' ] ) || empty( $data[ 'slug' ] ) ) {
+                    $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId );
+                }
+
+                // Validar slug único
+                if ( !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId ) ) {
+                    return ServiceResult::error(
+                        OperationStatus::INVALID_DATA,
+                        'Slug já existe para este contexto',
+                        null,
+                        new Exception( 'Slug duplicado' ),
+                    );
+                }
+
+                // Criar categoria
+                $category = Category::create( [
+                    'slug'      => $data[ 'slug' ],
+                    'name'      => $data[ 'name' ],
+                    'parent_id' => $data[ 'parent_id' ] ?? null,
+                    'is_active' => $data[ 'is_active' ] ?? true,
+                    'is_custom' => $tenantId !== null,
+                    'tenant_id' => $tenantId,
+                ] );
+
+                // Se for categoria custom, vincular ao tenant na tabela pivot
+                if ( $tenantId !== null ) {
+                    $category->tenants()->attach( $tenantId );
+                }
+
+                return ServiceResult::success( $category, 'Categoria criada com sucesso' );
+            } );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar categoria: ' . $e->getMessage(), null, $e );
         }
-        return $this->create( $data );
     }
 
     public function updateCategory( int $id, array $data ): ServiceResult
     {
-        if ( isset( $data[ 'name' ] ) && empty( $data[ 'slug' ] ) ) {
-            $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $id );
+        try {
+            $categoryResult = $this->findById( $id );
+            if ( $categoryResult->isError() ) {
+                return $categoryResult;
+            }
+
+            $category = $categoryResult->getData();
+            $tenantId = $category->tenant_id;
+
+            // Se o nome foi alterado e slug não foi fornecido, gerar novo slug
+            if ( isset( $data[ 'name' ] ) && empty( $data[ 'slug' ] ) ) {
+                $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId, $id );
+            }
+
+            // Validar slug único
+            if ( isset( $data[ 'slug' ] ) && !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId, $id ) ) {
+                return ServiceResult::error(
+                    OperationStatus::INVALID_DATA,
+                    'Slug já existe para este contexto',
+                    null,
+                    new Exception( 'Slug duplicado' ),
+                );
+            }
+
+            return $this->update( $id, $data );
+        } catch ( \Exception $e ) {
+            return ServiceResult::error( OperationStatus::ERROR, 'Erro ao atualizar categoria: ' . $e->getMessage(), null, $e );
         }
-        return $this->update( $id, $data );
     }
 
     public function deleteCategory( int $id ): ServiceResult
@@ -156,15 +215,38 @@ class CategoryService extends AbstractBaseService
 
     /**
      * Retorna dados para o dashboard de categorias.
+     *
+     * @param bool $isAdminGlobal Indica se o usuário é admin global (apenas para admins globais)
      */
-    public function getDashboardData(): ServiceResult
+    public function getDashboardData( bool $isAdminGlobal = false ): ServiceResult
     {
         try {
-            $total    = $this->categoryRepository->countGlobalCategories();
-            $active   = $this->categoryRepository->countActiveGlobalCategories();
-            $inactive = $total - $active;
+            // Admin global deve ver apenas categorias globais
+            if ( $isAdminGlobal ) {
+                $total    = $this->categoryRepository->countGlobalCategories();
+                $active   = $this->categoryRepository->countActiveGlobalCategories();
+                $inactive = $total - $active;
 
-            $recentCategories = $this->categoryRepository->getRecentGlobalCategories( 5 );
+                $recentCategories = $this->categoryRepository->getRecentGlobalCategories( 5 );
+            } else {
+                // Para providers, contar categorias globais + custom do próprio tenant
+                $totalGlobal  = $this->categoryRepository->countGlobalCategories();
+                $activeGlobal = $this->categoryRepository->countActiveGlobalCategories();
+
+                // Contar categorias custom do tenant
+                $tenantId     = auth()->user()->tenant_id ?? null;
+                $totalCustom  = $tenantId ? $this->categoryRepository->countCustomCategoriesByTenant( $tenantId ) : 0;
+                $activeCustom = $tenantId ? $this->categoryRepository->countActiveCustomCategoriesByTenant( $tenantId ) : 0;
+
+                $total    = $totalGlobal + $totalCustom;
+                $active   = $activeGlobal + $activeCustom;
+                $inactive = $total - $active;
+
+                // Categorias recentes: globais + custom do tenant
+                $recentCategories = $tenantId
+                    ? $this->categoryRepository->getRecentCategoriesByTenant( $tenantId, 5 )
+                    : $this->categoryRepository->getRecentGlobalCategories( 5 );
+            }
 
             $stats = [
                 'total_categories'    => $total,

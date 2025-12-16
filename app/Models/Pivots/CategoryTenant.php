@@ -15,16 +15,11 @@ class CategoryTenant extends Pivot
     protected $fillable = [
         'category_id',
         'tenant_id',
-        'is_default',
-        'is_custom',
     ];
 
     public $timestamps = true;
 
-    protected $casts = [
-        'is_default' => 'boolean',
-        'is_custom' => 'boolean',
-    ];
+    protected $casts = [];
 
     protected static function boot()
     {
@@ -33,22 +28,19 @@ class CategoryTenant extends Pivot
         // Apenas logs de auditoria
         // Lógica de negócio (como set default) está em CategoryManagementService
 
-        static::created(function (CategoryTenant $pivot) {
-            Log::info('category_tenant created', [
-                'tenant_id' => $pivot->tenant_id,
+        static::created( function ( CategoryTenant $pivot ) {
+            Log::info( 'category_tenant created', [
+                'tenant_id'   => $pivot->tenant_id,
                 'category_id' => $pivot->category_id,
-                'is_default' => (bool) $pivot->is_default,
-                'is_custom' => (bool) $pivot->is_custom,
-            ]);
-        });
+            ] );
+        } );
 
-        static::updated(function (CategoryTenant $pivot) {
-            Log::info('category_tenant updated', [
-                'tenant_id' => $pivot->tenant_id,
+        static::updated( function ( CategoryTenant $pivot ) {
+            Log::info( 'category_tenant updated', [
+                'tenant_id'   => $pivot->tenant_id,
                 'category_id' => $pivot->category_id,
-                'is_default' => (bool) $pivot->is_default,
-                'is_custom' => (bool) $pivot->is_custom,
-            ]);
-        });
+            ] );
+        } );
     }
+
 }

@@ -163,8 +163,13 @@
                                                             @endif
                                                             <i class="bi bi-tag me-2 text-muted"></i>
                                                             <span>{{ $category->name }}</span>
-                                                            <span class="badge bg-secondary ms-2" title="Sistema"><i
-                                                                    class="bi bi-gear-fill"></i></span>
+                                                            @if ($category->isGlobal())
+                                                                <span class="badge bg-secondary ms-2" title="Sistema"><i
+                                                                        class="bi bi-gear-fill"></i></span>
+                                                            @else
+                                                                <span class="badge bg-primary ms-2" title="Custom"><i
+                                                                        class="bi bi-person-fill"></i></span>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                     <td>
@@ -229,8 +234,13 @@
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold mb-2">{{ $category->name }}</div>
                                                     <div class="d-flex gap-2 flex-wrap">
-                                                        <span class="badge bg-secondary" title="Sistema"><i
-                                                                class="bi bi-gear-fill"></i></span>
+                                                        @if ($category->isGlobal())
+                                                            <span class="badge bg-secondary" title="Sistema"><i
+                                                                    class="bi bi-gear-fill"></i></span>
+                                                        @else
+                                                            <span class="badge bg-primary" title="Custom"><i
+                                                                    class="bi bi-person-fill"></i></span>
+                                                        @endif
                                                         @if ($category->is_active)
                                                             <span class="badge bg-success-subtle text-success">Ativa</span>
                                                         @else

@@ -48,7 +48,10 @@ class CategoryController extends Controller
      */
     public function dashboard()
     {
-        $result = $this->categoryService->getDashboardData();
+        $user    = auth()->user();
+        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
+
+        $result = $this->categoryService->getDashboardData( $isAdmin );
 
         if ( !$result->isSuccess() ) {
             return view( 'pages.category.dashboard', [
@@ -68,7 +71,7 @@ class CategoryController extends Controller
     public function index( Request $request )
     {
         $filters        = $request->only( [ 'search', 'active', 'per_page', 'deleted' ] );
-        $hasFilters     = collect( $filters )->filter( fn( $v ) => filled( $v ) )->isNotEmpty();
+        $hasFilters     = $request->has( [ 'search', 'active', 'deleted' ] );
         $perPage        = (int) ( $filters[ 'per_page' ] ?? $request->input( 'per_page', 10 ) );
         $allowedPerPage = [ 10, 20, 50 ];
         if ( !in_array( $perPage, $allowedPerPage, true ) ) {
@@ -84,39 +87,37 @@ class CategoryController extends Controller
         ];
         $service        = app( CategoryService::class);
 
-        if ( $isAdmin ) {
+        if ( $hasFilters ) {
             // Admin pode ver deletados
-            if ( $hasFilters ) {
+            if ( $isAdmin ) {
                 if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
                     $result = $service->paginate( $serviceFilters, $perPage, true, true );
                 } else {
                     $result = $service->paginate( $serviceFilters, $perPage, true );
                 }
-                $categories = $this->getServiceData( $result, collect() );
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
             } else {
-                // Quando não há filtros, não carregar dados automaticamente
-                $categories = collect(); // Coleção vazia
+                // Para não-admins, mostrar apenas categorias globais
+                $result = $service->paginate( $serviceFilters, $perPage, false );
+            }
+
+            $categories = $this->getServiceData( $result, collect() );
+            if ( method_exists( $categories, 'appends' ) ) {
+                $categories = $categories->appends( $request->query() );
             }
         } else {
-            // Para não-admins, mostrar apenas categorias globais
-            if ( $hasFilters ) {
-                $result     = $service->paginate( $serviceFilters, $perPage, false );
-                $categories = $this->getServiceData( $result, collect() );
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
-            } else {
-                // Quando não há filtros, não carregar dados automaticamente
-                $categories = collect(); // Coleção vazia
-            }
+            // Quando não há filtros, mostrar tabela vazia inicialmente
+            $categories = collect();
         }
 
+        // Carregar categorias pai para filtros na view
+        $parentCategories = $isAdmin
+            ? Category::query()->globalOnly()->whereNull( 'parent_id' )->whereNull( 'deleted_at' )->orderBy( 'name' )->get( [ 'id', 'name' ] )
+            : collect();
+
         return view( 'pages.category.index', [
-            'categories' => $categories,
-            'filters'    => $filters,
+            'categories'        => $categories,
+            'filters'           => $filters,
+            'parent_categories' => $parentCategories,
         ] );
     }
 
@@ -155,7 +156,7 @@ class CategoryController extends Controller
                                             ->from( 'categories as c2' )
                                             ->join( 'category_tenant as ct2', 'ct2.category_id', '=', 'c2.id' )
                                             ->where( 'ct2.tenant_id', $tenantId )
-                                            ->where( 'ct2.is_custom', true )
+                                            ->where( 'c2.is_custom', true )
                                             ->whereColumn( 'c2.slug', 'categories.slug' );
                                     } );
                             } );
@@ -179,8 +180,14 @@ class CategoryController extends Controller
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        $tenantId = $this->resolveTenantId();
-        $result   = $this->managementService->createCategory( $data, $tenantId );
+        $user    = auth()->user();
+        $isAdmin = app( PermissionService::class)->canManageGlobalCategories( $user );
+
+        // Admin global deve criar categorias globais (tenant_id = null)
+        // Prestadores devem criar categorias custom com seu tenant_id
+        $tenantId = $isAdmin ? null : $this->resolveTenantId();
+
+        $result = $this->categoryService->createCategory( $data, $tenantId );
 
         if ( $result->isError() ) {
             return back()->with( 'error', $result->getMessage() )->withInput();
@@ -238,7 +245,7 @@ class CategoryController extends Controller
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        $result = $this->managementService->updateCategory( $category, $data );
+        $result = $this->categoryService->updateCategory( $category->id, $data );
 
         if ( $result->isError() ) {
             return redirect()->back()->with( 'error', $result->getMessage() )->withInput();

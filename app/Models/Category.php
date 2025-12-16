@@ -27,6 +27,8 @@ class Category extends Model
         'name',
         'parent_id',
         'is_active',
+        'is_custom',
+        'tenant_id',
     ];
 
     /**
@@ -39,6 +41,8 @@ class Category extends Model
         'name'       => 'string',
         'parent_id'  => 'integer',
         'is_active'  => 'boolean',
+        'is_custom'  => 'boolean',
+        'tenant_id'  => 'integer',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -67,11 +71,20 @@ class Category extends Model
     /**
      * Validação customizada para verificar se o slug é único.
      */
-    public static function validateUniqueSlug( string $slug, ?int $excludeCategoryId = null ): bool
+    public static function validateUniqueSlug( string $slug, ?int $tenantId = null, ?int $excludeCategoryId = null ): bool
     {
         $query = static::where( 'slug', $slug );
 
-        if ( $excludeCategoryId ) {
+        // Se tenantId for fornecido, verificar apenas no contexto do tenant
+        if ( $tenantId !== null ) {
+            $query->where( 'tenant_id', $tenantId );
+        } else {
+            // Para categorias globais, verificar apenas categorias sem tenant_id
+            $query->whereNull( 'tenant_id' );
+        }
+
+        // Se excludeCategoryId for fornecido, ignorar a categoria com esse ID
+        if ( $excludeCategoryId !== null ) {
             $query->where( 'id', '!=', $excludeCategoryId );
         }
 
@@ -132,9 +145,8 @@ class Category extends Model
      */
     public function isGlobal(): bool
     {
-        // Categorias globais são aquelas que não têm associação com tenants
-        // ou têm associação com is_custom=false
-        return !$this->tenants()->where( 'is_custom', true )->exists();
+        // Categorias globais não têm tenant_id ou têm is_custom = false
+        return $this->tenant_id === null || !$this->is_custom;
     }
 
     /**
@@ -145,10 +157,8 @@ class Category extends Model
      */
     public function isCustomFor( int $tenantId ): bool
     {
-        return $this->tenants()
-            ->where( 'tenant_id', $tenantId )
-            ->where( 'is_custom', true )
-            ->exists();
+        // Categorias custom têm tenant_id e is_custom = true
+        return $this->tenant_id === $tenantId && $this->is_custom;
     }
 
     /**
@@ -176,12 +186,7 @@ class Category extends Model
      */
     public function scopeGlobalOnly( $query )
     {
-        return $query->where( function ( $q ) {
-            $q->whereDoesntHave( 'tenants' )
-                ->orWhereHas( 'tenants', function ( $t ) {
-                    $t->where( 'is_custom', false );
-                } );
-        } );
+        return $query->whereNull( 'tenant_id' );
     }
 
     /**

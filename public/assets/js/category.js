@@ -40,7 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var search = (searchInput?.value || "").trim();
             var status = (statusSelect?.value || "").trim();
-            var hasFilters = !!(search || status);
+            var deleted = (deletedSelect?.value || "").trim();
+            var hasFilters = !!(search || status || deleted);
 
             if (!hasFilters) {
                e.preventDefault();
