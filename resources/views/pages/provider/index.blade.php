@@ -22,7 +22,9 @@
                         <h1 class="h3 mb-1 fw-bold">
                             <i class="bi bi-speedometer2 me-2"></i>Painel do Prestador
                         </h1>
-                        <p class="mb-0 opacity-75">Bem-vindo de volta, {{ $user->name }}!</p>
+                        <p class="mb-0 opacity-75">Bem-vindo de volta,
+                            {{ $user->provider?->commonData?->first_name ?? ($user->provider?->commonData?->company_name ?? $user->name) }}!
+                        </p>
                     </div>
                     <div class="text-end">
                         <div class="fs-5 fw-semibold">{{ now()->format('d/m/Y') }}</div>

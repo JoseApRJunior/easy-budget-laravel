@@ -9,12 +9,13 @@ class TenantObserver
 {
     public function created( Tenant $tenant ): void
     {
-        $categories = Category::globalOnly()
-            ->orderBy( 'name' )
-            ->get( [ 'id' ] );
-        $tenant->categories()->syncWithoutDetaching(
-            $categories->pluck( 'id' )->toArray(),
-        );
+        // Sistema simplificado: cada tenant cria suas próprias categorias
+        // Não há categorias globais para copiar
+        // As categorias padrão são criadas pelo CategorySeeder para cada tenant
+
+        // Se necessário, pode-se implementar lógica para criar categorias padrão
+        // baseadas em templates específicos por tipo de negócio
+        // $this->createDefaultCategoriesForTenant($tenant);
     }
 
 }

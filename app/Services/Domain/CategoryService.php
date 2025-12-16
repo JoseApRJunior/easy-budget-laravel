@@ -16,13 +16,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
+/**
+ * Serviço simplificado para gerenciamento de categorias.
+ *
+ * Categorias são isoladas por tenant - cada empresa gerencia suas próprias categorias.
+ */
 class CategoryService extends AbstractBaseService
 {
     private CategoryRepository $categoryRepository;
-    public function __construct(
-        CategoryRepository $repository,
-        private CategoryManagementService $managementService,
-    ) {
+
+    public function __construct( CategoryRepository $repository )
+    {
         parent::__construct( $repository );
         $this->categoryRepository = $repository;
     }
@@ -32,27 +36,29 @@ class CategoryService extends AbstractBaseService
         return [ 'id', 'name', 'slug', 'is_active', 'parent_id', 'created_at', 'updated_at' ];
     }
 
-    public function generateUniqueSlug( string $name, ?int $tenantId = null, ?int $excludeId = null ): string
+    /**
+     * Gera slug único para o tenant.
+     */
+    public function generateUniqueSlug( string $name, int $tenantId, ?int $excludeId = null ): string
     {
         $base = Str::slug( $name );
         $slug = $base;
         $i    = 1;
 
-        while ( $this->categoryRepository->existsBySlug( $slug, $tenantId, $excludeId ) ) {
+        while ( $this->categoryRepository->existsBySlugAndTenantId( $slug, $tenantId, $excludeId ) ) {
             $slug = $base . '-' . $i;
             $i++;
         }
+
         return $slug;
     }
 
+    /**
+     * Valida dados da categoria.
+     */
     public function validate( array $data, bool $isUpdate = false ): ServiceResult
     {
         $rules = Category::businessRules();
-
-        if ( $isUpdate && isset( $data[ 'id' ] ) ) {
-            // Remover validação de unicidade global
-            $rules[ 'slug' ] = 'required|string|max:255';
-        }
 
         $validator = Validator::make( $data, $rules );
 
@@ -64,9 +70,18 @@ class CategoryService extends AbstractBaseService
         return $this->success( $data );
     }
 
-    public function paginate( array $filters, int $perPage = 10, bool $isAdminGlobal = false, bool $onlyTrashed = false ): ServiceResult
+    /**
+     * Pagina categorias do tenant.
+     */
+    public function paginate( array $filters, int $perPage = 10, bool $onlyTrashed = false ): ServiceResult
     {
         try {
+            $tenantId = auth()->user()->tenant_id ?? null;
+
+            if ( !$tenantId ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+            }
+
             $normalized = [];
             if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
                 $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
@@ -83,18 +98,27 @@ class CategoryService extends AbstractBaseService
                 $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
             }
 
-            $paginator = $this->categoryRepository->paginate( $perPage, $normalized, [ 'name' => 'asc' ], $isAdminGlobal, $onlyTrashed );
+            $paginator = $this->categoryRepository->paginateByTenantId( $tenantId, $perPage, $normalized, [ 'name' => 'asc' ], $onlyTrashed );
             return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
         } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e );
         }
     }
 
-    public function createCategory( array $data, ?int $tenantId = null ): ServiceResult
+    /**
+     * Cria nova categoria para o tenant.
+     */
+    public function createCategory( array $data ): ServiceResult
     {
         try {
+            $tenantId = auth()->user()->tenant_id ?? null;
+
+            if ( !$tenantId ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+            }
+
             return DB::transaction( function () use ($data, $tenantId) {
-                // Gerar slug único considerando o contexto
+                // Gerar slug único se não fornecido
                 if ( !isset( $data[ 'slug' ] ) || empty( $data[ 'slug' ] ) ) {
                     $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId );
                 }
@@ -103,34 +127,44 @@ class CategoryService extends AbstractBaseService
                 if ( !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId ) ) {
                     return ServiceResult::error(
                         OperationStatus::INVALID_DATA,
-                        'Slug já existe para este contexto',
+                        'Slug já existe neste tenant',
                         null,
                         new Exception( 'Slug duplicado' ),
                     );
                 }
 
+                // Validar parent_id se fornecido
+                if ( isset( $data[ 'parent_id' ] ) && $data[ 'parent_id' ] ) {
+                    $parentCategory = Category::find( $data[ 'parent_id' ] );
+                    if ( !$parentCategory || $parentCategory->tenant_id !== $tenantId ) {
+                        return $this->error( OperationStatus::INVALID_DATA, 'Categoria pai inválida' );
+                    }
+
+                    // Verificar referência circular
+                    if ( $parentCategory->wouldCreateCircularReference( $data[ 'parent_id' ] ) ) {
+                        return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
+                    }
+                }
+
                 // Criar categoria
                 $category = Category::create( [
+                    'tenant_id' => $tenantId,
                     'slug'      => $data[ 'slug' ],
                     'name'      => $data[ 'name' ],
                     'parent_id' => $data[ 'parent_id' ] ?? null,
                     'is_active' => $data[ 'is_active' ] ?? true,
-                    'is_custom' => $tenantId !== null,
-                    'tenant_id' => $tenantId,
                 ] );
-
-                // Se for categoria custom, vincular ao tenant na tabela pivot
-                if ( $tenantId !== null ) {
-                    $category->tenants()->attach( $tenantId );
-                }
 
                 return ServiceResult::success( $category, 'Categoria criada com sucesso' );
             } );
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             return ServiceResult::error( OperationStatus::ERROR, 'Erro ao criar categoria: ' . $e->getMessage(), null, $e );
         }
     }
 
+    /**
+     * Atualiza categoria.
+     */
     public function updateCategory( int $id, array $data ): ServiceResult
     {
         try {
@@ -140,7 +174,12 @@ class CategoryService extends AbstractBaseService
             }
 
             $category = $categoryResult->getData();
-            $tenantId = $category->tenant_id;
+            $tenantId = auth()->user()->tenant_id ?? null;
+
+            // Verificar se categoria pertence ao tenant atual
+            if ( $category->tenant_id !== $tenantId ) {
+                return $this->error( OperationStatus::UNAUTHORIZED, 'Categoria não pertence ao tenant atual' );
+            }
 
             // Se o nome foi alterado e slug não foi fornecido, gerar novo slug
             if ( isset( $data[ 'name' ] ) && empty( $data[ 'slug' ] ) ) {
@@ -151,18 +190,38 @@ class CategoryService extends AbstractBaseService
             if ( isset( $data[ 'slug' ] ) && !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId, $id ) ) {
                 return ServiceResult::error(
                     OperationStatus::INVALID_DATA,
-                    'Slug já existe para este contexto',
+                    'Slug já existe neste tenant',
                     null,
                     new Exception( 'Slug duplicado' ),
                 );
             }
 
+            // Validar parent_id se fornecido
+            if ( isset( $data[ 'parent_id' ] ) && $data[ 'parent_id' ] ) {
+                if ( $data[ 'parent_id' ] == $id ) {
+                    return $this->error( OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma' );
+                }
+
+                $parentCategory = Category::find( $data[ 'parent_id' ] );
+                if ( !$parentCategory || $parentCategory->tenant_id !== $tenantId ) {
+                    return $this->error( OperationStatus::INVALID_DATA, 'Categoria pai inválida' );
+                }
+
+                // Verificar referência circular
+                if ( $parentCategory->wouldCreateCircularReference( $data[ 'parent_id' ] ) ) {
+                    return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
+                }
+            }
+
             return $this->update( $id, $data );
-        } catch ( \Exception $e ) {
+        } catch ( Exception $e ) {
             return ServiceResult::error( OperationStatus::ERROR, 'Erro ao atualizar categoria: ' . $e->getMessage(), null, $e );
         }
     }
 
+    /**
+     * Remove categoria.
+     */
     public function deleteCategory( int $id ): ServiceResult
     {
         $categoryResult = $this->findById( $id );
@@ -172,24 +231,43 @@ class CategoryService extends AbstractBaseService
 
         /** @var Category $category */
         $category = $categoryResult->getData();
+        $tenantId = auth()->user()->tenant_id ?? null;
 
-        // Usar CategoryManagementService para validação completa
-        $canDeleteResult = $this->managementService->canDelete( $category );
-        if ( $canDeleteResult->isError() ) {
-            return $canDeleteResult;
+        // Verificar se categoria pertence ao tenant atual
+        if ( $category->tenant_id !== $tenantId ) {
+            return $this->error( OperationStatus::UNAUTHORIZED, 'Categoria não pertence ao tenant atual' );
+        }
+
+        // Verificar se categoria tem filhos
+        if ( $category->hasChildren() ) {
+            return $this->error( OperationStatus::INVALID_DATA, 'Não é possível excluir categoria que possui subcategorias' );
         }
 
         return $this->delete( $id );
     }
 
+    /**
+     * Lista categorias ativas do tenant.
+     */
     public function getActive(): Collection
     {
-        return $this->repository->listActive( [ 'name' => 'asc' ] );
+        $tenantId = auth()->user()->tenant_id ?? null;
+        return $tenantId ? $this->categoryRepository->listActiveByTenantId( $tenantId, [ 'name' => 'asc' ] ) : collect();
     }
 
+    /**
+     * Lista categorias ativas com filhos (estrutura hierárquica).
+     */
     public function getActiveWithChildren(): Collection
     {
-        return Category::whereNull( 'parent_id' )
+        $tenantId = auth()->user()->tenant_id ?? null;
+
+        if ( !$tenantId ) {
+            return collect();
+        }
+
+        return Category::where( 'tenant_id', $tenantId )
+            ->whereNull( 'parent_id' )
             ->where( 'is_active', true )
             ->with( [ 'children' => function ( $query ) {
                 $query->where( 'is_active', true )->orderBy( 'name', 'asc' );
@@ -198,55 +276,56 @@ class CategoryService extends AbstractBaseService
             ->get();
     }
 
+    /**
+     * Busca categoria por slug dentro do tenant.
+     */
     public function findBySlug( string $slug ): ServiceResult
     {
-        $entity = $this->repository->findBySlug( $slug );
+        $tenantId = auth()->user()->tenant_id ?? null;
+
+        if ( !$tenantId ) {
+            return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+        }
+
+        $entity = $this->categoryRepository->findBySlugAndTenantId( $slug, $tenantId );
         if ( !$entity ) {
             return $this->error( 'Categoria não encontrada' );
         }
         return $this->success( $entity );
     }
 
+    /**
+     * Lista todas as categorias do tenant.
+     */
     public function listAll(): ServiceResult
     {
-        $list = $this->repository->findOrderedByName( 'asc' );
+        $tenantId = auth()->user()->tenant_id ?? null;
+
+        if ( !$tenantId ) {
+            return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+        }
+
+        $list = $this->categoryRepository->findOrderedByNameAndTenantId( $tenantId, 'asc' );
         return $this->success( $list );
     }
 
     /**
      * Retorna dados para o dashboard de categorias.
-     *
-     * @param bool $isAdminGlobal Indica se o usuário é admin global (apenas para admins globais)
      */
-    public function getDashboardData( bool $isAdminGlobal = false ): ServiceResult
+    public function getDashboardData(): ServiceResult
     {
         try {
-            // Admin global deve ver apenas categorias globais
-            if ( $isAdminGlobal ) {
-                $total    = $this->categoryRepository->countGlobalCategories();
-                $active   = $this->categoryRepository->countActiveGlobalCategories();
-                $inactive = $total - $active;
+            $tenantId = auth()->user()->tenant_id ?? null;
 
-                $recentCategories = $this->categoryRepository->getRecentGlobalCategories( 5 );
-            } else {
-                // Para providers, contar categorias globais + custom do próprio tenant
-                $totalGlobal  = $this->categoryRepository->countGlobalCategories();
-                $activeGlobal = $this->categoryRepository->countActiveGlobalCategories();
-
-                // Contar categorias custom do tenant
-                $tenantId     = auth()->user()->tenant_id ?? null;
-                $totalCustom  = $tenantId ? $this->categoryRepository->countCustomCategoriesByTenant( $tenantId ) : 0;
-                $activeCustom = $tenantId ? $this->categoryRepository->countActiveCustomCategoriesByTenant( $tenantId ) : 0;
-
-                $total    = $totalGlobal + $totalCustom;
-                $active   = $activeGlobal + $activeCustom;
-                $inactive = $total - $active;
-
-                // Categorias recentes: globais + custom do tenant
-                $recentCategories = $tenantId
-                    ? $this->categoryRepository->getRecentCategoriesByTenant( $tenantId, 5 )
-                    : $this->categoryRepository->getRecentGlobalCategories( 5 );
+            if ( !$tenantId ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
+
+            $total    = $this->categoryRepository->countByTenantId( $tenantId );
+            $active   = $this->categoryRepository->countActiveByTenantId( $tenantId );
+            $inactive = $total - $active;
+
+            $recentCategories = $this->categoryRepository->getRecentByTenantId( $tenantId, 5 );
 
             $stats = [
                 'total_categories'    => $total,

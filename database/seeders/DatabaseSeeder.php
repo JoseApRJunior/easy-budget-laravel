@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             AreasOfActivitySeeder::class,
             ProfessionSeeder::class,
-            CategorySeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
@@ -46,6 +45,12 @@ class DatabaseSeeder extends Seeder
         $this->command->info( '👑 Criando tenant admin...' );
         $this->call( [
             AdminTenantSeeder::class,
+        ] );
+
+        // Categorias após tenants existirem
+        $this->command->info( '🏷️ Criando categorias padrão...' );
+        $this->call( [
+            CategorySeeder::class,
         ] );
 
         $this->command->info( '✅ Seed do Easy Budget concluído com sucesso!' );

@@ -96,8 +96,11 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->boolean( 'is_active' )->default( true );
-            $table->boolean( 'is_custom' )->default( false ); // Indica se é categoria custom
-            $table->foreignId( 'tenant_id' )->nullable()->constrained( 'tenants' )->cascadeOnDelete();
+
+            $table->foreignId( 'tenant_id' )
+                ->constrained( 'tenants' )
+                ->cascadeOnDelete();
+
             $table->timestamps();
             $table->softDeletes(); // Soft deletes adicionado
 
@@ -107,18 +110,8 @@ return new class extends Migration
             $table->index( 'slug', 'idx_categories_slug' ); // índice não único para slug
             $table->index( 'is_active', 'idx_categories_active' );
             $table->index( 'deleted_at', 'idx_categories_deleted_at' );
-            $table->index( [ 'tenant_id', 'is_custom' ], 'idx_categories_tenant_custom' );
-        } );
-
-        Schema::create( 'category_tenant', function ( Blueprint $table ) {
-            $table->id();
-            $table->foreignId( 'category_id' )->constrained( 'categories' )->cascadeOnDelete();
-            $table->foreignId( 'tenant_id' )->constrained( 'tenants' )->cascadeOnDelete();
-            $table->timestamps();
-            $table->unique( [ 'category_id', 'tenant_id' ] );
-
-            // Índices de performance
-            $table->index( [ 'tenant_id' ], 'idx_ct_tenant' );
+            $table->index( 'tenant_id', 'idx_categories_tenant' ); // atualizado, sem is_custom
+            $table->unique( [ 'tenant_id', 'slug' ], 'uq_categories_tenant_slug' ); // slug único por tenant
         } );
 
         // 2) Usuários e RBAC

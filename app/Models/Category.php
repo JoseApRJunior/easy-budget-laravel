@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * Model para representar categorias.
  *
- * Categorias são compartilhadas entre todos os tenants.
+ * Categorias são isoladas por tenant - cada empresa gerencia suas próprias categorias.
  */
 class Category extends Model
 {
@@ -23,12 +23,11 @@ class Category extends Model
     protected $table = 'categories';
 
     protected $fillable = [
+        'tenant_id',
         'slug',
         'name',
         'parent_id',
         'is_active',
-        'is_custom',
-        'tenant_id',
     ];
 
     /**
@@ -37,12 +36,11 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'tenant_id'  => 'integer',
         'slug'       => 'string',
         'name'       => 'string',
         'parent_id'  => 'integer',
         'is_active'  => 'boolean',
-        'is_custom'  => 'boolean',
-        'tenant_id'  => 'integer',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -69,19 +67,11 @@ class Category extends Model
     }
 
     /**
-     * Validação customizada para verificar se o slug é único.
+     * Validação customizada para verificar se o slug é único dentro do tenant.
      */
-    public static function validateUniqueSlug( string $slug, ?int $tenantId = null, ?int $excludeCategoryId = null ): bool
+    public static function validateUniqueSlug( string $slug, int $tenantId, ?int $excludeCategoryId = null ): bool
     {
-        $query = static::where( 'slug', $slug );
-
-        // Se tenantId for fornecido, verificar apenas no contexto do tenant
-        if ( $tenantId !== null ) {
-            $query->where( 'tenant_id', $tenantId );
-        } else {
-            // Para categorias globais, verificar apenas categorias sem tenant_id
-            $query->whereNull( 'tenant_id' );
-        }
+        $query = static::where( 'tenant_id', $tenantId )->where( 'slug', $slug );
 
         // Se excludeCategoryId for fornecido, ignorar a categoria com esse ID
         if ( $excludeCategoryId !== null ) {
@@ -117,15 +107,9 @@ class Category extends Model
         return $this->hasMany( Category::class, 'parent_id' );
     }
 
-    /**
-     * Relacionamento com tenants.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function tenants()
+    public function tenant(): BelongsTo
     {
-        return $this->belongsToMany( Tenant::class, 'category_tenant', 'category_id', 'tenant_id' )
-            ->withTimestamps();
+        return $this->belongsTo( Tenant::class);
     }
 
     public function hasChildren(): bool
@@ -136,57 +120,6 @@ class Category extends Model
     public function getActiveChildrenCountAttribute(): int
     {
         return $this->children()->where( 'is_active', true )->count();
-    }
-
-    /**
-     * Verifica se a categoria é uma categoria global do sistema.
-     *
-     * @return bool True se for uma categoria global, false caso contrário
-     */
-    public function isGlobal(): bool
-    {
-        // Categorias globais não têm tenant_id ou têm is_custom = false
-        return $this->tenant_id === null || !$this->is_custom;
-    }
-
-    /**
-     * Verifica se a categoria é custom para um tenant específico.
-     *
-     * @param int $tenantId ID do tenant
-     * @return bool True se for uma categoria custom para o tenant
-     */
-    public function isCustomFor( int $tenantId ): bool
-    {
-        // Categorias custom têm tenant_id e is_custom = true
-        return $this->tenant_id === $tenantId && $this->is_custom;
-    }
-
-    /**
-     * Verifica se a categoria está disponível para um tenant específico.
-     *
-     * @param int $tenantId ID do tenant
-     * @return bool True se a categoria for global ou custom para o tenant
-     */
-    public function isAvailableFor( int $tenantId ): bool
-    {
-        // Categorias globais estão sempre disponíveis
-        if ( $this->isGlobal() ) {
-            return true;
-        }
-
-        // Categorias custom do tenant estão disponíveis
-        return $this->isCustomFor( $tenantId );
-    }
-
-    /**
-     * Escopo para filtrar apenas categorias globais.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeGlobalOnly( $query )
-    {
-        return $query->whereNull( 'tenant_id' );
     }
 
     /**

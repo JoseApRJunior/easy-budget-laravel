@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Category;
-use App\Repositories\Abstracts\AbstractGlobalRepository;
+use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Repositório para gerenciamento de categorias.
+ * Repositório simplificado para gerenciamento de categorias.
  *
- * Estende AbstractGlobalRepository para operações globais
- * (categorias são compartilhadas entre todos os tenants).
+ * Categorias são isoladas por tenant - cada empresa gerencia suas próprias categorias.
  */
-class CategoryRepository extends AbstractGlobalRepository
+class CategoryRepository extends AbstractTenantRepository
 {
     /**
      * Define o Model a ser utilizado pelo Repositório.
@@ -26,26 +26,33 @@ class CategoryRepository extends AbstractGlobalRepository
     }
 
     /**
-     * Busca categoria por slug.
+     * Busca categoria por slug dentro do tenant.
      *
      * @param string $slug Slug da categoria
+     * @param int $tenantId ID do tenant
      * @return Category|null Categoria encontrada
      */
-    public function findBySlug( string $slug ): ?Model
+    public function findBySlugAndTenantId( string $slug, int $tenantId ): ?Model
     {
-        return $this->model->where( 'slug', $slug )->first();
+        return $this->model
+            ->where( 'slug', $slug )
+            ->where( 'tenant_id', $tenantId )
+            ->first();
     }
 
     /**
-     * Verifica se slug existe.
+     * Verifica se slug existe dentro do tenant.
      *
      * @param string $slug Slug a ser verificado
+     * @param int $tenantId ID do tenant
      * @param int|null $excludeId ID da categoria a ser excluído da verificação (para updates)
      * @return bool True se existe, false caso contrário
      */
-    public function existsBySlug( string $slug, ?int $excludeId = null ): bool
+    public function existsBySlugAndTenantId( string $slug, int $tenantId, ?int $excludeId = null ): bool
     {
-        $query = $this->model->where( 'slug', $slug );
+        $query = $this->model
+            ->where( 'slug', $slug )
+            ->where( 'tenant_id', $tenantId );
 
         if ( $excludeId ) {
             $query->where( 'id', '!=', $excludeId );
@@ -55,16 +62,18 @@ class CategoryRepository extends AbstractGlobalRepository
     }
 
     /**
-     * Lista categorias ativas.
+     * Lista categorias ativas do tenant.
      *
      * Exclui categorias órfãs (com parent deletado).
      *
+     * @param int $tenantId ID do tenant
      * @param array<string, string>|null $orderBy Ordenação
      * @return Collection<Category> Categorias ativas
      */
-    public function listActive( ?array $orderBy = null ): Collection
+    public function listActiveByTenantId( int $tenantId, ?array $orderBy = null ): Collection
     {
         $query = $this->model->newQuery()
+            ->where( 'tenant_id', $tenantId )
             ->where( 'is_active', true )
             ->where( function ( $q ) {
                 // Incluir categorias sem parent OU com parent não deletado
@@ -80,31 +89,36 @@ class CategoryRepository extends AbstractGlobalRepository
     }
 
     /**
-     * Busca categorias ordenadas por nome.
+     * Busca categorias ordenadas por nome dentro do tenant.
      *
+     * @param int $tenantId ID do tenant
      * @param string $direction Direção da ordenação (asc/desc)
      * @return Collection<Category> Categorias ordenadas
      */
-    public function findOrderedByName( string $direction = 'asc' ): Collection
+    public function findOrderedByNameAndTenantId( int $tenantId, string $direction = 'asc' ): Collection
     {
-        return $this->getAllGlobal(
-            [],
-            [ 'name' => $direction ],
-        );
+        return $this->getAllByTenantId( $tenantId, [], [ 'name' => $direction ] );
     }
 
     /**
-     * Pagina categorias globais.
+     * Pagina categorias do tenant.
      *
+     * @param int $tenantId ID do tenant
      * @param int $perPage
      * @param array<string, mixed> $filters
      * @param array<string, string>|null $orderBy
-     * @param bool $isAdminGlobal Indica se o usuário é admin global (apenas para admins globais)
-     * @return \Illuminate\Pagination\LengthAwarePaginator
+     * @param bool $onlyTrashed
+     * @return LengthAwarePaginator
      */
-    public function paginate( int $perPage = 15, array $filters = [], ?array $orderBy = [ 'name' => 'asc' ], bool $isAdminGlobal = false, bool $onlyTrashed = false ): \Illuminate\Pagination\LengthAwarePaginator
-    {
+    public function paginateByTenantId(
+        int $tenantId,
+        int $perPage = 15,
+        array $filters = [],
+        ?array $orderBy = [ 'name' => 'asc' ],
+        bool $onlyTrashed = false,
+    ): LengthAwarePaginator {
         $query = $this->model->newQuery()
+            ->where( 'tenant_id', $tenantId )
             ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
             ->select( 'categories.*' )
             ->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
@@ -115,19 +129,7 @@ class CategoryRepository extends AbstractGlobalRepository
             $query->withTrashed();
         }
 
-        // Admin global deve ver apenas categorias globais
-        if ( $isAdminGlobal ) {
-            $query->where( function ( $q ) {
-                $q->whereNull( 'categories.tenant_id' )
-                    ->orWhere( function ( $q2 ) {
-                        $q2->where( 'categories.is_custom', false );
-                    } );
-            } );
-        } else {
-            // Para não-admins, mostrar apenas categorias globais (tenant_id = null)
-            $query->whereNull( 'categories.tenant_id' );
-        }
-
+        // Aplicar filtros
         if ( !empty( $filters[ 'search' ] ) ) {
             $search = (string) $filters[ 'search' ];
             unset( $filters[ 'search' ] );
@@ -176,100 +178,43 @@ class CategoryRepository extends AbstractGlobalRepository
     }
 
     /**
-     * Count all global categories.
+     * Conta categorias do tenant.
      *
+     * @param int $tenantId ID do tenant
      * @return int
      */
-    public function countGlobalCategories(): int
-    {
-        return $this->model->newQuery()
-            ->where( function ( $q ) {
-                $q->whereNull( 'tenant_id' )
-                    ->orWhere( 'is_custom', false );
-            } )
-            ->count();
-    }
-
-    /**
-     * Count active global categories.
-     *
-     * @return int
-     */
-    public function countActiveGlobalCategories(): int
-    {
-        return $this->model->newQuery()
-            ->where( 'is_active', true )
-            ->where( function ( $q ) {
-                $q->whereNull( 'tenant_id' )
-                    ->orWhere( 'is_custom', false );
-            } )
-            ->count();
-    }
-
-    /**
-     * Get recent global categories.
-     *
-     * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getRecentGlobalCategories( int $limit = 10 ): Collection
-    {
-        return $this->model->newQuery()
-            ->where( function ( $q ) {
-                $q->whereNull( 'tenant_id' )
-                    ->orWhere( 'is_custom', false );
-            } )
-            ->orderBy( 'created_at', 'desc' )
-            ->limit( $limit )
-            ->get();
-    }
-
-    /**
-     * Count custom categories by tenant.
-     *
-     * @param int $tenantId
-     * @return int
-     */
-    public function countCustomCategoriesByTenant( int $tenantId ): int
+    public function countByTenantId( int $tenantId ): int
     {
         return $this->model->newQuery()
             ->where( 'tenant_id', $tenantId )
-            ->where( 'is_custom', true )
             ->count();
     }
 
     /**
-     * Count active custom categories by tenant.
+     * Conta categorias ativas do tenant.
      *
-     * @param int $tenantId
+     * @param int $tenantId ID do tenant
      * @return int
      */
-    public function countActiveCustomCategoriesByTenant( int $tenantId ): int
+    public function countActiveByTenantId( int $tenantId ): int
     {
         return $this->model->newQuery()
             ->where( 'tenant_id', $tenantId )
-            ->where( 'is_custom', true )
             ->where( 'is_active', true )
             ->count();
     }
 
     /**
-     * Get recent categories by tenant (global + custom).
+     * Obtém categorias recentes do tenant.
      *
-     * @param int $tenantId
+     * @param int $tenantId ID do tenant
      * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
-    public function getRecentCategoriesByTenant( int $tenantId, int $limit = 10 ): Collection
+    public function getRecentByTenantId( int $tenantId, int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
-            ->where( function ( $query ) use ( $tenantId ) {
-                $query->whereNull( 'tenant_id' )
-                    ->orWhere( function ( $q ) use ( $tenantId ) {
-                        $q->where( 'tenant_id', $tenantId )
-                            ->where( 'is_custom', true );
-                    } );
-            } )
+            ->where( 'tenant_id', $tenantId )
             ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();

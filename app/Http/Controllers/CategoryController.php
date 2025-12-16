@@ -8,10 +8,8 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
-use App\Models\Tenant;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\PermissionService;
-use App\Services\Domain\CategoryManagementService;
 use App\Services\Domain\CategoryService;
 use Collator;
 use Illuminate\Http\Request;
@@ -21,37 +19,24 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
+/**
+ * Controller simplificado para gerenciamento de categorias.
+ *
+ * Categorias são isoladas por tenant - cada empresa gerencia suas próprias categorias.
+ */
 class CategoryController extends Controller
 {
     public function __construct(
         private CategoryRepository $repository,
-        private CategoryManagementService $managementService,
         private CategoryService $categoryService,
     ) {}
-
-    private function resolveTenantId(): ?int
-    {
-        $testing = config( 'tenant.testing_id' );
-        if ( $testing !== null ) {
-            return (int) $testing;
-        }
-        $user = auth()->user();
-        if ( $user && isset( $user->tenant_id ) && $user->tenant_id > 0 ) {
-            return (int) $user->tenant_id;
-        }
-        $tenantParam = request()->integer( 'tenant_id' );
-        return $tenantParam > 0 ? $tenantParam : null;
-    }
 
     /**
      * Dashboard de categorias com estatísticas.
      */
     public function dashboard()
     {
-        $user    = auth()->user();
-        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
-
-        $result = $this->categoryService->getDashboardData( $isAdmin );
+        $result = $this->categoryService->getDashboardData();
 
         if ( !$result->isSuccess() ) {
             return view( 'pages.category.dashboard', [
@@ -78,25 +63,18 @@ class CategoryController extends Controller
             $perPage = 10;
         }
 
-        $user    = auth()->user();
-        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
-
-        $serviceFilters = [
-            'search' => $filters[ 'search' ] ?? '',
-            'active' => $filters[ 'active' ] ?? '',
-        ];
-        $service        = app( CategoryService::class);
+        $service = app( CategoryService::class);
 
         if ( $hasFilters ) {
-            // Admin pode ver deletados
-            if ( $isAdmin ) {
-                if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
-                    $result = $service->paginate( $serviceFilters, $perPage, true, true );
-                } else {
-                    $result = $service->paginate( $serviceFilters, $perPage, true );
-                }
+            $serviceFilters = [
+                'search' => $filters[ 'search' ] ?? '',
+                'active' => $filters[ 'active' ] ?? '',
+            ];
+
+            // Se request 'deleted' = 'only', mostrar apenas deletadas
+            if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
+                $result = $service->paginate( $serviceFilters, $perPage, true );
             } else {
-                // Para não-admins, mostrar apenas categorias globais
                 $result = $service->paginate( $serviceFilters, $perPage, false );
             }
 
@@ -110,8 +88,17 @@ class CategoryController extends Controller
         }
 
         // Carregar categorias pai para filtros na view
-        $parentCategories = $isAdmin
-            ? Category::query()->globalOnly()->whereNull( 'parent_id' )->whereNull( 'deleted_at' )->orderBy( 'name' )->get( [ 'id', 'name' ] )
+        $user     = auth()->user();
+        $tenantId = $user->tenant_id ?? null;
+
+        $parentCategories = $tenantId
+            ? Category::query()
+                ->where( 'tenant_id', $tenantId )
+                ->whereNull( 'parent_id' )
+                ->whereNull( 'deleted_at' )
+                ->where( 'is_active', true )
+                ->orderBy( 'name' )
+                ->get( [ 'id', 'name' ] )
             : collect();
 
         return view( 'pages.category.index', [
@@ -126,45 +113,21 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        $user    = auth()->user();
-        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
-        if ( $isAdmin ) {
-            $parents = Category::query()
-                ->globalOnly()
-                ->whereNull( 'parent_id' )
-                ->whereNull( 'deleted_at' )
-                ->orderBy( 'name' )
-                ->get( [ 'id', 'name' ] );
-        } else {
-            $tenantId = $this->resolveTenantId();
-            $parents  = $tenantId !== null
-                ? Category::query()
-                    ->whereNull( 'parent_id' )
-                    ->whereNull( 'deleted_at' )
-                    ->where( function ( $q ) use ( $tenantId ) {
-                        $q->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
-                            $t->where( 'tenant_id', $tenantId )
-                                ->where( 'is_custom', true );
-                        } )
-                            ->orWhere( function ( $q2 ) use ( $tenantId ) {
-                                $q2->where( 'is_active', true )
-                                    ->whereDoesntHave( 'tenants', function ( $t ) {
-                                        $t->where( 'is_custom', true );
-                                    } )
-                                    ->whereNotExists( function ( $sub ) use ( $tenantId ) {
-                                        $sub->selectRaw( 1 )
-                                            ->from( 'categories as c2' )
-                                            ->join( 'category_tenant as ct2', 'ct2.category_id', '=', 'c2.id' )
-                                            ->where( 'ct2.tenant_id', $tenantId )
-                                            ->where( 'c2.is_custom', true )
-                                            ->whereColumn( 'c2.slug', 'categories.slug' );
-                                    } );
-                            } );
-                    } )
-                    ->orderBy( 'name' )
-                    ->get( [ 'id', 'name', 'deleted_at' ] )
-                : collect();
+        $user     = auth()->user();
+        $tenantId = $user->tenant_id ?? null;
+
+        if ( !$tenantId ) {
+            return redirect()->route( 'categories.index' )->with( 'error', 'Tenant não identificado' );
         }
+
+        $parents = Category::query()
+            ->where( 'tenant_id', $tenantId )
+            ->whereNull( 'parent_id' )
+            ->whereNull( 'deleted_at' )
+            ->where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get( [ 'id', 'name' ] );
+
         $defaults = [ 'is_active' => true ];
 
         return view( 'pages.category.create', compact( 'parents', 'defaults' ) );
@@ -180,14 +143,7 @@ class CategoryController extends Controller
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        $user    = auth()->user();
-        $isAdmin = app( PermissionService::class)->canManageGlobalCategories( $user );
-
-        // Admin global deve criar categorias globais (tenant_id = null)
-        // Prestadores devem criar categorias custom com seu tenant_id
-        $tenantId = $isAdmin ? null : $this->resolveTenantId();
-
-        $result = $this->categoryService->createCategory( $data, $tenantId );
+        $result = $this->categoryService->createCategory( $data );
 
         if ( $result->isError() ) {
             return back()->with( 'error', $result->getMessage() )->withInput();
@@ -204,8 +160,12 @@ class CategoryController extends Controller
      */
     public function show( string $slug )
     {
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            abort( 404 );
+        }
+
+        $category = $result->getData();
         $category->load( 'parent' );
 
         return view( 'pages.category.show', compact( 'category' ) );
@@ -216,10 +176,21 @@ class CategoryController extends Controller
      */
     public function edit( string $slug )
     {
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            abort( 404 );
+        }
+
+        $category = $result->getData();
+        $user     = auth()->user();
+        $tenantId = $user->tenant_id ?? null;
+
+        if ( !$tenantId || $category->tenant_id !== $tenantId ) {
+            return redirect()->route( 'categories.index' )->with( 'error', 'Categoria não encontrada' );
+        }
 
         $parents = Category::query()
+            ->where( 'tenant_id', $tenantId )
             ->whereNull( 'parent_id' )
             ->whereNull( 'deleted_at' )
             ->where( 'id', '!=', $category->id )
@@ -227,7 +198,7 @@ class CategoryController extends Controller
             ->orderBy( 'name' )
             ->get( [ 'id', 'name' ] );
 
-        $canDeactivate = !( $category->hasChildren() || $this->managementService->isInUse( $category ) );
+        $canDeactivate = !( $category->hasChildren() );
 
         return view( 'pages.category.edit', compact( 'category', 'parents', 'canDeactivate' ) );
     }
@@ -237,10 +208,13 @@ class CategoryController extends Controller
      */
     public function update( UpdateCategoryRequest $request, string $slug )
     {
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            abort( 404 );
+        }
 
-        $data = $request->validated();
+        $category = $result->getData();
+        $data     = $request->validated();
         if ( isset( $data[ 'name' ] ) ) {
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
@@ -261,11 +235,14 @@ class CategoryController extends Controller
      */
     public function destroy( string $slug )
     {
-        $this->authorize( 'manage-custom-categories' );
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            abort( 404 );
+        }
 
-        $result = $this->managementService->deleteCategory( $category );
+        $category = $result->getData();
+
+        $result = $this->categoryService->deleteCategory( $category->id );
 
         if ( $result->isError() ) {
             return $this->redirectError( 'categories.index', $result->getMessage() );
@@ -281,30 +258,18 @@ class CategoryController extends Controller
      */
     public function toggle_status( string $slug )
     {
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
-        $user    = auth()->user();
-        $isAdmin = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
-
-        // Verificar permissões
-        if ( $isAdmin && !$category->isGlobal() ) {
-            return $this->redirectError( 'categories.index', 'Admin só pode gerenciar categorias globais.' );
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            abort( 404 );
         }
 
-        if ( !$isAdmin ) {
-            $tenantId = $user->tenant_id ?? null;
+        $category = $result->getData();
+        $user     = auth()->user();
+        $tenantId = $user->tenant_id ?? null;
 
-            // Para providers, verificar se é categoria custom do próprio tenant ou global
-            if ( $tenantId !== null ) {
-                $isOwnCustomCategory = $category->tenants()
-                    ->where( 'tenant_id', $tenantId )
-                    ->where( 'is_custom', true )
-                    ->exists();
-
-                if ( !$isOwnCustomCategory && !$category->isGlobal() ) {
-                    return $this->redirectError( 'categories.index', 'Você só pode gerenciar suas próprias categorias custom.' );
-                }
-            }
+        // Verificar se categoria pertence ao tenant atual
+        if ( !$tenantId || $category->tenant_id !== $tenantId ) {
+            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
         }
 
         // Alternar status
@@ -323,30 +288,20 @@ class CategoryController extends Controller
 
     /**
      * Restaura categoria deletada (soft delete).
-     * Admin pode restaurar qualquer categoria.
-     * Prestadores podem restaurar apenas categorias custom do próprio tenant.
      */
     public function restore( string $slug )
     {
-        $user    = auth()->user();
-        $isAdmin = app( PermissionService::class)->canManageGlobalCategories( $user );
+        $user     = auth()->user();
+        $tenantId = $user->tenant_id ?? null;
 
-        $category = Category::onlyTrashed()->where( 'slug', $slug )->firstOrFail();
-
-        // Se não é admin, verificar se é categoria custom do próprio tenant
-        if ( !$isAdmin ) {
-            $tenantId = $user->tenant_id ?? null;
-
-            // Verificar se a categoria é custom do tenant do usuário
-            $isOwnCustomCategory = $category->tenants()
-                ->where( 'tenant_id', $tenantId )
-                ->where( 'is_custom', true )
-                ->exists();
-
-            if ( !$isOwnCustomCategory ) {
-                return $this->redirectError( 'categories.index', 'Você só pode restaurar categorias custom do seu próprio tenant.' );
-            }
+        if ( !$tenantId ) {
+            return $this->redirectError( 'categories.index', 'Tenant não identificado' );
         }
+
+        $category = Category::onlyTrashed()
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'slug', $slug )
+            ->firstOrFail();
 
         $category->restore();
 
@@ -370,15 +325,19 @@ class CategoryController extends Controller
         };
 
         $user     = auth()->user();
-        $isAdmin  = $user ? app( PermissionService::class)->canManageGlobalCategories( $user ) : false;
-        $tenantId = null;
-        $search   = trim( (string) $request->get( 'search', '' ) );
-        $active   = $request->get( 'active' );
+        $tenantId = $user->tenant_id ?? null;
+
+        if ( !$tenantId ) {
+            return redirect()->route( 'categories.index' )->with( 'error', 'Tenant não identificado' );
+        }
 
         $search = trim( (string) $request->get( 'search', '' ) );
         $active = $request->get( 'active' );
-        $query  = Category::query()
+
+        $query = Category::query()
+            ->where( 'tenant_id', $tenantId )
             ->with( 'parent' );
+
         if ( $search !== '' ) {
             $query->where( function ( $q ) use ( $search ) {
                 $q->where( 'name', 'like', "%{$search}%" )
@@ -388,9 +347,11 @@ class CategoryController extends Controller
                     } );
             } );
         }
+
         if ( in_array( $active, [ '0', '1' ], true ) ) {
             $query->where( 'is_active', $active === '1' );
         }
+
         $categories = $query->orderBy( 'name' )->get();
 
         $collator   = class_exists( Collator::class) ? new Collator( 'pt_BR' ) : null;
@@ -407,26 +368,13 @@ class CategoryController extends Controller
                 $createdAt        = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format( 'd/m/Y H:i:s' ) : '';
                 $updatedAt        = $category->updated_at instanceof \DateTimeInterface ? $category->updated_at->format( 'd/m/Y H:i:s' ) : '';
                 $slugVal          = $category->slug ?: Str::slug( $category->name );
-                $childrenCount    = $isAdmin
-                    ? $category->children()->where( 'is_active', true )->count()
-                    : $category->children()
-                        ->where( 'is_active', true )
-                        ->where( function ( $q ) use ( $tenantId ) {
-                            $q->whereHas( 'tenants', function ( $t ) use ( $tenantId ) {
-                                $t->where( 'tenant_id', $tenantId );
-                            } )
-                                ->orWhereHas( 'tenants', function ( $t ) {
-                                    $t->where( 'is_custom', false );
-                                } )
-                                ->orWhereDoesntHave( 'tenants' );
-                        } )
-                        ->count();
+                $childrenCount    = $category->children()->where( 'is_active', true )->count();
                 $categoryName     = $category->parent_id ? $category->parent->name : $category->name;
                 $subcategoryName  = $category->parent_id ? $category->name : '—';
                 $rows            .= '<tr>'
                     . '<td>' . e( $categoryName ) . '</td>'
                     . '<td>' . e( $subcategoryName ) . '</td>'
-                    . ( $isAdmin ? ( '<td>' . e( $slugVal ) . '</td>' ) : '' )
+                    . '<td>' . e( $slugVal ) . '</td>'
                     . '<td>' . ( $category->is_active ? 'Sim' : 'Não' ) . '</td>'
                     . '<td class="text-center">' . $childrenCount . '</td>'
                     . '<td>' . e( $createdAt ) . '</td>'
@@ -434,7 +382,7 @@ class CategoryController extends Controller
                     . '</tr>';
             }
 
-            $thead = '<thead><tr><th>Categoria</th><th>Subcategoria</th>' . ( $isAdmin ? '<th>Slug</th>' : '' ) . '<th>Ativo</th><th style="text-align:center">Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
+            $thead = '<thead><tr><th>Categoria</th><th>Subcategoria</th><th>Slug</th><th>Ativo</th><th style="text-align:center">Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
             $html  = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f5f5f5}.text-center{text-align:center}</style></head><body>'
                 . '<h3>Categorias</h3>'
                 . '<table>'
@@ -485,6 +433,7 @@ class CategoryController extends Controller
 
             $row++;
         }
+
         foreach ( range( 'A', 'G' ) as $col ) {
             $sheet->getColumnDimension( $col )->setAutoSize( true );
         }
@@ -499,66 +448,6 @@ class CategoryController extends Controller
             $writer->save( 'php://output' );
         }, $fileName, [
             'Content-Type' => $contentType,
-        ] );
-    }
-
-    /**
-     * Define categoria padrão.
-     */
-    public function setDefault( Request $request, string $slug )
-    {
-        $category = $this->repository->findBySlug( $slug );
-        abort_unless( $category, 404 );
-
-        $result = $this->managementService->setDefaultCategory( $category );
-
-        if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
-        }
-
-        $this->logOperation( 'categories_set_default', [ 'id' => $category->id ] );
-
-        return $this->redirectSuccess( 'categories.index', 'Categoria definida como padrão com sucesso.' );
-    }
-
-    /**
-     * Valida e normaliza slug informado.
-     */
-    public function checkSlug( Request $request )
-    {
-        $slugInput = (string) $request->get( 'slug', '' );
-        $slug      = Str::slug( $slugInput );
-
-        $exists = false;
-        $id     = null;
-
-        if ( $slug !== '' ) {
-            $query  = Category::where( 'slug', $slug );
-            $exists = $query->exists();
-        }
-
-        $this->logOperation( 'categories_check_slug', [ 'slug' => $slug, 'exists' => $exists ] );
-
-        return $this->jsonSuccess( [
-            'slug'   => $slug,
-            'exists' => $exists,
-            'id'     => $id,
-        ] );
-    }
-
-    /**
-     * Retorna subcategorias de uma categoria pai.
-     */
-    public function getChildren( int $id )
-    {
-        $children = Category::where( 'parent_id', $id )
-            ->where( 'is_active', true )
-            ->whereNull( 'deleted_at' )
-            ->orderBy( 'name' )
-            ->get( [ 'id', 'name' ] );
-
-        return response()->json( [
-            'children' => $children,
         ] );
     }
 
