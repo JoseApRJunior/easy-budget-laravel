@@ -5,21 +5,30 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Address;
+use App\Models\AuditLog;
 use App\Models\Budget;
 use App\Models\CommonData;
 use App\Models\Contact;
+use App\Models\Customer;
+use App\Models\InventoryMovement;
 use App\Models\Invoice;
 use App\Models\MiddlewareMetricHistory;
 use App\Models\MonitoringAlertHistory;
 use App\Models\PlanSubscription;
 use App\Models\Product;
+use App\Models\ProductInventory;
 use App\Models\Provider;
+use App\Models\Report;
+use App\Models\Schedule;
 use App\Models\Service;
+use App\Models\ServiceItem;
 use App\Models\User;
+use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
 class Tenant extends Model
 {
@@ -60,6 +69,14 @@ class Tenant extends Model
     public function users(): HasMany
     {
         return $this->hasMany( User::class);
+    }
+
+    /**
+     * Usuários pertencentes a este tenant.
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany( Category::class);
     }
 
     /**
@@ -164,12 +181,6 @@ class Tenant extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany( Contact::class);
-    }
-
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany( Category::class, 'category_tenant' )
-            ->withTimestamps();
     }
 
     /**

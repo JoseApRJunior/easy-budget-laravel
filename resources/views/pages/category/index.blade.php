@@ -176,7 +176,6 @@
                                             <th width="60"><i class="bi bi-tag" aria-hidden="true"></i></th>
                                             <th>Categoria</th>
                                             <th>Subcategoria</th>
-                                            <th width="120">Tipo</th>
                                             <th width="120">Status</th>
                                             <th width="150">Criado em</th>
                                             <th width="150" class="text-center">Ações</th>
@@ -205,11 +204,6 @@
                                                     @else
                                                         <span class="text-muted">—</span>
                                                     @endif
-                                                </td>
-                                                <td>
-                                                    <span class="modern-badge badge-custom">
-                                                        Personalizada
-                                                    </span>
                                                 </td>
                                                 <td>
                                                     <span

@@ -444,58 +444,59 @@ class AuthServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register category management gates (Hybrid System)
+     * Register category management gates (Tenant-Based System)
      *
-     * Sistema híbrido: categorias globais + personalizadas por tenant
+     * Sistema baseado em tenant: cada empresa gerencia suas próprias categorias
      */
     protected function registerCategoryGates(): void
     {
         // Inject PermissionService
-        $permissionService = app(\App\Services\Core\PermissionService::class);
+        $permissionService = app( \App\Services\Core\PermissionService::class);
 
         // Visualização de categorias globais
-        Gate::define('view-global-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canViewGlobalCategories($user);
-        });
+        Gate::define( 'view-global-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canViewGlobalCategories( $user );
+        } );
 
         // Gerenciamento de categorias globais (apenas admin)
-        Gate::define('manage-global-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canManageGlobalCategories($user);
-        });
+        Gate::define( 'manage-global-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canManageGlobalCategories( $user );
+        } );
 
         // Gerenciamento de categorias personalizadas (provider ou admin)
-        Gate::define('manage-custom-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canManageCustomCategories($user);
-        });
+        Gate::define( 'manage-custom-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canManageCustomCategories( $user );
+        } );
 
         // Criação de categorias personalizadas
-        Gate::define('create-custom-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canCreateCustomCategories($user);
-        });
+        Gate::define( 'create-custom-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canCreateCustomCategories( $user );
+        } );
 
         // Edição de categorias personalizadas
-        Gate::define('edit-custom-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canEditCustomCategories($user);
-        });
+        Gate::define( 'edit-custom-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canEditCustomCategories( $user );
+        } );
 
         // Exclusão de categorias personalizadas
-        Gate::define('delete-custom-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canDeleteCustomCategories($user);
-        });
+        Gate::define( 'delete-custom-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canDeleteCustomCategories( $user );
+        } );
 
         // Usar categoria global como base para personalizada
-        Gate::define('use-global-as-custom', function (User $user) use ($permissionService) {
-            return $permissionService->canUseGlobalAsCustom($user);
-        });
+        Gate::define( 'use-global-as-custom', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canUseGlobalAsCustom( $user );
+        } );
 
         // Associar categorias a produtos/serviços
-        Gate::define('assign-categories', function (User $user) use ($permissionService) {
-            return $permissionService->canAssignCategories($user);
-        });
+        Gate::define( 'assign-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canAssignCategories( $user );
+        } );
 
         // Validação de acesso específico para categoria
-        Gate::define('manage-category', function (User $user, ?int $categoryTenantId) use ($permissionService) {
-            return $permissionService->canManageCategory($user, $categoryTenantId);
-        });
+        Gate::define( 'manage-category', function ( User $user, ?int $categoryTenantId ) use ( $permissionService ) {
+            return $permissionService->canManageCategory( $user, $categoryTenantId );
+        } );
     }
+
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Models\User;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\PermissionService;
 use App\Services\Domain\CategoryService;
@@ -15,6 +16,7 @@ use Collator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
+use PhpOffice\PhpSpreadsheet\Reader\Xml\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -83,19 +85,11 @@ class CategoryController extends Controller
                 $categories = $categories->appends( $request->query() );
             }
         } else {
-            // Carregar categorias por padrão quando não há filtros
-            $result = $service->listAll();
-            if ( $result->isSuccess() ) {
-                $categories = $this->getServiceData( $result, collect() );
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
-            } else {
-                $categories = collect();
-            }
+            $categories = collect();
         }
 
         // Carregar categorias pai para filtros na view
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 
@@ -121,6 +115,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 
@@ -146,45 +141,33 @@ class CategoryController extends Controller
      */
     public function store( StoreCategoryRequest $request )
     {
-        // DEBUG: Log what's happening
-        error_log( "=== CATEGORY STORE DEBUG START ===" );
-        error_log( "Request data: " . json_encode( $request->all() ) );
-
         $data = $request->validated();
         if ( isset( $data[ 'name' ] ) ) {
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        error_log( "Data after validation: " . json_encode( $data ) );
-
         $result = $this->categoryService->createCategory( $data );
 
-        error_log( "Service result isError: " . ( $result->isError() ? 'YES' : 'NO' ) );
-        error_log( "Service result message: " . $result->getMessage() );
-
         if ( $result->isError() ) {
-            error_log( "ERROR: Service returned error, entering error handling" );
-
             // Converter ServiceResult errors em validation errors para campos específicos
             $message = $result->getMessage();
 
             // Se for erro de slug duplicado, adicionar erro de validação específico
             if ( strpos( $message, 'Slug já existe neste tenant' ) !== false ) {
-                error_log( "SLUG ERROR DETECTED - returning validation errors" );
                 return back()
                     ->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa. Escolha outro slug.' ] )
                     ->withInput();
             }
 
-            error_log( "GENERAL ERROR - returning general error" );
             return back()->with( 'error', $message )->withInput();
         }
 
-        error_log( "SUCCESS: Service returned success" );
         $category = $result->getData();
         $this->logOperation( 'categories_store', [ 'id' => $category->id, 'name' => $category->name ] );
 
-        return $this->redirectSuccess( 'categories.index', 'Categoria criada com sucesso.' );
+        return redirect()
+            ->route( 'categories.create' )
+            ->with( 'success', 'Categoria criada com sucesso! Você pode cadastrar outra categoria agora.' );
     }
 
     /**
@@ -214,6 +197,7 @@ class CategoryController extends Controller
         }
 
         $category = $result->getData();
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 
@@ -254,7 +238,20 @@ class CategoryController extends Controller
         $result = $this->categoryService->updateCategory( $category->id, $data );
 
         if ( $result->isError() ) {
-            return redirect()->back()->with( 'error', $result->getMessage() )->withInput();
+            $message = $result->getMessage();
+
+            // Se for erro de referência circular ou validação específica de campo, usar withErrors
+            if (
+                strpos( $message, 'referência circular' ) !== false ||
+                strpos( $message, 'Categoria não pode ser pai de si mesma' ) !== false ||
+                strpos( $message, 'Categoria pai inválida' ) !== false
+            ) {
+                return back()
+                    ->withErrors( [ 'parent_id' => $message ] )
+                    ->withInput();
+            }
+
+            return redirect()->back()->with( 'error', $message )->withInput();
         }
 
         $this->logOperation( 'categories_update', [ 'id' => $category->id, 'name' => $category->name ] );
@@ -296,6 +293,7 @@ class CategoryController extends Controller
         }
 
         $category = $result->getData();
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 
@@ -323,6 +321,7 @@ class CategoryController extends Controller
      */
     public function restore( string $slug )
     {
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 
@@ -356,6 +355,7 @@ class CategoryController extends Controller
             default => 'categories.xlsx',
         };
 
+        /** @var User $user */
         $user     = auth()->user();
         $tenantId = $user->tenant_id ?? null;
 

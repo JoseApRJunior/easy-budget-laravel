@@ -48,11 +48,9 @@ class StoreCategoryRequest extends FormRequest
                     $validator->errors()->add( 'parent_id', 'A categoria pai deve pertencer à sua empresa.' );
                 }
 
-                // Verificar se parent forma loop consigo mesmo
-                $tempCategory = new Category( [ 'id' => PHP_INT_MAX ] );
-                if ( $tempCategory->wouldCreateCircularReference( $parentId ) ) {
-                    $validator->errors()->add( 'parent_id', 'A categoria pai selecionada possui hierarquia circular.' );
-                }
+                // REMOVIDO: Validação de referência circular
+                // Esta validação é feita no CategoryService::createCategory() de forma mais precisa
+                // A validação aqui estava incorreta (verificava se o parent formaria loop consigo mesmo)
             }
         } );
     }

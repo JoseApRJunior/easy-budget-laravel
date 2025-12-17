@@ -163,7 +163,7 @@
                                                         @if ($category->parent)
                                                             <small class="text-muted">Subcategoria</small>
                                                         @else
-                                                            <small class="text-muted">Categoria Principal</small>
+                                                            <small class="text-muted">Categoria</small>
                                                         @endif
                                                     </td>
                                                     <td>

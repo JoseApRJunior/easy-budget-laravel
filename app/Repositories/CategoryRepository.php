@@ -118,7 +118,7 @@ class CategoryRepository extends AbstractTenantRepository
         bool $onlyTrashed = false,
     ): LengthAwarePaginator {
         $query = $this->model->newQuery()
-            ->where( 'tenant_id', $tenantId )
+            ->where( 'categories.tenant_id', $tenantId )
             ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
             ->select( 'categories.*' )
             ->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
@@ -218,6 +218,24 @@ class CategoryRepository extends AbstractTenantRepository
             ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();
+    }
+
+    /**
+     * Verifica se slug existe (método requerido pelos testes).
+     *
+     * @param string $slug Slug da categoria
+     * @param int|null $tenantId ID do tenant (null para admin global)
+     * @param int|null $excludeId ID da categoria a ser excluído da verificação
+     * @return bool True se existe, false caso contrário
+     */
+    public function existsBySlug( string $slug, ?int $tenantId = null, ?int $excludeId = null ): bool
+    {
+        // Para admin global (tenantId = null), sempre retorna false para não ter conflitos
+        if ( $tenantId === null ) {
+            return false;
+        }
+
+        return $this->existsBySlugAndTenantId( $slug, $tenantId, $excludeId );
     }
 
 }

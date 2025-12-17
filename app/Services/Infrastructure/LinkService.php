@@ -7,7 +7,7 @@ namespace App\Services\Infrastructure;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Serviço híbrido para construção segura de links de confirmação e validação.
+ * Serviço para construção segura de links de confirmação e validação.
  *
  * Centraliza toda a lógica de construção de URLs para diferentes contextos,
  * eliminando duplicação entre componentes e garantindo consistência,
@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 class LinkService
 {
     /**
-     * Constrói URL segura para diferentes contextos (híbrido).
+     * Constrói URL segura para diferentes contextos.
      *
      * Estratégia de segurança implementada:
      * 1. Validação rigorosa do token com diferentes formatos
@@ -149,7 +149,7 @@ class LinkService
     /**
      * Constrói URL de confirmação híbrida para verificação com parâmetros customizáveis.
      *
-     * Método híbrido que permite configuração completa dos parâmetros de criação e validação
+     * Método flexível que permite configuração completa dos parâmetros de criação e validação
      * de links de verificação, usado por classes externas para diferentes contextos.
      *
      * @param string|null $token Token de confirmação

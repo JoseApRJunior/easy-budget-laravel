@@ -82,26 +82,47 @@ class CategoryService extends AbstractBaseService
                 return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
 
+            // Normalizar filtros para formato aceito pelo repository
             $normalized = [];
-            if ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) {
+            if ( isset( $filters[ 'active' ] ) && ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) ) {
                 $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
             }
-            if ( !empty( $filters[ 'name' ] ) ) {
+            if ( isset( $filters[ 'name' ] ) && !empty( $filters[ 'name' ] ) ) {
                 $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
             }
-            if ( !empty( $filters[ 'slug' ] ) ) {
+            if ( isset( $filters[ 'slug' ] ) && !empty( $filters[ 'slug' ] ) ) {
                 $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
             }
-            if ( !empty( $filters[ 'search' ] ) ) {
+            if ( isset( $filters[ 'search' ] ) && !empty( $filters[ 'search' ] ) ) {
                 $term                 = '%' . $filters[ 'search' ] . '%';
                 $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => $term ];
                 $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
             }
 
-            $paginator = $this->categoryRepository->paginateByTenantId( $tenantId, $perPage, $normalized, [ 'name' => 'asc' ], $onlyTrashed );
+            // Para filtrar deletados, criar query específica
+            if ( $onlyTrashed ) {
+                $query = \App\Models\Category::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
+                    ->onlyTrashed()
+                    ->where( 'tenant_id', $tenantId );
+
+                // Aplicar filtros normalizados
+                foreach ( $normalized as $field => $value ) {
+                    if ( is_array( $value ) && isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
+                        $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
+                    } else {
+                        $query->where( $field, $value );
+                    }
+                }
+
+                $paginator = $query->orderBy( 'name', 'asc' )->paginate( $perPage );
+            } else {
+                // Usar o método padrão do AbstractTenantRepository que aplica global scope automaticamente
+                $paginator = $this->categoryRepository->paginateByTenant( $perPage, $normalized, [ 'name' => 'asc' ] );
+            }
+
             return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
         } catch ( Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias.', null, $e );
+            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias: ' . $e->getMessage(), null, $e );
         }
     }
 
@@ -140,8 +161,13 @@ class CategoryService extends AbstractBaseService
                         return $this->error( OperationStatus::INVALID_DATA, 'Categoria pai inválida' );
                     }
 
-                    // Verificar referência circular
-                    if ( $parentCategory->wouldCreateCircularReference( $data[ 'parent_id' ] ) ) {
+                    // Verificar referência circular criando instância temporária da nova categoria
+                    $tempCategory = new Category( [
+                        'tenant_id' => $tenantId,
+                        'parent_id' => $data[ 'parent_id' ]
+                    ] );
+
+                    if ( $tempCategory->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
                         return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
                     }
                 }
@@ -208,7 +234,7 @@ class CategoryService extends AbstractBaseService
                 }
 
                 // Verificar referência circular
-                if ( $parentCategory->wouldCreateCircularReference( $data[ 'parent_id' ] ) ) {
+                if ( $category->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
                     return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
                 }
             }

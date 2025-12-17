@@ -40,26 +40,10 @@ class CustomerController extends Controller
 
         $filters = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
 
-        Log::info('CustomerController::index - Filtros recebidos', [
-            'filters' => $filters,
-            'query_string' => $request->query(),
-            'tenant_id' => $user->tenant_id,
-        ]);
-
-        // Verificar se há filtros aplicados - se qualquer parâmetro existe na query string
-        $hasFilters = $request->has(['search', 'status', 'type', 'area_of_activity_id', 'deleted']);
-
-        Log::info('CustomerController::index - hasFilters', [
-            'hasFilters' => $hasFilters,
-        ]);
+        $hasFilters = $request->has( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
 
         if ( $hasFilters ) {
             $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
-
-            Log::info('CustomerController::index - Tipo de busca', [
-                'showOnlyTrashed' => $showOnlyTrashed,
-                'deleted_filter' => $filters[ 'deleted' ] ?? 'não definido',
-            ]);
 
             if ( $showOnlyTrashed ) {
                 $result = $this->customerService->getDeletedCustomers( $filters, $user->tenant_id );
@@ -87,13 +71,8 @@ class CustomerController extends Controller
             }
 
             $customers = $result->getData();
-            Log::info('CustomerController::index - Clientes retornados', [
-                'count' => $customers instanceof \Illuminate\Pagination\LengthAwarePaginator ? $customers->total() : $customers->count(),
-            ]);
         } else {
-            // Quando não há filtros, mostrar tabela vazia inicialmente
             $customers = collect();
-            Log::info('CustomerController::index - Sem filtros, retornando vazio');
         }
 
         $areasOfActivity = AreaOfActivity::where( 'is_active', true )
@@ -152,8 +131,9 @@ class CustomerController extends Controller
                     ->withInput();
             }
 
-            return redirect()->route( 'provider.customers.index' )
-                ->with( 'success', 'Cliente criado com sucesso!' );
+            return redirect()
+                ->route( 'provider.customers.create' )
+                ->with( 'success', 'Cliente criado com sucesso! Você pode cadastrar outro cliente agora.' );
         } catch ( \Exception $e ) {
             Log::error( 'Erro inesperado ao criar cliente', [
                 'user_id'   => auth()->id(),
