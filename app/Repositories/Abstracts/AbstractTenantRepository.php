@@ -298,4 +298,79 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
         return $query->get();
     }
 
+    // --------------------------------------------------------------------------
+    // MÉTODO PADRÃO DE PAGINAÇÃO (PADRONIZAÇÃO)
+    // --------------------------------------------------------------------------
+
+    /**
+     * Método padrão de paginação com funcionalidades avançadas.
+     *
+     * Este método pode ser sobrescrito por repositories específicos quando necessário,
+     * fornecendo uma base consistente para todos os repositories tenant-scoped.
+     *
+     * Funcionalidades incluídas:
+     * - Eager loading paramétrico via $with
+     * - Suporte a soft delete automático
+     * - Per page dinâmico via filtro
+     * - Ordenação customizável
+     * - Filtros avançados via RepositoryFiltersTrait
+     *
+     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['search' => 'termo', 'active' => true, 'per_page' => 20])
+     * @param int $perPage Número padrão de itens por página (15)
+     * @param array<string> $with Relacionamentos para eager loading (ex: ['category', 'inventory'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada (ex: ['name' => 'asc', 'created_at' => 'desc'])
+     * @return LengthAwarePaginator Resultado paginado
+     *
+     * @example Uso básico:
+     * ```php
+     * $results = $repository->getPaginated();
+     * ```
+     *
+     * @example Com filtros:
+     * ```php
+     * $results = $repository->getPaginated([
+     *     'search' => 'produto',
+     *     'active' => true,
+     *     'per_page' => 20
+     * ]);
+     * ```
+     *
+     * @example Com eager loading:
+     * ```php
+     * $results = $repository->getPaginated([], 15, ['category', 'inventory']);
+     * ```
+     *
+     * @example Com ordenação customizada:
+     * ```php
+     * $results = $repository->getPaginated([], 15, [], ['created_at' => 'desc', 'name' => 'asc']);
+     * ```
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery();
+
+        // Eager loading paramétrico
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        // Aplicar filtros avançados
+        $this->applyFilters( $query, $filters );
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter( $query, $filters );
+
+        // Aplicar ordenação
+        $this->applyOrderBy( $query, $orderBy );
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
+    }
+
 }

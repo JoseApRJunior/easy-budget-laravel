@@ -101,83 +101,6 @@ class CategoryRepository extends AbstractTenantRepository
     }
 
     /**
-     * Pagina categorias do tenant.
-     *
-     * @param int $tenantId ID do tenant
-     * @param int $perPage
-     * @param array<string, mixed> $filters
-     * @param array<string, string>|null $orderBy
-     * @param bool $onlyTrashed
-     * @return LengthAwarePaginator
-     */
-    public function paginateByTenantId(
-        int $tenantId,
-        int $perPage = 15,
-        array $filters = [],
-        ?array $orderBy = [ 'name' => 'asc' ],
-        bool $onlyTrashed = false,
-    ): LengthAwarePaginator {
-        $query = $this->model->newQuery()
-            ->where( 'categories.tenant_id', $tenantId )
-            ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
-            ->select( 'categories.*' )
-            ->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
-            ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
-            ->orderBy( 'categories.name', 'ASC' );
-
-        if ( $onlyTrashed ) {
-            $query->withTrashed();
-        }
-
-        // Aplicar filtros
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $search = (string) $filters[ 'search' ];
-            unset( $filters[ 'search' ] );
-            $query->where( function ( $q ) use ( $search ) {
-                $q->where( 'categories.name', 'like', "%{$search}%" )
-                    ->orWhere( 'categories.slug', 'like', "%{$search}%" )
-                    ->orWhere( 'parent.name', 'like', "%{$search}%" );
-            } );
-        }
-
-        if ( !empty( $filters[ 'name' ] ) && is_array( $filters[ 'name' ] ) && isset( $filters[ 'name' ][ 'operator' ], $filters[ 'name' ][ 'value' ] ) ) {
-            $op  = $filters[ 'name' ][ 'operator' ];
-            $val = $filters[ 'name' ][ 'value' ];
-            unset( $filters[ 'name' ] );
-            $query->where( function ( $q ) use ( $op, $val ) {
-                $q->where( 'categories.name', $op, $val )
-                    ->orWhere( 'parent.name', $op, $val );
-            } );
-        }
-
-        if ( !empty( $filters[ 'slug' ] ) && is_array( $filters[ 'slug' ] ) && isset( $filters[ 'slug' ][ 'operator' ], $filters[ 'slug' ][ 'value' ] ) ) {
-            $op  = $filters[ 'slug' ][ 'operator' ];
-            $val = $filters[ 'slug' ][ 'value' ];
-            unset( $filters[ 'slug' ] );
-            $query->where( 'categories.slug', $op, $val );
-        }
-
-        if ( array_key_exists( 'is_active', $filters ) ) {
-            $val = $filters[ 'is_active' ];
-            unset( $filters[ 'is_active' ] );
-            $query->where( 'categories.is_active', $val );
-        }
-
-        if ( array_key_exists( 'active', $filters ) && $filters[ 'active' ] !== '' ) {
-            $val = $filters[ 'active' ];
-            unset( $filters[ 'active' ] );
-            $bool = in_array( (string) $val, [ '1', 'true', 'on' ], true );
-            $query->where( 'categories.is_active', $bool );
-        }
-
-        unset( $filters[ 'per_page' ] );
-
-        $this->applyFilters( $query, $filters );
-
-        return $query->paginate( $perPage );
-    }
-
-    /**
      * Conta categorias do tenant.
      *
      * @param int $tenantId ID do tenant
@@ -236,6 +159,102 @@ class CategoryRepository extends AbstractTenantRepository
         }
 
         return $this->existsBySlugAndTenantId( $slug, $tenantId, $excludeId );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Implementação específica para categorias com suporte a hierarquia e filtros avançados.
+     *
+     * @param array<string, mixed> $filters Filtros específicos:
+     *   - search: termo de busca em nome, slug ou nome da categoria pai
+     *   - active: true/false para filtrar por status ativo
+     *   - per_page: número de itens por página
+     *   - deleted: 'only' para mostrar apenas categorias deletadas
+     *   - name: filtro por nome (com operador e valor)
+     *   - slug: filtro por slug (com operador e valor)
+     * @param int $perPage Número padrão de itens por página (15)
+     * @param array<string> $with Relacionamentos para eager loading (ex: ['parent'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada
+     * @param bool $onlyTrashed Se true, retorna apenas categorias deletadas (soft delete)
+     * @return LengthAwarePaginator Resultado paginado
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+        bool $onlyTrashed = false,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery()
+            ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
+            ->select( 'categories.*' );
+
+        // Eager loading paramétrico
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        // Aplicar filtro de soft delete específico se solicitado
+        if ( $onlyTrashed ) {
+            $query->onlyTrashed();
+        }
+
+        // Aplicar filtros avançados do trait
+        $this->applyFilters( $query, $filters );
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter( $query, $filters );
+
+        // Filtros específicos de categoria
+        // Filtro por busca (nome, slug ou nome da categoria pai)
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $search = (string) $filters[ 'search' ];
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'categories.name', 'like', "%{$search}%" )
+                    ->orWhere( 'categories.slug', 'like', "%{$search}%" )
+                    ->orWhere( 'parent.name', 'like', "%{$search}%" );
+            } );
+        }
+
+        // Filtros por nome com operador
+        if ( !empty( $filters[ 'name' ] ) && is_array( $filters[ 'name' ] ) && isset( $filters[ 'name' ][ 'operator' ], $filters[ 'name' ][ 'value' ] ) ) {
+            $op  = $filters[ 'name' ][ 'operator' ];
+            $val = $filters[ 'name' ][ 'value' ];
+            $query->where( function ( $q ) use ( $op, $val ) {
+                $q->where( 'categories.name', $op, $val )
+                    ->orWhere( 'parent.name', $op, $val );
+            } );
+        }
+
+        // Filtros por slug com operador
+        if ( !empty( $filters[ 'slug' ] ) && is_array( $filters[ 'slug' ] ) && isset( $filters[ 'slug' ][ 'operator' ], $filters[ 'slug' ][ 'value' ] ) ) {
+            $op  = $filters[ 'slug' ][ 'operator' ];
+            $val = $filters[ 'slug' ][ 'value' ];
+            $query->where( 'categories.slug', $op, $val );
+        }
+
+        // Filtro por ativo/inativo
+        if ( array_key_exists( 'is_active', $filters ) ) {
+            $query->where( 'categories.is_active', $filters[ 'is_active' ] );
+        } elseif ( array_key_exists( 'active', $filters ) && $filters[ 'active' ] !== '' ) {
+            $bool = in_array( (string) $filters[ 'active' ], [ '1', 'true', 'on' ], true );
+            $query->where( 'categories.is_active', $bool );
+        }
+
+        // Ordenação hierárquica: categorias pai primeiro, depois filhas, ordenadas por nome
+        if ( !$orderBy ) {
+            $query->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
+                ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
+                ->orderBy( 'categories.name', 'ASC' );
+        } else {
+            $this->applyOrderBy( $query, $orderBy );
+        }
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
     }
 
 }

@@ -39,10 +39,10 @@ class CustomerRepository extends AbstractTenantRepository
      * @param int|null $limit
      * @return Collection<Customer>
      */
-    public function listActive(?array $orderBy = null, ?int $limit = null): Collection
+    public function listActive( ?array $orderBy = null, ?int $limit = null ): Collection
     {
         return $this->getAllByTenant(
-            ['status' => 'active'],
+            [ 'status' => 'active' ],
             $orderBy,
             $limit,
         );
@@ -54,9 +54,9 @@ class CustomerRepository extends AbstractTenantRepository
      * @param array<string, mixed> $filters
      * @return int
      */
-    public function countByFilters(array $filters = []): int
+    public function countByFilters( array $filters = [] ): int
     {
-        return $this->countByTenant($filters);
+        return $this->countByTenant( $filters );
     }
 
     /**
@@ -65,9 +65,9 @@ class CustomerRepository extends AbstractTenantRepository
      * @param array<string, mixed> $criteria
      * @return bool
      */
-    public function existsByCriteria(array $criteria): bool
+    public function existsByCriteria( array $criteria ): bool
     {
-        return $this->findByMultipleCriteria($criteria)->isNotEmpty();
+        return $this->findByMultipleCriteria( $criteria )->isNotEmpty();
     }
 
     /**
@@ -76,9 +76,9 @@ class CustomerRepository extends AbstractTenantRepository
      * @param array<int> $ids
      * @return int Número de registros removidos
      */
-    public function deleteManyByIds(array $ids): int
+    public function deleteManyByIds( array $ids ): int
     {
-        return $this->deleteManyByTenant($ids);
+        return $this->deleteManyByTenant( $ids );
     }
 
     /**
@@ -88,11 +88,11 @@ class CustomerRepository extends AbstractTenantRepository
      * @param array<string, mixed> $updates
      * @return int Número de registros atualizados
      */
-    public function updateManyByCriteria(array $criteria, array $updates): int
+    public function updateManyByCriteria( array $criteria, array $updates ): int
     {
         $query = $this->model->newQuery();
-        $this->applyFilters($query, $criteria);
-        return $query->update($updates);
+        $this->applyFilters( $query, $criteria );
+        return $query->update( $updates );
     }
 
     /**
@@ -110,32 +110,16 @@ class CustomerRepository extends AbstractTenantRepository
         ?int $limit = null,
         ?int $offset = null,
     ): Collection {
-        return $this->getAllByTenant($criteria, $orderBy, $limit, $offset);
+        return $this->getAllByTenant( $criteria, $orderBy, $limit, $offset );
     }
 
-    /**
-     * Retorna clientes paginados dentro do tenant atual.
-     *
-     * @param int $perPage
-     * @param array<string, mixed> $criteria
-     * @param array<string, string>|null $orderBy
-     * @return LengthAwarePaginator
-     */
-    public function paginateByCriteria(
-        int $perPage = 15,
-        array $criteria = [],
-        ?array $orderBy = null,
-    ): LengthAwarePaginator {
-        return $this->paginateByTenant($perPage, $criteria, $orderBy);
-    }
-
-    public function findByIdAndTenantId(int $id, int $tenantId): ?Customer
+    public function findByIdAndTenantId( int $id, int $tenantId ): ?Customer
     {
         $query = $this->model->newQuery();
-        $this->applyFilters($query, [
+        $this->applyFilters( $query, [
             'id'        => $id,
             'tenant_id' => $tenantId,
-        ]);
+        ] );
         return $query->first();
     }
 
@@ -154,7 +138,7 @@ class CustomerRepository extends AbstractTenantRepository
         ?int $limit = null,
         ?int $offset = null,
     ): Collection {
-        return $this->getAllByTenant($filters, $orderBy, $limit, $offset);
+        return $this->getAllByTenant( $filters, $orderBy, $limit, $offset );
     }
 
     // ========================================
@@ -164,16 +148,16 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se email é único no tenant (exclui customer atual se especificado)
      */
-    public function isEmailUnique(string $email, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isEmailUnique( string $email, int $tenantId, ?int $excludeCustomerId = null ): bool
     {
-        $query = Contact::where('tenant_id', $tenantId)
-            ->where(function ($q) use ($email) {
-                $q->where('email_personal', $email)
-                    ->orWhere('email_business', $email);
-            });
+        $query = Contact::where( 'tenant_id', $tenantId )
+            ->where( function ( $q ) use ( $email ) {
+                $q->where( 'email_personal', $email )
+                    ->orWhere( 'email_business', $email );
+            } );
 
-        if ($excludeCustomerId) {
-            $query->where('customer_id', '!=', $excludeCustomerId);
+        if ( $excludeCustomerId ) {
+            $query->where( 'customer_id', '!=', $excludeCustomerId );
         }
 
         return !$query->exists();
@@ -182,20 +166,20 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se CPF é único no tenant (exclui customer atual se especificado)
      */
-    public function isCpfUnique(string $cpf, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isCpfUnique( string $cpf, int $tenantId, ?int $excludeCustomerId = null ): bool
     {
-        if (strlen($cpf) !== 11) return false; // CPF deve ter 11 dígitos
+        if ( strlen( $cpf ) !== 11 ) return false; // CPF deve ter 11 dígitos
 
         $query = CommonData::query()
-            ->where('tenant_id', $tenantId)
-            ->where('cpf', $cpf)
-            ->whereNotNull('cpf');
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'cpf', $cpf )
+            ->whereNotNull( 'cpf' );
 
         // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
-        if ($excludeCustomerId) {
-            $query->whereDoesntHave('customer', function ($q) use ($excludeCustomerId) {
-                $q->where('id', $excludeCustomerId);
-            });
+        if ( $excludeCustomerId ) {
+            $query->whereDoesntHave( 'customer', function ( $q ) use ( $excludeCustomerId ) {
+                $q->where( 'id', $excludeCustomerId );
+            } );
         }
 
         return !$query->exists();
@@ -204,20 +188,20 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se CNPJ é único no tenant (exclui customer atual se especificado)
      */
-    public function isCnpjUnique(string $cnpj, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isCnpjUnique( string $cnpj, int $tenantId, ?int $excludeCustomerId = null ): bool
     {
-        if (strlen($cnpj) !== 14) return false; // CNPJ deve ter 14 dígitos
+        if ( strlen( $cnpj ) !== 14 ) return false; // CNPJ deve ter 14 dígitos
 
         $query = CommonData::query()
-            ->where('tenant_id', $tenantId)
-            ->where('cnpj', $cnpj)
-            ->whereNotNull('cnpj');
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'cnpj', $cnpj )
+            ->whereNotNull( 'cnpj' );
 
         // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
-        if ($excludeCustomerId) {
-            $query->whereDoesntHave('customer', function ($q) use ($excludeCustomerId) {
-                $q->where('id', $excludeCustomerId);
-            });
+        if ( $excludeCustomerId ) {
+            $query->whereDoesntHave( 'customer', function ( $q ) use ( $excludeCustomerId ) {
+                $q->where( 'id', $excludeCustomerId );
+            } );
         }
 
         return !$query->exists();
@@ -228,102 +212,135 @@ class CustomerRepository extends AbstractTenantRepository
     // ========================================
 
     /**
-     * Retorna clientes paginados com filtros avançados
+     * {@inheritdoc}
+     *
+     * Implementação específica para clientes com filtros avançados.
+     *
+     * @param array<string, mixed> $filters Filtros específicos:
+     *   - search: termo de busca em nome, email, CPF/CNPJ, razão social
+     *   - type: 'pessoa_fisica' ou 'pessoa_juridica'
+     *   - status: status do cliente
+     *   - area_of_activity_id: ID da área de atuação
+     *   - profession_id: ID da profissão
+     *   - per_page: número de itens por página
+     *   - deleted: 'only' para mostrar apenas clientes deletados
+     * @param int $perPage Número padrão de itens por página (15)
+     * @param array<string> $with Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada (padrão: ['created_at' => 'desc'])
+     * @return LengthAwarePaginator Resultado paginado
      */
-    public function getPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $query = Customer::with([
-            'commonData' => function ($q) {
-                $q->with(['areaOfActivity', 'profession']);
-            },
-            'contact',
-            'address',
-            'businessData'
-        ]);
+    /**
+     * {@inheritdoc}
+     *
+     * Implementação específica para clientes com filtros avançados.
+     *
+     * @param array<string, mixed> $filters Filtros específicos:
+     *   - search: termo de busca em nome, email, CPF/CNPJ, razão social
+     *   - type: 'pessoa_fisica' ou 'pessoa_juridica'
+     *   - status: status do cliente
+     *   - area_of_activity_id: ID da área de atuação
+     *   - profession_id: ID da profissão
+     *   - per_page: número de itens por página
+     *   - deleted: 'only' para mostrar apenas clientes deletados
+     * @param int $perPage Número padrão de itens por página (15)
+     * @param array<string> $with Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada (padrão: ['created_at' => 'desc'])
+     * @return LengthAwarePaginator Resultado paginado
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [ 'commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData' ],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery();
 
-        if (!empty($filters['tenant_id'])) {
-            $query->where('tenant_id', $filters['tenant_id']);
+        // Eager loading paramétrico
+        if ( !empty( $with ) ) {
+            $query->with( $with );
         }
 
+        // Aplicar filtros avançados do trait
+        $this->applyFilters( $query, $filters );
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter( $query, $filters );
+
+        // Filtros específicos de cliente
         // Filtro por texto (busca em nome, email, CPF/CNPJ, razão social)
-        if (!empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereHas('commonData', function ($cq) use ($filters) {
-                    $cq->where('first_name', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('last_name', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('company_name', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('cpf', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('cnpj', 'like', '%' . $filters['search'] . '%');
-                })->orWhereHas('contact', function ($cq) use ($filters) {
-                    $cq->where('email_personal', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('email_business', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('phone_personal', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('phone_business', 'like', '%' . $filters['search'] . '%');
-                });
-            });
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $query->where( function ( $q ) use ( $filters ) {
+                $q->whereHas( 'commonData', function ( $cq ) use ( $filters ) {
+                    $cq->where( 'first_name', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'last_name', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'company_name', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'cpf', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'cnpj', 'like', '%' . $filters[ 'search' ] . '%' );
+                } )->orWhereHas( 'contact', function ( $cq ) use ( $filters ) {
+                    $cq->where( 'email_personal', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'email_business', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'phone_personal', 'like', '%' . $filters[ 'search' ] . '%' )
+                        ->orWhere( 'phone_business', 'like', '%' . $filters[ 'search' ] . '%' );
+                } );
+            } );
         }
 
         // Filtro por tipo (PF/PJ)
-        if (!empty($filters['type'])) {
-            $query->whereHas('commonData', function ($q) use ($filters) {
-                if ($filters['type'] === 'pessoa_fisica') {
-                    $q->whereNotNull('cpf');
+        if ( !empty( $filters[ 'type' ] ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
+                if ( $filters[ 'type' ] === 'pessoa_fisica' ) {
+                    $q->whereNotNull( 'cpf' );
                 } else {
-                    $q->whereNotNull('cnpj');
+                    $q->whereNotNull( 'cnpj' );
                 }
-            });
+            } );
         }
 
         // Filtro por status
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if ( !empty( $filters[ 'status' ] ) ) {
+            $query->where( 'status', $filters[ 'status' ] );
         }
 
         // Filtro por área de atuação
-        if (!empty($filters['area_of_activity_id'])) {
-            $query->whereHas('commonData', function ($q) use ($filters) {
-                $q->where('area_of_activity_id', $filters['area_of_activity_id']);
-            });
+        if ( !empty( $filters[ 'area_of_activity_id' ] ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
+                $q->where( 'area_of_activity_id', $filters[ 'area_of_activity_id' ] );
+            } );
         }
 
         // Filtro por profissão
-        if (!empty($filters['profession_id'])) {
-            $query->whereHas('commonData', function ($q) use ($filters) {
-                $q->where('profession_id', $filters['profession_id']);
-            });
+        if ( !empty( $filters[ 'profession_id' ] ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
+                $q->where( 'profession_id', $filters[ 'profession_id' ] );
+            } );
         }
 
-        // Filtro por registros deletados
-        if (isset($filters['deleted']) && $filters['deleted'] === 'only') {
-            Log::info('CustomerRepository::getPaginated - Aplicando onlyTrashed', [
-                'deleted_filter' => $filters['deleted'],
-            ]);
-            $query->onlyTrashed();
-        } else {
-            Log::info('CustomerRepository::getPaginated - Buscando apenas ativos (sem trashed)', [
-                'deleted_filter' => $filters['deleted'] ?? 'não definido',
-            ]);
-        }
+        // Aplicar ordenação (padrão: created_at desc)
+        $defaultOrderBy = $orderBy ?: [ 'created_at' => 'desc' ];
+        $this->applyOrderBy( $query, $defaultOrderBy );
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
     }
 
     /**
      * Busca customer com dados completos relacionados
      */
-    public function findWithCompleteData(int $id, int $tenantId): ?Customer
+    public function findWithCompleteData( int $id, int $tenantId ): ?Customer
     {
-        return Customer::where('id', $id)
-            ->where('tenant_id', $tenantId)
-            ->with([
-                'commonData' => function ($q) {
-                    $q->with(['areaOfActivity', 'profession']);
+        return Customer::where( 'id', $id )
+            ->where( 'tenant_id', $tenantId )
+            ->with( [
+                'commonData' => function ( $q ) {
+                    $q->with( [ 'areaOfActivity', 'profession' ] );
                 },
                 'contact',
                 'address',
                 'businessData',
                 'budgets' // REMOVIDO: 'services' - causava ambiguidade
-            ])
+            ] )
             ->first();
     }
 
@@ -334,196 +351,196 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Cria customer com todas as relações (estrutura de 5 tabelas)
      */
-    public function createWithRelations(array $data): Customer
+    public function createWithRelations( array $data ): Customer
     {
-        return DB::transaction(function () use ($data) {
-            $tenantId = $data['tenant_id'];
+        return DB::transaction( function () use ($data) {
+            $tenantId = $data[ 'tenant_id' ];
 
             // 1. Criar CommonData
-            $commonData = CommonData::create([
+            $commonData = CommonData::create( [
                 'tenant_id'           => $tenantId,
                 'customer_id'         => null, // Será atualizado após criar customer
-                'type'                => $data['type'] ?? 'individual',
-                'first_name'          => $data['first_name'] ?? null,
-                'last_name'           => $data['last_name'] ?? null,
-                'birth_date'          => $data['birth_date'] ?? null,
-                'cpf'                 => $data['cpf'] ?? null,
-                'cnpj'                => $data['cnpj'] ?? null,
-                'company_name'        => $data['company_name'] ?? null,
-                'description'         => $data['description'] ?? null,
-                'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
-                'profession_id'       => $data['profession_id'] ?? null,
-            ]);
+                'type'                => $data[ 'type' ] ?? 'individual',
+                'first_name'          => $data[ 'first_name' ] ?? null,
+                'last_name'           => $data[ 'last_name' ] ?? null,
+                'birth_date'          => $data[ 'birth_date' ] ?? null,
+                'cpf'                 => $data[ 'cpf' ] ?? null,
+                'cnpj'                => $data[ 'cnpj' ] ?? null,
+                'company_name'        => $data[ 'company_name' ] ?? null,
+                'description'         => $data[ 'description' ] ?? null,
+                'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
+                'profession_id'       => $data[ 'profession_id' ] ?? null,
+            ] );
 
             // 2. Criar Contact
-            $contact = Contact::create([
+            $contact = Contact::create( [
                 'tenant_id'      => $tenantId,
                 'customer_id'    => null, // Será atualizado após criar customer
-                'email_personal' => $data['email'] ?? null,
-                'phone_personal' => $data['phone'] ?? null,
-                'email_business' => $data['email_business'] ?? null,
-                'phone_business' => $data['phone_business'] ?? null,
-                'website'        => $data['website'] ?? null,
-            ]);
+                'email_personal' => $data[ 'email' ] ?? null,
+                'phone_personal' => $data[ 'phone' ] ?? null,
+                'email_business' => $data[ 'email_business' ] ?? null,
+                'phone_business' => $data[ 'phone_business' ] ?? null,
+                'website'        => $data[ 'website' ] ?? null,
+            ] );
 
             // 3. Criar Address
-            $address = Address::create([
+            $address = Address::create( [
                 'tenant_id'      => $tenantId,
                 'customer_id'    => null, // Será atualizado após criar customer
-                'address'        => $data['address'] ?? null,
-                'address_number' => $data['address_number'] ?? null,
-                'neighborhood'   => $data['neighborhood'] ?? null,
-                'city'           => $data['city'] ?? null,
-                'state'          => $data['state'] ?? null,
-                'cep'            => $data['cep'] ?? null,
-            ]);
+                'address'        => $data[ 'address' ] ?? null,
+                'address_number' => $data[ 'address_number' ] ?? null,
+                'neighborhood'   => $data[ 'neighborhood' ] ?? null,
+                'city'           => $data[ 'city' ] ?? null,
+                'state'          => $data[ 'state' ] ?? null,
+                'cep'            => $data[ 'cep' ] ?? null,
+            ] );
 
             // 4. Criar Customer (tabela principal)
-            $customer = Customer::create([
+            $customer = Customer::create( [
                 'tenant_id' => $tenantId,
-                'status'    => $data['status'] ?? 'active',
-            ]);
+                'status'    => $data[ 'status' ] ?? 'active',
+            ] );
 
             // 5. Atualizar customer_id nas tabelas relacionadas
-            $commonData->update(['customer_id' => $customer->id]);
-            $contact->update(['customer_id' => $customer->id]);
-            $address->update(['customer_id' => $customer->id]);
+            $commonData->update( [ 'customer_id' => $customer->id ] );
+            $contact->update( [ 'customer_id' => $customer->id ] );
+            $address->update( [ 'customer_id' => $customer->id ] );
 
             // 6. Criar BusinessData se for pessoa jurídica
-            if (($data['type'] ?? 'individual') === 'company' || !empty($data['cnpj'])) {
-                BusinessData::create([
+            if ( ( $data[ 'type' ] ?? 'individual' ) === 'company' || !empty( $data[ 'cnpj' ] ) ) {
+                BusinessData::create( [
                     'tenant_id'              => $tenantId,
                     'customer_id'            => $customer->id,
-                    'fantasy_name'           => $data['fantasy_name'] ?? null,
-                    'state_registration'     => $data['state_registration'] ?? null,
-                    'municipal_registration' => $data['municipal_registration'] ?? null,
-                    'founding_date'          => $data['founding_date'] ?? null,
-                    'industry'               => $data['industry'] ?? null,
-                    'company_size'           => $data['company_size'] ?? null,
-                    'notes'                  => $data['business_notes'] ?? null,
-                ]);
+                    'fantasy_name'           => $data[ 'fantasy_name' ] ?? null,
+                    'state_registration'     => $data[ 'state_registration' ] ?? null,
+                    'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
+                    'founding_date'          => $data[ 'founding_date' ] ?? null,
+                    'industry'               => $data[ 'industry' ] ?? null,
+                    'company_size'           => $data[ 'company_size' ] ?? null,
+                    'notes'                  => $data[ 'business_notes' ] ?? null,
+                ] );
             }
 
-            return $customer->fresh(['commonData', 'contact', 'address', 'businessData']);
-        });
+            return $customer->fresh( [ 'commonData', 'contact', 'address', 'businessData' ] );
+        } );
     }
 
     /**
      * Atualiza customer com todas as relações
      */
-    public function updateWithRelations(Customer $customer, array $data): bool
+    public function updateWithRelations( Customer $customer, array $data ): bool
     {
-        return DB::transaction(function () use ($customer, $data) {
+        return DB::transaction( function () use ($customer, $data) {
             // Atualizar CommonData
-            if ($customer->commonData) {
-                $customer->commonData->update([
-                    'type'                => $data['type'] ?? $customer->commonData->type,
-                    'first_name'          => $data['first_name'] ?? $customer->commonData->first_name,
-                    'last_name'           => $data['last_name'] ?? $customer->commonData->last_name,
-                    'birth_date'          => $data['birth_date'] ?? $customer->commonData->birth_date,
-                    'cpf'                 => $data['cpf'] ?? $customer->commonData->cpf,
-                    'cnpj'                => $data['cnpj'] ?? $customer->commonData->cnpj,
-                    'company_name'        => $data['company_name'] ?? $customer->commonData->company_name,
-                    'description'         => $data['description'] ?? $customer->commonData->description,
-                    'area_of_activity_id' => $data['area_of_activity_id'] ?? $customer->commonData->area_of_activity_id,
-                    'profession_id'       => $data['profession_id'] ?? $customer->commonData->profession_id,
-                ]);
+            if ( $customer->commonData ) {
+                $customer->commonData->update( [
+                    'type'                => $data[ 'type' ] ?? $customer->commonData->type,
+                    'first_name'          => $data[ 'first_name' ] ?? $customer->commonData->first_name,
+                    'last_name'           => $data[ 'last_name' ] ?? $customer->commonData->last_name,
+                    'birth_date'          => $data[ 'birth_date' ] ?? $customer->commonData->birth_date,
+                    'cpf'                 => $data[ 'cpf' ] ?? $customer->commonData->cpf,
+                    'cnpj'                => $data[ 'cnpj' ] ?? $customer->commonData->cnpj,
+                    'company_name'        => $data[ 'company_name' ] ?? $customer->commonData->company_name,
+                    'description'         => $data[ 'description' ] ?? $customer->commonData->description,
+                    'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? $customer->commonData->area_of_activity_id,
+                    'profession_id'       => $data[ 'profession_id' ] ?? $customer->commonData->profession_id,
+                ] );
             }
 
             // Atualizar Contact
-            if ($customer->contact) {
-                $customer->contact->update([
-                    'email_personal' => $data['email_personal'] ?? ($data['email'] ?? $customer->contact->email_personal),
-                    'phone_personal' => $data['phone_personal'] ?? ($data['phone'] ?? $customer->contact->phone_personal),
-                    'email_business' => $data['email_business'] ?? $customer->contact->email_business,
-                    'phone_business' => $data['phone_business'] ?? $customer->contact->phone_business,
-                    'website'        => $data['website'] ?? $customer->contact->website,
-                ]);
+            if ( $customer->contact ) {
+                $customer->contact->update( [
+                    'email_personal' => $data[ 'email_personal' ] ?? ( $data[ 'email' ] ?? $customer->contact->email_personal ),
+                    'phone_personal' => $data[ 'phone_personal' ] ?? ( $data[ 'phone' ] ?? $customer->contact->phone_personal ),
+                    'email_business' => $data[ 'email_business' ] ?? $customer->contact->email_business,
+                    'phone_business' => $data[ 'phone_business' ] ?? $customer->contact->phone_business,
+                    'website'        => $data[ 'website' ] ?? $customer->contact->website,
+                ] );
             }
 
             // Atualizar Address
-            if ($customer->address) {
-                $customer->address->update([
-                    'address'        => $data['address'] ?? $customer->address->address,
-                    'address_number' => $data['address_number'] ?? $customer->address->address_number,
-                    'neighborhood'   => $data['neighborhood'] ?? $customer->address->neighborhood,
-                    'city'           => $data['city'] ?? $customer->address->city,
-                    'state'          => $data['state'] ?? $customer->address->state,
-                    'cep'            => $data['cep'] ?? $customer->address->cep,
-                ]);
+            if ( $customer->address ) {
+                $customer->address->update( [
+                    'address'        => $data[ 'address' ] ?? $customer->address->address,
+                    'address_number' => $data[ 'address_number' ] ?? $customer->address->address_number,
+                    'neighborhood'   => $data[ 'neighborhood' ] ?? $customer->address->neighborhood,
+                    'city'           => $data[ 'city' ] ?? $customer->address->city,
+                    'state'          => $data[ 'state' ] ?? $customer->address->state,
+                    'cep'            => $data[ 'cep' ] ?? $customer->address->cep,
+                ] );
             }
 
             // Atualizar ou criar BusinessData
-            if (($data['type'] ?? 'individual') === 'company' || !empty($data['cnpj'])) {
-                if ($customer->businessData) {
-                    $customer->businessData->update([
-                        'fantasy_name'           => $data['fantasy_name'] ?? $customer->businessData->fantasy_name,
-                        'state_registration'     => $data['state_registration'] ?? $customer->businessData->state_registration,
-                        'municipal_registration' => $data['municipal_registration'] ?? $customer->businessData->municipal_registration,
-                        'founding_date'          => $data['founding_date'] ?? $customer->businessData->founding_date,
-                        'industry'               => $data['industry'] ?? $customer->businessData->industry,
-                        'company_size'           => $data['company_size'] ?? $customer->businessData->company_size,
-                        'notes'                  => $data['business_notes'] ?? ($data['notes'] ?? $customer->businessData->notes),
-                    ]);
+            if ( ( $data[ 'type' ] ?? 'individual' ) === 'company' || !empty( $data[ 'cnpj' ] ) ) {
+                if ( $customer->businessData ) {
+                    $customer->businessData->update( [
+                        'fantasy_name'           => $data[ 'fantasy_name' ] ?? $customer->businessData->fantasy_name,
+                        'state_registration'     => $data[ 'state_registration' ] ?? $customer->businessData->state_registration,
+                        'municipal_registration' => $data[ 'municipal_registration' ] ?? $customer->businessData->municipal_registration,
+                        'founding_date'          => $data[ 'founding_date' ] ?? $customer->businessData->founding_date,
+                        'industry'               => $data[ 'industry' ] ?? $customer->businessData->industry,
+                        'company_size'           => $data[ 'company_size' ] ?? $customer->businessData->company_size,
+                        'notes'                  => $data[ 'business_notes' ] ?? ( $data[ 'notes' ] ?? $customer->businessData->notes ),
+                    ] );
                 } else {
-                    BusinessData::create([
+                    BusinessData::create( [
                         'tenant_id'              => $customer->tenant_id,
                         'customer_id'            => $customer->id,
-                        'fantasy_name'           => $data['fantasy_name'] ?? null,
-                        'state_registration'     => $data['state_registration'] ?? null,
-                        'municipal_registration' => $data['municipal_registration'] ?? null,
-                        'founding_date'          => $data['founding_date'] ?? null,
-                        'industry'               => $data['industry'] ?? null,
-                        'company_size'           => $data['company_size'] ?? null,
-                        'notes'                  => $data['business_notes'] ?? ($data['notes'] ?? null),
-                    ]);
+                        'fantasy_name'           => $data[ 'fantasy_name' ] ?? null,
+                        'state_registration'     => $data[ 'state_registration' ] ?? null,
+                        'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
+                        'founding_date'          => $data[ 'founding_date' ] ?? null,
+                        'industry'               => $data[ 'industry' ] ?? null,
+                        'company_size'           => $data[ 'company_size' ] ?? null,
+                        'notes'                  => $data[ 'business_notes' ] ?? ( $data[ 'notes' ] ?? null ),
+                    ] );
                 }
             }
 
             // Atualizar Customer (status)
-            $customer->update([
-                'status' => $data['status'] ?? $customer->status,
-            ]);
+            $customer->update( [
+                'status' => $data[ 'status' ] ?? $customer->status,
+            ] );
 
             return true;
-        });
+        } );
     }
 
     /**
      * Verifica se customer pode ser deletado (verifica relacionamentos)
      */
-    public function canDelete(int $id, int $tenantId): array
+    public function canDelete( int $id, int $tenantId ): array
     {
-        $customer = Customer::select('customers.*')
-            ->where('customers.id', $id)
-            ->where('customers.tenant_id', $tenantId)
-            ->where('customers.deleted_at', null)
-            ->addSelect([
-                'budgets_count'  => function ($query) use ($tenantId) {
-                    $query->selectRaw('count(*)')
-                        ->from('budgets')
-                        ->whereColumn('budgets.customer_id', 'customers.id')
-                        ->where('budgets.tenant_id', $tenantId);
+        $customer = Customer::select( 'customers.*' )
+            ->where( 'customers.id', $id )
+            ->where( 'customers.tenant_id', $tenantId )
+            ->where( 'customers.deleted_at', null )
+            ->addSelect( [
+                'budgets_count'  => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'budgets' )
+                        ->whereColumn( 'budgets.customer_id', 'customers.id' )
+                        ->where( 'budgets.tenant_id', $tenantId );
                 },
-                'services_count' => function ($query) use ($tenantId) {
-                    $query->selectRaw('count(*)')
-                        ->from('services')
-                        ->join('budgets', 'services.budget_id', '=', 'budgets.id')
-                        ->whereColumn('budgets.customer_id', 'customers.id')
-                        ->where('budgets.tenant_id', $tenantId);
+                'services_count' => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'services' )
+                        ->join( 'budgets', 'services.budget_id', '=', 'budgets.id' )
+                        ->whereColumn( 'budgets.customer_id', 'customers.id' )
+                        ->where( 'budgets.tenant_id', $tenantId );
                 },
-                'invoices_count' => function ($query) use ($tenantId) {
-                    $query->selectRaw('count(*)')
-                        ->from('invoices')
-                        ->whereColumn('invoices.customer_id', 'customers.id')
-                        ->where('invoices.tenant_id', $tenantId)
-                        ->whereNull('invoices.deleted_at');
+                'invoices_count' => function ( $query ) use ( $tenantId ) {
+                    $query->selectRaw( 'count(*)' )
+                        ->from( 'invoices' )
+                        ->whereColumn( 'invoices.customer_id', 'customers.id' )
+                        ->where( 'invoices.tenant_id', $tenantId )
+                        ->whereNull( 'invoices.deleted_at' );
                 }
-            ])
+            ] )
             ->first();
 
-        if (!$customer) {
-            return ['canDelete' => false, 'reason' => 'Customer não encontrado'];
+        if ( !$customer ) {
+            return [ 'canDelete' => false, 'reason' => 'Customer não encontrado' ];
         }
 
         $budgetsCount   = (int) $customer->budgets_count;
@@ -532,20 +549,20 @@ class CustomerRepository extends AbstractTenantRepository
         $totalRelations = $budgetsCount + $servicesCount + $invoicesCount;
 
         $reasons = [];
-        if ($budgetsCount > 0) {
+        if ( $budgetsCount > 0 ) {
             $reasons[] = "{$budgetsCount} orçamento(s)";
         }
-        if ($servicesCount > 0) {
+        if ( $servicesCount > 0 ) {
             $reasons[] = "{$servicesCount} serviço(s)";
         }
-        if ($invoicesCount > 0) {
+        if ( $invoicesCount > 0 ) {
             $reasons[] = "{$invoicesCount} fatura(s)";
         }
 
         return [
             'canDelete'           => $totalRelations === 0,
             'reason'              => $totalRelations > 0
-                ? 'Cliente não pode ser excluído pois possui: ' . implode(', ', $reasons)
+                ? 'Cliente não pode ser excluído pois possui: ' . implode( ', ', $reasons )
                 : null,
             'budgetsCount'        => $budgetsCount,
             'servicesCount'       => $servicesCount,
@@ -557,132 +574,133 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca por email (qualquer campo de email)
      */
-    public function findByEmail(string $email, int $tenantId): ?Customer
+    public function findByEmail( string $email, int $tenantId ): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->whereHas('contact', function ($q) use ($email) {
-                $q->where('email_personal', $email)
-                    ->orWhere('email_business', $email);
-            })
+        return Customer::where( 'tenant_id', $tenantId )
+            ->whereHas( 'contact', function ( $q ) use ( $email ) {
+                $q->where( 'email_personal', $email )
+                    ->orWhere( 'email_business', $email );
+            } )
             ->first();
     }
 
     /**
      * Busca por CPF
      */
-    public function findByCpf(string $cpf, int $tenantId): ?Customer
+    public function findByCpf( string $cpf, int $tenantId ): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->whereHas('commonData', function ($q) use ($cpf) {
-                $q->where('cpf', $cpf);
-            })
+        return Customer::where( 'tenant_id', $tenantId )
+            ->whereHas( 'commonData', function ( $q ) use ( $cpf ) {
+                $q->where( 'cpf', $cpf );
+            } )
             ->first();
     }
 
     /**
      * Busca por CNPJ
      */
-    public function findByCnpj(string $cnpj, int $tenantId): ?Customer
+    public function findByCnpj( string $cnpj, int $tenantId ): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->whereHas('commonData', function ($q) use ($cnpj) {
-                $q->where('cnpj', $cnpj);
-            })
+        return Customer::where( 'tenant_id', $tenantId )
+            ->whereHas( 'commonData', function ( $q ) use ( $cnpj ) {
+                $q->where( 'cnpj', $cnpj );
+            } )
             ->first();
     }
 
     /**
      * Verifica relacionamentos (método aliases para canDelete)
      */
-    public function checkRelationships(int $id, int $tenantId): array
+    public function checkRelationships( int $id, int $tenantId ): array
     {
-        $canDelete = $this->canDelete($id, $tenantId);
+        $canDelete = $this->canDelete( $id, $tenantId );
         return [
-            'hasRelationships' => !$canDelete['canDelete'],
-            'budgets'          => $canDelete['budgetsCount'] ?? 0,
-            'services'         => $canDelete['servicesCount'] ?? 0,
-            'invoices'         => $canDelete['invoicesCount'] ?? 0,
-            'interactions'     => $canDelete['interactionsCount'] ?? 0,
-            'totalRelations'   => $canDelete['totalRelationsCount'] ?? 0,
-            'reason'           => $canDelete['reason'] ?? null
+            'hasRelationships' => !$canDelete[ 'canDelete' ],
+            'budgets'          => $canDelete[ 'budgetsCount' ] ?? 0,
+            'services'         => $canDelete[ 'servicesCount' ] ?? 0,
+            'invoices'         => $canDelete[ 'invoicesCount' ] ?? 0,
+            'interactions'     => $canDelete[ 'interactionsCount' ] ?? 0,
+            'totalRelations'   => $canDelete[ 'totalRelationsCount' ] ?? 0,
+            'reason'           => $canDelete[ 'reason' ] ?? null
         ];
     }
 
     /**
      * Busca customer com registros trashed
      */
-    public function findWithTrashed(int $id, int $tenantId): ?Customer
+    public function findWithTrashed( int $id, int $tenantId ): ?Customer
     {
         return Customer::withTrashed()
-            ->where('id', $id)
-            ->where('tenant_id', $tenantId)
-            ->with([
-                'commonData'   => function ($q) {
-                    $q->withTrashed()->with(['areaOfActivity', 'profession']);
+            ->where( 'id', $id )
+            ->where( 'tenant_id', $tenantId )
+            ->with( [
+                'commonData'   => function ( $q ) {
+                    $q->withTrashed()->with( [ 'areaOfActivity', 'profession' ] );
                 },
-                'contact'      => function ($q) {
+                'contact'      => function ( $q ) {
                     $q->withTrashed();
                 },
-                'address'      => function ($q) {
+                'address'      => function ( $q ) {
                     $q->withTrashed();
                 },
-                'businessData' => function ($q) {
+                'businessData' => function ( $q ) {
                     $q->withTrashed();
                 }
-            ])
+            ] )
             ->first();
     }
 
     /**
      * Conta total de customers por tenant
      */
-    public function countByTenantId(int $tenantId): int
+    public function countByTenantId( int $tenantId ): int
     {
-        return Customer::where('tenant_id', $tenantId)->count();
+        return Customer::where( 'tenant_id', $tenantId )->count();
     }
 
     /**
      * Conta customers por status no tenant
      */
-    public function countByStatus(string $status, int $tenantId): int
+    public function countByStatus( string $status, int $tenantId ): int
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->where('status', $status)
+        return Customer::where( 'tenant_id', $tenantId )
+            ->where( 'status', $status )
             ->count();
     }
 
     /**
      * Busca customers recentes por tenant
      */
-    public function getRecentByTenantId(int $tenantId, int $limit = 10): Collection
+    public function getRecentByTenantId( int $tenantId, int $limit = 10 ): Collection
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
+        return Customer::where( 'tenant_id', $tenantId )
+            ->orderBy( 'created_at', 'desc' )
+            ->limit( $limit )
             ->get();
     }
 
     /**
      * Busca para autocomplete
      */
-    public function searchForAutocomplete(string $query, int $tenantId): Collection
+    public function searchForAutocomplete( string $query, int $tenantId ): Collection
     {
-        return Customer::where('tenant_id', $tenantId)
-            ->whereHas('commonData', function ($q) use ($query) {
-                $q->where('first_name', 'like', '%' . $query . '%')
-                    ->orWhere('last_name', 'like', '%' . $query . '%')
-                    ->orWhere('company_name', 'like', '%' . $query . '%')
-                    ->orWhere('cpf', 'like', '%' . $query . '%')
-                    ->orWhere('cnpj', 'like', '%' . $query . '%');
-            })
-            ->orWhereHas('contact', function ($q) use ($query) {
-                $q->where('email_personal', 'like', '%' . $query . '%')
-                    ->orWhere('email_business', 'like', '%' . $query . '%')
-                    ->orWhere('phone_personal', 'like', '%' . $query . '%')
-                    ->orWhere('phone_business', 'like', '%' . $query . '%');
-            })
-            ->with('commonData.contact')
-            ->limit(20)
+        return Customer::where( 'tenant_id', $tenantId )
+            ->whereHas( 'commonData', function ( $q ) use ( $query ) {
+                $q->where( 'first_name', 'like', '%' . $query . '%' )
+                    ->orWhere( 'last_name', 'like', '%' . $query . '%' )
+                    ->orWhere( 'company_name', 'like', '%' . $query . '%' )
+                    ->orWhere( 'cpf', 'like', '%' . $query . '%' )
+                    ->orWhere( 'cnpj', 'like', '%' . $query . '%' );
+            } )
+            ->orWhereHas( 'contact', function ( $q ) use ( $query ) {
+                $q->where( 'email_personal', 'like', '%' . $query . '%' )
+                    ->orWhere( 'email_business', 'like', '%' . $query . '%' )
+                    ->orWhere( 'phone_personal', 'like', '%' . $query . '%' )
+                    ->orWhere( 'phone_business', 'like', '%' . $query . '%' );
+            } )
+            ->with( 'commonData.contact' )
+            ->limit( 20 )
             ->get();
     }
+
 }

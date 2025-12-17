@@ -99,26 +99,9 @@ class CategoryService extends AbstractBaseService
                 $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
             }
 
-            // Para filtrar deletados, criar query específica
-            if ( $onlyTrashed ) {
-                $query = \App\Models\Category::withoutGlobalScope( \App\Models\Traits\TenantScope::class)
-                    ->onlyTrashed()
-                    ->where( 'tenant_id', $tenantId );
-
-                // Aplicar filtros normalizados
-                foreach ( $normalized as $field => $value ) {
-                    if ( is_array( $value ) && isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
-                        $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
-                    } else {
-                        $query->where( $field, $value );
-                    }
-                }
-
-                $paginator = $query->orderBy( 'name', 'asc' )->paginate( $perPage );
-            } else {
-                // Usar o método padrão do AbstractTenantRepository que aplica global scope automaticamente
-                $paginator = $this->categoryRepository->paginateByTenant( $perPage, $normalized, [ 'name' => 'asc' ] );
-            }
+            // Usar o método específico do CategoryRepository que inclui funcionalidades avançadas
+            // Passar o parâmetro $onlyTrashed para manter consistência arquitetural
+            $paginator = $this->categoryRepository->getPaginated( $normalized, $perPage, [], [ 'name' => 'asc' ], $onlyTrashed );
 
             return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
         } catch ( Exception $e ) {

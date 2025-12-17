@@ -4,30 +4,45 @@ namespace App\Repositories;
 
 use App\Models\Product;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductRepository extends AbstractTenantRepository
 {
-    public function __construct( Product $model )
-    {
-        $this->model = $model;
-    }
-
+    /**
+     * {@inheritdoc}
+     */
     protected function makeModel(): Model
     {
         return new Product();
     }
 
-    public function getPaginated( array $filters = [], int $perPage = 15, array $with = [] ): LengthAwarePaginator
-    {
+    /**
+     * {@inheritdoc}
+     *
+     * Override do método padrão para adicionar filtros específicos de produto.
+     * Mantém compatibilidade com assinatura do AbstractTenantRepository.
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        // Eager loading padrão para produtos
+        $defaultWith = [ 'category', 'inventory' ];
+        $with        = array_unique( array_merge( $defaultWith, $with ) );
+
+        // Adicionar filtros específicos do ProductRepository
         $query = $this->model->newQuery();
 
+        // Eager loading paramétrico
         if ( !empty( $with ) ) {
             $query->with( $with );
         }
 
+        // Filtro por busca (nome, SKU, descrição)
         if ( !empty( $filters[ 'search' ] ) ) {
             $query->where( function ( $q ) use ( $filters ) {
                 $q->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' )
@@ -36,14 +51,17 @@ class ProductRepository extends AbstractTenantRepository
             } );
         }
 
+        // Filtro por ativo/inativo
         if ( isset( $filters[ 'active' ] ) && $filters[ 'active' ] !== '' ) {
             $query->where( 'active', (bool) $filters[ 'active' ] );
         }
 
+        // Filtro por categoria
         if ( !empty( $filters[ 'category_id' ] ) ) {
             $query->where( 'category_id', $filters[ 'category_id' ] );
         }
 
+        // Filtros de preço
         if ( !empty( $filters[ 'min_price' ] ) ) {
             $query->where( 'price', '>=', $filters[ 'min_price' ] );
         }
@@ -52,10 +70,18 @@ class ProductRepository extends AbstractTenantRepository
             $query->where( 'price', '<=', $filters[ 'max_price' ] );
         }
 
-        // Usar per_page do filtro se fornecido
-        $itemsPerPage = !empty( $filters[ 'per_page' ] ) ? (int) $filters[ 'per_page' ] : $perPage;
+        // Aplicar filtros padrão do trait
+        $this->applyFilters( $query, $filters );
+        $this->applySoftDeleteFilter( $query, $filters );
 
-        return $query->orderBy( 'name', 'asc' )->paginate( $itemsPerPage );
+        // Aplicar ordenação (padrão: nome ascendente)
+        $defaultOrderBy = $orderBy ?: [ 'name' => 'asc' ];
+        $this->applyOrderBy( $query, $defaultOrderBy );
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
     }
 
     public function findBySku( string $sku, array $with = [] ): ?Model

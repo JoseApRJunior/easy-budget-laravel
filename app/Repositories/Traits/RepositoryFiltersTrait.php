@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Repositories\Traits;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\EloquentBuilder;
+
 /**
  * Trait com métodos auxiliares comuns para repositórios.
  *
@@ -87,6 +90,59 @@ trait RepositoryFiltersTrait
     protected function getFillableFields(): array
     {
         return $this->model->getFillable();
+    }
+
+    // --------------------------------------------------------------------------
+    // MÉTODOS AUXILIARES PARA PAGINAÇÃO PADRONIZADA
+    // --------------------------------------------------------------------------
+
+    /**
+     * Aplica filtro de soft delete baseado nos filtros.
+     *
+     * Este método é usado pelo método getPaginated() padrão para aplicar
+     * automaticamente filtro de soft delete quando o filtro 'deleted' = 'only' for fornecido.
+     *
+     * @param Builder $query
+     * @param array<string, mixed> $filters
+     *
+     * @example Uso:
+     * ```php
+     * $filters = ['deleted' => 'only'];
+     * $this->applySoftDeleteFilter($query, $filters);
+     * // Aplica onlyTrashed() à query
+     * ```
+     */
+    protected function applySoftDeleteFilter( $query, array $filters ): void
+    {
+        if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
+            $query->onlyTrashed();
+        }
+    }
+
+    /**
+     * Retorna per page efetivo baseado nos filtros.
+     *
+     * Permite que o método getPaginated() use um per_page customizado
+     * via filtro, mantendo o padrão de 15 itens por página.
+     *
+     * @param array<string, mixed> $filters
+     * @param int $defaultPerPage
+     * @return int
+     *
+     * @example Uso:
+     * ```php
+     * $filters = ['per_page' => 20];
+     * $perPage = $this->getEffectivePerPage($filters, 15);
+     * // Retorna 20
+     *
+     * $filters = [];
+     * $perPage = $this->getEffectivePerPage($filters, 15);
+     * // Retorna 15
+     * ```
+     */
+    protected function getEffectivePerPage( array $filters, int $defaultPerPage ): int
+    {
+        return $filters[ 'per_page' ] ?? $defaultPerPage;
     }
 
 }

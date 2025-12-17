@@ -6,14 +6,13 @@ use App\Models\ProductInventory;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class InventoryRepository extends AbstractTenantRepository
 {
-    public function __construct( ProductInventory $model )
-    {
-        $this->model = $model;
-    }
-
+    /**
+     * {@inheritdoc}
+     */
     protected function makeModel(): Model
     {
         return new ProductInventory();
@@ -36,12 +35,44 @@ class InventoryRepository extends AbstractTenantRepository
         return $this->model->where( 'product_id', $productId )->update( [ 'quantity' => $quantity ] );
     }
 
-    // ========== MÉTODOS ADICIONADOS DE ProductInventoryRepository ==========
+    // ========== MÉTODOS ADICIONADOS DE AbstractTenantRepository ==========
 
-    public function getPaginated( int $tenantId, int $perPage = 15, array $filters = [] )
-    {
-        $query = $this->model->where( 'tenant_id', $tenantId )->with( 'product' );
+    /**
+     * {@inheritdoc}
+     *
+     * Implementação específica para inventory com filtros avançados.
+     *
+     * @param array<string, mixed> $filters Filtros específicos:
+     *   - search: termo de busca em nome/SKU do produto
+     *   - low_stock: true para filtrar itens com estoque baixo
+     *   - high_stock: true para filtrar itens com estoque alto
+     *   - per_page: número de itens por página
+     *   - deleted: 'only' para mostrar apenas itens deletados
+     * @param int $perPage Número padrão de itens por página (15)
+     * @param array<string> $with Relacionamentos para eager loading (padrão: ['product'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada
+     * @return LengthAwarePaginator Resultado paginado
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [ 'product' ],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery();
 
+        // Eager loading paramétrico
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        // Aplicar filtros avançados
+        $this->applyFilters( $query, $filters );
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter( $query, $filters );
+
+        // Filtros específicos de inventory
         if ( !empty( $filters[ 'search' ] ) ) {
             $query->whereHas( 'product', function ( $q ) use ( $filters ) {
                 $q->where( 'name', 'like', "%{$filters[ 'search' ]}%" )
@@ -57,7 +88,13 @@ class InventoryRepository extends AbstractTenantRepository
             $query->whereColumn( 'quantity', '>=', 'max_quantity' );
         }
 
-        return $query->paginate( $perPage );
+        // Aplicar ordenação
+        $this->applyOrderBy( $query, $orderBy );
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
     }
 
     public function findByProduct( int $productId, int $tenantId ): ?ProductInventory
