@@ -215,7 +215,7 @@
                                                             <i class="bi bi-eye" aria-hidden="true"></i>
                                                         </a>
                                                         <a href="{{ route('provider.products.edit', $product->sku) }}"
-                                                            class="btn btn-warning" title="Editar" aria-label="Editar">
+                                                            class="btn btn-primary" title="Editar" aria-label="Editar">
                                                             <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                                         </a>
                                                         <form

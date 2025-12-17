@@ -23,9 +23,8 @@
 
         <div class="row">
             <!-- Coluna Esquerda: Imagem e Status -->
-
             <div class="col-md-4 mb-4">
-                <div class="card mb-4">
+                <div class="card">
                     <div class="card-body text-center">
                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                             class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; object-fit: cover;">
@@ -40,36 +39,6 @@
                                     <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
                                 </div>
                             @endif
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card de Ações Rápidas -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-lightning-charge me-1"></i> Ações Rápidas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <form action="{{ route('provider.products.toggle-status', $product->sku) }}" method="POST"
-                                onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                    class="btn {{ $product->active ? 'btn-outline-danger' : 'btn-outline-success' }} w-100">
-                                    <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-1"></i>
-                                    {{ $product->active ? 'Desativar Produto' : 'Ativar Produto' }}
-                                </button>
-                            </form>
-
-                            <form action="{{ route('provider.products.destroy', $product->sku) }}" method="POST"
-                                onsubmit="return confirm('Tem certeza que deseja excluir este produto permanentemente?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger w-100">
-                                    <i class="bi bi-trash me-1"></i> Excluir Produto
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -222,15 +191,68 @@
                 <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
-                <form action="{{ route('provider.products.destroy', $product->sku) }}" method="POST" class="d-inline"
-                    onsubmit="return confirm('Tem certeza que deseja excluir este produto permanentemente?')">
+                <form action="{{ route('provider.products.toggle-status', $product->sku) }}" method="POST"
+                    class="d-inline"
+                    onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
                     @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger">
-                        <i class="bi bi-trash-fill me-2"></i>Excluir
+                    @method('PATCH')
+                    <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
+                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
+                        {{ $product->active ? 'Desativar' : 'Ativar' }}
                     </button>
                 </form>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                    data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                    data-product-name="{{ $product->name }}">
+                    <i class="bi bi-trash-fill me-2"></i>Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
+                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" action="#" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        // Script para o modal de exclusão
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const deleteUrl = button.getAttribute('data-delete-url');
+                    const productName = button.getAttribute('data-product-name');
+
+                    const deleteProductName = deleteModal.querySelector('#deleteProductName');
+                    const deleteForm = deleteModal.querySelector('#deleteForm');
+
+                    deleteProductName.textContent = productName;
+                    deleteForm.action = deleteUrl;
+                });
+            }
+        });
+    </script>
+@endpush
