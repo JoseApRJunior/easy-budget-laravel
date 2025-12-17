@@ -10,16 +10,18 @@ use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\User;
 use App\Repositories\CategoryRepository;
-use App\Services\Core\PermissionService;
 use App\Services\Domain\CategoryService;
 use Collator;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Reader\Xml\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Controller simplificado para gerenciamento de categorias.
@@ -36,7 +38,7 @@ class CategoryController extends Controller
     /**
      * Dashboard de categorias com estatísticas.
      */
-    public function dashboard()
+    public function dashboard(): View
     {
         $result = $this->categoryService->getDashboardData();
 
@@ -55,7 +57,7 @@ class CategoryController extends Controller
     /**
      * Lista categorias com filtros e paginação.
      */
-    public function index( Request $request )
+    public function index( Request $request ): View
     {
         $filters        = $request->only( [ 'search', 'active', 'per_page', 'deleted' ] );
         $hasFilters     = $request->has( [ 'search', 'active', 'deleted' ] );
@@ -73,7 +75,7 @@ class CategoryController extends Controller
                 'active' => $filters[ 'active' ] ?? '',
             ];
 
-            // Se request 'deleted' = 'only', mostrar apenas deletadas
+            // Filtro para mostrar apenas registros deletados (soft delete)
             if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
                 $result = $service->paginate( $serviceFilters, $perPage, true );
             } else {
@@ -113,7 +115,7 @@ class CategoryController extends Controller
     /**
      * Form para criar categoria.
      */
-    public function create()
+    public function create(): View
     {
         /** @var User $user */
         $user     = auth()->user();
@@ -139,7 +141,7 @@ class CategoryController extends Controller
     /**
      * Persiste nova categoria.
      */
-    public function store( StoreCategoryRequest $request )
+    public function store( StoreCategoryRequest $request ): RedirectResponse
     {
         $data = $request->validated();
         if ( isset( $data[ 'name' ] ) ) {
@@ -173,7 +175,7 @@ class CategoryController extends Controller
     /**
      * Mostra detalhes da categoria por slug.
      */
-    public function show( string $slug )
+    public function show( string $slug ): View
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
@@ -189,7 +191,7 @@ class CategoryController extends Controller
     /**
      * Form para editar categoria.
      */
-    public function edit( string $slug )
+    public function edit( string $slug ): View
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
@@ -222,7 +224,7 @@ class CategoryController extends Controller
     /**
      * Atualiza categoria.
      */
-    public function update( UpdateCategoryRequest $request, string $slug )
+    public function update( UpdateCategoryRequest $request, string $slug ): RedirectResponse
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
@@ -262,7 +264,7 @@ class CategoryController extends Controller
     /**
      * Exclui categoria.
      */
-    public function destroy( string $slug )
+    public function destroy( string $slug ): RedirectResponse
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
@@ -285,7 +287,7 @@ class CategoryController extends Controller
     /**
      * Alterna status ativo/inativo da categoria.
      */
-    public function toggle_status( string $slug )
+    public function toggle_status( string $slug ): RedirectResponse
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
@@ -319,7 +321,7 @@ class CategoryController extends Controller
     /**
      * Restaura categoria deletada (soft delete).
      */
-    public function restore( string $slug )
+    public function restore( string $slug ): RedirectResponse
     {
         /** @var User $user */
         $user     = auth()->user();
@@ -344,7 +346,7 @@ class CategoryController extends Controller
     /**
      * Exporta categorias em xlsx, csv ou pdf.
      */
-    public function export( Request $request )
+    public function export( Request $request ): BinaryFileResponse
     {
         $format = $request->get( 'format', 'xlsx' );
 

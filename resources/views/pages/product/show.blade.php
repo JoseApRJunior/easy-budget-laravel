@@ -108,7 +108,13 @@
                                         <label class="text-muted small text-uppercase fw-bold">Categoria</label>
                                         <p class="h5">
                                             @if ($product->category)
-                                                <span class="badge bg-primary">{{ $product->category->name }}</span>
+                                                <span class="badge bg-primary">
+                                                    @if ($product->category->parent_id)
+                                                        {{ $product->category->getFormattedHierarchy() }}
+                                                    @else
+                                                        {{ $product->category->name }}
+                                                    @endif
+                                                </span>
                                             @else
                                                 <span class="text-muted">Sem categoria</span>
                                             @endif

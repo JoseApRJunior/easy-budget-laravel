@@ -124,6 +124,47 @@ class Category extends Model
     }
 
     /**
+     * Constrói a hierarquia completa da categoria.
+     *
+     * Retorna um array com todos os níveis da hierarquia, da categoria raiz até a atual.
+     *
+     * @return array<string>
+     */
+    public function getFullHierarchy(): array
+    {
+        $hierarchy = [];
+        $current   = $this;
+        $maxDepth  = 50; // Proteção contra loops infinitos
+        $depth     = 0;
+
+        while ( $current && $depth < $maxDepth ) {
+            array_unshift( $hierarchy, $current->name );
+
+            // Se não tem parent, terminamos
+            if ( !$current->parent_id ) {
+                break;
+            }
+
+            // Buscar o parent (incluindo deletados para reconstruir hierarquia completa)
+            $current = Category::withTrashed()->find( $current->parent_id );
+            $depth++;
+        }
+
+        return $hierarchy;
+    }
+
+    /**
+     * Retorna a hierarquia formatada como string.
+     *
+     * @param string $separator Separador entre os níveis (padrão: ' > ')
+     * @return string
+     */
+    public function getFormattedHierarchy( string $separator = ' > ' ): string
+    {
+        return implode( $separator, $this->getFullHierarchy() );
+    }
+
+    /**
      * Verifica se definir um parent_id criaria uma referência circular.
      *
      * @param int $proposedParentId ID do parent que se deseja definir

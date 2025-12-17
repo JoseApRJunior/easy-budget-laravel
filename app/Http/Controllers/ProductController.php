@@ -60,8 +60,8 @@ class ProductController extends Controller
         }
         $filters[ 'per_page' ] = $perPage;
 
-        $hasFilters = $request->has(['search', 'category_id', 'active', 'min_price', 'max_price', 'deleted']);
-        $showAll = $request->boolean('all');
+        $hasFilters = $request->has( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
+        $showAll    = $request->boolean( 'all' );
 
         try {
             if ( $hasFilters || $showAll ) {
@@ -148,7 +148,7 @@ class ProductController extends Controller
     public function show( string $sku ): View
     {
         try {
-            $result = $this->productService->findBySku( $sku, [ 'category', 'productInventory' ] );
+            $result = $this->productService->findBySku( $sku, [ 'category.parent', 'productInventory' ] );
 
             if ( !$result->isSuccess() ) {
                 abort( 404, 'Produto não encontrado' );
