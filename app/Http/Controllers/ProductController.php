@@ -61,10 +61,9 @@ class ProductController extends Controller
         $filters[ 'per_page' ] = $perPage;
 
         $hasFilters = $request->has( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
-        $showAll    = $request->boolean( 'all' );
 
         try {
-            if ( $hasFilters || $showAll ) {
+            if ( $hasFilters ) {
                 $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
                 if ( $showOnlyTrashed ) {
@@ -82,7 +81,7 @@ class ProductController extends Controller
                         $products = $products->appends( $request->query() );
                     }
                 }
-            } elseif ( !$showAll ) {
+            } else {
                 $products = collect();
             }
 

@@ -60,56 +60,61 @@ class CategoryController extends Controller
     public function index( Request $request ): View
     {
         $filters        = $request->only( [ 'search', 'active', 'per_page', 'deleted' ] );
-        $hasFilters     = $request->has( [ 'search', 'active', 'deleted' ] );
-        $perPage        = (int) ( $filters[ 'per_page' ] ?? $request->input( 'per_page', 10 ) );
+        $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
         $allowedPerPage = [ 10, 20, 50 ];
         if ( !in_array( $perPage, $allowedPerPage, true ) ) {
             $perPage = 10;
         }
+        $filters[ 'per_page' ] = $perPage;
 
-        $service = app( CategoryService::class);
+        $hasFilters = $request->has( [ 'search', 'active', 'deleted' ] );
 
-        if ( $hasFilters ) {
-            $serviceFilters = [
-                'search' => $filters[ 'search' ] ?? '',
-                'active' => $filters[ 'active' ] ?? '',
-            ];
+        try {
+            if ( $hasFilters ) {
+                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
-            // Filtro para mostrar apenas registros deletados (soft delete)
-            if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
-                $result = $service->paginate( $serviceFilters, $perPage, true );
+                if ( $showOnlyTrashed ) {
+                    $result     = $this->categoryService->getDeletedCategories( $filters );
+                    $categories = $result->isSuccess() ? $result->getData() : collect();
+                } else {
+                    $result = $this->categoryService->getFilteredCategories( $filters );
+
+                    if ( !$result->isSuccess() ) {
+                        $categories = collect();
+                    }
+
+                    $categories = $result->getData();
+                    if ( is_object( $categories ) && method_exists( $categories, 'appends' ) ) {
+                        $categories = $categories->appends( $request->query() );
+                    }
+                }
             } else {
-                $result = $service->paginate( $serviceFilters, $perPage, false );
+                $categories = collect();
             }
 
-            $categories = $this->getServiceData( $result, collect() );
-            if ( method_exists( $categories, 'appends' ) ) {
-                $categories = $categories->appends( $request->query() );
-            }
-        } else {
-            $categories = collect();
+            // Carregar categorias pai para filtros na view
+            /** @var User $user */
+            $user     = auth()->user();
+            $tenantId = $user->tenant_id ?? null;
+
+            $parentCategories = $tenantId
+                ? Category::query()
+                    ->where( 'tenant_id', $tenantId )
+                    ->whereNull( 'parent_id' )
+                    ->whereNull( 'deleted_at' )
+                    ->where( 'is_active', true )
+                    ->orderBy( 'name' )
+                    ->get( [ 'id', 'name' ] )
+                : collect();
+
+            return view( 'pages.category.index', [
+                'categories'        => $categories,
+                'filters'           => $filters,
+                'parent_categories' => $parentCategories,
+            ] );
+        } catch ( \Exception ) {
+            abort( 500, 'Erro ao carregar categorias' );
         }
-
-        // Carregar categorias pai para filtros na view
-        /** @var User $user */
-        $user     = auth()->user();
-        $tenantId = $user->tenant_id ?? null;
-
-        $parentCategories = $tenantId
-            ? Category::query()
-                ->where( 'tenant_id', $tenantId )
-                ->whereNull( 'parent_id' )
-                ->whereNull( 'deleted_at' )
-                ->where( 'is_active', true )
-                ->orderBy( 'name' )
-                ->get( [ 'id', 'name' ] )
-            : collect();
-
-        return view( 'pages.category.index', [
-            'categories'        => $categories,
-            'filters'           => $filters,
-            'parent_categories' => $parentCategories,
-        ] );
     }
 
     /**

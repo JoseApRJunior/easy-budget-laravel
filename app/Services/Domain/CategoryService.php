@@ -319,6 +319,22 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
+     * Retorna categorias filtradas do tenant.
+     */
+    public function getFilteredCategories( array $filters ): ServiceResult
+    {
+        return $this->paginate( $filters, 10, false );
+    }
+
+    /**
+     * Retorna categorias deletadas do tenant.
+     */
+    public function getDeletedCategories( array $filters ): ServiceResult
+    {
+        return $this->paginate( $filters, 10, true );
+    }
+
+    /**
      * Retorna dados para o dashboard de categorias.
      */
     public function getDashboardData(): ServiceResult

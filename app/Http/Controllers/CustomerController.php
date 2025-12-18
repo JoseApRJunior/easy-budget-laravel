@@ -35,55 +35,59 @@ class CustomerController extends Controller
      */
     public function index( Request $request ): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $filters = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
+        $filters        = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
+        $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
+        $allowedPerPage = [ 10, 20, 50 ];
+        if ( !in_array( $perPage, $allowedPerPage, true ) ) {
+            $perPage = 10;
+        }
+        $filters[ 'per_page' ] = $perPage;
 
         $hasFilters = $request->has( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
 
-        if ( $hasFilters ) {
-            $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+        try {
+            /** @var User $user */
+            $user = Auth::user();
 
-            if ( $showOnlyTrashed ) {
-                $result = $this->customerService->getDeletedCustomers( $filters, $user->tenant_id );
+            if ( $hasFilters ) {
+                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+
+                if ( $showOnlyTrashed ) {
+                    $result = $this->customerService->getDeletedCustomers( $filters, $user->tenant_id );
+                } else {
+                    $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+                }
+
+                if ( !$result->isSuccess() ) {
+                    Log::error( 'Erro ao carregar clientes', [
+                        'user_id'   => $user->id,
+                        'tenant_id' => $user->tenant_id,
+                        'error'     => $result->getMessage(),
+                    ] );
+
+                    abort( 500, 'Erro ao carregar lista de clientes' );
+                }
+
+                $customers = $result->getData();
+                if ( is_object( $customers ) && method_exists( $customers, 'appends' ) ) {
+                    $customers = $customers->appends( $request->query() );
+                }
             } else {
-                $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
+                $customers = collect();
             }
 
-            if ( !$result->isSuccess() ) {
-                Log::error( 'Erro ao carregar clientes', [
-                    'user_id'   => $user->id,
-                    'tenant_id' => $user->tenant_id,
-                    'error'     => $result->getMessage(),
-                ] );
+            $areasOfActivity = AreaOfActivity::where( 'is_active', true )
+                ->orderBy( 'name' )
+                ->get();
 
-                $areasOfActivity = AreaOfActivity::where( 'is_active', true )
-                    ->orderBy( 'name' )
-                    ->get();
-
-                return view( 'pages.customer.index', [
-                    'customers'         => collect( [] ),
-                    'filters'           => $filters,
-                    'areas_of_activity' => $areasOfActivity,
-                    'error'             => $result->getMessage(),
-                ] );
-            }
-
-            $customers = $result->getData();
-        } else {
-            $customers = collect();
+            return view( 'pages.customer.index', [
+                'customers'         => $customers,
+                'filters'           => $filters,
+                'areas_of_activity' => $areasOfActivity,
+            ] );
+        } catch ( \Exception ) {
+            abort( 500, 'Erro ao carregar clientes' );
         }
-
-        $areasOfActivity = AreaOfActivity::where( 'is_active', true )
-            ->orderBy( 'name' )
-            ->get();
-
-        return view( 'pages.customer.index', [
-            'customers'         => $customers,
-            'filters'           => $filters,
-            'areas_of_activity' => $areasOfActivity,
-        ] );
     }
 
     /**

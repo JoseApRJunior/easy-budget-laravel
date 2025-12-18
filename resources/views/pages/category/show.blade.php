@@ -34,8 +34,6 @@
                             <label class="text-muted small mb-1">Nome</label>
                             <h5 class="mb-0">
                                 {{ $category->name }}
-                                <span class="badge bg-primary ms-2" title="Personalizada"><i
-                                        class="bi bi-person-fill"></i></span>
                             </h5>
                         </div>
                     </div>
@@ -49,8 +47,6 @@
                                         class="text-decoration-none">
                                         {{ $category->parent->name }}
                                     </a>
-                                    <span class="badge bg-primary ms-2" title="Personalizada"><i
-                                            class="bi bi-person-fill"></i></span>
                                 </h5>
                             </div>
                         </div>
@@ -103,8 +99,7 @@
                                                 <tr>
                                                     <td>{{ $child->name }}</td>
                                                     <td class="text-center">
-                                                        <span class="badge bg-primary" title="Personalizada"><i
-                                                                class="bi bi-person-fill"></i></span>
+                                                        <span class="badge bg-primary">Subcategoria</span>
                                                     </td>
                                                     <td class="text-center">
                                                         <span
@@ -137,8 +132,6 @@
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold mb-2">{{ $child->name }}</div>
                                                     <div class="d-flex gap-2 flex-wrap">
-                                                        <span class="badge bg-primary" title="Personalizada"><i
-                                                                class="bi bi-person-fill"></i></span>
                                                         <span
                                                             class="modern-badge {{ $child->is_active ? 'badge-active' : 'badge-inactive' }}">
                                                             {{ $child->is_active ? 'Ativo' : 'Inativo' }}

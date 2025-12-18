@@ -138,8 +138,6 @@
                                                     {{ $category->parent ? $category->parent->name : $category->name }}
                                                 </div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
-                                                    <span class="badge bg-primary" title="Personalizada"><i
-                                                            class="bi bi-person-fill"></i></span>
                                                     @if ($category->is_active)
                                                         <span class="badge bg-success-subtle text-success">Ativo</span>
                                                     @else

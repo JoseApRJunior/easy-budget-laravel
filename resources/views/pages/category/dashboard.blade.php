@@ -155,8 +155,6 @@
                                                             @endif
                                                             <i class="bi bi-tag me-2 text-muted"></i>
                                                             <span>{{ $category->name }}</span>
-                                                            <span class="badge bg-primary ms-2" title="Personalizada"><i
-                                                                    class="bi bi-person-fill"></i></span>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -204,8 +202,6 @@
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold mb-2">{{ $category->name }}</div>
                                                     <div class="d-flex gap-2 flex-wrap">
-                                                        <span class="badge bg-primary" title="Personalizada"><i
-                                                                class="bi bi-person-fill"></i></span>
                                                         @if ($category->is_active)
                                                             <span class="badge bg-success-subtle text-success">Ativa</span>
                                                         @else
