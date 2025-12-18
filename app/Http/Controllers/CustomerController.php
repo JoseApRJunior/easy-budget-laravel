@@ -59,17 +59,12 @@ class CustomerController extends Controller
                 }
 
                 if ( !$result->isSuccess() ) {
-                    Log::error( 'Erro ao carregar clientes', [
-                        'user_id'   => $user->id,
-                        'tenant_id' => $user->tenant_id,
-                        'error'     => $result->getMessage(),
-                    ] );
 
                     abort( 500, 'Erro ao carregar lista de clientes' );
                 }
 
                 $customers = $result->getData();
-                if ( is_object( $customers ) && method_exists( $customers, 'appends' ) ) {
+                if ( method_exists( $customers, 'appends' ) ) {
                     $customers = $customers->appends( $request->query() );
                 }
             } else {

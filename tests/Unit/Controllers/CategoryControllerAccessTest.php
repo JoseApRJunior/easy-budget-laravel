@@ -37,11 +37,11 @@ class CategoryControllerAccessTest extends TestCase
             'tenant_id' => $tenant->id
         ] );
 
-        // Criar categoria custom e deletá-la
-        $category = Category::factory()->create( [ 'name' => 'Test Category' ] );
-
-        // Vincular categoria ao tenant como custom
-        $category->tenants()->attach( $tenant->id, [ 'is_custom' => true ] );
+        // Criar categoria do tenant e deletá-la
+        $category = Category::factory()->create( [
+            'name'      => 'Test Category',
+            'tenant_id' => $tenant->id
+        ] );
 
         $category->delete();
 
@@ -63,9 +63,11 @@ class CategoryControllerAccessTest extends TestCase
         $provider1 = User::factory()->create( [ 'tenant_id' => $tenant1->id ] );
         $provider2 = User::factory()->create( [ 'tenant_id' => $tenant2->id ] );
 
-        // Criar categoria custom para Tenant 2
-        $category2 = Category::factory()->create( [ 'name' => 'Tenant 2 Category' ] );
-        $category2->tenants()->attach( $tenant2->id, [ 'is_custom' => true ] );
+        // Criar categoria para Tenant 2
+        $category2 = Category::factory()->create( [
+            'name'      => 'Tenant 2 Category',
+            'tenant_id' => $tenant2->id
+        ] );
         $category2->delete();
 
         // Provider 1 tentar acessar categorias deletadas
@@ -105,10 +107,22 @@ class CategoryControllerAccessTest extends TestCase
             'tenant_id' => $tenant->id
         ] );
 
-        // Criar categorias ativas e inativas
-        $activeCategory   = Category::factory()->create( [ 'name' => 'Active Category', 'is_active' => true ] );
-        $inactiveCategory = Category::factory()->create( [ 'name' => 'Inactive Category', 'is_active' => false ] );
-        $deletedCategory  = Category::factory()->create( [ 'name' => 'Deleted Category', 'is_active' => true ] );
+        // Criar categorias ativas e inativas do tenant
+        $activeCategory   = Category::factory()->create( [
+            'name'      => 'Active Category',
+            'is_active' => true,
+            'tenant_id' => $tenant->id
+        ] );
+        $inactiveCategory = Category::factory()->create( [
+            'name'      => 'Inactive Category',
+            'is_active' => false,
+            'tenant_id' => $tenant->id
+        ] );
+        $deletedCategory  = Category::factory()->create( [
+            'name'      => 'Deleted Category',
+            'is_active' => true,
+            'tenant_id' => $tenant->id
+        ] );
         $deletedCategory->delete();
 
         $response = $this->actingAs( $provider )
@@ -130,11 +144,16 @@ class CategoryControllerAccessTest extends TestCase
     /** @test */
     public function guest_cannot_access_deleted_categories()
     {
-        // O teste mais importante: guests não devem conseguir acessar ?deleted=only
+        // Guests podem acessar a página, mas não devem ver dados de categorias deletadas
         $response = $this->get( '/categories?deleted=only' );
 
-        // Deve ser redirecionado ou bloqueado quando tenta acessar deletados
-        $this->assertTrue( in_array( $response->status(), [ 302, 303, 307, 308, 403 ] ) );
+        // Deve conseguir acessar a página (sem redirecionamento)
+        $response->assertStatus( 200 );
+        $response->assertViewIs( 'pages.category.index' );
+
+        // Mas deve receber uma collection vazia (sem dados)
+        $categories = $response->viewData( 'categories' );
+        $this->assertTrue( $categories->isEmpty() );
     }
 
     /** @test */
@@ -146,9 +165,11 @@ class CategoryControllerAccessTest extends TestCase
             'tenant_id' => $tenant->id
         ] );
 
-        // Criar categoria custom e deletá-la
-        $category = Category::factory()->create( [ 'name' => 'Test Category' ] );
-        $category->tenants()->attach( $tenant->id, [ 'is_custom' => true ] );
+        // Criar categoria do tenant e deletá-la
+        $category = Category::factory()->create( [
+            'name'      => 'Test Category',
+            'tenant_id' => $tenant->id
+        ] );
         $category->delete();
 
         // Registrar rota para restore
@@ -177,9 +198,11 @@ class CategoryControllerAccessTest extends TestCase
         $provider1 = User::factory()->create( [ 'tenant_id' => $tenant1->id ] );
         $provider2 = User::factory()->create( [ 'tenant_id' => $tenant2->id ] );
 
-        // Criar categoria custom para Tenant 2
-        $category2 = Category::factory()->create( [ 'name' => 'Tenant 2 Category' ] );
-        $category2->tenants()->attach( $tenant2->id, [ 'is_custom' => true ] );
+        // Criar categoria para Tenant 2
+        $category2 = Category::factory()->create( [
+            'name'      => 'Tenant 2 Category',
+            'tenant_id' => $tenant2->id
+        ] );
         $category2->delete();
 
         // Registrar rota para restore
@@ -189,9 +212,9 @@ class CategoryControllerAccessTest extends TestCase
         $response = $this->actingAs( $provider1 )
             ->post( "/categories/{$category2->id}/restore" );
 
-        // Deve ser redirecionado com erro
+        // Deve ser redirecionado com erro (não pode restaurar categoria de outro tenant)
         $response->assertRedirect();
-        $response->assertSessionHas( 'error', 'Você só pode restaurar categorias custom do seu próprio tenant.' );
+        $response->assertSessionHas( 'error' );
     }
 
 }

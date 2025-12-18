@@ -70,13 +70,8 @@ class ProductController extends Controller
                     $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
                     $products = $result->isSuccess() ? $result->getData() : collect();
                 } else {
-                    $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
-
-                    if ( !$result->isSuccess() ) {
-                        abort( 500, 'Erro ao carregar lista de produtos' );
-                    }
-
-                    $products = $result->getData();
+                    $result   = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+                    $products = $result->isSuccess() ? $result->getData() : collect();
                     if ( method_exists( $products, 'appends' ) ) {
                         $products = $products->appends( $request->query() );
                     }

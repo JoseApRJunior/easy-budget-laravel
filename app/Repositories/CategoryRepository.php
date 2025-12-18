@@ -200,8 +200,36 @@ class CategoryRepository extends AbstractTenantRepository
             $query->onlyTrashed();
         }
 
-        // Aplicar filtros avançados do trait
-        $this->applyFilters( $query, $filters );
+        // Aplicar todos os filtros de categoria (com tratamento completo de joins)
+        $this->applyAllCategoryFilters( $query, $filters );
+
+        // Ordenação hierárquica: categorias pai primeiro, depois filhas, ordenadas por nome
+        if ( !$orderBy ) {
+            $query->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
+                ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
+                ->orderBy( 'categories.name', 'ASC' );
+        } else {
+            $this->applyOrderBy( $query, $orderBy );
+        }
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
+    }
+
+    /**
+     * Aplica todos os filtros de categoria com tratamento completo para joins.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array<string, mixed> $filters
+     */
+    protected function applyAllCategoryFilters( $query, array $filters ): void
+    {
+        // Filtro por tenant_id - deve ser qualificado para evitar ambiguidade
+        if ( !empty( $filters[ 'tenant_id' ] ) ) {
+            $query->where( 'categories.tenant_id', $filters[ 'tenant_id' ] );
+        }
 
         // Aplicar filtro de soft delete se necessário
         $this->applySoftDeleteFilter( $query, $filters );
@@ -241,20 +269,6 @@ class CategoryRepository extends AbstractTenantRepository
             $bool = in_array( (string) $filters[ 'active' ], [ '1', 'true', 'on' ], true );
             $query->where( 'categories.is_active', $bool );
         }
-
-        // Ordenação hierárquica: categorias pai primeiro, depois filhas, ordenadas por nome
-        if ( !$orderBy ) {
-            $query->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
-                ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
-                ->orderBy( 'categories.name', 'ASC' );
-        } else {
-            $this->applyOrderBy( $query, $orderBy );
-        }
-
-        // Per page dinâmico
-        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
-
-        return $query->paginate( $effectivePerPage );
     }
 
 }

@@ -427,12 +427,16 @@ class CustomerService extends AbstractBaseService
     public function getFilteredCustomers( array $filters, int $tenantId ): ServiceResult
     {
         try {
+            // Extrair per_page dos filtros antes de passar para o repository
+            $perPage = $filters[ 'per_page' ] ?? 15;
+            unset( $filters[ 'per_page' ] );
+
             // Adicionar tenant_id aos filtros para garantir isolamento
             $filters[ 'tenant_id' ] = $tenantId;
             // Remover filtro deleted para não interferir
             unset( $filters[ 'deleted' ] );
 
-            $customers = $this->customerRepository->getPaginated( $filters );
+            $customers = $this->customerRepository->getPaginated( $filters, $perPage );
 
             return $this->success( $customers, 'Clientes obtidos com sucesso' );
         } catch ( \Exception $e ) {
@@ -451,10 +455,14 @@ class CustomerService extends AbstractBaseService
     public function getDeletedCustomers( array $filters, int $tenantId ): ServiceResult
     {
         try {
+            // Extrair per_page dos filtros antes de passar para o repository
+            $perPage = $filters[ 'per_page' ] ?? 15;
+            unset( $filters[ 'per_page' ] );
+
             $filters[ 'tenant_id' ] = $tenantId;
             $filters[ 'deleted' ]   = 'only';
 
-            $customers = $this->customerRepository->getPaginated( $filters );
+            $customers = $this->customerRepository->getPaginated( $filters, $perPage );
 
             return $this->success( $customers, 'Clientes deletados obtidos com sucesso' );
         } catch ( \Exception $e ) {

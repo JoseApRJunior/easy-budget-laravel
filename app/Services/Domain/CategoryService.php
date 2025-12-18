@@ -321,17 +321,57 @@ class CategoryService extends AbstractBaseService
     /**
      * Retorna categorias filtradas do tenant.
      */
-    public function getFilteredCategories( array $filters ): ServiceResult
+    public function getFilteredCategories( array $filters, int $tenantId ): ServiceResult
     {
-        return $this->paginate( $filters, 10, false );
+        try {
+            // Extrair per_page dos filtros antes de passar para o repository
+            $perPage = $filters[ 'per_page' ] ?? 15;
+            unset( $filters[ 'per_page' ] );
+
+            // Adicionar tenant_id aos filtros para garantir isolamento
+            $filters[ 'tenant_id' ] = $tenantId;
+            // Remover filtro deleted para não interferir
+            unset( $filters[ 'deleted' ] );
+
+            $categories = $this->categoryRepository->getPaginated( $filters, $perPage );
+
+            return $this->success( $categories, 'Categorias obtidas com sucesso' );
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao obter categorias filtradas', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId,
+                'filters'   => $filters,
+            ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter categorias filtradas: ' . $e->getMessage(), null, $e );
+        }
     }
 
     /**
      * Retorna categorias deletadas do tenant.
      */
-    public function getDeletedCategories( array $filters ): ServiceResult
+    public function getDeletedCategories( array $filters, int $tenantId ): ServiceResult
     {
-        return $this->paginate( $filters, 10, true );
+        try {
+            // Extrair per_page dos filtros antes de passar para o repository
+            $perPage = $filters[ 'per_page' ] ?? 15;
+            unset( $filters[ 'per_page' ] );
+
+            // Adicionar tenant_id aos filtros para garantir isolamento
+            $filters[ 'tenant_id' ] = $tenantId;
+            // Remover filtro deleted para não interferir
+            unset( $filters[ 'deleted' ] );
+
+            $categories = $this->categoryRepository->getPaginated( $filters, $perPage, [], [ 'name' => 'asc' ], true );
+
+            return $this->success( $categories, 'Categorias deletadas obtidas com sucesso' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao obter categorias deletadas', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId,
+                'filters'   => $filters,
+            ] );
+            return $this->error( OperationStatus::ERROR, 'Erro ao obter categorias deletadas: ' . $e->getMessage(), null, $e );
+        }
     }
 
     /**

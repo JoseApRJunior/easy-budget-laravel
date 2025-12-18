@@ -70,21 +70,25 @@ class CategoryController extends Controller
         $hasFilters = $request->has( [ 'search', 'active', 'deleted' ] );
 
         try {
+            /** @var User $user */
+            $user = auth()->user();
+
             if ( $hasFilters ) {
                 $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
                 if ( $showOnlyTrashed ) {
-                    $result     = $this->categoryService->getDeletedCategories( $filters );
+                    $result     = $this->categoryService->getDeletedCategories( $filters, $user->tenant_id );
                     $categories = $result->isSuccess() ? $result->getData() : collect();
                 } else {
-                    $result = $this->categoryService->getFilteredCategories( $filters );
+                    $result = $this->categoryService->getFilteredCategories( $filters, $user->tenant_id );
 
                     if ( !$result->isSuccess() ) {
-                        $categories = collect();
+                        // Para casos de erro real do sistema, abortar com 500
+                        abort( 500, 'Erro ao carregar lista de categorias' );
                     }
 
                     $categories = $result->getData();
-                    if ( is_object( $categories ) && method_exists( $categories, 'appends' ) ) {
+                    if ( method_exists( $categories, 'appends' ) ) {
                         $categories = $categories->appends( $request->query() );
                     }
                 }
@@ -93,8 +97,6 @@ class CategoryController extends Controller
             }
 
             // Carregar categorias pai para filtros na view
-            /** @var User $user */
-            $user     = auth()->user();
             $tenantId = $user->tenant_id ?? null;
 
             $parentCategories = $tenantId
