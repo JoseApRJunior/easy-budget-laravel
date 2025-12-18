@@ -66,68 +66,44 @@ class PermissionService
      */
 
     /**
-     * Permissão para gerenciar categorias globais (apenas admin)
+     * Permissão para gerenciar categorias do tenant
      */
-    public function canManageGlobalCategories( User $user ): bool
-    {
-        return $this->isAdminGlobal( $user );
-    }
-
-    /**
-     * Permissão para visualizar categorias globais (provider e admin)
-     */
-    public function canViewGlobalCategories( User $user ): bool
-    {
-        return $this->hasPermission( $user, 'view-global-categories' ) || $this->isAdminGlobal( $user );
-    }
-
-    /**
-     * Permissão para gerenciar categorias personalizadas do tenant
-     */
-    public function canManageCustomCategories( User $user ): bool
+    public function canManageCategories( User $user ): bool
     {
         // Provider pode sempre gerenciar suas próprias categorias
         if ( $user->isProvider() ) {
             return true;
         }
 
-        return $this->hasPermission( $user, 'manage-custom-categories' ) || $this->isAdminGlobal( $user );
+        return $this->hasPermission( $user, 'manage-categories' ) || $this->isAdminGlobal( $user );
     }
 
     /**
-     * Permissão para criar categorias personalizadas
+     * Permissão para criar categorias
      */
-    public function canCreateCustomCategories( User $user ): bool
+    public function canCreateCategories( User $user ): bool
     {
         if ( !$user->tenant_id ) {
             return false;
         }
 
-        return $this->canManageCustomCategories( $user );
+        return $this->canManageCategories( $user );
     }
 
     /**
-     * Permissão para usar categorias globais como base
+     * Permissão para editar categorias
      */
-    public function canUseGlobalAsCustom( User $user ): bool
+    public function canEditCategories( User $user ): bool
     {
-        return $this->canManageCustomCategories( $user );
+        return $this->canManageCategories( $user );
     }
 
     /**
-     * Permissão para editar categorias personalizadas
+     * Permissão para excluir categorias
      */
-    public function canEditCustomCategories( User $user ): bool
+    public function canDeleteCategories( User $user ): bool
     {
-        return $this->canManageCustomCategories( $user );
-    }
-
-    /**
-     * Permissão para excluir categorias personalizadas
-     */
-    public function canDeleteCustomCategories( User $user ): bool
-    {
-        return $this->canManageCustomCategories( $user );
+        return $this->canManageCategories( $user );
     }
 
     /**
@@ -198,16 +174,11 @@ class PermissionService
     }
 
     /**
-     * Verifica se pode gerenciar categoria específica (global vs custom)
+     * Verifica se pode gerenciar categoria específica do tenant
      */
     public function canManageCategory( User $user, ?int $categoryTenantId ): bool
     {
-        // Categoria global - só admin pode gerenciar
-        if ( $categoryTenantId === null ) {
-            return $this->canManageGlobalCategories( $user );
-        }
-
-        // Categoria personalizada - provider pode gerenciar apenas do próprio tenant
+        // Provider pode gerenciar apenas do próprio tenant
         return $this->canAccessTenantData( $user, $categoryTenantId );
     }
 
@@ -341,7 +312,7 @@ class PermissionService
             // Verifica acesso baseado no tipo de categoria
             switch ( $action ) {
                 case 'view':
-                    if ( $this->canViewGlobalCategories( $user ) || $this->canAccessTenantData( $user, $category->tenant_id ) ) {
+                    if ( $this->canAccessTenantData( $user, $category->tenant_id ) ) {
                         return ServiceResult::success();
                     }
                     break;
@@ -353,13 +324,7 @@ class PermissionService
                     break;
 
                 case 'delete':
-                    if ( $this->canManageCategory( $user, $category->tenant_id ) && $category->tenant_id !== null ) {
-                        return ServiceResult::success();
-                    }
-                    break;
-
-                case 'import':
-                    if ( $this->canUseGlobalAsCustom( $user ) && $category->tenant_id === null ) {
+                    if ( $this->canManageCategory( $user, $category->tenant_id ) ) {
                         return ServiceResult::success();
                     }
                     break;

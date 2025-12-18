@@ -453,39 +453,14 @@ class AuthServiceProvider extends ServiceProvider
         // Inject PermissionService
         $permissionService = app( \App\Services\Core\PermissionService::class);
 
-        // Visualização de categorias globais
-        Gate::define( 'view-global-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canViewGlobalCategories( $user );
+        // Gerenciamento de categorias (provider ou admin)
+        Gate::define( 'manage-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canManageCategories( $user );
         } );
 
-        // Gerenciamento de categorias globais (apenas admin)
-        Gate::define( 'manage-global-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canManageGlobalCategories( $user );
-        } );
-
-        // Gerenciamento de categorias personalizadas (provider ou admin)
-        Gate::define( 'manage-custom-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canManageCustomCategories( $user );
-        } );
-
-        // Criação de categorias personalizadas
-        Gate::define( 'create-custom-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canCreateCustomCategories( $user );
-        } );
-
-        // Edição de categorias personalizadas
-        Gate::define( 'edit-custom-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canEditCustomCategories( $user );
-        } );
-
-        // Exclusão de categorias personalizadas
-        Gate::define( 'delete-custom-categories', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canDeleteCustomCategories( $user );
-        } );
-
-        // Usar categoria global como base para personalizada
-        Gate::define( 'use-global-as-custom', function ( User $user ) use ( $permissionService ) {
-            return $permissionService->canUseGlobalAsCustom( $user );
+        // Criação de categorias
+        Gate::define( 'create-categories', function ( User $user ) use ( $permissionService ) {
+            return $permissionService->canCreateCategories( $user );
         } );
 
         // Associar categorias a produtos/serviços

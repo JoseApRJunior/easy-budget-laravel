@@ -4,9 +4,9 @@ namespace App\Repositories;
 
 use App\Models\Report;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ReportRepository extends AbstractTenantRepository
 {
@@ -15,10 +15,20 @@ class ReportRepository extends AbstractTenantRepository
         return new Report();
     }
 
-    public function getPaginated( array $filters = [], int $perPage = 15 ): LengthAwarePaginator
-    {
-        $query = $this->model->newQuery()->with( [ 'tenant', 'user' ] );
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
+        $query = $this->model->newQuery();
 
+        // Eager loading paramétrico - mescla com o padrão
+        $defaultWith   = [ 'tenant', 'user' ];
+        $effectiveWith = array_unique( array_merge( $defaultWith, $with ) );
+        $query->with( $effectiveWith );
+
+        // Aplicar filtros específicos do Report
         if ( !empty( $filters[ 'search' ] ) ) {
             $query->where( function ( $q ) use ( $filters ) {
                 $q->where( 'file_name', 'like', '%' . $filters[ 'search' ] . '%' )
@@ -51,7 +61,23 @@ class ReportRepository extends AbstractTenantRepository
             $query->where( 'user_id', $filters[ 'user_id' ] );
         }
 
-        return $query->orderBy( 'created_at', 'desc' )->paginate( $perPage );
+        // Aplicar filtros avançados do trait
+        $this->applyFilters( $query, $filters );
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter( $query, $filters );
+
+        // Aplicar ordenação
+        if ( $orderBy ) {
+            $this->applyOrderBy( $query, $orderBy );
+        } else {
+            $query->orderBy( 'created_at', 'desc' );
+        }
+
+        // Per page dinâmico
+        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
+        return $query->paginate( $effectivePerPage );
     }
 
     public function findByHash( string $hash, array $with = [] ): ?Report

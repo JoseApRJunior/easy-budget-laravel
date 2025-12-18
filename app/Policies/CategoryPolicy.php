@@ -26,21 +26,9 @@ class CategoryPolicy
         return $user->hasPermission( 'manage-categories' );
     }
 
-    public function manageGlobal( User $user ): bool
+    public function manage( User $user, Category $category ): bool
     {
-        return app( \App\Services\Core\PermissionService::class)->canManageGlobalCategories( $user );
-    }
-
-    public function manageCustom( User $user, Category $category ): bool
-    {
-        $permission = app( \App\Services\Core\PermissionService::class);
-        if ( $permission->canManageCustomCategories( $user ) ) {
-            if ( $user->tenant_id ) {
-                return $category->isCustomFor( (int) $user->tenant_id ) || $category->isAvailableFor( (int) $user->tenant_id );
-            }
-            return false;
-        }
-        return false;
+        return $user->hasPermission( 'manage-categories' ) && $category->tenant_id === $user->tenant_id;
     }
 
     /**
@@ -56,7 +44,7 @@ class CategoryPolicy
      */
     public function update( User $user, Category $category ): bool
     {
-        return $user->hasPermission( 'manage-categories' );
+        return $this->manage( $user, $category );
     }
 
     /**
@@ -64,7 +52,7 @@ class CategoryPolicy
      */
     public function delete( User $user, Category $category ): bool
     {
-        return $user->hasPermission( 'manage-categories' );
+        return $this->manage( $user, $category );
     }
 
     /**
@@ -72,7 +60,7 @@ class CategoryPolicy
      */
     public function restore( User $user, Category $category ): bool
     {
-        return $user->hasPermission( 'manage-categories' );
+        return $this->manage( $user, $category );
     }
 
     /**
@@ -80,7 +68,7 @@ class CategoryPolicy
      */
     public function forceDelete( User $user, Category $category ): bool
     {
-        return $user->hasPermission( 'manage-categories' );
+        return $this->manage( $user, $category );
     }
 
     /**

@@ -186,21 +186,16 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated Use getPaginated() instead for better functionality with eager loading, soft delete support, and advanced filters
      */
     public function paginateByTenant(
         int $perPage = 15,
         array $filters = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
-        $query = $this->model->newQuery();
-
-        // Aplica filtros de tenant automaticamente via Global Scope
-        $this->applyFilters( $query, $filters );
-
-        // Aplica ordenação usando trait
-        $this->applyOrderBy( $query, $orderBy );
-
-        return $query->paginate( $perPage );
+        // Mantém compatibilidade redirecionando para o método padrão
+        return $this->getPaginated( $filters, $perPage, [], $orderBy );
     }
 
     /**

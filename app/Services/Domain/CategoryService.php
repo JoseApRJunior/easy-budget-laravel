@@ -71,9 +71,12 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
-     * Pagina categorias do tenant.
+     * Lista categorias do tenant com filtros e paginação.
+     *
+     * Método unificado que decide automaticamente se deve mostrar categorias ativas/deletadas
+     * baseado nos filtros fornecidos.
      */
-    public function paginate( array $filters, int $perPage = 10, bool $onlyTrashed = false ): ServiceResult
+    public function getCategories( array $filters = [], int $perPage = 10 ): ServiceResult
     {
         try {
             $tenantId = auth()->user()->tenant_id ?? null;
@@ -82,30 +85,81 @@ class CategoryService extends AbstractBaseService
                 return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
 
+            // Determinar se deve mostrar apenas deletadas
+            $onlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+
             // Normalizar filtros para formato aceito pelo repository
-            $normalized = [];
-            if ( isset( $filters[ 'active' ] ) && ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) ) {
-                $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
-            }
-            if ( isset( $filters[ 'name' ] ) && !empty( $filters[ 'name' ] ) ) {
-                $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
-            }
-            if ( isset( $filters[ 'slug' ] ) && !empty( $filters[ 'slug' ] ) ) {
-                $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
-            }
-            if ( isset( $filters[ 'search' ] ) && !empty( $filters[ 'search' ] ) ) {
-                $term                 = '%' . $filters[ 'search' ] . '%';
-                $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => $term ];
-                $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => $term ];
-            }
+            $normalized = $this->normalizeFilters( $filters );
 
             // Usar o método específico do CategoryRepository que inclui funcionalidades avançadas
-            // Passar o parâmetro $onlyTrashed para manter consistência arquitetural
-            $paginator = $this->categoryRepository->getPaginated( $normalized, $perPage, [], [ 'name' => 'asc' ], $onlyTrashed );
+            $paginator = $this->categoryRepository->getPaginated(
+                $normalized,
+                $perPage,
+                [], // with - pode ser expandido se necessário
+                [ 'name' => 'asc' ], // orderBy padrão
+                $onlyTrashed,
+            );
 
-            return $this->success( $paginator, 'Categorias paginadas com sucesso.' );
+            return $this->success( $paginator, 'Categorias carregadas com sucesso.' );
         } catch ( Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao paginar categorias: ' . $e->getMessage(), null, $e );
+            return $this->error( OperationStatus::ERROR, 'Erro ao carregar categorias: ' . $e->getMessage(), null, $e );
+        }
+    }
+
+    /**
+     * Normaliza filtros do request para formato aceito pelo repository.
+     */
+    private function normalizeFilters( array $filters ): array
+    {
+        $normalized = [];
+
+        // Filtro por status ativo
+        if ( isset( $filters[ 'active' ] ) && ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) ) {
+            $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
+        }
+
+        // Filtro por nome
+        if ( isset( $filters[ 'name' ] ) && !empty( $filters[ 'name' ] ) ) {
+            $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
+        }
+
+        // Filtro por slug
+        if ( isset( $filters[ 'slug' ] ) && !empty( $filters[ 'slug' ] ) ) {
+            $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
+        }
+
+        // Filtro de busca geral (nome, slug ou nome da categoria pai)
+        if ( isset( $filters[ 'search' ] ) && !empty( $filters[ 'search' ] ) ) {
+            $term                   = '%' . $filters[ 'search' ] . '%';
+            $normalized[ 'search' ] = $term; // O repository trata este filtro especial
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Obtém categorias pai ativas para uso em formulários.
+     */
+    public function getParentCategories(): ServiceResult
+    {
+        try {
+            $tenantId = auth()->user()->tenant_id ?? null;
+
+            if ( !$tenantId ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+            }
+
+            $parents = Category::query()
+                ->where( 'tenant_id', $tenantId )
+                ->whereNull( 'parent_id' )
+                ->whereNull( 'deleted_at' )
+                ->where( 'is_active', true )
+                ->orderBy( 'name' )
+                ->get( [ 'id', 'name' ] );
+
+            return $this->success( $parents, 'Categorias pai carregadas com sucesso.' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao carregar categorias pai: ' . $e->getMessage(), null, $e );
         }
     }
 
@@ -256,6 +310,23 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
+     * Retorna categorias filtradas do tenant.
+     */
+    public function getFilteredCategories( array $filters ): ServiceResult
+    {
+        return $this->getCategories( $filters, 10 );
+    }
+
+    /**
+     * Retorna categorias deletadas do tenant.
+     */
+    public function getDeletedCategories( array $filters ): ServiceResult
+    {
+        $filters[ 'deleted' ] = 'only';
+        return $this->getCategories( $filters, 10 );
+    }
+
+    /**
      * Lista categorias ativas do tenant.
      */
     public function getActive(): Collection
@@ -316,62 +387,6 @@ class CategoryService extends AbstractBaseService
 
         $list = $this->categoryRepository->findOrderedByNameAndTenantId( $tenantId, 'asc' );
         return $this->success( $list );
-    }
-
-    /**
-     * Retorna categorias filtradas do tenant.
-     */
-    public function getFilteredCategories( array $filters, int $tenantId ): ServiceResult
-    {
-        try {
-            // Extrair per_page dos filtros antes de passar para o repository
-            $perPage = $filters[ 'per_page' ] ?? 15;
-            unset( $filters[ 'per_page' ] );
-
-            // Adicionar tenant_id aos filtros para garantir isolamento
-            $filters[ 'tenant_id' ] = $tenantId;
-            // Remover filtro deleted para não interferir
-            unset( $filters[ 'deleted' ] );
-
-            $categories = $this->categoryRepository->getPaginated( $filters, $perPage );
-
-            return $this->success( $categories, 'Categorias obtidas com sucesso' );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao obter categorias filtradas', [
-                'error'     => $e->getMessage(),
-                'tenant_id' => $tenantId,
-                'filters'   => $filters,
-            ] );
-            return $this->error( OperationStatus::ERROR, 'Erro ao obter categorias filtradas: ' . $e->getMessage(), null, $e );
-        }
-    }
-
-    /**
-     * Retorna categorias deletadas do tenant.
-     */
-    public function getDeletedCategories( array $filters, int $tenantId ): ServiceResult
-    {
-        try {
-            // Extrair per_page dos filtros antes de passar para o repository
-            $perPage = $filters[ 'per_page' ] ?? 15;
-            unset( $filters[ 'per_page' ] );
-
-            // Adicionar tenant_id aos filtros para garantir isolamento
-            $filters[ 'tenant_id' ] = $tenantId;
-            // Remover filtro deleted para não interferir
-            unset( $filters[ 'deleted' ] );
-
-            $categories = $this->categoryRepository->getPaginated( $filters, $perPage, [], [ 'name' => 'asc' ], true );
-
-            return $this->success( $categories, 'Categorias deletadas obtidas com sucesso' );
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao obter categorias deletadas', [
-                'error'     => $e->getMessage(),
-                'tenant_id' => $tenantId,
-                'filters'   => $filters,
-            ] );
-            return $this->error( OperationStatus::ERROR, 'Erro ao obter categorias deletadas: ' . $e->getMessage(), null, $e );
-        }
     }
 
     /**

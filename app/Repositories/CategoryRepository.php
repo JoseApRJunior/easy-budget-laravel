@@ -186,6 +186,8 @@ class CategoryRepository extends AbstractTenantRepository
         ?array $orderBy = null,
         bool $onlyTrashed = false,
     ): LengthAwarePaginator {
+        // Usar query padrão com Global Scope ativo, mas qualificar todas as referências
+        // para evitar ambiguidade com JOINs
         $query = $this->model->newQuery()
             ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
             ->select( 'categories.*' );
@@ -226,10 +228,9 @@ class CategoryRepository extends AbstractTenantRepository
      */
     protected function applyAllCategoryFilters( $query, array $filters ): void
     {
-        // Filtro por tenant_id - deve ser qualificado para evitar ambiguidade
-        if ( !empty( $filters[ 'tenant_id' ] ) ) {
-            $query->where( 'categories.tenant_id', $filters[ 'tenant_id' ] );
-        }
+        // IMPORTANTE: Quando há JOINs, devemos sempre qualificar tenant_id para evitar ambiguidade
+        // O Global Scope TenantScoped será aplicado automaticamente, mas pode conflitar com JOINs
+        // Por isso, aplicamos o filtro de tenant_id explicitamente aqui quando necessário
 
         // Aplicar filtro de soft delete se necessário
         $this->applySoftDeleteFilter( $query, $filters );

@@ -70,44 +70,23 @@ class CategoryController extends Controller
         $hasFilters = $request->has( [ 'search', 'active', 'deleted' ] );
 
         try {
-            /** @var User $user */
-            $user = auth()->user();
-
+            $categories = collect();
             if ( $hasFilters ) {
-                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+                $result = $this->categoryService->getCategories( $filters, $perPage );
 
-                if ( $showOnlyTrashed ) {
-                    $result     = $this->categoryService->getDeletedCategories( $filters, $user->tenant_id );
-                    $categories = $result->isSuccess() ? $result->getData() : collect();
-                } else {
-                    $result = $this->categoryService->getFilteredCategories( $filters, $user->tenant_id );
-
-                    if ( !$result->isSuccess() ) {
-                        // Para casos de erro real do sistema, abortar com 500
-                        abort( 500, 'Erro ao carregar lista de categorias' );
-                    }
-
-                    $categories = $result->getData();
-                    if ( method_exists( $categories, 'appends' ) ) {
-                        $categories = $categories->appends( $request->query() );
-                    }
+                if ( !$result->isSuccess() ) {
+                    abort( 500, 'Erro ao carregar lista de categorias' );
                 }
-            } else {
-                $categories = collect();
+
+                $categories = $result->getData();
+                if ( method_exists( $categories, 'appends' ) ) {
+                    $categories = $categories->appends( $request->query() );
+                }
             }
 
             // Carregar categorias pai para filtros na view
-            $tenantId = $user->tenant_id ?? null;
-
-            $parentCategories = $tenantId
-                ? Category::query()
-                    ->where( 'tenant_id', $tenantId )
-                    ->whereNull( 'parent_id' )
-                    ->whereNull( 'deleted_at' )
-                    ->where( 'is_active', true )
-                    ->orderBy( 'name' )
-                    ->get( [ 'id', 'name' ] )
-                : collect();
+            $parentResult     = $this->categoryService->getParentCategories();
+            $parentCategories = $parentResult->isSuccess() ? $parentResult->getData() : collect();
 
             return view( 'pages.category.index', [
                 'categories'        => $categories,
