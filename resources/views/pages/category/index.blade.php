@@ -71,8 +71,8 @@
                                         <select name="deleted" id="deleted" class="form-control">
                                             <option value=""
                                                 {{ empty($filters['deleted'] ?? null) ? 'selected' : '' }}>Todos</option>
-                                            <option value="0"
-                                                {{ ($filters['deleted'] ?? null) === '0' ? 'selected' : '' }}>Ativos
+                                            <option value="current"
+                                                {{ ($filters['deleted'] ?? null) === 'current' ? 'selected' : '' }}>Ativos
                                             </option>
                                             <option value="only"
                                                 {{ ($filters['deleted'] ?? null) === 'only' ? 'selected' : '' }}>Deletados

@@ -188,7 +188,6 @@ class CategoryRepository extends AbstractTenantRepository
         $query = $this->model->query();
         $query->with( $with );
 
-        dd( $filters );
         $this->applyAllCategoryFilters( $query, $filters );
 
         // Ordenação hierárquica simplificada

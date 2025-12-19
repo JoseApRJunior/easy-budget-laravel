@@ -114,8 +114,14 @@ trait RepositoryFiltersTrait
      */
     protected function applySoftDeleteFilter( $query, array $filters ): void
     {
-        if ( isset( $filters[ 'deleted' ] ) && $filters[ 'deleted' ] === 'only' ) {
-            $query->onlyTrashed();
+        if ( isset( $filters[ 'deleted' ] ) ) {
+            if ( $filters[ 'deleted' ] === 'only' ) {
+                $query->onlyTrashed();
+            } elseif ( $filters[ 'deleted' ] === 'current' ) {
+                // Não faz nada, mostra apenas ativos (default do Eloquent)
+            } elseif ( $filters[ 'deleted' ] === '' || $filters[ 'deleted' ] === null ) {
+                $query->withTrashed();
+            }
         }
     }
 
