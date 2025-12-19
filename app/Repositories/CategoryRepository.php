@@ -9,6 +9,7 @@ use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Repositório simplificado para gerenciamento de categorias.
@@ -184,31 +185,19 @@ class CategoryRepository extends AbstractTenantRepository
         array $with = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
-        // Usar query normal com Global Scope aplicado automaticamente
-        $query = $this->model->newQuery();
+        $query = $this->model->query();
+        $query->with( $with );
 
-        // Eager loading paramétrico (carregar parent se solicitado)
-        if ( in_array( 'parent', $with, true ) ) {
-            $query->with( 'parent' );
-        }
+        $this->applyFilters( $query, $filters );
 
-        // Aplicar filtro de soft delete automaticamente através do filtro 'deleted'
-        // O filtro 'deleted=only' é tratado pelo applySoftDeleteFilter herdado
-        $this->applySoftDeleteFilter( $query, $filters );
-
-        // Aplicar todos os filtros de categoria
-        $this->applyAllCategoryFilters( $query, $filters );
-
-        // Ordenação hierárquica para agrupar subcategorias com suas categorias pai
+        // Ordenação hierárquica simplificada
         if ( !$orderBy ) {
-            $query->orderByRaw( 'CASE WHEN parent_id IS NULL THEN id ELSE parent_id END, parent_id IS NOT NULL, name' );
+            $query->orderByRaw( 'COALESCE((SELECT name FROM categories AS parent WHERE parent.id = categories.parent_id LIMIT 1), name), parent_id IS NULL DESC, name' );
         } else {
             $this->applyOrderBy( $query, $orderBy );
         }
 
-        // Per page dinâmico
         $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
-
         return $query->paginate( $effectivePerPage );
     }
 

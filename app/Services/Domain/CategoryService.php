@@ -93,10 +93,15 @@ class CategoryService extends AbstractBaseService
             $paginator = $this->categoryRepository->getPaginated(
                 $normalized,
                 $perPage,
-                [], // with - pode ser expandido se necessário
-                [ 'name' => 'asc' ] // orderBy padrão
+                [ 'parent' ], // Carregar relacionamento `parent` para exibição
+                null // Permitir que o repositório aplique a ordenação hierárquica padrão
             );
 
+            // Log para o total e filtros
+            Log::info( 'Categorias carregadas com sucesso', [
+                'total'   => $paginator->total(),
+                'filters' => $filters,
+            ] );
             return $this->success( $paginator, 'Categorias carregadas com sucesso.' );
         } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, 'Erro ao carregar categorias: ' . $e->getMessage(), null, $e );
