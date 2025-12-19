@@ -119,7 +119,7 @@ trait RepositoryFiltersTrait
                 $query->onlyTrashed();
             } elseif ( $filters[ 'deleted' ] === 'current' ) {
                 // Não faz nada, mostra apenas ativos (default do Eloquent)
-            } elseif ( $filters[ 'deleted' ] === '' || $filters[ 'deleted' ] === null ) {
+            } elseif ( $filters[ 'deleted' ] === '' || $filters[ 'deleted' ] === null || empty( $filters[ 'deleted' ] ) ) {
                 $query->withTrashed();
             }
         }

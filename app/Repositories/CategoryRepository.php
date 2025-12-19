@@ -198,6 +198,7 @@ class CategoryRepository extends AbstractTenantRepository
         }
 
         $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+
         return $query->paginate( $effectivePerPage );
     }
 
