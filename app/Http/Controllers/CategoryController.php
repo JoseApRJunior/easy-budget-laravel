@@ -66,7 +66,6 @@ class CategoryController extends Controller
                 'parent_categories' => collect(),
             ] );
         }
-
         $filters        = $request->only( [ 'search', 'active', 'per_page', 'deleted' ] );
         $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
         $allowedPerPage = [ 10, 20, 50 ];
@@ -74,8 +73,8 @@ class CategoryController extends Controller
             $perPage = 10;
         }
         $filters[ 'per_page' ] = $perPage;
-
         try {
+
             $result = $this->categoryService->getCategories( $filters, $perPage );
             Log::info( 'Resultado da consulta de categorias', [ 'result' => $result ] );
             $categories = $result->isSuccess() ? $result->getData() : collect();

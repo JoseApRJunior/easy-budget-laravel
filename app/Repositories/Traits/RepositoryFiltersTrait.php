@@ -145,4 +145,48 @@ trait RepositoryFiltersTrait
         return $filters[ 'per_page' ] ?? $defaultPerPage;
     }
 
+    /**
+     * Aplica filtro de busca genérico
+     */
+    public function applySearchFilter( $query, array $filters, string $field1, string $field2 = null )
+    {
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $search = (string) $filters[ 'search' ];
+            $query->where( function ( $q ) use ( $search, $field1, $field2 ) {
+                $q->where( $field1, 'like', "%{$search}%" );
+                if ( $field2 ) {
+                    $q->orWhere( $field2, 'like', "%{$search}%" );
+                }
+            } );
+        }
+        return $query;
+    }
+
+    /**
+     * Aplica filtro com operador genérico
+     */
+    public function applyOperatorFilter( $query, array $filters, string $filterName, string $fieldName )
+    {
+        if (
+            !empty( $filters[ $filterName ] ) && is_array( $filters[ $filterName ] )
+            && isset( $filters[ $filterName ][ 'operator' ], $filters[ $filterName ][ 'value' ] )
+        ) {
+            $op  = $filters[ $filterName ][ 'operator' ];
+            $val = $filters[ $filterName ][ 'value' ];
+            $query->where( $fieldName, $op, $val );
+        }
+        return $query;
+    }
+
+    /**
+     * Aplica filtro booleano genérico
+     */
+    public function applyBooleanFilter( $query, array $filters, string $filterName, string $fieldName )
+    {
+        if ( array_key_exists( $filterName, $filters ) ) {
+            $query->where( $fieldName, $filters[ $filterName ] );
+        }
+        return $query;
+    }
+
 }

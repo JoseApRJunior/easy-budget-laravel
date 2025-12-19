@@ -188,7 +188,8 @@ class CategoryRepository extends AbstractTenantRepository
         $query = $this->model->query();
         $query->with( $with );
 
-        $this->applyFilters( $query, $filters );
+        dd( $filters );
+        $this->applyAllCategoryFilters( $query, $filters );
 
         // Ordenação hierárquica simplificada
         if ( !$orderBy ) {
@@ -209,37 +210,11 @@ class CategoryRepository extends AbstractTenantRepository
      */
     protected function applyAllCategoryFilters( $query, array $filters ): void
     {
-        // Filtros específicos de categoria
-        // Filtro por busca (nome ou slug da categoria)
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $search = (string) $filters[ 'search' ];
-            $query->where( function ( $q ) use ( $search ) {
-                $q->where( 'name', 'like', "%{$search}%" )
-                    ->orWhere( 'slug', 'like', "%{$search}%" );
-            } );
-        }
+        $this->applySearchFilter( $query, $filters, 'name', 'slug' );
+        $this->applyOperatorFilter( $query, $filters, 'name', 'name' );
+        $this->applyBooleanFilter( $query, $filters, 'is_active', 'is_active' );
+        $this->applySoftDeleteFilter( $query, $filters );
 
-        // Filtros por nome com operador
-        if ( !empty( $filters[ 'name' ] ) && is_array( $filters[ 'name' ] ) && isset( $filters[ 'name' ][ 'operator' ], $filters[ 'name' ][ 'value' ] ) ) {
-            $op  = $filters[ 'name' ][ 'operator' ];
-            $val = $filters[ 'name' ][ 'value' ];
-            $query->where( 'name', $op, $val );
-        }
-
-        // Filtros por slug com operador
-        if ( !empty( $filters[ 'slug' ] ) && is_array( $filters[ 'slug' ] ) && isset( $filters[ 'slug' ][ 'operator' ], $filters[ 'slug' ][ 'value' ] ) ) {
-            $op  = $filters[ 'slug' ][ 'operator' ];
-            $val = $filters[ 'slug' ][ 'value' ];
-            $query->where( 'slug', $op, $val );
-        }
-
-        // Filtro por ativo/inativo
-        if ( array_key_exists( 'is_active', $filters ) ) {
-            $query->where( 'is_active', $filters[ 'is_active' ] );
-        } elseif ( array_key_exists( 'active', $filters ) && $filters[ 'active' ] !== '' ) {
-            $bool = in_array( (string) $filters[ 'active' ], [ '1', 'true', 'on' ], true );
-            $query->where( 'is_active', $bool );
-        }
     }
 
 }

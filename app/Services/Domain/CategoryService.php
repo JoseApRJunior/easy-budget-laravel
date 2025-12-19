@@ -115,6 +115,11 @@ class CategoryService extends AbstractBaseService
     {
         $normalized = [];
 
+        // Verificar se o parâmetro 'all' está presente
+        if ( isset( $filters[ 'all' ] ) ) {
+            $normalized[ 'all' ] = (bool) $filters[ 'all' ];
+        }
+
         // Filtro por status ativo
         if ( isset( $filters[ 'active' ] ) && ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) ) {
             $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
@@ -134,6 +139,11 @@ class CategoryService extends AbstractBaseService
         if ( isset( $filters[ 'search' ] ) && !empty( $filters[ 'search' ] ) ) {
             $term                   = '%' . $filters[ 'search' ] . '%';
             $normalized[ 'search' ] = $term; // O repository trata este filtro especial
+        }
+
+        // Filtro de deletados
+        if ( isset( $filters[ 'deleted' ] ) && ( !empty( $filters[ 'deleted' ] ) || $filters[ 'deleted' ] === 'current' ) ) {
+            $normalized[ 'deleted' ] = $filters[ 'deleted' ] === 'current' ? 'current' : 'only';
         }
 
         return $normalized;
