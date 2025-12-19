@@ -58,11 +58,6 @@ class CustomerController extends Controller
                     $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
                 }
 
-                if ( !$result->isSuccess() ) {
-
-                    abort( 500, 'Erro ao carregar lista de clientes' );
-                }
-
                 $customers = $result->getData();
                 if ( method_exists( $customers, 'appends' ) ) {
                     $customers = $customers->appends( $request->query() );

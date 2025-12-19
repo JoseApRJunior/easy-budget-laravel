@@ -189,8 +189,8 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      *
      * @deprecated Use getPaginated() instead for better functionality with eager loading, soft delete support, and advanced filters
      */
-    public function paginateByTenant(
-        int $perPage = 15,
+    public function paginate(
+        int $perPage = 10,
         array $filters = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
@@ -342,7 +342,7 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      */
     public function getPaginated(
         array $filters = [],
-        int $perPage = 15,
+        int $perPage = 10,
         array $with = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {

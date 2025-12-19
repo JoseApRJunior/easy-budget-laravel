@@ -49,16 +49,16 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Retorna registros paginados do tenant atual.
      *
-     * @param int $perPage Itens por página (padrão: 15).
+     * @param int $perPage Itens por página (padrão: 10).
      * @param array<string, mixed> $filters Filtros a aplicar.
      * @param array<string, string>|null $orderBy Ordenação.
      * @return LengthAwarePaginator Resultado paginado.
      *
      * @example
-     * $clients = $repository->paginateByTenant(10, ['status' => 'active']);
+     * $clients = $repository->paginate(10, ['status' => 'active']);
      */
-    public function paginateByTenant(
-        int $perPage = 15,
+    public function paginate(
+        int $perPage = 10,
         array $filters = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator;

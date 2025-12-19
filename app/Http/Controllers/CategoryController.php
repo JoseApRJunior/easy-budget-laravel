@@ -16,8 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Log;
 use Mpdf\Mpdf;
-use PhpOffice\PhpSpreadsheet\Reader\Xml\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -59,6 +59,14 @@ class CategoryController extends Controller
      */
     public function index( Request $request ): View
     {
+        if ( !$request->hasAny( [ 'search', 'active', 'per_page', 'deleted', 'all' ] ) ) {
+            return view( 'pages.category.index', [
+                'categories'        => collect(),
+                'filters'           => [],
+                'parent_categories' => collect(),
+            ] );
+        }
+
         $filters        = $request->only( [ 'search', 'active', 'per_page', 'deleted' ] );
         $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
         $allowedPerPage = [ 10, 20, 50 ];
@@ -67,26 +75,20 @@ class CategoryController extends Controller
         }
         $filters[ 'per_page' ] = $perPage;
 
-        $hasFilters = $request->has( [ 'search', 'active', 'deleted' ] );
-
         try {
-            $categories = collect();
-            if ( $hasFilters ) {
-                $result = $this->categoryService->getCategories( $filters, $perPage );
-
-                if ( !$result->isSuccess() ) {
-                    abort( 500, 'Erro ao carregar lista de categorias' );
-                }
-
-                $categories = $result->getData();
-                if ( method_exists( $categories, 'appends' ) ) {
-                    $categories = $categories->appends( $request->query() );
-                }
+            $result = $this->categoryService->getCategories( $filters, $perPage );
+            Log::info( 'Resultado da consulta de categorias', [ 'result' => $result ] );
+            $categories = $result->isSuccess() ? $result->getData() : collect();
+            if ( method_exists( $categories, 'appends' ) ) {
+                $categories = $categories->appends( $request->query() );
             }
-
             // Carregar categorias pai para filtros na view
             $parentResult     = $this->categoryService->getParentCategories();
             $parentCategories = $parentResult->isSuccess() ? $parentResult->getData() : collect();
+            Log::info( 'Categorias carregadas com sucesso', [
+                'total'   => $categories->count(),
+                'filters' => $filters,
+            ] );
 
             return view( 'pages.category.index', [
                 'categories'        => $categories,

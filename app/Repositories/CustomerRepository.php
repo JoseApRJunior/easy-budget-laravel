@@ -250,12 +250,12 @@ class CustomerRepository extends AbstractTenantRepository
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
-        array $with = [ 'commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData' ],
+        array $with = [ 'commonData' ],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
         $query = $this->model->newQuery();
 
-        // Eager loading paramétrico
+        // Eager loading paramétrico - simplificado
         if ( !empty( $with ) ) {
             $query->with( $with );
         }
@@ -266,56 +266,27 @@ class CustomerRepository extends AbstractTenantRepository
         // Aplicar filtro de soft delete se necessário
         $this->applySoftDeleteFilter( $query, $filters );
 
-        // Filtros específicos de cliente
-        // Filtro por texto (busca em nome, email, CPF/CNPJ, razão social)
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $query->where( function ( $q ) use ( $filters ) {
-                $q->whereHas( 'commonData', function ( $cq ) use ( $filters ) {
-                    $cq->where( 'first_name', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'last_name', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'company_name', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'cpf', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'cnpj', 'like', '%' . $filters[ 'search' ] . '%' );
-                } )->orWhereHas( 'contact', function ( $cq ) use ( $filters ) {
-                    $cq->where( 'email_personal', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'email_business', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'phone_personal', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'phone_business', 'like', '%' . $filters[ 'search' ] . '%' );
-                } );
-            } );
-        }
+        // Filtros específicos de cliente - SIMPLIFICADOS
 
-        // Filtro por tipo (PF/PJ)
-        if ( !empty( $filters[ 'type' ] ) ) {
-            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
-                if ( $filters[ 'type' ] === 'pessoa_fisica' ) {
-                    $q->whereNotNull( 'cpf' );
-                } else {
-                    $q->whereNotNull( 'cnpj' );
-                }
-            } );
-        }
-
-        // Filtro por status
+        // Filtro por status (direto na tabela customers)
         if ( !empty( $filters[ 'status' ] ) ) {
             $query->where( 'status', $filters[ 'status' ] );
         }
 
-        // Filtro por área de atuação
-        if ( !empty( $filters[ 'area_of_activity_id' ] ) ) {
-            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
-                $q->where( 'area_of_activity_id', $filters[ 'area_of_activity_id' ] );
+        // Filtro por texto simplificado (busca apenas na tabela customers)
+        if ( !empty( $filters[ 'search' ] ) ) {
+            // Buscar apenas por ID ou status se especificado, mantendo simples
+            $search = $filters[ 'search' ];
+            $query->where( function ( $q ) use ( $search ) {
+                // Busca simples por ID numérico
+                if ( is_numeric( $search ) ) {
+                    $q->where( 'id', (int) $search );
+                }
+                // Filtros diretos adicionais podem ser adicionados aqui se necessário
             } );
         }
 
-        // Filtro por profissão
-        if ( !empty( $filters[ 'profession_id' ] ) ) {
-            $query->whereHas( 'commonData', function ( $q ) use ( $filters ) {
-                $q->where( 'profession_id', $filters[ 'profession_id' ] );
-            } );
-        }
-
-        // Aplicar ordenação (padrão: created_at desc)
+        // Aplicar ordenação simples (padrão: created_at desc)
         $defaultOrderBy = $orderBy ?: [ 'created_at' => 'desc' ];
         $this->applyOrderBy( $query, $defaultOrderBy );
 

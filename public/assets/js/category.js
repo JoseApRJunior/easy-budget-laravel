@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", function () {
    const deletedSelect = document.getElementById("deleted");
    const deleteModal = document.getElementById("deleteModal");
 
+   // Flag para detectar carregamento inicial
+   let isInitialLoad = true;
+
    // Configurar modal de confirmação
    function setupDeleteModal() {
       if (deleteModal && deleteModal.parentElement !== document.body) {
@@ -37,6 +40,12 @@ document.addEventListener("DOMContentLoaded", function () {
          filtersForm.addEventListener("submit", function (e) {
             if (!e.submitter || e.submitter.id !== "btnFilterCategories")
                return;
+
+            // Permitir carregamento inicial sem modal
+            if (isInitialLoad) {
+               isInitialLoad = false;
+               return; // Permitir submissão normal
+            }
 
             var search = (searchInput?.value || "").trim();
             var status = (statusSelect?.value || "").trim();
@@ -99,4 +108,9 @@ document.addEventListener("DOMContentLoaded", function () {
    setupDeleteModal();
    setupFilters();
    setupAutoFilter();
+
+   // Marcar que o carregamento inicial foi completado
+   setTimeout(() => {
+      isInitialLoad = false;
+   }, 100);
 });

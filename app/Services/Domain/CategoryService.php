@@ -85,19 +85,16 @@ class CategoryService extends AbstractBaseService
                 return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
 
-            // Determinar se deve mostrar apenas deletadas
-            $onlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
-
             // Normalizar filtros para formato aceito pelo repository
             $normalized = $this->normalizeFilters( $filters );
 
             // Usar o método específico do CategoryRepository que inclui funcionalidades avançadas
+            // O filtro "deleted=only" é aplicado automaticamente pelo método getPaginated()
             $paginator = $this->categoryRepository->getPaginated(
                 $normalized,
                 $perPage,
                 [], // with - pode ser expandido se necessário
-                [ 'name' => 'asc' ], // orderBy padrão
-                $onlyTrashed,
+                [ 'name' => 'asc' ] // orderBy padrão
             );
 
             return $this->success( $paginator, 'Categorias carregadas com sucesso.' );
@@ -150,6 +147,7 @@ class CategoryService extends AbstractBaseService
             }
 
             $parents = Category::query()
+                ->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
                 ->where( 'tenant_id', $tenantId )
                 ->whereNull( 'parent_id' )
                 ->whereNull( 'deleted_at' )

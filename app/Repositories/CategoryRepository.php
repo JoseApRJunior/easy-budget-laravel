@@ -176,7 +176,6 @@ class CategoryRepository extends AbstractTenantRepository
      * @param int $perPage Número padrão de itens por página (15)
      * @param array<string> $with Relacionamentos para eager loading (ex: ['parent'])
      * @param array<string, string>|null $orderBy Ordenação personalizada
-     * @param bool $onlyTrashed Se true, retorna apenas categorias deletadas (soft delete)
      * @return LengthAwarePaginator Resultado paginado
      */
     public function getPaginated(
@@ -184,32 +183,25 @@ class CategoryRepository extends AbstractTenantRepository
         int $perPage = 15,
         array $with = [],
         ?array $orderBy = null,
-        bool $onlyTrashed = false,
     ): LengthAwarePaginator {
-        // Usar query padrão com Global Scope ativo, mas qualificar todas as referências
-        // para evitar ambiguidade com JOINs
-        $query = $this->model->newQuery()
-            ->leftJoin( 'categories as parent', 'parent.id', '=', 'categories.parent_id' )
-            ->select( 'categories.*' );
+        // Usar query normal com Global Scope aplicado automaticamente
+        $query = $this->model->newQuery();
 
-        // Eager loading paramétrico
-        if ( !empty( $with ) ) {
-            $query->with( $with );
+        // Eager loading paramétrico (carregar parent se solicitado)
+        if ( in_array( 'parent', $with, true ) ) {
+            $query->with( 'parent' );
         }
 
-        // Aplicar filtro de soft delete específico se solicitado
-        if ( $onlyTrashed ) {
-            $query->onlyTrashed();
-        }
+        // Aplicar filtro de soft delete automaticamente através do filtro 'deleted'
+        // O filtro 'deleted=only' é tratado pelo applySoftDeleteFilter herdado
+        $this->applySoftDeleteFilter( $query, $filters );
 
-        // Aplicar todos os filtros de categoria (com tratamento completo de joins)
+        // Aplicar todos os filtros de categoria
         $this->applyAllCategoryFilters( $query, $filters );
 
-        // Ordenação hierárquica: categorias pai primeiro, depois filhas, ordenadas por nome
+        // Ordenação hierárquica para agrupar subcategorias com suas categorias pai
         if ( !$orderBy ) {
-            $query->orderByRaw( 'COALESCE(parent.name, categories.name) ASC' )
-                ->orderByRaw( 'CASE WHEN categories.parent_id IS NULL THEN 0 ELSE 1 END' )
-                ->orderBy( 'categories.name', 'ASC' );
+            $query->orderByRaw( 'CASE WHEN parent_id IS NULL THEN id ELSE parent_id END, parent_id IS NOT NULL, name' );
         } else {
             $this->applyOrderBy( $query, $orderBy );
         }
@@ -221,28 +213,20 @@ class CategoryRepository extends AbstractTenantRepository
     }
 
     /**
-     * Aplica todos os filtros de categoria com tratamento completo para joins.
+     * Aplica todos os filtros de categoria.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array<string, mixed> $filters
      */
     protected function applyAllCategoryFilters( $query, array $filters ): void
     {
-        // IMPORTANTE: Quando há JOINs, devemos sempre qualificar tenant_id para evitar ambiguidade
-        // O Global Scope TenantScoped será aplicado automaticamente, mas pode conflitar com JOINs
-        // Por isso, aplicamos o filtro de tenant_id explicitamente aqui quando necessário
-
-        // Aplicar filtro de soft delete se necessário
-        $this->applySoftDeleteFilter( $query, $filters );
-
         // Filtros específicos de categoria
-        // Filtro por busca (nome, slug ou nome da categoria pai)
+        // Filtro por busca (nome ou slug da categoria)
         if ( !empty( $filters[ 'search' ] ) ) {
             $search = (string) $filters[ 'search' ];
             $query->where( function ( $q ) use ( $search ) {
-                $q->where( 'categories.name', 'like', "%{$search}%" )
-                    ->orWhere( 'categories.slug', 'like', "%{$search}%" )
-                    ->orWhere( 'parent.name', 'like', "%{$search}%" );
+                $q->where( 'name', 'like', "%{$search}%" )
+                    ->orWhere( 'slug', 'like', "%{$search}%" );
             } );
         }
 
@@ -250,25 +234,22 @@ class CategoryRepository extends AbstractTenantRepository
         if ( !empty( $filters[ 'name' ] ) && is_array( $filters[ 'name' ] ) && isset( $filters[ 'name' ][ 'operator' ], $filters[ 'name' ][ 'value' ] ) ) {
             $op  = $filters[ 'name' ][ 'operator' ];
             $val = $filters[ 'name' ][ 'value' ];
-            $query->where( function ( $q ) use ( $op, $val ) {
-                $q->where( 'categories.name', $op, $val )
-                    ->orWhere( 'parent.name', $op, $val );
-            } );
+            $query->where( 'name', $op, $val );
         }
 
         // Filtros por slug com operador
         if ( !empty( $filters[ 'slug' ] ) && is_array( $filters[ 'slug' ] ) && isset( $filters[ 'slug' ][ 'operator' ], $filters[ 'slug' ][ 'value' ] ) ) {
             $op  = $filters[ 'slug' ][ 'operator' ];
             $val = $filters[ 'slug' ][ 'value' ];
-            $query->where( 'categories.slug', $op, $val );
+            $query->where( 'slug', $op, $val );
         }
 
         // Filtro por ativo/inativo
         if ( array_key_exists( 'is_active', $filters ) ) {
-            $query->where( 'categories.is_active', $filters[ 'is_active' ] );
+            $query->where( 'is_active', $filters[ 'is_active' ] );
         } elseif ( array_key_exists( 'active', $filters ) && $filters[ 'active' ] !== '' ) {
             $bool = in_array( (string) $filters[ 'active' ], [ '1', 'true', 'on' ], true );
-            $query->where( 'categories.is_active', $bool );
+            $query->where( 'is_active', $bool );
         }
     }
 

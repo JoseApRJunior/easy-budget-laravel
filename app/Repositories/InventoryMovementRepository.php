@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  */
 class InventoryMovementRepository extends AbstractTenantRepository
 {
-        /**
+    /**
      * Create a new repository instance.
      */
     public function __construct( InventoryMovement $model )
@@ -36,37 +36,16 @@ class InventoryMovementRepository extends AbstractTenantRepository
     public function getByProduct( int $productId, int $perPage = 20 ): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->with( ['product'] )
+            ->with( [ 'product' ] )
             ->where( 'product_id', $productId )
             ->orderBy( 'created_at', 'desc' )
             ->paginate( $perPage );
     }
 
-    /**
-     * Retorna todas as movimentações com filtros
-     */
-    public function getPaginated( int $perPage = 20, array $filters = [] ): LengthAwarePaginator
-    {
-        return $this->model->newQuery()
-            ->with( ['product'] )
-            ->when( $filters['product_id'] ?? null, function ( $query, $productId ) {
-                $query->where( 'product_id', $productId );
-            } )
-            ->when( $filters['type'] ?? null, function ( $query, $type ) {
-                $query->where( 'type', $type );
-            } )
-            ->when( $filters['start_date'] ?? null, function ( $query, $startDate ) {
-                $query->whereDate( 'created_at', '>=', $startDate );
-            } )
-            ->when( $filters['end_date'] ?? null, function ( $query, $endDate ) {
-                $query->whereDate( 'created_at', '<=', $endDate );
-            } )
-            ->when( $filters['reason'] ?? null, function ( $query, $reason ) {
-                $query->where( 'reason', 'like', "%{$reason}%" );
-            } )
-            ->orderBy( 'created_at', 'desc' )
-            ->paginate( $perPage );
-    }
+    // Usando implementação padrão do AbstractTenantRepository
+    // que é suficiente para as funcionalidades básicas de paginação
+
+    // Métodos específicos podem ser adicionados conforme necessário
 
     /**
      * Cria uma movimentação de inventário
@@ -91,7 +70,7 @@ class InventoryMovementRepository extends AbstractTenantRepository
             $query->whereDate( 'created_at', '<=', $endDate );
         }
 
-        $movementsIn = $query->clone()->where( 'type', 'in' );
+        $movementsIn  = $query->clone()->where( 'type', 'in' );
         $movementsOut = $query->clone()->where( 'type', 'out' );
 
         return [
@@ -110,7 +89,7 @@ class InventoryMovementRepository extends AbstractTenantRepository
     public function getRecentMovements( int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
-            ->with( ['product'] )
+            ->with( [ 'product' ] )
             ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();
@@ -132,7 +111,7 @@ class InventoryMovementRepository extends AbstractTenantRepository
             ->groupBy( 'product_id' )
             ->orderByDesc( 'total_quantity' )
             ->limit( $limit )
-            ->with( ['product'] )
+            ->with( [ 'product' ] )
             ->get();
     }
 
@@ -152,12 +131,13 @@ class InventoryMovementRepository extends AbstractTenantRepository
         }
 
         $summary = $query->selectRaw( 'type, COUNT(*) as count, SUM(quantity) as total_quantity' )
-                         ->groupBy( 'type' )
-                         ->get();
+            ->groupBy( 'type' )
+            ->get();
 
         return [
             'in'  => $summary->where( 'type', 'in' )->first(),
             'out' => $summary->where( 'type', 'out' )->first(),
         ];
     }
+
 }
