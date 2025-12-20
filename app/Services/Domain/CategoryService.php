@@ -121,29 +121,42 @@ class CategoryService extends AbstractBaseService
         }
 
         // Filtro por status ativo
-        if ( isset( $filters[ 'active' ] ) && ( !empty( $filters[ 'active' ] ) || $filters[ 'active' ] === '0' ) ) {
-            $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1';
+        if ( array_key_exists( 'active', $filters ) ) {
+            if ( $filters[ 'active' ] === null || $filters[ 'active' ] === '' ) {
+                // Não filtra por ativo/inativo
+                // Opcional: pode remover a chave ou não adicionar nada
+            } elseif ( (string) $filters[ 'active' ] === '0' || $filters[ 'active' ] === 0 ) {
+                $normalized[ 'is_active' ] = false;
+            } else {
+                $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1' || $filters[ 'active' ] === 1;
+            }
         }
 
         // Filtro por nome
-        if ( isset( $filters[ 'name' ] ) && !empty( $filters[ 'name' ] ) ) {
+        if ( array_key_exists( 'name', $filters ) && $filters[ 'name' ] !== null && $filters[ 'name' ] !== '' ) {
             $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
         }
 
         // Filtro por slug
-        if ( isset( $filters[ 'slug' ] ) && !empty( $filters[ 'slug' ] ) ) {
+        if ( array_key_exists( 'slug', $filters ) && $filters[ 'slug' ] !== null && $filters[ 'slug' ] !== '' ) {
             $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
         }
 
-        // Filtro de busca geral (nome, slug ou nome da categoria pai)
-        if ( isset( $filters[ 'search' ] ) && !empty( $filters[ 'search' ] ) ) {
-            $term                   = '%' . $filters[ 'search' ] . '%';
-            $normalized[ 'search' ] = $term; // O repository trata este filtro especial
+        // Filtro de busca geral
+        if ( array_key_exists( 'search', $filters ) && $filters[ 'search' ] !== null && $filters[ 'search' ] !== '' ) {
+            $normalized[ 'search' ] = '%' . $filters[ 'search' ] . '%';
         }
 
         // Filtro de deletados
-        if ( isset( $filters[ 'deleted' ] ) && ( !empty( $filters[ 'deleted' ] ) || $filters[ 'deleted' ] === 'current' ) ) {
-            $normalized[ 'deleted' ] = $filters[ 'deleted' ] === 'current' ? 'current' : 'only';
+        if ( array_key_exists( 'deleted', $filters ) ) {
+            if ( $filters[ 'deleted' ] === 'only' || $filters[ 'deleted' ] === '1' ) {
+                $normalized[ 'deleted' ] = 'only';
+            } elseif ( $filters[ 'deleted' ] === 'current' || $filters[ 'deleted' ] === '0' ) {
+                $normalized[ 'deleted' ] = 'current';
+            } else {
+                // null, vazio ou qualquer outro valor: default (todos)
+                $normalized[ 'deleted' ] = '';
+            }
         }
 
         return $normalized;

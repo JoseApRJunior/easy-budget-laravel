@@ -44,13 +44,13 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            <option value=""
-                                                {{ empty($filters['active'] ?? null) ? 'selected' : '' }}>Todos</option>
                                             <option value="1"
                                                 {{ ($filters['active'] ?? null) === '1' ? 'selected' : '' }}>Ativo</option>
                                             <option value="0"
                                                 {{ ($filters['active'] ?? null) === '0' ? 'selected' : '' }}>Inativo
                                             </option>
+                                            <option value=""
+                                                {{ empty($filters['active'] ?? null) ? 'selected' : '' }}>Todos</option>
                                         </select>
                                     </div>
                                 </div>
@@ -69,14 +69,14 @@
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select name="deleted" id="deleted" class="form-control">
-                                            <option value=""
-                                                {{ empty($filters['deleted'] ?? null) ? 'selected' : '' }}>Todos</option>
                                             <option value="current"
-                                                {{ ($filters['deleted'] ?? null) === 'current' ? 'selected' : '' }}>Ativos
+                                                {{ ($filters['deleted'] ?? null) === 'current' ? 'selected' : '' }}>Atuais
                                             </option>
                                             <option value="only"
                                                 {{ ($filters['deleted'] ?? null) === 'only' ? 'selected' : '' }}>Deletados
                                             </option>
+                                            <option value=""
+                                                {{ empty($filters['deleted'] ?? null) ? 'selected' : '' }}>Todos</option>
                                         </select>
                                     </div>
                                 </div>

@@ -210,6 +210,7 @@ class CategoryRepository extends AbstractTenantRepository
      */
     protected function applyAllCategoryFilters( $query, array $filters ): void
     {
+
         $this->applySearchFilter( $query, $filters, 'name', 'slug' );
         $this->applyOperatorFilter( $query, $filters, 'name', 'name' );
         $this->applyBooleanFilter( $query, $filters, 'is_active', 'is_active' );
