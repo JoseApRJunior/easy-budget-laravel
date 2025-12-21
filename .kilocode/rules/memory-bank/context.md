@@ -2,7 +2,7 @@
 
 ## 🎯 Foco Atual do Trabalho
 
-**Sistema Easy Budget Laravel - Migração Concluída** - Projeto 完成了 migração completa do sistema legado (Twig + DoctrineDBAL) para Laravel 12. A arquitetura moderna está totalmente implementada com Controller → Services → Repositories → Models → Views, incluindo sistema completo de padrões arquiteturais. Sistema legado removido do repositório. Foco atual: implementação de novos recursos e otimizações na nova arquitetura Laravel 12.
+**Sistema Easy Budget Laravel - Migração Concluída** - Projeto completo da migração do sistema legado (Twig + DoctrineDBAL) para Laravel 12. A arquitetura moderna está totalmente implementada com Controller → Services → Repositories → Models → Views, incluindo sistema completo de padrões arquiteturais. Sistema legado removido do repositório. Foco atual: implementação de novos recursos e aperfeiçoamento da UX/UI na nova arquitetura Laravel 12.
 
 ## 🔄 Mudanças Recentes
 
@@ -623,7 +623,20 @@ Refatoração do LoginRequest para permitir login com senha ou Google, melhorand
 -  **Queries eficientes** - Relacionamentos e índices adequados
 -  **Escalabilidade preparada** - Arquitetura pronta para crescimento
 
-Este contexto representa o estado atual do sistema Easy Budget Laravel com **correção completa do sistema de reset de senha**, **correção do middleware de trial expirado**, **sistema completo de padrões arquiteturais implementado**, e **finalização dos módulos Categories e Products**, garantindo consistência, qualidade e manutenibilidade em todas as camadas da aplicação.
+- **Módulo Products**: 100% finalizado com gestão de estoque integrada
+- **Refinamento Categoria/UX**: ✅ Slugs removidos da UI (uso apenas interno), Dashboard com métricas precisas (incluindo deletadas) e exportação com alinhamento centralizado.
+
+### **✨ Destaques das Últimas Atualizações (21/12/2024)**
+
+#### **📊 Dashboard de Categorias Aprimorado**
+- **Novas Métricas:** Adicionado contador para 'Deletadas' (Soft Deletes).
+- **Cálculos Precisos:** Lógica de Inativas ajustada para `max(0, total - active)`.
+- **Layout Moderno:** Cartões de métricas com design responsivo (grid de 5 colunas) e identidate visual padronizada com variáveis CSS globais.
+
+#### **🛠️ Refatoração de UX/UI para Prestadores**
+- **Slugs Internos:** Remoção do campo Slug das views de visualização, criação e edição. O slug agora é gerado automaticamente "por baixo dos panos", reduzindo a carga cognitiva para o prestador.
+- **Exportação Refinada:** Centralização da coluna "Subcategorias Ativas" no Excel/PDF para melhor legibilidade.
+- **Robustez no CategoryService:** Refatoração de helpers internos (`findAndVerifyOwnership`, `validateAndGetParent`) para retornar `ServiceResult`, evitando erros de tipo e melhorando a segurança de tenant.
 
 **Última atualização do Memory Bank:** 01/12/2025 - ✅ **Atualização completa para refletir o estado atual do sistema Easy Budget Laravel**:
 
@@ -636,6 +649,6 @@ Este contexto representa o estado atual do sistema Easy Budget Laravel com **cor
 -  **Gestão de providers**: Controller avançado com integração de múltiplos serviços
 -  **Correção do reset de senha**: Sistema completo com eventos personalizados e MailerService
 -  **Correção do trial expirado**: Redirecionamento seletivo com aviso visual
--  **Módulo Categories**: 100% finalizado com sistema hierárquico e Soft Delete
+-  **Módulo Categories**: 100% finalizado e refinado com dashboard avançado e UI simplificada
 -  **Módulo Products**: 100% finalizado com gestão de estoque integrada
--  **Memory Bank atualizado**: Revisão completa com estado atual do projeto
+-  **Memory Bank atualizado**: Revisão das últimas melhorias e decisões de UX

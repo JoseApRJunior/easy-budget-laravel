@@ -336,6 +336,14 @@ memory_get_usage()
 -  **Database queries** otimizadas
 -  **Memory usage** monitorado
 
+### **📑 Exportação e Relatórios**
+- **Excel/CSV:** Gerados via `PhpSpreadsheet`, com suporte a formatação condicional e alinhamento customizado.
+- **PDF:** Gerados via `mPDF` com suporte a UTF-8 e layouts responsivos baseados em HTML/CSS.
+
+### **🔗 Política de Identificadores (Slugs)**
+- **Uso Técnico:** Slugs são gerados automaticamente para todas as entidades principais (categorias, produtos, etc.) para garantir URLs amigáveis (SEO).
+- **Abstração de UX:** Para o usuário final (prestador), o slug é ocultado de formulários e tabelas, simplificando a interface. A manipulação é 100% automatizada no Service Layer.
+
 Este documento detalha toda a stack tecnológica utilizada no Easy Budget Laravel, incluindo configurações, dependências e padrões de desenvolvimento estabelecidos.
 
-**Última atualização:** 19/11/2025 - ✅ **Atualização com migração parcial para Vanilla JS (máscaras)**
+**Última atualização:** 21/12/2024 - Adicionado detalhes de exportação e política de Slugs.
