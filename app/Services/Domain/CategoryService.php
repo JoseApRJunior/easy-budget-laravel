@@ -194,8 +194,10 @@ class CategoryService extends AbstractBaseService
     public function updateCategory( int $id, array $data ): ServiceResult
     {
         return $this->safeExecute(function() use ($id, $data) {
-            $category = $this->findAndVerifyOwnership( $id );
-            if ( $category instanceof ServiceResult ) return $category;
+            $ownerResult = $this->findAndVerifyOwnership( $id );
+            if ( $ownerResult->isError() ) return $ownerResult;
+
+            $category = $ownerResult->getData();
 
             $tenantId = $this->tenantId();
 
@@ -234,8 +236,10 @@ class CategoryService extends AbstractBaseService
     public function deleteCategory( int $id ): ServiceResult
     {
         return $this->safeExecute(function() use ($id) {
-            $category = $this->findAndVerifyOwnership( $id );
-            if ( $category instanceof ServiceResult ) return $category;
+            $ownerResult = $this->findAndVerifyOwnership( $id );
+            if ( $ownerResult->isError() ) return $ownerResult;
+
+            $category = $ownerResult->getData();
 
             if ( $category->hasChildren() ) {
                 return $this->error( OperationStatus::INVALID_DATA, 'Não é possível excluir categoria que possui subcategorias' );
@@ -341,12 +345,14 @@ class CategoryService extends AbstractBaseService
         return $this->safeExecute(function() {
             $total    = $this->repository->countByTenantId();
             $active   = $this->repository->countActiveByTenantId();
+            $deleted  = $this->repository->countDeletedByTenantId();
             $recentCategories = $this->repository->getRecentByTenantId( 5 );
 
             return [
                 'total_categories'    => $total,
                 'active_categories'   => $active,
-                'inactive_categories' => $total - $active,
+                'inactive_categories' => max(0, $total - $active),
+                'deleted_categories'  => $deleted,
                 'recent_categories'   => $recentCategories,
             ];
         }, 'Erro ao obter estatísticas de categorias.');
@@ -363,7 +369,7 @@ class CategoryService extends AbstractBaseService
         return $id;
     }
 
-    private function findAndVerifyOwnership( int $id ): Category|ServiceResult
+    private function findAndVerifyOwnership( int $id ): ServiceResult
     {
         $result = $this->findById( $id );
         if ( $result->isError() ) return $result;
@@ -373,16 +379,16 @@ class CategoryService extends AbstractBaseService
             return $this->error( OperationStatus::UNAUTHORIZED, 'Categoria não pertence ao tenant atual' );
         }
 
-        return $category;
+        return $this->success( $category );
     }
 
-    private function validateAndGetParent( int $parentId, int $tenantId ): Category|ServiceResult
+    private function validateAndGetParent( int $parentId, int $tenantId ): ServiceResult
     {
         $parent = Category::find( $parentId );
         if ( !$parent || $parent->tenant_id !== $tenantId ) {
             return $this->error( OperationStatus::INVALID_DATA, 'Categoria pai inválida' );
         }
-        return $parent;
+        return $this->success( $parent );
     }
 
 }

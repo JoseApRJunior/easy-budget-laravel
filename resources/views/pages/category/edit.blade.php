@@ -80,11 +80,6 @@
                                     <label for="parent_id">Categoria Pai (opcional)</label>
                                 @endif
                             </div>
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="slugPreview" name="slugPreview"
-                                    value="{{ $category->slug }}" placeholder="slug" disabled>
-                                <label for="slugPreview">Slug (gerado automaticamente)</label>
-                            </div>
                             @if ($canDeactivate)
                                 <input type="hidden" name="is_active" value="0">
                             @else
@@ -124,27 +119,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        (function() {
-            var nameInput = document.getElementById('name');
-            var slugInput = document.getElementById('slugPreview');
-
-            function slugify(text) {
-                return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
-            }
-
-            if (nameInput && slugInput) {
-                nameInput.addEventListener('input', function() {
-                    slugInput.value = slugify(nameInput.value || '');
-                });
-            }
-        })();
-    </script>
-@endpush

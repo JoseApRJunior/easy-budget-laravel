@@ -177,6 +177,28 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     }
 
     /**
+     * Conta incluindo deletadas.
+     */
+    public function countByTenantWithTrashed( array $filters = [] ): int
+    {
+        $query = $this->model->newQuery()->withTrashed();
+        $this->applyFilters( $query, $filters );
+
+        return $query->count();
+    }
+
+    /**
+     * Conta apenas deletadas.
+     */
+    public function countOnlyTrashedByTenant( array $filters = [] ): int
+    {
+        $query = $this->model->newQuery()->onlyTrashed();
+        $this->applyFilters( $query, $filters );
+
+        return $query->count();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function findByTenantAndSlug( string $slug ): ?Model

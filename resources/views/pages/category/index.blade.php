@@ -37,7 +37,7 @@
                                         <label for="search">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
                                             value="{{ old('search', $filters['search'] ?? '') }}"
-                                            placeholder="Categoria, Subcategoria, Slug">
+                                            placeholder="Categoria, Subcategoria">
                                     </div>
                                 </div>
                                 <div class="col-md-2">

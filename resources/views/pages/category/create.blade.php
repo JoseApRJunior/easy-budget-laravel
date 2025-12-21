@@ -55,11 +55,6 @@
                                 </select>
                                 <label for="parent_id">Categoria Pai (opcional)</label>
                             </div>
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="slugPreview" name="slugPreview"
-                                    value="{{ Str::slug(old('name')) }}" placeholder="slug" disabled>
-                                <label for="slugPreview">Slug (gerado automaticamente)</label>
-                            </div>
                             <input type="hidden" name="is_active" value="0">
                             <div class="form-check form-switch mt-3">
                                 <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
@@ -87,27 +82,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        (function() {
-            var nameInput = document.getElementById('name');
-            var slugInput = document.getElementById('slugPreview');
-
-            function slugify(text) {
-                return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
-            }
-
-            if (nameInput && slugInput) {
-                nameInput.addEventListener('input', function() {
-                    slugInput.value = slugify(nameInput.value || '');
-                });
-            }
-        })();
-    </script>
-@endpush

@@ -330,7 +330,24 @@ header {
 
 .small-text {
    color: var(--small-text);
-   font-size: 0.875rem;
+   font-size: 0.75rem;
+   line-height: 1.2;
+}
+
+/* Avatar Circle Helper */
+.avatar-circle {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 50%;
+}
+
+/* Custom Grid: 5 columns on large screens */
+@media (min-width: 1200px) {
+   .col-xl-5-custom {
+      flex: 0 0 auto;
+      width: 20%;
+   }
 }
 .theme-dark .password-toggle {
    color: var(--form-text);

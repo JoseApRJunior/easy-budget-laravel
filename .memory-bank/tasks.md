@@ -535,6 +535,26 @@ class NovoModeloService extends BaseTenantService
 -  **Validação:** Criar scripts de verificação para confirmar padrões corretos
 -  **Documentação:** Atualizar memory bank com novos padrões identificados
 
+### **🛠️ Refinamento de UX e Dashboard de Categorias**
+**Última execução:** 21/12/2024
+**Arquivos modificados:**
+- `app/Services/Domain/CategoryService.php` - Refatoração de segurança e lógica de dashboard
+- `app/Services/Domain/CategoryExportService.php` - Remoção de slug e alinhamento centralizado
+- `app/Http/Controllers/CategoryController.php` - Injeção do novo ExportService
+- `resources/views/pages/category/dashboard.blade.php` - Novo layout de métricas responsivo
+- `resources/views/pages/category/*.blade.php` - Remoção visual de Slugs
+
+**Passos executados:**
+1. **Diferenciação de Métricas:** Implementado contador para categorias deletadas e lógica de inativas.
+2. **Simplificação de UI:** Ocultado o campo Slug em todas as telas voltadas ao prestador para reduzir complexidade.
+3. **Melhoria na Exportação:** Ajustado alinhamento das colunas numéricas no Excel para padrão profissional.
+4. **Segurança de Tenant:** Refatorado helpers do `CategoryService` para garantir que toda busca valide a propriedade do registro via `ServiceResult`.
+
+**Considerações importantes:**
+- **Slugs como identificadores:** Devem ser mantidos nas URLs por SEO/Estética, mas ocultos nos formulários.
+- **Métricas:** Sempre considerar registros deletados (`withTrashed`) ao calcular estatísticas totais.
+- **Consistência Visual:** Usar classes utilitárias CSS globais em vez de estilos inline no Blade.
+
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
-**Última atualização:** 19/11/2025 - Atualização para refletir remoção da pasta `old-system` e manutenção de referências históricas.
+**Última atualização:** 21/12/2024 - Refinamento do módulo de categorias e dashboard.

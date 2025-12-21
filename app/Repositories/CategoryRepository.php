@@ -83,6 +83,14 @@ class CategoryRepository extends AbstractTenantRepository
     }
 
     /**
+     * Conta apenas categorias deletadas.
+     */
+    public function countDeletedByTenantId(): int
+    {
+        return $this->countOnlyTrashedByTenant();
+    }
+
+    /**
      * Obtém categorias recentes do tenant.
      */
     public function getRecentByTenantId( int $limit = 10 ): Collection

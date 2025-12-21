@@ -24,7 +24,7 @@ class CategoryExportService
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $headers = ['Categoria', 'Subcategoria', 'Slug', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
+        $headers = ['Categoria', 'Subcategoria', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
         $sheet->fromArray([$headers]);
 
         $row = 2;
@@ -38,7 +38,6 @@ class CategoryExportService
             $dataRow = [
                 $categoryName,
                 $subcategoryName,
-                $category->slug ?: Str::slug($category->name),
                 $category->is_active ? 'Sim' : 'Não',
                 $childrenCount,
                 $createdAt,
@@ -49,10 +48,15 @@ class CategoryExportService
             $row++;
         }
 
-        // Auto-size columns
-        foreach (range('A', 'G') as $col) {
+        // Auto-size columns and styling
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
+
+        // Centralizar coluna "Subcategorias Ativas" (D)
+        $sheet->getStyle('D1:D' . ($row - 1))
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         $fileName = "categories.{$format}";
         $contentType = $format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -104,7 +108,6 @@ class CategoryExportService
             $rows .= "<tr>
                 <td>" . e($categoryName) . "</td>
                 <td>" . e($subcategoryName) . "</td>
-                <td>" . e((string)($category->slug ?: Str::slug($category->name))) . "</td>
                 <td>" . ($category->is_active ? 'Sim' : 'Não') . "</td>
                 <td style='text-align:center'>{$childrenCount}</td>
                 <td>{$createdAt}</td>
@@ -115,7 +118,6 @@ class CategoryExportService
         $thead = '<thead><tr>
             <th>Categoria</th>
             <th>Subcategoria</th>
-            <th>Slug</th>
             <th>Ativo</th>
             <th style="text-align:center">Subcats Ativas</th>
             <th>Criação</th>

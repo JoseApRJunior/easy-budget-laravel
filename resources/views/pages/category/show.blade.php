@@ -52,14 +52,6 @@
                         </div>
                     @endif
 
-                    @if ($isAdmin)
-                        <div class="col-md-3">
-                            <div class="d-flex flex-column">
-                                <label class="text-muted small mb-1">Slug</label>
-                                <h5 class="mb-0"><span class="text-code">{{ $category->slug }}</span></h5>
-                            </div>
-                        </div>
-                    @endif
 
                     <div class="col-md-3">
                         <div class="d-flex flex-column">
