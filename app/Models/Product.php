@@ -157,7 +157,7 @@ class Product extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductInventory>
      */
-    public function productInventory(): HasMany
+    public function inventory(): HasMany
     {
         return $this->hasMany( ProductInventory::class);
     }
@@ -230,7 +230,7 @@ class Product extends Model
      */
     public function scopeWithInventory( $query )
     {
-        return $query->with( [ 'productInventory' ] );
+        return $query->with( [ 'inventory' ] );
     }
 
     // ==================== MÉTODOS DE NEGÓCIO ====================
@@ -242,7 +242,7 @@ class Product extends Model
      */
     public function isAvailable(): bool
     {
-        $totalQuantity = $this->productInventory()
+        $totalQuantity = $this->inventory()
             ->sum( 'quantity' );
 
         return $totalQuantity > 0;
@@ -316,7 +316,7 @@ class Product extends Model
      */
     public function getTotalStockAttribute(): float
     {
-        return $this->productInventory()->sum( 'quantity' );
+        return $this->inventory()->sum( 'quantity' );
     }
 
     /**

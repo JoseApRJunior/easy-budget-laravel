@@ -54,19 +54,22 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     {
         $allStatuses = ServiceStatus::cases();
 
-        if ( $field === 'order_index' ) {
-            if ( $direction === 'asc' ) {
-                usort( $allStatuses, fn( $a, $b ) => 0 <=> $b->0 );
-            } else {
-                usort( $allStatuses, fn( $a, $b ) => $b->0 <=> 0 );
-            }
-        } elseif ( $field === 'name' ) {
-            if ( $direction === 'asc' ) {
-                usort( $allStatuses, fn( $a, $b ) => $a->getDescription() <=> $b->getDescription() );
-            } else {
-                usort( $allStatuses, fn( $a, $b ) => $b->getDescription() <=> $a->getDescription() );
-            }
-        }
+       if ( $field === 'order_index' ) {
+    usort( $allStatuses, function( $a, $b ) use ( $direction ) {
+        $valA = $a->order_index;
+        $valB = $b->order_index;
+
+        return $direction === 'asc' ? $valA <=> $valB : $valB <=> $valA;
+    });
+} elseif ( $field === 'name' ) {
+    usort( $allStatuses, function( $a, $b ) use ( $direction ) {
+        $valA = $a->getDescription();
+        $valB = $b->getDescription();
+
+        return $direction === 'asc' ? $valA <=> $valB : $valB <=> $valA;
+    });
+}
+
 
         if ( $limit ) {
             $allStatuses = array_slice( $allStatuses, 0, $limit );
@@ -138,18 +141,22 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
             }
         }
 
-        // Aplica ordenação
-        if ( $orderBy ) {
-            foreach ( $orderBy as $field => $direction ) {
-                if ( $field === 'order_index' ) {
-                    if ( $direction === 'asc' ) {
-                        usort( $results, fn( $a, $b ) => 0 <=> $b->0 );
-                    } else {
-                        usort( $results, fn( $a, $b ) => $b->0 <=> 0 );
-                    }
+     // Aplica ordenação
+if ( $orderBy ) {
+    foreach ( $orderBy as $field => $direction ) {
+        if ( $field === 'order_index' ) {
+            usort( $results, function( $a, $b ) use ( $direction ) {
+                // Compara a propriedade order_index de cada objeto
+                if ( $direction === 'asc' ) {
+                    return $a->order_index <=> $b->order_index;
+                } else {
+                    return $b->order_index <=> $a->order_index;
                 }
-            }
+            });
         }
+    }
+}
+
 
         if ( $limit ) {
             $results = array_slice( $results, 0, $limit );
