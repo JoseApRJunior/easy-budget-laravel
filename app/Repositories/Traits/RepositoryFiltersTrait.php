@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 namespace App\Repositories\Traits;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Database\EloquentBuilder;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Trait com métodos auxiliares comuns para repositórios.
@@ -33,24 +32,23 @@ trait RepositoryFiltersTrait
      * $this->applyFilters($query, $filters);
      * ```
      */
-    protected function applyFilters( $query, array $filters ): void
+    protected function applyFilters( Builder $query, array $filters ): Builder
     {
-        if ( empty( $filters ) ) {
-            return;
+        foreach ( $filters as $field => $value ) {
+            $query->when( $value !== null, function ( $q ) use ( $field, $value ) {
+                if ( is_array( $value ) ) {
+                    if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
+                        $q->where( $field, $value[ 'operator' ], $value[ 'value' ] );
+                    } else {
+                        $q->whereIn( $field, $value );
+                    }
+                } else {
+                    $q->where( $field, $value );
+                }
+            } );
         }
 
-        foreach ( $filters as $field => $value ) {
-            if ( is_array( $value ) ) {
-                // Suporte a operadores especiais
-                if ( isset( $value[ 'operator' ], $value[ 'value' ] ) ) {
-                    $query->where( $field, $value[ 'operator' ], $value[ 'value' ] );
-                } else {
-                    $query->whereIn( $field, $value );
-                }
-            } elseif ( $value !== null ) {
-                $query->where( $field, $value );
-            }
-        }
+        return $query;
     }
 
     /**
@@ -59,16 +57,18 @@ trait RepositoryFiltersTrait
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array<string, string>|null $orderBy
      */
-    protected function applyOrderBy( $query, ?array $orderBy ): void
+    protected function applyOrderBy( Builder $query, ?array $orderBy ): Builder
     {
         if ( empty( $orderBy ) ) {
-            return;
+            return $query;
         }
 
         foreach ( $orderBy as $field => $direction ) {
-            $direction = strtolower( $direction ) === 'desc' ? 'desc' : 'asc';
+            $direction = strtolower( (string) $direction ) === 'desc' ? 'desc' : 'asc';
             $query->orderBy( $field, $direction );
         }
+
+        return $query;
     }
 
     /**
@@ -79,7 +79,8 @@ trait RepositoryFiltersTrait
      */
     protected function isValidField( string $field ): bool
     {
-        return in_array( $field, $this->getFillableFields() );
+        $commonFields = [ 'id', 'created_at', 'updated_at', 'deleted_at' ];
+        return in_array( $field, array_merge( $this->getFillableFields(), $commonFields ) );
     }
 
     /**
@@ -112,17 +113,18 @@ trait RepositoryFiltersTrait
      * // Aplica onlyTrashed() à query
      * ```
      */
-    protected function applySoftDeleteFilter( $query, array $filters ): void
+    protected function applySoftDeleteFilter( Builder $query, array $filters ): Builder
     {
-        if ( array_key_exists( 'deleted', $filters ) ) {
-            if ( $filters[ 'deleted' ] === 'only' ) {
-                $query->onlyTrashed();
-            } elseif ( $filters[ 'deleted' ] === 'current' ) {
-                // Apenas ativos (não deletados) - não faz nada, pois é o padrão
-            } else {
-                $query->withTrashed();
-            }
+        if ( !method_exists( $query->getModel(), 'runSoftDelete' ) ) {
+            return $query;
         }
+
+        return match ( $filters[ 'deleted' ] ?? null ) {
+            'only'    => $query->onlyTrashed(),
+            'current' => $query,
+            null      => $query, // Se não existir, mantém padrão (ativos)
+            default   => $query->withTrashed(), // Caso venha 'all' ou vazio do service
+        };
     }
 
     /**
@@ -154,45 +156,45 @@ trait RepositoryFiltersTrait
     /**
      * Aplica filtro de busca genérico
      */
-    public function applySearchFilter( $query, array $filters, string $field1, string $field2 = null )
+    public function applySearchFilter( Builder $query, array $filters, string|array $fields ): Builder
     {
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $search = (string) $filters[ 'search' ];
-            $query->where( function ( $q ) use ( $search, $field1, $field2 ) {
-                $q->where( $field1, 'like', "%{$search}%" );
-                if ( $field2 ) {
-                    $q->orWhere( $field2, 'like', "%{$search}%" );
+        $search = $filters[ 'search' ] ?? null;
+
+        return $query->when( !empty( $search ), function ( $q ) use ( $search, $fields ) {
+            $searchString = (string) $search;
+            $fieldsArray  = is_array( $fields ) ? $fields : [ $fields ];
+
+            $q->where( function ( $sq ) use ( $searchString, $fieldsArray ) {
+                foreach ( $fieldsArray as $index => $field ) {
+                    $method = $index === 0 ? 'where' : 'orWhere';
+                    $sq->{$method}( $field, 'like', "%{$searchString}%" );
                 }
             } );
-        }
-        return $query;
+        } );
     }
 
     /**
      * Aplica filtro com operador genérico
      */
-    public function applyOperatorFilter( $query, array $filters, string $filterName, string $fieldName )
+    public function applyOperatorFilter( Builder $query, array $filters, string $filterName, string $fieldName ): Builder
     {
-        if (
-            !empty( $filters[ $filterName ] ) && is_array( $filters[ $filterName ] )
-            && isset( $filters[ $filterName ][ 'operator' ], $filters[ $filterName ][ 'value' ] )
-        ) {
-            $op  = $filters[ $filterName ][ 'operator' ];
-            $val = $filters[ $filterName ][ 'value' ];
-            $query->where( $fieldName, $op, $val );
-        }
-        return $query;
+        $filterValue = $filters[ $filterName ] ?? null;
+
+        return $query->when(
+            is_array( $filterValue ) && isset( $filterValue[ 'operator' ], $filterValue[ 'value' ] ),
+            fn( $q ) => $q->where( $fieldName, $filterValue[ 'operator' ], $filterValue[ 'value' ] )
+        );
     }
 
     /**
      * Aplica filtro booleano genérico
      */
-    public function applyBooleanFilter( $query, array $filters, string $filterName, string $fieldName )
+    public function applyBooleanFilter( Builder $query, array $filters, string $filterName, string $fieldName ): Builder
     {
-        if ( array_key_exists( $filterName, $filters ) ) {
-            $query->where( $fieldName, $filters[ $filterName ] );
-        }
-        return $query;
+        return $query->when(
+            array_key_exists( $filterName, $filters ),
+            fn( $q ) => $q->where( $fieldName, $filters[ $filterName ] )
+        );
     }
 
 }

@@ -36,7 +36,7 @@
                                     <div class="form-group">
                                         <label for="search">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
-                                            value="{{ $filters['search'] ?? '' }}"
+                                            value="{{ old('search', $filters['search'] ?? '') }}"
                                             placeholder="Categoria, Subcategoria, Slug">
                                     </div>
                                 </div>
@@ -45,12 +45,16 @@
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
                                             <option value="1"
-                                                {{ ($filters['active'] ?? null) === '1' ? 'selected' : '' }}>Ativo</option>
+                                                {{ old('active', $filters['active'] ?? 'all') === '1' ? 'selected' : '' }}>
+                                                Ativo</option>
                                             <option value="0"
-                                                {{ ($filters['active'] ?? null) === '0' ? 'selected' : '' }}>Inativo
+                                                {{ old('active', $filters['active'] ?? 'all') === '0' ? 'selected' : '' }}>
+                                                Inativo
                                             </option>
                                             <option value=""
-                                                {{ empty($filters['active'] ?? null) ? 'selected' : '' }}>Todos</option>
+                                                {{ old('active', $filters['active'] ?? 'all') === 'all' ? 'selected' : '' }}>
+                                                Todos
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -70,13 +74,16 @@
                                         <label for="deleted">Registros</label>
                                         <select name="deleted" id="deleted" class="form-control">
                                             <option value="current"
-                                                {{ ($filters['deleted'] ?? null) === 'current' ? 'selected' : '' }}>Atuais
+                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'current' ? 'selected' : '' }}>
+                                                Atuais
                                             </option>
                                             <option value="only"
-                                                {{ ($filters['deleted'] ?? null) === 'only' ? 'selected' : '' }}>Deletados
+                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'only' ? 'selected' : '' }}>
+                                                Deletados
                                             </option>
                                             <option value=""
-                                                {{ empty($filters['deleted'] ?? null) ? 'selected' : '' }}>Todos</option>
+                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'all' ? 'selected' : '' }}>
+                                                Todos</option>
                                         </select>
                                     </div>
                                 </div>

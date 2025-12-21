@@ -75,7 +75,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * - **Orçamentos/Faturas** - Controle financeiro por tenant
  * - **Configurações específicas** - Personalização por empresa
  */
-abstract class AbstractTenantRepository implements BaseRepositoryInterface, TenantRepositoryInterface
+abstract class AbstractTenantRepository implements TenantRepositoryInterface
 {
     use RepositoryFiltersTrait;
 
@@ -100,11 +100,7 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      */
     public function find( int $id ): ?Model
     {
-        try {
-            return $this->model->findOrFail( $id );
-        } catch ( ModelNotFoundException $e ) {
-            return null;
-        }
+        return $this->model->find( $id );
     }
 
     /**
@@ -143,13 +139,7 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      */
     public function delete( int $id ): bool
     {
-        $model = $this->find( $id );
-
-        if ( !$model ) {
-            return false;
-        }
-
-        return $model->delete();
+        return (bool) $this->model->where( 'id', $id )->delete();
     }
 
     // --------------------------------------------------------------------------
@@ -167,35 +157,12 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
     ): Collection {
         $query = $this->model->newQuery();
 
-        // Aplica filtros de tenant automaticamente via Global Scope
-        $this->applyFilters( $query, $criteria );
-
-        // Aplica ordenação usando trait
-        $this->applyOrderBy( $query, $orderBy );
-
-        // Aplica limite e offset
-        if ( $offset !== null ) {
-            $query->offset( $offset );
-        }
-        if ( $limit !== null ) {
-            $query->limit( $limit );
-        }
-
-        return $query->get();
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @deprecated Use getPaginated() instead for better functionality with eager loading, soft delete support, and advanced filters
-     */
-    public function paginate(
-        int $perPage = 10,
-        array $filters = [],
-        ?array $orderBy = null,
-    ): LengthAwarePaginator {
-        // Mantém compatibilidade redirecionando para o método padrão
-        return $this->getPaginated( $filters, $perPage, [], $orderBy );
+        // Aplica filtros e ordenação usando trait
+        return $this->applyFilters( $query, $criteria )
+            ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
+            ->when( $offset !== null, fn( $q ) => $q->offset( $offset ) )
+            ->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+            ->get();
     }
 
     /**
@@ -204,8 +171,6 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
     public function countByTenant( array $filters = [] ): int
     {
         $query = $this->model->newQuery();
-
-        // Aplica filtros de tenant automaticamente via Global Scope
         $this->applyFilters( $query, $filters );
 
         return $query->count();
@@ -232,13 +197,9 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      */
     public function isUniqueInTenant( string $field, mixed $value, ?int $excludeId = null ): bool
     {
-        $query = $this->model->where( $field, $value );
-
-        if ( $excludeId !== null ) {
-            $query->where( 'id', '!=', $excludeId );
-        }
-
-        return $query->exists();
+        return $this->model->where( $field, $value )
+            ->when( $excludeId !== null, fn( $q ) => $q->where( 'id', '!=', $excludeId ) )
+            ->exists();
     }
 
     /**
@@ -257,6 +218,84 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
         return $this->model->whereIn( 'id', $ids )->delete();
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function searchByTenant(
+        string $search,
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection {
+        $query = $this->model->newQuery();
+
+        if ( !empty( $search ) ) {
+            $filters[ 'search' ] = $search;
+            $this->applySearchFilter( $query, $filters, [ 'name', 'description' ] );
+        }
+
+        return $this->applyFilters( $query, $filters )
+            ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
+            ->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+            ->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getActiveByTenant(
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection {
+        $query = $this->model->newQuery();
+
+        // Se usar SoftDeletes, o default do newQuery() já filtra ativos.
+        // Caso contrário, filtramos manualmente se a coluna existir.
+        if ( !method_exists( $this->model, 'runSoftDelete' ) && $this->isValidField( 'deleted_at' ) ) {
+            $query->whereNull( 'deleted_at' );
+        }
+
+        $this->applyFilters( $query, $filters );
+        $this->applyOrderBy( $query, $orderBy );
+
+        return $query->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+            ->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDeletedByTenant(
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection {
+        $query = $this->model->newQuery();
+
+        if ( method_exists( $this->model, 'runSoftDelete' ) ) {
+            $query->onlyTrashed();
+        } else {
+            $query->whereNotNull( 'deleted_at' );
+        }
+
+        $this->applyFilters( $query, $filters );
+        $this->applyOrderBy( $query, $orderBy );
+
+        return $query->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+            ->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function restoreManyByTenant( array $ids ): int
+    {
+        return $this->model->whereIn( 'id', $ids )
+            ->whereNotNull( 'deleted_at' )
+            ->update( [ 'deleted_at' => null ] );
+    }
+
     // --------------------------------------------------------------------------
     // MÉTODOS AUXILIARES PROTEGIDOS
     // --------------------------------------------------------------------------
@@ -270,13 +309,9 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
      */
     public function findManyWithRelations( array $ids, array $with = [] ): Collection
     {
-        $query = $this->model->whereIn( 'id', $ids );
-
-        if ( !empty( $with ) ) {
-            $query->with( $with );
-        }
-
-        return $query->get();
+        return $this->model->whereIn( 'id', $ids )
+            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
+            ->get();
     }
 
     /**
@@ -300,45 +335,11 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
     /**
      * Método padrão de paginação com funcionalidades avançadas.
      *
-     * Este método pode ser sobrescrito por repositories específicos quando necessário,
-     * fornecendo uma base consistente para todos os repositories tenant-scoped.
-     *
-     * Funcionalidades incluídas:
-     * - Eager loading paramétrico via $with
-     * - Suporte a soft delete automático
-     * - Per page dinâmico via filtro
-     * - Ordenação customizável
-     * - Filtros avançados via RepositoryFiltersTrait
-     *
-     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['search' => 'termo', 'active' => true, 'per_page' => 20])
-     * @param int $perPage Número padrão de itens por página (15)
-     * @param array<string> $with Relacionamentos para eager loading (ex: ['category', 'inventory'])
-     * @param array<string, string>|null $orderBy Ordenação personalizada (ex: ['name' => 'asc', 'created_at' => 'desc'])
+     * @param array<string, mixed> $filters Filtros a aplicar
+     * @param int $perPage Número padrão de itens por página
+     * @param array<string> $with Relacionamentos para eager loading
+     * @param array<string, string>|null $orderBy Ordenação personalizada
      * @return LengthAwarePaginator Resultado paginado
-     *
-     * @example Uso básico:
-     * ```php
-     * $results = $repository->getPaginated();
-     * ```
-     *
-     * @example Com filtros:
-     * ```php
-     * $results = $repository->getPaginated([
-     *     'search' => 'produto',
-     *     'active' => true,
-     *     'per_page' => 20
-     * ]);
-     * ```
-     *
-     * @example Com eager loading:
-     * ```php
-     * $results = $repository->getPaginated([], 15, ['category', 'inventory']);
-     * ```
-     *
-     * @example Com ordenação customizada:
-     * ```php
-     * $results = $repository->getPaginated([], 15, [], ['created_at' => 'desc', 'name' => 'asc']);
-     * ```
      */
     public function getPaginated(
         array $filters = [],
@@ -346,26 +347,12 @@ abstract class AbstractTenantRepository implements BaseRepositoryInterface, Tena
         array $with = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
-        $query = $this->model->newQuery();
-
-        // Eager loading paramétrico
-        if ( !empty( $with ) ) {
-            $query->with( $with );
-        }
-
-        // Aplicar filtros avançados
-        $this->applyFilters( $query, $filters );
-
-        // Aplicar filtro de soft delete se necessário
-        $this->applySoftDeleteFilter( $query, $filters );
-
-        // Aplicar ordenação
-        $this->applyOrderBy( $query, $orderBy );
-
-        // Per page dinâmico
-        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
-
-        return $query->paginate( $effectivePerPage );
+        return $this->model->newQuery()
+            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
+            ->tap( fn( $q ) => $this->applyFilters( $q, $filters ) )
+            ->tap( fn( $q ) => $this->applySoftDeleteFilter( $q, $filters ) )
+            ->tap( fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
+            ->paginate( $this->getEffectivePerPage( $filters, $perPage ) );
     }
 
 }
