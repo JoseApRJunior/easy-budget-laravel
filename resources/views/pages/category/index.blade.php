@@ -129,13 +129,13 @@
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
+                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
                                                     <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'pdf'])) }}">
+                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
                                                     <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
                                                 </a>
                                             </li>

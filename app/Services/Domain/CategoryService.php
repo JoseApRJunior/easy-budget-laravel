@@ -93,7 +93,6 @@ class CategoryService extends AbstractBaseService
      */
     private function normalizeFilters( array $filters ): array
     {
-        // dd($filters);
 
         $normalized = [];
 

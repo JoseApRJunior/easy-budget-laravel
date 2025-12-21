@@ -43,10 +43,6 @@ class CategoryController extends Controller
     {
         $filters = $request->only( [ 'search', 'active', 'per_page', 'deleted', 'all' ] );
 
-        Log::info( 'Index Filters Debug', [
-            'all_request'  => $request->all(),
-            'filters'      => $filters,
-        ] );
         // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
         // O helper $this->view lida com o ServiceResult automaticamente
         if ( empty( $request->query() ) ) {
@@ -256,12 +252,7 @@ class CategoryController extends Controller
         $filters = $request->only( [ 'search', 'active', 'deleted' ] );
 
         // DEBUG: Ver o que está vindo
-        Log::info( 'Export Filters Debug', [
-            'all_request'  => $request->all(),
-            'only_filters' => $filters,
-        ] );
-
-             // Busca categorias com os filtros aplicados
+        // Busca categorias com os filtros aplicados
         $result = $this->categoryService->getCategories( $filters, 1000 );
 
         if ( $result->isError() ) {
