@@ -403,11 +403,15 @@ class ProductService extends AbstractBaseService
     public function getDashboardData( ?int $tenantId = null ): ServiceResult
     {
         return $this->safeExecute( function () {
+            $total   = $this->repository->countByTenant();
+            $active  = $this->repository->countActiveByTenant();
+            $deleted = $this->repository->countOnlyTrashedByTenant();
+
             $stats = [
-                'total_products'    => $this->repository->countByTenant(),
-                'active_products'   => $this->repository->countActiveByTenant(),
-                'inactive_products' => $this->repository->countByTenant( [ 'active' => false ] ),
-                'deleted_products'  => $this->repository->countOnlyTrashedByTenant(),
+                'total_products'    => $total,
+                'active_products'   => $active,
+                'inactive_products' => max( 0, $total - $active ),
+                'deleted_products'  => $deleted,
                 'recent_products'   => $this->getRecentProducts( 5, [ 'category' ] ), // Usa método do service
             ];
 

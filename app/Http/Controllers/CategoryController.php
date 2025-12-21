@@ -75,6 +75,7 @@ class CategoryController extends Controller
      */
     public function store( StoreCategoryRequest $request ): RedirectResponse
     {
+
         $data = $request->validated();
         if ( isset( $data[ 'name' ] ) ) {
             $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );

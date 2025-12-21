@@ -61,7 +61,7 @@ class ProductFactory extends Factory
         return $this->state( fn( array $attributes ) => [
             'category_id' => $attributes[ 'category_id' ] ??
                 Category::factory()
-                    ->forTenant( $attributes[ 'tenant_id' ] ?? Tenant::first()->id )
+                    ->forTenant( $attributes[ 'tenant_id' ] ?? Tenant::first() )
                     ->create()
                     ->id,
         ] );

@@ -14,11 +14,7 @@ class UpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
-        if ( !$user ) {
-            return false;
-        }
-        return $user->can( 'manage-custom-categories' );
+        return auth()->check();
     }
 
     public function rules(): array

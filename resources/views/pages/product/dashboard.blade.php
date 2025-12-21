@@ -32,85 +32,85 @@
             $total = $stats['total_products'] ?? 0;
             $active = $stats['active_products'] ?? 0;
             $inactive = $stats['inactive_products'] ?? 0;
+            $deleted = $stats['deleted_products'] ?? 0;
             $recent = $stats['recent_products'] ?? collect();
 
             $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
         @endphp
 
         <!-- Cards de Métricas -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-5-custom">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-box-seam text-white"></i>
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                                <i class="bi bi-box-seam text-white" style="font-size: 0.9rem;"></i>
                             </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total de Produtos</h6>
-                                <h3 class="mb-0">{{ $total }}</h3>
-                            </div>
+                            <h6 class="text-muted mb-0 small fw-bold">TOTAL</h6>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Total de produtos cadastrados.
-                        </p>
+                        <h3 class="mb-1 fw-bold">{{ $total }}</h3>
+                        <p class="text-muted small-text mb-0">Ativos e inativos.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-12 col-md-6 col-xl-5-custom">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle-fill text-white"></i>
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
+                                <i class="bi bi-check-circle-fill text-white" style="font-size: 0.9rem;"></i>
                             </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Produtos Ativos</h6>
-                                <h3 class="mb-0">{{ $active }}</h3>
-                            </div>
+                            <h6 class="text-muted mb-0 small fw-bold">ATIVOS</h6>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Produtos disponíveis para uso em orçamentos, serviços e vendas.
-                        </p>
+                        <h3 class="mb-1 fw-bold text-success">{{ $active }}</h3>
+                        <p class="text-muted small-text mb-0">Disponíveis para uso.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-12 col-md-6 col-xl-5-custom">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-secondary bg-gradient me-3">
-                                <i class="bi bi-pause-circle-fill text-white"></i>
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-circle bg-secondary bg-gradient me-2" style="width: 35px; height: 35px;">
+                                <i class="bi bi-pause-circle-fill text-white" style="font-size: 0.9rem;"></i>
                             </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Produtos Inativos</h6>
-                                <h3 class="mb-0">{{ $inactive }}</h3>
-                            </div>
+                            <h6 class="text-muted mb-0 small fw-bold">INATIVOS</h6>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Itens desativados ou em revisão, não disponíveis para novos lançamentos.
-                        </p>
+                        <h3 class="mb-1 fw-bold text-secondary">{{ $inactive }}</h3>
+                        <p class="text-muted small-text mb-0">Suspensos temporariamente.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-12 col-md-6 col-xl-5-custom">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-graph-up-arrow text-white"></i>
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
+                                <i class="bi bi-trash3-fill text-white" style="font-size: 0.9rem;"></i>
                             </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Taxa de Atividade</h6>
-                                <h3 class="mb-0">{{ $activityRate }}%</h3>
-                            </div>
+                            <h6 class="text-muted mb-0 small fw-bold">DELETADOS</h6>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Percentual de produtos ativos em relação ao total.
-                        </p>
+                        <h3 class="mb-1 fw-bold text-danger">{{ $deleted }}</h3>
+                        <p class="text-muted small-text mb-0">Na lixeira.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-5-custom">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
+                                <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
+                            </div>
+                            <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
+                        </div>
+                        <h3 class="mb-1 fw-bold text-info">{{ $activityRate }}%</h3>
+                        <p class="text-muted small-text mb-0">Percentual de ativos.</p>
                     </div>
                 </div>
             </div>

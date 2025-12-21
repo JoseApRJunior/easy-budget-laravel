@@ -12,7 +12,7 @@ class StoreCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can( 'manage-custom-categories' );
+        return auth()->check();
     }
 
     public function rules(): array
