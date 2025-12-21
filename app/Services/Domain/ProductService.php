@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
@@ -21,14 +22,121 @@ use Illuminate\Support\Str;
  *
  * Centraliza a regra de negócios e delega a persistência ao ProductRepository.
  * Mantém isolamento entre Controller e Model/Database.
+ * Implementa a arquitetura padronizada com validação robusta e operações transacionais.
+ *
+ * @property ProductRepository $repository
  */
 class ProductService extends AbstractBaseService
 {
-    private ProductRepository $productRepository;
-
-    public function __construct( ProductRepository $productRepository )
+    public function __construct( ProductRepository $repository )
     {
-        $this->productRepository = $productRepository;
+        parent::__construct( $repository );
+    }
+
+    protected function getSupportedFilters(): array
+    {
+        return [ 'id', 'name', 'sku', 'price', 'active', 'category_id', 'created_at', 'updated_at' ];
+    }
+
+    /**
+     * Gera SKU único para o tenant.
+     */
+    public function generateUniqueSku( int $tenantId ): string
+    {
+        return DB::transaction( function () use ($tenantId) {
+            $lastProduct = Product::where( 'tenant_id', $tenantId )
+                ->where( 'sku', 'LIKE', 'PROD%' )
+                ->orderByDesc( 'sku' )
+                ->lockForUpdate()
+                ->first();
+
+            if ( !$lastProduct || !preg_match( '/^PROD(\d{6})$/', $lastProduct->sku, $matches ) ) {
+                return 'PROD000001';
+            }
+
+            $nextNumber = (int) $matches[ 1 ] + 1;
+
+            return 'PROD' . str_pad( (string) $nextNumber, 6, '0', STR_PAD_LEFT );
+        } );
+    }
+
+    /**
+     * Valida dados do produto.
+     */
+    public function validate( array $data, bool $isUpdate = false ): ServiceResult
+    {
+        $rules = [
+            'name'        => 'required|string|max:255',
+            'price'       => 'required|numeric|min:0',
+            'active'      => 'boolean',
+            'category_id' => 'nullable|exists:categories,id',
+            'image'       => 'nullable|image|max:2048',
+        ];
+
+        if ( $isUpdate ) {
+            $rules[ 'sku' ] = 'string|max:50|unique:products,sku,' . ( $data[ 'id' ] ?? 'null' ) . ',id,tenant_id,' . $this->tenantId();
+        } else {
+            $rules[ 'sku' ] = 'string|max:50|unique:products,sku,NULL,id,tenant_id,' . $this->tenantId();
+        }
+
+        $validator = Validator::make( $data, $rules );
+
+        if ( $validator->fails() ) {
+            return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $validator->errors()->all() ) );
+        }
+
+        return $this->success( $data );
+    }
+
+    /**
+     * Normaliza filtros do request para formato aceito pelo repository.
+     */
+    private function normalizeFilters( array $filters ): array
+    {
+        $normalized = [];
+
+        // Status filter
+        if ( isset( $filters[ 'active' ] ) && $filters[ 'active' ] !== '' && $filters[ 'active' ] !== null ) {
+            $normalized[ 'active' ] = (string) $filters[ 'active' ] === '1' || $filters[ 'active' ] === 1;
+        }
+
+        // Search filters
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $normalized[ 'search' ] = (string) $filters[ 'search' ];
+        }
+
+        if ( !empty( $filters[ 'name' ] ) ) {
+            $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
+        }
+
+        if ( !empty( $filters[ 'sku' ] ) ) {
+            $normalized[ 'sku' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'sku' ] . '%' ];
+        }
+
+        // Price filters
+        if ( isset( $filters[ 'min_price' ] ) && $filters[ 'min_price' ] !== null ) {
+            $normalized[ 'min_price' ] = $filters[ 'min_price' ];
+        }
+
+        if ( isset( $filters[ 'max_price' ] ) && $filters[ 'max_price' ] !== null ) {
+            $normalized[ 'max_price' ] = $filters[ 'max_price' ];
+        }
+
+        // Category filter
+        if ( !empty( $filters[ 'category_id' ] ) ) {
+            $normalized[ 'category_id' ] = $filters[ 'category_id' ];
+        }
+
+        // Soft delete filter
+        if ( array_key_exists( 'deleted', $filters ) ) {
+            $normalized[ 'deleted' ] = match ( $filters[ 'deleted' ] ) {
+                'only', '1'    => 'only',
+                'current', '0' => 'current',
+                default        => '',
+            };
+        }
+
+        return $normalized;
     }
 
     /**
@@ -36,7 +144,7 @@ class ProductService extends AbstractBaseService
      */
     public function getTotalCount(): int
     {
-        return $this->productRepository->countByTenant();
+        return $this->repository->countByTenant();
     }
 
     /**
@@ -44,7 +152,7 @@ class ProductService extends AbstractBaseService
      */
     public function getActiveCount(): int
     {
-        return $this->productRepository->countActiveByTenant();
+        return $this->repository->countActiveByTenant();
     }
 
     /**
@@ -54,7 +162,7 @@ class ProductService extends AbstractBaseService
     {
         // Obtém produtos recentes do repositório
         // Nota: O método do repositório já aplica ordenação por created_at desc
-        $products = $this->productRepository->getRecentByTenant( $limit );
+        $products = $this->repository->getRecentByTenant( $limit );
 
         // Carrega relacionamentos se solicitados
         if ( !empty( $with ) ) {
@@ -70,9 +178,9 @@ class ProductService extends AbstractBaseService
     public function getActive(): Collection
     {
         try {
-            return $this->productRepository->getAllByTenant(
+            return $this->repository->getAllByTenant(
                 [ 'active' => true ],
-                [ 'name' => 'asc' ]
+                [ 'name' => 'asc' ],
             );
         } catch ( Exception $e ) {
             Log::error( 'Erro ao buscar produtos ativos', [
@@ -85,7 +193,7 @@ class ProductService extends AbstractBaseService
     public function findBySku( string $sku, array $with = [] ): ServiceResult
     {
         try {
-            $product = $this->productRepository->findBySku( $sku, $with );
+            $product = $this->repository->findBySku( $sku, $with );
 
             if ( !$product ) {
                 return $this->error(
@@ -106,68 +214,44 @@ class ProductService extends AbstractBaseService
         }
     }
 
-    public function getFilteredProducts( array $filters = [], array $with = [], int $perPage = 15 ): ServiceResult
-    {
-        try {
-            $products = $this->productRepository->getPaginated( $filters, $perPage, $with );
-
-            return $this->success( $products, 'Produtos filtrados' );
-
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao filtrar produtos',
-                null,
-                $e,
-            );
-        }
-    }
-
     /**
      * Cria um novo produto.
      */
     public function createProduct( array $data ): ServiceResult
     {
-        try {
-            return DB::transaction( function () use ($data) {
-                // Gerar SKU se não fornecido
-                if ( empty( $data[ 'sku' ] ) ) {
-                    $data[ 'sku' ] = $this->generateUniqueSku();
-                }
+        return $this->safeExecute( function () use ($data) {
+            $tenantId = $this->ensureTenantId();
 
-                // Processar imagem
-                if ( isset( $data[ 'image' ] ) ) {
-                    $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
-                }
+            if ( isset( $data[ 'name' ] ) ) {
+                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            }
 
-                if ( empty( $data[ 'tenant_id' ] ) ) {
-                    /** @var \App\Models\User $user */
-                    $user = auth()->user();
-                    $resolvedTenantId = $user->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
-                    $data[ 'tenant_id' ] = $resolvedTenantId;
-                }
+            if ( empty( $data[ 'sku' ] ) ) {
+                $data[ 'sku' ] = $this->generateUniqueSku( $tenantId );
+            }
 
-                $product = $this->productRepository->create( $data );
+            // Processar imagem
+            if ( isset( $data[ 'image' ] ) ) {
+                $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
+            }
 
-                // Criar registro de inventário automaticamente
-                \App\Models\ProductInventory::create( [
-                    'tenant_id'    => $product->tenant_id,
-                    'product_id'   => $product->id,
-                    'quantity'     => 0,
-                    'min_quantity' => 0,
-                    'max_quantity' => null,
-                ] );
+            if ( empty( $data[ 'tenant_id' ] ) ) {
+                $data[ 'tenant_id' ] = $tenantId;
+            }
 
-                return $this->success( $product, 'Produto criado com sucesso' );
-            } );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao criar produto',
-                null,
-                $e,
-            );
-        }
+            $product = $this->repository->create( $data );
+
+            // Criar registro de inventário automaticamente
+            \App\Models\ProductInventory::create( [
+                'tenant_id'    => $product->tenant_id,
+                'product_id'   => $product->id,
+                'quantity'     => 0,
+                'min_quantity' => 0,
+                'max_quantity' => null,
+            ] );
+
+            return $this->success( $product, 'Produto criado com sucesso' );
+        }, 'Erro ao criar produto.' );
     }
 
     /**
@@ -175,263 +259,209 @@ class ProductService extends AbstractBaseService
      */
     public function updateProductBySku( string $sku, array $data ): ServiceResult
     {
-        try {
-            return DB::transaction( function () use ($sku, $data) {
-                // Busca usando repositório (garante tenant context se o repo estiver configurado corretamente,
-                // mas findBySku é custom e pode precisar de verificação extra se o SKU for global?)
-                // Assumindo que findBySku retorna apenas se pertencer ao tenant, ou se SKU for único globalmente.
-                $product = $this->productRepository->findBySku( $sku );
+        return $this->safeExecute( function () use ($sku, $data) {
+            $ownerResult = $this->findAndVerifyOwnership( $sku );
+            if ( $ownerResult->isError() ) return $ownerResult;
 
-                if ( !$product ) {
-                    return $this->error(
-                        OperationStatus::NOT_FOUND,
-                        "Produto com SKU {$sku} não encontrado",
-                    );
+            $product = $ownerResult->getData();
+
+            if ( isset( $data[ 'name' ] ) ) {
+                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            }
+
+            if ( isset( $data[ 'name' ] ) && empty( $data[ 'sku' ] ) ) {
+                $data[ 'sku' ] = $this->generateUniqueSku( $this->tenantId() );
+            }
+
+            // Remover imagem existente se solicitado
+            if ( isset( $data[ 'remove_image' ] ) && $data[ 'remove_image' ] && $product->image ) {
+                $relative = $this->resolveRelativeStoragePath( $product->image );
+                if ( $relative ) {
+                    Storage::disk( 'public' )->delete( $relative );
                 }
+                $data[ 'image' ] = null;
+            }
 
-                // TODO: Validar se produto pertence ao tenant (se repository.findBySku não garantir)
-                // $this->productRepository->find($product->id) garantiria.
-
-                // Remover imagem existente se solicitado
-                if ( isset( $data[ 'remove_image' ] ) && $data[ 'remove_image' ] && $product->image ) {
-                    $relative = $this->resolveRelativeStoragePath( $product->image );
-                    if ( $relative ) {
-                        Storage::disk( 'public' )->delete( $relative );
-                    }
-                    $data[ 'image' ] = null;
-                }
-
-                // Processar nova imagem se fornecida
-                if ( isset( $data[ 'image' ] ) && is_a( $data[ 'image' ], 'Illuminate\Http\UploadedFile' ) ) {
-                    // Deletar imagem antiga se existir
-                    if ( $product->image ) {
-                        $relative = $this->resolveRelativeStoragePath( $product->image );
-                        if ( $relative ) {
-                            Storage::disk( 'public' )->delete( $relative );
-                        }
-                    }
-                    $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
-                } else if ( isset( $data[ 'image' ] ) && $data[ 'image' ] === null ) {
-                    if ( $product->image ) {
-                        $relative = $this->resolveRelativeStoragePath( $product->image );
-                        if ( $relative ) {
-                            Storage::disk( 'public' )->delete( $relative );
-                        }
-                    }
-                    $data[ 'image' ] = null;
-                } else {
-                    unset( $data[ 'image' ] );
-                }
-
-                $product = $this->productRepository->update( $product->id, $data );
-
-                return $this->success( $product, 'Produto atualizado com sucesso' );
-            } );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao atualizar produto',
-                null,
-                $e,
-            );
-        }
-    }
-
-    public function toggleProductStatus( string $sku ): ServiceResult
-    {
-        try {
-            return DB::transaction( function () use ($sku) {
-                $product = $this->productRepository->findBySku( $sku );
-
-                if ( !$product ) {
-                    return $this->error(
-                        OperationStatus::NOT_FOUND,
-                        "Produto com SKU {$sku} não encontrado",
-                    );
-                }
-
-                if ( !$this->productRepository->canBeDeactivatedOrDeleted( $product->id ) ) {
-                    return $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        'Produto não pode ser desativado/ativado pois está em uso em serviços.',
-                    );
-                }
-
-                $newStatus = !$product->active;
-                $product   = $this->productRepository->update( $product->id, [ 'active' => $newStatus ] );
-
-                $message = $newStatus ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
-                return $this->success( $product, $message );
-            } );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao alterar status do produto',
-                null,
-                $e,
-            );
-        }
-    }
-
-    public function deleteProductBySku( string $sku ): ServiceResult
-    {
-        try {
-            return DB::transaction( function () use ($sku) {
-                $product = $this->productRepository->findBySku( $sku );
-
-                if ( !$product ) {
-                    return $this->error(
-                        OperationStatus::NOT_FOUND,
-                        "Produto com SKU {$sku} não encontrado",
-                    );
-                }
-
-                if ( !$this->productRepository->canBeDeactivatedOrDeleted( $product->id ) ) {
-                    return $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        'Produto não pode ser excluído pois está em uso em serviços.',
-                    );
-                }
-
-                // Deletar imagem física se existir
+            // Processar nova imagem se fornecida
+            if ( isset( $data[ 'image' ] ) && is_a( $data[ 'image' ], 'Illuminate\Http\UploadedFile' ) ) {
+                // Deletar imagem antiga se existir
                 if ( $product->image ) {
                     $relative = $this->resolveRelativeStoragePath( $product->image );
                     if ( $relative ) {
                         Storage::disk( 'public' )->delete( $relative );
                     }
                 }
+                $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
+            } else if ( isset( $data[ 'image' ] ) && $data[ 'image' ] === null ) {
+                if ( $product->image ) {
+                    $relative = $this->resolveRelativeStoragePath( $product->image );
+                    if ( $relative ) {
+                        Storage::disk( 'public' )->delete( $relative );
+                    }
+                }
+                $data[ 'image' ] = null;
+            } else {
+                unset( $data[ 'image' ] );
+            }
 
-                $this->productRepository->delete( $product->id );
+            $product = $this->repository->update( $product->id, $data );
 
-                return $this->success( null, 'Produto excluído com sucesso' );
-            } );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao excluir produto',
-                null,
-                $e,
-            );
-        }
+            return $this->success( $product, 'Produto atualizado com sucesso' );
+        }, 'Erro ao atualizar produto.' );
     }
 
-    public function getDeletedProducts( array $filters = [], array $with = [], int $perPage = 15 ): ServiceResult
+    public function toggleProductStatus( string $sku ): ServiceResult
     {
-        try {
-            // Usa método herdado do AbstractTenantRepository que suporta OnlyTrashed
-            $products = $this->productRepository->getDeletedByTenant( $filters, null, $perPage );
+        return $this->safeExecute( function () use ($sku) {
+            $ownerResult = $this->findAndVerifyOwnership( $sku );
+            if ( $ownerResult->isError() ) return $ownerResult;
 
-            // Nota: O repo pode retornar Collection ou Paginator dependendo da implementação do pai.
-            // AbstractTenantRepository::getDeletedByTenant geralmente retorna Collection se não passar limite/page?
-            // Mas no CategoryRepository ele retorna Collection.
-            // Se eu quero Paginado, AbstractTenantRepository::getDeletedByTenant pode não paginar por padrão.
-            // Olhando CategoryRepository::getDeletedCategories, ele não pagina.
-            // Mas o Controller de Produtos espera Paginator?
-            // O request tem per_page.
-            // Se getDeletedByTenant não paginar, o controller vai falhar ou a view vai falhar na paginação.
+            $product = $ownerResult->getData();
 
-            // Correção: Se AbstractTenantRepository não tiver método paginado para deleted,
-            // uso a implementação manual via repository->getPaginated com filtro 'deleted' => 'only'?
-            // Não, getPaginated (refatorado) tem applySoftDeleteFilter que checa $filters['deleted'].
-            // Então getPaginated resolve tudo!
+            if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
+                return $this->error(
+                    OperationStatus::VALIDATION_ERROR,
+                    'Produto não pode ser desativado/ativado pois está em uso em serviços.',
+                );
+            }
 
-            // Então posso substituir tudo por getPaginated!
-            $filters['deleted'] = 'only';
-            $products = $this->productRepository->getPaginated($filters, $perPage, $with);
+            $newStatus = !$product->active;
+            $product   = $this->repository->update( $product->id, [ 'active' => $newStatus ] );
 
-            return $this->success( $products, 'Produtos deletados carregados' );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao carregar produtos deletados',
-                null,
-                $e,
+            $message = $newStatus ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
+            return $this->success( $product, $message );
+        }, 'Erro ao alterar status do produto.' );
+    }
+
+    public function deleteProductBySku( string $sku ): ServiceResult
+    {
+        return $this->safeExecute( function () use ($sku) {
+            $ownerResult = $this->findAndVerifyOwnership( $sku );
+            if ( $ownerResult->isError() ) return $ownerResult;
+
+            $product = $ownerResult->getData();
+
+            if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
+                return $this->error(
+                    OperationStatus::VALIDATION_ERROR,
+                    'Produto não pode ser excluído pois está em uso em serviços.',
+                );
+            }
+
+            // Deletar imagem física se existir
+            if ( $product->image ) {
+                $relative = $this->resolveRelativeStoragePath( $product->image );
+                if ( $relative ) {
+                    Storage::disk( 'public' )->delete( $relative );
+                }
+            }
+
+            $this->repository->delete( $product->id );
+
+            return $this->success( null, 'Produto excluído com sucesso' );
+        }, 'Erro ao excluir produto.' );
+    }
+
+    public function getDeleted( array $filters = [], array $with = [], int $perPage = 15 ): ServiceResult
+    {
+        return $this->safeExecute( function () use ($filters, $with, $perPage) {
+            if ( !$this->tenantId() ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+            }
+
+            $filters[ 'deleted' ] = 'only';
+            $paginator            = $this->repository->getPaginated(
+                $this->normalizeFilters( $filters ),
+                $perPage,
+                $with,
             );
-        }
+
+            Log::info( 'Produtos deletados carregados', [ 'total' => $paginator->total() ] );
+            return $paginator;
+        }, 'Erro ao carregar produtos deletados.' );
     }
 
     public function restoreProductBySku( string $sku ): ServiceResult
     {
-        try {
-            // Busca incluindo deletados
-            $product = $this->productRepository->findBySku($sku); // findBySku do repo não traz trashed por padrão
-
-            // Preciso buscar trashed.
-            // ProductRepository deve ter método findTrashedBySku? Ou usar query manual.
-            /** @var Product|null $product */
-            $product = Product::onlyTrashed()->where( 'sku', $sku )->first(); // TODO: Adicionar tenant scope aqui
+        return $this->safeExecute( function () use ($sku) {
+            $tenantId = $this->ensureTenantId();
+            $product  = Product::onlyTrashed()
+                ->where( 'tenant_id', $tenantId )
+                ->where( 'sku', $sku )
+                ->first();
 
             if ( !$product ) {
-                return $this->error(
-                    OperationStatus::NOT_FOUND,
-                    "Produto deletado com SKU {$sku} não encontrado",
-                );
+                return $this->error( OperationStatus::NOT_FOUND, 'Produto não encontrado ou não está excluído' );
             }
 
-            // TODO: check tenant owner
-
             $product->restore();
-
             return $this->success( $product, 'Produto restaurado com sucesso' );
-        } catch ( Exception $e ) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao restaurar produto',
-                null,
-                $e,
-            );
-        }
+        }, 'Erro ao restaurar produto.' );
     }
 
     // Método para dashboard
     public function getDashboardData( ?int $tenantId = null ): ServiceResult
     {
-        try {
-            // Repositorio usa contexto tenant automaticamente
+        return $this->safeExecute( function () {
             $stats = [
-                'total_products'    => $this->productRepository->countByTenant(),
-                'active_products'   => $this->productRepository->countActiveByTenant(),
-                'inactive_products' => $this->productRepository->countByTenant( [ 'active' => false ] ),
-                'deleted_products'  => $this->productRepository->countOnlyTrashedByTenant(),
+                'total_products'    => $this->repository->countByTenant(),
+                'active_products'   => $this->repository->countActiveByTenant(),
+                'inactive_products' => $this->repository->countByTenant( [ 'active' => false ] ),
+                'deleted_products'  => $this->repository->countOnlyTrashedByTenant(),
                 'recent_products'   => $this->getRecentProducts( 5, [ 'category' ] ), // Usa método do service
             ];
 
             return $this->success( $stats, 'Estatísticas obtidas com sucesso' );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao obter estatísticas de produtos', [ 'error' => $e->getMessage() ] );
-            return $this->error( OperationStatus::ERROR, 'Erro ao obter estatísticas', null, $e );
-        }
+        }, 'Erro ao obter estatísticas de produtos.' );
     }
 
-    /**
-     * Gera SKU único sequencial.
-     */
-    private function generateUniqueSku(): string
+    public function getFilteredProducts( array $filters = [], array $with = [], int $perPage = 15 ): ServiceResult
     {
-        // TODO: Movel para repositório
-        return DB::transaction( function () {
-            $lastProduct = Product::where( 'sku', 'LIKE', 'PROD%' )
-                ->orderByDesc( 'sku' )
-                ->lockForUpdate()
-                ->first();
-
-            if ( !$lastProduct || !preg_match( '/^PROD(\d{6})$/', $lastProduct->sku, $matches ) ) {
-                return 'PROD000001';
+        return $this->safeExecute( function () use ($filters, $with, $perPage) {
+            if ( !$this->tenantId() ) {
+                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
 
-            $nextNumber = (int) $matches[ 1 ] + 1;
+            $paginator = $this->repository->getPaginated(
+                $this->normalizeFilters( $filters ),
+                $perPage,
+                $with,
+            );
 
-            return 'PROD' . str_pad( (string) $nextNumber, 6, '0', STR_PAD_LEFT );
-        } );
+            Log::info( 'Produtos carregados', [ 'total' => $paginator->total() ] );
+            return $paginator;
+        }, 'Erro ao carregar produtos.' );
+    }
+
+    // --- Auxiliares Privados ---
+
+    private function ensureTenantId(): int
+    {
+        $id = $this->tenantId();
+        if ( !$id ) {
+            throw new Exception( 'Tenant não identificado' );
+        }
+        return $id;
+    }
+
+    private function findAndVerifyOwnership( string $sku ): ServiceResult
+    {
+        $result = $this->findBySku( $sku );
+        if ( $result->isError() ) return $result;
+
+        $product = $result->getData();
+        if ( $product->tenant_id !== $this->tenantId() ) {
+            return $this->error( OperationStatus::UNAUTHORIZED, 'Produto não pertence ao tenant atual' );
+        }
+
+        return $this->success( $product );
     }
 
     private function uploadProductImage( $imageFile ): ?string
     {
         if ( !$imageFile ) return null;
 
-        /** @var \App\Models\User $user */
-        $user = auth()->user();
-        $tenantId = $user->tenant_id ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+        $tenantId = $this->tenantId();
         $path     = 'products/' . ( $tenantId ?? 'unknown' );
         $filename = Str::random( 40 ) . '.' . $imageFile->getClientOriginalExtension();
 
@@ -452,4 +482,5 @@ class ProductService extends AbstractBaseService
         }
         return $trimmed;
     }
+
 }

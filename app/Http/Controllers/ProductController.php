@@ -8,14 +8,11 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Services\Domain\CategoryService;
-use App\Services\Domain\ProductService;
 use App\Services\Domain\ProductExportService;
-use Exception;
+use App\Services\Domain\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -26,273 +23,11 @@ use Illuminate\View\View;
  */
 class ProductController extends Controller
 {
-    private ProductService $productService;
-    private ProductExportService $productExportService;
-
-    private CategoryService $categoryService;
-
-    private function normalizeCurrencyFilter( ?string $val ): ?float
-    {
-        if ( $val === null ) return null;
-        $digits = preg_replace( '/[^0-9]/', '', $val );
-        if ( $digits === null || $digits === '' ) return null;
-        if ( strlen( $digits ) === 1 ) $digits = '0' . $digits;
-        $intPart    = substr( $digits, 0, -2 );
-        $decPart    = substr( $digits, -2 );
-        $normalized = ( $intPart !== '' ? $intPart : '0' ) . '.' . $decPart;
-        return (float) $normalized;
-    }
-
     public function __construct(
-        ProductService $productService,
-        CategoryService $categoryService,
-        ProductExportService $productExportService
-    ) {
-        $this->productService       = $productService;
-        $this->categoryService      = $categoryService;
-        $this->productExportService = $productExportService;
-    }
-
-    /**
-     * Lista de produtos com filtros avançados.
-     *
-     * Rota: products.index
-     */
-    public function index( Request $request ): View
-    {
-        // Limpa filtros vazios para evitar queries quebradas e arrays incorretos
-        $filters = array_filter(
-            $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] ),
-            fn( $value ) => $value !== null && $value !== ''
-        );
-
-        // Normalização de preços (se vier formatado do front)
-        if ( isset( $filters[ 'min_price' ] ) ) {
-            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
-        }
-        if ( isset( $filters[ 'max_price' ] ) ) {
-            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
-        }
-
-        $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
-        $allowedPerPage = [ 10, 20, 50 ];
-        if ( !in_array( $perPage, $allowedPerPage, true ) ) {
-            $perPage = 10;
-        }
-        // Garante per_page no array final para uso na paginação
-        $filters[ 'per_page' ] = $perPage;
-
-        try {
-            // Remove per_page da verificação de filtros ativos
-            $effectiveFilters = array_diff_key( $filters, [ 'per_page' => 0 ] );
-
-            // Carrega se tiver filtros reais OU se o usuário pediu explicitamente "all"
-            if ( !empty( $effectiveFilters ) || $request->has( 'all' ) ) {
-                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
-
-                $result = $showOnlyTrashed
-                    ? $this->productService->getDeletedProducts( $filters, [ 'category' ], $perPage )
-                    : $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
-            } else {
-                $result = $this->emptyResult();
-            }
-
-            return $this->view( 'pages.product.index', $result, 'products', [
-                'filters'    => $filters,
-                'categories' => $this->categoryService->getActiveCategories()->getData(),
-            ] );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao carregar produtos', [ 'error' => $e->getMessage() ] );
-            abort( 500, 'Erro ao carregar produtos' );
-        }
-    }
-
-    /**
-     * Formulário de criação de produto.
-     *
-     * Rota: products.create
-     */
-    public function create(): View
-    {
-        try {
-            return view( 'pages.product.create', [
-                'categories' => $this->categoryService->getActiveCategories()->getData(),
-            ] );
-        } catch ( Exception ) {
-            abort( 500, 'Erro ao carregar formulário de criação de produto' );
-        }
-    }
-
-    /**
-     * Armazena um novo produto.
-     *
-     * Rota: products.store
-     */
-    public function store( ProductStoreRequest $request ): RedirectResponse
-    {
-        try {
-            $result = $this->productService->createProduct( $request->validated() );
-
-            if ( !$result->isSuccess() ) {
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->with( 'error', $result->getMessage() );
-            }
-
-            return redirect()
-                ->route( 'provider.products.create' )
-                ->with( 'success', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
-        } catch ( Exception $e ) {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with( 'error', 'Erro ao criar produto: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Detalhes de um produto por SKU.
-     *
-     * Rota: products.show
-     */
-    public function show( string $sku ): View
-    {
-        try {
-            $result = $this->productService->findBySku( $sku, [ 'category.parent', 'productInventory' ] );
-
-            if ( !$result->isSuccess() ) {
-                abort( 404, 'Produto não encontrado' );
-            }
-
-            return view( 'pages.product.show', [
-                'product' => $result->getData(),
-            ] );
-        } catch ( Exception ) {
-            abort( 500, 'Erro ao carregar detalhes do produto' );
-        }
-    }
-
-    /**
-     * Formulário de edição de produto por SKU.
-     *
-     * Rota: products.edit
-     */
-    public function edit( string $sku ): View
-    {
-        try {
-            $result = $this->productService->findBySku( $sku, [ 'category' ] );
-
-            if ( !$result->isSuccess() ) {
-                abort( 404, 'Produto não encontrado' );
-            }
-
-            return view( 'pages.product.edit', [
-                'product'    => $result->getData(),
-                'categories' => $this->categoryService->getActiveCategories()->getData(),
-            ] );
-        } catch ( Exception ) {
-            abort( 500, 'Erro ao carregar formulário de edição de produto' );
-        }
-    }
-
-    /**
-     * Atualiza um produto por SKU.
-     *
-     * Rota: products.update
-     */
-    public function update( string $sku, ProductUpdateRequest $request ): RedirectResponse
-    {
-        try {
-            $result = $this->productService->updateProductBySku( $sku, $request->validated() );
-
-            if ( !$result->isSuccess() ) {
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->with( 'error', $result->getMessage() );
-            }
-
-            $product = $result->getData();
-
-            return redirect()
-                ->route( 'provider.products.show', $product->sku )
-                ->with( 'success', 'Produto atualizado com sucesso!' );
-        } catch ( Exception $e ) {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with( 'error', 'Erro ao atualizar produto: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Alterna status (ativo/inativo) de um produto via SKU.
-     *
-     * Rota: products.toggle-status (PATCH)
-     */
-    public function toggle_status( string $sku, Request $request )
-    {
-        try {
-            $result = $this->productService->toggleProductStatus( $sku );
-
-            if ( !$result->isSuccess() ) {
-                if ( $request->ajax() || $request->wantsJson() ) {
-                    return response()->json( [
-                        'success' => false,
-                        'message' => $result->getMessage(),
-                    ], 400 );
-                }
-                return redirect()->back()->with( 'error', $result->getMessage() );
-            }
-
-            if ( $request->ajax() || $request->wantsJson() ) {
-                return response()->json( [
-                    'success' => true,
-                    'message' => $result->getMessage(),
-                ] );
-            }
-
-            $product = $result->getData();
-            return redirect()
-                ->route( 'provider.products.show', $product->sku )
-                ->with( 'success', $result->getMessage() );
-        } catch ( Exception $e ) {
-            if ( $request->ajax() || $request->wantsJson() ) {
-                return response()->json( [
-                    'success' => false,
-                    'message' => 'Erro ao alterar status do produto: ' . $e->getMessage(),
-                ], 500 );
-            }
-            return redirect()->back()->with( 'error', 'Erro ao alterar status do produto: ' . $e->getMessage() );
-        }
-    }
-
-    /**
-     * Exclui um produto por SKU.
-     *
-     * Rota: products.destroy (DELETE)
-     */
-    public function delete_store( string $sku ): RedirectResponse
-    {
-        try {
-            $result = $this->productService->deleteProductBySku( $sku );
-
-            if ( !$result->isSuccess() ) {
-                return redirect()
-                    ->back()
-                    ->with( 'error', $result->getMessage() );
-            }
-
-            return redirect()
-                ->route( 'provider.products.index' )
-                ->with( 'success', 'Produto excluído com sucesso!' );
-        } catch ( Exception $e ) {
-            return redirect()
-                ->back()
-                ->with( 'error', 'Erro ao excluir produto: ' . $e->getMessage() );
-        }
-    }
+        private ProductService $productService,
+        private CategoryService $categoryService,
+        private ProductExportService $productExportService,
+    ) {}
 
     /**
      * Dashboard de Produtos.
@@ -303,18 +38,166 @@ class ProductController extends Controller
      */
     public function dashboard()
     {
-        $result = $this->productService->getDashboardData();
+        return $this->view( 'pages.product.dashboard', $this->productService->getDashboardData(), 'stats' );
+    }
+
+    /**
+     * Lista de produtos com filtros avançados.
+     *
+     * Rota: products.index
+     */
+    public function index( Request $request ): View
+    {
+        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page', 'all' ] );
+
+        // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
+        // O helper $this->view lida com o ServiceResult automaticamente
+        if ( empty( $request->query() ) ) {
+            $result = $this->emptyResult();
+        } else {
+            $perPage = (int) ( $filters[ 'per_page' ] ?? 10 );
+            $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
+        }
+
+        return $this->view( 'pages.product.index', $result, 'products', [
+            'filters'    => $filters,
+            'categories' => $this->categoryService->getActive()->getData(),
+        ] );
+    }
+
+    /**
+     * Formulário de criação de produto.
+     *
+     * Rota: products.create
+     */
+    public function create(): View
+    {
+        $result = $this->categoryService->getActive();
+
+        return $this->view( 'pages.product.create', $result, 'categories', [
+            'defaults' => [ 'is_active' => true ],
+        ] );
+    }
+
+    /**
+     * Armazena um novo produto.
+     *
+     * Rota: products.store
+     */
+    public function store( ProductStoreRequest $request ): RedirectResponse
+    {
+        $result = $this->productService->createProduct( $request->validated() );
 
         if ( !$result->isSuccess() ) {
-            return view( 'pages.product.dashboard', [
-                'stats' => [],
-                'error' => $result->getMessage(),
+            return $this->redirectBackWithServiceResult( $result, 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
+        }
+
+        return $this->redirectSuccess( 'provider.products.create', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
+    }
+
+    /**
+     * Detalhes de um produto por SKU.
+     *
+     * Rota: products.show
+     */
+    public function show( string $sku ): View
+    {
+        $result = $this->productService->findBySku( $sku, [ 'category.parent', 'productInventory' ] );
+
+        return $this->view( 'pages.product.show', $result, 'product' );
+    }
+
+    /**
+     * Formulário de edição de produto por SKU.
+     *
+     * Rota: products.edit
+     */
+    public function edit( string $sku ): View
+    {
+        $result = $this->productService->findBySku( $sku, [ 'category' ] );
+
+        if ( $result->isError() ) {
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        }
+
+        $product      = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
+        $parentResult = $this->categoryService->getActive();
+
+        $categories = $parentResult->isSuccess()
+            ? $parentResult->getData()->filter( fn( $p ) => $p->id !== $product->id )
+            : collect();
+
+        return view( 'pages.product.edit', compact( 'product', 'categories' ) );
+    }
+
+    /**
+     * Atualiza um produto por SKU.
+     *
+     * Rota: products.update
+     */
+    public function update( string $sku, ProductUpdateRequest $request ): RedirectResponse
+    {
+        $result = $this->productService->updateProductBySku( $sku, $request->validated() );
+
+        if ( !$result->isSuccess() ) {
+            return $this->redirectBackWithServiceResult( $result, 'Produto atualizado com sucesso!' );
+        }
+
+        $product = $result->getData();
+
+        return $this->redirectSuccess( 'provider.products.show', $product->sku, 'Produto atualizado com sucesso!' );
+    }
+
+    /**
+     * Alterna status (ativo/inativo) de um produto via SKU.
+     *
+     * Rota: products.toggle-status (PATCH)
+     */
+    public function toggle_status( string $sku, Request $request )
+    {
+        $result = $this->productService->toggleProductStatus( $sku );
+
+        if ( !$result->isSuccess() ) {
+            if ( $request->ajax() || $request->wantsJson() ) {
+                return response()->json( [
+                    'success' => false,
+                    'message' => $result->getMessage(),
+                ], 400 );
+            }
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        }
+
+        if ( $request->ajax() || $request->wantsJson() ) {
+            return response()->json( [
+                'success' => true,
+                'message' => $result->getMessage(),
             ] );
         }
 
-        return view( 'pages.product.dashboard', [
-            'stats' => $result->getData(),
-        ] );
+        $product = $result->getData();
+        return $this->redirectSuccess( 'provider.products.show', $product->sku, $result->getMessage() );
+    }
+
+    /**
+     * Exclui um produto por SKU.
+     *
+     * Rota: products.destroy (DELETE)
+     */
+    public function destroy( string $sku ): RedirectResponse
+    {
+        $result = $this->productService->deleteProductBySku( $sku );
+
+        return $this->redirectWithServiceResult( 'provider.products.index', $result );
+    }
+
+    /**
+     * Exclui um produto por SKU (método alternativo mantido para compatibilidade).
+     *
+     * Rota: products.delete_store (DELETE)
+     */
+    public function delete_store( string $sku ): RedirectResponse
+    {
+        return $this->destroy( $sku );
     }
 
     /**
@@ -324,23 +207,46 @@ class ProductController extends Controller
      */
     public function restore( string $sku ): RedirectResponse
     {
-        try {
-            $result = $this->productService->restoreProductBySku( $sku );
+        $result = $this->productService->restoreProductBySku( $sku );
 
-            if ( !$result->isSuccess() ) {
-                return redirect()
-                    ->route( 'provider.products.index' )
-                    ->with( 'error', $result->getMessage() );
-            }
+        return $this->redirectWithServiceResult( 'provider.products.index', $result );
+    }
 
-            return redirect()
-                ->route( 'provider.products.index' )
-                ->with( 'success', 'Produto restaurado com sucesso!' );
-        } catch ( Exception $e ) {
-            return redirect()
-                ->route( 'provider.products.index' )
-                ->with( 'error', 'Erro ao restaurar produto: ' . $e->getMessage() );
+    /**
+     * Métodos de conveniência que delegam ao index com filtros pré-definidos.
+     */
+    public function search( Request $request ): View
+    {
+        return $this->index( $request );
+    }
+
+    public function active( Request $request ): View
+    {
+        $request->merge( [ 'active' => '1' ] );
+        return $this->index( $request );
+    }
+
+    public function deleted( Request $request ): View
+    {
+        $request->merge( [ 'deleted' => 'only' ] );
+        return $this->index( $request );
+    }
+
+    public function restoreMultiple( Request $request ): RedirectResponse
+    {
+        $ids = $request->input( 'ids', [] );
+
+        if ( empty( $ids ) ) {
+            return $this->redirectError( 'provider.products.index', 'Nenhum produto selecionado para restauração.' );
         }
+
+        $result = $this->productService->restoreProducts( $ids );
+
+        if ( $result->isError() ) {
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        }
+
+        return $this->redirectSuccess( 'provider.products.index', "Restaurados produtos com sucesso." );
     }
 
     /**
@@ -349,17 +255,9 @@ class ProductController extends Controller
     public function ajaxSearch( Request $request ): JsonResponse
     {
         $filters = $request->only( [ 'search', 'active', 'min_price', 'max_price', 'category_id' ] );
-        if ( isset( $filters[ 'min_price' ] ) ) {
-            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
-        }
-        if ( isset( $filters[ 'max_price' ] ) ) {
-            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
-        }
-        $result = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+        $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
-        return $result->isSuccess()
-            ? response()->json( [ 'success' => true, 'data' => $result->getData() ] )
-            : response()->json( [ 'success' => false, 'message' => $result->getMessage() ], 400 );
+        return $this->jsonWithServiceResult( $result );
     }
 
     /**
@@ -369,39 +267,35 @@ class ProductController extends Controller
      */
     public function export( Request $request )
     {
+        $format = $request->get( 'format', 'xlsx' );
+
+        // Captura TODOS os filtros aplicados na listagem (exceto paginação)
         $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
-        $format  = $request->query( 'format', 'xlsx' );
 
-        // Normalização de preços (se vier formatado do front)
-        if ( isset( $filters[ 'min_price' ] ) ) {
-            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
-        }
-        if ( isset( $filters[ 'max_price' ] ) ) {
-            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
-        }
-
-        // Flag especial para ignorar paginação ou pegar muitos itens
-        $perPage = 10000;
-
-        $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
-
-        $result = $showOnlyTrashed
-            ? $this->productService->getDeletedProducts( $filters, [ 'category' ], $perPage )
-            : $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
+        // Busca produtos com os filtros aplicados
+        $result = $this->productService->getFilteredProducts( $filters, [ 'category' ], 1000 );
 
         if ( $result->isError() ) {
-            return redirect()->back()->with( 'error', $result->getMessage() );
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
         }
 
-        // Extrai collection do Paginator
-        $paginator = $result->getData();
-        $products  = collect( $paginator->items() );
+        // Extrai a collection do paginator preservando todos os atributos
+        $paginatorOrCollection = $result->getData();
 
-        if ( $format === 'pdf' ) {
-            return $this->productExportService->exportToPdf( $products );
+        if ( method_exists( $paginatorOrCollection, 'items' ) ) {
+            // É um LengthAwarePaginator - pega os items diretamente
+            $products = collect( $paginatorOrCollection->items() );
+        } elseif ( method_exists( $paginatorOrCollection, 'getCollection' ) ) {
+            // É um Paginator - usa getCollection
+            $products = $paginatorOrCollection->getCollection();
+        } else {
+            // Já é uma Collection
+            $products = $paginatorOrCollection;
         }
 
-        return $this->productExportService->exportToExcel( $products, $format );
+        return $format === 'pdf'
+            ? $this->productExportService->exportToPdf( $products )
+            : $this->productExportService->exportToExcel( $products, $format );
     }
 
 }

@@ -49,7 +49,7 @@ class CategoryController extends Controller
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ( $filters[ 'per_page' ] ?? 10 );
-            $result  = $this->categoryService->getCategories( $filters, $perPage );
+            $result  = $this->categoryService->getFilteredCategories( $filters, $perPage );
         }
 
         return $this->view( 'pages.category.index', $result, 'categories', [

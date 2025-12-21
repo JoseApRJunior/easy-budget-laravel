@@ -70,22 +70,22 @@ class CategoryService extends AbstractBaseService
     /**
      * Lista categorias do tenant com filtros e paginação.
      */
-    public function getCategories( array $filters = [], int $perPage = 10 ): ServiceResult
+    public function getFilteredCategories( array $filters = [], int $perPage = 10 ): ServiceResult
     {
-        return $this->safeExecute(function() use ($filters, $perPage) {
-            if (!$this->tenantId()) {
+        return $this->safeExecute( function () use ($filters, $perPage) {
+            if ( !$this->tenantId() ) {
                 return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
 
             $paginator = $this->repository->getPaginated(
                 $this->normalizeFilters( $filters ),
                 $perPage,
-                [ 'parent' ]
+                [ 'parent' ],
             );
 
             Log::info( 'Categorias carregadas', [ 'total' => $paginator->total() ] );
             return $paginator;
-        }, 'Erro ao carregar categorias.');
+        }, 'Erro ao carregar categorias.' );
     }
 
     /**
@@ -162,7 +162,7 @@ class CategoryService extends AbstractBaseService
      */
     public function createCategory( array $data ): ServiceResult
     {
-        return $this->safeExecute(function() use ($data) {
+        return $this->safeExecute( function () use ($data) {
             $tenantId = $this->ensureTenantId();
 
             if ( isset( $data[ 'name' ] ) ) {
@@ -177,17 +177,17 @@ class CategoryService extends AbstractBaseService
                 return $this->error( OperationStatus::INVALID_DATA, 'Slug já existe neste tenant' );
             }
 
-            if ( !empty($data[ 'parent_id' ]) ) {
+            if ( !empty( $data[ 'parent_id' ] ) ) {
                 $parentResult = $this->validateAndGetParent( (int) $data[ 'parent_id' ], $tenantId );
-                if ($parentResult->isError()) return $parentResult;
+                if ( $parentResult->isError() ) return $parentResult;
 
-                if ( (new Category(['tenant_id' => $tenantId, 'parent_id' => $data['parent_id']]))->wouldCreateCircularReference((int)$data['parent_id']) ) {
+                if ( ( new Category( [ 'tenant_id' => $tenantId, 'parent_id' => $data[ 'parent_id' ] ] ) )->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
                     return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
                 }
             }
 
-            return DB::transaction(fn() => $this->repository->create( array_merge($data, ['tenant_id' => $tenantId]) ));
-        }, 'Erro ao criar categoria.');
+            return DB::transaction( fn() => $this->repository->create( array_merge( $data, [ 'tenant_id' => $tenantId ] ) ) );
+        }, 'Erro ao criar categoria.' );
     }
 
     /**
@@ -195,7 +195,7 @@ class CategoryService extends AbstractBaseService
      */
     public function updateCategory( int $id, array $data ): ServiceResult
     {
-        return $this->safeExecute(function() use ($id, $data) {
+        return $this->safeExecute( function () use ($id, $data) {
             $ownerResult = $this->findAndVerifyOwnership( $id );
             if ( $ownerResult->isError() ) return $ownerResult;
 
@@ -215,13 +215,13 @@ class CategoryService extends AbstractBaseService
                 return $this->error( OperationStatus::INVALID_DATA, 'Slug já existe neste tenant' );
             }
 
-            if ( !empty($data[ 'parent_id' ]) ) {
+            if ( !empty( $data[ 'parent_id' ] ) ) {
                 if ( $data[ 'parent_id' ] == $id ) {
                     return $this->error( OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma' );
                 }
 
                 $parentResult = $this->validateAndGetParent( (int) $data[ 'parent_id' ], $tenantId );
-                if ($parentResult->isError()) return $parentResult;
+                if ( $parentResult->isError() ) return $parentResult;
 
                 if ( $category->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
                     return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
@@ -229,7 +229,7 @@ class CategoryService extends AbstractBaseService
             }
 
             return $this->update( $id, $data );
-        }, 'Erro ao atualizar categoria.');
+        }, 'Erro ao atualizar categoria.' );
     }
 
     /**
@@ -237,7 +237,7 @@ class CategoryService extends AbstractBaseService
      */
     public function deleteCategory( int $id ): ServiceResult
     {
-        return $this->safeExecute(function() use ($id) {
+        return $this->safeExecute( function () use ($id) {
             $ownerResult = $this->findAndVerifyOwnership( $id );
             if ( $ownerResult->isError() ) return $ownerResult;
 
@@ -248,7 +248,7 @@ class CategoryService extends AbstractBaseService
             }
 
             return $this->delete( $id );
-        }, 'Erro ao remover categoria.');
+        }, 'Erro ao remover categoria.' );
     }
 
     /**
@@ -260,35 +260,35 @@ class CategoryService extends AbstractBaseService
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute(fn() =>
-            $this->repository->searchCategories($search, $filters, $orderBy, $limit),
-        'Erro ao buscar categorias.');
+        return $this->safeExecute( fn() =>
+            $this->repository->searchCategories( $search, $filters, $orderBy, $limit ),
+            'Erro ao buscar categorias.' );
     }
 
     /**
      * Busca categorias ativas (não deletadas) do tenant.
      */
-    public function getActiveCategories(
+    public function getActive(
         array $filters = [],
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute(fn() =>
-            $this->repository->getActiveCategories($filters, $orderBy, $limit),
-        'Erro ao buscar categorias ativas.');
+        return $this->safeExecute( fn() =>
+            $this->repository->getActiveCategories( $filters, $orderBy, $limit ),
+            'Erro ao buscar categorias ativas.' );
     }
 
     /**
      * Busca categorias deletadas (soft delete) do tenant.
      */
-    public function getDeletedCategories(
+    public function getDeleted(
         array $filters = [],
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute(fn() =>
-            $this->repository->getDeletedCategories($filters, $orderBy, $limit),
-        'Erro ao buscar categorias deletadas.');
+        return $this->safeExecute( fn() =>
+            $this->repository->getDeletedCategories( $filters, $orderBy, $limit ),
+            'Erro ao buscar categorias deletadas.' );
     }
 
     /**
@@ -296,7 +296,7 @@ class CategoryService extends AbstractBaseService
      */
     public function restoreCategories( array $ids ): ServiceResult
     {
-        return $this->safeExecute(fn() => $this->repository->restoreCategories($ids), 'Erro ao restaurar categorias.');
+        return $this->safeExecute( fn() => $this->repository->restoreCategories( $ids ), 'Erro ao restaurar categorias.' );
     }
 
     /**
@@ -304,20 +304,20 @@ class CategoryService extends AbstractBaseService
      */
     public function restoreCategoriesBySlug( string $slug ): ServiceResult
     {
-        return $this->safeExecute(function() use ($slug) {
+        return $this->safeExecute( function () use ($slug) {
             $tenantId = $this->ensureTenantId();
             $category = Category::onlyTrashed()
-                ->where('tenant_id', $tenantId)
-                ->where('slug', $slug)
+                ->where( 'tenant_id', $tenantId )
+                ->where( 'slug', $slug )
                 ->first();
 
-            if (!$category) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
+            if ( !$category ) {
+                return $this->error( OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída' );
             }
 
             $category->restore();
             return $category;
-        }, 'Erro ao restaurar categoria.');
+        }, 'Erro ao restaurar categoria.' );
     }
 
     /**
@@ -325,10 +325,10 @@ class CategoryService extends AbstractBaseService
      */
     public function findBySlug( string $slug ): ServiceResult
     {
-        return $this->safeExecute(function() use ($slug) {
+        return $this->safeExecute( function () use ($slug) {
             $entity = $this->repository->findBySlugAndTenantId( $slug );
             return $entity ?: $this->error( OperationStatus::NOT_FOUND, 'Categoria não encontrada' );
-        }, 'Erro ao buscar categoria.');
+        }, 'Erro ao buscar categoria.' );
     }
 
     /**
@@ -336,7 +336,7 @@ class CategoryService extends AbstractBaseService
      */
     public function listAll(): ServiceResult
     {
-        return $this->safeExecute(fn() => $this->repository->findOrderedByNameAndTenantId('asc'), 'Erro ao listar categorias.');
+        return $this->safeExecute( fn() => $this->repository->findOrderedByNameAndTenantId( 'asc' ), 'Erro ao listar categorias.' );
     }
 
     /**
@@ -344,20 +344,20 @@ class CategoryService extends AbstractBaseService
      */
     public function getDashboardData(): ServiceResult
     {
-        return $this->safeExecute(function() {
-            $total    = $this->repository->countByTenantId();
-            $active   = $this->repository->countActiveByTenantId();
-            $deleted  = $this->repository->countDeletedByTenantId();
+        return $this->safeExecute( function () {
+            $total            = $this->repository->countByTenantId();
+            $active           = $this->repository->countActiveByTenantId();
+            $deleted          = $this->repository->countDeletedByTenantId();
             $recentCategories = $this->repository->getRecentByTenantId( 5 );
 
             return [
                 'total_categories'    => $total,
                 'active_categories'   => $active,
-                'inactive_categories' => max(0, $total - $active),
+                'inactive_categories' => max( 0, $total - $active ),
                 'deleted_categories'  => $deleted,
                 'recent_categories'   => $recentCategories,
             ];
-        }, 'Erro ao obter estatísticas de categorias.');
+        }, 'Erro ao obter estatísticas de categorias.' );
     }
 
     // --- Auxiliares Privados ---
