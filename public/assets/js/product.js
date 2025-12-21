@@ -119,7 +119,13 @@
          form.submit();
       });
 
-      productState.modalInstance = new bootstrap.Modal(modalEl);
+      if (typeof window.bootstrap !== 'undefined') {
+         productState.modalInstance = new window.bootstrap.Modal(modalEl);
+      } else {
+         console.error('Bootstrap 5 not found in window scope');
+         // Fallback manual or retry logic could go here
+         return;
+      }
       productState.modalInstance.show();
    }
 

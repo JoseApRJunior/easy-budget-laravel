@@ -135,7 +135,7 @@
                             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                                 <h5 class="mb-0 d-flex align-items-center flex-wrap">
                                     <span class="me-2">
-                                        <i class="bi bi-list-ul me-1"></i> 
+                                        <i class="bi bi-list-ul me-1"></i>
                                         <span class="d-none d-sm-inline">Lista de Produtos</span>
                                         <span class="d-sm-none">Produtos</span>
                                     </span>
@@ -143,13 +143,35 @@
                                         @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                             ({{ $products->total() }})
                                         @else
-                                            ({{ $products->count() }})
+                                            ({{ count($products) }})
                                         @endif
                                     </span>
                                 </h5>
                             </div>
                             <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                <div class="d-flex justify-content-start justify-content-lg-end">
+                                <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                                            id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-download me-1" aria-hidden="true"></i> Exportar
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('provider.products.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel
+                                                    (.xlsx)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('provider.products.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
                                     <a href="{{ route('provider.products.create') }}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-plus" aria-hidden="true"></i>
                                         <span class="ms-1">Novo</span>
@@ -221,7 +243,8 @@
                                                         <form
                                                             action="{{ route('provider.products.toggle-status', $product->sku) }}"
                                                             method="POST" class="d-inline toggle-status-form"
-                                                            onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
+                                                            data-confirm-message="{{ $product->active ? 'Desativar este produto?' : 'Ativar este produto?' }}"
+                                                            onsubmit="return confirm(this.getAttribute('data-confirm-message'))">
                                                             @csrf
                                                             @method('PATCH')
                                                             <button type="submit"

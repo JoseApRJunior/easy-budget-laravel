@@ -231,6 +231,9 @@ Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'pr
         // Dashboard de Produtos
         Route::get( '/dashboard', [ ProductController::class, 'dashboard' ] )->name( 'dashboard' );
 
+        // Exportação (Antes do Index para evitar conflitos)
+        Route::get( '/export', [ ProductController::class, 'export' ] )->name( 'export' );
+
         // CRUD principal
         Route::get( '/', [ ProductController::class, 'index' ] )->name( 'index' );
         Route::get( '/create', [ ProductController::class, 'create' ] )->name( 'create' );

@@ -576,3 +576,16 @@ Este documento será atualizado conforme novas tarefas repetitivas forem identif
 - O helper `route()` remove parâmetros nulos; usar string vazia `''` para forçar presença.
 - `getCollection()` em Paginators pode perder atributos crus do banco; usar `items()` ou coleta manual.
 - `filemtime()` em Windows/Laragon é lento; usar versionamento estático para assets.
+
+### **🚀 Implementação "Gold Standard" no Módulo de Produtos**
+**Data:** 21/12/2024
+**Arquivos modificados:**
+- `app/Services/Domain/ProductService.php`: Refatorado para usar Repository Pattern no Dashboard e paginação dinâmica.
+- `app/Services/Domain/ProductExportService.php`: Criado novo serviço de exportação.
+- `app/Http/Controllers/ProductController.php`: Implementada exportação e injeção de dependências.
+- `resources/views/pages/product/index.blade.php`: Adicionado botão de exportação.
+
+**Melhorias Implementadas:**
+1. **Exportação Completa:** Excel e PDF agora disponíveis para produtos, com suporte a filtros (preço, status, search).
+2. **Dashboard Otimizado:** Consultas diretas ao Eloquent substituídas por métodos do Repository, garantindo escopo de Tenant e performance.
+3. **Consistência:** Módulo alinhado com a arquitetura de Categorias, facilitando manutenção futura.

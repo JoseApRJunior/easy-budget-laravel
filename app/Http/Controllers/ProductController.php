@@ -9,6 +9,7 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
+use App\Services\Domain\ProductExportService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ use Illuminate\View\View;
 class ProductController extends Controller
 {
     private ProductService $productService;
+    private ProductExportService $productExportService;
 
     private CategoryService $categoryService;
 
@@ -41,10 +43,14 @@ class ProductController extends Controller
         return (float) $normalized;
     }
 
-    public function __construct( ProductService $productService, CategoryService $categoryService )
-    {
-        $this->productService  = $productService;
-        $this->categoryService = $categoryService;
+    public function __construct(
+        ProductService $productService,
+        CategoryService $categoryService,
+        ProductExportService $productExportService
+    ) {
+        $this->productService       = $productService;
+        $this->categoryService      = $categoryService;
+        $this->productExportService = $productExportService;
     }
 
     /**
@@ -54,21 +60,39 @@ class ProductController extends Controller
      */
     public function index( Request $request ): View
     {
-        $filters        = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] );
+        // Limpa filtros vazios para evitar queries quebradas e arrays incorretos
+        $filters = array_filter(
+            $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page' ] ),
+            fn( $value ) => $value !== null && $value !== ''
+        );
+
+        // Normalização de preços (se vier formatado do front)
+        if ( isset( $filters[ 'min_price' ] ) ) {
+            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
+        }
+        if ( isset( $filters[ 'max_price' ] ) ) {
+            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
+        }
+
         $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
         $allowedPerPage = [ 10, 20, 50 ];
         if ( !in_array( $perPage, $allowedPerPage, true ) ) {
             $perPage = 10;
         }
+        // Garante per_page no array final para uso na paginação
         $filters[ 'per_page' ] = $perPage;
 
         try {
-            if ( $request->hasAny( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] ) ) {
+            // Remove per_page da verificação de filtros ativos
+            $effectiveFilters = array_diff_key( $filters, [ 'per_page' => 0 ] );
+
+            // Carrega se tiver filtros reais OU se o usuário pediu explicitamente "all"
+            if ( !empty( $effectiveFilters ) || $request->has( 'all' ) ) {
                 $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
                 $result = $showOnlyTrashed
-                    ? $this->productService->getDeletedProducts( $filters, [ 'category' ] )
-                    : $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+                    ? $this->productService->getDeletedProducts( $filters, [ 'category' ], $perPage )
+                    : $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
             } else {
                 $result = $this->emptyResult();
             }
@@ -279,7 +303,7 @@ class ProductController extends Controller
      */
     public function dashboard()
     {
-        $result = $this->productService->getDashboardData( (int) Auth::user()->tenant_id );
+        $result = $this->productService->getDashboardData();
 
         if ( !$result->isSuccess() ) {
             return view( 'pages.product.dashboard', [
@@ -336,6 +360,48 @@ class ProductController extends Controller
         return $result->isSuccess()
             ? response()->json( [ 'success' => true, 'data' => $result->getData() ] )
             : response()->json( [ 'success' => false, 'message' => $result->getMessage() ], 400 );
+    }
+
+    /**
+     * Exporta os produtos para Excel ou PDF.
+     *
+     * Rota: products.export (GET)
+     */
+    public function export( Request $request )
+    {
+        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
+        $format  = $request->query( 'format', 'xlsx' );
+
+        // Normalização de preços (se vier formatado do front)
+        if ( isset( $filters[ 'min_price' ] ) ) {
+            $filters[ 'min_price' ] = $this->normalizeCurrencyFilter( $filters[ 'min_price' ] );
+        }
+        if ( isset( $filters[ 'max_price' ] ) ) {
+            $filters[ 'max_price' ] = $this->normalizeCurrencyFilter( $filters[ 'max_price' ] );
+        }
+
+        // Flag especial para ignorar paginação ou pegar muitos itens
+        $perPage = 10000;
+
+        $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+
+        $result = $showOnlyTrashed
+            ? $this->productService->getDeletedProducts( $filters, [ 'category' ], $perPage )
+            : $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
+
+        if ( $result->isError() ) {
+            return redirect()->back()->with( 'error', $result->getMessage() );
+        }
+
+        // Extrai collection do Paginator
+        $paginator = $result->getData();
+        $products  = collect( $paginator->items() );
+
+        if ( $format === 'pdf' ) {
+            return $this->productExportService->exportToPdf( $products );
+        }
+
+        return $this->productExportService->exportToExcel( $products, $format );
     }
 
 }
