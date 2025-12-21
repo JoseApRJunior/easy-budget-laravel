@@ -76,6 +76,7 @@ class CategoryService extends AbstractBaseService
             if (!$this->tenantId()) {
                 return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
             }
+
             $paginator = $this->repository->getPaginated(
                 $this->normalizeFilters( $filters ),
                 $perPage,
@@ -92,6 +93,8 @@ class CategoryService extends AbstractBaseService
      */
     private function normalizeFilters( array $filters ): array
     {
+        // dd($filters);
+
         $normalized = [];
 
         if ( array_key_exists( 'all', $filters ) && $filters[ 'all' ] !== null ) {

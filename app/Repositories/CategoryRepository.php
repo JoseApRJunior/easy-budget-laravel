@@ -96,6 +96,7 @@ class CategoryRepository extends AbstractTenantRepository
     public function getRecentByTenantId( int $limit = 10 ): Collection
     {
         return $this->model->newQuery()
+            ->with('parent') // Eager load parent relationship to avoid N+1
             ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();

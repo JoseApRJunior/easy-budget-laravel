@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\Support\ServiceResult;
 use App\Enums\OperationStatus;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -24,7 +25,7 @@ class CategoryExportService
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $headers = ['Categoria', 'Subcategoria', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
+        $headers = ['Categoria', 'Subcategoria', 'Situação', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
         $sheet->fromArray([$headers]);
 
         $row = 2;
@@ -35,10 +36,22 @@ class CategoryExportService
             $subcategoryName = $category->parent_id ? $category->name : '—';
             $childrenCount   = $category->children()->where('is_active', true)->count();
 
+            // Determina a situação: Deletado > Inativo > Ativo
+            // DEBUG: Log para verificar o valor de deleted_at
+            Log::info('Category Export Debug', [
+                'id' => $category->id,
+                'name' => $category->name,
+                'deleted_at' => $category->deleted_at,
+                'deleted_at_is_null' => is_null($category->deleted_at),
+                'is_active' => $category->is_active,
+            ]);
+
+            $situacao = !is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
+
             $dataRow = [
                 $categoryName,
                 $subcategoryName,
-                $category->is_active ? 'Sim' : 'Não',
+                $situacao,
                 $childrenCount,
                 $createdAt,
                 $updatedAt,
@@ -53,8 +66,8 @@ class CategoryExportService
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Centralizar coluna "Subcategorias Ativas" (D)
-        $sheet->getStyle('D1:D' . ($row - 1))
+        // Centralizar colunas "Situação" (C) e "Subcategorias Ativas" (D)
+        $sheet->getStyle('C1:D' . ($row - 1))
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
@@ -105,10 +118,13 @@ class CategoryExportService
             $subcategoryName = $category->parent_id ? $category->name : '—';
             $childrenCount   = $category->children()->where('is_active', true)->count();
 
+            // Determina a situação: Deletado > Inativo > Ativo
+            $situacao = !is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
+
             $rows .= "<tr>
                 <td>" . e($categoryName) . "</td>
                 <td>" . e($subcategoryName) . "</td>
-                <td>" . ($category->is_active ? 'Sim' : 'Não') . "</td>
+                <td style='text-align:center'>" . $situacao . "</td>
                 <td style='text-align:center'>{$childrenCount}</td>
                 <td>{$createdAt}</td>
                 <td>{$updatedAt}</td>
@@ -118,7 +134,7 @@ class CategoryExportService
         $thead = '<thead><tr>
             <th>Categoria</th>
             <th>Subcategoria</th>
-            <th>Ativo</th>
+            <th style="text-align:center">Situação</th>
             <th style="text-align:center">Subcats Ativas</th>
             <th>Criação</th>
             <th>Atualização</th>

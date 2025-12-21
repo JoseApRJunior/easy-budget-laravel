@@ -119,11 +119,14 @@ trait RepositoryFiltersTrait
             return $query;
         }
 
-        return match ( $filters[ 'deleted' ] ?? null ) {
-            'only'    => $query->onlyTrashed(),
-            'current' => $query,
-            null      => $query, // Se não existir, mantém padrão (ativos)
-            default   => $query->withTrashed(), // Caso venha 'all' ou vazio do service
+        $deletedFilter = $filters[ 'deleted' ] ?? 'current';
+
+        return match ( $deletedFilter ) {
+            'only'    => $query->onlyTrashed(),  // Apenas deletados
+            'current' => $query,                  // Apenas ativos (padrão do Eloquent)
+            ''        => $query->withTrashed(),   // Todos (string vazia do formulário)
+            'all'     => $query->withTrashed(),   // Todos (alternativa)
+            default   => $query,                  // Fallback: apenas ativos
         };
     }
 

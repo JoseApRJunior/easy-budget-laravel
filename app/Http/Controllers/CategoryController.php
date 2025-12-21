@@ -11,6 +11,7 @@ use App\Services\Domain\CategoryExportService;
 use App\Services\Domain\CategoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -42,6 +43,10 @@ class CategoryController extends Controller
     {
         $filters = $request->only( [ 'search', 'active', 'per_page', 'deleted', 'all' ] );
 
+        Log::info( 'Index Filters Debug', [
+            'all_request'  => $request->all(),
+            'filters'      => $filters,
+        ] );
         // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
         // O helper $this->view lida com o ServiceResult automaticamente
         if ( empty( $request->query() ) ) {
@@ -116,7 +121,7 @@ class CategoryController extends Controller
             return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
-        $category = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
+        $category     = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
         $parentResult = $this->categoryService->getParentCategories();
 
         $parents = $parentResult->isSuccess()
@@ -245,17 +250,36 @@ class CategoryController extends Controller
 
     public function export( Request $request ): StreamedResponse|RedirectResponse
     {
-        $format  = $request->get( 'format', 'xlsx' );
-        $filters = $request->only( [ 'search', 'active' ] );
-        $result  = $this->categoryService->getCategories( $filters + [ 'all' => true ], 1000 );
+        $format = $request->get( 'format', 'xlsx' );
+
+        // Captura TODOS os filtros aplicados na listagem (exceto paginação)
+        $filters = $request->only( [ 'search', 'active', 'deleted' ] );
+
+        // DEBUG: Ver o que está vindo
+        Log::info( 'Export Filters Debug', [
+            'all_request'  => $request->all(),
+            'only_filters' => $filters,
+        ] );
+
+             // Busca categorias com os filtros aplicados
+        $result = $this->categoryService->getCategories( $filters, 1000 );
 
         if ( $result->isError() ) {
             return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
-        $categories = $result->getData();
-        if ( method_exists( $categories, 'getCollection' ) ) {
-            $categories = $categories->getCollection();
+        // Extrai a collection do paginator preservando todos os atributos
+        $paginatorOrCollection = $result->getData();
+
+        if ( method_exists( $paginatorOrCollection, 'items' ) ) {
+            // É um LengthAwarePaginator - pega os items diretamente
+            $categories = collect( $paginatorOrCollection->items() );
+        } elseif ( method_exists( $paginatorOrCollection, 'getCollection' ) ) {
+            // É um Paginator - usa getCollection
+            $categories = $paginatorOrCollection->getCollection();
+        } else {
+            // Já é uma Collection
+            $categories = $paginatorOrCollection;
         }
 
         return $format === 'pdf'
