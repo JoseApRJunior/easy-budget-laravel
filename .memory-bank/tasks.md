@@ -558,3 +558,21 @@ class NovoModeloService extends BaseTenantService
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
 **Última atualização:** 21/12/2024 - Refinamento do módulo de categorias e dashboard.
+
+### **🛠️ Correção e Melhoria na Exportação de Categorias**
+**Data:** 21/12/2024
+**Arquivos modificados:**
+- `app/Repositories/Traits/RepositoryFiltersTrait.php` - Correção no filtro `deleted` para aceitar string vazia.
+- `app/Http/Controllers/CategoryController.php` - Ajuste na extração de dados do Paginator para preservar `deleted_at`.
+- `app/Services/Domain/CategoryExportService.php` - Adição da coluna "Situação" (Ativo/Inativo/Deletado) e lógica robusta de detecção.
+- `resources/views/pages/category/index.blade.php` - Correção nos links de exportação para persistir filtros vazios.
+
+**Passos executados:**
+1. **Filtros Persistentes:** Links de exportação agora forçam parâmetros (ex: `deleted=''`) para evitar limpeza automática do Laravel.
+2. **Coluna Situação:** Exportação agora mostra claramente itens Deletados, diferenciando de Inativos.
+3. **Correção Backend:** Repositório agora entende que filtro vazio significa `withTrashed()` (Todos).
+
+**Lições Aprendidas:**
+- O helper `route()` remove parâmetros nulos; usar string vazia `''` para forçar presença.
+- `getCollection()` em Paginators pode perder atributos crus do banco; usar `items()` ou coleta manual.
+- `filemtime()` em Windows/Laragon é lento; usar versionamento estático para assets.
