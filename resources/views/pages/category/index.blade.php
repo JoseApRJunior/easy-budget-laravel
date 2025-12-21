@@ -44,15 +44,13 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            <option value="1"
-                                                {{ old('active', $filters['active'] ?? 'all') === '1' ? 'selected' : '' }}>
+                                            @php($selectedActive = request()->has('active') ? request('active') : '1')
+                                            <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                                 Ativo</option>
-                                            <option value="0"
-                                                {{ old('active', $filters['active'] ?? 'all') === '0' ? 'selected' : '' }}>
+                                            <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
                                                 Inativo
                                             </option>
-                                            <option value=""
-                                                {{ old('active', $filters['active'] ?? 'all') === 'all' ? 'selected' : '' }}>
+                                            <option value="" {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -62,7 +60,7 @@
                                     <div class="form-group">
                                         <label for="per_page" class="text-nowrap">Por página</label>
                                         <select class="form-control" id="per_page" name="per_page">
-                                            @php($pp = (int) ($filters['per_page'] ?? 10))
+                                            @php($pp = (int) request('per_page', 10))
                                             <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
                                             <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
                                             <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
@@ -73,16 +71,14 @@
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select name="deleted" id="deleted" class="form-control">
-                                            <option value="current"
-                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'current' ? 'selected' : '' }}>
+                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : 'current')
+                                            <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
                                                 Atuais
                                             </option>
-                                            <option value="only"
-                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'only' ? 'selected' : '' }}>
+                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
                                                 Deletados
                                             </option>
-                                            <option value=""
-                                                {{ old('deleted', $filters['deleted'] ?? 'all') === 'all' ? 'selected' : '' }}>
+                                            <option value="" {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
                                                 Todos</option>
                                         </select>
                                     </div>
@@ -124,7 +120,27 @@
                                 </h5>
                             </div>
                             <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                <div class="d-flex justify-content-start justify-content-lg-end">
+                                <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                                            id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-download me-1"></i> Exportar
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
+                                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'pdf'])) }}">
+                                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <a href="{{ route('categories.create') }}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-plus" aria-hidden="true"></i>
                                         <span class="ms-1">Nova</span>
@@ -244,10 +260,7 @@
                                                                 class="action-btn action-btn-view" title="Visualizar">
                                                                 <i class="bi bi-eye-fill"></i>
                                                             </a>
-                                                            @php($hasChildren = $category->hasChildren())
-                                                            @php($hasServices = $category->services()->exists())
-                                                            @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                                                            @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
+                                                            @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
                                                             <a href="{{ route('categories.edit', $category->slug) }}"
                                                                 class="action-btn action-btn-edit" title="Editar">
                                                                 <i class="bi bi-pencil-fill"></i>

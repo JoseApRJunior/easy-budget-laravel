@@ -23,10 +23,8 @@
         </div>
 
         @php
-            $hasChildren = $category->hasChildren();
-            $hasServices = $category->services()->exists();
-            $hasProducts = \App\Models\Product::where('category_id', $category->id)->whereNull('deleted_at')->exists();
-            $canDeactivate = !($hasChildren || $hasServices || $hasProducts);
+            $hasChildren = $category->children_count > 0;
+            $canDeactivate = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0;
         @endphp
 
         <div class="card border-0 shadow-sm">

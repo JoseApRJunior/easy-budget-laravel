@@ -13,6 +13,8 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -60,32 +62,23 @@ class ProductController extends Controller
         }
         $filters[ 'per_page' ] = $perPage;
 
-        $hasFilters = $request->has( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
-
         try {
-            if ( $hasFilters ) {
+            if ( $request->hasAny( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] ) ) {
                 $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
 
-                if ( $showOnlyTrashed ) {
-                    $result   = $this->productService->getDeletedProducts( $filters, [ 'category' ] );
-                    $products = $result->isSuccess() ? $result->getData() : collect();
-                } else {
-                    $result   = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
-                    $products = $result->isSuccess() ? $result->getData() : collect();
-                    if ( method_exists( $products, 'appends' ) ) {
-                        $products = $products->appends( $request->query() );
-                    }
-                }
+                $result = $showOnlyTrashed
+                    ? $this->productService->getDeletedProducts( $filters, [ 'category' ] )
+                    : $this->productService->getFilteredProducts( $filters, [ 'category' ] );
             } else {
-                $products = collect();
+                $result = $this->emptyResult();
             }
 
-            return view( 'pages.product.index', [
-                'products'   => $products,
+            return $this->view( 'pages.product.index', $result, 'products', [
                 'filters'    => $filters,
-                'categories' => $this->categoryService->getActive(),
+                'categories' => $this->categoryService->getActiveCategories()->getData(),
             ] );
-        } catch ( Exception ) {
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao carregar produtos', [ 'error' => $e->getMessage() ] );
             abort( 500, 'Erro ao carregar produtos' );
         }
     }
@@ -99,7 +92,7 @@ class ProductController extends Controller
     {
         try {
             return view( 'pages.product.create', [
-                'categories' => $this->categoryService->getActiveWithChildren(),
+                'categories' => $this->categoryService->getActiveCategories()->getData(),
             ] );
         } catch ( Exception ) {
             abort( 500, 'Erro ao carregar formulário de criação de produto' );
@@ -172,7 +165,7 @@ class ProductController extends Controller
 
             return view( 'pages.product.edit', [
                 'product'    => $result->getData(),
-                'categories' => $this->categoryService->getActiveWithChildren(),
+                'categories' => $this->categoryService->getActiveCategories()->getData(),
             ] );
         } catch ( Exception ) {
             abort( 500, 'Erro ao carregar formulário de edição de produto' );
@@ -286,7 +279,7 @@ class ProductController extends Controller
      */
     public function dashboard()
     {
-        $result = $this->productService->getDashboardData( auth()->user()->tenant_id );
+        $result = $this->productService->getDashboardData( (int) Auth::user()->tenant_id );
 
         if ( !$result->isSuccess() ) {
             return view( 'pages.product.dashboard', [

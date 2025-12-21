@@ -212,6 +212,16 @@ class ServiceResult
     }
 
     /**
+     * Retorna os erros da operação (detalhes de validação, etc.)
+     *
+     * @return mixed
+     */
+    public function getErrors(): mixed
+    {
+        return $this->isError() ? $this->data : null;
+    }
+
+    /**
      * Converte o ServiceResult para array
      *
      * @return array

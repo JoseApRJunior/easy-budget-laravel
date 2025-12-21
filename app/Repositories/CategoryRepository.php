@@ -146,6 +146,7 @@ class CategoryRepository extends AbstractTenantRepository
     ): LengthAwarePaginator {
         return $this->model->newQuery()
             ->with( $with )
+            ->withCount( [ 'children', 'services', 'products' ] )
             ->tap( fn( $q ) => $this->applyAllCategoryFilters( $q, $filters ) )
             ->when( !$orderBy, function ( $q ) {
                 $q->orderByRaw( 'COALESCE((SELECT name FROM categories AS p WHERE p.id = categories.parent_id LIMIT 1), name), parent_id IS NULL DESC, name' );

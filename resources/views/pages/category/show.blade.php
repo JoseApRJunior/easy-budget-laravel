@@ -76,7 +76,7 @@
                 </div>
 
                 @if (!$category->parent_id)
-                    @php($children = $category->children()->where('is_active', true)->get())
+                    @php($children = $category->children)
                     @if ($children->isNotEmpty())
                         <div class="mt-4">
                             <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Subcategorias ({{ $children->count() }})
@@ -160,10 +160,7 @@
                 Última atualização: {{ $category->updated_at?->format('d/m/Y H:i') }}
             </small>
             <div class="d-flex gap-2">
-                @php($hasChildren = $category->hasChildren())
-                @php($hasServices = $category->services()->exists())
-                @php($hasProducts = \App\Models\Product::query()->where('category_id', $category->id)->whereNull('deleted_at')->exists())
-                @php($canDelete = !$hasChildren && !$hasServices && !$hasProducts)
+                @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
                 <a href="{{ route('categories.edit', $category->slug) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>

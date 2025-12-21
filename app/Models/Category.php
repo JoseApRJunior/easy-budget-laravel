@@ -98,6 +98,11 @@ class Category extends Model
         return $this->hasMany( Service::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany( Product::class );
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo( Category::class, 'parent_id' );

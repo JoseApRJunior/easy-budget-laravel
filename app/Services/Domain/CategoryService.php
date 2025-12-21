@@ -163,6 +163,10 @@ class CategoryService extends AbstractBaseService
         return $this->safeExecute(function() use ($data) {
             $tenantId = $this->ensureTenantId();
 
+            if ( isset( $data[ 'name' ] ) ) {
+                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            }
+
             if ( empty( $data[ 'slug' ] ) ) {
                 $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId );
             }
@@ -194,6 +198,10 @@ class CategoryService extends AbstractBaseService
             if ( $category instanceof ServiceResult ) return $category;
 
             $tenantId = $this->tenantId();
+
+            if ( isset( $data[ 'name' ] ) ) {
+                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            }
 
             if ( isset( $data[ 'name' ] ) && empty( $data[ 'slug' ] ) ) {
                 $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId, $id );

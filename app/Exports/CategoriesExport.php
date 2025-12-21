@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -26,9 +27,8 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
     public function headings(): array
     {
         return [
-            'ID',
-            'Nome',
-            'Categoria Pai',
+            'Categoria',
+            'Subcategoria',
             'Slug',
             'Ativo',
             'Subcategorias Ativas',
@@ -39,15 +39,15 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
 
     public function map($category): array
     {
+        $categoryName    = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
+        $subcategoryName = $category->parent_id ? $category->name : '—';
+
         return [
-            $category->id,
-            $category->name,
-            $category->parent ? $category->parent->name : '-',
-            $category->slug,
+            $categoryName,
+            $subcategoryName,
+            $category->slug ?: Str::slug($category->name),
             $category->is_active ? 'Sim' : 'Não',
-            method_exists($category, 'getActiveChildrenCountAttribute')
-                ? $category->active_children_count
-                : $category->children()->where('is_active', true)->count(),
+            $category->children()->where('is_active', true)->count(),
             $category->created_at->format('d/m/Y H:i:s'),
             $category->updated_at->format('d/m/Y H:i:s'),
         ];

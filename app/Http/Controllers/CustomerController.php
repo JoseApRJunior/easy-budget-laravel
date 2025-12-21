@@ -43,39 +43,26 @@ class CustomerController extends Controller
         }
         $filters[ 'per_page' ] = $perPage;
 
-        $hasFilters = $request->has( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
-
         try {
-            /** @var User $user */
-            $user = Auth::user();
-
-            if ( $hasFilters ) {
+            if ( $request->hasAny( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] ) ) {
                 $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+                $tenantId        = auth()->user()->tenant_id;
 
-                if ( $showOnlyTrashed ) {
-                    $result = $this->customerService->getDeletedCustomers( $filters, $user->tenant_id );
-                } else {
-                    $result = $this->customerService->getFilteredCustomers( $filters, $user->tenant_id );
-                }
-
-                $customers = $result->getData();
-                if ( method_exists( $customers, 'appends' ) ) {
-                    $customers = $customers->appends( $request->query() );
-                }
+                $result = $showOnlyTrashed
+                    ? $this->customerService->getDeletedCustomers( $filters, (int) $tenantId )
+                    : $this->customerService->getFilteredCustomers( $filters, (int) $tenantId );
             } else {
-                $customers = collect();
+                $result = $this->emptyResult();
             }
 
-            $areasOfActivity = AreaOfActivity::where( 'is_active', true )
-                ->orderBy( 'name' )
-                ->get();
+            $areasOfActivity = AreaOfActivity::where( 'is_active', true )->orderBy( 'name' )->get();
 
-            return view( 'pages.customer.index', [
-                'customers'         => $customers,
+            return $this->view( 'pages.customer.index', $result, 'customers', [
                 'filters'           => $filters,
                 'areas_of_activity' => $areasOfActivity,
             ] );
-        } catch ( \Exception ) {
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao carregar clientes', [ 'error' => $e->getMessage() ] );
             abort( 500, 'Erro ao carregar clientes' );
         }
     }

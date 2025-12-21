@@ -7,18 +7,12 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use App\Services\Domain\CategoryExportService;
 use App\Services\Domain\CategoryService;
-use Collator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Log;
-use Mpdf\Mpdf;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Csv;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Controller para gerenciamento de categorias com arquitetura refinada.
@@ -30,6 +24,7 @@ class CategoryController extends Controller
 {
     public function __construct(
         private CategoryService $categoryService,
+        private CategoryExportService $exportService,
     ) {}
 
     /**
@@ -37,48 +32,29 @@ class CategoryController extends Controller
      */
     public function dashboard(): View
     {
-        $result = $this->categoryService->getDashboardData();
-
-        if (!$result->isSuccess()) {
-            return view('pages.category.dashboard', [
-                'stats' => [],
-                'error' => $result->getMessage(),
-            ]);
-        }
-
-        return view('pages.category.dashboard', [
-            'stats' => $result->getData(),
-        ]);
+        return $this->view( 'pages.category.dashboard', $this->categoryService->getDashboardData(), 'stats' );
     }
 
     /**
      * Lista categorias com filtros e paginação.
      */
-    public function index(Request $request): View
+    public function index( Request $request ): View
     {
-        $filters = $request->only(['search', 'active', 'per_page', 'deleted', 'all']);
-        $perPage = (int) ($filters['per_page'] ?? 10);
+        $filters = $request->only( [ 'search', 'active', 'per_page', 'deleted', 'all' ] );
 
-        try {
-            $result = $this->categoryService->getCategories($filters, $perPage);
-
-            $categories = $result->isSuccess() ? $result->getData() : collect();
-            if (method_exists($categories, 'appends')) {
-                $categories->appends($request->query());
-            }
-
-            $parentCategories = $this->categoryService->getParentCategories()->getData() ?? collect();
-
-            return view('pages.category.index', [
-                'categories'        => $categories,
-                'filters'           => $filters,
-                'parent_categories' => $parentCategories,
-                'error'             => $result->isError() ? $result->getMessage() : null,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Erro no listagem de categorias', ['exception' => $e]);
-            abort(500, 'Erro ao carregar categorias');
+        // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
+        // O helper $this->view lida com o ServiceResult automaticamente
+        if ( empty( $request->query() ) ) {
+            $result = $this->emptyResult();
+        } else {
+            $perPage = (int) ( $filters[ 'per_page' ] ?? 10 );
+            $result  = $this->categoryService->getCategories( $filters, $perPage );
         }
+
+        return $this->view( 'pages.category.index', $result, 'categories', [
+            'filters' => $filters,
+            'error'   => $result->isError() ? $result->getMessage() : null,
+        ] );
     }
 
     /**
@@ -86,188 +62,143 @@ class CategoryController extends Controller
      */
     public function create(): View|RedirectResponse
     {
-        $parentResult = $this->categoryService->getParentCategories();
+        $result = $this->categoryService->getParentCategories();
 
-        if ($parentResult->isError()) {
-            return redirect()->route('categories.index')->with('error', $parentResult->getMessage());
-        }
-
-        return view('pages.category.create', [
-            'parents'  => $parentResult->getData(),
-            'defaults' => ['is_active' => true],
-        ]);
+        return $this->view( 'pages.category.create', $result, 'parents', [
+            'defaults' => [ 'is_active' => true ],
+        ] );
     }
 
     /**
      * Persiste nova categoria.
      */
-    public function store(StoreCategoryRequest $request): RedirectResponse
+    public function store( StoreCategoryRequest $request ): RedirectResponse
     {
         $data = $request->validated();
-        if (isset($data['name'])) {
-            $data['name'] = mb_convert_case($data['name'], MB_CASE_TITLE, 'UTF-8');
+        if ( isset( $data[ 'name' ] ) ) {
+            $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        $result = $this->categoryService->createCategory($data);
+        $result = $this->categoryService->createCategory( $data );
 
-        if ($result->isError()) {
-            // Converter ServiceResult errors em validation errors para campos específicos
-            $message = $result->getMessage();
-
-            // Se for erro de slug duplicado, adicionar erro de validação específico
-            if (strpos($message, 'Slug já existe neste tenant') !== false) {
-                return back()
-                    ->withErrors(['slug' => 'Este slug já está em uso nesta empresa. Escolha outro slug.'])
-                    ->withInput();
-            }
-
-            return back()->with('error', $message)->withInput();
+        if ( $result->isError() && str_contains( $result->getMessage(), 'Slug já existe' ) ) {
+            return back()->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa.' ] )->withInput();
         }
 
-        $category = $result->getData();
-        $this->logOperation('categories_store', ['id' => $category->id, 'name' => $category->name]);
-
-        return redirect()
-            ->route('categories.create')
-            ->with('success', 'Categoria criada com sucesso! Você pode cadastrar outra categoria agora.');
+        return $this->redirectBackWithServiceResult( $result, 'Categoria criada com sucesso!' );
     }
 
     /**
      * Mostra detalhes da categoria por slug.
      */
-    public function show(string $slug): View
+    public function show( string $slug ): View
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
-            abort(404);
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isSuccess() ) {
+            $result->getData()->load( [
+                'parent',
+                'children' => fn( $q ) => $q->where( 'is_active', true ),
+            ] )->loadCount( [ 'children', 'services', 'products' ] );
         }
 
-        $category = $result->getData();
-        $category->load('parent');
-
-        return view('pages.category.show', compact('category'));
+        return $this->view( 'pages.category.show', $result, 'category' );
     }
 
     /**
      * Form para editar categoria.
      */
-    public function edit(string $slug): View|RedirectResponse
+    public function edit( string $slug ): View|RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
-            return redirect()->route('categories.index')->with('error', 'Categoria não encontrada');
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            return redirect()->route( 'categories.index' )->with( 'error', 'Categoria não encontrada' );
         }
 
-        $category     = $result->getData();
+        $category = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
         $parentResult = $this->categoryService->getParentCategories();
 
         $parents = $parentResult->isSuccess()
-            ? $parentResult->getData()->filter(fn($p) => $p->id !== $category->id)
+            ? $parentResult->getData()->filter( fn( $p ) => $p->id !== $category->id )
             : collect();
 
-        $canDeactivate = !($category->hasChildren());
-
-        return view('pages.category.edit', compact('category', 'parents', 'canDeactivate'));
+        return view( 'pages.category.edit', compact( 'category', 'parents' ) );
     }
 
     /**
      * Atualiza categoria.
      */
-    public function update(UpdateCategoryRequest $request, string $slug): RedirectResponse
+    public function update( UpdateCategoryRequest $request, string $slug ): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
-            abort(404);
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
         }
 
         $category = $result->getData();
         $data     = $request->validated();
-        if (isset($data['name'])) {
-            $data['name'] = mb_convert_case($data['name'], MB_CASE_TITLE, 'UTF-8');
+        if ( isset( $data[ 'name' ] ) ) {
+            $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
         }
 
-        $result = $this->categoryService->updateCategory($category->id, $data);
+        $updateResult = $this->categoryService->updateCategory( $category->id, $data );
 
-        if ($result->isError()) {
-            $message = $result->getMessage();
-
-            // Se for erro de referência circular ou validação específica de campo, usar withErrors
-            if (
-                strpos($message, 'referência circular') !== false ||
-                strpos($message, 'Categoria não pode ser pai de si mesma') !== false ||
-                strpos($message, 'Categoria pai inválida') !== false
-            ) {
-                return back()
-                    ->withErrors(['parent_id' => $message])
-                    ->withInput();
-            }
-
-            return redirect()->back()->with('error', $message)->withInput();
+        if ( $updateResult->isError() && str_contains( $updateResult->getMessage(), 'Slug já existe' ) ) {
+            return back()->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa.' ] )->withInput();
         }
 
-        $this->logOperation('categories_update', ['id' => $category->id, 'name' => $category->name]);
-
-        return $this->redirectSuccess('categories.index', 'Categoria atualizada com sucesso.');
+        return $this->redirectWithServiceResult( 'categories.index', $updateResult, 'Categoria atualizada com sucesso.' );
     }
 
     /**
      * Exclui categoria.
      */
-    public function destroy(string $slug): RedirectResponse
+    public function destroy( string $slug ): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
-            abort(404);
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
         }
 
-        $category = $result->getData();
+        $deleteResult = $this->categoryService->deleteCategory( $result->getData()->id );
 
-        $result = $this->categoryService->deleteCategory($category->id);
-
-        if ($result->isError()) {
-            return $this->redirectError('categories.index', $result->getMessage());
-        }
-
-        $this->logOperation('categories_destroy', ['id' => $category->id, 'slug' => $slug]);
-
-        return $this->redirectSuccess('categories.index', 'Categoria excluída com sucesso.');
+        return $this->redirectWithServiceResult( 'categories.index', $deleteResult, 'Categoria excluída com sucesso.' );
     }
 
     /**
      * Alterna status ativo/inativo da categoria.
      */
-    public function toggle_status(string $slug): RedirectResponse
+    public function toggle_status( string $slug ): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
-            return $this->redirectError('categories.index', 'Categoria não encontrada');
+        $result = $this->categoryService->findBySlug( $slug );
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
         }
 
         $category     = $result->getData();
-        $updateResult = $this->categoryService->updateCategory($category->id, [
+        $updateResult = $this->categoryService->updateCategory( $category->id, [
             'is_active' => !$category->is_active
-        ]);
+        ] );
 
-        if ($updateResult->isError()) {
-            return $this->redirectError('categories.index', $updateResult->getMessage());
+        if ( $updateResult->isError() ) {
+            return $this->redirectError( 'categories.index', $updateResult->getMessage() );
         }
 
         $statusText = $updateResult->getData()->is_active ? 'ativada' : 'desativada';
-        return $this->redirectSuccess('categories.index', "Categoria {$statusText} com sucesso.");
+        return $this->redirectSuccess( 'categories.index', "Categoria {$statusText} com sucesso." );
     }
 
     /**
      * Restaura categoria deletada (soft delete).
      */
-    public function restore(string $slug): RedirectResponse
+    public function restore( string $slug ): RedirectResponse
     {
-        $result = $this->categoryService->restoreCategoriesBySlug($slug);
+        $result = $this->categoryService->restoreCategoriesBySlug( $slug );
 
-        if ($result->isError()) {
-            return $this->redirectError('categories.index', $result->getMessage());
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
-        return $this->redirectSuccess('categories.index', 'Categoria restaurada com sucesso!');
+        return $this->redirectSuccess( 'categories.index', 'Categoria restaurada com sucesso!' );
     }
 
     /**
@@ -276,160 +207,58 @@ class CategoryController extends Controller
     /**
      * Métodos de conveniência que delegam ao index com filtros pré-definidos.
      */
-    public function search(Request $request): View
+    public function search( Request $request ): View
     {
-        return $this->index($request);
+        return $this->index( $request );
     }
 
-    public function active(Request $request): View
+    public function active( Request $request ): View
     {
-        $request->merge(['active' => '1']);
-        return $this->index($request);
+        $request->merge( [ 'active' => '1' ] );
+        return $this->index( $request );
     }
 
-    public function deleted(Request $request): View
+    public function deleted( Request $request ): View
     {
-        $request->merge(['deleted' => 'only']);
-        return $this->index($request);
+        $request->merge( [ 'deleted' => 'only' ] );
+        return $this->index( $request );
     }
 
-    public function restoreMultiple(Request $request): RedirectResponse
+    public function restoreMultiple( Request $request ): RedirectResponse
     {
-        $ids = $request->input('ids', []);
+        $ids = $request->input( 'ids', [] );
 
-        if (empty($ids)) {
-            return $this->redirectError('categories.index', 'Nenhuma categoria selecionada para restauração.');
+        if ( empty( $ids ) ) {
+            return $this->redirectError( 'categories.index', 'Nenhuma categoria selecionada para restauração.' );
         }
 
-        $result = $this->categoryService->restoreCategories($ids);
+        $result = $this->categoryService->restoreCategories( $ids );
 
-        if ($result->isError()) {
-            return $this->redirectError('categories.index', $result->getMessage());
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
-        return $this->redirectSuccess('categories.index', "Restauradas categorias com sucesso.");
+        return $this->redirectSuccess( 'categories.index', "Restauradas categorias com sucesso." );
     }
 
-    /**
-     * Exporta categorias em xlsx, csv ou pdf.
-     */
-    public function export(Request $request): BinaryFileResponse
+    public function export( Request $request ): StreamedResponse|RedirectResponse
     {
-        $format = $request->get('format', 'xlsx');
+        $format  = $request->get( 'format', 'xlsx' );
+        $filters = $request->only( [ 'search', 'active' ] );
+        $result  = $this->categoryService->getCategories( $filters + [ 'all' => true ], 1000 );
 
-        $fileName = match ($format) {
-            'csv'   => 'categories.csv',
-            'xlsx'  => 'categories.xlsx',
-            'pdf'   => 'categories.pdf',
-            default => 'categories.xlsx',
-        };
-
-        $filters = $request->only(['search', 'active']);
-        $result  = $this->categoryService->getCategories($filters + ['all' => true], 1000); // 1000 como limite alto para export
-
-        if ($result->isError()) {
-            return redirect()->route('categories.index')->with('error', $result->getMessage());
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
         $categories = $result->getData();
-        if (method_exists($categories, 'getCollection')) {
+        if ( method_exists( $categories, 'getCollection' ) ) {
             $categories = $categories->getCollection();
         }
 
-        $collator   = class_exists(Collator::class) ? new Collator('pt_BR') : null;
-        $categories = $categories->sort(function ($a, $b) use ($collator) {
-            if ($collator) {
-                return $collator->compare($a->name, $b->name);
-            }
-            return strcasecmp($a->name, $b->name);
-        })->values();
-
-        if ($format === 'pdf') {
-            $rows = '';
-            foreach ($categories as $category) {
-                $createdAt        = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format('d/m/Y H:i:s') : '';
-                $updatedAt        = $category->updated_at instanceof \DateTimeInterface ? $category->updated_at->format('d/m/Y H:i:s') : '';
-                $slugVal          = $category->slug ?: Str::slug($category->name);
-                $childrenCount    = $category->children()->where('is_active', true)->count();
-                $categoryName     = $category->parent_id ? $category->parent->name : $category->name;
-                $subcategoryName  = $category->parent_id ? $category->name : '—';
-                $rows            .= '<tr>'
-                    . '<td>' . e($categoryName) . '</td>'
-                    . '<td>' . e($subcategoryName) . '</td>'
-                    . '<td>' . e($slugVal) . '</td>'
-                    . '<td>' . ($category->is_active ? 'Sim' : 'Não') . '</td>'
-                    . '<td class="text-center">' . $childrenCount . '</td>'
-                    . '<td>' . e($createdAt) . '</td>'
-                    . '<td>' . e($updatedAt) . '</td>'
-                    . '</tr>';
-            }
-
-            $thead = '<thead><tr><th>Categoria</th><th>Subcategoria</th><th>Slug</th><th>Ativo</th><th style="text-align:center">Subcategorias Ativas</th><th>Data Criação</th><th>Data Atualização</th></tr></thead>';
-            $html  = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f5f5f5}.text-center{text-align:center}</style></head><body>'
-                . '<h3>Categorias</h3>'
-                . '<table>'
-                . $thead
-                . '<tbody>' . $rows . '</tbody>'
-                . '</table>'
-                . '</body></html>';
-
-            return response()->streamDownload(function () use ($html) {
-                $mpdf = new Mpdf();
-                $mpdf->WriteHTML($html);
-                echo $mpdf->Output('', 'S');
-            }, $fileName, [
-                'Content-Type' => 'application/pdf',
-            ]);
-        }
-
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-        $headers     = ['Categoria', 'Subcategoria', 'Slug', 'Ativo', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
-        $sheet->fromArray([$headers]);
-
-        // Centralizar coluna "Subcategorias Ativas"
-        $subCatCol = 'E';
-        $sheet->getStyle($subCatCol . '1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-        $row = 2;
-        foreach ($categories as $category) {
-            $createdAt       = $category->created_at instanceof \DateTimeInterface ? $category->created_at->format('d/m/Y H:i:s') : '';
-            $updatedAt       = $category->updated_at instanceof \DateTimeInterface ? $category->updated_at->format('d/m/Y H:i:s') : '';
-            $childrenCount   = $category->children()->where('is_active', true)->count();
-            $categoryName    = $category->parent_id ? $category->parent->name : $category->name;
-            $subcategoryName = $category->parent_id ? $category->name : '—';
-            $dataRow         = [
-                $categoryName,
-                $subcategoryName,
-                ($category->slug ?: Str::slug($category->name)),
-                $category->is_active ? 'Sim' : 'Não',
-                $childrenCount,
-                $createdAt,
-                $updatedAt,
-            ];
-            $sheet->fromArray([$dataRow], null, 'A' . $row);
-
-            // Centralizar valor da coluna "Subcategorias Ativas"
-            $subCatCol = 'E';
-            $sheet->getStyle($subCatCol . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-            $row++;
-        }
-
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $contentType = $format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        return response()->streamDownload(function () use ($spreadsheet, $format) {
-            if ($format === 'csv') {
-                $writer = new Csv($spreadsheet);
-            } else {
-                $writer = new Xlsx($spreadsheet);
-            }
-            $writer->save('php://output');
-        }, $fileName, [
-            'Content-Type' => $contentType,
-        ]);
+        return $format === 'pdf'
+            ? $this->exportService->exportToPdf( $categories )
+            : $this->exportService->exportToExcel( $categories, $format );
     }
+
 }

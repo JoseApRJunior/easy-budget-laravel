@@ -76,6 +76,30 @@ abstract class Controller extends BaseController
         return $result->isSuccess() ? '' : ($result->getMessage() ?: $default);
     }
 
+    /**
+     * Cria um resultado de sucesso rapidamente.
+     */
+    protected function successResult(mixed $data = null, string $message = ''): ServiceResult
+    {
+        return ServiceResult::success($data, $message);
+    }
+
+    /**
+     * Cria um resultado vazio (coleção) para estados iniciais.
+     */
+    protected function emptyResult(): ServiceResult
+    {
+        return ServiceResult::success(collect());
+    }
+
+    /**
+     * Cria um resultado de paginação vazio.
+     */
+    protected function emptyPaginatedResult(int $perPage = 10): ServiceResult
+    {
+        return ServiceResult::success(new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage));
+    }
+
     // --------------------------------------------------------------------------
     // MÉTODOS PARA TRATAMENTO DE VIEWS
     // --------------------------------------------------------------------------
@@ -214,12 +238,18 @@ abstract class Controller extends BaseController
     {
         $statusCode = $result->isSuccess() ? $successStatus : $this->getErrorStatusCode($result);
 
-        return response()->json([
+        $response = [
             'success' => $result->isSuccess(),
             'message' => $result->getMessage(),
-            'data' => $result->getData(),
-            'errors' => $result->getErrors(),
-        ], $statusCode);
+        ];
+
+        if ($result->isSuccess()) {
+            $response['data'] = $result->getData();
+        } else {
+            $response['errors'] = $result->getErrors();
+        }
+
+        return response()->json($response, $statusCode);
     }
 
     /**
@@ -266,10 +296,15 @@ abstract class Controller extends BaseController
      */
     private function getErrorStatusCode(ServiceResult $result): int
     {
-        // Em uma implementação futura, podemos mapear diferentes tipos de erro
-        // para códigos HTTP específicos (404 para NOT_FOUND, 409 para CONFLICT, etc.)
-
-        return 400; // Bad Request como padrão
+        return match ($result->getStatus()) {
+            \App\Enums\OperationStatus::NOT_FOUND => 404,
+            \App\Enums\OperationStatus::FORBIDDEN => 403,
+            \App\Enums\OperationStatus::UNAUTHORIZED => 401,
+            \App\Enums\OperationStatus::INVALID_DATA, \App\Enums\OperationStatus::VALIDATION_ERROR => 422,
+            \App\Enums\OperationStatus::CONFLICT => 409,
+            \App\Enums\OperationStatus::ERROR => 500,
+            default => 400,
+        };
     }
 
     /**
