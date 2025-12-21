@@ -53,7 +53,7 @@ class CategoryController extends Controller
 
         return $this->view( 'pages.category.index', $result, 'categories', [
             'filters' => $filters,
-            'error'   => $result->isError() ? $result->getMessage() : null,
+            'error'   => $this->getServiceErrorMessage( $result, null ),
         ] );
     }
 
@@ -91,15 +91,17 @@ class CategoryController extends Controller
     /**
      * Mostra detalhes da categoria por slug.
      */
-    public function show( string $slug ): View
+    public function show( string $slug ): View|RedirectResponse
     {
         $result = $this->categoryService->findBySlug( $slug );
-        if ( $result->isSuccess() ) {
-            $result->getData()->load( [
-                'parent',
-                'children' => fn( $q ) => $q->where( 'is_active', true ),
-            ] )->loadCount( [ 'children', 'services', 'products' ] );
+        if ( $result->isError() ) {
+            return $this->redirectError( 'categories.index', $result->getMessage() );
         }
+
+        $result->getData()->load( [
+            'parent',
+            'children' => fn( $q ) => $q->where( 'is_active', true ),
+        ] )->loadCount( [ 'children', 'services', 'products' ] );
 
         return $this->view( 'pages.category.show', $result, 'category' );
     }
@@ -111,7 +113,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return redirect()->route( 'categories.index' )->with( 'error', 'Categoria não encontrada' );
+            return $this->redirectError( 'categories.index', $result->getMessage() );
         }
 
         $category = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );

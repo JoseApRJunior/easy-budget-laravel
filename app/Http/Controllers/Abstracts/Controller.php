@@ -71,9 +71,9 @@ abstract class Controller extends BaseController
      * @param  string  $default  Mensagem padrão se não houver erro específico
      * @return string Mensagem de erro
      */
-    protected function getServiceErrorMessage(ServiceResult $result, string $default = 'Operação falhou'): string
+    protected function getServiceErrorMessage(ServiceResult $result, ?string $default = 'Operação falhou'): ?string
     {
-        return $result->isSuccess() ? '' : ($result->getMessage() ?: $default);
+        return $result->isSuccess() ? null : ($result->getMessage() ?: $default);
     }
 
     /**
