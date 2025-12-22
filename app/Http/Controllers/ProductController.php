@@ -102,8 +102,8 @@ class ProductController extends Controller
      */
     public function show( string $sku ): View|RedirectResponse
     {
-        $result = $this->productService->findBySku( $sku, [ 'category.parent', 'productInventory' ] );
 
+        $result = $this->productService->findBySku( $sku, [ 'category', 'inventory' ] );
         if ( $result->isError() ) {
             return $this->redirectError( 'provider.products.index', $result->getMessage() );
         }
@@ -121,7 +121,7 @@ class ProductController extends Controller
      *
      * Rota: products.edit
      */
-    public function edit( string $sku ): View
+    public function edit( string $sku ): View|RedirectResponse
     {
         $result = $this->productService->findBySku( $sku, [ 'category' ] );
 
@@ -129,11 +129,11 @@ class ProductController extends Controller
             return $this->redirectError( 'provider.products.index', $result->getMessage() );
         }
 
-        $product      = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
+        $product      = $result->getData();
         $parentResult = $this->categoryService->getActive();
 
         $categories = $parentResult->isSuccess()
-            ? $parentResult->getData()->filter( fn( $p ) => $p->id !== $product->id )
+            ? $parentResult->getData()
             : collect();
 
         return view( 'pages.product.edit', compact( 'product', 'categories' ) );
@@ -154,7 +154,7 @@ class ProductController extends Controller
 
         $product = $result->getData();
 
-        return $this->redirectSuccess( 'provider.products.show', $product->sku, 'Produto atualizado com sucesso!' );
+        return $this->redirectSuccess( 'provider.products.show', 'Produto atualizado com sucesso!', [ 'sku' => $product->sku ] );
     }
 
     /**
@@ -162,7 +162,7 @@ class ProductController extends Controller
      *
      * Rota: products.toggle-status (PATCH)
      */
-    public function toggle_status( string $sku, Request $request )
+    public function toggleStatus( string $sku, Request $request )
     {
         $result = $this->productService->toggleProductStatus( $sku );
 
@@ -184,7 +184,7 @@ class ProductController extends Controller
         }
 
         $product = $result->getData();
-        return $this->redirectSuccess( 'provider.products.show', $product->sku, $result->getMessage() );
+        return $this->redirectSuccess( 'provider.products.show', $result->getMessage(), [ 'sku' => $product->sku ] );
     }
 
     /**

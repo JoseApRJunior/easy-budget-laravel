@@ -425,7 +425,8 @@ class InventoryController extends Controller
         $product = Product::where( 'sku', $sku )->firstOrFail();
 
         $result = $this->inventoryService->addStock(
-            $product->id,
+            (int) $product->id,
+            (int) $product->tenant_id,
             (int) $request->input( 'quantity' ),
             (string) $request->input( 'reason', 'Entrada manual' )
         );
@@ -464,7 +465,8 @@ class InventoryController extends Controller
         $product = Product::where( 'sku', $sku )->firstOrFail();
 
         $result = $this->inventoryService->removeStock(
-            $product->id,
+            (int) $product->id,
+            (int) $product->tenant_id,
             (int) $request->input( 'quantity' ),
             (string) $request->input( 'reason', 'Saída manual' )
         );

@@ -13,9 +13,23 @@
 
     <!-- Script Inline para Inicialização do Tema (Evita FOUC) -->
     <script>
+        // Bloqueia a renderização até definir o tema
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+            // Define o atributo para o Bootstrap 5
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+            // Cria uma tag de estilo temporária para evitar o flash branco no body
+            const css = document.createElement('style');
+            css.innerText = `body { display: none !important; }`; // Esconde o body até o tema estar pronto
+            document.head.appendChild(css);
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('theme-' + savedTheme);
+                css.remove(); // Mostra o body já com a cor certa
+            });
         })();
     </script>
 

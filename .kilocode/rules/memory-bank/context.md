@@ -429,19 +429,17 @@ Refatoração do LoginRequest para permitir login com senha ou Google, melhorand
 
 **Marco Histórico Alcançado:** Finalização completa dos primeiros módulos principais do sistema:
 
-#### **📦 Módulo Categories - 100% Concluído**
+#### **📦 Módulo Categories - 100% Concluído e Padronizado**
 
-**Implementação robusta com arquitetura avançada:**
+**Implementação robusta com arquitetura avançada e rotas padronizadas:**
 
--  **Sistema Hierárquico:** Suporte a categorias pai/filho (parent/children)
--  **Pivot Table:** Relacionamento belongsToMany mais robusto (category_tenant)
--  **Diferenciação Prestador vs Admin:** Interface personalizada (com/sem coluna slug)
--  **Soft Delete:** Sistema completo de filtros "Atuais/Deletados" com restauração
--  **Exportação Multi-formato:** XLSX, CSV, PDF com filtros aplicados
--  **Interface Avançada:** JavaScript com validações client-side (465 linhas)
--  **Sistema AJAX:** Toggle de status, busca dinâmica e confirmação de exclusão
--  **Formatação Brasileira:** Datas e valores no padrão nacional
--  **Validações Granulares:** Prestador vê apenas suas categorias custom deletadas
+-  **Rotas Padronizadas:** Todas as rotas seguem o padrão `provider.categories.*` para consistência.
+-  **Sistema Hierárquico:** Suporte a categorias pai/filho (parent/children).
+-  **Soft Delete:** Sistema completo de filtros "Atuais/Deletados" com restauração.
+-  **Exportação Multi-formato:** XLSX, CSV, PDF com filtros aplicados.
+-  **Interface Avançada:** JavaScript com validações client-side.
+-  **Sistema AJAX:** Toggle de status, busca dinâmica e confirmação de exclusão.
+-  **Permissões Simplificadas:** Lógica de permissão consolidada em `manage-categories`.
 
 #### **📦 Módulo Products - 100% Concluído**
 
@@ -480,7 +478,7 @@ Refatoração do LoginRequest para permitir login com senha ou Google, melhorand
 -  **Provider Management:** ✅ ProviderBusinessController implementado com integração multi-serviços
 -  **Budget Management:** ✅ Sistema completo com PDF verification e tokens públicos
 -  **Testing Infrastructure:** ✅ 40+ testes Feature, Unit, Browser com Dusk
--  **Categories Module:** ✅ 100% finalizado e pronto para produção
+-  **Categories Module:** ✅ 100% finalizado, padronizado e pronto para produção
 -  **Products Module:** ✅ 100% finalizado com gestão de estoque integrada
 
 **Foco Atual - Melhorias e Expansões:**

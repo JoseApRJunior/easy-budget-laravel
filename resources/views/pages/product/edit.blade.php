@@ -15,14 +15,14 @@
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
+                    <li class="breadcrumb-item"><a
+                            href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Editar</li>
                 </ol>
             </nav>
         </div>
 
-        <form action="{{ route('provider.products.update', $product->sku) }}" method="POST"
-            enctype="multipart/form-data">
+        <form action="{{ route('provider.products.update', $product->sku) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -51,16 +51,13 @@
                                     </div>
                                 </div>
 
-                                <!-- SKU -->
+                                <!-- SKU (Visualização Apenas) -->
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label for="sku" class="form-label">SKU</label>
-                                        <input type="text" class="form-control @error('sku') is-invalid @enderror"
-                                            id="sku" name="sku" value="{{ old('sku', $product->sku) }}">
-                                        @error('sku')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <div class="form-text">Código único para identificação</div>
+                                        <input type="text" class="form-control" id="sku" name="sku"
+                                            value="{{ $product->sku }}" readonly disabled>
+                                        <div class="form-text">Código único - não editável</div>
                                     </div>
                                 </div>
 
@@ -73,7 +70,7 @@
                                             <div class="input-group-text">R$</div>
                                             <input type="text" class="form-control @error('price') is-invalid @enderror"
                                                 id="price" name="price"
-                                                value="{{ old('price', number_format($product->price, 2, ',', '.')) }}"
+                                                value="{{ old('price', number_format((float) $product->price, 2, ',', '.')) }}"
                                                 inputmode="numeric" required>
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -90,24 +87,26 @@
                                             id="category_id" name="category_id">
                                             <option value="">Selecione uma categoria</option>
                                             @foreach ($categories as $category)
-                                                @if ($category->children->isEmpty())
-                                                    <option value="{{ $category->id }}"
-                                                        {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @else
-                                                    <optgroup label="{{ $category->name }}">
+                                                @if ($category->parent_id === null)
+                                                    @if ($category->children->isEmpty())
                                                         <option value="{{ $category->id }}"
                                                             {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                                            {{ $category->name }} (Geral)
+                                                            {{ $category->name }}
                                                         </option>
-                                                        @foreach ($category->children as $subcategory)
-                                                            <option value="{{ $subcategory->id }}"
-                                                                {{ old('category_id', $product->category_id) == $subcategory->id ? 'selected' : '' }}>
-                                                                {{ $subcategory->name }}
+                                                    @else
+                                                        <optgroup label="{{ $category->name }}">
+                                                            <option value="{{ $category->id }}"
+                                                                {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                                                {{ $category->name }} (Geral)
                                                             </option>
-                                                        @endforeach
-                                                    </optgroup>
+                                                            @foreach ($category->children as $subcategory)
+                                                                <option value="{{ $subcategory->id }}"
+                                                                    {{ old('category_id', $product->category_id) == $subcategory->id ? 'selected' : '' }}>
+                                                                    {{ $subcategory->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endif
                                                 @endif
                                             @endforeach
                                         </select>
@@ -247,7 +246,8 @@
                     if (window.parseCurrencyBRLToNumber) {
                         num = window.parseCurrencyBRLToNumber(price.value) || 0;
                     } else {
-                        num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(/[^0-9\.]/g,
+                        num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(
+                            /[^0-9\.]/g,
                             '')) || 0;
                     }
                     price.value = num.toFixed(2);
@@ -287,13 +287,12 @@
         if (removeImageCheckbox) {
             removeImageCheckbox.addEventListener('change', function(e) {
                 if (e.target.checked) {
-                    if (!confirm('Tem certeza que deseja remover a imagem atual? Esta ação não pode ser desfeita.')) {
+                    if (!confirm(
+                            'Tem certeza que deseja remover a imagem atual? Esta ação não pode ser desfeita.')) {
                         e.target.checked = false;
                     }
                 }
             });
         }
-
-
     </script>
 @endpush

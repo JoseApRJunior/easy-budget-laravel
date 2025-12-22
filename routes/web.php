@@ -133,23 +133,6 @@ Route::prefix( 'email' )->name( 'verification.' )->group( function () {
 
 Route::get( '/confirm-account', [ CustomVerifyEmailController::class, 'confirmAccount' ] )->name( 'confirm-account' );
 
-// Categories - unified (fora de provider/admin)
-Route::middleware( [ 'auth', 'verified' ] )->prefix( 'categories' )->name( 'categories.' )->group( function () {
-    Route::get( '/dashboard', [ CategoryController::class, 'dashboard' ] )->name( 'dashboard' );
-    Route::get( '/', [ CategoryController::class, 'index' ] )->name( 'index' );
-    Route::get( '/create', [ CategoryController::class, 'create' ] )->name( 'create' );
-    Route::get( '/export', [ CategoryController::class, 'export' ] )->name( 'export' );
-    Route::post( '/', [ CategoryController::class, 'store' ] )->name( 'store' );
-    Route::get( '/{slug}', [ CategoryController::class, 'show' ] )->name( 'show' );
-    Route::get( '/{slug}/edit', [ CategoryController::class, 'edit' ] )->name( 'edit' );
-    Route::put( '/{slug}', [ CategoryController::class, 'update' ] )->name( 'update' );
-    Route::delete( '/{slug}', [ CategoryController::class, 'destroy' ] )->name( 'destroy' );
-    Route::post( '/{slug}/toggle-status', [ CategoryController::class, 'toggleStatus' ] )->name( 'toggle-status' );
-    Route::post( '/{slug}/set-default', [ CategoryController::class, 'setDefault' ] )->name( 'set-default' );
-    Route::post( '/{slug}/restore', [ CategoryController::class, 'restore' ] )->name( 'restore' );
-    Route::get( '/{id}/children', [ CategoryController::class, 'getChildren' ] )->name( 'children' );
-} );
-
 // Provider routes group
 // Routes for provider users with auth, verified, and provider middlewares
 Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'provider', 'monitoring' ] )->group( function () {
@@ -189,6 +172,23 @@ Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'pr
         Route::post( '/{plan}/cancel-pending-subscription', [ PlanController::class, 'cancelPendingSubscription' ] )->name( 'cancel-pending-subscription' );
         Route::get( '/{plan}/status', [ PlanController::class, 'status' ] )->name( 'status' );
         Route::get( '/payment-status', [ PlanController::class, 'paymentStatus' ] )->name( 'payment-status' );
+    } );
+
+    // Categories (novo padrão)
+    Route::prefix( 'categories' )->name( 'categories.' )->group( function () {
+        Route::get( '/dashboard', [ CategoryController::class, 'dashboard' ] )->name( 'dashboard' );
+        Route::get( '/', [ CategoryController::class, 'index' ] )->name( 'index' );
+        Route::get( '/create', [ CategoryController::class, 'create' ] )->name( 'create' );
+        Route::get( '/export', [ CategoryController::class, 'export' ] )->name( 'export' );
+        Route::post( '/', [ CategoryController::class, 'store' ] )->name( 'store' );
+        Route::get( '/{slug}', [ CategoryController::class, 'show' ] )->name( 'show' );
+        Route::get( '/{slug}/edit', [ CategoryController::class, 'edit' ] )->name( 'edit' );
+        Route::put( '/{slug}', [ CategoryController::class, 'update' ] )->name( 'update' );
+        Route::delete( '/{slug}', [ CategoryController::class, 'destroy' ] )->name( 'destroy' );
+        Route::post( '/{slug}/toggle-status', [ CategoryController::class, 'toggleStatus' ] )->name( 'toggle-status' );
+        Route::post( '/{slug}/set-default', [ CategoryController::class, 'setDefault' ] )->name( 'set-default' );
+        Route::post( '/{slug}/restore', [ CategoryController::class, 'restore' ] )->name( 'restore' );
+        Route::get( '/{id}/children', [ CategoryController::class, 'getChildren' ] )->name( 'children' );
     } );
 
     // Customers
@@ -243,7 +243,7 @@ Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'pr
         Route::put( '/{sku}', [ ProductController::class, 'update' ] )->name( 'update' );
 
         // Status e exclusão via SKU
-        Route::patch( '/{sku}/toggle-status', [ ProductController::class, 'toggle_status' ] )->name( 'toggle-status' );
+        Route::patch( '/{sku}/toggle-status', [ ProductController::class, 'toggleStatus' ] )->name( 'toggle-status' );
         Route::delete( '/{sku}', [ ProductController::class, 'delete_store' ] )->name( 'destroy' );
         Route::post( '/{sku}/restore', [ ProductController::class, 'restore' ] )->name( 'restore' );
 

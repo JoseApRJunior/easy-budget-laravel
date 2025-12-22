@@ -228,13 +228,7 @@ class PermissionService
     protected function getAdminPermissions(): array
     {
         return [
-            'view-global-categories',
-            'manage-global-categories',
-            'manage-custom-categories',
-            'create-custom-categories',
-            'edit-custom-categories',
-            'delete-custom-categories',
-            'use-global-as-custom',
+            'manage-categories',
             'assign-categories',
             'manage-products',
             'manage-services',
@@ -252,12 +246,7 @@ class PermissionService
     protected function getProviderPermissions(): array
     {
         return [
-            'view-global-categories',
-            'manage-custom-categories',
-            'create-custom-categories',
-            'edit-custom-categories',
-            'delete-custom-categories',
-            'use-global-as-custom',
+            'manage-categories',
             'assign-categories',
             'manage-products',
             'manage-services',
@@ -273,7 +262,6 @@ class PermissionService
     protected function getBasicUserPermissions(): array
     {
         return [
-            'view-global-categories',
             'assign-categories',
         ];
     }

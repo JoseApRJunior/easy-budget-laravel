@@ -11,53 +11,62 @@ export function scrollToElement(elementId) {
 
 // Funções de tema
 export function toggleTheme() {
+   const html = document.documentElement;
    const body = document.body;
+   const currentTheme = html.getAttribute("data-bs-theme");
+   const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+   // 1. Atualiza o atributo do Bootstrap
+   html.setAttribute("data-bs-theme", newTheme);
+
+   // 2. Atualiza as classes do Body (que o seu layout.css usa)
+   body.classList.remove("theme-dark", "theme-light");
+   body.classList.add("theme-" + newTheme);
+
+   // 3. Guarda a preferência
+   localStorage.setItem("theme", newTheme);
+
+   // 4. Atualiza os ícones (Sua lógica existente)
    const themeButton = document.querySelector(".theme-toggle");
    const sunIcon = themeButton?.querySelector(".theme-light-icon");
    const moonIcon = themeButton?.querySelector(".theme-dark-icon");
 
-   if (body.classList.contains("theme-dark")) {
-      body.classList.replace("theme-dark", "theme-light");
-      localStorage.setItem("theme", "light");
-      // Mostrar ícone do sol e ocultar ícone da lua
-      if (sunIcon) sunIcon.setAttribute("aria-hidden", "false");
-      if (moonIcon) moonIcon.setAttribute("aria-hidden", "true");
-   } else {
-      body.classList.replace("theme-light", "theme-dark");
-      localStorage.setItem("theme", "dark");
-      // Mostrar ícone da lua e ocultar ícone do sol
+   if (newTheme === "dark") {
       if (sunIcon) sunIcon.setAttribute("aria-hidden", "true");
       if (moonIcon) moonIcon.setAttribute("aria-hidden", "false");
+   } else {
+      if (sunIcon) sunIcon.setAttribute("aria-hidden", "false");
+      if (moonIcon) moonIcon.setAttribute("aria-hidden", "true");
    }
 }
 
 export function initTheme() {
-   const savedTheme = localStorage.getItem("theme") || "dark";
-   const body = document.body;
-   body.classList.add(`theme-${savedTheme}`);
+   const theme = document.documentElement.getAttribute("data-bs-theme");
 
-   // Aguardar o DOM estar pronto e definir aria-hidden baseado no tema inicial
-   const setInitialIcons = () => {
-      const themeButton = document.querySelector(".theme-toggle");
-      const sunIcon = themeButton?.querySelector(".theme-light-icon");
-      const moonIcon = themeButton?.querySelector(".theme-dark-icon");
+   // Apenas garante que os ícones do botão de toggle estão certos
+   const sunIcon = document.querySelector(".theme-light-icon");
+   const moonIcon = document.querySelector(".theme-dark-icon");
 
-      if (sunIcon && moonIcon) {
-         if (savedTheme === "light") {
-            sunIcon.setAttribute("aria-hidden", "false");
-            moonIcon.setAttribute("aria-hidden", "true");
-         } else {
-            sunIcon.setAttribute("aria-hidden", "true");
-            moonIcon.setAttribute("aria-hidden", "false");
-         }
-      }
-   };
+   if (theme === "dark") {
+      sunIcon?.setAttribute("aria-hidden", "true");
+      moonIcon?.setAttribute("aria-hidden", "false");
+   } else {
+      sunIcon?.setAttribute("aria-hidden", "false");
+      moonIcon?.setAttribute("aria-hidden", "true");
+   }
+}
 
-   // Tentar definir imediatamente
-   setInitialIcons();
+function updateThemeIcons(theme) {
+   const sunIcons = document.querySelectorAll(".theme-light-icon");
+   const moonIcons = document.querySelectorAll(".theme-dark-icon");
 
-   // Tentar novamente após um pequeno delay para garantir que o DOM esteja pronto
-   setTimeout(setInitialIcons, 100);
+   if (theme === "dark") {
+      sunIcons.forEach((el) => el.classList.add("d-none")); // Use d-none do Bootstrap ou hidden
+      moonIcons.forEach((el) => el.classList.remove("d-none"));
+   } else {
+      sunIcons.forEach((el) => el.classList.remove("d-none"));
+      moonIcons.forEach((el) => el.classList.add("d-none"));
+   }
 }
 
 // Validação de formulário

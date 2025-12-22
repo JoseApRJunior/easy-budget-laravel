@@ -36,7 +36,8 @@
                                     <div class="form-group">
                                         <label for="search">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
-                                            value="{{ $filters['search'] ?? '' }}" placeholder="Nome, SKU ou descrição">
+                                            value="{{ old('search', $filters['search'] ?? '') }}"
+                                            placeholder="Nome, SKU ou Descrição">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
@@ -46,7 +47,7 @@
                                             <option value="">Todas</option>
                                             @foreach ($categories as $category)
                                                 <option value="{{ $category->id }}"
-                                                    {{ ($filters['category_id'] ?? '') == $category->id ? 'selected' : '' }}>
+                                                    {{ old('category_id', $filters['category_id'] ?? '') == $category->id ? 'selected' : '' }}>
                                                     {{ $category->name }}
                                                 </option>
                                             @endforeach
@@ -58,13 +59,15 @@
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
                                             <option value="">Todos</option>
-                                            <option value="1"
-                                                {{ ($filters['active'] ?? '') === '1' ? 'selected' : '' }}>
+                                            @php($selectedActive = request()->has('active') ? request('active') : '')
+                                            <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                                 Ativo
                                             </option>
-                                            <option value="0"
-                                                {{ ($filters['active'] ?? '') === '0' ? 'selected' : '' }}>
+                                            <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
                                                 Inativo</option>
+                                            <option value=""
+                                                {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
+                                                Todos</option>
                                         </select>
                                     </div>
                                 </div>
@@ -83,9 +86,13 @@
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select class="form-control" id="deleted" name="deleted">
-                                            <option value="">Atuais</option>
-                                            <option value="only"
-                                                {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>Deletados
+                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : '')
+                                            <option value=""
+                                                {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
+                                                Atuais</option>
+                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
+                                                Deletados</option>
+                                            <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>Todos
                                             </option>
                                         </select>
                                     </div>
@@ -96,7 +103,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
                                             <input type="text" class="form-control currency-brl" id="min_price"
-                                                name="min_price" value="{{ $filters['min_price'] ?? '' }}"
+                                                name="min_price"
+                                                value="{{ old('min_price', $filters['min_price'] ?? '') }}"
                                                 inputmode="decimal" placeholder="0,00">
                                         </div>
                                     </div>
@@ -107,7 +115,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
                                             <input type="text" class="form-control currency-brl" id="max_price"
-                                                name="max_price" value="{{ $filters['max_price'] ?? '' }}"
+                                                name="max_price"
+                                                value="{{ old('max_price', $filters['max_price'] ?? '') }}"
                                                 inputmode="decimal" placeholder="0,00">
                                         </div>
                                     </div>
@@ -184,106 +193,89 @@
                         <!-- Desktop View -->
                         <div class="desktop-view">
                             <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Imagem</th>
-                                        <th>Nome</th>
-                                        <th>SKU</th>
-                                        <th>Categoria</th>
-                                        <th>Preço</th>
-                                        <th>Status</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($products as $product)
+                                <table class="modern-table table mb-0">
+                                    <thead>
                                         <tr>
-                                            <td class="text-center">
-                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                                                    class="img-thumbnail"
-                                                    style="width: 50px; height: 50px; object-fit: cover;">
-                                            </td>
-                                            <td>{{ $product->name }}</td>
-                                            <td><span class="text-code">{{ $product->sku }}</span></td>
-                                            <td>{{ $product->category->name ?? 'N/A' }}</td>
-                                            <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
-                                            <td>
-                                                @if ($product->active)
-                                                    <span class="badge badge-success">Ativo</span>
-                                                @else
-                                                    <span class="badge badge-danger">Inativo</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    @if ($product->deleted_at)
-                                                        {{-- Produto deletado: apenas restaurar --}}
-                                                        <form
-                                                            action="{{ route('provider.products.restore', $product->sku) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-success"
+                                            <th>Imagem</th>
+                                            <th>Nome</th>
+                                            <th>SKU</th>
+                                            <th>Categoria</th>
+                                            <th>Preço</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($products as $product)
+                                            <tr>
+                                                <td class="text-center">
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                                                        class="img-thumbnail"
+                                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                                </td>
+                                                <td>{{ $product->name }}</td>
+                                                <td><span class="text-code">{{ $product->sku }}</span></td>
+                                                <td>{{ $product->category->name ?? 'N/A' }}</td>
+                                                <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
+                                                <td>
+                                                    <span
+                                                        class="modern-badge {{ $product->active ? 'badge-active' : 'badge-inactive' }}">
+                                                        {{ $product->active ? 'Ativo' : 'Inativo' }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        @if ($product->deleted_at)
+                                                            {{-- Produto deletado: apenas restaurar --}}
+                                                            <button type="button" class="btn btn-success"
+                                                                data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                                data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                                                                data-product-name="{{ $product->name }}"
                                                                 title="Restaurar" aria-label="Restaurar">
                                                                 <i class="bi bi-arrow-counterclockwise"
                                                                     aria-hidden="true"></i>
                                                             </button>
-                                                        </form>
-                                                    @else
-                                                        {{-- Produto ativo: show, edit, toggle, delete --}}
-                                                        <a href="{{ route('provider.products.show', $product->sku) }}"
-                                                            class="btn btn-info" title="Visualizar"
-                                                            aria-label="Visualizar">
-                                                            <i class="bi bi-eye" aria-hidden="true"></i>
-                                                        </a>
-                                                        <a href="{{ route('provider.products.edit', $product->sku) }}"
-                                                            class="btn btn-primary" title="Editar" aria-label="Editar">
-                                                            <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                                        </a>
-                                                        <form
-                                                            action="{{ route('provider.products.toggle-status', $product->sku) }}"
-                                                            method="POST" class="d-inline toggle-status-form"
-                                                            data-confirm-message="{{ $product->active ? 'Desativar este produto?' : 'Ativar este produto?' }}"
-                                                            onsubmit="return confirm(this.getAttribute('data-confirm-message'))">
-                                                            @csrf
-                                                            @method('PATCH')
-                                                            <button type="submit"
-                                                                class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
-                                                                title="{{ $product->active ? 'Desativar' : 'Ativar' }}"
-                                                                aria-label="{{ $product->active ? 'Desativar' : 'Ativar' }}">
-                                                                <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }}"
-                                                                    aria-hidden="true"></i>
+                                                        @else
+                                                            {{-- Produto ativo: show, edit, toggle, delete --}}
+                                                            <a href="{{ route('provider.products.show', $product->sku) }}"
+                                                                class="btn btn-info" title="Visualizar"
+                                                                aria-label="Visualizar">
+                                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            </a>
+                                                            <a href="{{ route('provider.products.edit', $product->sku) }}"
+                                                                class="btn btn-primary" title="Editar"
+                                                                aria-label="Editar">
+                                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-danger"
+                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                                                                data-product-name="{{ $product->name }}" title="Excluir"
+                                                                aria-label="Excluir">
+                                                                <i class="bi bi-trash" aria-hidden="true"></i>
                                                             </button>
-                                                        </form>
-                                                        <button type="button" class="btn btn-danger"
-                                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                            data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                                                            data-product-name="{{ $product->name }}"
-                                                            title="Excluir" aria-label="Excluir">
-                                                            <i class="bi bi-trash" aria-hidden="true"></i>
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center text-muted">
-                                                <i class="bi bi-inbox mb-2" aria-hidden="true"
-                                                    style="font-size: 2rem;"></i>
-                                                <br>
-                                                @if (($filters['deleted'] ?? '') === 'only')
-                                                    Nenhum produto deletado encontrado.
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center text-muted">
+                                                    <i class="bi bi-inbox mb-2" aria-hidden="true"
+                                                        style="font-size: 2rem;"></i>
                                                     <br>
-                                                    <small>Você ainda não deletou nenhum produto.</small>
-                                                @else
-                                                    Nenhum produto encontrado.
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                                    @if (($filters['deleted'] ?? '') === 'only')
+                                                        Nenhum produto deletado encontrado.
+                                                        <br>
+                                                        <small>Você ainda não deletou nenhum produto.</small>
+                                                    @else
+                                                        Nenhum produto encontrado.
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -295,7 +287,8 @@
                                         class="list-group-item list-group-item-action py-3">
                                         <div class="d-flex align-items-start">
                                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                                                class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                class="rounded me-2"
+                                                style="width: 40px; height: 40px; object-fit: cover;">
                                             <div class="flex-grow-1">
                                                 <div class="fw-semibold mb-2">{{ $product->name }}</div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
@@ -306,7 +299,8 @@
                                                         <span class="badge bg-danger-subtle text-danger">Inativo</span>
                                                     @endif
                                                 </div>
-                                                <small class="text-muted">R$ {{ number_format($product->price, 2, ',', '.') }}</small>
+                                                <small class="text-muted">R$
+                                                    {{ number_format($product->price, 2, ',', '.') }}</small>
                                             </div>
                                             <i class="bi bi-chevron-right text-muted ms-2"></i>
                                         </div>
@@ -326,7 +320,10 @@
                         </div>
                     </div>
                     @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
-                        @include('partials.components.paginator', ['p' => $products->appends(request()->query()), 'show_info' => true])
+                        @include('partials.components.paginator', [
+                            'p' => $products->appends(request()->query()),
+                            'show_info' => true,
+                        ])
                     @endif
                 </div>
             </div>
@@ -341,7 +338,7 @@
                 </div>
                 <div class="modal-body">
                     Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
-                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                    <br><small class="text-muted">Esta ação pode ser desfeita.</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -349,6 +346,27 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja restaurar o produto <strong id="restoreProductName"></strong>?
+                    <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="restoreForm" action="#" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Restaurar</button>
                     </form>
                 </div>
             </div>

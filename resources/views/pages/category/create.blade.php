@@ -14,7 +14,7 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Nova</li>
                 </ol>
             </nav>
@@ -31,7 +31,7 @@
                         </ul>
                     </div>
                 @endif
-                <form action="{{ route('categories.store') }}" method="POST">
+                <form action="{{ route('provider.categories.store') }}" method="POST">
                     @csrf
                     <div class="row g-4">
                         <div class="col-md-12">
@@ -69,7 +69,7 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <div>
-                            <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('provider.categories.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
                         </div>

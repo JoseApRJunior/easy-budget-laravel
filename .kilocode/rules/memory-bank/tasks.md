@@ -243,7 +243,7 @@ class NovoModeloService extends BaseTenantService
 -  `app/Services/CategoryService.php` - Service para operações hierárquicas
 -  `app/Http/Controllers/CategoryController.php` - Controller com filtros e Soft Delete
 -  `database/migrations/2025_01_01_000000_create_categories_table.php` - Tabela com parent_id
--  `resources/views/pages/categories/` - Views com filtros e gestão de Soft Delete
+-  `resources/views/pages/category/` - Views com filtros e gestão de Soft Delete
 -  `resources/js/categories.js` - JavaScript para interface com filtros
 
 **Passos:**
@@ -272,7 +272,7 @@ class NovoModeloService extends BaseTenantService
 -  **Estrutura hierárquica:** Usar parent_id com índices adequados para performance
 -  **Eager loading:** Sempre usar with('children') para evitar N+1 queries
 -  **Soft Delete granular:** Implementar filtros diferentes para Prestador vs Admin
--  **Pivot Tables:** Considerar category_tenant para multi-tenant mais robusto
+-  **Rotas Padronizadas:** Rotas de categoria agora seguem o padrão `provider.categories.*`.
 -  **Validações hierárquicas:** Não permitir categoria ser pai de si mesma
 -  **Cache de hierarquia:** Implementar cache para estruturas hierárquicas grandes
 -  **Interface responsiva:** Garantir que interface funcione bem em diferentes dispositivos
@@ -536,56 +536,67 @@ class NovoModeloService extends BaseTenantService
 -  **Documentação:** Atualizar memory bank com novos padrões identificados
 
 ### **🛠️ Refinamento de UX e Dashboard de Categorias**
+
 **Última execução:** 21/12/2024
 **Arquivos modificados:**
-- `app/Services/Domain/CategoryService.php` - Refatoração de segurança e lógica de dashboard
-- `app/Services/Domain/CategoryExportService.php` - Remoção de slug e alinhamento centralizado
-- `app/Http/Controllers/CategoryController.php` - Injeção do novo ExportService
-- `resources/views/pages/category/dashboard.blade.php` - Novo layout de métricas responsivo
-- `resources/views/pages/category/*.blade.php` - Remoção visual de Slugs
+
+-  `app/Services/Domain/CategoryService.php` - Refatoração de segurança e lógica de dashboard
+-  `app/Services/Domain/CategoryExportService.php` - Remoção de slug e alinhamento centralizado
+-  `app/Http/Controllers/CategoryController.php` - Injeção do novo ExportService
+-  `resources/views/pages/category/dashboard.blade.php` - Novo layout de métricas responsivo
+-  `resources/views/pages/category/*.blade.php` - Remoção visual de Slugs
 
 **Passos executados:**
+
 1. **Diferenciação de Métricas:** Implementado contador para categorias deletadas e lógica de inativas.
 2. **Simplificação de UI:** Ocultado o campo Slug em todas as telas voltadas ao prestador para reduzir complexidade.
 3. **Melhoria na Exportação:** Ajustado alinhamento das colunas numéricas no Excel para padrão profissional.
 4. **Segurança de Tenant:** Refatorado helpers do `CategoryService` para garantir que toda busca valide a propriedade do registro via `ServiceResult`.
 
 **Considerações importantes:**
-- **Slugs como identificadores:** Devem ser mantidos nas URLs por SEO/Estética, mas ocultos nos formulários.
-- **Métricas:** Sempre considerar registros deletados (`withTrashed`) ao calcular estatísticas totais.
-- **Consistência Visual:** Usar classes utilitárias CSS globais em vez de estilos inline no Blade.
+
+-  **Slugs como identificadores:** Devem ser mantidos nas URLs por SEO/Estética, mas ocultos nos formulários.
+-  **Métricas:** Sempre considerar registros deletados (`withTrashed`) ao calcular estatísticas totais.
+-  **Consistência Visual:** Usar classes utilitárias CSS globais em vez de estilos inline no Blade.
 
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
 **Última atualização:** 21/12/2024 - Refinamento do módulo de categorias e dashboard.
 
 ### **🛠️ Correção e Melhoria na Exportação de Categorias**
+
 **Data:** 21/12/2024
 **Arquivos modificados:**
-- `app/Repositories/Traits/RepositoryFiltersTrait.php` - Correção no filtro `deleted` para aceitar string vazia.
-- `app/Http/Controllers/CategoryController.php` - Ajuste na extração de dados do Paginator para preservar `deleted_at`.
-- `app/Services/Domain/CategoryExportService.php` - Adição da coluna "Situação" (Ativo/Inativo/Deletado) e lógica robusta de detecção.
-- `resources/views/pages/category/index.blade.php` - Correção nos links de exportação para persistir filtros vazios.
+
+-  `app/Repositories/Traits/RepositoryFiltersTrait.php` - Correção no filtro `deleted` para aceitar string vazia.
+-  `app/Http/Controllers/CategoryController.php` - Ajuste na extração de dados do Paginator para preservar `deleted_at`.
+-  `app/Services/Domain/CategoryExportService.php` - Adição da coluna "Situação" (Ativo/Inativo/Deletado) e lógica robusta de detecção.
+-  `resources/views/pages/category/index.blade.php` - Correção nos links de exportação para persistir filtros vazios.
 
 **Passos executados:**
+
 1. **Filtros Persistentes:** Links de exportação agora forçam parâmetros (ex: `deleted=''`) para evitar limpeza automática do Laravel.
 2. **Coluna Situação:** Exportação agora mostra claramente itens Deletados, diferenciando de Inativos.
 3. **Correção Backend:** Repositório agora entende que filtro vazio significa `withTrashed()` (Todos).
 
 **Lições Aprendidas:**
-- O helper `route()` remove parâmetros nulos; usar string vazia `''` para forçar presença.
-- `getCollection()` em Paginators pode perder atributos crus do banco; usar `items()` ou coleta manual.
-- `filemtime()` em Windows/Laragon é lento; usar versionamento estático para assets.
+
+-  O helper `route()` remove parâmetros nulos; usar string vazia `''` para forçar presença.
+-  `getCollection()` em Paginators pode perder atributos crus do banco; usar `items()` ou coleta manual.
+-  `filemtime()` em Windows/Laragon é lento; usar versionamento estático para assets.
 
 ### **🚀 Implementação "Gold Standard" no Módulo de Produtos**
+
 **Data:** 21/12/2024
 **Arquivos modificados:**
-- `app/Services/Domain/ProductService.php`: Refatorado para usar Repository Pattern no Dashboard e paginação dinâmica.
-- `app/Services/Domain/ProductExportService.php`: Criado novo serviço de exportação.
-- `app/Http/Controllers/ProductController.php`: Implementada exportação e injeção de dependências.
-- `resources/views/pages/product/index.blade.php`: Adicionado botão de exportação.
+
+-  `app/Services/Domain/ProductService.php`: Refatorado para usar Repository Pattern no Dashboard e paginação dinâmica.
+-  `app/Services/Domain/ProductExportService.php`: Criado novo serviço de exportação.
+-  `app/Http/Controllers/ProductController.php`: Implementada exportação e injeção de dependências.
+-  `resources/views/pages/product/index.blade.php`: Adicionado botão de exportação.
 
 **Melhorias Implementadas:**
+
 1. **Exportação Completa:** Excel e PDF agora disponíveis para produtos, com suporte a filtros (preço, status, search).
 2. **Dashboard Otimizado:** Consultas diretas ao Eloquent substituídas por métodos do Repository, garantindo escopo de Tenant e performance.
 3. **Consistência:** Módulo alinhado com a arquitetura de Categorias, facilitando manutenção futura.

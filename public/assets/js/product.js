@@ -49,6 +49,36 @@
    }
 
    /**
+    * Initialize restore modal functionality
+    */
+   function initializeRestoreModal() {
+      const restoreModal = document.getElementById("restoreModal");
+      if (!restoreModal) return;
+
+      // Move modal to body if not already there
+      if (restoreModal.parentElement !== document.body) {
+         document.body.appendChild(restoreModal);
+      }
+
+      restoreModal.addEventListener("show.bs.modal", function (event) {
+         const button = event.relatedTarget;
+         if (!button) return;
+
+         const restoreUrl = button.getAttribute("data-restore-url");
+         const productName = button.getAttribute("data-product-name");
+         const form = document.getElementById("restoreForm");
+         const nameEl = document.getElementById("restoreProductName");
+
+         if (form && restoreUrl) {
+            form.setAttribute("action", restoreUrl);
+         }
+         if (nameEl) {
+            nameEl.textContent = '"' + (productName || "") + '"';
+         }
+      });
+   }
+
+   /**
     * Initialize all product index functionality
     */
    function initializeProductIndex() {
@@ -57,6 +87,7 @@
       initializeCurrencyFormatting();
       initializeStatusToggle();
       initializeDeleteModal();
+      initializeRestoreModal();
    }
 
    /**
@@ -119,10 +150,10 @@
          form.submit();
       });
 
-      if (typeof window.bootstrap !== 'undefined') {
+      if (typeof window.bootstrap !== "undefined") {
          productState.modalInstance = new window.bootstrap.Modal(modalEl);
       } else {
-         console.error('Bootstrap 5 not found in window scope');
+         console.error("Bootstrap 5 not found in window scope");
          // Fallback manual or retry logic could go here
          return;
       }
@@ -342,5 +373,6 @@
       normalizeCurrencyInputs: normalizeCurrencyInputs,
       formatBRL: formatBRL,
       normalizeCurrency: normalizeCurrency,
+      initializeRestoreModal: initializeRestoreModal,
    };
 })();

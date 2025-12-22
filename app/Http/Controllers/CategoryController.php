@@ -97,7 +97,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
         $result->getData()->load( [
@@ -115,7 +115,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
         $category     = $result->getData()->loadCount( [ 'children', 'services', 'products' ] );
@@ -135,7 +135,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
+            return $this->redirectError( 'provider.categories.index', 'Categoria não encontrada' );
         }
 
         $category = $result->getData();
@@ -150,7 +150,7 @@ class CategoryController extends Controller
             return back()->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa.' ] )->withInput();
         }
 
-        return $this->redirectWithServiceResult( 'categories.index', $updateResult, 'Categoria atualizada com sucesso.' );
+        return $this->redirectWithServiceResult( 'provider.categories.index', $updateResult, 'Categoria atualizada com sucesso.' );
     }
 
     /**
@@ -160,22 +160,22 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
+            return $this->redirectError( 'provider.categories.index', 'Categoria não encontrada' );
         }
 
         $deleteResult = $this->categoryService->deleteCategory( $result->getData()->id );
 
-        return $this->redirectWithServiceResult( 'categories.index', $deleteResult, 'Categoria excluída com sucesso.' );
+        return $this->redirectWithServiceResult( 'provider.categories.index', $deleteResult, 'Categoria excluída com sucesso.' );
     }
 
     /**
      * Alterna status ativo/inativo da categoria.
      */
-    public function toggle_status( string $slug ): RedirectResponse
+    public function toggleStatus( string $slug ): RedirectResponse
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', 'Categoria não encontrada' );
+            return $this->redirectError( 'provider.categories.index', 'Categoria não encontrada' );
         }
 
         $category     = $result->getData();
@@ -184,11 +184,11 @@ class CategoryController extends Controller
         ] );
 
         if ( $updateResult->isError() ) {
-            return $this->redirectError( 'categories.index', $updateResult->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $updateResult->getMessage() );
         }
 
         $statusText = $updateResult->getData()->is_active ? 'ativada' : 'desativada';
-        return $this->redirectSuccess( 'categories.index', "Categoria {$statusText} com sucesso." );
+        return $this->redirectSuccess( 'provider.categories.index', "Categoria {$statusText} com sucesso." );
     }
 
     /**
@@ -199,10 +199,10 @@ class CategoryController extends Controller
         $result = $this->categoryService->restoreCategoriesBySlug( $slug );
 
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
-        return $this->redirectSuccess( 'categories.index', 'Categoria restaurada com sucesso!' );
+        return $this->redirectSuccess( 'provider.categories.index', 'Categoria restaurada com sucesso!' );
     }
 
     /**
@@ -233,16 +233,16 @@ class CategoryController extends Controller
         $ids = $request->input( 'ids', [] );
 
         if ( empty( $ids ) ) {
-            return $this->redirectError( 'categories.index', 'Nenhuma categoria selecionada para restauração.' );
+            return $this->redirectError( 'provider.categories.index', 'Nenhuma categoria selecionada para restauração.' );
         }
 
         $result = $this->categoryService->restoreCategories( $ids );
 
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
-        return $this->redirectSuccess( 'categories.index', "Restauradas categorias com sucesso." );
+        return $this->redirectSuccess( 'provider.categories.index', "Restauradas categorias com sucesso." );
     }
 
     public function export( Request $request ): StreamedResponse|RedirectResponse
@@ -257,7 +257,7 @@ class CategoryController extends Controller
         $result = $this->categoryService->getCategories( $filters, 1000 );
 
         if ( $result->isError() ) {
-            return $this->redirectError( 'categories.index', $result->getMessage() );
+            return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
         // Extrai a collection do paginator preservando todos os atributos

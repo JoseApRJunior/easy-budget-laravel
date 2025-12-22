@@ -41,23 +41,24 @@ class ProductService extends AbstractBaseService
     /**
      * Gera SKU único para o tenant.
      */
-    public function generateUniqueSku( int $tenantId ): string
+    private function generateUniqueSku( int $tenantId ): string
     {
-        return DB::transaction( function () use ($tenantId) {
-            $lastProduct = Product::where( 'tenant_id', $tenantId )
-                ->where( 'sku', 'LIKE', 'PROD%' )
-                ->orderByDesc( 'sku' )
-                ->lockForUpdate()
-                ->first();
+        $lastProduct = Product::where( 'tenant_id', $tenantId )
+            ->where( 'sku', 'LIKE', 'PROD%' )
+            ->withTrashed() // ESSA É A CHAVE: Considera até os deletados para não repetir número
+            ->orderBy( 'sku', 'desc' )
+            ->lockForUpdate()
+            ->first();
 
-            if ( !$lastProduct || !preg_match( '/^PROD(\d{6})$/', $lastProduct->sku, $matches ) ) {
-                return 'PROD000001';
-            }
+        if ( !$lastProduct ) {
+            return 'PROD000001';
+        }
 
-            $nextNumber = (int) $matches[ 1 ] + 1;
+        // Agora ele vai encontrar o PROD000030 corretamente
+        $lastNumber = (int) filter_var( $lastProduct->sku, FILTER_SANITIZE_NUMBER_INT );
+        $nextNumber = $lastNumber + 1;
 
-            return 'PROD' . str_pad( (string) $nextNumber, 6, '0', STR_PAD_LEFT );
-        } );
+        return 'PROD' . str_pad( (string) $nextNumber, 6, '0', STR_PAD_LEFT );
     }
 
     /**
@@ -72,12 +73,6 @@ class ProductService extends AbstractBaseService
             'category_id' => 'nullable|exists:categories,id',
             'image'       => 'nullable|image|max:2048',
         ];
-
-        if ( $isUpdate ) {
-            $rules[ 'sku' ] = 'string|max:50|unique:products,sku,' . ( $data[ 'id' ] ?? 'null' ) . ',id,tenant_id,' . $this->tenantId();
-        } else {
-            $rules[ 'sku' ] = 'string|max:50|unique:products,sku,NULL,id,tenant_id,' . $this->tenantId();
-        }
 
         $validator = Validator::make( $data, $rules );
 
@@ -222,33 +217,39 @@ class ProductService extends AbstractBaseService
         return $this->safeExecute( function () use ($data) {
             $tenantId = $this->ensureTenantId();
 
-            if ( isset( $data[ 'name' ] ) ) {
-                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
-            }
+            // A transação envolve todo o processo de escrita
+            $product = DB::transaction( function () use ($data, $tenantId) {
 
-            if ( empty( $data[ 'sku' ] ) ) {
-                $data[ 'sku' ] = $this->generateUniqueSku( $tenantId );
-            }
+                // 1. Lógica de tratamento de dados (Nome, SKU, etc)
+                if ( isset( $data[ 'name' ] ) ) {
+                    $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+                }
 
-            // Processar imagem
-            if ( isset( $data[ 'image' ] ) ) {
-                $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
-            }
+                if ( empty( $data[ 'sku' ] ) ) {
+                    // O lockForUpdate aqui dentro agora segura o banco até o final deste bloco
+                    $data[ 'sku' ] = $this->generateUniqueSku( (int) $tenantId );
+                }
 
-            if ( empty( $data[ 'tenant_id' ] ) ) {
+                // 2. Upload e Tenant ID
+                if ( isset( $data[ 'image' ] ) ) {
+                    $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
+                }
                 $data[ 'tenant_id' ] = $tenantId;
-            }
 
-            $product = $this->repository->create( $data );
+                // 3. Persistência (Insert no Banco)
+                $product = $this->repository->create( $data );
 
-            // Criar registro de inventário automaticamente
-            \App\Models\ProductInventory::create( [
-                'tenant_id'    => $product->tenant_id,
-                'product_id'   => $product->id,
-                'quantity'     => 0,
-                'min_quantity' => 0,
-                'max_quantity' => null,
-            ] );
+                // 4. Inventário
+                \App\Models\ProductInventory::create( [
+                    'tenant_id'    => $product->tenant_id,
+                    'product_id'   => $product->id,
+                    'quantity'     => 0,
+                    'min_quantity' => 0,
+                    'max_quantity' => null,
+                ] );
+
+                return $product;
+            } );
 
             return $this->success( $product, 'Produto criado com sucesso' );
         }, 'Erro ao criar produto.' );
@@ -260,51 +261,51 @@ class ProductService extends AbstractBaseService
     public function updateProductBySku( string $sku, array $data ): ServiceResult
     {
         return $this->safeExecute( function () use ($sku, $data) {
-            $ownerResult = $this->findAndVerifyOwnership( $sku );
-            if ( $ownerResult->isError() ) return $ownerResult;
-
-            $product = $ownerResult->getData();
-
-            if ( isset( $data[ 'name' ] ) ) {
-                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
-            }
-
-            if ( isset( $data[ 'name' ] ) && empty( $data[ 'sku' ] ) ) {
-                $data[ 'sku' ] = $this->generateUniqueSku( $this->tenantId() );
-            }
-
-            // Remover imagem existente se solicitado
-            if ( isset( $data[ 'remove_image' ] ) && $data[ 'remove_image' ] && $product->image ) {
-                $relative = $this->resolveRelativeStoragePath( $product->image );
-                if ( $relative ) {
-                    Storage::disk( 'public' )->delete( $relative );
+            $product = DB::transaction( function () use ($sku, $data) {
+                $ownerResult = $this->findAndVerifyOwnership( $sku );
+                if ( $ownerResult->isError() ) {
+                    throw new Exception( $ownerResult->getMessage() );
                 }
-                $data[ 'image' ] = null;
-            }
 
-            // Processar nova imagem se fornecida
-            if ( isset( $data[ 'image' ] ) && is_a( $data[ 'image' ], 'Illuminate\Http\UploadedFile' ) ) {
-                // Deletar imagem antiga se existir
-                if ( $product->image ) {
+                $product = $ownerResult->getData();
+
+                if ( isset( $data[ 'name' ] ) ) {
+                    $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+                }
+
+                // Remover imagem existente se solicitado
+                if ( isset( $data[ 'remove_image' ] ) && $data[ 'remove_image' ] && $product->image ) {
                     $relative = $this->resolveRelativeStoragePath( $product->image );
                     if ( $relative ) {
                         Storage::disk( 'public' )->delete( $relative );
                     }
+                    $data[ 'image' ] = null;
                 }
-                $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
-            } else if ( isset( $data[ 'image' ] ) && $data[ 'image' ] === null ) {
-                if ( $product->image ) {
-                    $relative = $this->resolveRelativeStoragePath( $product->image );
-                    if ( $relative ) {
-                        Storage::disk( 'public' )->delete( $relative );
-                    }
-                }
-                $data[ 'image' ] = null;
-            } else {
-                unset( $data[ 'image' ] );
-            }
 
-            $product = $this->repository->update( $product->id, $data );
+                // Processar nova imagem se fornecida
+                if ( isset( $data[ 'image' ] ) && is_a( $data[ 'image' ], 'Illuminate\Http\UploadedFile' ) ) {
+                    // Deletar imagem antiga se existir
+                    if ( $product->image ) {
+                        $relative = $this->resolveRelativeStoragePath( $product->image );
+                        if ( $relative ) {
+                            Storage::disk( 'public' )->delete( $relative );
+                        }
+                    }
+                    $data[ 'image' ] = $this->uploadProductImage( $data[ 'image' ] );
+                } else if ( isset( $data[ 'image' ] ) && $data[ 'image' ] === null ) {
+                    if ( $product->image ) {
+                        $relative = $this->resolveRelativeStoragePath( $product->image );
+                        if ( $relative ) {
+                            Storage::disk( 'public' )->delete( $relative );
+                        }
+                    }
+                    $data[ 'image' ] = null;
+                } else {
+                    unset( $data[ 'image' ] );
+                }
+
+                return $this->repository->update( $product->id, $data );
+            } );
 
             return $this->success( $product, 'Produto atualizado com sucesso' );
         }, 'Erro ao atualizar produto.' );
@@ -313,22 +314,23 @@ class ProductService extends AbstractBaseService
     public function toggleProductStatus( string $sku ): ServiceResult
     {
         return $this->safeExecute( function () use ($sku) {
-            $ownerResult = $this->findAndVerifyOwnership( $sku );
-            if ( $ownerResult->isError() ) return $ownerResult;
+            $product = DB::transaction( function () use ($sku) {
+                $ownerResult = $this->findAndVerifyOwnership( $sku );
+                if ( $ownerResult->isError() ) {
+                    throw new Exception( $ownerResult->getMessage() );
+                }
 
-            $product = $ownerResult->getData();
+                $product = $ownerResult->getData();
 
-            if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
-                return $this->error(
-                    OperationStatus::VALIDATION_ERROR,
-                    'Produto não pode ser desativado/ativado pois está em uso em serviços.',
-                );
-            }
+                if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
+                    throw new Exception( 'Produto não pode ser desativado/ativado pois está em uso em serviços.' );
+                }
 
-            $newStatus = !$product->active;
-            $product   = $this->repository->update( $product->id, [ 'active' => $newStatus ] );
+                $newStatus = !$product->active;
+                return $this->repository->update( $product->id, [ 'active' => $newStatus ] );
+            } );
 
-            $message = $newStatus ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
+            $message = $product->active ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
             return $this->success( $product, $message );
         }, 'Erro ao alterar status do produto.' );
     }
@@ -336,27 +338,28 @@ class ProductService extends AbstractBaseService
     public function deleteProductBySku( string $sku ): ServiceResult
     {
         return $this->safeExecute( function () use ($sku) {
-            $ownerResult = $this->findAndVerifyOwnership( $sku );
-            if ( $ownerResult->isError() ) return $ownerResult;
-
-            $product = $ownerResult->getData();
-
-            if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
-                return $this->error(
-                    OperationStatus::VALIDATION_ERROR,
-                    'Produto não pode ser excluído pois está em uso em serviços.',
-                );
-            }
-
-            // Deletar imagem física se existir
-            if ( $product->image ) {
-                $relative = $this->resolveRelativeStoragePath( $product->image );
-                if ( $relative ) {
-                    Storage::disk( 'public' )->delete( $relative );
+            DB::transaction( function () use ($sku) {
+                $ownerResult = $this->findAndVerifyOwnership( $sku );
+                if ( $ownerResult->isError() ) {
+                    throw new Exception( $ownerResult->getMessage() );
                 }
-            }
 
-            $this->repository->delete( $product->id );
+                $product = $ownerResult->getData();
+
+                if ( !$this->repository->canBeDeactivatedOrDeleted( $product->id ) ) {
+                    throw new Exception( 'Produto não pode ser excluído pois está em uso em serviços.' );
+                }
+
+                // Deletar imagem física se existir
+                if ( $product->image ) {
+                    $relative = $this->resolveRelativeStoragePath( $product->image );
+                    if ( $relative ) {
+                        Storage::disk( 'public' )->delete( $relative );
+                    }
+                }
+
+                $this->repository->delete( $product->id );
+            } );
 
             return $this->success( null, 'Produto excluído com sucesso' );
         }, 'Erro ao excluir produto.' );

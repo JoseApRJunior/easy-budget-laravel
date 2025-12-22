@@ -175,7 +175,7 @@
                                                         {{ optional($category->created_at)->format('d/m/Y') }}
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="{{ route('categories.show', $category->slug) }}"
+                                                        <a href="{{ route('provider.categories.show', $category->slug) }}"
                                                             class="btn btn-sm btn-outline-secondary">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
@@ -191,7 +191,7 @@
                             <div class="mobile-view">
                                 <div class="list-group">
                                     @foreach ($recent as $category)
-                                        <a href="{{ route('categories.show', $category->slug) }}"
+                                        <a href="{{ route('provider.categories.show', $category->slug) }}"
                                             class="list-group-item list-group-item-action py-3">
                                             <div class="d-flex align-items-start">
                                                 @if ($category->parent)
@@ -260,13 +260,13 @@
                         </h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <a href="{{ route('categories.create') }}" class="btn btn-sm btn-success">
+                        <a href="{{ route('provider.categories.create') }}" class="btn btn-sm btn-success">
                             <i class="bi bi-plus-circle me-2"></i>Nova Categoria
                         </a>
-                        <a href="{{ route('categories.index') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('provider.categories.index') }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-tags me-2"></i>Listar Categorias
                         </a>
-                        <a href="{{ route('categories.index', ['deleted' => 'only']) }}"
+                        <a href="{{ route('provider.categories.index', ['deleted' => 'only']) }}"
                             class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-archive me-2"></i>Ver Deletadas
                         </a>

@@ -16,7 +16,7 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('categories.dashboard') }}">Categorias</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.dashboard') }}">Categorias</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Listar</li>
                 </ol>
             </nav>
@@ -30,7 +30,7 @@
                         <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                     </div>
                     <div class="card-body">
-                        <form id="filtersFormCategories" method="GET" action="{{ route('categories.index') }}">
+                        <form id="filtersFormCategories" method="GET" action="{{ route('provider.categories.index') }}">
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -50,7 +50,8 @@
                                             <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
                                                 Inativo
                                             </option>
-                                            <option value="" {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
+                                            <option value=""
+                                                {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -78,7 +79,8 @@
                                             <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
                                                 Deletados
                                             </option>
-                                            <option value="" {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
+                                            <option value=""
+                                                {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
                                                 Todos</option>
                                         </select>
                                     </div>
@@ -89,7 +91,7 @@
                                             aria-label="Filtrar">
                                             <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                                         </button>
-                                        <a href="{{ route('categories.index') }}" class="btn btn-secondary"
+                                        <a href="{{ route('provider.categories.index') }}" class="btn btn-secondary"
                                             aria-label="Limpar filtros">
                                             <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
                                         </a>
@@ -129,19 +131,19 @@
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
                                                     <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('categories.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
                                                     <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
                                                 </a>
                                             </li>
                                         </ul>
                                     </div>
-                                    <a href="{{ route('categories.create') }}" class="btn btn-primary btn-sm">
+                                    <a href="{{ route('provider.categories.create') }}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-plus" aria-hidden="true"></i>
                                         <span class="ms-1">Nova</span>
                                     </a>
@@ -155,7 +157,7 @@
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @forelse($categories as $category)
-                                    <a href="{{ route('categories.show', $category->slug) }}"
+                                    <a href="{{ route('provider.categories.show', $category->slug) }}"
                                         class="list-group-item list-group-item-action py-3">
                                         <div class="d-flex align-items-start">
                                             <i class="bi bi-tag-fill text-muted me-2 mt-1"></i>
@@ -245,7 +247,7 @@
                                                         @if ($category->deleted_at)
                                                             {{-- Categoria deletada: apenas restaurar --}}
                                                             <form
-                                                                action="{{ route('categories.restore', $category->slug) }}"
+                                                                action="{{ route('provider.categories.restore', $category->slug) }}"
                                                                 method="POST" class="d-inline">
                                                                 @csrf
                                                                 <button type="submit" class="btn btn-success"
@@ -256,23 +258,22 @@
                                                             </form>
                                                         @else
                                                             {{-- Categoria ativa: show, edit, delete --}}
-                                                            <a href="{{ route('categories.show', $category->slug) }}"
-                                                                class="action-btn action-btn-view" title="Visualizar">
-                                                                <i class="bi bi-eye-fill"></i>
+                                                            <a href="{{ route('provider.categories.show', $category->slug) }}"
+                                                                class="btn btn-info" title="Visualizar" aria-label="Visualizar">
+                                                                <i class="bi bi-eye" aria-hidden="true"></i>
                                                             </a>
                                                             @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                            <a href="{{ route('categories.edit', $category->slug) }}"
-                                                                class="action-btn action-btn-edit" title="Editar">
-                                                                <i class="bi bi-pencil-fill"></i>
+                                                            <a href="{{ route('provider.categories.edit', $category->slug) }}"
+                                                                class="btn btn-primary" title="Editar" aria-label="Editar">
+                                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                                             </a>
                                                             @if ($canDelete)
-                                                                <button type="button"
-                                                                    class="action-btn action-btn-delete"
+                                                                <button type="button" class="btn btn-danger"
                                                                     data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                                    data-delete-url="{{ route('categories.destroy', $category->slug) }}"
-                                                                    data-category-name="{{ $category->name }}"
-                                                                    title="Excluir">
-                                                                    <i class="bi bi-trash-fill"></i>
+                                                                    data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
+                                                                    data-category-name="{{ $category->name }}" title="Excluir"
+                                                                    aria-label="Excluir">
+                                                                    <i class="bi bi-trash" aria-hidden="true"></i>
                                                                 </button>
                                                             @endif
                                                         @endif

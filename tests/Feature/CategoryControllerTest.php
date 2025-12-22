@@ -31,17 +31,24 @@ class CategoryControllerTest extends TestCase
         // Assign 'provider' role to tenantUser
         $providerRole = \App\Models\Role::firstOrCreate( [ 'name' => 'provider' ], [ 'description' => 'Provider' ] );
         $this->tenantUser->roles()->attach( $providerRole->id, [ 'tenant_id' => $this->tenant->id ] );
+
+        // Create provider record for the user
+        \App\Models\Provider::create( [
+            'user_id'        => $this->tenantUser->id,
+            'tenant_id'      => $this->tenant->id,
+            'terms_accepted' => true,
+        ] );
     }
 
     public function test_tenant_can_create_category()
     {
         $response = $this->actingAs( $this->tenantUser )
-            ->post( route( 'categories.store' ), [
+            ->post( route( 'provider.categories.store' ), [
                 'name'      => 'Minha Categoria Custom',
                 'is_active' => true,
             ] );
 
-        $response->assertRedirect( route( 'categories.create' ) );
+        $response->assertRedirect( route( 'provider.categories.create' ) );
         $response->assertSessionHas( 'success', 'Categoria criada com sucesso! Você pode cadastrar outra categoria agora.' );
         $response->assertSessionHasNoErrors();
 
@@ -67,12 +74,12 @@ class CategoryControllerTest extends TestCase
         ] );
 
         $response = $this->actingAs( $this->tenantUser )
-            ->post( route( 'categories.store' ), [
+            ->post( route( 'provider.categories.store' ), [
                 'name'      => 'Serviços Gerais', // Same name
                 'is_active' => true,
             ] );
 
-        $response->assertRedirect( route( 'categories.create' ) );
+        $response->assertRedirect( route( 'provider.categories.create' ) );
         $response->assertSessionHas( 'success', 'Categoria criada com sucesso! Você pode cadastrar outra categoria agora.' );
         $response->assertSessionHasNoErrors();
 
@@ -101,7 +108,7 @@ class CategoryControllerTest extends TestCase
 
         // Try to create category with explicit duplicate slug
         $response = $this->actingAs( $this->tenantUser )
-            ->post( route( 'categories.store' ), [
+            ->post( route( 'provider.categories.store' ), [
                 'name'      => 'Serviços Diferentes',
                 'slug'      => 'servicos-gerais', // Explicit duplicate slug
                 'is_active' => true,
@@ -134,14 +141,21 @@ class CategoryControllerTest extends TestCase
         $providerRole = \App\Models\Role::firstOrCreate( [ 'name' => 'provider' ], [ 'description' => 'Provider' ] );
         $secondUser->roles()->attach( $providerRole->id, [ 'tenant_id' => $secondTenant->id ] );
 
+        // Create provider record for the second user
+        \App\Models\Provider::create( [
+            'user_id'        => $secondUser->id,
+            'tenant_id'      => $secondTenant->id,
+            'terms_accepted' => true,
+        ] );
+
         // Second user can create category with same slug
         $response = $this->actingAs( $secondUser )
-            ->post( route( 'categories.store' ), [
+            ->post( route( 'provider.categories.store' ), [
                 'name'      => 'Serviços Gerais',
                 'is_active' => true,
             ] );
 
-        $response->assertRedirect( route( 'categories.create' ) );
+        $response->assertRedirect( route( 'provider.categories.create' ) );
         $response->assertSessionHas( 'success', 'Categoria criada com sucesso! Você pode cadastrar outra categoria agora.' );
         $response->assertSessionHasNoErrors();
 
@@ -180,14 +194,14 @@ class CategoryControllerTest extends TestCase
 
         // Test without filters - should return empty collection (padrão estabelecido)
         $response = $this->actingAs( $this->tenantUser )
-            ->get( route( 'categories.index' ) );
+            ->get( route( 'provider.categories.index' ) );
 
         $response->assertStatus( 200 );
         $response->assertViewIs( 'pages.category.index' );
 
         // Test with active filter - should return active categories
         $response = $this->actingAs( $this->tenantUser )
-            ->get( route( 'categories.index', [ 'active' => '1' ] ) );
+            ->get( route( 'provider.categories.index', [ 'active' => '1' ] ) );
 
         $response->assertStatus( 200 );
         $response->assertViewIs( 'pages.category.index' );

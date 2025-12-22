@@ -14,7 +14,7 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
                 </ol>
             </nav>
@@ -43,7 +43,7 @@
                             <div class="d-flex flex-column">
                                 <label class="text-muted small mb-1">Categoria Pai</label>
                                 <h5 class="mb-0">
-                                    <a href="{{ route('categories.show', $category->parent->slug) }}"
+                                    <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
                                         class="text-decoration-none">
                                         {{ $category->parent->name }}
                                     </a>
@@ -101,7 +101,7 @@
                                                     </td>
                                                     <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
                                                     <td class="text-center">
-                                                        <a href="{{ route('categories.show', $child->slug) }}"
+                                                        <a href="{{ route('provider.categories.show', $child->slug) }}"
                                                             class="btn btn-sm btn-outline-secondary" title="Visualizar">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
@@ -117,7 +117,7 @@
                             <div class="mobile-view">
                                 <div class="list-group">
                                     @foreach ($children as $child)
-                                        <a href="{{ route('categories.show', $child->slug) }}"
+                                        <a href="{{ route('provider.categories.show', $child->slug) }}"
                                             class="list-group-item list-group-item-action py-3">
                                             <div class="d-flex align-items-start">
                                                 <i class="bi bi-tag text-muted me-2 mt-1"></i>
@@ -144,7 +144,7 @@
 
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex gap-2">
-                <a href="{{ url()->previous(route('categories.index')) }}" class="btn btn-outline-secondary">
+                <a href="{{ url()->previous(route('provider.categories.index')) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-2"></i>Voltar
                 </a>
             </div>
@@ -153,7 +153,7 @@
             </small>
             <div class="d-flex gap-2">
                 @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                <a href="{{ route('categories.edit', $category->slug) }}" class="btn btn-primary">
+                <a href="{{ route('provider.categories.edit', $category->slug) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
                 @if ($canDelete)
@@ -180,7 +180,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form action="{{ route('categories.destroy', $category->slug) }}" method="POST" class="d-inline">
+                    <form action="{{ route('provider.categories.destroy', $category->slug) }}" method="POST"
+                        class="d-inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Excluir</button>

@@ -14,9 +14,9 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Categorias</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
                     <li class="breadcrumb-item"><a
-                            href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a></li>
+                            href="{{ route('provider.categories.show', $category->slug) }}">{{ $category->name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Editar</li>
                 </ol>
             </nav>
@@ -24,7 +24,8 @@
 
         @php
             $hasChildren = $category->children_count > 0;
-            $canDeactivate = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0;
+            $canDeactivate =
+                $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0;
         @endphp
 
         <div class="card border-0 shadow-sm">
@@ -38,7 +39,7 @@
                         </ul>
                     </div>
                 @endif
-                <form action="{{ route('categories.update', $category->slug) }}" method="POST">
+                <form action="{{ route('provider.categories.update', $category->slug) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="row g-4">
@@ -106,7 +107,8 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <div>
-                            <a href="{{ url()->previous(route('categories.index')) }}" class="btn btn-outline-secondary">
+                            <a href="{{ url()->previous(route('provider.categories.index')) }}"
+                                class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
                         </div>

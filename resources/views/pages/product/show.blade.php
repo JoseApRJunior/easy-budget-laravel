@@ -109,7 +109,7 @@
                             <!-- Aba Inventário -->
                             <div class="tab-pane fade" id="inventory" role="tabpanel">
                                 @php
-                                    $inventory = $product->productInventory->first();
+                                    $inventory = $product->inventory->first();
                                     $quantity = $inventory ? $inventory->quantity : 0;
                                     $minQuantity = $inventory ? $inventory->min_quantity : 0;
                                     $maxQuantity = $inventory ? $inventory->max_quantity : null;
@@ -191,21 +191,48 @@
                 <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
-                <form action="{{ route('provider.products.toggle-status', $product->sku) }}" method="POST"
-                    class="d-inline"
-                    onsubmit="return confirm('{{ $product->active ? 'Desativar' : 'Ativar' }} este produto?')">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
-                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                        {{ $product->active ? 'Desativar' : 'Ativar' }}
-                    </button>
-                </form>
+                <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
+                    data-bs-toggle="modal" data-bs-target="#toggleModal"
+                    data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
+                    data-product-name="{{ $product->name }}"
+                    data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}">
+                    <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
+                    {{ $product->active ? 'Desativar' : 'Ativar' }}
+                </button>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
                     data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
                     data-product-name="{{ $product->name }}">
                     <i class="bi bi-trash-fill me-2"></i>Excluir
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Ativação/Desativação -->
+    <div class="modal fade" id="toggleModal" tabindex="-1" aria-labelledby="toggleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="toggleModalLabel">Confirmar
+                        {{ $product->active ? 'Desativação' : 'Ativação' }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja {{ $product->active ? 'desativar' : 'ativar' }} o produto <strong
+                        id="toggleProductName"></strong>?
+                    <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="toggleForm" action="#" method="POST" class="d-inline">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
+                            <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
+                            {{ $product->active ? 'Desativar' : 'Ativar' }}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -220,7 +247,7 @@
                 </div>
                 <div class="modal-body">
                     Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
-                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                    <br><small class="text-muted">Esta ação pode ser desfeita.</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -251,6 +278,30 @@
 
                     deleteProductName.textContent = productName;
                     deleteForm.action = deleteUrl;
+                });
+            }
+
+            // Script para o modal de ativação/desativação
+            const toggleModal = document.getElementById('toggleModal');
+            if (toggleModal) {
+                toggleModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const toggleUrl = button.getAttribute('data-toggle-url');
+                    const productName = button.getAttribute('data-product-name');
+                    const action = button.getAttribute('data-action');
+
+                    const toggleProductName = toggleModal.querySelector('#toggleProductName');
+                    const toggleForm = toggleModal.querySelector('#toggleForm');
+                    const toggleTitle = toggleModal.querySelector('#toggleModalLabel');
+                    const toggleButton = toggleModal.querySelector('button[type="submit"]');
+
+                    toggleProductName.textContent = productName;
+                    toggleForm.action = toggleUrl;
+
+                    // Atualiza o título e texto do modal com base na ação
+                    toggleTitle.textContent = action === 'Desativar' ? 'Confirmar Desativação' :
+                        'Confirmar Ativação';
+                    toggleButton.textContent = action;
                 });
             }
         });

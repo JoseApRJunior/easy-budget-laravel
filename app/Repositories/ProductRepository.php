@@ -129,4 +129,5 @@ class ProductRepository extends AbstractTenantRepository
             $q->where( 'price', '<=', $filters[ 'max_price' ] );
         } );
     }
+
 }
