@@ -113,16 +113,16 @@ class ProductService extends AbstractBaseService
             $normalized[ 'sku' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'sku' ] . '%' ];
         }
 
-        // Price filters
+        // Price filters (mantidos para funcionalidade específica de produtos)
         if ( isset( $filters[ 'min_price' ] ) && $filters[ 'min_price' ] !== null ) {
-            $normalized[ 'min_price' ] = $filters[ 'min_price' ];
+            $normalized[ 'min_price' ] = $this->normalizePrice( $filters[ 'min_price' ] );
         }
 
         if ( isset( $filters[ 'max_price' ] ) && $filters[ 'max_price' ] !== null ) {
-            $normalized[ 'max_price' ] = $filters[ 'max_price' ];
+            $normalized[ 'max_price' ] = $this->normalizePrice( $filters[ 'max_price' ] );
         }
 
-        // Category filter
+        // Category filter (mantido para funcionalidade específica de produtos)
         if ( !empty( $filters[ 'category_id' ] ) ) {
             $normalized[ 'category_id' ] = $filters[ 'category_id' ];
         }
@@ -485,6 +485,16 @@ class ProductService extends AbstractBaseService
             return Str::after( $trimmed, 'storage/' );
         }
         return $trimmed;
+    }
+
+    /**
+     * Normaliza preço removendo formatação brasileira (R$ 12,00 -> 12.00).
+     */
+    private function normalizePrice( string $price ): float
+    {
+        // Remove R$, pontos de milhar e substitui vírgula por ponto
+        $clean = preg_replace( '/[^\d,]/', '', $price );
+        return (float) str_replace( ',', '.', $clean );
     }
 
 }

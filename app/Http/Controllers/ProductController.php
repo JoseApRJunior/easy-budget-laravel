@@ -48,7 +48,7 @@ class ProductController extends Controller
      */
     public function index( Request $request ): View
     {
-        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted', 'per_page', 'all' ] );
+        $filters = $request->only( [ 'search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price' ] );
 
         // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
         // O helper $this->view lida com o ServiceResult automaticamente
@@ -100,9 +100,18 @@ class ProductController extends Controller
      *
      * Rota: products.show
      */
-    public function show( string $sku ): View
+    public function show( string $sku ): View|RedirectResponse
     {
         $result = $this->productService->findBySku( $sku, [ 'category.parent', 'productInventory' ] );
+
+        if ( $result->isError() ) {
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        }
+
+        $result->getData()->load( [
+            'category',
+            'inventory',
+        ] );
 
         return $this->view( 'pages.product.show', $result, 'product' );
     }
@@ -254,10 +263,10 @@ class ProductController extends Controller
      */
     public function ajaxSearch( Request $request ): JsonResponse
     {
-        $filters = $request->only( [ 'search', 'active', 'min_price', 'max_price', 'category_id' ] );
+        $filters = $request->only( [ 'search', 'active', 'category_id', 'min_price', 'max_price' ] );
         $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
 
-        return $this->jsonWithServiceResult( $result );
+        return $this->jsonResponse( $result );
     }
 
     /**
@@ -270,7 +279,7 @@ class ProductController extends Controller
         $format = $request->get( 'format', 'xlsx' );
 
         // Captura TODOS os filtros aplicados na listagem (exceto paginação)
-        $filters = $request->only( [ 'search', 'category_id', 'active', 'min_price', 'max_price', 'deleted' ] );
+        $filters = $request->only( [ 'search', 'active', 'deleted', 'category_id', 'min_price', 'max_price' ] );
 
         // Busca produtos com os filtros aplicados
         $result = $this->productService->getFilteredProducts( $filters, [ 'category' ], 1000 );
