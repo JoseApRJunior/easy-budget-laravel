@@ -1,125 +1,147 @@
-/* ==========================================================================
-   EASY BUDGET - SISTEMA DE VARIÁVEIS (REFATORADO)
-   ========================================================================== */
-
 :root {
-   /* 1. PALETA DE CORES BASE (Tokens) */
-   --brand-primary: #093172;
-   --brand-primary-hover: #1d4ed8;
+   /* Sistema de cores */
+   --dark-primary: #093172; /* Azul mais moderno e vibrante */
+   --dark-secondary: #1e293b; /* Fundo escuro mais suave */
+   --dark-background: #58667a; /* Cinza azulado mais sofisticado */
+   --dark-surface: #334155; /* Superfície escura mais agradável */
+   --dark-text: #f8fafc; /* Texto claro mais suave */
 
-   /* Tons Dark */
-   --dark-background: #1e293b; /* Ajustado para um fundo mais profundo e estável */
-   --dark-surface: #334155;
-   --dark-surface-light: #475569;
-   --dark-text-main: #f8fafc;
-   --dark-text-muted: #cbd5e1;
+   --light-primary: #093172; /* Azul principal mais profundo */
+   --light-secondary: #94a3b8; /* Cinza mais neutro */
+   --light-background: #c3d0dd; /* Sua escolha - Excelente tom suave */
+   --light-surface: #9facb9; /* Sua escolha - Complemento perfeito */
+   --light-text: #1e293b; /* Texto escuro ajustado */
 
-   /* Tons Light */
-   --light-background: #f1f5f9; /* Ajustado para cinza ultra-leve (mais moderno que o azulado anterior) */
-   --light-surface: #ffffff;
-   --light-border: #e2e8f0;
-   --light-text-main: #1e293b;
-   --light-text-muted: #64748b;
+   /* Status - Cores mais modernas */
+   --text-primary: #2968f0; /* Azul escuro ajustado */
+   --text-success: #059669; /* Verde ajustado para harmonizar */
+   --text-error: #dc2626; /* Vermelho ajustado */
+   --text-info: #163881; /* Azul informativo ajustado */
+   --text-warning: #d97706; /* Amarelo ajustado */
 
-   /* Status e Feedback */
-   --color-success: #10b981;
-   --color-error: #ef4444;
-   --color-warning: #f59e0b;
-   --color-info: #3b82f6;
+   /* Sistema - Sombras ajustadas para as novas cores */
+   --form-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08),
+      0 2px 4px -2px rgb(0 0 0 / 0.06);
+   --form-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+   --bs-form-invalid-color: #ef4444;
+   --bs-form-invalid-border-color: #ef4444;
+   --bs-primary-darker: #0043a8;
 
-   /* 2. TIPOGRAFIA E ESPAÇAMENTO */
-   --font-primary: "Inter", system-ui, -apple-system, sans-serif;
+   /* Tipografia */
+   --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+   --font-size-small: 0.875rem;
+   --font-size-base: 1rem;
+   --font-size-large: 1.25rem;
+
+   /* Animações */
+   --transition-base: all 0.3s ease;
+   --transition-speed: 0.2s; /* Ligeiramente mais rápido */
+   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1); /* Timing mais suave */
+
+   /* Espaçamento */
+   --spacing-xs: 0.25rem;
+   --spacing-sm: 0.5rem;
    --spacing-md: 1rem;
+   --spacing-lg: 1.5rem;
+   --spacing-xl: 2rem;
+
+   /* Bordas mais modernas */
+   --border-radius-sm: 0.375rem; /* Ligeiramente maior */
    --border-radius-md: 0.5rem;
-   --transition-speed: 0.25s;
-   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+   --border-radius-lg: 0.75rem;
 
-   /* Z-Index e Sombras */
+   /* Z-index */
+   --z-dropdown: 1000;
    --z-sticky: 1020;
-   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+   --z-modal: 1030;
+   --z-popover: 1040;
+   --z-tooltip: 1050;
+
+   /* Tamanhos de ícones */
+   --icon-size-sm: 1rem; /* Padronizado em rem */
+   --icon-size-md: 1.5rem;
+   --icon-size-lg: 2rem;
+   --icon-size-xl: 3rem;
+
+   /* Opacidade */
+   --opacity-disabled: 0.5; /* Mais sutil */
+   --opacity-hover: 0.9;
+   --opacity-active: 1;
+
+   /* Breakpoints */
+   --breakpoint-sm: 640px; /* Ajustados para padrões modernos */
+   --breakpoint-md: 768px;
+   --breakpoint-lg: 1024px;
+   --breakpoint-xl: 1280px;
+
+   --primary-hover: #1d4ed8;
+   --secondary-hover: #475569;
+
+   --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+   --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* ==========================================================================
-   3. APLICAÇÃO DOS TEMAS (Onde a mágica acontece)
-   ========================================================================== */
-
-/* TEMA CLARO (Padrão) */
-:root,
-:root[data-bs-theme="light"],
-.theme-light {
-   --bg-color: var(--light-background);
-   --surface-color: var(--light-surface);
-   --text-color: var(--light-text-main);
-   --small-text: var(--light-text-muted);
-   --primary-color: var(--brand-primary);
-
-   /* Forms */
-   --form-bg: var(--light-surface);
-   --form-border: var(--light-border);
-   --form-input-bg: #ffffff;
-   --form-text: var(--light-text-main);
-
-   /* Cards */
-   --card-bg: var(--light-surface);
-   --card-border: var(--light-border);
-   --card-shadow: var(--shadow-sm);
-}
-
-/* TEMA ESCURO */
-:root[data-bs-theme="dark"],
 .theme-dark {
    --bg-color: var(--dark-background);
    --surface-color: var(--dark-surface);
-   --text-color: var(--dark-text-main);
-   --small-text: var(--dark-text-muted);
-   --primary-color: var(--brand-primary);
-
-   /* Forms */
-   --form-bg: var(--dark-surface);
-   --form-border: var(--dark-surface-light);
-   --form-input-bg: #1e293b;
-   --form-text: var(--dark-text-main);
-
-   /* Cards */
-   --card-bg: var(--dark-surface);
-   --card-border: var(--dark-surface-light);
-   --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+   --text-color: var(--dark-text);
+   --primary-color: var(--dark-primary);
+   --secondary-color: var(--dark-secondary);
+   --form-bg: #1e293b; /* Mais escuro e profissional */
+   --form-text: #f8fafc;
+   --form-input-bg: #2a374b; /* Ligeiramente mais claro */
+   --form-border: #4b5563; /* Mais visível */
+   --small-text: #cbd5e1;
+   --bs-form-invalid-color: #f87171;
+   --bs-form-invalid-border-color: #f87171;
 }
 
-/* ==========================================================================
-   4. STATUS E ÍCONES (Unificado)
-   ========================================================================== */
+.theme-light {
+   --bg-color: var(--light-background);
+   --surface-color: var(--light-surface);
+   --text-color: var(--light-text);
+   --primary-color: var(--light-primary);
+   --secondary-color: var(--light-secondary);
+   --form-bg: var(--light-surface); /* Usando a superfície como base */
+   --form-text: #1e293b;
+   --form-border: #b4c2d3; /* Borda mais suave */
+   --form-input-bg: #e2e8f0; /* Input levemente mais claro */
+   --form-input-border: #9fb3c8; /* Borda de input mais definida */
+   --small-text: #475569;
+   --bs-form-invalid-color: #dc2626;
+   --bs-form-invalid-border-color: #dc2626;
 
-.theme-light,
-.theme-dark,
-:root {
-   --status-completed-color: var(--color-success);
-   --status-pending-color: var(--color-warning);
-   --status-cancelled-color: var(--color-error);
-   --status-in-progress-color: var(--color-info);
-}
+   /* Hover states */
+   --hover-bg: #e2e8f0; /* Hover mais suave */
+   --active-bg: #c9d5e2; /* Estado ativo mais definido */
 
-/* ==========================================================================
-   5. FIXAÇÃO DE PERFORMANCE (ESTABILIDADE)
-   ========================================================================== */
+   /* Cards e elementos */
+   --card-bg: var(--light-surface);
+   --card-border: #b4c2d3;
+   --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 
-body {
-   background-color: var(--bg-color) !important;
-   color: var(--text-color) !important;
-   font-family: var(--font-primary);
-   /* A transição aqui deve ser sutil para evitar lag no scroll */
-   transition: background-color var(--transition-speed) var(--transition-timing),
-      color var(--transition-speed) var(--transition-timing);
-   margin: 0;
-   min-height: 100vh;
-}
+   /* Status colors - using system variables */
+   --status-pending-color: var(--text-warning);
+   --status-scheduling-color: var(--text-info);
+   --status-preparing-color: var(--text-primary);
+   --status-in-progress-color: var(--text-primary);
+   --status-on-hold-color: var(--text-warning);
+   --status-scheduled-color: var(--text-info);
+   --status-completed-color: var(--text-success);
+   --status-partial-color: var(--text-success);
+   --status-cancelled-color: var(--text-error);
+   --status-not-performed-color: var(--text-error);
 
-/* Evita que inputs fiquem brancos ao carregar no Dark Mode */
-input,
-select,
-textarea {
-   background-color: var(--form-input-bg) !important;
-   color: var(--form-text) !important;
-   border-color: var(--form-border) !important;
+   /* Status icons */
+   --status-pending-icon: "bi-hourglass-split";
+   --status-scheduling-icon: "bi-calendar-check";
+   --status-preparing-icon: "bi-tools";
+   --status-in-progress-icon: "bi-play-circle";
+   --status-on-hold-icon: "bi-pause-circle";
+   --status-scheduled-icon: "bi-calendar-plus";
+   --status-completed-icon: "bi-check-circle";
+   --status-partial-icon: "bi-check-circle-fill";
+   --status-cancelled-icon: "bi-x-circle";
+   --status-not-performed-icon: "bi-slash-circle";
 }

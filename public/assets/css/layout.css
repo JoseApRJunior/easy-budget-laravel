@@ -7,32 +7,11 @@ html {
 }
 body {
    min-height: 100vh;
-   /* A cor e o fundo já vêm do variables.css, não precisas repetir aqui */
-}
-/* Scrollbar Customizada (Tema Escuro) */
-[data-bs-theme="dark"] ::-webkit-scrollbar,
-.theme-dark::-webkit-scrollbar {
-   width: 12px;
-}
-
-[data-bs-theme="dark"] ::-webkit-scrollbar-track,
-.theme-dark::-webkit-scrollbar-track {
-   /* Usamos var(--bg-color) para que, se você mudar a cor do tema,
-      a scrollbar mude automaticamente sem precisar mexer aqui */
-   background: var(--bg-color);
-}
-
-[data-bs-theme="dark"] ::-webkit-scrollbar-thumb,
-.theme-dark::-webkit-scrollbar-thumb {
-   background-color: var(--surface-color);
-   border-radius: 20px;
-   /* Cria um efeito de margem usando a cor de fundo */
-   border: 3px solid var(--bg-color);
-}
-
-/* Opcional: Efeito de hover na scrollbar para ficar mais pro */
-[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-   background-color: var(--dark-surface-light);
+   font-family: var(--font-primary);
+   background-color: var(--bg-color);
+   color: var(--text-color);
+   margin: 0;
+   padding: 0;
 }
 
 /* Header/Navbar */
@@ -71,16 +50,13 @@ header {
    transition: transform var(--transition-speed) var(--transition-timing);
 }
 
-/* Ajuste para a logo no modo claro (Light) */
-[data-bs-theme="light"] .logo-img,
-.theme-light .logo-img {
-   filter: brightness(0.9) contrast(1.05);
+/* Ajustes específicos para diferentes temas */
+.logo-img[data-theme="dark"] {
+   filter: brightness(1.2) contrast(1.1);
 }
 
-/* Ajuste para a logo no modo escuro (Dark) */
-[data-bs-theme="dark"] .logo-img,
-.theme-dark .logo-img {
-   filter: brightness(1.2) contrast(1.1);
+.logo-img[data-theme="light"] {
+   filter: brightness(0.9) contrast(1.05);
 }
 
 /* Container do Logo */
@@ -1903,79 +1879,37 @@ input[type="number"] {
       display: none !important;
    }
 
-   /* ==========================================================================
-   MODERN TABLE - SISTEMA DE ORÇAMENTOS
-   ========================================================================== */
-
-   .modern-table-container {
-      border-radius: var(--border-radius-lg);
-      overflow: hidden;
-      border: 1px solid var(--form-border);
-      background: var(--surface-color);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: var(--spacing-lg);
-   }
-
    .modern-table {
-      width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      background: var(--surface-color);
    }
 
-   /* Cabeçalho da Tabela */
    .modern-table thead th {
-      background: var(--brand-primary); /* Azul fixo para identidade visual */
-      color: #ffffff !important; /* Texto sempre branco no cabeçalho azul */
+      background: var(--primary-color);
+      color: var(--light-surface);
       font-weight: 600;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 1.25rem 1rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 0.75rem;
       border: none;
-      text-align: left;
    }
 
-   /* Linhas da Tabela */
    .modern-table tbody tr {
+      transition: all 0.3s ease;
       background: var(--surface-color);
-      transition: all var(--transition-speed) var(--transition-timing);
    }
 
-   /* Efeito de Hover (Interativo) */
    .modern-table tbody tr:hover {
       background: var(--hover-bg);
-      transform: scale(1.002) translateY(-2px);
-      z-index: 1;
-      position: relative;
-      /* A sombra agora usa a variável de sombra do tema */
-      box-shadow: var(--card-shadow);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
    }
 
-   /* Células */
    .modern-table tbody td {
-      padding: 1.1rem 1rem;
+      padding: 1rem 0.75rem;
       vertical-align: middle;
-      color: var(--text-color);
       border-bottom: 1px solid var(--form-border);
-      font-size: 0.9375rem;
-   }
-
-   /* Remove a borda da última linha para não chocar com o container */
-   .modern-table tbody tr:last-child td {
-      border-bottom: none;
-   }
-
-   /* Ajustes Específicos para Modo Escuro (Dark Mode) */
-   [data-bs-theme="dark"] .modern-table thead th {
-      background: var(
-         --dark-surface-light
-      ); /* Um azul acinzentado mais suave */
-      border-bottom: 2px solid var(--brand-primary);
-   }
-
-   [data-bs-theme="dark"] .modern-table tbody tr:hover {
-      background: rgba(255, 255, 255, 0.03); /* Brilho sutil no escuro */
    }
 
    .item-icon {
@@ -2069,54 +2003,26 @@ input[type="number"] {
       display: none !important;
    }
 
-   /* ==========================================================================
-   MODERN CARD - SISTEMA DE ORÇAMENTOS E SERVIÇOS
-   ========================================================================== */
-
    .modern-card {
       background: var(--surface-color);
-      border-radius: var(--border-radius-md);
-      /* Usamos a variável de sombra que se adapta ao tema */
-      box-shadow: var(--card-shadow);
-      margin-bottom: var(--spacing-md);
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      margin-bottom: 1rem;
       overflow: hidden;
-      transition: all var(--transition-speed) var(--transition-timing);
-      border: 1px solid var(--form-border);
+      transition: all 0.3s ease;
       border-left: 4px solid transparent;
-      position: relative;
    }
 
-   /* Variantes de Borda Lateral (Indicadores de Categoria) */
    .modern-card.system {
-      border-left-color: var(--color-info);
+      border-left-color: var(--text-info);
    }
-
    .modern-card.personal {
-      border-left-color: #7c3aed; /* Roxo moderno */
-   }
-
-   /* Estados de Interação */
-   .modern-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--brand-primary);
+      border-left-color: #7c3aed;
    }
 
    .modern-card:active {
       transform: scale(0.98);
-      opacity: 0.9;
-   }
-
-   /* Ajustes específicos para o Modo Escuro */
-   [data-bs-theme="dark"] .modern-card {
-      background: var(--dark-surface);
-      /* No escuro, uma borda sutil ajuda a definir o card melhor que a sombra */
-      border-color: var(--dark-surface-light);
-   }
-
-   [data-bs-theme="dark"] .modern-card:hover {
-      background: var(--dark-surface-light);
-      border-color: var(--brand-primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
    }
 
    .card-header-mobile {
@@ -2205,30 +2111,9 @@ input[type="number"] {
    }
 }
 
-/* Animação de entrada suave */
-@keyframes fadeInUp {
-   from {
-      opacity: 0;
-      transform: translateY(15px); /* Reduzi para 15px para ser mais sutil */
-   }
-   to {
-      opacity: 1;
-      transform: translateY(0);
-   }
-}
-
-/* Aplicando a animação */
 .modern-card,
 .modern-table tbody tr {
-   animation: fadeInUp 0.4s var(--transition-timing); /* Usando a variável de tempo que criamos */
-   /* Essencial: mantém o estado final da animação */
-   animation-fill-mode: both;
-}
-
-/* Evita que a animação rode de novo se o utilizador apenas trocar o tema */
-.theme-transition .modern-card,
-.theme-transition .modern-table tbody tr {
-   animation: none !important;
+   animation: fadeInUp 0.4s ease;
 }
 
 /* Estado vazio */
