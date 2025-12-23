@@ -83,11 +83,11 @@
     */
    function initializeProductIndex() {
       initializeFilterConfirmation();
+      initializeAutoSubmit();
       initializeCurrencyFormatting();
       initializeStatusToggle();
       initializeDeleteModal();
       initializeRestoreModal();
-      initializeFormSubmission();
    }
 
    /**
@@ -98,8 +98,7 @@
       if (!form) return;
 
       form.addEventListener("submit", function (e) {
-         // If the form is being submitted with the 'all' flag, don't validate
-         if (form.querySelector('input[name="all"]')) return;
+         if (!e.submitter || e.submitter.id !== "btnFilterProducts") return;
 
          const search = (form.querySelector("#search")?.value || "").trim();
          const category = (
@@ -148,7 +147,6 @@
          form.appendChild(hiddenInput);
 
          productState.modalInstance.hide();
-         normalizeCurrencyInputs(form);
          form.submit();
       });
 
@@ -163,14 +161,28 @@
    }
 
    /**
-    * Initialize manual form submission handling
+    * Auto-submit functionality for search fields
     */
-   function initializeFormSubmission() {
-      const form = document.getElementById("filtersFormProducts");
-      if (!form) return;
+   function initializeAutoSubmit() {
+      const autoSubmitFields = [
+         "search",
+         "category_id",
+         "active",
+         "min_price",
+         "max_price",
+      ];
 
-      form.addEventListener("submit", function () {
-         normalizeCurrencyInputs(form);
+      autoSubmitFields.forEach(function (fieldId) {
+         const element = document.getElementById(fieldId);
+         if (!element) return;
+
+         element.addEventListener("change", function () {
+            clearTimeout(productState.filterTimeout);
+            productState.filterTimeout = setTimeout(function () {
+               normalizeCurrencyInputs(element.closest("form"));
+               element.closest("form").submit();
+            }, 500);
+         });
       });
    }
 

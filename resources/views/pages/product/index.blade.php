@@ -75,7 +75,6 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            <option value="">Todos</option>
                                             @php($selectedActive = request()->has('active') ? request('active') : '')
                                             <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                                 Ativo
