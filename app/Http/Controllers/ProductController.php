@@ -55,6 +55,7 @@ class ProductController extends Controller
         } else {
             $perPage = (int) ( $filters[ 'per_page' ] ?? 10 );
             $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
+
         }
 
         return $this->view( 'pages.product.index', $result, 'products', [

@@ -100,7 +100,7 @@ class ProductRepository extends AbstractTenantRepository
             ->tap( fn( $q ) => $this->applyAllProductFilters( $q, $filters ) )
             ->when( !$orderBy, fn( $q ) => $q->orderBy( 'name' ) )
             ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
-            ->paginate( $this->getEffectivePerPage( $filters, $perPage ) );
+            ->paginate( $this->getEffectivePerPage( $filters, $perPage ) )->appends( $filters )->withQueryString();
     }
 
     /**
