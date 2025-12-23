@@ -11,6 +11,7 @@ use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -300,7 +301,7 @@ class PlanService extends AbstractBaseService
             foreach ( $plans as $plan ) {
                 if ( $plan->status ) {
                     $active++;
-                    $totalPrice += $plan->price;
+                    $totalPrice  += $plan->price;
                     $priceCount++;
 
                     if ( $plan->price > $maxPrice ) {
@@ -359,18 +360,15 @@ class PlanService extends AbstractBaseService
      * Encontra plano por slug.
      *
      * @param string $slug Slug do plano
+     * @param array $with Relacionamentos a carregar
      * @return ServiceResult Resultado com plano encontrado
      */
-    public function findBySlug( string $slug ): ServiceResult
+    public function findBySlug( string $slug, array $with = [] ): ServiceResult
     {
         try {
-            $result = $this->findOneBy( [ 'slug' => $slug ] );
-
-            if ( !$result->isSuccess() ) {
-                return $this->error( OperationStatus::NOT_FOUND, "Plano com slug '{$slug}' não encontrado." );
-            }
-
-            return $this->success( $result->getData(), 'Plano encontrado com sucesso.' );
+            $entity = $this->repository->findBySlug( $slug, $with );
+            if ( !$entity ) return $this->error( OperationStatus::NOT_FOUND, "Registro com slug {$slug} não encontrado" );
+            return $this->success( $entity, 'Encontrado' );
         } catch ( Exception $e ) {
             return $this->error( OperationStatus::ERROR, "Erro ao buscar plano por slug.", null, $e );
         }
@@ -481,6 +479,98 @@ class PlanService extends AbstractBaseService
         }
 
         return parent::update( $id, $data );
+    }
+
+    /**
+     * Retorna planos filtrados e paginados.
+     */
+    public function getFilteredPlans( array $filters = [], array $with = [] ): ServiceResult
+    {
+        try {
+            $entities = $this->repository->getPaginated( $filters, 15 );
+            return $this->success( $entities, 'Filtrados' );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao filtrar', null, $e );
+        }
+    }
+
+    /**
+     * Cria plano com transação.
+     */
+    public function createPlan( array $data ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($data) {
+                $entity = $this->repository->create( $data );
+                return $this->success( $entity, 'Plan criado com sucesso' );
+            } );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao criar plan', null, $e );
+        }
+    }
+
+    /**
+     * Atualiza plano por slug.
+     */
+    public function updateBySlug( string $slug, array $data ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($slug, $data) {
+                $entity = $this->repository->findBySlug( $slug );
+                if ( !$entity ) return $this->error( OperationStatus::NOT_FOUND, "Registro com slug {$slug} não encontrado" );
+
+                $entity = $this->repository->update( $entity->id, $data );
+                return $this->success( $entity, 'Atualizado com sucesso' );
+            } );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao atualizar', null, $e );
+        }
+    }
+
+    /**
+     * Alterna status do plano.
+     */
+    public function toggleStatus( string $slug ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($slug) {
+                $entity = $this->repository->findBySlug( $slug );
+                if ( !$entity ) return $this->error( OperationStatus::NOT_FOUND, "Registro com slug {$slug} não encontrado" );
+
+                if ( !$this->repository->canBeDeactivatedOrDeleted( $entity->id ) ) {
+                    return $this->error( OperationStatus::VALIDATION_ERROR, 'Não pode alterar status: em uso.' );
+                }
+
+                $new    = !$entity->status;
+                $entity = $this->repository->update( $entity->id, [ 'status' => $new ] );
+                return $this->success( $entity, $new ? 'Ativado com sucesso' : 'Desativado com sucesso' );
+            } );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao alterar status', null, $e );
+        }
+    }
+
+    /**
+     * Remove plano por slug.
+     */
+    public function deleteBySlug( string $slug ): ServiceResult
+    {
+        try {
+            return DB::transaction( function () use ($slug) {
+                $entity = $this->repository->findBySlug( $slug );
+                if ( !$entity ) return $this->error( OperationStatus::NOT_FOUND, "Registro com slug {$slug} não encontrado" );
+
+                if ( !$this->repository->canBeDeactivatedOrDeleted( $entity->id ) ) {
+                    return $this->error( OperationStatus::VALIDATION_ERROR, 'Não pode excluir: em uso.' );
+                }
+
+                $this->repository->delete( $entity->id );
+
+                return $this->success( null, 'Excluído com sucesso' );
+            } );
+        } catch ( Exception $e ) {
+            return $this->error( OperationStatus::ERROR, 'Erro ao excluir', null, $e );
+        }
     }
 
 }

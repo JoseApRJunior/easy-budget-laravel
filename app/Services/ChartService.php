@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Serviço para geração de dados para gráficos e visualizações.

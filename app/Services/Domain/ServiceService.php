@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\Enums\OperationStatus;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceItem;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\Domain\ScheduleService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -18,27 +19,42 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceService extends AbstractBaseService
 {
-    public function findByCode( string $code, array $with = [] ): ServiceResult
+    /**
+     * @var ScheduleService
+     */
+    protected $scheduleService;
+
+    /**
+     * ServiceService constructor.
+     *
+     * @param ScheduleService $scheduleService
+     */
+    public function __construct(ScheduleService $scheduleService)
+    {
+        $this->scheduleService = $scheduleService;
+    }
+
+    public function findByCode(string $code, array $with = []): ServiceResult
     {
         try {
-            $query = Service::where( 'code', $code );
+            // Usar withoutGlobalScopes para debug - o tenant scoping será aplicado no controller
+            $query = Service::withoutGlobalScopes()->where('code', $code);
 
-            if ( !empty( $with ) ) {
-                $query->with( $with );
+            if (!empty($with)) {
+                $query->with($with);
             }
 
             $service = $query->first();
 
-            if ( !$service ) {
+            if (!$service) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
                     "Serviço com código {$code} não encontrado",
                 );
             }
 
-            return $this->success( $service, 'Serviço encontrado' );
-
-        } catch ( Exception $e ) {
+            return $this->success($service, 'Serviço encontrado');
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao buscar serviço',
@@ -48,49 +64,48 @@ class ServiceService extends AbstractBaseService
         }
     }
 
-    public function getFilteredServices( array $filters = [], array $with = [] ): ServiceResult
+    public function getFilteredServices(array $filters = [], array $with = []): ServiceResult
     {
         try {
             $query = Service::query();
 
             // Filtros
-            if ( !empty( $filters[ 'status' ] ) ) {
-                $query->where( 'status', $filters[ 'status' ] );
+            if (!empty($filters['status'])) {
+                $query->where('status', $filters['status']);
             }
 
-            if ( !empty( $filters[ 'category_id' ] ) ) {
-                $query->where( 'category_id', $filters[ 'category_id' ] );
+            if (!empty($filters['category_id'])) {
+                $query->where('category_id', $filters['category_id']);
             }
 
-            if ( !empty( $filters[ 'date_from' ] ) ) {
-                $query->whereDate( 'created_at', '>=', $filters[ 'date_from' ] );
+            if (!empty($filters['date_from'])) {
+                $query->whereDate('created_at', '>=', $filters['date_from']);
             }
 
-            if ( !empty( $filters[ 'date_to' ] ) ) {
-                $query->whereDate( 'created_at', '<=', $filters[ 'date_to' ] );
+            if (!empty($filters['date_to'])) {
+                $query->whereDate('created_at', '<=', $filters['date_to']);
             }
 
-            if ( !empty( $filters[ 'search' ] ) ) {
-                $query->where( function ( $q ) use ( $filters ) {
-                    $q->where( 'code', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
-                } );
+            if (!empty($filters['search'])) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('code', 'like', '%' . $filters['search'] . '%')
+                        ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                });
             }
 
-            // Eager loading
-            $withDefaults = [ 'category', 'budget.customer', 'serviceStatus' ];
-            $with         = array_unique( array_merge( $withDefaults, $with ) );
-            $query->with( $with );
+            // Eager loading - apenas relações válidas
+            $withDefaults = ['category', 'budget.customer'];
+            $with         = array_unique(array_merge($withDefaults, $with));
+            $query->with($with);
 
             // Ordenação
-            $query->orderBy( 'created_at', 'desc' );
+            $query->orderBy('created_at', 'desc');
 
             // Paginação
-            $services = $query->paginate( 15 );
+            $services = $query->paginate(15);
 
-            return $this->success( $services, 'Serviços filtrados' );
-
-        } catch ( Exception $e ) {
+            return $this->success($services, 'Serviços filtrados');
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao filtrar serviços',
@@ -103,55 +118,51 @@ class ServiceService extends AbstractBaseService
     /**
      * Cria um novo serviço com itens e atualiza o orçamento.
      */
-    public function createService( array $data ): ServiceResult
+    public function createService(array $data): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($data) {
-                // Buscar orçamento
-                $budget = Budget::where( 'code', $data[ 'budget_code' ] )->first();
-                if ( !$budget ) {
+            return DB::transaction(function () use ($data) {
+                $budget = Budget::find($data['budget_id'] ?? 0);
+                if (!$budget) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         'Orçamento não encontrado',
                     );
                 }
 
-                // Gerar código único
-                $serviceCode = $this->generateUniqueServiceCode( $budget->code );
+                $serviceCode = $this->generateUniqueServiceCode($budget->code);
 
                 // Criar serviço
-                $service = Service::create( [
+                $service = Service::create([
                     'tenant_id'   => $budget->tenant_id,
                     'budget_id'   => $budget->id,
-                    'category_id' => $data[ 'category_id' ] ?? null,
+                    'category_id' => $data['category_id'] ?? null,
                     'code'        => $serviceCode,
-                    'status'      => $data[ 'status' ] ?? ServiceStatusEnum::SCHEDULED->value,
-                    'description' => $data[ 'description' ] ?? null,
-                    'due_date'    => $data[ 'due_date' ] ?? null,
-                    'discount'    => $data[ 'discount' ] ?? 0.0,
-                    'total'       => $data[ 'total' ] ?? 0.0
-                ] );
+                    'status'      => $data['status'] ?? ServiceStatus::DRAFT->value,
+                    'description' => $data['description'] ?? null,
+                    'due_date'    => $data['due_date'] ?? null,
+                    'discount'    => $data['discount'] ?? 0.0,
+                    'total'       => $data['total'] ?? 0.0
+                ]);
 
                 // Criar itens do serviço
-                if ( !empty( $data[ 'items' ] ) ) {
-                    $this->createServiceItems( $service, $data[ 'items' ] );
+                if (!empty($data['items'])) {
+                    $this->createServiceItems($service, $data['items']);
                 }
 
                 // Atualizar total do orçamento
-                $this->updateBudgetTotal( $budget );
+                $this->updateBudgetTotal($budget);
 
-                return $this->success( $service->load( [
+                return $this->success($service->load([
                     'budget',
                     'serviceItems.product',
                     'category'
-                ] ), 'Serviço criado com sucesso' );
-
-            } );
-
-        } catch ( Exception $e ) {
+                ]), 'Serviço criado com sucesso');
+            });
+        } catch (Exception $e) {
             // Preservar mensagens de erro específicas
             $message = $e->getMessage();
-            if ( strpos( $message, 'Produto ID' ) === false ) {
+            if (strpos($message, 'Produto ID') === false) {
                 $message = 'Erro ao criar serviço';
             }
 
@@ -167,68 +178,70 @@ class ServiceService extends AbstractBaseService
     /**
      * Gera código único para o serviço baseado no código do orçamento.
      */
-    private function generateUniqueServiceCode( string $budgetCode ): string
+    private function generateUniqueServiceCode(string $budgetCode): string
     {
-        $lastService = Service::whereHas( 'budget', function ( $query ) use ( $budgetCode ) {
-            $query->where( 'code', $budgetCode );
-        } )->orderBy( 'code', 'desc' )->first();
+        $lastService = Service::whereHas('budget', function ($query) use ($budgetCode) {
+            $query->where('code', $budgetCode);
+        })->orderBy('code', 'desc')->first();
 
         $sequential = 1;
-        if ( $lastService && preg_match( '/-S(\d{3})$/', $lastService->code, $matches ) ) {
-            $sequential = (int) $matches[ 1 ] + 1;
+        if ($lastService && preg_match('/-S(\d{3})$/', $lastService->code, $matches)) {
+            $sequential = (int) $matches[1] + 1;
         }
 
-        return $budgetCode . "-S" . str_pad( (string) $sequential, 3, '0', STR_PAD_LEFT );
+        return $budgetCode . "-S" . str_pad((string) $sequential, 3, '0', STR_PAD_LEFT);
     }
 
     /**
      * Cria itens do serviço.
      */
-    private function createServiceItems( Service $service, array $items ): void
+    private function createServiceItems(Service $service, array $items): void
     {
-        foreach ( $items as $itemData ) {
+        foreach ($items as $itemData) {
             // Validar produto
-            $product = Product::where( 'id', $itemData[ 'product_id' ] )
-                ->where( 'active', true )
+            $product = Product::where('id', $itemData['product_id'])
+                ->where('active', true)
                 ->first();
 
-            if ( !$product ) {
-                throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+            if (!$product) {
+                throw new Exception("Produto ID {$itemData['product_id']} não encontrado ou inativo");
             }
 
             // Calcular total do item
-            $quantity  = (float) $itemData[ 'quantity' ];
-            $unitValue = (float) $itemData[ 'unit_value' ];
+            $quantity  = (float) $itemData['quantity'];
+            $unitValue = (float) $itemData['unit_value'];
             $total     = $quantity * $unitValue;
 
             // Criar item
-            ServiceItem::create( [
+            ServiceItem::create([
                 'tenant_id'  => $service->tenant_id,
                 'service_id' => $service->id,
                 'product_id' => $product->id,
                 'unit_value' => $unitValue,
                 'quantity'   => $quantity,
                 'total'      => $total
-            ] );
+            ]);
         }
 
         // Atualizar total do serviço
-        $this->updateServiceTotal( $service );
+        $this->updateServiceTotal($service);
     }
 
     /**
      * Atualiza o total do serviço baseado nos itens.
      */
-    private function updateServiceTotal( Service $service ): void
+    private function updateServiceTotal(Service $service): void
     {
-        $total = $service->serviceItems()->sum( 'total' );
-        $service->update( [ 'total' => $total ] );
+        $itemsTotal = (float) $service->serviceItems()->sum('total');
+        $discount   = (float) ($service->discount ?? 0.0);
+        $total      = max(0.0, $itemsTotal - $discount);
+        $service->update(['total' => $total]);
     }
 
     /**
      * Atualiza o total do orçamento após criar serviços.
      */
-    private function updateBudgetTotal( Budget $budget ): void
+    private function updateBudgetTotal(Budget $budget): void
     {
         $budget->updateCalculatedTotals();
     }
@@ -236,13 +249,13 @@ class ServiceService extends AbstractBaseService
     /**
      * Atualiza serviço por código com gerenciamento de itens.
      */
-    public function updateServiceByCode( string $code, array $data ): ServiceResult
+    public function updateServiceByCode(string $code, array $data): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($code, $data) {
-                $service = Service::where( 'code', $code )->first();
+            return DB::transaction(function () use ($code, $data) {
+                $service = Service::where('code', $code)->first();
 
-                if ( !$service ) {
+                if (!$service) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Serviço {$code} não encontrado",
@@ -250,7 +263,7 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Verificar se pode editar
-                if ( !$service->serviceStatus->canEdit() ) {
+                if (!$service->serviceStatus->canEdit()) {
                     return $this->error(
                         OperationStatus::INVALID_DATA,
                         "Serviço não pode ser editado no status {$service->serviceStatus->value}",
@@ -258,28 +271,29 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Atualizar serviço
-                $service->update( [
-                    'category_id' => $data[ 'category_id' ] ?? $service->category_id,
-                    'description' => $data[ 'description' ] ?? $service->description,
-                    'due_date'    => $data[ 'due_date' ] ?? $service->due_date,
-                    'status'      => $data[ 'status' ] ?? $service->status,
-                ] );
+                $service->update([
+                    'category_id' => $data['category_id'] ?? $service->category_id,
+                    'description' => $data['description'] ?? $service->description,
+                    'due_date'    => $data['due_date'] ?? $service->due_date,
+                    'status'      => $data['status'] ?? $service->status,
+                    'discount'    => $data['discount'] ?? $service->discount,
+                ]);
+
+                $this->updateServiceTotal($service);
 
                 // Gerenciar itens processados
-                if ( !empty( $data[ 'items_to_create' ] ) || !empty( $data[ 'items_to_update' ] ) || !empty( $data[ 'items_to_delete' ] ) ) {
-                    $this->updateServiceItems( $service, $data );
+                if (!empty($data['items_to_create']) || !empty($data['items_to_update']) || !empty($data['items_to_delete'])) {
+                    $this->updateServiceItems($service, $data);
                 }
 
                 // Atualizar total do orçamento
-                $this->updateBudgetTotal( $service->budget );
+                $this->updateBudgetTotal($service->budget);
 
-                return $this->success( $service->fresh( [
+                return $this->success($service->fresh([
                     'serviceItems.product',
-                ] ), 'Serviço atualizado' );
-
-            } );
-
-        } catch ( Exception $e ) {
+                ]), 'Serviço atualizado');
+            });
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao atualizar serviço',
@@ -292,87 +306,86 @@ class ServiceService extends AbstractBaseService
     /**
      * Atualiza itens do serviço (delete/update/create).
      */
-    private function updateServiceItems( Service $service, array $data ): void
+    private function updateServiceItems(Service $service, array $data): void
     {
         // Processar itens para deletar
-        if ( !empty( $data[ 'items_to_delete' ] ) ) {
-            ServiceItem::whereIn( 'id', $data[ 'items_to_delete' ] )
-                ->where( 'service_id', $service->id )
+        if (!empty($data['items_to_delete'])) {
+            ServiceItem::whereIn('id', $data['items_to_delete'])
+                ->where('service_id', $service->id)
                 ->delete();
         }
 
         // Processar itens para atualizar
-        if ( !empty( $data[ 'items_to_update' ] ) ) {
-            foreach ( $data[ 'items_to_update' ] as $itemData ) {
+        if (!empty($data['items_to_update'])) {
+            foreach ($data['items_to_update'] as $itemData) {
                 // Validar produto
-                $product = Product::where( 'id', $itemData[ 'product_id' ] )
-                    ->where( 'active', true )
+                $product = Product::where('id', $itemData['product_id'])
+                    ->where('active', true)
                     ->first();
 
-                if ( !$product ) {
-                    throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                if (!$product) {
+                    throw new Exception("Produto ID {$itemData['product_id']} não encontrado ou inativo");
                 }
 
                 // Calcular total do item
-                $quantity  = (float) $itemData[ 'quantity' ];
-                $unitValue = (float) $itemData[ 'unit_value' ];
+                $quantity  = (float) $itemData['quantity'];
+                $unitValue = (float) $itemData['unit_value'];
                 $total     = $quantity * $unitValue;
 
                 // Atualizar item
-                ServiceItem::where( 'id', $itemData[ 'id' ] )
-                    ->where( 'service_id', $service->id )
-                    ->update( [
+                ServiceItem::where('id', $itemData['id'])
+                    ->where('service_id', $service->id)
+                    ->update([
                         'product_id' => $product->id,
                         'unit_value' => $unitValue,
                         'quantity'   => $quantity,
                         'total'      => $total,
-                    ] );
+                    ]);
             }
         }
-
         // Processar itens para criar
-        if ( !empty( $data[ 'items_to_create' ] ) ) {
-            foreach ( $data[ 'items_to_create' ] as $itemData ) {
+        if (!empty($data['items_to_create'])) {
+            foreach ($data['items_to_create'] as $itemData) {
                 // Validar produto
-                $product = Product::where( 'id', $itemData[ 'product_id' ] )
-                    ->where( 'active', true )
+                $product = Product::where('id', $itemData['product_id'])
+                    ->where('active', true)
                     ->first();
 
-                if ( !$product ) {
-                    throw new Exception( "Produto ID {$itemData[ 'product_id' ]} não encontrado ou inativo" );
+                if (!$product) {
+                    throw new Exception("Produto ID {$itemData['product_id']} não encontrado ou inativo");
                 }
 
                 // Calcular total do item
-                $quantity  = (float) $itemData[ 'quantity' ];
-                $unitValue = (float) $itemData[ 'unit_value' ];
+                $quantity  = (float) $itemData['quantity'];
+                $unitValue = (float) $itemData['unit_value'];
                 $total     = $quantity * $unitValue;
 
                 // Criar item
-                ServiceItem::create( [
+                ServiceItem::create([
                     'tenant_id'  => $service->tenant_id,
                     'service_id' => $service->id,
                     'product_id' => $product->id,
                     'unit_value' => $unitValue,
                     'quantity'   => $quantity,
                     'total'      => $total,
-                ] );
+                ]);
             }
         }
 
         // Atualizar total do serviço
-        $this->updateServiceTotal( $service );
+        $this->updateServiceTotal($service);
     }
 
     /**
      * Altera o status do serviço com validação de transições permitidas.
      */
-    public function changeStatus( string $code, string $newStatus ): ServiceResult
+    public function changeStatus(string $code, string $newStatus): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($code, $newStatus) {
-                $service = Service::where( 'code', $code )->first();
+            return DB::transaction(function () use ($code, $newStatus) {
+                $service = Service::where('code', $code)->first();
 
-                if ( !$service ) {
+                if (!$service) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Serviço {$code} não encontrado",
@@ -382,8 +395,8 @@ class ServiceService extends AbstractBaseService
                 $oldStatus = $service->status;
 
                 // Validar transição
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $oldStatus->value );
-                if ( !in_array( $newStatus, $allowedTransitions ) ) {
+                $allowedTransitions = ServiceStatus::getAllowedTransitions($oldStatus->value);
+                if (!in_array($newStatus, $allowedTransitions)) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
                         "Transição de {$oldStatus->value} para {$newStatus} não permitida",
@@ -391,16 +404,17 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Atualizar serviço
-                $service->update( [ 'status' => $newStatus ] );
+                $service->update(['status' => $newStatus]);
 
                 // Atualizar orçamento em cascata se necessário
-                $this->updateBudgetStatusIfNeeded( $service, $newStatus );
+                $this->updateBudgetStatusIfNeeded($service, $newStatus);
 
-                return $this->success( $service, 'Status alterado com sucesso' );
+                // Carregar relacionamentos para retorno completo
+                $service->load(['customer', 'category', 'serviceStatus']);
 
-            } );
-
-        } catch ( Exception $e ) {
+                return $this->success($service, 'Status alterado com sucesso');
+            });
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao alterar status',
@@ -411,31 +425,39 @@ class ServiceService extends AbstractBaseService
     }
 
     /**
+     * Get the latest schedule for a service.
+     */
+    public function getLatestSchedule(Service $service): ?\App\Models\Schedule
+    {
+        return $this->scheduleService->getLatestScheduleByService($service->id);
+    }
+
+    /**
      * Atualiza o status do orçamento em cascata quando necessário.
      */
-    private function updateBudgetStatusIfNeeded( Service $service, string $newStatus ): void
+    private function updateBudgetStatusIfNeeded(Service $service, string $newStatus): void
     {
         $budgetStatusMap = [
-            ServiceStatusEnum::APPROVED->value  => 'approved',
-            ServiceStatusEnum::REJECTED->value  => 'rejected',
-            ServiceStatusEnum::CANCELLED->value => 'cancelled'
+            ServiceStatus::APPROVED->value  => 'approved',
+            ServiceStatus::REJECTED->value  => 'rejected',
+            ServiceStatus::CANCELLED->value => 'cancelled'
         ];
 
-        if ( isset( $budgetStatusMap[ $newStatus ] ) ) {
-            $service->budget->update( [ 'status' => $budgetStatusMap[ $newStatus ] ] );
+        if (isset($budgetStatusMap[$newStatus])) {
+            $service->budget->update(['status' => $budgetStatusMap[$newStatus]]);
         }
     }
 
     /**
      * Deleta um serviço por código com validações de dependências.
      */
-    public function deleteByCode( string $code ): ServiceResult
+    public function deleteByCode(string $code): ServiceResult
     {
         try {
-            return DB::transaction( function () use ($code) {
-                $service = Service::where( 'code', $code )->first();
+            return DB::transaction(function () use ($code) {
+                $service = Service::where('code', $code)->first();
 
-                if ( !$service ) {
+                if (!$service) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Serviço {$code} não encontrado",
@@ -443,7 +465,7 @@ class ServiceService extends AbstractBaseService
                 }
 
                 // Verificar se pode deletar
-                if ( !$this->canDeleteService( $service ) ) {
+                if (!$this->canDeleteService($service)) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
                         'Serviço não pode ser excluído devido a dependências',
@@ -452,10 +474,10 @@ class ServiceService extends AbstractBaseService
 
                 // Verificar se não tem agendamentos futuros
                 $futureSchedules = $service->schedules()
-                    ->where( 'start_date_time', '>', now() )
+                    ->where('start_date_time', '>', now())
                     ->count();
 
-                if ( $futureSchedules > 0 ) {
+                if ($futureSchedules > 0) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
                         'Serviço possui agendamentos futuros e não pode ser excluído',
@@ -472,13 +494,11 @@ class ServiceService extends AbstractBaseService
                 $service->delete();
 
                 // Atualizar total do orçamento
-                $this->updateBudgetTotal( $service->budget );
+                $this->updateBudgetTotal($service->budget);
 
-                return $this->success( null, 'Serviço excluído com sucesso' );
-
-            } );
-
-        } catch ( Exception $e ) {
+                return $this->success(null, 'Serviço excluído com sucesso');
+            });
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao excluir serviço',
@@ -491,16 +511,10 @@ class ServiceService extends AbstractBaseService
     /**
      * Verifica se um serviço pode ser deletado baseado em suas dependências.
      */
-    private function canDeleteService( Service $service ): bool
+    private function canDeleteService(Service $service): bool
     {
         // Não pode deletar se tiver faturas
-        if ( $service->invoices()->count() > 0 ) {
-            return false;
-        }
-
-        // Não pode deletar se estiver em status final
-        $finalStatuses = ServiceStatusEnum::getFinalStatuses();
-        if ( in_array( $service->status->value, $finalStatuses ) ) {
+        if ($service->invoices()->count() > 0) {
             return false;
         }
 
@@ -508,64 +522,147 @@ class ServiceService extends AbstractBaseService
     }
 
     /**
-     * Cancela um serviço alterando o status para CANCELLED.
+     * Retorna dados estatísticos para o dashboard de serviços.
+     *
+     * @param int $tenantId ID do tenant
+     * @return array
      */
-    public function cancelService( string $code, ?string $reason = null ): ServiceResult
+    public function getDashboardData(int $tenantId): array
     {
         try {
-            return DB::transaction( function () use ($code, $reason) {
-                $service = Service::where( 'code', $code )->first();
+            // Buscar estatísticas dos serviços
+            $statsResult = $this->getServiceStats($tenantId);
 
-                if ( !$service ) {
+            if (!$statsResult->isSuccess()) {
+                return [
+                    'total_services'      => 0,
+                    'active_services'     => 0,
+                    'completed_services'  => 0,
+                    'cancelled_services'  => 0,
+                    'total_service_value' => 0,
+                    'status_breakdown'    => [],
+                    'recent_services'     => collect()
+                ];
+            }
+
+            $stats = $statsResult->getData();
+
+            // Buscar serviços recentes (últimos 10)
+            $recentServices = $this->getRecentServicesForDashboard($tenantId);
+
+            return [
+                'total_services'      => $stats['total'],
+                'active_services'     => $stats['active'],
+                'completed_services'  => $stats['completed'],
+                'cancelled_services'  => $stats['cancelled'],
+                'total_service_value' => $stats['total_value'],
+                'status_breakdown'    => $stats['status_breakdown'] ?? [],
+                'recent_services'     => $recentServices
+            ];
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter dados do dashboard de serviços', [
+                'error'     => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ]);
+
+            return [
+                'total_services'      => 0,
+                'active_services'     => 0,
+                'completed_services'  => 0,
+                'cancelled_services'  => 0,
+                'total_service_value' => 0,
+                'status_breakdown'    => [],
+                'recent_services'     => collect()
+            ];
+        }
+    }
+
+    /**
+     * Retorna estatísticas básicas dos serviços para um tenant.
+     */
+    private function getServiceStats(int $tenantId): ServiceResult
+    {
+        try {
+            $services = Service::where('tenant_id', $tenantId)->get();
+
+            $total      = $services->count();
+            $active     = $services->filter(fn($s) => $s->status->isActive())->count();
+            $completed  = $services->filter(fn($s) => $s->status->value === ServiceStatus::COMPLETED->value)->count();
+            $cancelled  = $services->filter(fn($s) => $s->status->value === ServiceStatus::CANCELLED->value)->count();
+            $totalValue = $services->sum('total');
+
+            // Agrupar por status com cores
+            $statusBreakdown = $services->groupBy('status')->map(function ($group, $status) {
+                $serviceStatus = ServiceStatus::fromString($status);
+                return [
+                    'count' => $group->count(),
+                    'color' => $serviceStatus?->getColor() ?? '#6c757d'
+                ];
+            })->toArray();
+
+            return $this->success([
+                'total'            => $total,
+                'active'           => $active,
+                'completed'        => $completed,
+                'cancelled'        => $cancelled,
+                'total_value'      => $totalValue,
+                'status_breakdown' => $statusBreakdown
+            ], 'Estatísticas calculadas');
+        } catch (\Exception $e) {
+            return $this->error(
+                OperationStatus::ERROR,
+                'Erro ao calcular estatísticas',
+                null,
+                $e,
+            );
+        }
+    }
+
+    /**
+     * Retorna serviços recentes para exibição no dashboard.
+     */
+    private function getRecentServicesForDashboard(int $tenantId): \Illuminate\Support\Collection
+    {
+        return Service::where('tenant_id', $tenantId)
+            ->with(['budget.customer', 'category'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Cancela um serviço alterando o status para CANCELLED.
+     */
+    public function cancelService(string $code): ServiceResult
+    {
+        try {
+            return DB::transaction(function () use ($code) {
+                $service = Service::where('code', $code)->first();
+
+                if (!$service) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
                         "Serviço {$code} não encontrado",
                     );
                 }
 
-                $oldStatus = $service->status;
-
-                // Verificar se já está cancelado
-                if ( $oldStatus === ServiceStatusEnum::CANCELLED ) {
+                // Verificar se pode ser cancelado
+                if (!$service->serviceStatus->canEdit()) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        'Serviço já está cancelado',
-                    );
-                }
-
-                // Validar transições permitidas
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $oldStatus->value );
-                if ( !in_array( ServiceStatusEnum::CANCELLED->value, $allowedTransitions ) ) {
-                    return $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        "Transição de {$oldStatus->value} para CANCELLED não permitida",
+                        'Serviço não pode ser cancelado no status atual',
                     );
                 }
 
                 // Atualizar status para CANCELLED
-                $service->update( [
-                    'status' => ServiceStatusEnum::CANCELLED->value,
-                    'reason' => $reason
-                ] );
+                $service->update(['status' => ServiceStatus::CANCELLED->value]);
 
-                // Log da ação
-                Log::info( 'Service cancelled', [
-                    'service_id'   => $service->id,
-                    'service_code' => $service->code,
-                    'old_status'   => $oldStatus->value,
-                    'new_status'   => ServiceStatusEnum::CANCELLED->value,
-                    'reason'       => $reason,
-                    'ip'           => request()->ip()
-                ] );
+                // Atualizar total do orçamento
+                $this->updateBudgetTotal($service->budget);
 
-                // Atualizar orçamento em cascata
-                $this->updateBudgetStatusIfNeeded( $service, ServiceStatusEnum::CANCELLED->value );
-
-                return $this->success( $service, 'Serviço cancelado com sucesso' );
-
-            } );
-
-        } catch ( Exception $e ) {
+                return $this->success($service->fresh(), 'Serviço cancelado com sucesso');
+            });
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
                 'Erro ao cancelar serviço',
@@ -576,82 +673,72 @@ class ServiceService extends AbstractBaseService
     }
 
     /**
-     * Atualiza status do serviço por token público com validação robusta.
+     * Atualiza o status de um serviço usando token de confirmação.
      */
-    public function updateStatusByToken(
-        string $serviceCode,
-        string $token,
-        string $newStatus,
-        ?string $reason = null,
-    ): ServiceResult {
+    public function updateStatusByToken(string $serviceCode, string $token, string $newStatus, ?string $reason = null): ServiceResult
+    {
         try {
-            return DB::transaction( function () use ($serviceCode, $token, $newStatus, $reason) {
-                // Buscar serviço com token
-                $service = Service::where( 'code', $serviceCode )
-                    ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
-                        $query->where( 'token', $token )
-                            ->where( 'expires_at', '>', now() );
-                    } )
-                    ->first();
+            return DB::transaction(function () use ($serviceCode, $token, $newStatus, $reason) {
+                // Buscar serviço
+                $service = Service::where('code', $serviceCode)->first();
 
-                if ( !$service ) {
+                if (!$service) {
                     return $this->error(
                         OperationStatus::NOT_FOUND,
-                        'Serviço ou token não encontrado/expirado',
+                        "Serviço {$serviceCode} não encontrado",
                     );
                 }
 
-                // Validar que é status permitido para cliente
-                $allowedStatuses = [
-                    ServiceStatusEnum::APPROVED->value,
-                    ServiceStatusEnum::REJECTED->value,
-                    ServiceStatusEnum::CANCELLED->value
-                ];
+                // Verificar token de confirmação
+                $confirmationToken = $service->userConfirmationToken;
 
-                if ( !in_array( $newStatus, $allowedStatuses ) ) {
+                if (!$confirmationToken || $confirmationToken->token !== $token) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        'Status não permitido para alteração por cliente',
+                        'Token de confirmação inválido',
                     );
                 }
 
-                // Validar transições permitidas
-                $allowedTransitions = ServiceStatusEnum::getAllowedTransitions( $service->status->value );
-                if ( !in_array( $newStatus, $allowedTransitions ) ) {
+                // Verificar se token não expirou
+                if ($confirmationToken->expires_at->isPast()) {
                     return $this->error(
                         OperationStatus::VALIDATION_ERROR,
-                        "Transição de {$service->status->value} para {$newStatus} não permitida",
+                        'Token de confirmação expirado',
                     );
                 }
 
-                // Atualizar status
-                $service->update( [
-                    'status' => $newStatus,
-                    'reason' => $reason
-                ] );
+                // Validar transição de status
+                $allowedTransitions = ServiceStatus::getAllowedTransitions($service->status);
+                if (!in_array($newStatus, $allowedTransitions)) {
+                    return $this->error(
+                        OperationStatus::VALIDATION_ERROR,
+                        "Transição de {$service->status} para {$newStatus} não permitida",
+                    );
+                }
 
-                // Log da alteração
-                Log::info( 'Service status updated via public token', [
-                    'service_id'   => $service->id,
-                    'service_code' => $service->code,
-                    'old_status'   => $service->status->value,
-                    'new_status'   => $newStatus,
-                    'reason'       => $reason,
-                    'ip'           => request()->ip()
-                ] );
+                // Atualizar serviço
+                $updateData = ['status' => $newStatus];
+                if ($reason) {
+                    $updateData['reason'] = $reason;
+                }
 
-                return $this->success( $service, 'Status atualizado com sucesso' );
+                $service->update($updateData);
 
-            } );
+                // Atualizar orçamento em cascata se necessário
+                $this->updateBudgetStatusIfNeeded($service, $newStatus);
 
-        } catch ( Exception $e ) {
+                // Remover token usado
+                $confirmationToken->delete();
+
+                return $this->success($service->fresh(), 'Status atualizado com sucesso');
+            });
+        } catch (Exception $e) {
             return $this->error(
                 OperationStatus::ERROR,
-                'Erro ao atualizar status via token',
+                'Erro ao atualizar status do serviço',
                 null,
                 $e,
             );
         }
     }
-
 }

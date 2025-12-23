@@ -43,74 +43,73 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-        $this->renderable( function ( NotFoundHttpException $e, $request ) {
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Recurso não encontrado' ], 404 );
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Recurso não encontrado'], 404);
             }
 
-            return response()->view( 'errors.404', [], 404 );
-        } );
+            return response()->view('errors.404', [], 404);
+        });
 
-        $this->renderable( function ( AuthorizationException $e, $request ) {
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Acesso negado' ], 403 );
+        $this->renderable(function (AuthorizationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Acesso negado'], 403);
             }
 
-            return response()->view( 'errors.403', [], 403 );
-        } );
+            return response()->view('errors.403', [], 403);
+        });
 
-        $this->renderable( function ( Throwable $e, $request ) {
-            if ( $this->isHttpException( $e ) ) {
+        $this->renderable(function (Throwable $e, $request) {
+            if ($this->isHttpException($e)) {
                 $statusCode = $e->getStatusCode();
 
-                if ( $request->is( 'api/*' ) ) {
-                    return response()->json( [ 'error' => 'Erro interno do servidor' ], $statusCode );
+                if ($request->is('api/*')) {
+                    return response()->json(['error' => 'Erro interno do servidor'], $statusCode);
                 }
 
-                return response()->view( 'errors.500', [], $statusCode );
+                return response()->view('errors.500', [], $statusCode);
             }
 
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Erro interno do servidor' ], 500 );
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Erro interno do servidor'], 500);
             }
 
-            return response()->view( 'errors.500', [], 500 );
-        } );
+            return response()->view('errors.500', [], 500);
+        });
     }
 
     /**
      * Render an exception into an HTTP response.
      */
-    public function render( $request, Throwable $exception )
+    public function render($request, Throwable $exception)
     {
         // Página 404 customizada
-        if ( $exception instanceof NotFoundHttpException ) {
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Recurso não encontrado' ], 404 );
+        if ($exception instanceof NotFoundHttpException) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Recurso não encontrado'], 404);
             }
 
-            return response()->view( 'errors.404', [], 404 );
+            return response()->view('errors.404', [], 404);
         }
 
         // Página 403 customizada
-        if ( $exception instanceof AuthorizationException ) {
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Acesso negado' ], 403 );
+        if ($exception instanceof AuthorizationException) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Acesso negado'], 403);
             }
 
-            return response()->view( 'errors.403', [], 403 );
+            return response()->view('errors.403', [], 403);
         }
 
         // Página 500 customizada
-        if ( $this->isHttpException( $exception ) ) {
-            if ( $request->is( 'api/*' ) ) {
-                return response()->json( [ 'error' => 'Erro interno do servidor' ], $exception->getStatusCode() );
+        if ($this->isHttpException($exception)) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'Erro interno do servidor'], $exception->getStatusCode());
             }
 
-            return response()->view( 'errors.500', [], $exception->getStatusCode() );
+            return response()->view('errors.500', [], $exception->getStatusCode());
         }
 
-        return parent::render( $request, $exception );
+        return parent::render($request, $exception);
     }
-
 }

@@ -5,24 +5,24 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\CustomerPessoaFisicaRequest;
-use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Http\Requests\CustomerRequest;
+use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\AreaOfActivity;
-use App\Models\Customer;
 use App\Models\Profession;
+use App\Models\User;
 use App\Services\Domain\CustomerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Controller para gestão de clientes - Interface Web
+ * Controller de Clientes
  *
- * Gerencia todas as operações relacionadas a clientes através
- * da interface web, incluindo CRUD, busca e filtros.
- * Implementa arquitetura Controller → Services → Repositories → Models.
+ * Gerencia CRUD de clientes (Pessoa Física e Jurídica) com separação
+ * de validação e processamento.
  */
 class CustomerController extends Controller
 {
@@ -31,113 +31,148 @@ class CustomerController extends Controller
     ) {}
 
     /**
-     * Lista de clientes com filtros e paginação
+     * Mostrar lista de clientes.
      */
     public function index( Request $request ): View
     {
-        $filters   = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id' ] );
-        $customers = $this->customerService->listCustomers( $filters );
-
-        if ( !$customers->isSuccess() ) {
-            return view( 'pages.customer.index', [
-                'customers' => collect(),
-                'error'     => $customers->getMessage()
-            ] );
+        $filters        = $request->only( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] );
+        $perPage        = (int) ( $filters[ 'per_page' ] ?? 10 );
+        $allowedPerPage = [ 10, 20, 50 ];
+        if ( !in_array( $perPage, $allowedPerPage, true ) ) {
+            $perPage = 10;
         }
+        $filters[ 'per_page' ] = $perPage;
 
-        return view( 'pages.customer.index', [
-            'customers'         => $customers->getData(),
-            'filters'           => $filters,
-            'areas_of_activity' => AreaOfActivity::active()->get(),
-        ] );
+        try {
+            if ( $request->hasAny( [ 'search', 'status', 'type', 'area_of_activity_id', 'deleted' ] ) ) {
+                $showOnlyTrashed = ( $filters[ 'deleted' ] ?? '' ) === 'only';
+                $tenantId        = auth()->user()->tenant_id;
+
+                $result = $showOnlyTrashed
+                    ? $this->customerService->getDeletedCustomers( $filters, (int) $tenantId )
+                    : $this->customerService->getFilteredCustomers( $filters, (int) $tenantId );
+            } else {
+                $result = $this->emptyResult();
+            }
+
+            $areasOfActivity = AreaOfActivity::where( 'is_active', true )->orderBy( 'name' )->get();
+
+            return $this->view( 'pages.customer.index', $result, 'customers', [
+                'filters'           => $filters,
+                'areas_of_activity' => $areasOfActivity,
+            ] );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro ao carregar clientes', [ 'error' => $e->getMessage() ] );
+            abort( 500, 'Erro ao carregar clientes' );
+        }
     }
 
-
-
     /**
-     * Formulário de criação de cliente
+     * Mostrar formulário de criação de cliente.
      */
     public function create(): View
     {
-        $areasOfActivity = AreaOfActivity::active()->get();
-        $professions     = Profession::active()->get();
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Dados necessários para o formulário
+        $areasOfActivity = AreaOfActivity::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
+
+        $professions = Profession::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
 
         return view( 'pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
-            'customer'          => new Customer(), // Instância vazia para criação
+            'customer'          => new \App\Models\Customer,
         ] );
     }
 
     /**
-     * Criar cliente (PF ou PJ baseado no tipo de documento)
+     * Criar cliente (Pessoa Física ou Jurídica) - Método unificado
      */
-    public function store( Request $request ): RedirectResponse
+    public function store( CustomerRequest $request ): RedirectResponse
     {
-        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
-        $cnpj = $request->input( 'cnpj', '' );
-        $cpf = $request->input( 'cpf', '' );
-        $isPJ = !empty( $cnpj );
-        
-        $formRequest = $isPJ 
-            ? app( CustomerPessoaJuridicaRequest::class )
-            : app( CustomerPessoaFisicaRequest::class );
-        
-        $formRequest->setContainer( app() )
-            ->setRedirector( app( 'redirect' ) )
-            ->replace( $request->all() );
-        
-        $formRequest->validateResolved();
-        $validated = $formRequest->validated();
+        try {
+            /** @var User $user */
+            $user      = Auth::user();
+            $validated = $request->validated();
 
-        $result = $this->customerService->createCustomer( $validated );
+            // Usar o serviço para criar cliente
+            $result = $this->customerService->createCustomer( $validated );
+
+            // Verificar resultado do serviço
+            if ( !$result->isSuccess() ) {
+                return redirect()
+                    ->route( 'provider.customers.create' )
+                    ->with( 'error', $result->getMessage() )
+                    ->withInput();
+            }
+
+            return redirect()
+                ->route( 'provider.customers.create' )
+                ->with( 'success', 'Cliente criado com sucesso! Você pode cadastrar outro cliente agora.' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao criar cliente', [
+                'user_id'   => auth()->id(),
+                'tenant_id' => auth()->user()->tenant_id,
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(),
+            ] );
+
+            return redirect()
+                ->route( 'provider.customers.create' )
+                ->with( 'error', 'Erro interno ao criar cliente. Tente novamente.' )
+                ->withInput();
+        }
+    }
+
+    /**
+     * Mostrar cliente específico.
+     */
+    public function show( string $id ): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findCustomer( (int) $id );
 
         if ( !$result->isSuccess() ) {
-            return back()->withInput()->with( 'error', $result->getMessage() );
+            abort( 404, $result->getMessage() );
         }
-
-        $this->logOperation( 'customer_created', [
-            'customer_id' => $result->getData()->id,
-            'type'        => $isPJ ? 'pj' : 'pf'
-        ] );
-
-        return redirect()
-            ->route( 'provider.customers.show', $result->getData() )
-            ->with( 'success', $result->getMessage() );
-    }
-
-
-
-    /**
-     * Detalhes do cliente
-     */
-    public function show( Customer $customer ): View
-    {
-        // Verificar se o cliente pertence ao tenant do usuário
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
-        }
-
-        $customer->load( [ 'commonData', 'contact', 'address', 'budgets', 'invoices' ] );
 
         return view( 'pages.customer.show', [
-            'customer' => $customer,
+            'customer' => $result->getData(),
         ] );
     }
 
     /**
-     * Formulário de edição
+     * Mostrar formulário de edição de cliente.
      */
-    public function edit( Customer $customer ): View
+    public function edit( string $id ): View
     {
-        // Verificar se o cliente pertence ao tenant do usuário
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findCustomer( (int) $id );
+
+        if ( !$result->isSuccess() ) {
+            abort( 404, $result->getMessage() );
         }
 
-        $customer->load( [ 'commonData', 'contact', 'address' ] );
-        $areasOfActivity = AreaOfActivity::active()->get();
-        $professions     = Profession::active()->get();
+        $customer = $result->getData();
+
+        // Dados necessários para o formulário
+        $areasOfActivity = AreaOfActivity::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
+
+        $professions = \App\Models\Profession::where( 'is_active', true )
+            ->orderBy( 'name' )
+            ->get();
 
         return view( 'pages.customer.edit', [
             'customer'          => $customer,
@@ -147,287 +182,318 @@ class CustomerController extends Controller
     }
 
     /**
-     * Atualizar cliente (PF ou PJ baseado no documento existente)
+     * Atualizar cliente (Pessoa Física ou Jurídica) - Método unificado
      */
-    public function update( Customer $customer, Request $request ): RedirectResponse
+    public function update( CustomerUpdateRequest $request, \App\Models\Customer $customer ): RedirectResponse
     {
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
-        }
+        try {
+            /** @var User $user */
+            $user      = Auth::user();
+            $validated = $request->validated();
 
-        // Detecta tipo baseado no campo enviado (cnpj ou cpf)
-        $cnpj = $request->input( 'cnpj', '' );
-        $cpf = $request->input( 'cpf', '' );
-        $isPJ = !empty( $cnpj );
-        
-        $formRequest = $isPJ 
-            ? app( CustomerPessoaJuridicaRequest::class )
-            : app( CustomerPessoaFisicaRequest::class );
-        
-        $formRequest->setContainer( app() )
-            ->setRedirector( app( 'redirect' ) )
-            ->replace( $request->all() );
-        
-        $formRequest->validateResolved();
-        $validated = $formRequest->validated();
+            // Usar o serviço para atualizar cliente
+            $result = $this->customerService->updateCustomer( (int) $customer->id, $validated );
 
-        $result = $this->customerService->updateCustomer( $customer->id, $validated );
+            // Verificar resultado do serviço
+            if ( !$result->isSuccess() ) {
+                return redirect()
+                    ->route( 'provider.customers.edit', $customer->id )
+                    ->with( 'error', $result->getMessage() )
+                    ->withInput();
+            }
 
-        if ( !$result->isSuccess() ) {
-            return back()->withInput()->with( 'error', $result->getMessage() );
-        }
+            return redirect()->route( 'provider.customers.index' )
+                ->with( 'success', 'Cliente atualizado com sucesso!' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao atualizar cliente', [
+                'customer_id' => $customer->id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+            ] );
 
-        $this->logOperation( 'customer_updated', [ 'customer_id' => $customer->id ] );
-
-        return redirect()
-            ->route( 'provider.customers.show', $customer )
-            ->with( 'success', $result->getMessage() );
-    }
-
-    /**
-     * Remover cliente
-     */
-    public function destroy( Customer $customer ): RedirectResponse
-    {
-        // Verificar se o cliente pertence ao tenant do usuário
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
-        }
-
-        $result = $this->customerService->deleteCustomer( $customer->id );
-
-        if ( !$result->isSuccess() ) {
             return redirect()
-                ->route( 'provider.customers.show', $customer )
-                ->with( 'error', $result->getMessage() );
+                ->route( 'provider.customers.edit', $customer->id )
+                ->with( 'error', 'Erro interno ao atualizar cliente. Tente novamente.' )
+                ->withInput();
         }
-
-        $this->logOperation( 'customer_deleted', [
-            'customer_id' => $customer->id
-        ] );
-
-        return redirect()
-            ->route( 'provider.customers.index' )
-            ->with( 'success', $result->getMessage() );
     }
 
     /**
-     * Restaurar cliente (soft delete)
+     * Excluir cliente.
      */
-    public function restore( Customer $customer ): RedirectResponse
+    public function destroy( \App\Models\Customer $customer ): RedirectResponse
     {
-        // Verificar se o cliente pertence ao tenant do usuário
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
-        }
+        try {
+            /** @var User $user */
+            $user = Auth::user();
 
-        $customer->restore();
+            $result = $this->customerService->delete( (int) $customer->id );
 
-        $this->logOperation( 'customer_restored', [
-            'customer_id' => $customer->id
-        ] );
+            if ( !$result->isSuccess() ) {
+                return redirect()
+                    ->route( 'provider.customers.index' )
+                    ->with( 'error', $result->getMessage() );
+            }
 
-        return redirect()
-            ->route( 'provider.customers.show', $customer )
-            ->with( 'success', 'Cliente restaurado com sucesso.' );
-    }
+            return redirect()->route( 'provider.customers.index' )
+                ->with( 'success', 'Cliente excluído com sucesso!' );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao excluir cliente', [
+                'customer_id' => $customer->id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage(),
+            ] );
 
-    /**
-     * Duplicar cliente
-     */
-    public function duplicate( Customer $customer ): RedirectResponse
-    {
-        // Verificar se o cliente pertence ao tenant do usuário
-        if ( $customer->tenant_id !== Auth::user()->tenant_id ) {
-            abort( 403, 'Cliente não encontrado.' );
-        }
-
-        // Implementar lógica de duplicação
-        $duplicateData = $customer->toArray();
-        unset( $duplicateData[ 'id' ], $duplicateData[ 'created_at' ], $duplicateData[ 'updated_at' ] );
-
-        // Modificar campos únicos
-        $duplicateData[ 'email' ]    = 'copia-' . $duplicateData[ 'email' ];
-        $duplicateData[ 'document' ] = 'copia-' . $duplicateData[ 'document' ];
-
-        $result = $this->customerService->createCustomer( $duplicateData );
-
-        if ( !$result->isSuccess() ) {
             return redirect()
-                ->route( 'provider.customers.show', $customer )
-                ->with( 'error', 'Erro ao duplicar cliente: ' . $result->getMessage() );
+                ->route( 'provider.customers.index' )
+                ->with( 'error', 'Erro interno ao excluir cliente. Tente novamente.' );
         }
-
-        $this->logOperation( 'customer_duplicated', [
-            'original_customer_id' => $customer->id,
-            'new_customer_id'      => $result->getData()->id
-        ] );
-
-        return redirect()
-            ->route( 'provider.customers.show', $result->getData() )
-            ->with( 'success', 'Cliente duplicado com sucesso.' );
     }
 
     /**
-     * Buscar clientes próximos (geolocalização)
+     * Alterar status do cliente (ativo/inativo).
+     */
+    public function toggleStatus( \App\Models\Customer $customer, Request $request ): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $result = $this->customerService->toggleStatus( (int) $customer->id, $user->tenant_id );
+
+            $status  = $result->isSuccess() ? 'success' : 'error';
+            $message = $result->isSuccess()
+                ? 'Status do cliente alterado com sucesso!'
+                : $result->getMessage();
+
+            if ( $request->ajax() || $request->expectsJson() ) {
+                return response()->json( [
+                    'success' => $result->isSuccess(),
+                    'message' => $message,
+                ], $result->isSuccess() ? 200 : 400 );
+            }
+
+            return redirect()
+                ->route( 'provider.customers.index' )
+                ->with( $status, $message );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao alterar status do cliente', [
+                'customer_id' => $customer->id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage(),
+            ] );
+
+            return redirect()
+                ->route( 'provider.customers.index' )
+                ->with( 'error', 'Erro interno ao alterar status. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Restaurar cliente excluído.
+     */
+    public function restore( string $id ): RedirectResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $result = $this->customerService->restoreCustomer( (int) $id, $user->tenant_id );
+
+            $status  = $result->isSuccess() ? 'success' : 'error';
+            $message = $result->isSuccess()
+                ? 'Cliente restaurado com sucesso!'
+                : $result->getMessage();
+
+            return redirect()
+                ->route( 'provider.customers.index' )
+                ->with( $status, $message );
+        } catch ( \Exception $e ) {
+            Log::error( 'Erro inesperado ao restaurar cliente', [
+                'customer_id' => $id,
+                'user_id'     => auth()->id(),
+                'tenant_id'   => auth()->user()->tenant_id,
+                'error'       => $e->getMessage(),
+            ] );
+
+            return redirect()
+                ->route( 'provider.customers.index' )
+                ->with( 'error', 'Erro interno ao restaurar cliente. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Buscar clientes próximos (por CEP).
      */
     public function findNearby( Request $request ): View
     {
-        $request->validate( [
-            'lat'    => 'required|numeric|between:-90,90',
-            'lng'    => 'required|numeric|between:-180,180',
-            'radius' => 'nullable|integer|min:1|max:100',
-        ] );
+        $cep = $request->get( 'cep' );
 
-        // Implementar busca por geolocalização
-        $customers = collect(); // Placeholder
+        if ( !$cep ) {
+            return redirect()->route( 'provider.customers.index' )
+                ->with( 'error', 'CEP é obrigatório para busca por proximidade.' );
+        }
 
-        return view( 'pages.customer.nearby', [
-            'customers' => $customers,
-            'lat'       => $request->lat,
-            'lng'       => $request->lng,
-            'radius'    => $request->radius ?? 10,
-        ] );
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->findNearbyCustomers( $cep, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return redirect()->route( 'provider.customers.index' )
+                ->with( 'error', $result->getMessage() );
+        }
+
+        // Por enquanto, redirecionar para a página principal com dados filtrados
+        // TODO: Implementar view de busca por proximidade
+        return redirect()->route( 'provider.customers.index' )
+            ->with( 'info', 'Busca por proximidade não implementada. Use os filtros da página principal.' );
     }
 
     /**
-     * Autocomplete para busca de clientes
+     * Buscar clientes (AJAX).
+     */
+    public function search( Request $request ): \Illuminate\Http\JsonResponse
+    {
+        /** @var User $user */
+        $user    = Auth::user();
+        $search  = $request->get( 'search' );
+        $type    = $request->get( 'type' );
+        $status  = $request->get( 'status' );
+        $areaId  = $request->get( 'area_of_activity_id' );
+        $deleted = $request->get( 'deleted' );
+
+        $query = \App\Models\Customer::with( [ 'commonData', 'contact' ] )
+            ->where( 'tenant_id', $user->tenant_id );
+
+        if ( !empty( $search ) ) {
+            $query->where( function ( $q ) use ( $search ) {
+                $q->whereHas( 'commonData', function ( $cq ) use ( $search ) {
+                    $cq->where( 'first_name', 'like', "%{$search}%" )
+                        ->orWhere( 'last_name', 'like', "%{$search}%" )
+                        ->orWhere( 'company_name', 'like', "%{$search}%" )
+                        ->orWhere( 'cpf', 'like', "%{$search}%" )
+                        ->orWhere( 'cnpj', 'like', "%{$search}%" );
+                } )->orWhereHas( 'contact', function ( $cq ) use ( $search ) {
+                    $cq->where( 'email_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'email_business', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_business', 'like', "%{$search}%" );
+                } );
+            } );
+        }
+
+        if ( !empty( $type ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $type ) {
+                if ( strtolower( $type ) === 'pessoa_fisica' || strtolower( $type ) === 'pf' || strtolower( $type ) === 'individual' ) {
+                    $q->whereNotNull( 'cpf' );
+                } else {
+                    $q->whereNotNull( 'cnpj' );
+                }
+            } );
+        }
+
+        if ( $deleted === 'only' ) {
+            $query->onlyTrashed();
+        } elseif ( !empty( $status ) ) {
+            $query->where( 'status', $status );
+        }
+
+        if ( !empty( $areaId ) ) {
+            $query->whereHas( 'commonData', function ( $q ) use ( $areaId ) {
+                $q->where( 'area_of_activity_id', $areaId );
+            } );
+        }
+
+        $customers = $query->orderBy( 'created_at', 'desc' )->limit( 100 )->get();
+
+        $data = $customers->map( function ( $customer ) {
+            $commonData = $customer->commonData;
+            $contact    = $customer->contact;
+
+            return [
+                'id'             => $customer->id,
+                'customer_name'  => $commonData ? ( $commonData->company_name ?: trim( ( $commonData->first_name ?? '' ) . ' ' . ( $commonData->last_name ?? '' ) ) ) : 'Nome não informado',
+                'cpf'            => $commonData->cpf ?? '',
+                'cnpj'           => $commonData->cnpj ?? '',
+                'email'          => $contact->email_personal ?? '',
+                'email_business' => $contact->email_business ?? '',
+                'phone'          => $contact->phone_personal ?? '',
+                'phone_business' => $contact->phone_business ?? '',
+                'status'         => $customer->status,
+                'status_label'   => $customer->status_label ?? ucfirst( (string) $customer->status ),
+                'created_at'     => $customer->created_at?->toISOString(),
+                'deleted_at'     => $customer->deleted_at?->toISOString(),
+            ];
+        } );
+
+        return response()->json( [ 'data' => $data ] );
+    }
+
+    /**
+     * Autocompletar clientes (AJAX).
      */
     public function autocomplete( Request $request ): \Illuminate\Http\JsonResponse
     {
-        $request->validate( [
-            'q' => 'required|string|min:2|max:50',
+        $query = $request->get( 'q' );
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $result = $this->customerService->searchForAutocomplete( $query, $user->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'error' => $result->getMessage(),
+            ], 400 );
+        }
+
+        return response()->json( [
+            'suggestions' => $result->getData(),
         ] );
-
-        $customers = $this->customerService->listCustomers( [
-            'search' => $request->q,
-            'limit'  => 10,
-        ] );
-
-        $results = $customers->isSuccess() ? $customers->getData()->map( function ( $customer ) {
-            return [
-                'id'    => $customer->id,
-                'text'  => $customer->full_name . ' (' . $customer->email . ')',
-                'email' => $customer->email,
-                'phone' => $customer->contact?->phone,
-            ];
-        } ) : collect();
-
-        return response()->json( [ 'results' => $results ] );
     }
 
     /**
-     * Exportar clientes
+     * Exportar clientes.
      */
-    public function export( Request $request ): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export( Request $request ): BinaryFileResponse|\Illuminate\Http\JsonResponse
     {
-        // Implementar exportação CSV/Excel
-        $filename = 'clientes_' . now()->format( 'Y-m-d_H-i-s' ) . '.csv';
 
-        // Placeholder - implementar lógica real
-        $content = "Nome,Email,Telefone\nJoão Silva,joao@email.com,(11) 99999-9999\n";
+        $filters = $request->only( [ 'search', 'status', 'type' ] );
 
-        return response()->streamDownload( function () use ($content) {
-            echo $content;
-        }, $filename, [ 'Content-Type' => 'text/csv' ] );
+        $result = $this->customerService->exportCustomers( $filters );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'error' => $result->getMessage(),
+            ], 400 );
+        }
+
+        return response()->json( [
+            'data' => $result->getData(),
+        ] );
     }
 
     /**
-     * Dashboard de clientes
+     * Dashboard de clientes.
      */
     public function dashboard(): View
     {
-        // Implementar métricas e estatísticas
-        $stats = [
-            'total_customers'          => 0,
-            'active_customers'         => 0,
-            'new_customers_this_month' => 0,
-            'top_customers'            => collect(),
-        ];
+        $result = $this->customerService->getDashboardData( auth()->user()->tenant_id );
+
+        if ( !$result->isSuccess() ) {
+            return view( 'pages.customer.dashboard', [
+                'stats' => [],
+                'error' => $result->getMessage(),
+            ] );
+        }
 
         return view( 'pages.customer.dashboard', [
-            'stats' => $stats,
-        ] );
-    }
-
-    /**
-     * Busca AJAX de clientes
-     */
-    public function search(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            $searchTerm = $request->input('search', '');
-            
-            // Busca direta no modelo para testar
-            $query = Customer::with(['commonData', 'contact'])
-                ->where('tenant_id', Auth::user()->tenant_id);
-            
-            if (!empty($searchTerm)) {
-                $query->where(function($q) use ($searchTerm) {
-                    $q->whereHas('commonData', function($subQ) use ($searchTerm) {
-                        $subQ->where('first_name', 'like', "%{$searchTerm}%")
-                             ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                             ->orWhere('company_name', 'like', "%{$searchTerm}%")
-                             ->orWhere('cpf', 'like', "%{$searchTerm}%")
-                             ->orWhere('cnpj', 'like', "%{$searchTerm}%");
-                    })
-                    ->orWhereHas('contact', function($subQ) use ($searchTerm) {
-                        $subQ->where('email_personal', 'like', "%{$searchTerm}%")
-                             ->orWhere('email_business', 'like', "%{$searchTerm}%");
-                    });
-                });
-            }
-            
-            $customers = $query->limit(50)->get();
-
-            $result = $customers->map(function ($customer) {
-                $commonData = $customer->commonData;
-                $contact = $customer->contact;
-                
-                return [
-                    'id' => $customer->id,
-                    'customer_name' => $commonData ? 
-                        ($commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name)) : 
-                        'Nome não informado',
-                    'cpf' => $commonData?->cpf ?? '',
-                    'cnpj' => $commonData?->cnpj ?? '',
-                    'email' => $contact?->email_personal ?? '',
-                    'email_business' => $contact?->email_business ?? '',
-                    'phone' => $contact?->phone_personal ?? '',
-                    'phone_business' => $contact?->phone_business ?? '',
-                    'created_at' => $customer->created_at->toISOString(),
-                ];
-            });
-
-            return response()->json($result);
-            
-        } catch (\Exception $e) {
-            Log::error('Erro na busca de clientes', [
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                'user_id' => Auth::id(),
-                'search_term' => $request->input('search')
-            ]);
-            
-            return response()->json([
-                'error' => 'Erro interno: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Log de operações para auditoria
-     */
-    protected function logOperation( string $action, array $context = [] ): void
-    {
-        Log::info( "Customer operation: {$action}", [
-            'user_id'    => Auth::id(),
-            'tenant_id'  => Auth::user()?->tenant_id,
-            'action'     => $action,
-            'context'    => $context,
-            'ip'         => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'stats' => $result->getData(),
         ] );
     }
 

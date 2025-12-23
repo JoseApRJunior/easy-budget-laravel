@@ -17,24 +17,26 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class SocialLoginWelcomeMail extends \Illuminate\Mail\Mailable
 {
-    public User    $user;
+    public User $user;
+
     public ?Tenant $tenant;
-    public string  $provider;
+
+    public string $provider;
 
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string $provider Provedor social usado (ex: 'google')
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $provider  Provedor social usado (ex: 'google')
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
         string $provider = 'google',
     ) {
-        $this->user     = $user;
-        $this->tenant   = $tenant;
+        $this->user = $user;
+        $this->tenant = $tenant;
         $this->provider = $provider;
     }
 
@@ -44,7 +46,7 @@ class SocialLoginWelcomeMail extends \Illuminate\Mail\Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bem-vindo ao ' . config( 'app.name', 'Easy Budget Laravel' ) . ' via ' . ucfirst( $this->provider ) . '!',
+            subject: 'Bem-vindo ao '.config('app.name', 'Easy Budget Laravel').' via '.ucfirst($this->provider).'!',
         );
     }
 
@@ -56,10 +58,10 @@ class SocialLoginWelcomeMail extends \Illuminate\Mail\Mailable
         return new Content(
             view: 'emails.users.social-login-welcome',
             with: [
-                'user'       => $this->user,
-                'tenant'     => $this->tenant,
-                'provider'   => $this->provider,
-                'first_name' => $this->user->first_name ?? explode( ' ', $this->user->name )[ 0 ] ?? 'usuário',
+                'user' => $this->user,
+                'tenant' => $this->tenant,
+                'provider' => $this->provider,
+                'first_name' => $this->user->first_name ?? explode(' ', $this->user->name)[0] ?? 'usuário',
             ],
         );
     }
@@ -71,5 +73,4 @@ class SocialLoginWelcomeMail extends \Illuminate\Mail\Mailable
     {
         return [];
     }
-
 }

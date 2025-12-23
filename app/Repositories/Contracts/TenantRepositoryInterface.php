@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Repositories\Contracts;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -47,19 +47,42 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     ): Collection;
 
     /**
-     * Retorna registros paginados do tenant atual.
+     * Retorna registros paginados com filtros avançados.
      *
-     * @param int $perPage Itens por página (padrão: 15).
-     * @param array<string, mixed> $filters Filtros a aplicar.
-     * @param array<string, string>|null $orderBy Ordenação.
-     * @return LengthAwarePaginator Resultado paginado.
+     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['search' => 'termo', 'active' => true, 'per_page' => 20])
+     * @param int $perPage Número padrão de itens por página (10)
+     * @param array<string> $with Relacionamentos para eager loading (ex: ['category', 'inventory'])
+     * @param array<string, string>|null $orderBy Ordenação personalizada (ex: ['name' => 'asc', 'created_at' => 'desc'])
+     * @return LengthAwarePaginator Resultado paginado
      *
-     * @example
-     * $clients = $repository->paginateByTenant(10, ['status' => 'active']);
+     * @example Uso básico:
+     * ```php
+     * $results = $repository->getPaginated();
+     * ```
+     *
+     * @example Com filtros:
+     * ```php
+     * $results = $repository->getPaginated([
+     *     'search' => 'produto',
+     *     'active' => true,
+     *     'per_page' => 20
+     * ]);
+     * ```
+     *
+     * @example Com eager loading:
+     * ```php
+     * $results = $repository->getPaginated([], 15, ['category', 'inventory']);
+     * ```
+     *
+     * @example Com ordenação customizada:
+     * ```php
+     * $results = $repository->getPaginated([], 15, [], ['created_at' => 'desc', 'name' => 'asc']);
+     * ```
      */
-    public function paginateByTenant(
-        int $perPage = 15,
+    public function getPaginated(
         array $filters = [],
+        int $perPage = 10,
+        array $with = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator;
 
@@ -130,4 +153,68 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * $deletedCount = $repository->deleteManyByTenant([1, 2, 3]);
      */
     public function deleteManyByTenant( array $ids ): int;
+
+    /**
+     * Busca registros por nome/descrição com pesquisa parcial.
+     *
+     * @param string $search Termo de busca.
+     * @param array<string, mixed> $filters Filtros adicionais.
+     * @param array<string, string>|null $orderBy Ordenação.
+     * @param int|null $limit Limite de resultados.
+     * @return Collection<Model> Registros encontrados.
+     *
+     * @example
+     * $results = $repository->searchByTenant('notebook', ['status' => 'active']);
+     */
+    public function searchByTenant(
+        string $search,
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection;
+
+    /**
+     * Busca registros ativos (não deletados) do tenant atual.
+     *
+     * @param array<string, mixed> $filters Filtros adicionais.
+     * @param array<string, string>|null $orderBy Ordenação.
+     * @param int|null $limit Limite de resultados.
+     * @return Collection<Model> Registros ativos encontrados.
+     *
+     * @example
+     * $activeProducts = $repository->getActiveByTenant(['category_id' => 1]);
+     */
+    public function getActiveByTenant(
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection;
+
+    /**
+     * Busca registros deletados (soft delete) do tenant atual.
+     *
+     * @param array<string, mixed> $filters Filtros adicionais.
+     * @param array<string, string>|null $orderBy Ordenação.
+     * @param int|null $limit Limite de resultados.
+     * @return Collection<Model> Registros deletados encontrados.
+     *
+     * @example
+     * $deletedProducts = $repository->getDeletedByTenant(['category_id' => 1]);
+     */
+    public function getDeletedByTenant(
+        array $filters = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+    ): Collection;
+
+    /**
+     * Restaura registros deletados (soft delete) por IDs.
+     *
+     * @param array<int> $ids Lista de IDs a restaurar.
+     * @return int Número de registros restaurados.
+     *
+     * @example
+     * $restoredCount = $repository->restoreManyByTenant([1, 2, 3]);
+     */
+    public function restoreManyByTenant( array $ids ): int;
 }

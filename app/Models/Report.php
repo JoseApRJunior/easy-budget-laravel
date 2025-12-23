@@ -4,9 +4,6 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 /**
  * Modelo para relatórios gerados - Compatibilidade com sistema legado
@@ -44,9 +41,13 @@ class Report extends Model
         'type',
         'description',
         'file_name',
+        'file_path',
         'status',
         'format',
         'size',
+        'filters',
+        'error_message',
+        'generated_at',
         'definition_id',
         'execution_id',
         'metadata'
@@ -58,15 +59,19 @@ class Report extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'hash'        => 'string',
-        'type'        => 'string',
-        'description' => 'string',
-        'file_name'   => 'string',
-        'status'      => 'string',
-        'format'      => 'string',
-        'size'        => 'float',
-        'metadata'    => 'array',
-        'created_at'  => 'immutable_datetime',
+        'hash'          => 'string',
+        'type'          => 'string',
+        'description'   => 'string',
+        'file_name'     => 'string',
+        'file_path'     => 'string',
+        'status'        => 'string',
+        'format'        => 'string',
+        'size'          => 'float',
+        'filters'       => 'array',
+        'error_message' => 'string',
+        'generated_at'  => 'datetime',
+        'metadata'      => 'array',
+        'created_at'    => 'immutable_datetime',
     ];
 
     /**
@@ -139,7 +144,7 @@ class Report extends Model
         $rule = 'unique:reports,hash';
 
         if ( $excludeId ) {
-            $rule .= ',' . $excludeId . ',id';
+            $rule  .= ',' . $excludeId . ',id';
         }
 
         return $rule . ',tenant_id,' . request()->user()->tenant_id;
@@ -247,7 +252,7 @@ class Report extends Model
         $unitIndex = 0;
 
         while ( $bytes >= 1024 && $unitIndex < count( $units ) - 1 ) {
-            $bytes /= 1024;
+            $bytes  /= 1024;
             $unitIndex++;
         }
 

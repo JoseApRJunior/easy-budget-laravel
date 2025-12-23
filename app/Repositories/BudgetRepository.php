@@ -43,11 +43,23 @@ class BudgetRepository extends AbstractTenantRepository
      * Conta budgets por status dentro do tenant atual.
      *
      * @param string $status Status dos budgets
+     * @param array $filters Filtros adicionais
      * @return int Número de budgets
      */
-    public function countByStatus( string $status ): int
+    public function countByStatus( string $status, array $filters = [] ): int
     {
-        return $this->countByTenant( [ 'status' => $status ] );
+        $queryFilters = [ 'status' => $status ];
+
+        // Aplicar filtros de data se fornecidos
+        if ( !empty( $filters[ 'date_from' ] ) ) {
+            $queryFilters[ 'created_at_from' ] = $filters[ 'date_from' ];
+        }
+
+        if ( !empty( $filters[ 'date_to' ] ) ) {
+            $queryFilters[ 'created_at_to' ] = $filters[ 'date_to' ];
+        }
+
+        return $this->countByTenant( $queryFilters );
     }
 
     /**
@@ -250,54 +262,54 @@ class BudgetRepository extends AbstractTenantRepository
     public function getPaginatedBudgets( int $tenantId, array $filters = [], int $perPage = 15 ): LengthAwarePaginator
     {
         $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->with(['customer.commonData', 'customer.contact']);
+            ->with( [ 'customer.commonData', 'customer.contact' ] );
 
         // Aplicar filtros da view
-        if (!empty($filters['filter_code'])) {
-            $query->where('code', 'like', '%' . $filters['filter_code'] . '%');
+        if ( !empty( $filters[ 'filter_code' ] ) ) {
+            $query->where( 'code', 'like', '%' . $filters[ 'filter_code' ] . '%' );
         }
 
-        if (!empty($filters['filter_start_date'])) {
-            $query->whereDate('created_at', '>=', $filters['filter_start_date']);
+        if ( !empty( $filters[ 'filter_start_date' ] ) ) {
+            $query->whereDate( 'created_at', '>=', $filters[ 'filter_start_date' ] );
         }
 
-        if (!empty($filters['filter_end_date'])) {
-            $query->whereDate('created_at', '<=', $filters['filter_end_date']);
+        if ( !empty( $filters[ 'filter_end_date' ] ) ) {
+            $query->whereDate( 'created_at', '<=', $filters[ 'filter_end_date' ] );
         }
 
-        if (!empty($filters['filter_customer'])) {
-            $query->whereHas('customer.commonData', function($q) use ($filters) {
-                $q->where('first_name', 'like', '%' . $filters['filter_customer'] . '%')
-                  ->orWhere('last_name', 'like', '%' . $filters['filter_customer'] . '%')
-                  ->orWhere('company_name', 'like', '%' . $filters['filter_customer'] . '%');
-            });
+        if ( !empty( $filters[ 'filter_customer' ] ) ) {
+            $query->whereHas( 'customer.commonData', function ( $q ) use ( $filters ) {
+                $q->where( 'first_name', 'like', '%' . $filters[ 'filter_customer' ] . '%' )
+                    ->orWhere( 'last_name', 'like', '%' . $filters[ 'filter_customer' ] . '%' )
+                    ->orWhere( 'company_name', 'like', '%' . $filters[ 'filter_customer' ] . '%' );
+            } );
         }
 
-        if (!empty($filters['filter_min_value'])) {
-            $query->where('total', '>=', $filters['filter_min_value']);
+        if ( !empty( $filters[ 'filter_min_value' ] ) ) {
+            $query->where( 'total', '>=', $filters[ 'filter_min_value' ] );
         }
 
-        if (!empty($filters['filter_status'])) {
-            $query->where('status', $filters['filter_status']);
+        if ( !empty( $filters[ 'filter_status' ] ) ) {
+            $query->where( 'status', $filters[ 'filter_status' ] );
         }
 
         // Ordenação
-        $orderBy = $filters['filter_order_by'] ?? 'created_at_desc';
-        switch ($orderBy) {
+        $orderBy = $filters[ 'filter_order_by' ] ?? 'created_at_desc';
+        switch ( $orderBy ) {
             case 'created_at_asc':
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy( 'created_at', 'asc' );
                 break;
             case 'total_desc':
-                $query->orderBy('total', 'desc');
+                $query->orderBy( 'total', 'desc' );
                 break;
             case 'total_asc':
-                $query->orderBy('total', 'asc');
+                $query->orderBy( 'total', 'asc' );
                 break;
             default:
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy( 'created_at', 'desc' );
         }
 
-        return $query->paginate($perPage);
+        return $query->paginate( $perPage );
     }
 
     /**
@@ -324,11 +336,11 @@ class BudgetRepository extends AbstractTenantRepository
     {
         $query = $this->applyTenantFilter( $this->model::query(), $tenantId )
             ->where( 'code', $code );
-            
+
         if ( !empty( $with ) ) {
             $query->with( $with );
         }
-        
+
         return $query->first();
     }
 
@@ -445,33 +457,51 @@ class BudgetRepository extends AbstractTenantRepository
      * Obtém estatísticas de conversão de orçamentos.
      *
      * @param int $tenantId ID do tenant
+     * @param array $filters Filtros opcionais
      * @return array Estatísticas
      */
-    public function getConversionStats( int $tenantId ): array
+    public function getConversionStats( int $tenantId, array $filters = [] ): array
     {
-        $stats = $this->applyTenantFilter( $this->model::query(), $tenantId )
-            ->selectRaw( '
-                COUNT(*) as total,
-                SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved,
-                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN status = "rejected" THEN 1 ELSE 0 END) as rejected,
-                AVG(total) as avg_value,
-                SUM(total) as total_value
-            ' )
-            ->first();
+        $query = $this->applyTenantFilter( $this->model::query(), $tenantId );
+
+        // Aplicar filtros de data se fornecidos
+        if ( !empty( $filters[ 'date_from' ] ) ) {
+            $query->whereDate( 'created_at', '>=', $filters[ 'date_from' ] );
+        }
+
+        if ( !empty( $filters[ 'date_to' ] ) ) {
+            $query->whereDate( 'created_at', '<=', $filters[ 'date_to' ] );
+        }
+
+        $stats = $query->selectRaw( '
+            COUNT(*) as total,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as approved,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as rejected,
+            SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as pending,
+            AVG(total) as avg_value,
+            SUM(total) as total_value
+        ', [
+            \App\Enums\BudgetStatus::APPROVED->value,
+            \App\Enums\BudgetStatus::COMPLETED->value,
+            \App\Enums\BudgetStatus::REJECTED->value,
+            \App\Enums\BudgetStatus::DRAFT->value,
+            \App\Enums\BudgetStatus::PENDING->value,
+        ] )->first();
 
         $conversionRate = $stats->total > 0 ? ( $stats->approved / $stats->total ) * 100 : 0;
         $completionRate = $stats->approved > 0 ? ( $stats->completed / $stats->approved ) * 100 : 0;
 
         return [
-            'total_budgets'     => $stats->total,
-            'approved_budgets'  => $stats->approved,
-            'completed_budgets' => $stats->completed,
-            'rejected_budgets'  => $stats->rejected,
-            'conversion_rate'   => round( $conversionRate, 2 ),
-            'completion_rate'   => round( $completionRate, 2 ),
-            'average_value'     => $stats->avg_value,
-            'total_value'       => $stats->total_value,
+            'total'           => $stats->total,
+            'approved'        => $stats->approved,
+            'completed'       => $stats->completed,
+            'rejected'        => $stats->rejected,
+            'pending'         => $stats->pending,
+            'conversion_rate' => round( $conversionRate, 2 ),
+            'completion_rate' => round( $completionRate, 2 ),
+            'average_value'   => $stats->avg_value,
+            'total_value'     => $stats->total_value,
         ];
     }
 

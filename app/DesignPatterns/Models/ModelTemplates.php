@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Models;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em ModelPattern.
- *
- * @package App\DesignPatterns
  */
 class ModelTemplates
 {
@@ -1118,5 +1116,4 @@ public function scopeOrdered($query)
 - Use nomes descritivos e claros
 - Documente métodos públicos importantes';
     }
-
 }

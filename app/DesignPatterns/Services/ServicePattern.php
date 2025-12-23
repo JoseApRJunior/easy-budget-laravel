@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Services;
  *
  * Define convenções consistentes para desenvolvimento de services,
  * garantindo uniformidade, manutenibilidade e reutilização de código.
- *
- * @package App\DesignPatterns
  */
 class ServicePattern
 {
@@ -921,5 +919,4 @@ try {
 - Especifique filtros suportados
 - Documente regras de negócio implementadas';
     }
-
 }

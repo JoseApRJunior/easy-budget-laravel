@@ -1,10 +1,10 @@
-@extends( 'layouts.admin' )
+@extends('layouts.admin')
 
-@section( 'breadcrumb' )
+@section('breadcrumb')
     <li class="breadcrumb-item active">Dashboard IA </li>
 @endsection
 
-@section( 'admin_content' )
+@section('admin_content')
     <style>
         .metric-card {
             text-align: center;
@@ -123,7 +123,7 @@
                         </h5>
                     </div>
                     <div class="card-body" id="churn-predictions">
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center text-muted py-1">
                             <div class="spinner-border" role="status">
                                 <span class="visually-hidden">Carregando...</span>
                             </div>
@@ -148,7 +148,7 @@
                         </h5>
                     </div>
                     <div class="card-body" id="alerts-container">
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center text-muted py-1">
                             <div class="spinner-border" role="status">
                                 <span class="visually-hidden">Carregando...</span>
                             </div>
@@ -200,68 +200,68 @@
     </div>
 @endsection
 
-@section( 'scripts' )
+@section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             loadDashboardData();
-        } );
+        });
 
         function loadDashboardData() {
-            fetch( '/admin/ai/dashboard-data' )
-                .then( response => response.json() )
-                .then( data => {
-                    updateMetrics( data.metrics );
-                    updateChurnPredictions( data.churn_predictions );
-                    updateProactiveAlerts( data.proactive_alerts );
-                    createRevenueChart( data.revenue_forecast );
-                } )
-                .catch( error => console.error( 'Erro ao carregar dados do dashboard:', error ) );
+            fetch('/admin/ai/dashboard-data')
+                .then(response => response.json())
+                .then(data => {
+                    updateMetrics(data.metrics);
+                    updateChurnPredictions(data.churn_predictions);
+                    updateProactiveAlerts(data.proactive_alerts);
+                    createRevenueChart(data.revenue_forecast);
+                })
+                .catch(error => console.error('Erro ao carregar dados do dashboard:', error));
         }
 
-        function updateMetrics( metrics ) {
-            document.getElementById( 'downtime-reduction' ).textContent = metrics.downtime_reduction;
-            document.getElementById( 'revenue-increase' ).textContent = metrics.revenue_increase;
-            document.getElementById( 'alerts-count' ).textContent = metrics.alerts_count;
-            document.getElementById( 'efficiency-gains' ).textContent = metrics.efficiency_gains;
+        function updateMetrics(metrics) {
+            document.getElementById('downtime-reduction').textContent = metrics.downtime_reduction;
+            document.getElementById('revenue-increase').textContent = metrics.revenue_increase;
+            document.getElementById('alerts-count').textContent = metrics.alerts_count;
+            document.getElementById('efficiency-gains').textContent = metrics.efficiency_gains;
 
-            document.getElementById( 'roi-downtime' ).textContent = metrics.roi.downtime;
-            document.getElementById( 'roi-revenue' ).textContent = metrics.roi.revenue;
-            document.getElementById( 'roi-savings' ).textContent = metrics.roi.savings;
-            document.getElementById( 'roi-efficiency' ).textContent = metrics.roi.efficiency;
+            document.getElementById('roi-downtime').textContent = metrics.roi.downtime;
+            document.getElementById('roi-revenue').textContent = metrics.roi.revenue;
+            document.getElementById('roi-savings').textContent = metrics.roi.savings;
+            document.getElementById('roi-efficiency').textContent = metrics.roi.efficiency;
         }
 
-        function updateChurnPredictions( predictions ) {
-            const container = document.getElementById( 'churn-predictions' );
+        function updateChurnPredictions(predictions) {
+            const container = document.getElementById('churn-predictions');
             container.innerHTML = ''; // Limpa o spinner
-            predictions.forEach( p => {
+            predictions.forEach(p => {
                 const predictionHtml = `
                 <div class="alert alert-warning alert-item">
                     <strong>${p.customer_name}</strong> (ID: ${p.customer_id})<br>
                     Probabilidade de Churn: <strong>${p.churn_probability}%</strong><br>
                     <a href="/admin/customer/${p.customer_id}" class="btn btn-sm btn-outline-secondary mt-2">Ver Cliente</a>
                 </div>`;
-                container.insertAdjacentHTML( 'beforeend', predictionHtml );
-            } );
+                container.insertAdjacentHTML('beforeend', predictionHtml);
+            });
         }
 
-        function updateProactiveAlerts( alerts ) {
-            const container = document.getElementById( 'alerts-container' );
+        function updateProactiveAlerts(alerts) {
+            const container = document.getElementById('alerts-container');
             container.innerHTML = ''; // Limpa o spinner
-            alerts.forEach( a => {
+            alerts.forEach(a => {
                 const alertHtml = `
                 <div class="alert alert-danger alert-item">
                     <strong>${a.title}</strong><br>
                     ${a.description}<br>
                     <small class="text-muted">Detectado em: ${a.timestamp}</small>
                 </div>`;
-                container.insertAdjacentHTML( 'beforeend', alertHtml );
-            } );
+                container.insertAdjacentHTML('beforeend', alertHtml);
+            });
         }
 
-        function createRevenueChart( forecast ) {
-            const ctx = document.getElementById( 'revenueChart' ).getContext( '2d' );
-            new Chart( ctx, {
+        function createRevenueChart(forecast) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: forecast.labels,
@@ -273,11 +273,11 @@
                         fill: true
                     }]
                 }
-            } );
+            });
 
-            document.getElementById( 'next-month' ).textContent = forecast.summary.next_month;
-            document.getElementById( 'next-quarter' ).textContent = forecast.summary.next_quarter;
-            document.getElementById( 'growth-rate' ).textContent = forecast.summary.growth_rate;
+            document.getElementById('next-month').textContent = forecast.summary.next_month;
+            document.getElementById('next-quarter').textContent = forecast.summary.next_quarter;
+            document.getElementById('growth-rate').textContent = forecast.summary.growth_rate;
         }
     </script>
 @endsection

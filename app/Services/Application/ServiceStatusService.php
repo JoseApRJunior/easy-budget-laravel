@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Support\ServiceResult;
 
 /**
  * Serviço para gerenciamento de status de serviços usando enums.
  *
  * Este serviço fornece funcionalidades para trabalhar com status de serviços
- * através de enums, substituindo o modelo ServiceStatus por ServiceStatusEnum.
+ * através de enums, substituindo o modelo ServiceStatus por ServiceStatus.
  * Como os status agora são enums, este serviço foca em fornecer métodos utilitários
  * para trabalhar com os status de forma type-safe.
  *
@@ -34,18 +34,18 @@ class ServiceStatusService
      */
     public function getAllStatuses(): array
     {
-        return ServiceStatusEnum::cases();
+        return ServiceStatus::cases();
     }
 
     /**
      * Obtém um status específico pelo seu valor.
      *
      * @param string $value
-     * @return ServiceStatusEnum|null
+     * @return ServiceStatus|null
      */
-    public function getStatusByValue( string $value ): ?ServiceStatusEnum
+    public function getStatusByValue( string $value ): ?ServiceStatus
     {
-        return ServiceStatusEnum::tryFrom( $value );
+        return ServiceStatus::tryFrom( $value );
     }
 
     /**
@@ -56,7 +56,7 @@ class ServiceStatusService
      */
     public function isValidStatus( string $value ): bool
     {
-        return ServiceStatusEnum::tryFrom( $value ) !== null;
+        return ServiceStatus::tryFrom( $value ) !== null;
     }
 
     /**
@@ -75,10 +75,10 @@ class ServiceStatusService
 
         return $this->success( [
             'value'       => $status->value,
-            'name'        => $status->getName(),
+            'name'        => $status->getDescription(),
             'color'       => $status->getColor(),
             'icon'        => $status->getIcon(),
-            'order_index' => $status->getOrderIndex(),
+            'order_index' => 0,
             'is_active'   => $status->isActive(),
         ], 'Metadados do status obtidos com sucesso' );
     }
@@ -91,10 +91,10 @@ class ServiceStatusService
     public function getStatusOptions(): array
     {
         $options = [];
-        foreach ( ServiceStatusEnum::cases() as $status ) {
+        foreach ( ServiceStatus::cases() as $status ) {
             $options[ $status->value ] = [
                 'value' => $status->value,
-                'label' => $status->getName(),
+                'label' => $status->getDescription(),
                 'color' => $status->getColor(),
                 'icon'  => $status->getIcon(),
             ];
@@ -107,13 +107,13 @@ class ServiceStatusService
      */
     public function getAllowedTransitions( string $currentStatus ): ServiceResult
     {
-        $status = ServiceStatusEnum::tryFrom( $currentStatus );
+        $status = ServiceStatus::tryFrom( $currentStatus );
 
         if ( !$status ) {
             return $this->error( 'Status atual inválido', [ 'status' => $currentStatus ] );
         }
 
-        $transitions = ServiceStatusEnum::getAllowedTransitions( $status->value );
+        $transitions = ServiceStatus::getAllowedTransitions( $status->value );
 
         return $this->success( $transitions, 'Transições permitidas recuperadas' );
     }
@@ -123,8 +123,8 @@ class ServiceStatusService
      */
     public function canTransitionTo( string $currentStatus, string $targetStatus ): ServiceResult
     {
-        $current = ServiceStatusEnum::tryFrom( $currentStatus );
-        $target  = ServiceStatusEnum::tryFrom( $targetStatus );
+        $current = ServiceStatus::tryFrom( $currentStatus );
+        $target  = ServiceStatus::tryFrom( $targetStatus );
 
         if ( !$current || !$target ) {
             return $this->error( 'Status inválido', [
@@ -133,7 +133,7 @@ class ServiceStatusService
             ] );
         }
 
-        $transitions   = ServiceStatusEnum::getAllowedTransitions( $current->value );
+        $transitions   = ServiceStatus::getAllowedTransitions( $current->value );
         $canTransition = in_array( $target->value, $transitions );
 
         return $this->success( $canTransition, $canTransition ? 'Transição permitida' : 'Transição não permitida' );

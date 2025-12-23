@@ -2,6 +2,7 @@
 
 @section( 'content' )
     <div class="container-fluid py-1">
+        @php($activeTab = $activeTab ?? 'profile')
         @include( 'partials.settings.header' )
 
         <div class="row g-4">
@@ -18,6 +19,8 @@
                     @include( 'partials.settings.tabs.notifications' )
                     @include( 'partials.settings.tabs.security' )
                     @include( 'partials.settings.tabs.integration' )
+                    @include( 'partials.settings.tabs.customization' )
+                    @include( 'partials.settings.tabs.provider' )
                 </div>
             </div>
         </div>

@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -146,6 +147,105 @@ class InvoiceRepository extends AbstractTenantRepository
     {
         $query->where( 'tenant_id', $tenantId );
         return $query;
+    }
+
+    public function getFiltered( array $filters = [], ?array $orderBy = null, ?int $limit = null ): Collection
+    {
+        $query = $this->model->newQuery();
+
+        // Aplicar filtros
+        if ( !empty( $filters[ 'status' ] ) ) {
+            $query->where( 'status', $filters[ 'status' ] );
+        }
+
+        if ( !empty( $filters[ 'customer_id' ] ) ) {
+            $query->where( 'customer_id', $filters[ 'customer_id' ] );
+        }
+
+        if ( !empty( $filters[ 'date_from' ] ) ) {
+            $query->whereDate( 'due_date', '>=', $filters[ 'date_from' ] );
+        }
+
+        if ( !empty( $filters[ 'date_to' ] ) ) {
+            $query->whereDate( 'due_date', '<=', $filters[ 'date_to' ] );
+        }
+
+        if ( !empty( $filters[ 'search' ] ) ) {
+            $query->where( function ( $q ) use ( $filters ) {
+                $q->where( 'code', 'like', '%' . $filters[ 'search' ] . '%' )
+                    ->orWhereHas( 'customer', function ( $sq ) use ( $filters ) {
+                        $sq->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' );
+                    } )
+                    ->orWhereHas( 'service', function ( $sq ) use ( $filters ) {
+                        $sq->where( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
+                    } );
+            } );
+        }
+
+        // Eager loading padrão
+        $query->with( [ 'customer', 'service.budget' ] );
+
+        // Ordenação
+        if ( $orderBy ) {
+            foreach ( $orderBy as $field => $direction ) {
+                $query->orderBy( $field, $direction );
+            }
+        } else {
+            $query->orderBy( 'due_date', 'desc' );
+        }
+
+        // Limite
+        if ( $limit ) {
+            $query->limit( $limit );
+        }
+
+        return $query->get();
+    }
+
+    public function findByCode( string $code, array $with = [] ): ?Model
+    {
+        $query = $this->model->where( 'code', $code );
+
+        if ( !empty( $with ) ) {
+            $query->with( $with );
+        }
+
+        return $query->first();
+    }
+
+    public function countByStatus(): array
+    {
+        return $this->model
+            ->selectRaw( 'status, COUNT(*) as count' )
+            ->groupBy( 'status' )
+            ->pluck( 'count', 'status' )
+            ->toArray();
+    }
+
+    public function countOverdue(): int
+    {
+        return $this->model->where( 'due_date', '<', now() )
+            ->where( 'status', '!=', 'paid' ) // Assumindo que 'paid' é um status final
+            ->count();
+    }
+
+    public function getTotalRevenue(): float
+    {
+        return $this->model->where( 'status', 'paid' )->sum( 'total' );
+    }
+
+    public function sumTotalByBudgetId( int $budgetId, ?array $statusFilter = null ): float
+    {
+        $query = $this->model->newQuery()
+            ->whereHas('service', function ($q) use ($budgetId) {
+                $q->where('budget_id', $budgetId);
+            });
+
+        if ($statusFilter && count($statusFilter) > 0) {
+            $query->whereIn('status', $statusFilter);
+        }
+
+        return (float) ($query->sum('total') ?? 0);
     }
 
 }

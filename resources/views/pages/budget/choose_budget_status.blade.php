@@ -33,7 +33,7 @@
                             <div class="col-md-2">
                                 <small class="text-muted">Status</small>
                                 <span class="badge fs-6"
-                                    style="background-color: {{ $budget->status->color }};">{{ $budget->status->name }}</span>
+                                    style="background-color: {{ $budget->status->getColor() }};">{{ $budget->status->getDescription() }}</span>
                             </div>
                         </div>
 
@@ -96,7 +96,7 @@
                                 class="fw-semibold @if( $budget->due_date->isPast() ) text-danger @endif">{{ $budget->due_date->format( 'd/m/Y' ) }}</span>
                         </div>
                         <!-- Action Buttons for PENDING status -->
-                        @if( $budget->status->slug === 'PENDING' )
+                        @if( $budget->status === \App\Enums\BudgetStatus::PENDING )
                             <div class="d-grid gap-2 mt-4">
                                 <button class="btn btn-success btn-lg" data-bs-toggle="modal"
                                     data-bs-target="#approveBudgetModal"><i class="bi bi-check-circle-fill me-2"></i>Aprovar
@@ -107,7 +107,7 @@
                             </div>
                         @else
                             <div class="alert alert-info text-center">Este orçamento já foi
-                                {{ strtolower( $budget->status->name ) }}.</div>
+                                {{ strtolower( $budget->status->getDescription() ) }}.</div>
                         @endif
                     </div>
                 </div>
@@ -125,7 +125,7 @@
                         <div class="card-header p-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-tag me-2"></i>{{ $service->category->name }}</h5>
                             <span class="badge"
-                                style="background-color: {{ $service->status->color }};">{{ $service->status->name }}</span>
+                                style="background-color: {{ $service->status->getColor() }};">{{ $service->status->getDescription() }}</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-4">

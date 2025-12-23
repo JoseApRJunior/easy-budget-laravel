@@ -7,43 +7,42 @@ class FlashHelper
     /**
      * Flash success message
      */
-    public static function success( $message )
+    public static function success($message)
     {
-        session()->flash( 'flash.success', $message );
+        session()->flash('flash.success', $message);
     }
 
     /**
      * Flash error message
      */
-    public static function error( $message )
+    public static function error($message)
     {
-        session()->flash( 'flash.error', $message );
+        session()->flash('flash.error', $message);
     }
 
     /**
      * Flash warning message
      */
-    public static function warning( $message )
+    public static function warning($message)
     {
-        session()->flash( 'flash.warning', $message );
+        session()->flash('flash.warning', $message);
     }
 
     /**
      * Flash info message
      */
-    public static function info( $message )
+    public static function info($message)
     {
-        session()->flash( 'flash.info', $message );
+        session()->flash('flash.info', $message);
     }
 
     /**
      * Flash multiple messages
      */
-    public static function messages( $messages )
+    public static function messages($messages)
     {
-        foreach ( $messages as $type => $message ) {
-            self::{$type}( $message );
+        foreach ($messages as $type => $message) {
+            self::{$type}($message);
         }
     }
-
 }

@@ -21,22 +21,23 @@ class EmailVerificationRequested
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public User    $user;
+    public User $user;
+
     public ?Tenant $tenant;
-    public string  $verificationToken;
+
+    public string $verificationToken;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param User $user Usuário que se registrou
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string $verificationToken Token de verificação criado
+     * @param  User  $user  Usuário que se registrou
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $verificationToken  Token de verificação criado
      */
-    public function __construct( User $user, ?Tenant $tenant = null, string $verificationToken )
+    public function __construct(User $user, ?Tenant $tenant, string $verificationToken)
     {
-        $this->user              = $user;
-        $this->tenant            = $tenant;
+        $this->user = $user;
+        $this->tenant = $tenant;
         $this->verificationToken = $verificationToken;
     }
-
 }

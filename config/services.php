@@ -38,8 +38,9 @@ return [
     'mercadopago' => [
         'access_token'   => env( 'MERCADO_PAGO_ACCESS_TOKEN' ),
         'webhook_secret' => env( 'MERCADO_PAGO_WEBHOOK_SECRET' ),
-        'app_id'         => env( 'MERCADOPAGO_APP_ID' ),
+        'client_id'      => env( 'MERCADOPAGO_CLIENT_ID' ),
         'client_secret'  => env( 'MERCADOPAGO_CLIENT_SECRET' ),
+        'redirect_uri'   => env( 'MERCADOPAGO_REDIRECT_URI' ),
     ],
 
     'google_maps' => [
@@ -51,5 +52,7 @@ return [
         'client_secret' => env( 'GOOGLE_CLIENT_SECRET' ),
         'redirect'      => env( 'GOOGLE_REDIRECT_URI' ),
     ],
+
+    'cacert_path' => env( 'CACERT_PATH' ),
 
 ];

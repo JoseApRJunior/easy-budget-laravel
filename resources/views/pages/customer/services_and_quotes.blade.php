@@ -10,7 +10,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url( '/provider' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Serviços e Orçamentos</li>
                 </ol>
             </nav>
@@ -23,7 +23,7 @@
                     <h5 class="mb-0">
                         <i class="bi bi-tools me-2"></i>Serviços
                     </h5>
-                    <a href="{{ url( '/provider/servico/create' ) }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route( 'provider.services.create' ) }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-lg me-2"></i>Novo Serviço
                     </a>
                 </div>
@@ -72,12 +72,12 @@
                                     </td>
                                     <td class="text-end px-4">
                                         <div class="btn-group">
-                                            <a href="{{ url( '/provider/servico/' . $servico->id . '/show' ) }}"
+                                            <a href="{{ route( 'provider.services.show', $servico->id ) }}"
                                                 class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
                                                 title="Visualizar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ url( '/provider/servico/' . $servico->id . '/edit' ) }}"
+                                            <a href="{{ route( 'provider.services.edit', $servico->id ) }}"
                                                 class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -112,7 +112,7 @@
                     <h5 class="mb-0">
                         <i class="bi bi-receipt me-2"></i>Orçamentos
                     </h5>
-                    <a href="{{ url( '/provider/orcamento/create' ) }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-lg me-2"></i>Novo Orçamento
                     </a>
                 </div>
@@ -159,12 +159,12 @@
                                     </td>
                                     <td class="text-end px-4">
                                         <div class="btn-group">
-                                            <a href="{{ url( '/provider/orcamento/' . $orcamento->id . '/show' ) }}"
+                                            <a href="{{ route( 'provider.budgets.show', $orcamento->code ) }}"
                                                 class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
                                                 title="Visualizar">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ url( '/provider/orcamento/' . $orcamento->id . '/edit' ) }}"
+                                            <a href="{{ route( 'provider.budgets.edit', $orcamento->code ) }}"
                                                 class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -230,7 +230,7 @@
         function confirmDelete( type, id ) {
             const modal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
             const form = document.getElementById( 'deleteForm' );
-            form.action = `{{ url( '/provider' ) }}/${type}/${id}`;
+            form.action = `{{ route( 'provider.dashboard' ) }}/${type}/${id}`;
             modal.show();
         }
     </script>

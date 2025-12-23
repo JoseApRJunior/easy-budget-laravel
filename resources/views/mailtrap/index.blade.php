@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -18,7 +18,7 @@
                             <i class="bi bi-arrow-clockwise me-1"></i>
                             Atualizar
                         </button>
-                        <a href="{{ route( 'mailtrap.providers' ) }}" class="btn btn-primary">
+                        <a href="{{ route('mailtrap.providers') }}" class="btn btn-primary">
                             <i class="bi bi-gear me-1"></i>
                             Configurar Provedores
                         </a>
@@ -39,18 +39,18 @@
                                 </h6>
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-circle-fill me-2"
-                                        style="color: {{ isset( $current_provider ) && $current_provider[ 'is_active' ] ? '#28a745' : '#dc3545' }}"></i>
+                                        style="color: {{ isset($current_provider) && $current_provider['is_active'] ? '#28a745' : '#dc3545' }}"></i>
                                     <span class="h5 mb-0 font-weight-bold text-gray-800">
-                                        {{ $current_provider[ 'provider' ] ?? 'Nenhum' }}
+                                        {{ $current_provider['provider'] ?? 'Nenhum' }}
                                     </span>
-                                    @if( isset( $current_provider ) && $current_provider[ 'is_active' ] )
+                                    @if (isset($current_provider) && $current_provider['is_active'])
                                         <span class="badge bg-success ms-2">Ativo</span>
                                     @else
                                         <span class="badge bg-danger ms-2">Inativo</span>
                                     @endif
                                 </div>
-                                @if( isset( $current_provider ) && $current_provider[ 'description' ] )
-                                    <p class="text-muted mt-2 mb-0">{{ $current_provider[ 'description' ] }}</p>
+                                @if (isset($current_provider) && $current_provider['description'])
+                                    <p class="text-muted mt-2 mb-0">{{ $current_provider['description'] }}</p>
                                 @endif
                             </div>
                             <div class="col-md-4 text-end">
@@ -78,7 +78,7 @@
                                     Provedores Disponíveis
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $available_providers ) ? count( $available_providers ) : 0 }}
+                                    {{ isset($available_providers) ? count($available_providers) : 0 }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -99,7 +99,7 @@
                                     Testes Recentes
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {{ isset( $recent_tests ) ? count( $recent_tests ) : 0 }}
+                                    {{ isset($recent_tests) ? count($recent_tests) : 0 }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -142,7 +142,7 @@
                                     Última Atualização
                                 </div>
                                 <div class="h6 mb-0 font-weight-bold text-gray-800">
-                                    {{ now()->format( 'H:i:s' ) }}
+                                    {{ now()->format('H:i:s') }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -165,7 +165,7 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        @if( isset( $recent_tests ) && count( $recent_tests ) > 0 )
+                        @if (isset($recent_tests) && count($recent_tests) > 0)
                             <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <thead>
@@ -178,13 +178,13 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach( $recent_tests as $test )
+                                        @foreach ($recent_tests as $test)
                                             <tr>
                                                 <td>
-                                                    <strong>{{ $test[ 'name' ] ?? $test[ 'test_type' ] }}</strong>
+                                                    <strong>{{ $test['name'] ?? $test['test_type'] }}</strong>
                                                 </td>
                                                 <td>
-                                                    @if( $test[ 'is_success' ] )
+                                                    @if ($test['is_success'])
                                                         <span class="badge bg-success">
                                                             <i class="bi bi-check-circle me-1"></i>
                                                             Sucesso
@@ -197,16 +197,16 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <small class="text-muted">{{ $test[ 'message' ] ?? 'N/A' }}</small>
+                                                    <small class="text-muted">{{ $test['message'] ?? 'N/A' }}</small>
                                                 </td>
                                                 <td>
                                                     <small class="text-muted">
-                                                        {{ isset( $test[ 'cached_at' ] ) ? \Carbon\Carbon::parse( $test[ 'cached_at' ] )->format( 'd/m/Y H:i:s' ) : 'N/A' }}
+                                                        {{ isset($test['cached_at']) ? \Carbon\Carbon::parse($test['cached_at'])->format('d/m/Y H:i:s') : 'N/A' }}
                                                     </small>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        onclick="runTest('{{ $test[ 'test_type' ] }}')">
+                                                        onclick="runTest('{{ $test['test_type'] }}')">
                                                         <i class="bi bi-play me-1"></i>
                                                         Executar
                                                     </button>
@@ -217,7 +217,7 @@
                                 </table>
                             </div>
                         @else
-                            <div class="text-center py-4">
+                            <div class="text-center py-1">
                                 <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
                                 <h6 class="text-muted">Nenhum teste realizado ainda</h6>
                                 <p class="text-muted">Execute um teste para ver os resultados aqui.</p>
@@ -246,7 +246,7 @@
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <button type="button" class="btn btn-outline-primary w-100 h-100 p-4"
-                                    onclick="window.location.href='{{ route( 'mailtrap.tests' ) }}'">
+                                    onclick="window.location.href='{{ route('mailtrap.tests') }}'">
                                     <i class="bi bi-play-circle fs-3 mb-2"></i>
                                     <div>Executar Testes</div>
                                     <small class="text-muted">Testar funcionalidades de e-mail</small>
@@ -254,7 +254,7 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <button type="button" class="btn btn-outline-info w-100 h-100 p-4"
-                                    onclick="window.location.href='{{ route( 'mailtrap.providers' ) }}'">
+                                    onclick="window.location.href='{{ route('mailtrap.providers') }}'">
                                     <i class="bi bi-gear fs-3 mb-2"></i>
                                     <div>Configurar Provedores</div>
                                     <small class="text-muted">Gerenciar configurações de e-mail</small>
@@ -262,7 +262,7 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <button type="button" class="btn btn-outline-warning w-100 h-100 p-4"
-                                    onclick="window.location.href='{{ route( 'mailtrap.logs' ) }}'">
+                                    onclick="window.location.href='{{ route('mailtrap.logs') }}'">
                                     <i class="bi bi-journal-text fs-3 mb-2"></i>
                                     <div>Ver Logs</div>
                                     <small class="text-muted">Consultar logs de e-mail</small>
@@ -297,9 +297,9 @@
                             <label for="testType" class="form-label">Tipo de Teste</label>
                             <select class="form-select" id="testType" name="test_type" required>
                                 <option value="">Selecione um tipo de teste...</option>
-                                @if( isset( $test_types ) )
-                                    @foreach( $test_types as $key => $test )
-                                        <option value="{{ $key }}">{{ $test[ 'name' ] }}</option>
+                                @if (isset($test_types))
+                                    @foreach ($test_types as $key => $test)
+                                        <option value="{{ $key }}">{{ $test['name'] }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -332,146 +332,150 @@
     </div>
 @endsection
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         function refreshDashboard() {
             window.location.reload();
         }
 
         function testCurrentProvider() {
-            showLoading( 'Testando provedor atual...' );
+            showLoading('Testando provedor atual...');
 
-            fetch( '{{ route( "mailtrap.test-provider" ) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify( {
-                    provider: '{{ $current_provider[ "provider" ] ?? "" }}'
-                } )
-            } )
-                .then( response => response.json() )
-                .then( data => {
+            fetch('{{ route('mailtrap.test-provider') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        provider: '{{ $current_provider['provider'] ?? '' }}'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
                     hideLoading();
-                    if ( data.success ) {
-                        showAlert( 'Provedor testado com sucesso!', 'success' );
+                    if (data.success) {
+                        showAlert('Provedor testado com sucesso!', 'success');
                     } else {
-                        showAlert( 'Erro ao testar provedor: ' + ( data.error || 'Erro desconhecido' ), 'danger' );
+                        showAlert('Erro ao testar provedor: ' + (data.error || 'Erro desconhecido'), 'danger');
                     }
-                } )
-                .catch( error => {
+                })
+                .catch(error => {
                     hideLoading();
-                    showAlert( 'Erro interno: ' + error.message, 'danger' );
-                } );
+                    showAlert('Erro interno: ' + error.message, 'danger');
+                });
         }
 
         function showTestModal() {
-            const modal = new bootstrap.Modal( document.getElementById( 'testModal' ) );
+            const modal = new bootstrap.Modal(document.getElementById('testModal'));
             modal.show();
         }
 
         function executeTest() {
-            const testType = document.getElementById( 'testType' ).value;
-            const recipientEmail = document.getElementById( 'recipientEmail' ).value;
+            const testType = document.getElementById('testType').value;
+            const recipientEmail = document.getElementById('recipientEmail').value;
 
-            if ( !testType ) {
-                showAlert( 'Selecione um tipo de teste', 'warning' );
+            if (!testType) {
+                showAlert('Selecione um tipo de teste', 'warning');
                 return;
             }
 
-            if ( !recipientEmail ) {
-                showAlert( 'Informe o e-mail do destinatário', 'warning' );
+            if (!recipientEmail) {
+                showAlert('Informe o e-mail do destinatário', 'warning');
                 return;
             }
 
-            showLoading( 'Executando teste...' );
+            showLoading('Executando teste...');
 
-            const formData = new FormData( document.getElementById( 'testForm' ) );
+            const formData = new FormData(document.getElementById('testForm'));
 
-            fetch( '{{ route( "mailtrap.run-test" ) }}', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            } )
-                .then( response => response.json() )
-                .then( data => {
+            fetch('{{ route('mailtrap.run-test') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
                     hideLoading();
 
-                    const resultDiv = document.getElementById( 'testResult' );
-                    const alertDiv = document.getElementById( 'testAlert' );
-                    const messageDiv = document.getElementById( 'testMessage' );
+                    const resultDiv = document.getElementById('testResult');
+                    const alertDiv = document.getElementById('testAlert');
+                    const messageDiv = document.getElementById('testMessage');
 
                     resultDiv.style.display = 'block';
 
-                    if ( data.success ) {
+                    if (data.success) {
                         alertDiv.className = 'alert alert-success';
-                        messageDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + ( data.message || 'Teste executado com sucesso!' );
+                        messageDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + (data.message ||
+                            'Teste executado com sucesso!');
                     } else {
                         alertDiv.className = 'alert alert-danger';
-                        messageDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + ( data.error || 'Erro ao executar teste' );
+                        messageDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + (data.error ||
+                            'Erro ao executar teste');
                     }
 
                     // Fechar modal após 2 segundos em caso de sucesso
-                    if ( data.success ) {
-                        setTimeout( () => {
-                            bootstrap.Modal.getInstance( document.getElementById( 'testModal' ) ).hide();
+                    if (data.success) {
+                        setTimeout(() => {
+                            bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
                             window.location.reload();
-                        }, 2000 );
+                        }, 2000);
                     }
-                } )
-                .catch( error => {
+                })
+                .catch(error => {
                     hideLoading();
 
-                    const resultDiv = document.getElementById( 'testResult' );
-                    const alertDiv = document.getElementById( 'testAlert' );
-                    const messageDiv = document.getElementById( 'testMessage' );
+                    const resultDiv = document.getElementById('testResult');
+                    const alertDiv = document.getElementById('testAlert');
+                    const messageDiv = document.getElementById('testMessage');
 
                     resultDiv.style.display = 'block';
                     alertDiv.className = 'alert alert-danger';
-                    messageDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Erro interno: ' + error.message;
-                } );
+                    messageDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Erro interno: ' + error
+                        .message;
+                });
         }
 
-        function runTest( testType ) {
-            document.getElementById( 'testType' ).value = testType;
+        function runTest(testType) {
+            document.getElementById('testType').value = testType;
             showTestModal();
         }
 
         function generateReport() {
-            showLoading( 'Gerando relatório...' );
+            showLoading('Gerando relatório...');
 
-            fetch( '{{ route( "mailtrap.generate-report" ) }}', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            } )
-                .then( response => response.json() )
-                .then( data => {
-                    hideLoading();
-                    if ( data.success ) {
-                        showAlert( 'Relatório gerado com sucesso!', 'success' );
-                        // Abrir relatório em nova aba
-                        window.open( '{{ route( "mailtrap.report" ) }}', '_blank' );
-                    } else {
-                        showAlert( 'Erro ao gerar relatório: ' + ( data.error || 'Erro desconhecido' ), 'danger' );
+            fetch('{{ route('mailtrap.generate-report') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                } )
-                .catch( error => {
+                })
+                .then(response => response.json())
+                .then(data => {
                     hideLoading();
-                    showAlert( 'Erro interno: ' + error.message, 'danger' );
-                } );
+                    if (data.success) {
+                        showAlert('Relatório gerado com sucesso!', 'success');
+                        // Abrir relatório em nova aba
+                        window.open('{{ route('mailtrap.report') }}', '_blank');
+                    } else {
+                        showAlert('Erro ao gerar relatório: ' + (data.error || 'Erro desconhecido'), 'danger');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('Erro interno: ' + error.message, 'danger');
+                });
         }
 
-        function showLoading( message = 'Carregando...' ) {
+        function showLoading(message = 'Carregando...') {
             // Implementar loading state
-            if ( !document.getElementById( 'loadingOverlay' ) ) {
-                const overlay = document.createElement( 'div' );
+            if (!document.getElementById('loadingOverlay')) {
+                const overlay = document.createElement('div');
                 overlay.id = 'loadingOverlay';
-                overlay.className = 'd-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-dark bg-opacity-50';
+                overlay.className =
+                    'd-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-dark bg-opacity-50';
                 overlay.style.zIndex = '9999';
                 overlay.style.top = '0';
                 overlay.style.left = '0';
@@ -485,19 +489,19 @@
                     </div>
                 </div>
             `;
-                document.body.appendChild( overlay );
+                document.body.appendChild(overlay);
             }
         }
 
         function hideLoading() {
-            const overlay = document.getElementById( 'loadingOverlay' );
-            if ( overlay ) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
                 overlay.remove();
             }
         }
 
-        function showAlert( message, type = 'info' ) {
-            const alertDiv = document.createElement( 'div' );
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
             alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
             alertDiv.innerHTML = `
@@ -505,17 +509,17 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
-            document.body.appendChild( alertDiv );
+            document.body.appendChild(alertDiv);
 
             // Auto-remover após 5 segundos
-            setTimeout( () => {
-                if ( alertDiv.parentNode ) {
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
                     alertDiv.remove();
                 }
-            }, 5000 );
+            }, 5000);
         }
 
         // Atualizar dashboard automaticamente a cada 30 segundos
-        setInterval( refreshDashboard, 30000 );
+        setInterval(refreshDashboard, 30000);
     </script>
 @endpush

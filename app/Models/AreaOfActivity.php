@@ -23,9 +23,9 @@ class AreaOfActivity extends Model
     ];
 
     protected $casts = [
-        'slug'       => 'string',
-        'name'       => 'string',
-        'is_active'  => 'boolean',
+        'slug' => 'string',
+        'name' => 'string',
+        'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -44,7 +44,7 @@ class AreaOfActivity extends Model
      * Índices para otimização de consultas
      */
     protected $indexes = [
-        'slug'      => 'unique',
+        'slug' => 'unique',
         'is_active' => 'index',
     ];
 
@@ -53,15 +53,14 @@ class AreaOfActivity extends Model
      */
     public function commonData()
     {
-        return $this->hasMany( CommonData::class, 'area_of_activity_id' );
+        return $this->hasMany(CommonData::class, 'area_of_activity_id');
     }
 
     /**
      * Scope para buscar apenas áreas ativas.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
-
 }

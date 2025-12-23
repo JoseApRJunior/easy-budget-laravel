@@ -1,196 +1,388 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('title', 'Detalhes da Fatura')
+@section('content')
+    <div class="container-fluid py-1">
+        {{-- Cabeçalho --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-receipt-cutoff me-2"></i>Detalhes da Fatura
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt me-2"></i>Detalhes da Fatura
+                </h1>
+                <p class="text-muted mb-0">Visualize todas as informações da fatura {{ $invoice->code }}</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.invoices.index' ) }}">Faturas</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
                     <li class="breadcrumb-item active">{{ $invoice->code }}</li>
                 </ol>
             </nav>
         </div>
 
-        <div class="row g-4">
-            <!-- Main Column -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <!-- Invoice Header -->
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div>
-                                <h2 class="h4 mb-1">Fatura #{{ $invoice->code }}</h2>
-                                <p class="text-muted mb-0">Gerada em: {{ $invoice->created_at->format( 'd/m/Y' ) }}</p>
-                            </div>
-                            <span class="badge fs-6" style="background-color: {{ $invoice->status_color }};">
-                                <i class="bi {{ $invoice->status_icon }} me-1"></i> {{ $invoice->status_name }}
-                            </span>
+        <a href="{{ route('provider.invoices.print', $invoice) }}" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-printer me-1"></i>Imprimir
+        </a>
+    </div>
+    <div class="row g-4">
+        <!-- Informações Principais -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Cabeçalho da Fatura -->
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="h4 mb-1">Fatura #{{ $invoice->code }}</h2>
+                            <p class="text-muted mb-0">
+                                Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
+                            </p>
                         </div>
-
-                        <!-- Customer and Provider Info -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <h6 class="text-uppercase text-muted small">Faturado para</h6>
-                                <p class="mb-1"><strong>{{ $invoice->customer_name }}</strong></p>
-                                <p class="mb-1">{{ $invoice->customer_email_business ?? $invoice->customer_email }}</p>
-                                <p class="mb-0">{{ $invoice->customer_phone_business ?? $invoice->customer_phone }}</p>
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <h6 class="text-uppercase text-muted small">De</h6>
-                                <p class="mb-1">
-                                    <strong>{{ $invoice->provider_company_name ?? $invoice->provider_name }}</strong>
-                                </p>
-                                <p class="mb-1">{{ $invoice->provider_email }}</p>
-                                <p class="mb-0">{{ $invoice->provider_phone }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Invoice Items -->
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Descrição</th>
-                                        <th class="text-end">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <p class="mb-0">Referente ao serviço:
-                                                <a
-                                                    href="{{ route( 'provider.services.show', $invoice->service_code ) }}"><strong>{{ $invoice->service_code }}</strong></a>
-                                            </p>
-                                            <small class="text-muted">{{ $invoice->service_description }}</small>
-                                        </td>
-                                        <td class="text-end">R$ {{ number_format( $invoice->subtotal, 2, ',', '.' ) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Notes -->
-                        @if ( $invoice->notes )
-                            <div class="mt-4">
-                                <h6 class="text-uppercase text-muted small">Observações</h6>
-                                <p class="text-muted">{{ $invoice->notes }}</p>
-                            </div>
-                        @endif
+                        @php
+                            $status = $invoice->status;
+                            $badgeClass = match ($status) {
+                                'pending' => 'bg-warning',
+                                'paid' => 'bg-success',
+                                'overdue' => 'bg-danger',
+                                'cancelled' => 'bg-secondary',
+                                default => 'bg-light text-dark',
+                            };
+                        @endphp
+                        <span class="badge {{ $badgeClass }} fs-6">
+                            {{ $status->name ?? ucfirst($status) }}
+                        </span>
                     </div>
-                </div>
-            </div>
 
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent p-4">
-                        <h5 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Resumo do Pagamento</h5>
+                    <!-- Dados do Cliente e Empresa -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">Cliente</h5>
+                            <div class="bg-light p-3 rounded">
+                                <strong>{{ $invoice->customer->name ?? 'N/A' }}</strong><br>
+                                @if ($invoice->customer->email)
+                                    <i class="bi bi-envelope me-1"></i>{{ $invoice->customer->email }}<br>
+                                @endif
+                                @if ($invoice->customer->phone)
+                                    <i class="bi bi-telephone me-1"></i>{{ $invoice->customer->phone }}
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">Serviço</h5>
+                            <div class="bg-light p-3 rounded">
+                                <strong>{{ $invoice->service->code ?? 'N/A' }}</strong><br>
+                                <small class="text-muted">
+                                    {{ Str::limit($invoice->service->description ?? '', 50) }}
+                                </small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body p-4">
-                        <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Subtotal
-                                <span>R$ {{ number_format( $invoice->subtotal, 2, ',', '.' ) }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Desconto
-                                <span class="text-danger">- R$ {{ number_format( $invoice->discount, 2, ',', '.' ) }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 rounded mt-2">
-                                <strong class="h5 mb-0">Total a Pagar</strong>
-                                <strong class="h5 mb-0 text-success">R$
-                                    {{ number_format( $invoice->total, 2, ',', '.' ) }}</strong>
-                            </li>
-                        </ul>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted">Data de Vencimento:</span>
-                            <span
-                                class="fw-semibold @if( $invoice->due_date->isPast() && $invoice->status_slug == 'pending' ) text-danger @endif">
-                                {{ $invoice->due_date->format( 'd/m/Y' ) }}
-                            </span>
+                    <!-- Datas Importantes -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Data de Emissão</h6>
+                            <p class="mb-0">{{ $invoice->issue_date?->format('d/m/Y') ?? 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Data de Vencimento</h6>
+                            <p class="mb-0">
+                                {{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}
+                                @if ($invoice->due_date)
+                                    @if ($invoice->due_date < now())
+                                        <span class="badge bg-danger ms-2">Vencida</span>
+                                    @elseif($invoice->due_date->diffInDays(now()) <= 7)
+                                        <span class="badge bg-warning ms-2">
+                                            Vence em {{ $invoice->due_date->diffInDays(now()) }} dias
+                                        </span>
+                                    @endif
+                                @endif
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Valor Total</h6>
+                            <p class="mb-0 fs-5 text-success fw-bold">
+                                R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Itens da Fatura -->
+                    @if ($invoice->invoiceItems->count() > 0)
+                        <h5 class="mb-3">Itens da Fatura</h5>
+                        {{-- Desktop View --}}
+                        <div class="desktop-view">
+                            <div class="table-responsive">
+                                <table class="modern-table table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th class="text-center">Qtd</th>
+                                            <th class="text-end">Valor Unit.</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($invoice->invoiceItems as $item)
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ $item->product->name ?? 'N/A' }}</strong>
+                                                    @if ($item->product->description)
+                                                        <br><small
+                                                            class="text-muted">{{ $item->product->description }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">{{ $item->quantity }}</td>
+                                                <td class="text-end">R$
+                                                    {{ number_format($item->unit_value, 2, ',', '.') }}</td>
+                                                <td class="text-end fw-bold">R$
+                                                    {{ number_format($item->total, 2, ',', '.') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <th colspan="3" class="text-end">Subtotal:</th>
+                                            <th class="text-end">R$
+                                                {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         </div>
 
-                        @if ( $invoice->transaction_date )
-                            <div class="d-flex justify-content-between align-items-center mb-3 text-success">
-                                <span class="text-muted">Pago em:</span>
-                                <span class="fw-semibold">{{ $invoice->transaction_date->format( 'd/m/Y' ) }}</span>
-                            </div>
-                        @endif
-
-                        <!-- Actions -->
-                        <div class="d-grid gap-2 mt-4">
-                            @if ( $invoice->status_slug == 'pending' )
-                                <button class="btn btn-success">
-                                    <i class="bi bi-check-circle me-2"></i>Marcar como Paga
-                                </button>
-                                <button class="btn btn-outline-danger">
-                                    <i class="bi bi-x-circle me-2"></i>Cancelar Fatura
-                                </button>
-                            @endif
-
-                            @if ( $invoice->status_slug != 'paid' && $invoice->status_slug != 'cancelled' && $invoice->public_hash )
-                                <div class="card mt-4">
-                                    <div class="card-body bg-light">
-                                        <h5 class="card-title"><i class="bi bi-link-45deg"></i> Link de Pagamento para o Cliente
-                                        </h5>
-                                        <p class="card-text text-muted">Envie este link para seu cliente visualizar a fatura e
-                                            realizar o pagamento de forma segura.</p>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="public-link"
-                                                value="{{ url( '/invoices/view/' . $invoice->public_hash ) }}" readonly>
-                                            <button class="btn btn-outline-secondary" type="button" id="copy-link-btn"
-                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Copiar para a área de transferência">
-                                                <i class="bi bi-clipboard"></i>
-                                            </button>
+                        {{-- Mobile View --}}
+                        <div class="mobile-view">
+                            <div class="list-group">
+                                @foreach ($invoice->invoiceItems as $item)
+                                    <div class="list-group-item py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-2">{{ $item->product->name ?? 'N/A' }}</div>
+                                                <div class="small text-muted mb-2">
+                                                    <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
+                                                    <span><strong>Unit:</strong> R$
+                                                        {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                </div>
+                                                <div class="text-success fw-semibold">Total: R$
+                                                    {{ number_format($item->total, 2, ',', '.') }}</div>
+                                            </div>
                                         </div>
                                     </div>
+                                @endforeach
+                                <div class="list-group-item bg-light">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>Subtotal:</strong>
+                                        <strong class="text-success">R$
+                                            {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</strong>
+                                    </div>
                                 </div>
-                            @endif
-                            <a href="{{ route( 'provider.invoices.print', $invoice->code ) }}" target="_blank"
-                                class="btn btn-primary">
-                                <i class="bi bi-printer me-2"></i>Imprimir Fatura
-                            </a>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                            <br>Nenhum item encontrado nesta fatura
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <div class="mt-4">
-            <a href="{{ route( 'provider.invoices.index' ) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Voltar para Faturas
-            </a>
+        <!-- Sidebar com Informações Extras -->
+        <div class="col-md-4">
+            <!-- Resumo Financeiro -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calculator me-2"></i>Resumo Financeiro
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>R$ {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Desconto:</span>
+                        <span>R$ 0,00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span class="text-success">R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Detalhado -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Status Detalhado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge {{ $badgeClass }} fs-6 w-100 py-2">
+                            {{ $status->name ?? ucfirst($status) }}
+                        </span>
+                    </div>
+
+                    @if ($invoice->due_date)
+                        @if ($invoice->status === 'pending')
+                            @if ($invoice->due_date < now())
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Fatura vencida há {{ $invoice->due_date->diffInDays(now()) }} dias
+                                </div>
+                            @else
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-clock me-2"></i>
+                                    Vence em {{ $invoice->due_date->diffInDays(now()) }} dias
+                                </div>
+                            @endif
+                        @elseif($invoice->status === 'paid')
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Fatura paga com sucesso
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            </div>
+
+            <!-- Histórico de Ações -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Histórico
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Fatura Criada</h6>
+                                <p class="timeline-description text-muted">
+                                    {{ $invoice->created_at->format('d/m/Y H:i') }}
+                                </p>
+                            </div>
+                        </div>
+                        @if ($invoice->updated_at->ne($invoice->created_at))
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">Última Atualização</h6>
+                                    <p class="timeline-description text-muted">
+                                        {{ $invoice->updated_at->format('d/m/Y H:i') }}
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-@endsection
 
-@push( 'scripts' )
+    {{-- Botões de Ação (Footer) --}}
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="d-flex gap-2">
+            <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+        <small class="text-muted d-none d-md-block">
+            Última atualização: {{ $invoice->updated_at?->format('d/m/Y H:i') }}
+        </small>
+        <div class="d-flex gap-2">
+            @if ($invoice->status === 'pending')
+                <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil-fill me-2"></i>Editar
+                </a>
+                <button type="button" class="btn btn-success" onclick="changeStatus('paid')">
+                    <i class="bi bi-check-circle-fill me-2"></i>Marcar como Paga
+                </button>
+                <button type="button" class="btn btn-danger" onclick="changeStatus('cancelled')">
+                    <i class="bi bi-x-circle-fill me-2"></i>Cancelar
+                </button>
+            @endif
+            <button type="button" class="btn btn-outline-danger" onclick="deleteInvoice()">
+                <i class="bi bi-trash-fill me-2"></i>Excluir
+            </button>
+        </div>
+    </div>
+    </div>
+
+
+
     <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            var tooltipTriggerList = [].slice.call( document.querySelectorAll( '[data-bs-toggle="tooltip"]' ) )
-            var tooltipList = tooltipTriggerList.map( function ( tooltipTriggerEl ) {
-                return new bootstrap.Tooltip( tooltipTriggerEl )
-            } )
+        let newStatus = '';
 
-            const copyButton = document.getElementById( 'copy-link-btn' );
-            if ( copyButton ) {
-                const tooltip = bootstrap.Tooltip.getInstance( copyButton );
+        // Função para alterar status
+        function changeStatus(status) {
+            newStatus = status;
+            const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+            statusModal.show();
+        }
 
-                copyButton.addEventListener( 'click', function () {
-                    const linkInput = document.getElementById( 'public-link' );
-                    navigator.clipboard.writeText( linkInput.value ).then( function () {
-                        copyButton.setAttribute( 'data-bs-original-title', 'Copiado!' );
-                        tooltip.show();
-                        setTimeout( () => { tooltip.hide(); copyButton.setAttribute( 'data-bs-original-title', 'Copiar para a área de transferência' ); }, 2000 );
-                    } );
-                } );
+        // Confirmação de mudança de status
+        document.getElementById('confirmStatusChange').addEventListener('click', function() {
+            if (!newStatus) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route('provider.invoices.change_status', $invoice->code) }}';
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'PUT';
+
+            const statusField = document.createElement('input');
+            statusField.type = 'hidden';
+            statusField.name = 'status';
+            statusField.value = newStatus;
+
+            form.appendChild(csrfToken);
+            form.appendChild(methodField);
+            form.appendChild(statusField);
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+
+        // Função para excluir fatura
+        function deleteInvoice() {
+            if (confirm('Tem certeza que deseja excluir esta fatura? Esta ação não pode ser desfeita.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('provider.invoices.destroy', $invoice->code) }}';
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+
+                document.body.appendChild(form);
+                form.submit();
             }
-        } );
+        }
     </script>
-@endpush
+@endsection

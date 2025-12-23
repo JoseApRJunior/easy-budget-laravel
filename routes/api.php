@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BudgetApiController;
 use App\Http\Controllers\Api\ChartDataController;
 use App\Http\Controllers\Api\CustomerApiController;
 use App\Http\Controllers\Api\EmailTemplateApiController;
+use App\Http\Controllers\Api\AjaxController;
 use App\Http\Controllers\Api\MetricsController;
 use App\Http\Controllers\Api\SettingsApiController;
 use App\Http\Controllers\BudgetController;
@@ -103,6 +104,7 @@ Route::middleware( 'auth' )->group( function () {
 
         // Busca e filtros
         Route::get( '/search/autocomplete', [ CustomerApiController::class, 'autocomplete' ] )->name( 'autocomplete' );
+        Route::get( '/search/table', [ CustomerApiController::class, 'searchForTable' ] )->name( 'search-table' );
         Route::get( '/filter/by-tags', [ CustomerApiController::class, 'filterByTags' ] )->name( 'filter-by-tags' );
         Route::get( '/nearby/{latitude}/{longitude}', [ CustomerApiController::class, 'findNearby' ] )->name( 'find-nearby' );
 
@@ -197,5 +199,14 @@ Route::middleware( 'auth' )->group( function () {
             return $controller->getPresets( request() );
         } )->name( 'presets.notifications' );
     } );
+
+    Route::prefix('ajax')->group(function () {
+        Route::post('/cep', [ AjaxController::class, 'cep' ])->name('api.ajax.cep');
+        Route::get('/budgets/filter', [ \App\Http\Controllers\BudgetController::class, 'ajaxFilter' ])->name('api.ajax.budgets.filter');
+        Route::get('/services/filter', [ \App\Http\Controllers\ServiceController::class, 'ajaxFilter' ])->name('api.ajax.services.filter');
+        Route::get('/customers/search', [ \App\Http\Controllers\CustomerController::class, 'ajaxSearch' ])->name('api.ajax.customers.search');
+        Route::get('/products/search', [ \App\Http\Controllers\ProductController::class, 'ajaxSearch' ])->name('api.ajax.products.search');
+        Route::get('/invoices/filter', [ \App\Http\Controllers\InvoiceController::class, 'ajaxFilter' ])->name('api.ajax.invoices.filter');
+    });
 
 } );

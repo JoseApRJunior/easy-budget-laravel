@@ -40,9 +40,9 @@ class ContactEmail extends Mailable implements ShouldQueue
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param array $contactData Dados do contato
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
+     * @param  array  $contactData  Dados do contato
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
      */
     public function __construct(
         array $contactData,
@@ -50,8 +50,8 @@ class ContactEmail extends Mailable implements ShouldQueue
         ?array $company = null,
     ) {
         $this->contactData = $contactData;
-        $this->tenant      = $tenant;
-        $this->company     = $company ?? [];
+        $this->tenant = $tenant;
+        $this->company = $company ?? [];
     }
 
     /**
@@ -61,14 +61,14 @@ class ContactEmail extends Mailable implements ShouldQueue
     {
         $subject = 'Nova mensagem de contato';
 
-        if ( isset( $this->contactData[ 'subject' ] ) ) {
-            $subject .= ': ' . $this->contactData[ 'subject' ];
+        if (isset($this->contactData['subject'])) {
+            $subject .= ': '.$this->contactData['subject'];
         }
 
         return new Envelope(
             to: $this->getSupportEmail(),
             subject: $subject,
-            replyTo: $this->contactData[ 'email' ] ?? null,
+            replyTo: $this->contactData['email'] ?? null,
         );
     }
 
@@ -80,13 +80,13 @@ class ContactEmail extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.contact',
             with: [
-                'contactData'  => $this->contactData,
-                'tenant'       => $this->tenant,
-                'company'      => $this->company,
+                'contactData' => $this->contactData,
+                'tenant' => $this->tenant,
+                'company' => $this->company,
                 'supportEmail' => $this->getSupportEmail(),
-                'supportUrl'   => $this->getSupportUrl(),
-                'appName'      => config( 'app.name', 'Easy Budget' ),
-                'appUrl'       => config( 'app.url' ),
+                'supportUrl' => $this->getSupportUrl(),
+                'appName' => config('app.name', 'Easy Budget'),
+                'appUrl' => config('app.url'),
             ],
         );
     }
@@ -109,17 +109,17 @@ class ContactEmail extends Mailable implements ShouldQueue
     private function getSupportEmail(): string
     {
         // Prioridade: tenant settings -> config global
-        if ( $this->tenant && isset( $this->tenant->settings[ 'support_email' ] ) && !empty( $this->tenant->settings[ 'support_email' ] ) ) {
-            return $this->tenant->settings[ 'support_email' ];
+        if ($this->tenant && isset($this->tenant->settings['support_email']) && ! empty($this->tenant->settings['support_email'])) {
+            return $this->tenant->settings['support_email'];
         }
 
         // Fallback para email de contato do tenant
-        if ( $this->tenant && isset( $this->tenant->settings[ 'contact_email' ] ) && !empty( $this->tenant->settings[ 'contact_email' ] ) ) {
-            return $this->tenant->settings[ 'contact_email' ];
+        if ($this->tenant && isset($this->tenant->settings['contact_email']) && ! empty($this->tenant->settings['contact_email'])) {
+            return $this->tenant->settings['contact_email'];
         }
 
         // Fallback para configuração global
-        return config( 'mail.support_email', 'suporte@easybudget.net.br' );
+        return config('mail.support_email', 'suporte@easybudget.net.br');
     }
 
     /**
@@ -129,19 +129,19 @@ class ContactEmail extends Mailable implements ShouldQueue
      */
     private function getSupportUrl(): string
     {
-        return config( 'app.url' ) . '/support';
+        return config('app.url').'/support';
     }
 
     /**
      * Obtém a URL para visualizar um ticket específico.
      *
-     * @param int|null $ticketId ID do ticket
+     * @param  int|null  $ticketId  ID do ticket
      * @return string URL do ticket
      */
-    private function getTicketUrl( ?int $ticketId = null ): string
+    private function getTicketUrl(?int $ticketId = null): string
     {
-        if ( $ticketId ) {
-            return config( 'app.url' ) . '/support/ticket/' . $ticketId;
+        if ($ticketId) {
+            return config('app.url').'/support/ticket/'.$ticketId;
         }
 
         return $this->getSupportUrl();
@@ -154,12 +154,12 @@ class ContactEmail extends Mailable implements ShouldQueue
      */
     public function getContactName(): string
     {
-        $firstName = $this->contactData[ 'first_name' ] ?? '';
-        $lastName  = $this->contactData[ 'last_name' ] ?? '';
+        $firstName = $this->contactData['first_name'] ?? '';
+        $lastName = $this->contactData['last_name'] ?? '';
 
-        $fullName = trim( $firstName . ' ' . $lastName );
+        $fullName = trim($firstName.' '.$lastName);
 
-        return !empty( $fullName ) ? $fullName : 'Usuário';
+        return ! empty($fullName) ? $fullName : 'Usuário';
     }
 
     /**
@@ -170,12 +170,11 @@ class ContactEmail extends Mailable implements ShouldQueue
     public function getContactInfo(): array
     {
         return [
-            'name'       => $this->getContactName(),
-            'email'      => $this->contactData[ 'email' ] ?? 'N/A',
-            'subject'    => $this->contactData[ 'subject' ] ?? 'Sem assunto',
-            'message'    => $this->contactData[ 'message' ] ?? '',
-            'created_at' => now()->format( 'd/m/Y H:i:s' ),
+            'name' => $this->getContactName(),
+            'email' => $this->contactData['email'] ?? 'N/A',
+            'subject' => $this->contactData['subject'] ?? 'Sem assunto',
+            'message' => $this->contactData['message'] ?? '',
+            'created_at' => now()->format('d/m/Y H:i:s'),
         ];
     }
-
 }

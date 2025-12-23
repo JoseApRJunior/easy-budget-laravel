@@ -116,6 +116,15 @@ class SupportService extends AbstractBaseService
                 'tenant_id'  => $support->tenant_id,
             ] );
 
+            // Gerar e persistir código de protocolo no padrão SUP-YYYY-MM-XXXX
+            $supportCode = $this->generateProtocolCode( $support );
+            $support->update( [ 'code' => $supportCode ] );
+
+            Log::info( 'SupportService::createSupportTicket - Código de protocolo gerado', [
+                'support_id'   => $support->id,
+                'support_code' => $supportCode,
+            ] );
+
             // Obtém tenant efetivo para o evento
             $effectiveTenant = $this->getEffectiveTenant();
             Log::info( 'SupportService::createSupportTicket - Tenant efetivo obtido', [
@@ -166,6 +175,20 @@ class SupportService extends AbstractBaseService
                 $e,
             );
         }
+    }
+
+    /**
+     * Gera código de protocolo no padrão SUP-YYYY-MM-XXXX.
+     */
+    private function generateProtocolCode( Support $support ): string
+    {
+        $year  = $support->created_at?->format( 'Y' ) ?? date( 'Y' );
+        $month = $support->created_at?->format( 'm' ) ?? date( 'm' );
+
+        // Usa o ID como sequencial base, zero‑pad de 4 dígitos
+        $seq = str_pad( (string) $support->id, 4, '0', STR_PAD_LEFT );
+
+        return sprintf( 'SUP-%s-%s-%s', $year, $month, $seq );
     }
 
     /**

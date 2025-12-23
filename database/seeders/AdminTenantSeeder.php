@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Helpers\DocumentGeneratorHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
@@ -11,6 +12,8 @@ use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Role;
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserRole;
@@ -116,18 +119,19 @@ class AdminTenantSeeder extends Seeder
             [
                 'tenant_id'      => $tenant->id,
                 'email_personal' => 'admin@easybudget.net.br',
-                'phone_personal' => '(11) 3000-1000',
+                'phone_personal' => DocumentGeneratorHelper::generateValidPhone(),
                 'email_business' => 'admin@easybudget.net.br',
-                'phone_business' => '(11) 3000-1001',
+                'phone_business' => DocumentGeneratorHelper::generateValidPhone(),
                 'website'        => 'https://admin.easybudget.com.br',
             ],
         );
 
         // 3. Criar dados da empresa admin
+        $validCnpj  = DocumentGeneratorHelper::generateValidCnpj();
         $commonData = CommonData::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'cnpj'      => '00000000000200',
+                'cnpj'      => $validCnpj,
             ],
             [
                 'tenant_id'           => $tenant->id,
@@ -136,7 +140,7 @@ class AdminTenantSeeder extends Seeder
                 'last_name'           => null,
                 'birth_date'          => null,
                 'cpf'                 => null,
-                'cnpj'                => '00000000000200',
+                'cnpj'                => $validCnpj,
                 'company_name'        => 'Easy Budget - Administração',
                 'description'         => 'Tenant administrativo para gerenciamento completo do sistema Easy Budget',
                 'area_of_activity_id' => $this->getOrCreateAreaOfActivity(),
@@ -175,6 +179,9 @@ class AdminTenantSeeder extends Seeder
         $this->createAdminUserSettings( $tenant, $user );
 
         $this->command->info( '📋 Dados completos do tenant Admin criados' );
+
+        // 9. Criar produtos da área de pintura para o admin
+        $this->createAdminPaintingProducts( $tenant );
     }
 
     /**
@@ -367,7 +374,7 @@ class AdminTenantSeeder extends Seeder
                 'avatar'                    => null,
                 'full_name'                 => 'Administrador do Sistema',
                 'bio'                       => 'Administrador principal com acesso completo ao sistema Easy Budget',
-                'phone'                     => '(11) 3000-1000',
+                'phone'                     => DocumentGeneratorHelper::generateValidPhone(),
                 'birth_date'                => '1980-01-01',
                 'social_facebook'           => null,
                 'social_twitter'            => null,
@@ -396,6 +403,47 @@ class AdminTenantSeeder extends Seeder
         );
 
         $this->command->info( '   👤 Configurações do admin criadas' );
+    }
+
+    /**
+     * Cria 10 produtos da área de pintura para o tenant admin.
+     */
+    private function createAdminPaintingProducts( Tenant $tenant ): void
+    {
+        $category = Category::where('slug', 'pintura')->first();
+        if ( !$category ) {
+            $this->command->warn('   ⚠️ Categoria "pintura" não encontrada. Pulando criação de produtos.');
+            return;
+        }
+
+        $service = app( \App\Services\Domain\ProductService::class );
+
+        $products = [
+            [ 'name' => 'Tinta Acrílica Premium 18L', 'price' => 320.00 ],
+            [ 'name' => 'Tinta Látex 18L',           'price' => 280.00 ],
+            [ 'name' => 'Massa Corrida 25kg',        'price' => 95.00 ],
+            [ 'name' => 'Rolo de Pintura 23cm',      'price' => 29.90 ],
+            [ 'name' => 'Pincel 2"',                 'price' => 18.50 ],
+            [ 'name' => 'Fita Crepe 48mm',           'price' => 12.90 ],
+            [ 'name' => 'Lixa d’água 120',           'price' => 2.50 ],
+            [ 'name' => 'Diluyente/Thinner 900ml',   'price' => 22.00 ],
+            [ 'name' => 'Bandeja de Pintura 2L',     'price' => 16.90 ],
+            [ 'name' => 'Selador Acrílico 18L',      'price' => 210.00 ],
+        ];
+
+        foreach ( $products as $p ) {
+            $service->createProduct( [
+                'tenant_id'   => $tenant->id,
+                'category_id' => $category->id,
+                'name'        => $p['name'],
+                'description' => 'Linha de pintura - produto para serviços de pintura',
+                'price'       => $p['price'],
+                'unit'        => 'un',
+                'active'      => true,
+            ] );
+        }
+
+        $this->command->info('   🎨 10 produtos de pintura criados para o admin');
     }
 
 }

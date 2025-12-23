@@ -1,352 +1,284 @@
-# Project Structure
-
-## Directory Organization
-
-### Core Application (`app/`)
-
-The main application logic organized by architectural layers and concerns.
-
-#### **Console/** - Artisan Commands
-
--  Custom CLI commands for maintenance and automation
--  `Kernel.php` - Command scheduling and registration
-
-#### **Contracts/Interfaces/** - Interface Definitions
-
--  Service contracts and repository interfaces
--  Defines contracts for dependency injection
-
-#### **DesignPatterns/** - Architectural Patterns & Documentation
-
--  `Controllers/` - Controller pattern examples and documentation
--  `Models/` - Model pattern examples and documentation
--  `Repositories/` - Repository pattern examples and documentation
--  `Services/` - Service pattern examples and documentation
--  `Views/` - View pattern examples and documentation
--  `Stubs/` - Code generation templates
--  `README-GERAL.md` - Comprehensive pattern documentation
-
-#### **Enums/** - Enumeration Types
-
--  `BudgetStatus.php`- Budget state management
--  `InvoiceStatus.php` - Invoice state management
--  `ServiceStatus.php` - Service state management
--  `OperationStatus.php` - General operation states
--  `SupportStatus.php` - Support ticket states
--  `TokenType.php` - Authentication token types
-
-#### **Events/** - Domain Events
-
--  `EmailVerificationRequested.php` - Email verification trigger
--  `InvoiceCreated.php` - Invoice creation event
--  `PasswordResetRequested.php` - Password reset trigger
--  `SocialAccountLinked.php` - Social login connection
--  `StatusUpdated.php` - Entity status changes
--  `SupportTicketCreated.php`, `SupportTicketResponded.php` - Support events
--  `UserRegistered.php` - New user registration
-
-#### **Exceptions/** - Error Handling
-
--  `Handler.php` - Global exception handler with custom error responses
-
-#### **Helpers/** - Utility Functions
-
--  `BackupHelper.php` - Backup operations
--  `BladeHelper.php` - Blade directive utilities
--  `CurrencyHelper.php` - Currency formatting and conversion
--  `DateHelper.php` - Date manipulation and formatting
--  `FlashHelper.php` - Flash message management
--  `MathHelper.php` - Mathematical operations
--  `ModelHelper.php` - Model utility functions
--  `StatusHelper.php` - Status management utilities
-
-#### **Http/** - HTTP Layer
-
--  `Controllers/` - Request handlers organized by domain
--  `Middleware/` - Request/response filters
--  `Requests/` - Form request validation classes
-
-#### **Jobs/** - Background Tasks
-
--  `SendEmailJob.php` - Asynchronous email sending
-
-#### **Listeners/** - Event Handlers
-
--  Email notification listeners for various events
--  Status update notification handlers
--  Support system notification handlers
-
-#### **Mail/** - Email Templates
-
--  `Concerns/` - Shared email traits
--  Mailable classes for all email types
--  Email verification, password reset, invoices, etc.
-
-#### **Models/** - Eloquent Models
-
-Core business entities with relationships and scopes:
-
--  **User Management**: `User.php`, `UserRole.php`, `UserSettings.php`, `UserConfirmationToken.php`
--  **Tenant System**: `Tenant.php`, `Provider.php`, `ProviderCredential.php`
--  **CRM**: `Customer.php`, `CustomerAddress.php`, `CustomerContact.php`, `CustomerInteraction.php`, `CustomerTag.php`
--  **Financial**: `Budget.php`, `BudgetItem.php`, `Invoice.php`, `InvoiceItem.php`
--  **Inventory**: `Product.php`, `ProductInventory.php`, `InventoryMovement.php`
--  **Services**: `Service.php`, `ServiceItem.php`
--  **System**: `AuditLog.php`, `EmailLog.php`, `Notification.php`, `Session.php`
--  **Traits/**: Shared model behaviors
-
-#### **Notifications/** - Laravel Notifications
-
--  `BudgetStatusNotification.php` - Budget status change notifications
-
-#### **Providers/** - Service Providers
-
--  `AppServiceProvider.php` - Application bootstrapping
--  `EventServiceProvider.php` - Event-listener registration
--  `RouteServiceProvider.php` - Route configuration
--  `TenancyServiceProvider.php` - Multi-tenant setup
--  `BladeDirectiveServiceProvider.php` - Custom Blade directives
--  `FlashMessageServiceProvider.php` - Flash message system
--  `MailViewServiceProvider.php` - Email view configuration
-
-#### **Repositories/** - Data Access Layer
-
-Organized with dual architecture (Tenant vs Global):
-
--  `Abstracts/` - Base repository classes
--  `Contracts/` - Repository interfaces
--  `Traits/` - Shared repository behaviors
--  Domain-specific repositories for all major entities
-
-#### **Services/** - Business Logic Layer
-
-Organized by architectural layers:
-
--  `Application/` - Application-specific services (15 services)
-   -  Auth/, BudgetCalculationService, EmailVerificationService, etc.
--  `Core/` - Core business services with abstracts
-   -  `Abstracts/AbstractBaseService.php` - Base service implementation
-   -  `Contracts/` - Service interfaces (5 interfaces)
-   -  `Traits/ServiceValidationHelpers.php` - Validation utilities
--  `Domain/` - Domain-specific business logic (15 services)
-   -  ActivityService, BudgetService, CustomerService, etc.
--  `Infrastructure/` - Infrastructure services (20+ services)
-   -  OAuth/, Email services, Payment services, PDF generation
--  `Shared/` - Shared service utilities
-   -  CacheService, NotificationService
--  Root level: `ChartService.php`, `MetricsService.php` - Analytics services
-
-#### **Support/** - Support Utilities
-
--  `helpers.php` - Global helper functions
--  `ServiceResult.php` - Service response wrapper
-
-#### **Traits/** - Reusable Behaviors
-
--  `BelongsToTenant.php` - Multi-tenant scoping
--  `SlugGenerator.php` - URL slug generation
-
-#### **View/Components/** - Blade Components
-
--  Reusable UI components
-
-### Configuration (`config/`)
-
-Application configuration files:
-
--  `app.php` - Application settings
--  `auth.php` - Authentication configuration
--  `database.php` - Database connections
--  `mail.php` - Email configuration
--  `tenancy.php` - Multi-tenant settings
--  `services.php` - Third-party service credentials
--  `socialite.php` - Social authentication
--  Custom configs: `email-templates.php`, `email-senders.php`
-
-### Database (`database/`)
-
--  `factories/` - Model factories for testing and seeding
--  `migrations/` - Database schema migrations
--  `seeders/` - Database seeders for initial data
-
-### Resources (`resources/`)
-
-Frontend assets and views:
-
-#### **css/** - Stylesheets
-
--  `app.css` - Main application styles
-
-#### **js/** - JavaScript
-
--  `app.js` - Main application JavaScript
--  `bootstrap.js` - Bootstrap configuration
-
-#### **lang/** - Translations
-
--  `en/` - English translations
--  `pt-BR/` - Brazilian Portuguese translations
-
-#### **views/** - Blade Templates
-
--  `admin/` - Admin panel views
--  `auth/` - Authentication views
--  `budgets/` - Budget management views
--  `components/` - Reusable components
--  `dashboard/` - Dashboard views
--  `emails/` - Email templates
--  `errors/` - Error pages
--  `invoices/` - Invoice views
--  `layouts/` - Layout templates
--  `pages/` - Static pages
--  `partials/` - Partial views
--  `profile/` - User profile views
--  `services/` - Service management views
--  `settings/` - Settings views
-
-### Routes (`routes/`)
-
--  `web.php` - Web routes
--  `api.php` - API routes
--  `auth.php` - Authentication routes
--  `tenant.php` - Tenant-specific routes
--  `console.php` - Console commands
-
-### Tests (`tests/`)
-
--  `Feature/` - Feature tests
-   -  `Auth/` - Authentication tests
-   -  `Contract/` - Contract tests
-   -  `Integration/` - Integration tests
-   -  Domain-specific feature tests
--  `Unit/` - Unit tests
-   -  Service tests
-   -  Event tests
-   -  Listener tests
-
-### Public (`public/`)
-
-Publicly accessible files:
-
--  `index.php` - Application entry point
--  `assets/` - Compiled assets (CSS, JS, images)
-
-### Storage (`storage/`)
-
--  `app/` - Application files
--  `framework/` - Framework cache and sessions
--  `logs/` - Application logs
-
-### Vendor (`vendor/`)
-
-Third-party dependencies managed by Composer
-
-## Architectural Patterns
-
-### Layered Architecture
-
+# Easy Budget Laravel - Estrutura do Projeto
+
+## Organização de Diretórios
+
+### `/app` - Núcleo da Aplicação
+
+#### `/app/Http/Controllers`
+Manipuladores de requisições HTTP organizados por domínio:
+- **CustomerController** - CRUD e gestão de clientes
+- **BudgetController** - Operações de orçamento/cotação
+- **InvoiceController** - Geração e gestão de faturas
+- **ProductController** - Catálogo de produtos/serviços
+- **ReportController** - Geração de relatórios
+- **SettingsController** - Configuração do sistema
+- **Auth Controllers** - Fluxos de autenticação
+
+#### `/app/Services`
+Camada de lógica de negócio organizada por domínio arquitetural:
+- **`/Domain`** - Serviços de negócio principais (BudgetService, InvoiceService, CustomerService)
+- **`/Application`** - Serviços de nível de aplicação (CustomerInteractionService)
+- **`/Infrastructure`** - Integrações externas (GeolocationService, MercadoPagoService)
+- **`/Core`** - Serviços principais compartilhados (AuthService, EmailService)
+- **`/Admin`** - Serviços administrativos
+- **`/Shared`** - Preocupações transversais
+
+#### `/app/Repositories`
+Camada de acesso a dados com arquitetura dual:
+- **`/Abstracts`** - Classes base de repositório
+- **`/Contracts`** - Interfaces de repositório
+- **`/Traits`** - Comportamentos reutilizáveis de repositório
+- **Repositórios Tenant** - Acesso a dados com escopo de tenant (CustomerRepository, BudgetRepository)
+- **Repositórios Globais** - Acesso a dados em todo o sistema (UserRepository, TenantRepository)
+
+#### `/app/Models`
+Modelos Eloquent ORM:
+- **Modelos Principais:** User, Tenant, Customer, Budget, Invoice, Product
+- **Modelos de Suporte:** Address, Contact, CommonData, BusinessData
+- **Modelos Financeiros:** Payment, PaymentMercadoPago, PlanSubscription
+- **Modelos de Sistema:** AuditLog, EmailLog, Notification, Session
+- **`/Traits`** - Comportamentos de modelo (BelongsToTenant, SlugGenerator)
+- **`/Pivots`** - Modelos de tabela pivot
+
+#### `/app/DesignPatterns`
+Padrões e templates padronizados:
+- **`/Controllers`** - Templates de padrão de controller (3 níveis)
+- **`/Services`** - Templates de padrão de serviço (3 níveis)
+- **`/Repositories`** - Templates de padrão de repositório (arquitetura dual)
+- **`/Models`** - Templates de padrão de modelo (3 níveis)
+- **`/Views`** - Templates de padrão de view (3 níveis)
+- **`/Stubs`** - Stubs de geração de código
+- **README-GERAL.md** - Documentação de padrões
+
+#### `/app/Events`
+Eventos de domínio:
+- BudgetStatusChanged, InvoiceCreated
+- EmailVerificationRequested, PasswordResetRequested
+- UserRegistered, SocialAccountLinked
+- CategoryCreated/Updated/Deleted
+
+#### `/app/Listeners`
+Manipuladores de eventos:
+- Listeners de notificação por e-mail
+- Listeners de gestão de cache
+- Listeners de registro de auditoria
+
+#### `/app/Observers`
+Observadores de ciclo de vida de modelo:
+- BudgetObserver, InvoiceObserver
+- CustomerObserver, ProductObserver
+- TenantObserver, UserObserver
+
+#### `/app/Policies`
+Políticas de autorização:
+- CustomerPolicy, ProductPolicy
+- BudgetPolicy, InvoicePolicy
+- TenantPolicy, CategoryPolicy
+
+#### `/app/Middleware`
+Middleware HTTP:
+- Identificação e escopo de tenant
+- Autenticação e autorização
+- Registro e monitoramento de requisições
+
+#### `/app/Providers`
+Provedores de serviço:
+- AppServiceProvider - Configuração principal da aplicação
+- AuthServiceProvider - Configuração de autenticação
+- EventServiceProvider - Registro de eventos/listeners
+- TenancyServiceProvider - Configuração multi-tenant
+- BladeDirectiveServiceProvider - Diretivas Blade customizadas
+
+#### `/app/Helpers`
+Funções utilitárias:
+- CurrencyHelper, DateHelper, MaskHelper
+- DocumentHelper, ValidationHelper
+- StatusHelper, ModelHelper
+
+#### `/app/Enums`
+Enumerações type-safe:
+- BudgetStatus, InvoiceStatus, PaymentStatus
+- CustomerStatus, ServiceStatus
+- AlertTypeEnum, AlertSeverityEnum
+
+#### `/app/Support`
+Utilitários de suporte:
+- **helpers.php** - Funções helper globais
+- **ServiceResult.php** - Wrapper de resposta de serviço padronizado
+
+### `/config` - Arquivos de Configuração
+- **database.php** - Conexões de banco de dados (MySQL, Redis)
+- **tenancy.php** - Configuração multi-tenant
+- **services.php** - Credenciais de serviços de terceiros
+- **mail.php** - Configuração de e-mail
+- **auth.php** - Configurações de autenticação
+
+### `/database` - Camada de Banco de Dados
+
+#### `/database/migrations`
+Definições de schema:
+- **2025_09_27_132300_create_initial_schema.php** - Schema inicial completo
+- **2025_11_28_210700_update_categories_slug_unique_per_tenant.php** - Atualizações de categoria
+
+#### `/database/factories`
+Factories de modelo para testes:
+- UserFactory, TenantFactory, CustomerFactory
+- BudgetFactory, InvoiceFactory, ProductFactory
+- Cobertura completa de factory para todos os modelos
+
+#### `/database/seeders`
+Seeders de banco de dados:
+- DatabaseSeeder - Orquestrador principal de seeder
+- AdminTenantSeeder, PublicTenantSeeder
+- CategorySeeder, ProfessionSeeder, UnitSeeder
+- Seeders de dados de teste para desenvolvimento
+
+### `/resources` - Assets Frontend
+
+#### `/resources/views`
+Templates Blade organizados por funcionalidade:
+- **`/layouts`** - Layouts base (app, guest, admin)
+- **`/pages`** - Páginas de funcionalidade (customer, budget, invoice, product)
+- **`/components`** - Componentes reutilizáveis (alerts, forms, tables)
+- **`/partials`** - Views parciais (header, footer, sidebar)
+- **`/auth`** - Views de autenticação
+- **`/emails`** - Templates de e-mail
+
+#### `/resources/js`
+Módulos JavaScript:
+- **app.js** - Entrada principal da aplicação
+- **bootstrap.js** - Bootstrap e dependências
+- **`/modules`** - Módulos específicos de funcionalidade
+- **`/pages`** - Scripts específicos de página
+
+#### `/resources/css`
+Folhas de estilo:
+- **app.css** - Estilos principais da aplicação
+- CSS customizado para funcionalidades específicas
+
+### `/routes` - Definições de Rotas
+- **web.php** - Rotas web públicas
+- **tenant.php** - Rotas com escopo de tenant
+- **auth.php** - Rotas de autenticação
+- **api.php** - Endpoints de API
+- **console.php** - Comandos Artisan
+
+### `/tests` - Suite de Testes
+
+#### `/tests/Feature`
+Testes de integração:
+- CategoryControllerTest, ProductAjaxSearchTest
+- CategoryHierarchyTest, CategorySoftDeleteTest
+- Cobertura completa de funcionalidades
+
+#### `/tests/Unit`
+Testes unitários:
+- **`/Controllers`** - Testes unitários de controller
+- **`/Services`** - Testes unitários de serviço
+- **`/Validation`** - Testes de validação
+
+### `/public` - Assets Públicos
+- **index.php** - Ponto de entrada da aplicação
+- **`/assets`** - Assets compilados (CSS, JS, imagens)
+- **.htaccess** - Configuração Apache
+
+### `/storage` - Camada de Armazenamento
+- **`/app`** - Arquivos da aplicação (uploads, arquivos gerados)
+- **`/logs`** - Logs da aplicação (laravel.log, security.log, browser.log)
+- **`/framework`** - Cache e sessões do framework
+
+### `/docs` - Documentação
+- Documentação técnica
+- Guias de migração
+- Especificações do sistema
+
+### `/specs` - Especificações de Funcionalidades
+- **`/001-login-google`** - Especificação de login Google
+- **`/002-easy-budget-platform`** - Especificação da plataforma
+- Especificações detalhadas de funcionalidades com contratos e checklists
+
+## Padrões Arquiteturais
+
+### Arquitetura em Camadas
 ```
-Controllers → Services → Repositories → Models
+Controller → Service → Repository → Model → Database
 ```
 
-**Controller Layer**
+### Arquitetura Multi-Tenant
+- Identificação de tenant via domínio/subdomínio
+- Escopo automático de tenant em consultas
+- Armazenamento de dados isolado por tenant
+- Repositórios Globais vs Tenant
 
--  Handles HTTP requests and responses
--  Validates input through Form Requests
--  Delegates business logic to Services
--  Returns views or JSON responses
+### Padrão de Camada de Serviço
+- Lógica de negócio centralizada em serviços
+- Serviços retornam objetos ServiceResult
+- Três níveis de complexidade: Básico, Intermediário, Avançado
+- Separação clara de controllers
 
-**Service Layer**
+### Padrão Repository
+- Abstração de acesso a dados
+- Arquitetura dual: Tenant vs Global
+- Contratos baseados em interface
+- Otimização de consultas e cache
 
--  Contains business logic and workflows
--  Orchestrates multiple repositories
--  Handles transactions and complex operations
--  Returns ServiceResult objects
+### Arquitetura Orientada a Eventos
+- Eventos de domínio para ações de negócio
+- Processamento assíncrono via listeners
+- Notificações por e-mail via eventos
+- Registro de auditoria via observers
 
-**Repository Layer**
+### Padrões de Design em Uso
+- **Padrão Factory** - Factories de modelo para testes
+- **Padrão Observer** - Hooks de ciclo de vida de modelo
+- **Padrão Strategy** - Processamento de pagamento
+- **Padrão Repository** - Acesso a dados
+- **Padrão Service Layer** - Lógica de negócio
+- **Injeção de Dependência** - Em toda a aplicação
 
--  Abstracts data access
--  Provides query methods
--  Handles tenant scoping
--  Returns Eloquent models or collections
+## Relacionamentos de Componentes
 
-**Model Layer**
+### Fluxo de Gestão de Clientes
+```
+CustomerController → CustomerService → CustomerRepository → Customer Model
+                                    ↓
+                            CommonData, Contact, Address Models
+```
 
--  Represents database entities
--  Defines relationships
--  Contains accessors/mutators
--  Implements model events
+### Fluxo de Orçamento para Fatura
+```
+BudgetController → BudgetService → BudgetRepository → Budget Model
+                                                    ↓
+InvoiceController → InvoiceService → InvoiceRepository → Invoice Model
+                                                       ↓
+                                            PaymentService (Mercado Pago)
+```
 
-### Multi-tenant Architecture
+### Fluxo de Autenticação
+```
+AuthController → AuthService → UserRepository → User Model
+                            ↓
+                    EmailService → EmailVerificationMail
+                            ↓
+                    UserConfirmationTokenRepository
+```
 
--  **Tenant Scoping**: Automatic filtering by tenant_id
--  **Global Scopes**: Applied to all tenant-aware models
--  **Tenant Middleware**: Identifies and sets current tenant
--  **Isolated Data**: Complete separation between tenants
+### Fluxo Multi-Tenant
+```
+Request → TenantMiddleware → Identificação de Tenant
+                           ↓
+                    Escopo de Tenant Aplicado
+                           ↓
+                    Controller → Service → Repository (Com escopo de tenant)
+```
 
-### Event-Driven Architecture
+## Decisões Arquiteturais Principais
 
--  **Events**: Triggered by domain actions
--  **Listeners**: Handle event consequences
--  **Jobs**: Asynchronous processing
--  **Notifications**: User communication
-
-### Repository Pattern Variants
-
--  **Tenant Repositories**: Automatically scope by tenant
--  **Global Repositories**: Access all data (admin operations)
--  **Abstract Base**: Shared repository functionality
-
-## Key Components
-
-### Authentication System
-
--  Laravel Sanctum for API authentication
--  Custom email verification with tokens
--  Social authentication via Socialite
--  Role-based access control
-
-### Multi-tenant System
-
--  Stancl/Tenancy package integration
--  Automatic tenant identification
--  Tenant-specific database scoping
--  Provider-tenant relationship
-
-### Email System
-
--  Queue-based email sending
--  Customizable email templates
--  Email variable substitution
--  Email logging and tracking
-
-### Audit System
-
--  Comprehensive action logging
--  User activity tracking
--  Change history for entities
--  Security event logging
-
-### Reporting System
-
--  Dynamic report generation
--  Scheduled report execution
--  Multiple export formats
--  Chart and metric visualization
-
-## Design Pattern Documentation
-
-The `app/DesignPatterns/` directory contains comprehensive documentation and examples for:
-
--  Controller patterns (3 levels: Simple, Filtered, Hybrid)
--  Service patterns (3 levels: Basic, Intermediate, Advanced)
--  Repository patterns (Tenant vs Global architecture)
--  Model patterns (3 levels: Basic, Relationships, Advanced)
--  View patterns (3 levels: Basic, Form, AJAX)
-
-Each pattern includes:
-
--  Detailed documentation
--  Code examples
--  Best practices
--  Implementation guidelines
+1. **Multi-Tenant Primeiro:** Todos os dados de tenant são automaticamente escopados
+2. **Camada de Serviço Obrigatória:** Controllers delegam para serviços
+3. **Abstração de Repository:** Sem consultas diretas de modelo em serviços
+4. **Notificações Orientadas a Eventos:** Todas as notificações via eventos
+5. **Respostas Padronizadas:** ServiceResult para todos os métodos de serviço
+6. **Registro Abrangente:** Trilha de auditoria para todas as operações críticas
+7. **Segurança de Tipo:** Tipos PHP 8.2+, enums e tipagem estrita
+8. **Frontend Moderno:** Vite para desenvolvimento rápido e builds otimizados

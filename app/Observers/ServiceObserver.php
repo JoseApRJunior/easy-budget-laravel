@@ -4,53 +4,98 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Models\AuditLog;
+use App\Enums\ServiceStatus;
 use App\Models\Service;
+use App\Services\Domain\InvoiceService;
+use Illuminate\Support\Facades\Log;
 
 class ServiceObserver
 {
-    public function created(Service $service): void
+    protected InvoiceService $invoiceService;
+
+    public function __construct(InvoiceService $invoiceService)
     {
-        $this->log($service, 'service_created', 'Serviço criado');
+        $this->invoiceService = $invoiceService;
     }
 
+    /**
+     * Handle the Service \"updated\" event.
+     * Gera fatura automaticamente quando o serviço muda para status \"completed\"
+     */
     public function updated(Service $service): void
     {
-        $this->log($service, 'service_updated', 'Serviço atualizado', [
-            'old_values' => $service->getOriginal(),
-            'new_values' => $service->getChanges(),
+        Log::info('ServiceObserver updated method called', [
+            'service_id' => $service->id,
+            'service_code' => $service->code,
+            'status' => $service->status->value,
+            'is_dirty' => $service->isDirty('status'),
+            'original_status' => $service->getOriginal('status')
         ]);
+        
+        // Verificar se o status mudou para \"completed\"
+        if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
+            Log::info('Service status changed to completed, generating automatic invoice', [
+                'service_id' => $service->id,
+                'service_code' => $service->code
+            ]);
+            $this->generateAutomaticInvoice($service);
+        }
     }
 
-    public function deleted(Service $service): void
-    {
-        $this->log($service, 'service_deleted', 'Serviço excluído');
-    }
-
-    public function restored(Service $service): void
-    {
-        $this->log($service, 'service_restored', 'Serviço restaurado');
-    }
-
-    private function log(Service $service, string $action, string $description, array $extra = []): void
+    /**
+     * Gera fatura automática para o serviço concluído
+     */
+    protected function generateAutomaticInvoice(Service $service): void
     {
         try {
-            AuditLog::withoutTenant()->create([
-                'tenant_id' => $service->tenant_id,
-                'user_id' => auth()->id(),
-                'action' => $action,
-                'model_type' => Service::class,
-                'model_id' => $service->id,
-                'description' => $description,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'metadata' => $extra,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to create audit log', [
-                'action' => $action,
+            Log::info('Iniciando geração automática de fatura para serviço', [
                 'service_id' => $service->id,
+                'service_code' => $service->code,
+                'tenant_id' => $service->tenant_id
+            ]);
+
+            // Verificar se já existe uma fatura para este serviço
+            if ($this->invoiceService->checkExistingInvoiceForService($service->id)) {
+                Log::info('Fatura já existe para este serviço, ignorando geração automática', [
+                    'service_id' => $service->id,
+                    'service_code' => $service->code
+                ]);
+                return;
+            }
+
+            // Preparar dados para a fatura automática
+            $invoiceData = [
+                'issue_date' => now()->format('Y-m-d'),
+                'due_date' => now()->addDays(30)->format('Y-m-d'), // 30 dias para pagamento
+                'notes' => 'Fatura gerada automaticamente após conclusão do serviço',
+                'is_automatic' => true, // Marcar como fatura automática
+            ];
+
+            // Gerar a fatura
+            $result = $this->invoiceService->createInvoiceFromService($service->code, $invoiceData);
+
+            if ($result->isSuccess()) {
+                $invoice = $result->getData();
+                Log::info('Fatura automática gerada com sucesso', [
+                    'service_id' => $service->id,
+                    'service_code' => $service->code,
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->code
+                ]);
+            } else {
+                Log::error('Erro ao gerar fatura automática', [
+                    'service_id' => $service->id,
+                    'service_code' => $service->code,
+                    'error' => $result->getMessage()
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Exceção ao gerar fatura automática', [
+                'service_id' => $service->id,
+                'service_code' => $service->code,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }

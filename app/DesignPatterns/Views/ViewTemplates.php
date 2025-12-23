@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Views;
  *
  * Fornece templates prontos para uso imediato no desenvolvimento,
  * seguindo o padrão unificado definido em ViewPattern.
- *
- * @package App\DesignPatterns
  */
 class ViewTemplates
 {
@@ -77,7 +75,7 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container py-4">
+<div class="container py-1">
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -237,7 +235,7 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container-fluid py-4">
+<div class="container-fluid py-1">
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>

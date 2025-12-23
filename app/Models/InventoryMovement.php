@@ -29,6 +29,13 @@ class InventoryMovement extends Model
     protected $table = 'inventory_movements';
 
     /**
+     * Relacionamentos carregados automaticamente
+     *
+     * @var array
+     */
+    protected $with = ['product'];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -38,7 +45,11 @@ class InventoryMovement extends Model
         'product_id',
         'type',
         'quantity',
+        'previous_quantity',
+        'new_quantity',
         'reason',
+        'reference_id',
+        'reference_type',
     ];
 
     /**
@@ -51,7 +62,11 @@ class InventoryMovement extends Model
         'product_id' => 'integer',
         'type'       => 'string', // enum('in', 'out')
         'quantity'   => 'integer',
+        'previous_quantity' => 'integer',
+        'new_quantity' => 'integer',
         'reason'     => 'string',
+        'reference_id' => 'integer',
+        'reference_type' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -80,6 +95,14 @@ class InventoryMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo( Product::class);
+    }
+
+    /**
+     * Get the user that created the InventoryMovement.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo( \App\Models\User::class);
     }
 
 }

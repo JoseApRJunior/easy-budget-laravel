@@ -1,16 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Provider;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Carbon;
 
 class CommonData extends Model
 {
@@ -38,6 +35,7 @@ class CommonData extends Model
      * @var array<int, string>
      */
     const TYPE_INDIVIDUAL = 'individual';
+
     const TYPE_COMPANY = 'company';
 
     protected $fillable = [
@@ -62,21 +60,21 @@ class CommonData extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'           => 'integer',
-        'customer_id'         => 'integer',
-        'provider_id'         => 'integer',
-        'type'                => 'string',
-        'first_name'          => 'string',
-        'last_name'           => 'string',
-        'birth_date'          => 'date',
-        'cpf'                 => 'string',
-        'company_name'        => 'string',
-        'cnpj'                => 'string',
-        'description'         => 'string',
+        'tenant_id' => 'integer',
+        'customer_id' => 'integer',
+        'provider_id' => 'integer',
+        'type' => 'string',
+        'first_name' => 'string',
+        'last_name' => 'string',
+        'birth_date' => 'date',
+        'cpf' => 'string',
+        'company_name' => 'string',
+        'cnpj' => 'string',
+        'description' => 'string',
         'area_of_activity_id' => 'integer',
-        'profession_id'       => 'integer',
-        'created_at'          => 'immutable_datetime',
-        'updated_at'          => 'datetime',
+        'profession_id' => 'integer',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -85,11 +83,11 @@ class CommonData extends Model
     public static function businessRules(string $type): array
     {
         $rules = [
-            'tenant_id'           => 'required|integer|exists:tenants,id',
-            'type'                => 'required|in:individual,company',
-            'description'         => 'nullable|string|max:65535',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'type' => 'required|in:individual,company',
+            'description' => 'nullable|string|max:65535',
             'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
-            'profession_id'       => 'nullable|integer|exists:professions,id',
+            'profession_id' => 'nullable|integer|exists:professions,id',
         ];
 
         if ($type === self::TYPE_INDIVIDUAL) {
@@ -110,7 +108,7 @@ class CommonData extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -118,7 +116,7 @@ class CommonData extends Model
      */
     public function areaOfActivity(): BelongsTo
     {
-        return $this->belongsTo( AreaOfActivity::class, 'area_of_activity_id' );
+        return $this->belongsTo(AreaOfActivity::class, 'area_of_activity_id');
     }
 
     /**
@@ -126,7 +124,7 @@ class CommonData extends Model
      */
     public function profession(): BelongsTo
     {
-        return $this->belongsTo( Profession::class, 'profession_id' );
+        return $this->belongsTo(Profession::class, 'profession_id');
     }
 
     /**
@@ -134,7 +132,7 @@ class CommonData extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo( Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -142,7 +140,7 @@ class CommonData extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo( Provider::class);
+        return $this->belongsTo(Provider::class);
     }
 
     /**
@@ -176,5 +174,4 @@ class CommonData extends Model
     {
         return $this->type === self::TYPE_COMPANY;
     }
-
 }

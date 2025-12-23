@@ -1,13 +1,13 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
+@section('content')
     <div class="container py-2">
         <!-- Formulário -->
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-5">
-                        <form method="POST" action="{{ route( 'login' ) }}" id="loginForm">
+                        <form method="POST" action="{{ route('login') }}" id="loginForm">
                             @csrf
 
                             <!-- Seções do formulário -->
@@ -26,10 +26,10 @@
                                             <i class="bi bi-envelope"></i>
                                         </span>
                                         <input id="email" name="email" type="email" autocomplete="email" required
-                                            value="{{ old( 'email' ) }}"
-                                            class="form-control @error( 'email' ) is-invalid @enderror"
+                                            value="{{ old('email') }}"
+                                            class="form-control @error('email') is-invalid @enderror"
                                             placeholder="seu@email.com">
-                                        @error( 'email' )
+                                        @error('email')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -46,12 +46,12 @@
                                         </span>
                                         <input id="password-input" name="password" type="password"
                                             autocomplete="current-password" required
-                                            class="form-control @error( 'password' ) is-invalid @enderror"
+                                            class="form-control @error('password') is-invalid @enderror"
                                             placeholder="Digite sua senha">
                                         <span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
                                             <i class="bi bi-eye" id="password-icon"></i>
                                         </span>
-                                        @error( 'password' )
+                                        @error('password')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -70,7 +70,7 @@
                                     <div class="col-md-6">
                                         <div class="form-check">
                                             <input id="remember_me" name="remember" type="checkbox"
-                                                class="form-check-input @error( 'remember' ) is-invalid @enderror">
+                                                class="form-check-input @error('remember') is-invalid @enderror">
                                             <label for="remember_me" class="form-check-label">
                                                 Lembrar de mim
                                             </label>
@@ -78,8 +78,8 @@
                                     </div>
 
                                     <div class="col-md-6 text-end">
-                                        @if ( Route::has( 'password.request' ) )
-                                            <a href="{{ route( 'password.request' ) }}" class="text-decoration-none">
+                                        @if (Route::has('password.request'))
+                                            <a href="{{ route('password.request') }}" class="text-decoration-none">
                                                 <i class="bi bi-question-circle me-1"></i>
                                                 Esqueceu a senha?
                                             </a>
@@ -89,28 +89,45 @@
                             </div>
 
                             <!-- Botões de ação -->
-                            <div class="d-flex justify-content-between pt-4 border-top">
-                                <a href="{{ route( 'register' ) }}" class="btn btn-primary">
-                                    <i class="bi bi-person-plus me-2"></i>Criar Conta
-                                </a>
-                                <a href="{{ route( 'auth.google' ) }}" class="btn btn-google btn-primary">
-                                    <i class="bi bi-google"></i>
-                                    Continuar com Google
-                                </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
-                                </button>
+                            <div class="row pt-4 border-top">
+                                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                                    <a href="{{ route('register') }}" class="btn btn-primary w-100">
+                                        <i class="bi bi-person-plus me-2"></i>Criar Conta
+                                    </a>
+                                </div>
+                                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                                    <a href="{{ route('auth.google') }}" class="btn btn-google btn-primary w-100">
+                                        <i class="bi bi-google me-1"></i>
+                                        <span class="d-none d-md-inline">Continuar com</span> Google
+                                    </a>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                                    </button>
+                                </div>
                             </div>
                         </form>
 
                         <!-- Credenciais de teste (apenas em desenvolvimento) -->
-                        @if( app()->environment( 'local' ) )
+                        @if (app()->environment('local'))
                             <div class="mt-4 pt-4 border-top">
-                                <div class="alert alert-warning">
-                                    <h6 class="alert-heading mb-2">
-                                        <i class="bi bi-info-circle me-2"></i>Credenciais de Teste
-                                    </h6>
-                                    <p class="mb-1"><strong>Prestador:</strong> provider@easybudget.net.br / Password1@</p>
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 class="alert-heading mb-1">
+                                                <i class="bi bi-info-circle me-2"></i>Credenciais de Teste
+                                            </h6>
+                                            <small class="d-block text-muted">
+                                                <strong>Email:</strong>
+                                                <span> provider1@test.com</span>
+                                                <strong>Senha:</strong>
+                                                <span>Password1@</span>
+                                            </small>
+                                        </div>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Fechar"></button>
+                                    </div>
                                 </div>
                             </div>
                         @endif
@@ -121,17 +138,16 @@
     </div>
 @endsection
 
-@push( 'styles' )
-
+@push('styles')
 @endpush
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         // Funcionalidades do formulário de login
-        document.addEventListener( 'DOMContentLoaded', function () {
-            const form = document.getElementById( 'loginForm' );
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
 
-            if ( form ) {
+            if (form) {
                 // Máscaras de entrada
                 setupInputMasks();
 
@@ -139,51 +155,51 @@
                 setupRealTimeValidation();
 
                 // Submit com indicador de loading
-                form.addEventListener( 'submit', function ( e ) {
-                    const submitBtn = form.querySelector( 'button[type="submit"]' );
-                    if ( submitBtn ) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
                         submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Entrando...';
                         submitBtn.disabled = true;
                     }
-                } );
+                });
             }
 
             function setupInputMasks() {
                 // Máscara básica para email se necessário
-                const emailInput = document.getElementById( 'email' );
-                if ( emailInput ) {
-                    emailInput.addEventListener( 'blur', function () {
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    emailInput.addEventListener('blur', function() {
                         const email = this.value.trim();
-                        if ( email && !email.includes( '@' ) ) {
-                            this.classList.add( 'is-invalid' );
+                        if (email && !email.includes('@')) {
+                            this.classList.add('is-invalid');
                         } else {
-                            this.classList.remove( 'is-invalid' );
+                            this.classList.remove('is-invalid');
                         }
-                    } );
+                    });
                 }
             }
 
             function setupRealTimeValidation() {
                 // Validação básica em tempo real
-                const requiredInputs = form.querySelectorAll( 'input[required]' );
-                requiredInputs.forEach( input => {
-                    input.addEventListener( 'blur', function () {
-                        if ( this.value.trim() === '' ) {
-                            this.classList.add( 'is-invalid' );
+                const requiredInputs = form.querySelectorAll('input[required]');
+                requiredInputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        if (this.value.trim() === '') {
+                            this.classList.add('is-invalid');
                         } else {
-                            this.classList.remove( 'is-invalid' );
+                            this.classList.remove('is-invalid');
                         }
-                    } );
-                } );
+                    });
+                });
             }
-        } );
+        });
 
         // Password visibility toggle
         function togglePassword() {
-            const passwordInput = document.getElementById( 'password-input' );
-            const passwordIcon = document.getElementById( 'password-icon' );
+            const passwordInput = document.getElementById('password-input');
+            const passwordIcon = document.getElementById('password-icon');
 
-            if ( passwordInput.type === 'password' ) {
+            if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 passwordIcon.className = 'bi bi-eye-slash';
             } else {

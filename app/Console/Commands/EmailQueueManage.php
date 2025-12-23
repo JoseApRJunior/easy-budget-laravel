@@ -43,7 +43,7 @@ class EmailQueueManage extends Command
     /**
      * Create a new command instance.
      */
-    public function __construct( MailerService $mailerService )
+    public function __construct(MailerService $mailerService)
     {
         parent::__construct();
         $this->mailerService = $mailerService;
@@ -54,43 +54,45 @@ class EmailQueueManage extends Command
      */
     public function handle(): int
     {
-        $action = $this->argument( 'action' );
-        $queue  = $this->option( 'queue' );
+        $action = $this->argument('action');
+        $queue = $this->option('queue');
 
-        $this->info( "🚀 Gerenciando fila de emails: {$queue}" );
-        $this->info( "📋 Ação solicitada: {$action}" );
+        $this->info("🚀 Gerenciando fila de emails: {$queue}");
+        $this->info("📋 Ação solicitada: {$action}");
 
         try {
-            switch ( $action ) {
+            switch ($action) {
                 case 'stats':
-                    return $this->showQueueStats( $queue );
+                    return $this->showQueueStats($queue);
 
                 case 'clear':
-                    return $this->clearQueue( $queue );
+                    return $this->clearQueue($queue);
 
                 case 'retry':
-                    return $this->retryFailedJobs( $queue );
+                    return $this->retryFailedJobs($queue);
 
                 case 'flush':
-                    return $this->flushQueue( $queue );
+                    return $this->flushQueue($queue);
 
                 case 'monitor':
-                    return $this->monitorQueue( $queue );
+                    return $this->monitorQueue($queue);
 
                 default:
-                    $this->error( "❌ Ação '{$action}' não reconhecida." );
+                    $this->error("❌ Ação '{$action}' não reconhecida.");
                     $this->showAvailableActions();
+
                     return 1;
             }
-        } catch ( \Throwable $e ) {
-            Log::error( 'Erro no gerenciamento da fila de emails', [
+        } catch (\Throwable $e) {
+            Log::error('Erro no gerenciamento da fila de emails', [
                 'action' => $action,
-                'queue'  => $queue,
-                'error'  => $e->getMessage(),
-                'trace'  => $e->getTraceAsString()
-            ] );
+                'queue' => $queue,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            $this->error( '💥 Erro: ' . $e->getMessage() );
+            $this->error('💥 Erro: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -98,33 +100,34 @@ class EmailQueueManage extends Command
     /**
      * Exibe estatísticas detalhadas da fila.
      */
-    private function showQueueStats( string $queue ): int
+    private function showQueueStats(string $queue): int
     {
-        $this->info( '📊 Obtendo estatísticas da fila...' );
+        $this->info('📊 Obtendo estatísticas da fila...');
 
         $stats = $this->mailerService->getEmailQueueStats();
 
-        if ( isset( $stats[ 'error' ] ) ) {
-            $this->error( '❌ ' . $stats[ 'error' ] );
+        if (isset($stats['error'])) {
+            $this->error('❌ '.$stats['error']);
+
             return 1;
         }
 
-        $this->info( '📈 Estatísticas da fila de emails:' );
+        $this->info('📈 Estatísticas da fila de emails:');
         $this->table(
-            [ 'Métrica', 'Valor' ],
+            ['Métrica', 'Valor'],
             [
-                [ 'Emails enfileirados', $stats[ 'queued_emails' ] ],
-                [ 'Emails processando', $stats[ 'processing_emails' ] ],
-                [ 'Emails com falha', $stats[ 'failed_emails' ] ],
-                [ 'Jobs última hora', $stats[ 'total_jobs_last_hour' ] ],
-                [ 'Tempo médio de espera', $stats[ 'avg_wait_time_seconds' ] . 's' ],
-                [ 'Status da fila', $this->getStatusBadge( $stats[ 'queue_status' ] ) ],
-                [ 'Última atualização', $stats[ 'timestamp' ] ],
+                ['Emails enfileirados', $stats['queued_emails']],
+                ['Emails processando', $stats['processing_emails']],
+                ['Emails com falha', $stats['failed_emails']],
+                ['Jobs última hora', $stats['total_jobs_last_hour']],
+                ['Tempo médio de espera', $stats['avg_wait_time_seconds'].'s'],
+                ['Status da fila', $this->getStatusBadge($stats['queue_status'])],
+                ['Última atualização', $stats['timestamp']],
             ],
         );
 
         // Análise adicional
-        $this->analyzeQueueHealth( $stats );
+        $this->analyzeQueueHealth($stats);
 
         return 0;
     }
@@ -132,28 +135,29 @@ class EmailQueueManage extends Command
     /**
      * Limpa fila de emails (remove jobs pendentes).
      */
-    private function clearQueue( string $queue ): int
+    private function clearQueue(string $queue): int
     {
-        if ( !$this->option( 'force' ) && !$this->confirm( 'Tem certeza que deseja limpar a fila de emails?', false ) ) {
-            $this->info( 'Operação cancelada.' );
+        if (! $this->option('force') && ! $this->confirm('Tem certeza que deseja limpar a fila de emails?', false)) {
+            $this->info('Operação cancelada.');
+
             return 0;
         }
 
-        $this->info( '🧹 Limpando fila de emails...' );
+        $this->info('🧹 Limpando fila de emails...');
 
-        $jobsTable = config( 'queue.connections.database.table', 'jobs' );
-        $deleted   = DB::table( $jobsTable )
-            ->where( 'queue', $queue )
-            ->whereNull( 'reserved_at' )
+        $jobsTable = config('queue.connections.database.table', 'jobs');
+        $deleted = DB::table($jobsTable)
+            ->where('queue', $queue)
+            ->whereNull('reserved_at')
             ->delete();
 
-        $this->info( "✅ {$deleted} jobs removidos da fila '{$queue}'." );
+        $this->info("✅ {$deleted} jobs removidos da fila '{$queue}'.");
 
-        Log::warning( 'Fila de emails limpa manualmente', [
-            'queue'        => $queue,
+        Log::warning('Fila de emails limpa manualmente', [
+            'queue' => $queue,
             'jobs_removed' => $deleted,
-            'user'         => auth()->id() ?? 'system'
-        ] );
+            'user' => auth()->id() ?? 'system',
+        ]);
 
         return 0;
     }
@@ -161,67 +165,71 @@ class EmailQueueManage extends Command
     /**
      * Tenta reenfileirar jobs falhos.
      */
-    private function retryFailedJobs( string $queue ): int
+    private function retryFailedJobs(string $queue): int
     {
-        $this->info( '🔄 Tentando reenfileirar jobs falhos...' );
+        $this->info('🔄 Tentando reenfileirar jobs falhos...');
 
-        $failedTable = config( 'queue.failed.table', 'failed_jobs' );
-        $failedJobs  = DB::table( $failedTable )
-            ->where( 'queue', $queue )
+        $failedTable = config('queue.failed.table', 'failed_jobs');
+        $failedJobs = DB::table($failedTable)
+            ->where('queue', $queue)
             ->get();
 
-        if ( $failedJobs->isEmpty() ) {
-            $this->info( '✅ Nenhum job falho encontrado na fila.' );
+        if ($failedJobs->isEmpty()) {
+            $this->info('✅ Nenhum job falho encontrado na fila.');
+
             return 0;
         }
 
-        $this->info( "📋 Encontrados {$failedJobs->count()} jobs falhos." );
+        $this->info("📋 Encontrados {$failedJobs->count()} jobs falhos.");
 
-        if ( !$this->option( 'force' ) && !$this->confirm( 'Deseja tentar reenfileirar esses jobs?', false ) ) {
-            $this->info( 'Operação cancelada.' );
+        if (! $this->option('force') && ! $this->confirm('Deseja tentar reenfileirar esses jobs?', false)) {
+            $this->info('Operação cancelada.');
+
             return 0;
         }
 
         $retried = 0;
-        foreach ( $failedJobs as $job ) {
+        foreach ($failedJobs as $job) {
             try {
-                $this->retrySingleJob( $job );
+                $this->retrySingleJob($job);
                 $retried++;
-            } catch ( \Throwable $e ) {
-                $this->error( "❌ Falha ao reenfileirar job {$job->id}: " . $e->getMessage() );
+            } catch (\Throwable $e) {
+                $this->error("❌ Falha ao reenfileirar job {$job->id}: ".$e->getMessage());
             }
         }
 
-        $this->info( "✅ {$retried} jobs reenfileirados com sucesso." );
+        $this->info("✅ {$retried} jobs reenfileirados com sucesso.");
+
         return 0;
     }
 
     /**
      * Esvazia completamente a fila (remove todos os jobs).
      */
-    private function flushQueue( string $queue ): int
+    private function flushQueue(string $queue): int
     {
-        $this->warn( '⚠️  Esta operação irá remover TODOS os jobs da fila!' );
+        $this->warn('⚠️  Esta operação irá remover TODOS os jobs da fila!');
 
-        if ( !$this->option( 'force' ) && !$this->confirm( 'Tem certeza absoluta? Esta ação não pode ser desfeita!', false ) ) {
-            $this->info( 'Operação cancelada.' );
+        if (! $this->option('force') && ! $this->confirm('Tem certeza absoluta? Esta ação não pode ser desfeita!', false)) {
+            $this->info('Operação cancelada.');
+
             return 0;
         }
 
-        $this->info( '💥 Esvaziando fila de emails...' );
+        $this->info('💥 Esvaziando fila de emails...');
 
-        $jobsTable = config( 'queue.connections.database.table', 'jobs' );
-        $deleted   = DB::table( $jobsTable )
-            ->where( 'queue', $queue )
+        $jobsTable = config('queue.connections.database.table', 'jobs');
+        $deleted = DB::table($jobsTable)
+            ->where('queue', $queue)
             ->delete();
 
-        $this->info( "✅ {$deleted} jobs removidos completamente da fila '{$queue}'." );
+        $this->info("✅ {$deleted} jobs removidos completamente da fila '{$queue}'.");
 
-        Log::critical( 'Fila de emails esvaziada completamente', [
-            'queue'        => $queue,
+        Log::critical('Fila de emails esvaziada completamente', [
+            'queue' => $queue,
             'jobs_removed' => $deleted,
-            'user'         => auth()->id() ?? 'system'
-        ] );
+            'user' => auth()->id() ?? 'system',
+        ]);
 
         return 0;
     }
@@ -229,18 +237,18 @@ class EmailQueueManage extends Command
     /**
      * Monitora a fila em tempo real.
      */
-    private function monitorQueue( string $queue ): int
+    private function monitorQueue(string $queue): int
     {
-        $this->info( '👁️  Iniciando monitoramento da fila de emails...' );
-        $this->info( 'Pressione Ctrl+C para parar.' );
+        $this->info('👁️  Iniciando monitoramento da fila de emails...');
+        $this->info('Pressione Ctrl+C para parar.');
 
         $iterations = 0;
-        while ( true ) {
+        while (true) {
             $stats = $this->mailerService->getEmailQueueStats();
 
-            $this->showLiveStats( $stats, ++$iterations );
+            $this->showLiveStats($stats, ++$iterations);
 
-            sleep( 5 ); // Atualiza a cada 5 segundos
+            sleep(5); // Atualiza a cada 5 segundos
         }
 
         return 0;
@@ -249,83 +257,84 @@ class EmailQueueManage extends Command
     /**
      * Exibe estatísticas em tempo real.
      */
-    private function showLiveStats( array $stats, int $iteration ): void
+    private function showLiveStats(array $stats, int $iteration): void
     {
         $this->newLine();
-        $this->line( "🔄 Monitoramento - Iteração #{$iteration} - " . now()->format( 'H:i:s' ) );
+        $this->line("🔄 Monitoramento - Iteração #{$iteration} - ".now()->format('H:i:s'));
 
-        if ( isset( $stats[ 'error' ] ) ) {
-            $this->error( '❌ Erro: ' . $stats[ 'error' ] );
+        if (isset($stats['error'])) {
+            $this->error('❌ Erro: '.$stats['error']);
+
             return;
         }
 
-        $this->line( "📊 Enfileirados: {$stats[ 'queued_emails' ]} | Processando: {$stats[ 'processing_emails' ]} | Falhos: {$stats[ 'failed_emails' ]}" );
-        $this->line( "⏱️  Tempo médio de espera: {$stats[ 'avg_wait_time_seconds' ]}s" );
-        $this->line( "📈 Status: " . $this->getStatusBadge( $stats[ 'queue_status' ] ) );
+        $this->line("📊 Enfileirados: {$stats['queued_emails']} | Processando: {$stats['processing_emails']} | Falhos: {$stats['failed_emails']}");
+        $this->line("⏱️  Tempo médio de espera: {$stats['avg_wait_time_seconds']}s");
+        $this->line('📈 Status: '.$this->getStatusBadge($stats['queue_status']));
     }
 
     /**
      * Tenta reenfileirar um job individual.
      */
-    private function retrySingleJob( object $job ): void
+    private function retrySingleJob(object $job): void
     {
-        $jobsTable = config( 'queue.connections.database.table', 'jobs' );
+        $jobsTable = config('queue.connections.database.table', 'jobs');
 
-        DB::table( $jobsTable )->insert( [
-            'queue'        => $job->queue,
-            'payload'      => $job->payload,
-            'attempts'     => 0,
-            'reserved_at'  => null,
+        DB::table($jobsTable)->insert([
+            'queue' => $job->queue,
+            'payload' => $job->payload,
+            'attempts' => 0,
+            'reserved_at' => null,
             'available_at' => now()->timestamp,
-            'created_at'   => now()->timestamp,
-        ] );
+            'created_at' => now()->timestamp,
+        ]);
 
         // Remove da tabela de falhas
-        $failedTable = config( 'queue.failed.table', 'failed_jobs' );
-        DB::table( $failedTable )->where( 'id', $job->id )->delete();
+        $failedTable = config('queue.failed.table', 'failed_jobs');
+        DB::table($failedTable)->where('id', $job->id)->delete();
 
-        Log::info( 'Job de email reenfileirado', [
+        Log::info('Job de email reenfileirado', [
             'failed_job_id' => $job->id,
-            'queue'         => $job->queue
-        ] );
+            'queue' => $job->queue,
+        ]);
     }
 
     /**
      * Analisa a saúde da fila e dá recomendações.
      */
-    private function analyzeQueueHealth( array $stats ): void
+    private function analyzeQueueHealth(array $stats): void
     {
         $this->newLine();
-        $this->info( '🔍 Análise de saúde da fila:' );
+        $this->info('🔍 Análise de saúde da fila:');
 
-        if ( $stats[ 'failed_emails' ] > 10 ) {
-            $this->warn( '⚠️  Muitos jobs falhos detectados! Considere verificar logs de erro.' );
+        if ($stats['failed_emails'] > 10) {
+            $this->warn('⚠️  Muitos jobs falhos detectados! Considere verificar logs de erro.');
         }
 
-        if ( $stats[ 'queued_emails' ] > 50 ) {
-            $this->warn( '⚠️  Muitos emails enfileirados. Considere iniciar mais workers.' );
+        if ($stats['queued_emails'] > 50) {
+            $this->warn('⚠️  Muitos emails enfileirados. Considere iniciar mais workers.');
         }
 
-        if ( $stats[ 'avg_wait_time_seconds' ] > 30 ) {
-            $this->warn( '⚠️  Tempo de espera alto. Workers podem estar sobrecarregados.' );
+        if ($stats['avg_wait_time_seconds'] > 30) {
+            $this->warn('⚠️  Tempo de espera alto. Workers podem estar sobrecarregados.');
         }
 
-        if ( $stats[ 'queue_status' ] === 'idle' && $stats[ 'queued_emails' ] === 0 ) {
-            $this->info( '✅ Fila saudável e sem pendências.' );
+        if ($stats['queue_status'] === 'idle' && $stats['queued_emails'] === 0) {
+            $this->info('✅ Fila saudável e sem pendências.');
         }
     }
 
     /**
      * Retorna badge colorido para status.
      */
-    private function getStatusBadge( string $status ): string
+    private function getStatusBadge(string $status): string
     {
-        return match ( $status ) {
-            'active'   => '<fg=green>● ATIVO</>',
-            'idle'     => '<fg=blue>● OCIOSO</>',
-            'warning'  => '<fg=yellow>● ATENÇÃO</>',
+        return match ($status) {
+            'active' => '<fg=green>● ATIVO</>',
+            'idle' => '<fg=blue>● OCIOSO</>',
+            'warning' => '<fg=yellow>● ATENÇÃO</>',
             'critical' => '<fg=red>● CRÍTICO</>',
-            default    => '<fg=gray>● DESCONHECIDO</>',
+            default => '<fg=gray>● DESCONHECIDO</>',
         };
     }
 
@@ -334,12 +343,11 @@ class EmailQueueManage extends Command
      */
     private function showAvailableActions(): void
     {
-        $this->info( 'Ações disponíveis:' );
-        $this->line( '  <fg=green>stats</>   - Exibir estatísticas da fila' );
-        $this->line( '  <fg=yellow>clear</>   - Limpar jobs pendentes' );
-        $this->line( '  <fg=blue>retry</>   - Reenfileirar jobs falhos' );
-        $this->line( '  <fg=red>flush</>   - Esvaziar fila completamente' );
-        $this->line( '  <fg=cyan>monitor</> - Monitorar fila em tempo real' );
+        $this->info('Ações disponíveis:');
+        $this->line('  <fg=green>stats</>   - Exibir estatísticas da fila');
+        $this->line('  <fg=yellow>clear</>   - Limpar jobs pendentes');
+        $this->line('  <fg=blue>retry</>   - Reenfileirar jobs falhos');
+        $this->line('  <fg=red>flush</>   - Esvaziar fila completamente');
+        $this->line('  <fg=cyan>monitor</> - Monitorar fila em tempo real');
     }
-
 }

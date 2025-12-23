@@ -1,4 +1,4 @@
-@extends('layout_pdf_base')
+@extends('layouts.pdf_base')
 
 @section('title')Relatório de Orçamentos@endsection
 

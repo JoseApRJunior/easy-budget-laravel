@@ -11,38 +11,34 @@ use Mpdf\Mpdf;
 
 class BudgetPdfService
 {
-    public function generatePdf( Budget $budget ): string
+    public function generatePdf( Budget $budget, array $extras = [] ): string
     {
-        // Renderizar HTML do orçamento
-        $html = View::make( 'budgets.pdf', compact( 'budget' ) )->render();
+        $viewData = array_merge(compact('budget'), $extras);
+        $html = View::make('budgets.pdf', $viewData)->render();
 
-        // Configurar mPDF
-        $mpdf = new Mpdf( [
-            'mode'          => 'utf-8',
-            'format'        => 'A4',
-            'margin_left'   => 15,
-            'margin_right'  => 15,
-            'margin_top'    => 16,
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 15,
+            'margin_right' => 15,
+            'margin_top' => 16,
             'margin_bottom' => 16,
-        ] );
+        ]);
 
-        // Gerar PDF
-        $mpdf->WriteHTML( $html );
-        $pdfContent = $mpdf->Output( '', 'S' );
+        $mpdf->WriteHTML($html);
+        $pdfContent = $mpdf->Output('', 'S');
 
-        // Salvar arquivo
         $filename = "budget_{$budget->code}.pdf";
-        $path     = "budgets/{$filename}";
-
-        Storage::put( $path, $pdfContent );
+        $path = "budgets/{$filename}";
+        Storage::put($path, $pdfContent);
 
         return $path;
     }
 
     public function generateHash( string $pdfPath ): string
     {
-        $content = Storage::get( $pdfPath );
-        return hash( 'sha256', $content );
+        $content = Storage::get($pdfPath);
+        return hash('sha256', $content);
     }
 
 }

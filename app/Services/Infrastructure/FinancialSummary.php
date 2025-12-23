@@ -288,11 +288,14 @@ class FinancialSummary
      */
     private function calculateMonthlyRevenue( int $tenantId, string $period ): float
     {
-        return Budget::query()
+        $revenue = Budget::query()
             ->where( 'tenant_id', $tenantId )
             ->whereIn( 'status', self::REVENUE_STATUSES )
             ->whereRaw( 'DATE_FORMAT(budgets.updated_at, "%Y-%m") = ?', [ $period ] )
             ->sum( 'total' );
+
+        // Garantir que sempre retorne um float
+        return (float) $revenue;
     }
 
     /**
@@ -347,11 +350,14 @@ class FinancialSummary
     {
         $nextMonth = Carbon::now()->parse( $currentPeriod . '-01' )->addMonth()->format( 'Y-m' );
 
-        return Budget::query()
+        $projection = Budget::query()
             ->where( 'tenant_id', $tenantId )
             ->whereIn( 'status', self::PROJECTION_STATUSES )
             ->whereRaw( 'DATE_FORMAT(due_date, "%Y-%m") = ?', [ $nextMonth ] )
             ->sum( 'total' );
+
+        // Garantir que sempre retorne um float
+        return (float) $projection;
     }
 
     /**

@@ -401,7 +401,7 @@ class EncryptionService
      */
     private function success( mixed $data = null, string $message = 'Operação realizada com sucesso.' ): ServiceResult
     {
-        return new ServiceResult( OperationStatus::SUCCESS, $message, $data );
+        return ServiceResult::success( $data, $message );
     }
 
     /**
@@ -415,7 +415,7 @@ class EncryptionService
      */
     private function error( OperationStatus $status, string $message, mixed $data = null, ?Exception $exception = null ): ServiceResult
     {
-        return new ServiceResult( $status, $message, $data, $exception );
+        return ServiceResult::error( $status, $message, $data, $exception );
     }
 
 }

@@ -1,237 +1,428 @@
-@extends( 'layouts.app' )
-
-@section( 'content' )
+@extends('layouts.app')
+@section('title', 'Detalhes do Serviço')
+@section('content')
     <div class="container-fluid py-1">
-        <!-- Page header -->
+        {{-- Cabeçalho --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-tools me-2"></i>Detalhes do Serviço
-            </h1>
-            <nav aria-label="breadcrumb">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-gear me-2"></i>Detalhes do Serviço
+                </h1>
+                <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.services.index' ) }}">Serviços</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
                     <li class="breadcrumb-item active">{{ $service->code }}</li>
                 </ol>
             </nav>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="d-flex justify-content-end gap-2 mb-4">
-            @if ( StatusHelper::status_allows_action( $service->status->slug, 'start_scheduling' ) )
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionModal"
-                    data-action="SCHEDULING" data-title="Iniciar Agendamento" data-button-class="btn-success"
-                    data-message="Deseja mover o serviço {{ $service->code }} para agendamento?">
-                    <i class="bi bi-calendar-plus me-2"></i>Iniciar Agendamento
-                </button>
-            @endif
-            <a href="{{ route( 'provider.services.print', $service->code ) }}" class="btn btn-outline-primary"
-                target="_blank">
-                <i class="bi bi-printer me-2"></i>Imprimir
-            </a>
-            @if ( StatusHelper::status_allows_edit( $service->status->slug ) )
-                <a href="{{ route( 'provider.services.edit', $service->id ) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-pencil me-2"></i>Editar
+        {{-- Alerta de Faturas Existentes --}}
+        @if ($service->invoices && $service->invoices->count() > 0)
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                Este serviço já possui {{ $service->invoices->count() }} fatura(s).
+                <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">
+                    Ver faturas
                 </a>
-            @endif
-            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                <i class="bi bi-trash me-2"></i>Excluir
-            </button>
-        </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
-        <!-- Service Details -->
-        <div class="row g-4">
-            <!-- Basic Information Card -->
+        <div class="row">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Informações do Serviço
-                        </h5>
-                        {!! StatusHelper::status_badge( $service->status ) !!}
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6"><span class="text-muted">Código:</span> <strong
-                                    class="ms-2">{{ $service->code }}</strong></div>
-                            <div class="col-md-6"><span class="text-muted">Criação:</span> <strong
-                                    class="ms-2">{{ DateHelper::formatBR( $service->created_at, 'd/m/Y H:i' ) }}</strong></div>
-                            <div class="col-md-6"><span class="text-muted">Cliente:</span> <strong
-                                    class="ms-2">{{ $service->customer_name }}</strong></div>
-                            <div class="col-md-6"><span class="text-muted">Orçamento:</span> <strong
-                                    class="ms-2">{{ $service->budget_code }}</strong></div>
-                            <div class="col-md-6"><span class="text-muted">Categoria:</span> <strong
-                                    class="ms-2">{{ $service->category->name }}</strong></div>
-                            <div class="col-md-6"><span class="text-muted">Vencimento:</span> <strong
-                                    class="ms-2 {{ $service->due_date->isPast() ? 'text-danger' : '' }}">{{ DateHelper::formatBR( $service->due_date ) }}</strong>
+                {{-- Informações Básicas do Serviço --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">Serviço {{ $service->code }}</h5>
+                                <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                             </div>
-                            <div class="col-12 mt-3">
-                                <div class="text-muted mb-2">Descrição:</div>
-                                <div class="p-3 rounded bg-light">{{ nl2br( e( $service->description ) ) }}</div>
+                            <div>
+                                @php($statusEnum = $service->serviceStatus)
+                                @if ($statusEnum)
+                                    <span class="badge px-3 py-2" style="background-color: {{ $statusEnum->getColor() }}">
+                                        <i class="bi {{ $statusEnum->getIcon() }} me-1"></i>
+                                        {{ $statusEnum->getDescription() }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary px-3 py-2">
+                                        <i class="bi bi-circle me-1"></i>
+                                        Status não definido
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
+
+                    <div class="card-body">
+                        <div class="row g-4 mb-4">
+                            <div class="col-12 col-md-6">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-tag me-2"></i>
+                                    Informações Gerais
+                                </h6>
+                                <div class="mb-2">
+                                    <strong>Categoria:</strong>
+                                    <span class="text-muted">{{ $service->category?->name ?? 'Não definida' }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Orçamento:</strong>
+                                    <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
+                                        class="text-decoration-none">
+                                        {{ $service->budget?->code ?? 'N/A' }}
+                                    </a>
+                                </div>
+                                @if ($service->due_date)
+                                    <div class="mb-2">
+                                        <strong>Prazo:</strong>
+                                        <span class="text-muted">
+                                            {{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-currency-dollar me-2"></i>
+                                    Valores
+                                </h6>
+                                <div class="mb-2">
+                                    <strong>Total:</strong>
+                                    <span class="text-success fs-5">R$
+                                        {{ number_format($service->total, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Desconto:</strong>
+                                    <span class="text-danger">R$
+                                        {{ number_format($service->discount, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Subtotal:</strong>
+                                    <span class="text-muted">R$
+                                        {{ number_format($service->total + $service->discount, 2, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if ($service->description)
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-card-text me-2"></i>
+                                    Descrição
+                                </h6>
+                                <p class="text-muted">{{ $service->description }}</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
+
+                {{-- Itens do Serviço --}}
+                @if ($service->serviceItems && $service->serviceItems->count() > 0)
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0">
+                                <i class="bi bi-list-ul me-2"></i>
+                                Itens do Serviço
+                                <span class="badge bg-primary ms-2">{{ $service->serviceItems->count() }}</span>
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            {{-- Desktop View --}}
+                            <div class="desktop-view">
+                                <div class="table-responsive">
+                                    <table class="modern-table table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Quantidade</th>
+                                                <th>Valor Unitário</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($service->serviceItems as $item)
+                                                <tr>
+                                                    <td>
+                                                        <div>
+                                                            <strong>{{ $item->product?->name ?? 'Produto não encontrado' }}</strong>
+                                                            @if ($item->product?->description)
+                                                                <br><small class="text-muted">{{ $item->product->description }}</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $item->quantity }}</td>
+                                                    <td>R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
+                                                    <td><strong>R$ {{ number_format($item->total, 2, ',', '.') }}</strong></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-light">
+                                                <th colspan="3">Total dos Itens:</th>
+                                                <th>R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- Mobile View --}}
+                            <div class="mobile-view">
+                                <div class="list-group">
+                                    @foreach ($service->serviceItems as $item)
+                                        <div class="list-group-item py-3">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold mb-2">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
+                                                    <div class="small text-muted mb-2">
+                                                        <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
+                                                        <span><strong>Unit:</strong> R$ {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="text-success fw-semibold">Total: R$ {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div class="list-group-item bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total dos Itens:</strong>
+                                            <strong class="text-success">R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Agendamentos --}}
+                @if ($service->schedules && $service->schedules->count() > 0)
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0">
+                                <i class="bi bi-calendar me-2"></i>
+                                Agendamentos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @foreach ($service->schedules as $schedule)
+                                <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar-event text-primary me-2"></i>
+                                            <strong>{{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}</strong>
+                                            <span class="text-muted ms-2">
+                                                {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
+                                                -
+                                                {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
+                                            </span>
+                                        </div>
+                                        @if ($schedule->location)
+                                            <div class="text-muted">
+                                                <i class="bi bi-geo-alt me-1"></i>
+                                                {{ $schedule->location }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
-            <!-- Financial Summary Card -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-currency-dollar me-2"></i>Resumo Financeiro
-                        </h5>
+                {{-- Informações do Cliente --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Cliente
+                        </h6>
                     </div>
                     <div class="card-body">
-                        <ul class="list-group list-group-flush small">
-                            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">Total Bruto:
-                                <span class="fw-bold text-success">R$
-                                    {{ number_format( $service->total, 2, ',', '.' ) }}</span></li>
-                            @if( $service->discount > 0 )
-                                <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">Desconto:
-                                    <span class="fw-bold text-danger">- R$
-                                        {{ number_format( $service->discount, 2, ',', '.' ) }}</span></li>
-                                <li class="list-group-item ps-0 d-flex justify-content-between align-items-center"><strong>Total
-                                        Líquido:</strong> <strong class="text-success">R$
-                                        {{ number_format( $service->total - $service->discount, 2, ',', '.' ) }}</strong></li>
+                        @if ($service->budget?->customer)
+                            <div class="mb-3">
+                                <a href="{{ route('provider.customers.show', $service->budget->customer) }}"
+                                    class="text-decoration-none">
+                                    <strong>{{ $service->budget->customer->commonData?->first_name }}
+                                        {{ $service->budget->customer->commonData?->last_name }}</strong>
+                                </a>
+                                @if ($service->budget->customer->commonData?->company_name)
+                                    <br>
+                                    <a href="{{ route('provider.customers.show', $service->budget->customer) }}"
+                                        class="text-decoration-none">
+                                        <small
+                                            class="text-muted">{{ $service->budget->customer->commonData->company_name }}</small>
+                                    </a>
+                                @endif
+                            </div>
+
+                            @if ($service->budget->customer->contact)
+                                <div class="mb-2">
+                                    <i class="bi bi-envelope me-2 text-muted"></i>
+                                    <a href="mailto:{{ $service->budget->customer->contact->email }}"
+                                        class="text-decoration-none">
+                                        {{ $service->budget->customer->contact->email }}
+                                    </a>
+                                </div>
+                                @if ($service->budget->customer->contact->phone)
+                                    <div class="mb-2">
+                                        <i class="bi bi-telephone me-2 text-muted"></i>
+                                        <a href="tel:{{ $service->budget->customer->contact->phone }}"
+                                            class="text-decoration-none">
+                                            {{ $service->budget->customer->contact->phone }}
+                                        </a>
+                                    </div>
+                                @endif
+                                @if ($service->budget->customer->contact->phone_business)
+                                    <div class="mb-2">
+                                        <i class="bi bi-building me-2 text-muted"></i>
+                                        <a href="tel:{{ $service->budget->customer->contact->phone_business }}"
+                                            class="text-decoration-none">
+                                            {{ $service->budget->customer->contact->phone_business }}
+                                        </a>
+                                    </div>
+                                @endif
                             @endif
-                            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">Itens: <span
-                                    class="fw-semibold">{{ $service->items->count() }}</span></li>
-                        </ul>
-                        <div class="mt-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Progresso:</span>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-{{ StatusHelper::status_color_class( $service->status->slug ) }}"
-                                    role="progressbar"
-                                    style="width: {{ StatusHelper::status_progress( $service->status->slug ) }}%;"
-                                    aria-valuenow="{{ StatusHelper::status_progress( $service->status->slug ) }}" aria-valuemin="0"
-                                    aria-valuemax="100" data-bs-toggle="tooltip" title="{{ $service->status->name }}"></div>
-                            </div>
-                            <small class="text-muted mt-1 d-block">{{ $service->status->description }}</small>
+                        @else
+                            <p class="text-muted mb-0">Cliente não informado</p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Ações Rápidas --}}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lightning me-2"></i>
+                            Ações Rápidas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            @if ($service->canBeEdited())
+                                <a href="{{ route('provider.services.edit', $service->code) }}"
+                                    class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil me-2"></i>
+                                    Editar Serviço
+                                </a>
+                            @endif
+                            @if ($service->budget)
+                                <a href="{{ route('provider.budgets.show', $service->budget->code) }}"
+                                    class="btn btn-outline-info">
+                                    <i class="bi bi-receipt me-2"></i>
+                                    Ver Orçamento
+                                </a>
+                            @endif
+
+                            {{-- Botões de Fatura --}}
+                            @if ($service->status->isFinished() || $service->status->value === 'COMPLETED')
+                                {{-- Serviço finalizado - pode criar fatura completa --}}
+                                <a href="{{ route('provider.invoices.create.from-service', $service->code) }}"
+                                    class="btn btn-outline-success">
+                                    <i class="bi bi-receipt me-2"></i>
+                                    Criar Fatura
+                                </a>
+                            @elseif($service->status->isActive() && $service->serviceItems && $service->serviceItems->count() > 0)
+                                {{-- Serviço ativo com itens - pode criar fatura parcial --}}
+                                <a href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
+                                    class="btn btn-outline-warning">
+                                    <i class="bi bi-receipt me-2"></i>
+                                    Criar Fatura Parcial
+                                </a>
+                            @endif
+                            <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                                <i class="bi bi-printer me-2"></i>
+                                Imprimir
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Service Items -->
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-list-check me-2"></i>Itens do Serviço
-                </h5>
+        {{-- Botões de Ação (Footer) --}}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 5%">#</th>
-                                <th style="width: 10%">Código</th>
-                                <th style="width: 40%">Produto</th>
-                                <th class="text-end" style="width: 15%">Valor Unit.</th>
-                                <th class="text-center" style="width: 10%">Qtd</th>
-                                <th class="text-end" style="width: 20%">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ( $service->items as $item )
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $item->product->code }}</td>
-                                    <td>{{ $item->product->name }}</td>
-                                    <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-                                    <td class="text-center">{{ $item->quantity }}</td>
-                                    <td class="text-end">R$
-                                        {{ number_format( $item->unit_value * $item->quantity, 2, ',', '.' ) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">Nenhum item vinculado a este serviço.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <small class="text-muted d-none d-md-block">
+                Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
+            </small>
+            <div class="d-flex gap-2">
+                @if ($service->canBeEdited())
+                    <a href="{{ route('provider.services.edit', $service->code) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar
+                    </a>
+                @endif
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash-fill me-2"></i>Excluir
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Action Modal -->
-    <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="actionModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="actionModalMessage"></p>
-                </div>
-                <div class="modal-footer">
-                    <form id="actionForm" action="{{ route( 'provider.services.updateStatus', $service->id ) }}"
-                        method="POST">
-                        @csrf
-                        @method( 'PATCH' )
-                        <input type="hidden" name="action" id="formActionInput">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
-                        <button type="submit" class="btn" id="actionConfirmButton">Confirmar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza que deseja excluir o serviço <strong>{{ $service->code }}</strong>?
-                    <p class="text-danger mt-2"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
-                </div>
-                <div class="modal-footer">
-                    <form action="{{ route( 'provider.services.destroy', $service->id ) }}" method="POST">
-                        @csrf
-                        @method( 'DELETE' )
+        {{-- Modal de Confirmação de Exclusão --}}
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Tem certeza de que deseja excluir o serviço <strong>{{ $service->code }}</strong>?
+                        <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
+                    </div>
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
-                    </form>
+                        <form action="{{ route('provider.services.destroy', $service->code) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
 
-@push( 'scripts' )
-    <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            const actionModal = document.getElementById( 'actionModal' );
-            if ( actionModal ) {
-                actionModal.addEventListener( 'show.bs.modal', function ( event ) {
-                    const button = event.relatedTarget;
-                    const action = button.getAttribute( 'data-action' );
-                    const title = button.getAttribute( 'data-title' );
-                    const message = button.getAttribute( 'data-message' );
-                    const buttonClass = button.getAttribute( 'data-button-class' ) || 'btn-primary';
+@push('styles')
+    <style>
+        .card {
+            border-radius: 12px;
+        }
 
-                    const modalTitle = actionModal.querySelector( '.modal-title' );
-                    const modalMessage = actionModal.querySelector( '#actionModalMessage' );
-                    const formActionInput = actionModal.querySelector( '#formActionInput' );
-                    const confirmButton = actionModal.querySelector( '#actionConfirmButton' );
+        .badge {
+            border-radius: 20px;
+        }
 
-                    modalTitle.textContent = title;
-                    modalMessage.innerHTML = message;
-                    formActionInput.value = action;
-                    confirmButton.className = 'btn ' + buttonClass;
-                } );
-            }
-        } );
-    </script>
+        .btn {
+            border-radius: 8px;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 0;
+        }
+
+        .breadcrumb-item+.breadcrumb-item::before {
+            content: "›";
+            color: #6c757d;
+        }
+    </style>
 @endpush

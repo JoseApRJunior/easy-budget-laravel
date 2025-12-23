@@ -17,11 +17,22 @@ class CurrencyHelper
      */
     public static function unformat( $value ): float
     {
-        // Remove tudo que não for número, vírgula ou ponto
-        $clean = preg_replace( '/[^0-9,.-]/', '', $value );
+        if ( empty( $value ) ) {
+            return 0.0;
+        }
 
-        // Troca vírgula por ponto para decimal
-        $clean = str_replace( ',', '.', $clean );
+        if ( is_numeric( $value ) ) {
+            return (float) $value;
+        }
+
+        // Remove R$ e outros caracteres não numéricos, exceto separadores
+        $clean = preg_replace( '/[^\d,.-]/', '', (string) $value );
+
+        // Se houver vírgula, tratamos como formato brasileiro (1.234,56)
+        if ( str_contains( $clean, ',' ) ) {
+            $clean = str_replace( '.', '', $clean ); // Remove pontos de milhar
+            $clean = str_replace( ',', '.', $clean ); // Converte vírgula decimal em ponto
+        }
 
         return (float) $clean;
     }

@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use HasFactory;
-    use TenantScoped;
+    use TenantScoped, Auditable;
+    use SoftDeletes;
 
     /**
      * Boot the model.
@@ -33,17 +36,26 @@ class Product extends Model
     protected $table = 'products';
 
     /**
+     * Relacionamentos carregados automaticamente
+     *
+     * @var array
+     */
+    protected $with = [ 'category' ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
         'tenant_id',
+        'category_id',
         'name',
         'description',
+        'sku',
         'price',
+        'unit',
         'active',
-        'code',
         'image',
     ];
 
@@ -54,14 +66,17 @@ class Product extends Model
      */
     protected $casts = [
         'tenant_id'   => 'integer',
+        'category_id' => 'integer',
         'name'        => 'string',
         'description' => 'string',
+        'sku'         => 'string',
         'price'       => 'decimal:2',
+        'unit'        => 'string',
         'active'      => 'boolean',
-        'code'        => 'string',
         'image'       => 'string',
         'created_at'  => 'immutable_datetime',
         'updated_at'  => 'datetime',
+        'deleted_at'  => 'datetime',
     ];
 
     /**
@@ -73,30 +88,32 @@ class Product extends Model
     {
         return [
             'name'        => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+            'sku'         => 'nullable|string|max:255',
             'price'       => 'required|numeric|min:0',
-            'code'        => 'nullable|string|max:50',
+            'unit'        => 'nullable|string|max:20',
             'active'      => 'boolean',
             'image'       => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'tenant_id'   => 'required|exists:tenants,id',
         ];
     }
 
     /**
-     * Validação personalizada para code único por tenant.
+     * Validação personalizada para sku único por tenant.
      * Esta validação deve ser usada no contexto de um request onde o tenant_id está disponível.
      *
-     * @param  string|null  $code
+     * @param  string|null  $sku
      * @param  int|null  $excludeId
      * @return string
      */
-    public static function validateUniqueCodeRule( ?string $code, ?int $excludeId = null ): string
+    public static function validateUniqueSkuRule( ?string $sku, ?int $excludeId = null ): string
     {
-        if ( empty( $code ) ) {
-            return 'nullable|string|max:50';
+        if ( empty( $sku ) ) {
+            return 'nullable|string|max:255';
         }
 
-        $rule = 'unique:products,code';
+        $rule = 'unique:products,sku';
 
         if ( $excludeId ) {
             $rule .= ',' . $excludeId . ',id';
@@ -116,6 +133,16 @@ class Product extends Model
     }
 
     /**
+     * Get the category that owns the Product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, \App\Models\Product>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo( Category::class);
+    }
+
+    /**
      * Movimentações de inventário deste produto.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\InventoryMovement>
@@ -130,7 +157,7 @@ class Product extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductInventory>
      */
-    public function productInventory(): HasMany
+    public function inventory(): HasMany
     {
         return $this->hasMany( ProductInventory::class);
     }
@@ -203,7 +230,7 @@ class Product extends Model
      */
     public function scopeWithInventory( $query )
     {
-        return $query->with( [ 'productInventory' ] );
+        return $query->with( [ 'inventory' ] );
     }
 
     // ==================== MÉTODOS DE NEGÓCIO ====================
@@ -215,7 +242,7 @@ class Product extends Model
      */
     public function isAvailable(): bool
     {
-        $totalQuantity = $this->productInventory()
+        $totalQuantity = $this->inventory()
             ->sum( 'quantity' );
 
         return $totalQuantity > 0;
@@ -252,7 +279,8 @@ class Product extends Model
     public function getImageUrlAttribute(): string
     {
         if ( empty( $this->image ) ) {
-            return asset( 'images/products/default.jpg' );
+            // Usar a imagem "não encontrada" como fallback
+            return asset( 'storage/img_not_found.png' );
         }
 
         // Se a imagem já for uma URL completa, retorna como está
@@ -260,8 +288,23 @@ class Product extends Model
             return $this->image;
         }
 
-        // Caso contrário, assume que é um caminho relativo
-        return asset( 'storage/' . $this->image );
+        $p = ltrim( (string) $this->image, '/' );
+        if ( Str::startsWith( $p, 'storage/' ) ) {
+            // Verificar se o arquivo existe antes de tentar acessá-lo
+            $fullPath = storage_path( 'app/public/' . Str::after( $p, 'storage/' ) );
+            if ( file_exists( $fullPath ) ) {
+                return asset( $p );
+            }
+        } else {
+            // Verificar se o arquivo existe antes de tentar acessá-lo
+            $fullPath = storage_path( 'app/public/' . $p );
+            if ( file_exists( $fullPath ) ) {
+                return asset( 'storage/' . $p );
+            }
+        }
+
+        // Se o arquivo não existir, retornar a imagem de fallback
+        return asset( 'storage/img_not_found.png' );
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
@@ -273,7 +316,7 @@ class Product extends Model
      */
     public function getTotalStockAttribute(): float
     {
-        return $this->productInventory()->sum( 'quantity' );
+        return $this->inventory()->sum( 'quantity' );
     }
 
     /**
@@ -295,6 +338,14 @@ class Product extends Model
     public function isLowStock( $threshold = 10 ): bool
     {
         return $this->total_stock <= $threshold;
+    }
+
+    /**
+     * Accessor para compatibilidade - code como alias de sku
+     */
+    public function getCodeAttribute(): ?string
+    {
+        return $this->sku;
     }
 
 }

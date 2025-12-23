@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Exception;
 
 /**
  * Job para envio assíncrono de e-mails com funcionalidades básicas.
@@ -41,7 +41,7 @@ class SendEmailJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct( array $emailData )
+    public function __construct(array $emailData)
     {
         $this->emailData = $emailData;
     }
@@ -52,39 +52,39 @@ class SendEmailJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info( 'Processando envio de e-mail', [
-                'to'      => $this->emailData[ 'to' ],
-                'subject' => $this->emailData[ 'subject' ],
-            ] );
+            Log::info('Processando envio de e-mail', [
+                'to' => $this->emailData['to'],
+                'subject' => $this->emailData['subject'],
+            ]);
 
             // Enviar e-mail
-            Mail::send( [], [], function ( $message ) {
-                $message->to( $this->emailData[ 'to' ] )
-                    ->subject( $this->emailData[ 'subject' ] )
-                    ->html( $this->emailData[ 'body' ] );
+            Mail::send([], [], function ($message) {
+                $message->to($this->emailData['to'])
+                    ->subject($this->emailData['subject'])
+                    ->html($this->emailData['body']);
 
                 // Anexo opcional
-                if ( isset( $this->emailData[ 'attachment' ] ) ) {
-                    $attachment = $this->emailData[ 'attachment' ];
-                    if ( isset( $attachment[ 'content' ] ) ) {
+                if (isset($this->emailData['attachment'])) {
+                    $attachment = $this->emailData['attachment'];
+                    if (isset($attachment['content'])) {
                         $message->attachData(
-                            $attachment[ 'content' ],
-                            $attachment[ 'fileName' ] ?? 'attachment.pdf',
-                            [ 'mime' => $attachment[ 'mime' ] ?? 'application/pdf' ],
+                            $attachment['content'],
+                            $attachment['fileName'] ?? 'attachment.pdf',
+                            ['mime' => $attachment['mime'] ?? 'application/pdf'],
                         );
                     }
                 }
-            } );
+            });
 
-            Log::info( 'E-mail enviado com sucesso', [
-                'to' => $this->emailData[ 'to' ],
-            ] );
+            Log::info('E-mail enviado com sucesso', [
+                'to' => $this->emailData['to'],
+            ]);
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro no envio de e-mail', [
-                'to'    => $this->emailData[ 'to' ],
+        } catch (Exception $e) {
+            Log::error('Erro no envio de e-mail', [
+                'to' => $this->emailData['to'],
                 'error' => $e->getMessage(),
-            ] );
+            ]);
             throw $e;
         }
     }
@@ -94,18 +94,17 @@ class SendEmailJob implements ShouldQueue
      */
     public function backoff(): array
     {
-        return [ 30, 60, 120 ];
+        return [30, 60, 120];
     }
 
     /**
      * Trata falha do job.
      */
-    public function failed( Exception $exception ): void
+    public function failed(Exception $exception): void
     {
-        Log::critical( 'Job de e-mail falhou permanentemente', [
-            'to'    => $this->emailData[ 'to' ] ?? 'unknown',
+        Log::critical('Job de e-mail falhou permanentemente', [
+            'to' => $this->emailData['to'] ?? 'unknown',
             'error' => $exception->getMessage(),
-        ] );
+        ]);
     }
-
 }

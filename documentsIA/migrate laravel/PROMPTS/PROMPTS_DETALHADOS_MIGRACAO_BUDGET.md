@@ -1256,7 +1256,7 @@ IMPLEMENTAÇÃO:
 @section('title', 'Orçamento ' . $budget->code)
 
 @section('content')
-<div class="container py-4">
+<div class="container py-1">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -1339,7 +1339,7 @@ IMPLEMENTAÇÃO:
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
+                                <td colspan="4" class="text-center text-muted py-1">
                                     Nenhum item adicionado
                                 </td>
                             </tr>

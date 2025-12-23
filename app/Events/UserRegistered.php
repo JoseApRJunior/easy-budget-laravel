@@ -20,25 +20,26 @@ class UserRegistered
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public User    $user;
+    public User $user;
+
     public ?Tenant $tenant;
-    public string  $verificationToken;
+
+    public string $verificationToken;
 
     /**
      * Cria uma nova instância do evento.
      *
-     * @param User $user Usuário que se registrou
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string $verificationToken Token de verificação
+     * @param  User  $user  Usuário que se registrou
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $verificationToken  Token de verificação
      */
     public function __construct(
         User $user,
-        ?Tenant $tenant = null,
+        ?Tenant $tenant,
         string $verificationToken,
     ) {
-        $this->user              = $user;
-        $this->tenant            = $tenant;
+        $this->user = $user;
+        $this->tenant = $tenant;
         $this->verificationToken = $verificationToken;
     }
-
 }

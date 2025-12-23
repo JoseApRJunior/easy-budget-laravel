@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Enums\BudgetStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -27,15 +26,15 @@ class BudgetApprovalRequest extends FormRequest
      */
     public function rules(): array
     {
-        $budget        = $this->route( 'budget' );
+        $budget = $this->route('budget');
         $currentStatus = $budget?->status;
 
         return [
-            'action'               => [
+            'action' => [
                 'required',
-                Rule::in( [ 'approve', 'reject' ] ),
+                Rule::in(['approve', 'reject']),
             ],
-            'comments'             => 'nullable|string|max:1000',
+            'comments' => 'nullable|string|max:1000',
             'alternative_proposal' => 'nullable|string|max:2000',
         ];
     }
@@ -46,9 +45,9 @@ class BudgetApprovalRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'action.required'          => 'A ação é obrigatória.',
-            'action.in'                => 'Ação inválida. Use aprovar ou rejeitar.',
-            'comments.max'             => 'Os comentários não podem ter mais de 1000 caracteres.',
+            'action.required' => 'A ação é obrigatória.',
+            'action.in' => 'Ação inválida. Use aprovar ou rejeitar.',
+            'comments.max' => 'Os comentários não podem ter mais de 1000 caracteres.',
             'alternative_proposal.max' => 'A proposta alternativa não pode ter mais de 2000 caracteres.',
         ];
     }
@@ -59,8 +58,8 @@ class BudgetApprovalRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'action'               => 'ação',
-            'comments'             => 'comentários',
+            'action' => 'ação',
+            'comments' => 'comentários',
             'alternative_proposal' => 'proposta alternativa',
         ];
     }
@@ -71,11 +70,11 @@ class BudgetApprovalRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Converte valores vazios para null
-        if ( $this->comments === '' ) {
-            $this->merge( [ 'comments' => null ] );
+        if ($this->comments === '') {
+            $this->merge(['comments' => null]);
         }
-        if ( $this->alternative_proposal === '' ) {
-            $this->merge( [ 'alternative_proposal' => null ] );
+        if ($this->alternative_proposal === '') {
+            $this->merge(['alternative_proposal' => null]);
         }
     }
 
@@ -84,17 +83,16 @@ class BudgetApprovalRequest extends FormRequest
      */
     private function hasValidToken(): bool
     {
-        $token  = $this->route( 'token' );
-        $budget = $this->route( 'budget' );
+        $token = $this->route('token');
+        $budget = $this->route('budget');
 
-        if ( !$token || !$budget ) {
+        if (! $token || ! $budget) {
             return false;
         }
 
         // Verifica se o token é válido e não expirou
         return $budget->public_token === $token &&
             $budget->public_expires_at &&
-            now()->lt( $budget->public_expires_at );
+            now()->lt($budget->public_expires_at);
     }
-
 }

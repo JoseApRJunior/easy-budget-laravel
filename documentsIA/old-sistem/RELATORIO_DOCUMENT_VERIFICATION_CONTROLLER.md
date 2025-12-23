@@ -2,9 +2,9 @@
 
 ## 📋 Informações Gerais
 
-**Controller:** `DocumentVerificationController`  
-**Namespace Old System:** `app\controllers`  
-**Tipo:** Controller de Verificação de Documentos  
+**Controller:** `DocumentVerificationController`
+**Namespace Old System:** `app\controllers`
+**Tipo:** Controller de Verificação de Documentos
 **Propósito:** Verificar autenticidade de documentos via hash
 
 ---
@@ -12,41 +12,45 @@
 ## 🎯 Funcionalidades Identificadas
 
 ### 1. **verify(string $hash)**
-- **Descrição:** Verifica autenticidade de documento através de hash único
-- **Método HTTP:** GET
-- **Parâmetros:** `$hash` - Hash de verificação do documento
-- **Retorno:** View com resultado da verificação
-- **Processo:**
-  1. Busca hash em tabela `budgets` (campo `pdf_verification_hash`)
-  2. Se não encontrar, busca em `services` (campo `pdf_verification_hash`)
-  3. Se não encontrar, busca em `reports` (campo `hash`)
-  4. Retorna view com documento encontrado ou mensagem de não encontrado
-- **Tipos de Documentos:**
-  - Orçamento
-  - Ordem de Serviço
-  - Relatório
-- **Dependências:**
-  - `Budget` model
-  - `Service` model
-  - `Report` model
-  - `Twig` template engine
+
+-  **Descrição:** Verifica autenticidade de documento através de hash único
+-  **Método HTTP:** GET
+-  **Parâmetros:** `$hash` - Hash de verificação do documento
+-  **Retorno:** View com resultado da verificação
+-  **Processo:**
+   1. Busca hash em tabela `budgets` (campo `pdf_verification_hash`)
+   2. Se não encontrar, busca em `services` (campo `pdf_verification_hash`)
+   3. Se não encontrar, busca em `reports` (campo `hash`)
+   4. Retorna view com documento encontrado ou mensagem de não encontrado
+-  **Tipos de Documentos:**
+   -  Orçamento
+   -  Ordem de Serviço
+   -  Relatório
+-  **Dependências:**
+   -  `Budget` model
+   -  `Service` model
+   -  `Report` model
+   -  `Twig` template engine
 
 ---
 
 ## 🔗 Dependências do Sistema Antigo
 
 ### Models Utilizados
-- `Budget` - Orçamentos
-- `Service` - Ordens de Serviço
-- `Report` - Relatórios
+
+-  `Budget` - Orçamentos
+-  `Service` - Ordens de Serviço
+-  `Report` - Relatórios
 
 ### Campos de Hash
-- `budgets.pdf_verification_hash`
-- `services.pdf_verification_hash`
-- `reports.hash`
+
+-  `budgets.pdf_verification_hash`
+-  `services.pdf_verification_hash`
+-  `reports.hash`
 
 ### Views
-- `pages/document/verify.twig`
+
+-  `pages/document/verify.twig`
 
 ---
 
@@ -87,10 +91,10 @@ Route::prefix('document')->group(function () {
 ### Services Necessários
 
 1. **DocumentVerificationService** - Lógica de verificação
-   - Buscar documento por hash
-   - Identificar tipo de documento
-   - Validar integridade
-   - Registrar tentativas de verificação
+   -  Buscar documento por hash
+   -  Identificar tipo de documento
+   -  Validar integridade
+   -  Registrar tentativas de verificação
 
 ---
 
@@ -166,7 +170,7 @@ class DocumentVerificationService
 
         if ($budget) {
             $this->logVerification($hash, 'budget', $budget->id);
-            
+
             return ServiceResult::success([
                 'document' => $budget,
                 'type' => 'Orçamento',
@@ -181,7 +185,7 @@ class DocumentVerificationService
 
         if ($service) {
             $this->logVerification($hash, 'service', $service->id);
-            
+
             return ServiceResult::success([
                 'document' => $service,
                 'type' => 'Ordem de Serviço',
@@ -196,7 +200,7 @@ class DocumentVerificationService
 
         if ($report) {
             $this->logVerification($hash, 'report', $report->id);
-            
+
             return ServiceResult::success([
                 'document' => $report,
                 'type' => 'Relatório',
@@ -206,7 +210,7 @@ class DocumentVerificationService
 
         // Documento não encontrado
         Log::warning('Document not found', ['hash' => $hash]);
-        
+
         return ServiceResult::error(
             OperationStatus::NOT_FOUND,
             'Documento não encontrado',
@@ -267,7 +271,7 @@ class DocumentVerificationService
 
                         <div class="document-info">
                             <h5 class="mb-3">Informações do Documento</h5>
-                            
+
                             <table class="table table-borderless">
                                 <tr>
                                     <th width="30%">Tipo:</th>
@@ -313,7 +317,7 @@ class DocumentVerificationService
                             <strong>Documento Não Encontrado</strong>
                         </div>
 
-                        <div class="text-center py-4">
+                        <div class="text-center py-1">
                             <p class="text-muted">
                                 O hash de verificação fornecido não corresponde a nenhum documento em nosso sistema.
                             </p>
@@ -359,39 +363,45 @@ class DocumentVerificationService
 ## ✅ Checklist de Implementação
 
 ### Fase 1: Database
-- [ ] Verificar campo `pdf_verification_hash` em `budgets`
-- [ ] Verificar campo `pdf_verification_hash` em `services`
-- [ ] Verificar campo `hash` em `reports`
-- [ ] Adicionar índices para performance
+
+-  [ ] Verificar campo `pdf_verification_hash` em `budgets`
+-  [ ] Verificar campo `pdf_verification_hash` em `services`
+-  [ ] Verificar campo `hash` em `reports`
+-  [ ] Adicionar índices para performance
 
 ### Fase 2: Service
-- [ ] Criar `DocumentVerificationService`
-- [ ] Implementar `verifyDocument()`
-- [ ] Implementar `generateHash()`
-- [ ] Implementar `validateHash()`
-- [ ] Implementar logging de verificações
+
+-  [ ] Criar `DocumentVerificationService`
+-  [ ] Implementar `verifyDocument()`
+-  [ ] Implementar `generateHash()`
+-  [ ] Implementar `validateHash()`
+-  [ ] Implementar logging de verificações
 
 ### Fase 3: Controller
-- [ ] Criar `DocumentVerificationController`
-- [ ] Implementar método `verify()`
-- [ ] Configurar rota pública
+
+-  [ ] Criar `DocumentVerificationController`
+-  [ ] Implementar método `verify()`
+-  [ ] Configurar rota pública
 
 ### Fase 4: View
-- [ ] Criar `verify.blade.php`
-- [ ] Implementar layout para documento encontrado
-- [ ] Implementar layout para documento não encontrado
-- [ ] Adicionar informações de segurança
+
+-  [ ] Criar `verify.blade.php`
+-  [ ] Implementar layout para documento encontrado
+-  [ ] Implementar layout para documento não encontrado
+-  [ ] Adicionar informações de segurança
 
 ### Fase 5: Integração
-- [ ] Adicionar hash em PDFs de orçamentos
-- [ ] Adicionar hash em PDFs de serviços
-- [ ] Adicionar hash em relatórios
-- [ ] Adicionar QR Code com link de verificação
+
+-  [ ] Adicionar hash em PDFs de orçamentos
+-  [ ] Adicionar hash em PDFs de serviços
+-  [ ] Adicionar hash em relatórios
+-  [ ] Adicionar QR Code com link de verificação
 
 ### Fase 6: Testes
-- [ ] Testes unitários para `DocumentVerificationService`
-- [ ] Testes de feature para rota pública
-- [ ] Testes de segurança
+
+-  [ ] Testes unitários para `DocumentVerificationService`
+-  [ ] Testes de feature para rota pública
+-  [ ] Testes de segurança
 
 ---
 
@@ -408,11 +418,12 @@ class DocumentVerificationService
 
 ## 📊 Prioridade de Implementação
 
-**Prioridade:** MÉDIA  
-**Complexidade:** BAIXA  
+**Prioridade:** MÉDIA
+**Complexidade:** BAIXA
 **Dependências:** Models (Budget, Service, Report)
 
 **Ordem Sugerida:**
+
 1. Criar DocumentVerificationService
 2. Criar DocumentVerificationController
 3. Criar view de verificação
@@ -432,7 +443,7 @@ class DocumentVerificationService
 7. **Blockchain:** Considerar blockchain para maior segurança
 8. **Certificado:** Gerar certificado de autenticidade
 9. **Histórico:** Mostrar histórico de verificações
-10. **Multi-idioma:** Suporte a múltiplos idiomas
+10.   **Multi-idioma:** Suporte a múltiplos idiomas
 
 ---
 
@@ -448,7 +459,7 @@ Schema::create('document_verifications', function (Blueprint $table) {
     $table->ipAddress('ip_address');
     $table->text('user_agent')->nullable();
     $table->timestamps();
-    
+
     $table->index(['entity_type', 'entity_id']);
     $table->index('created_at');
 });

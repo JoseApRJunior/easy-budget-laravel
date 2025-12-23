@@ -73,8 +73,8 @@ function generateAlphanumericToken( int $length ): string
     $token          = '';
 
     for ( $i = 0; $i < $length; $i++ ) {
-        $index   = random_int( 0, $alphabetLength - 1 );
-        $token  .= $alphabet[ $index ];
+        $index  = random_int( 0, $alphabetLength - 1 );
+        $token .= $alphabet[ $index ];
     }
 
     return $token;
@@ -199,7 +199,7 @@ if ( !function_exists( 'clean_document_number' ) ) {
 if ( !function_exists( 'clean_document_partial' ) ) {
     function clean_document_partial( ?string $documentNumber, int $minLength = 2 ): ?string
     {
-        return \App\Helpers\DocumentHelper::cleanPartial($documentNumber, $minLength);
+        return \App\Helpers\DocumentHelper::cleanPartial( $documentNumber, $minLength );
     }
 }
 
@@ -290,6 +290,16 @@ if ( !function_exists( 'format_cep' ) ) {
     function format_cep( ?string $cep ): ?string
     {
         return \App\Helpers\ValidationHelper::formatCep( $cep );
+    }
+}
+
+/**
+ * Gera opções HTML para status de orçamento
+ */
+if ( !function_exists( 'budget_status_options' ) ) {
+    function budget_status_options( $selectedStatus = '' )
+    {
+        return \App\Helpers\StatusHelper::budget_status_options( $selectedStatus );
     }
 }
 

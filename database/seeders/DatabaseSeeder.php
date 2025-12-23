@@ -7,10 +7,12 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Seeder principal do sistema Easy Budget.
+ * Seeder principal do sistema Easy Budget - Ambiente de Produção
  *
- * Organiza a execução de todos os seeders necessários para inicializar
- * o sistema com dados básicos e de demonstração.
+ * Contém apenas os dados básicos necessários para o funcionamento
+ * do sistema em ambiente de produção.
+ *
+ * Para dados de teste completos, use DatabaseCleanerAndSeeder
  */
 class DatabaseSeeder extends Seeder
 {
@@ -19,42 +21,37 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info( '🚀 Iniciando seed do Easy Budget...' );
+        $this->command->info( '🚀 Iniciando seed do Easy Budget (Ambiente de Produção)...' );
 
-        // 1. Executar seeders de dados básicos/globais
+        // Dados básicos necessários para funcionamento do sistema
         $this->command->info( '📊 Criando dados básicos do sistema...' );
         $this->call( [
             PlanSeeder::class,
             UnitSeeder::class,
             AreasOfActivitySeeder::class,
             ProfessionSeeder::class,
-            CategorySeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
         ] );
 
-        // 2. Criar tenant público com dados completos
+        // Tenant público com dados completos
         $this->command->info( '🌐 Criando tenant público...' );
         $this->call( [
             PublicTenantSeeder::class,
         ] );
 
-        // 3. Criar tenant admin com dados completos
+        // Tenant admin com dados completos
         $this->command->info( '👑 Criando tenant admin...' );
         $this->call( [
             AdminTenantSeeder::class,
         ] );
 
-        // 4. Criar Prestadores de teste (opcional - apenas em desenvolvimento)
-        if ( app()->environment( [ 'local', 'testing' ] ) ) {
-            $this->command->info( '🏢 Criando dados de teste...' );
-            $this->call( [
-                ProviderTestSeeder::class,
-            ] );
-        } else {
-            $this->command->info( '⚠️  Dados de teste ignorados (ambiente: ' . app()->environment() . ')' );
-        }
+        // Categorias após tenants existirem
+        $this->command->info( '🏷️ Criando categorias padrão...' );
+        $this->call( [
+            CategorySeeder::class,
+        ] );
 
         $this->command->info( '✅ Seed do Easy Budget concluído com sucesso!' );
         $this->command->info( '' );
@@ -63,16 +60,12 @@ class DatabaseSeeder extends Seeder
         $this->command->info( '   • Admin Tenant criado (ID: 2) - Para administração' );
         $this->command->info( '   • Admin login: admin@easybudget.net.br (ID: 3)' );
         $this->command->info( '   • Senha admin: AdminPassword1@' );
-
-        if ( app()->environment( [ 'local', 'testing' ] ) ) {
-            $this->command->info( '   • 10 Prestadores de teste criados (5 PJ + 5 PF)' );
-            $this->command->info( '   • 200 Clientes de teste criados (100 PF + 100 PJ)' );
-            $this->command->info( '   • Login: provider1@test.com até provider10@test.com' );
-            $this->command->info( '   • Senha padrão: Password1@' );
-        }
-
+        $this->command->info( '   • Dados de teste ignorados (uso DatabaseCleanerAndSeeder)' );
         $this->command->info( '' );
-        $this->command->info( '🎯 Sistema pronto para uso!' );
+        $this->command->info( '💡 Para dados de teste completos:' );
+        $this->command->info( '    php artisan db:seed --class=DatabaseCleanerAndSeeder' );
+        $this->command->info( '' );
+        $this->command->info( '🎯 Sistema de produção pronto para uso!' );
     }
 
 }

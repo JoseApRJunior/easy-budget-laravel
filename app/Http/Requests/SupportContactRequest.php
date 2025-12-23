@@ -134,13 +134,10 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Sanitiza nomes removendo espaços extras e caracteres inválidos.
-     *
-     * @param string|null $name
-     * @return string|null
      */
     private function sanitizeName(?string $name): ?string
     {
-        if (!$name) {
+        if (! $name) {
             return null;
         }
 
@@ -154,13 +151,10 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Sanitiza email removendo espaços e convertendo para minúsculas.
-     *
-     * @param string|null $email
-     * @return string|null
      */
     private function sanitizeEmail(?string $email): ?string
     {
-        if (!$email) {
+        if (! $email) {
             return null;
         }
 
@@ -169,13 +163,10 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Sanitiza texto geral removendo espaços extras.
-     *
-     * @param string|null $text
-     * @return string|null
      */
     private function sanitizeText(?string $text): ?string
     {
-        if (!$text) {
+        if (! $text) {
             return null;
         }
 
@@ -184,22 +175,19 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Sanitiza mensagem preservando quebras de linha mas removendo espaços extras.
-     *
-     * @param string|null $message
-     * @return string|null
      */
     private function sanitizeMessage(?string $message): ?string
     {
-        if (!$message) {
+        if (! $message) {
             return null;
         }
 
         // Remove espaços no início e fim
         $message = trim($message);
-        
+
         // Remove espaços múltiplos mas preserva quebras de linha
         $message = preg_replace('/[ \t]+/', ' ', $message);
-        
+
         // Remove quebras de linha múltiplas (máximo 2 consecutivas)
         $message = preg_replace('/\n{3,}/', "\n\n", $message);
 
@@ -208,8 +196,6 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Obtém os dados validados e preparados para o service.
-     *
-     * @return array
      */
     public function getValidatedData(): array
     {
@@ -226,40 +212,34 @@ class SupportContactRequest extends FormRequest
 
     /**
      * Obtém o nome completo do contato.
-     *
-     * @return string
      */
     public function getFullName(): string
     {
         $firstName = $this->validated()['first_name'] ?? '';
         $lastName = $this->validated()['last_name'] ?? '';
-        
-        $fullName = trim($firstName . ' ' . $lastName);
-        
-        return !empty($fullName) ? $fullName : 'Usuário';
+
+        $fullName = trim($firstName.' '.$lastName);
+
+        return ! empty($fullName) ? $fullName : 'Usuário';
     }
 
     /**
      * Verifica se o contato forneceu nome completo.
-     *
-     * @return bool
      */
     public function hasFullName(): bool
     {
         $validated = $this->validated();
-        
-        return !empty($validated['first_name']) && !empty($validated['last_name']);
+
+        return ! empty($validated['first_name']) && ! empty($validated['last_name']);
     }
 
     /**
      * Obtém dados formatados para logs.
-     *
-     * @return array
      */
     public function getLogData(): array
     {
         $validated = $this->validated();
-        
+
         return [
             'full_name' => $this->getFullName(),
             'email' => $validated['email'],

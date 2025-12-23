@@ -18,7 +18,7 @@ class LimparCachesEFecharServicos extends Command
      *
      * @var string
      */
-    protected $description = 'Limpa todos os caches do Laravel e encerra processos PHP, Node.js e Python';
+    protected $description = 'Limpa todos os caches do Laravel, logs e encerra processos PHP, Node.js e Python';
 
     public function handle()
     {
@@ -30,6 +30,7 @@ class LimparCachesEFecharServicos extends Command
         $this->callSilent( 'route:clear' );
         $this->callSilent( 'view:clear' );
         $this->callSilent( 'event:clear' );
+        $this->callSilent( 'logs:clear' );
 
         $this->info( '✅ Caches do Laravel limpos.' );
 
@@ -51,6 +52,7 @@ class LimparCachesEFecharServicos extends Command
 
         if ( strtoupper( substr( PHP_OS, 0, 3 ) ) !== 'WIN' ) {
             $this->warn( '⚠️ Este comando só é compatível com Windows.' );
+
             return;
         }
 

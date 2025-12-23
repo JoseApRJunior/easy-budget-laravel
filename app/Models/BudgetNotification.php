@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Budget;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetNotification extends Model
 {
@@ -54,14 +50,14 @@ class BudgetNotification extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
-        'budget_id'  => 'integer',
-        'user_id'    => 'integer',
-        'data'       => 'array',
-        'sent'       => 'boolean',
-        'read'       => 'boolean',
-        'sent_at'    => 'datetime',
-        'read_at'    => 'datetime',
+        'tenant_id' => 'integer',
+        'budget_id' => 'integer',
+        'user_id' => 'integer',
+        'data' => 'array',
+        'sent' => 'boolean',
+        'read' => 'boolean',
+        'sent_at' => 'datetime',
+        'read_at' => 'datetime',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -71,7 +67,7 @@ class BudgetNotification extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -79,7 +75,7 @@ class BudgetNotification extends Model
      */
     public function budget(): BelongsTo
     {
-        return $this->belongsTo( Budget::class);
+        return $this->belongsTo(Budget::class);
     }
 
     /**
@@ -87,31 +83,31 @@ class BudgetNotification extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
      * Scope para notificações não lidas.
      */
-    public function scopeUnread( $query )
+    public function scopeUnread($query)
     {
-        return $query->where( 'read', false );
+        return $query->where('read', false);
     }
 
     /**
      * Scope para notificações enviadas.
      */
-    public function scopeSent( $query )
+    public function scopeSent($query)
     {
-        return $query->where( 'sent', true );
+        return $query->where('sent', true);
     }
 
     /**
      * Scope para notificações não enviadas.
      */
-    public function scopePending( $query )
+    public function scopePending($query)
     {
-        return $query->where( 'sent', false );
+        return $query->where('sent', false);
     }
 
     /**
@@ -119,11 +115,13 @@ class BudgetNotification extends Model
      */
     public function markAsRead(): bool
     {
-        if ( !$this->read ) {
-            $this->read    = true;
+        if (! $this->read) {
+            $this->read = true;
             $this->read_at = now();
+
             return $this->save();
         }
+
         return true;
     }
 
@@ -132,11 +130,13 @@ class BudgetNotification extends Model
      */
     public function markAsSent(): bool
     {
-        if ( !$this->sent ) {
-            $this->sent    = true;
+        if (! $this->sent) {
+            $this->sent = true;
             $this->sent_at = now();
+
             return $this->save();
         }
+
         return true;
     }
 
@@ -146,15 +146,15 @@ class BudgetNotification extends Model
     public static function getAvailableTypes(): array
     {
         return [
-            'created'  => 'Orçamento Criado',
-            'updated'  => 'Orçamento Atualizado',
-            'sent'     => 'Orçamento Enviado',
+            'created' => 'Orçamento Criado',
+            'updated' => 'Orçamento Atualizado',
+            'sent' => 'Orçamento Enviado',
             'approved' => 'Orçamento Aprovado',
             'rejected' => 'Orçamento Rejeitado',
-            'expired'  => 'Orçamento Expirado',
+            'expired' => 'Orçamento Expirado',
             'reminder' => 'Lembrete de Orçamento',
-            'viewed'   => 'Orçamento Visualizado',
-            'shared'   => 'Orçamento Compartilhado',
+            'viewed' => 'Orçamento Visualizado',
+            'shared' => 'Orçamento Compartilhado',
         ];
     }
 
@@ -164,11 +164,10 @@ class BudgetNotification extends Model
     public static function getAvailableChannels(): array
     {
         return [
-            'email'    => 'E-mail',
-            'sms'      => 'SMS',
-            'push'     => 'Push Notification',
+            'email' => 'E-mail',
+            'sms' => 'SMS',
+            'push' => 'Push Notification',
             'database' => 'Notificação Interna',
         ];
     }
-
 }

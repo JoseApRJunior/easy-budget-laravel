@@ -7,7 +7,6 @@ namespace App\Mail;
 use App\Mail\Concerns\AbstractBaseConfirmationEmail;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\Infrastructure\LinkService;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
@@ -23,16 +22,16 @@ class EmailVerificationMail extends AbstractBaseConfirmationEmail
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string|null $confirmationLink URL de verificação de e-mail (opcional)
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string|null  $confirmationLink  URL de verificação de e-mail (opcional)
      */
     public function __construct(
         User $user,
         ?Tenant $tenant = null,
         ?string $confirmationLink = null,
     ) {
-        parent::__construct( $user, $tenant, $confirmationLink );
+        parent::__construct($user, $tenant, $confirmationLink);
     }
 
     /**
@@ -63,5 +62,4 @@ class EmailVerificationMail extends AbstractBaseConfirmationEmail
     {
         return [];
     }
-
 }

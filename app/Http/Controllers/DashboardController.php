@@ -24,41 +24,41 @@ class DashboardController extends Controller
     /**
      * Dashboard principal
      */
-    public function index( Request $request ): View
+    public function index(Request $request): View
     {
         $userId = Auth::id();
-        $period = $request->get( 'period', 'month' );
+        $period = $request->get('period', 'month');
 
         // Obter dados iniciais com cache curto para boa UX
         $cacheKey = "dashboard.initial.{$userId}.{$period}";
-        $ttl      = 60; // 1 minuto para dados iniciais
+        $ttl = 60; // 1 minuto para dados iniciais
 
-        $dashboardData = Cache::remember( $cacheKey, $ttl, function () use ($userId, $period) {
+        $dashboardData = Cache::remember($cacheKey, $ttl, function () use ($userId, $period) {
             return [
-                'metrics'           => $this->metricsService->getMetrics( $userId, $period ),
-                'charts'            => $this->chartService->getInitialChartData( $userId, $period ),
-                'recent_activities' => $this->getRecentActivities( $userId ),
-                'quick_actions'     => $this->getQuickActions()
+                'metrics' => $this->metricsService->getMetrics($userId, $period),
+                'charts' => $this->chartService->getInitialChartData($userId, $period),
+                'recent_activities' => $this->getRecentActivities($userId),
+                'quick_actions' => $this->getQuickActions(),
             ];
-        } );
+        });
 
-        return view( 'dashboard.index', [
-            'metrics'            => $dashboardData[ 'metrics' ],
-            'charts'             => $dashboardData[ 'charts' ],
-            'recentTransactions' => $dashboardData[ 'recent_activities' ],
-            'quickActions'       => $dashboardData[ 'quick_actions' ],
-            'currentPeriod'      => $period,
-            'lastUpdated'        => Carbon::now()->toDateTimeString()
-        ] );
+        return view('dashboard.index', [
+            'metrics' => $dashboardData['metrics'],
+            'charts' => $dashboardData['charts'],
+            'recentTransactions' => $dashboardData['recent_activities'],
+            'quickActions' => $dashboardData['quick_actions'],
+            'currentPeriod' => $period,
+            'lastUpdated' => Carbon::now()->toDateTimeString(),
+        ]);
     }
 
     /**
      * Obtém atividades recentes para o dashboard
      */
-    private function getRecentActivities( int $userId, int $limit = 10 ): array
+    private function getRecentActivities(int $userId, int $limit = 10): array
     {
         $user = Auth::user();
-        if ( !$user ) {
+        if (! $user) {
             return [];
         }
 
@@ -68,18 +68,18 @@ class DashboardController extends Controller
             ->limit($limit)
             ->get();
 
-        return $activities->map( function ( $activity ) {
+        return $activities->map(function ($activity) {
             return (object) [
-                'id'          => $activity->id,
+                'id' => $activity->id,
                 'action_type' => $activity->action,
                 'description' => $activity->description,
-                'created_at'  => $activity->created_at,
-                'user_name'   => $activity->user->name ?? 'Sistema',
+                'created_at' => $activity->created_at,
+                'user_name' => $activity->user->name ?? 'Sistema',
                 'entity_type' => $activity->model_type,
-                'entity_id'   => $activity->model_id,
-                'metadata'    => $activity->metadata,
+                'entity_id' => $activity->model_id,
+                'metadata' => $activity->metadata,
             ];
-        } )->toArray();
+        })->toArray();
     }
 
     /**
@@ -89,40 +89,39 @@ class DashboardController extends Controller
     {
         return [
             [
-                'id'          => 'nova_receita',
-                'title'       => 'Nova Receita',
+                'id' => 'nova_receita',
+                'title' => 'Nova Receita',
                 'description' => 'Registrar nova entrada financeira',
-                'icon'        => 'plus-circle',
-                'color'       => 'green',
-                'route'       => 'transactions.create',
-                'params'      => [ 'type' => 'receita' ]
+                'icon' => 'plus-circle',
+                'color' => 'green',
+                'route' => 'provider.invoices.create',
+                'params' => [],
             ],
             [
-                'id'          => 'nova_despesa',
-                'title'       => 'Nova Despesa',
+                'id' => 'nova_despesa',
+                'title' => 'Nova Despesa',
                 'description' => 'Registrar nova saída financeira',
-                'icon'        => 'dash-circle',
-                'color'       => 'red',
-                'route'       => 'transactions.create',
-                'params'      => [ 'type' => 'despesa' ]
+                'icon' => 'dash-circle',
+                'color' => 'red',
+                'route' => 'provider.invoices.create',
+                'params' => [],
             ],
             [
-                'id'          => 'ver_relatorios',
-                'title'       => 'Relatórios',
+                'id' => 'ver_relatorios',
+                'title' => 'Relatórios',
                 'description' => 'Ver relatórios detalhados',
-                'icon'        => 'bar-chart',
-                'color'       => 'blue',
-                'route'       => 'reports.index'
+                'icon' => 'bar-chart',
+                'color' => 'blue',
+                'route' => 'reports.index',
             ],
             [
-                'id'          => 'configuracoes',
-                'title'       => 'Configurações',
+                'id' => 'configuracoes',
+                'title' => 'Configurações',
                 'description' => 'Ajustar preferências do sistema',
-                'icon'        => 'gear',
-                'color'       => 'gray',
-                'route'       => 'settings.index'
-            ]
+                'icon' => 'gear',
+                'color' => 'gray',
+                'route' => 'settings.index',
+            ],
         ];
     }
-
 }

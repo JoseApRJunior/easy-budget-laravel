@@ -12,6 +12,8 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         health: '/up',
     )
     ->withProviders( [
+        App\Providers\AuthServiceProvider::class,
+        App\Providers\OptimizedAuthServiceProvider::class,
         App\Providers\AliasServiceProvider::class,
         App\Providers\ViewComposerServiceProvider::class,
         App\Providers\BladeDirectiveServiceProvider::class,
@@ -23,7 +25,14 @@ return Application::configure( basePath: dirname( __DIR__ ) )
             'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
             'provider'        => \App\Http\Middleware\ProviderMiddleware::class,
             'admin'           => \App\Http\Middleware\AdminMiddleware::class,
+            'monitoring'      => \App\Http\Middleware\MonitoringMiddleware::class,
+            'optimize.auth'   => \App\Http\Middleware\OptimizeAuthUser::class,
         ] );
+
+        // Adicionar middleware de otimização ao grupo web
+        $middleware->web(append: [
+            \App\Http\Middleware\OptimizeAuthUser::class,
+        ]);
 
         // Trust Cloudflare proxies for correct URL generation
         $middleware->trustProxies(

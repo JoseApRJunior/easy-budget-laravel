@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BudgetItemCategory extends Model
 {
@@ -49,12 +46,12 @@ class BudgetItemCategory extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'              => 'integer',
+        'tenant_id' => 'integer',
         'default_tax_percentage' => 'decimal:2',
-        'is_active'              => 'boolean',
-        'order_index'            => 'integer',
-        'created_at'             => 'immutable_datetime',
-        'updated_at'             => 'datetime',
+        'is_active' => 'boolean',
+        'order_index' => 'integer',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -63,15 +60,15 @@ class BudgetItemCategory extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'              => 'required|integer|exists:tenants,id',
-            'name'                   => 'required|string|max:100',
-            'slug'                   => 'required|string|max:50|alpha_dash',
-            'description'            => 'nullable|string|max:500',
-            'color'                  => 'nullable|string|max:7|regex:/^#[0-9A-F]{6}$/i',
-            'icon'                   => 'nullable|string|max:50',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'name' => 'required|string|max:100',
+            'slug' => 'required|string|max:50|alpha_dash',
+            'description' => 'nullable|string|max:500',
+            'color' => 'nullable|string|max:7|regex:/^#[0-9A-F]{6}$/i',
+            'icon' => 'nullable|string|max:50',
             'default_tax_percentage' => 'required|numeric|min:0|max:100',
-            'is_active'              => 'required|boolean',
-            'order_index'            => 'required|integer|min:0',
+            'is_active' => 'required|boolean',
+            'order_index' => 'required|integer|min:0',
         ];
     }
 
@@ -80,8 +77,8 @@ class BudgetItemCategory extends Model
      */
     public static function createRules(): array
     {
-        $rules         = self::businessRules();
-        $rules[ 'slug' ] = 'required|string|max:50|alpha_dash|unique:budget_item_categories,slug';
+        $rules = self::businessRules();
+        $rules['slug'] = 'required|string|max:50|alpha_dash|unique:budget_item_categories,slug';
 
         return $rules;
     }
@@ -89,10 +86,10 @@ class BudgetItemCategory extends Model
     /**
      * Regras de validação para atualização.
      */
-    public static function updateRules( int $categoryId ): array
+    public static function updateRules(int $categoryId): array
     {
-        $rules         = self::businessRules();
-        $rules[ 'slug' ] = 'required|string|max:50|alpha_dash|unique:budget_item_categories,slug,' . $categoryId;
+        $rules = self::businessRules();
+        $rules['slug'] = 'required|string|max:50|alpha_dash|unique:budget_item_categories,slug,'.$categoryId;
 
         return $rules;
     }
@@ -102,7 +99,7 @@ class BudgetItemCategory extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -110,31 +107,31 @@ class BudgetItemCategory extends Model
      */
     public function budgetItems(): HasMany
     {
-        return $this->hasMany( BudgetItem::class);
+        return $this->hasMany(BudgetItem::class);
     }
 
     /**
      * Scope para categorias ativas.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
 
     /**
      * Scope para ordenar por order_index.
      */
-    public function scopeOrdered( $query )
+    public function scopeOrdered($query)
     {
-        return $query->orderBy( 'order_index' )->orderBy( 'name' );
+        return $query->orderBy('order_index')->orderBy('name');
     }
 
     /**
      * Scope para categorias por tenant.
      */
-    public function scopeForTenant( $query, int $tenantId )
+    public function scopeForTenant($query, int $tenantId)
     {
-        return $query->where( 'tenant_id', $tenantId );
+        return $query->where('tenant_id', $tenantId);
     }
 
     /**
@@ -152,40 +149,40 @@ class BudgetItemCategory extends Model
     {
         return [
             [
-                'name'                   => 'Produtos',
-                'slug'                   => 'produtos',
-                'description'            => 'Produtos físicos ou digitais',
-                'color'                  => '#3B82F6',
-                'icon'                   => 'bi-box-seam',
+                'name' => 'Produtos',
+                'slug' => 'produtos',
+                'description' => 'Produtos físicos ou digitais',
+                'color' => '#3B82F6',
+                'icon' => 'bi-box-seam',
                 'default_tax_percentage' => 0,
-                'order_index'            => 1,
+                'order_index' => 1,
             ],
             [
-                'name'                   => 'Serviços',
-                'slug'                   => 'servicos',
-                'description'            => 'Serviços profissionais',
-                'color'                  => '#10B981',
-                'icon'                   => 'bi-tools',
+                'name' => 'Serviços',
+                'slug' => 'servicos',
+                'description' => 'Serviços profissionais',
+                'color' => '#10B981',
+                'icon' => 'bi-tools',
                 'default_tax_percentage' => 0,
-                'order_index'            => 2,
+                'order_index' => 2,
             ],
             [
-                'name'                   => 'Despesas',
-                'slug'                   => 'despesas',
-                'description'            => 'Despesas e custos operacionais',
-                'color'                  => '#F59E0B',
-                'icon'                   => 'bi-cash',
+                'name' => 'Despesas',
+                'slug' => 'despesas',
+                'description' => 'Despesas e custos operacionais',
+                'color' => '#F59E0B',
+                'icon' => 'bi-cash',
                 'default_tax_percentage' => 0,
-                'order_index'            => 3,
+                'order_index' => 3,
             ],
             [
-                'name'                   => 'Taxas',
-                'slug'                   => 'taxas',
-                'description'            => 'Taxas e encargos',
-                'color'                  => '#EF4444',
-                'icon'                   => 'bi-receipt',
+                'name' => 'Taxas',
+                'slug' => 'taxas',
+                'description' => 'Taxas e encargos',
+                'color' => '#EF4444',
+                'icon' => 'bi-receipt',
                 'default_tax_percentage' => 0,
-                'order_index'            => 4,
+                'order_index' => 4,
             ],
         ];
     }
@@ -193,22 +190,23 @@ class BudgetItemCategory extends Model
     /**
      * Cria categorias padrão para um tenant.
      */
-    public static function createDefaultCategories( int $tenantId ): void
+    public static function createDefaultCategories(int $tenantId): void
     {
-        foreach ( self::getDefaultCategories() as $category ) {
-            self::create( array_merge( $category, [
+        foreach (self::getDefaultCategories() as $category) {
+            self::create(array_merge($category, [
                 'tenant_id' => $tenantId,
                 'is_active' => true,
-            ] ) );
+            ]));
         }
     }
 
     /**
      * Atualiza a ordem da categoria.
      */
-    public function updateOrder( int $newOrder ): bool
+    public function updateOrder(int $newOrder): bool
     {
         $this->order_index = $newOrder;
+
         return $this->save();
     }
 
@@ -227,5 +225,4 @@ class BudgetItemCategory extends Model
     {
         return $this->icon ?: 'bi-circle';
     }
-
 }

@@ -7,7 +7,7 @@
                 $isCompany = $provider->commonData->cnpj || $provider->commonData->type === 'company';
             }
         @endphp
-        
+
         @if($isCompany)
             {{-- Prioriza botão empresarial para PJ --}}
             <a href="{{ route( 'provider.business.edit' ) }}" class="btn btn-primary">
@@ -25,9 +25,5 @@
                 <i class="bi bi-building me-2"></i>Editar Dados Empresariais
             </a>
         @endif
-        
-        <a href="{{ url( '/provider/change-password' ) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-key me-2"></i>Alterar Senha
-        </a>
     </div>
 </div>

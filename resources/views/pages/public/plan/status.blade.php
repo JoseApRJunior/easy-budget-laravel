@@ -46,7 +46,7 @@
                                 </div>
                             </div>
                             @if ( $status == 'success' )
-                                <a href="/provider" class="btn btn-success mt-4">Ir para o Painel</a>
+                                <a href="{{ route('provider.dashboard') }}" class="btn btn-success mt-4">Ir para o Painel</a>
                             @else
                                 <a href="{{ url( '/plans' ) }}" class="btn btn-primary mt-4">
                                     <i class="bi-clipboard-check me-2"></i>Planos Disponíveis

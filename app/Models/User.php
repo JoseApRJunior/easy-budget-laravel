@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\PlanSubscription;
 use App\Models\Provider;
@@ -12,9 +13,10 @@ use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use App\Models\UserRole;
+use App\Models\UserSettings;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,9 +25,38 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property string $name
+ * @property string $email
+ * @property string|null $password
+ * @property string|null $google_id
+ * @property string|null $avatar
+ * @property array|null $google_data
+ * @property bool $is_active
+ * @property string|null $logo
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property array|null $extra_links
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, TenantScoped, Notifiable, SoftDeletes;
+
+    /**
+     * Cache para verificações de roles (evita queries duplicadas)
+     */
+    protected array $roleCache = [];
+    protected array $permissionCache = [];
+
+    /**
+     * Relacionamentos que devem ser sempre carregados
+     */
+    protected $with = ['tenant'];
 
     protected static function boot()
     {
@@ -173,9 +204,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->where( 'is_active', true );
     }
 
-    public function hasRole( string $role ): bool
+    public function hasRole( $role ): bool
     {
-        return $this->getTenantScopedRoles()->where( 'name', $role )->exists();
+        if ( is_array( $role ) ) {
+            return $this->hasAnyRole( $role );
+        }
+
+        // Cache para evitar queries duplicadas
+        if (!isset($this->roleCache[$role])) {
+            $this->roleCache[$role] = $this->getTenantScopedRoles()->where( 'name', $role )->exists();
+        }
+
+        return $this->roleCache[$role];
     }
 
     public function hasRoleInTenant( string $role, int $tenantId ): bool
@@ -193,7 +233,57 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasAnyRole( array $roles ): bool
     {
-        return $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+        // Cache para evitar queries duplicadas
+        $cacheKey = 'any_' . implode('_', $roles);
+        if (!isset($this->roleCache[$cacheKey])) {
+            $this->roleCache[$cacheKey] = $this->getTenantScopedRoles()->whereIn( 'name', $roles )->exists();
+        }
+
+        return $this->roleCache[$cacheKey];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole( 'admin' );
+    }
+
+    public function isProvider(): bool
+    {
+        return $this->hasRole( 'provider' );
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->hasRole( 'customer' );
+    }
+
+    public function hasPermission( string $permission ): bool
+    {
+        // Admin users have all permissions
+        if ( $this->isAdmin() ) {
+            return true;
+        }
+
+        // Cache para evitar queries duplicadas
+        if (!isset($this->permissionCache[$permission])) {
+            $this->permissionCache[$permission] = $this->permissions()
+                ->where( 'name', $permission )
+                ->exists();
+        }
+
+        return $this->permissionCache[$permission];
+    }
+
+    public function hasAnyPermission( array $permissions ): bool
+    {
+        // Admin users have all permissions
+        if ( $this->isAdmin() ) {
+            return true;
+        }
+
+        return $this->permissions()
+            ->whereIn( 'name', $permissions )
+            ->exists();
     }
 
     public function getEmailForVerification(): string

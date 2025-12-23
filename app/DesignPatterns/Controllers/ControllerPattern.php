@@ -9,8 +9,6 @@ namespace App\DesignPatterns\Controllers;
  *
  * Define convenções consistentes para desenvolvimento de controllers,
  * garantindo uniformidade, manutenibilidade e reutilização de código.
- *
- * @package App\DesignPatterns
  */
 class ControllerPattern
 {
@@ -245,27 +243,27 @@ class ControllerPattern
         return [
             'index_accessed' => [
                 'action'  => 'Lista acessada',
-                'context' => [ 'filters', 'data_count', 'execution_time' ]
+                'context' => [ 'filters', 'data_count', 'execution_time' ],
             ],
 
             'show_accessed'  => [
                 'action'  => 'Detalhes visualizados',
-                'context' => [ 'resource_id', 'user_id' ]
+                'context' => [ 'resource_id', 'user_id' ],
             ],
 
             'created'        => [
                 'action'  => 'Novo registro criado',
-                'context' => [ 'resource_id', 'user_id', 'data_summary' ]
+                'context' => [ 'resource_id', 'user_id', 'data_summary' ],
             ],
 
             'updated'        => [
                 'action'  => 'Registro atualizado',
-                'context' => [ 'resource_id', 'user_id', 'changes_summary' ]
+                'context' => [ 'resource_id', 'user_id', 'changes_summary' ],
             ],
 
             'deleted'        => [
                 'action'  => 'Registro excluído',
-                'context' => [ 'resource_id', 'user_id' ]
+                'context' => [ 'resource_id', 'user_id' ],
             ],
         ];
     }
@@ -393,7 +391,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Controller híbrido para módulo com API
+ * Controller combinado para módulo com API
  */
 class HybridModuleController extends Controller
 {

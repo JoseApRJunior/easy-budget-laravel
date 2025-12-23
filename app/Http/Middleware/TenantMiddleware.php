@@ -8,22 +8,21 @@ use Illuminate\Support\Facades\Auth;
 
 class TenantMiddleware
 {
-    public function handle( Request $request, Closure $next )
+    public function handle(Request $request, Closure $next)
     {
         $user = Auth::user();
 
-        if ( !$user ) {
-            return redirect()->route( 'login' );
+        if (! $user) {
+            return redirect()->route('login');
         }
 
         // Set tenant context from user
         $tenantId = $user->tenant_id ?? 1;
-        $request->merge( [ 'tenant_id' => $tenantId ] );
+        $request->merge(['tenant_id' => $tenantId]);
 
         // Set tenant in session if needed
-        session( [ 'tenant_id' => $tenantId ] );
+        session(['tenant_id' => $tenantId]);
 
-        return $next( $request );
+        return $next($request);
     }
-
 }

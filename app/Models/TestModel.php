@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 
 // Aplicar padrões arquiteturais do projeto Easy Budget Laravel
 // Seguindo sistema de padrões de 3 níveis para Models

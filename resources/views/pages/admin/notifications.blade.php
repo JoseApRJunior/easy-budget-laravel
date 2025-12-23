@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <div class="row">
             <div class="col-12">
                 <h2 class="mb-4"><i class="bi bi-bell me-2"></i>Configurações de Notificação</h2>
@@ -94,11 +94,11 @@
     </div>
 @endsection
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         function addEmailInput() {
-            const container = document.getElementById( 'emailInputs' );
-            const div = document.createElement( 'div' );
+            const container = document.getElementById('emailInputs');
+            const div = document.createElement('div');
             div.className = 'input-group mb-2';
             div.innerHTML = `
                         <input type="email" class="form-control" name="emails[]" placeholder="email@exemplo.com" required>
@@ -106,19 +106,19 @@
                             <i class="bi bi-trash"></i>
                         </button>
                     `;
-            container.appendChild( div );
+            container.appendChild(div);
         }
 
-        function removeEmailInput( button ) {
-            const container = document.getElementById( 'emailInputs' );
-            if ( container.children.length > 1 ) {
+        function removeEmailInput(button) {
+            const container = document.getElementById('emailInputs');
+            if (container.children.length > 1) {
                 button.parentElement.remove();
             }
         }
 
         function addPhoneInput() {
-            const container = document.getElementById( 'phoneInputs' );
-            const div = document.createElement( 'div' );
+            const container = document.getElementById('phoneInputs');
+            const div = document.createElement('div');
             div.className = 'input-group mb-2';
             div.innerHTML = `
                         <input type="tel" class="form-control" name="phones[]" placeholder="(43) 99999-9999">
@@ -126,38 +126,38 @@
                             <i class="bi bi-trash"></i>
                         </button>
                     `;
-            container.appendChild( div );
+            container.appendChild(div);
         }
 
-        function removePhoneInput( button ) {
+        function removePhoneInput(button) {
             button.parentElement.remove();
         }
 
         function testEmail() {
-            fetch( '{{ url( '/admin/notifications/test-email' ) }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            } )
-                .then( response => response.json() )
-                .then( data => {
-                    alert( data.success ? '✅ ' + data.message : '❌ ' + data.message );
-                } );
+            fetch('{{ url('/admin/notifications/test-email') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
+                });
         }
 
-        document.getElementById( 'notificationForm' ).addEventListener( 'submit', function ( e ) {
+        document.getElementById('notificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const formData = new FormData( this );
+            const formData = new FormData(this);
 
-            fetch( '{{ url( '/admin/notifications/save' ) }}', {
-                method: 'POST',
-                body: formData
-            } )
-                .then( response => response.json() )
-                .then( data => {
-                    alert( data.success ? '✅ ' + data.message : '❌ ' + data.message );
-                } );
-        } );
+            fetch('{{ url('/admin/notifications/save') }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
+                });
+        });
     </script>
 @endpush

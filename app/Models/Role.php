@@ -7,7 +7,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Role extends Model
 {
@@ -41,15 +40,20 @@ class Role extends Model
     }
 
     /**
+     * Regras de validação para atualização de role.
+     */
+    public static function updateRules( int $roleId ): array
+    {
+        return [
+            'name'        => 'required|string|max:255|unique:roles,name,' . $roleId,
+            'description' => 'nullable|string|max:255',
+        ];
+    }
+
+    /**
      * Obtém as permissões associadas a este role de forma global.
      * Relação many-to-many sem restrição por tenant, permitindo permissões compartilhadas.
      * Tabela pivot: role_permissions com timestamps.
-     *
-     * @return BelongsToMany
-     */
-    /**
-     * Relationship com permissions - global, sem tenant scoping.
-     * Relação many-to-many usando tabela role_permissions, aplicável a todos tenants.
      *
      * @return BelongsToMany
      */
@@ -64,9 +68,6 @@ class Role extends Model
      * Permite atribuição de roles a usuários independentemente do tenant.
      *
      * @return BelongsToMany
-     */
-    /**
-     * Relationship com users - tenant-scoped via pivot.
      */
     public function users(): BelongsToMany
     {
@@ -90,6 +91,44 @@ class Role extends Model
     public function hasUsersInTenant( int $tenantId ): bool
     {
         return $this->users()->forTenant( $tenantId )->exists();
+    }
+
+    /**
+     * Scope para obter apenas roles ativos.
+     */
+    public function scopeActive( $query )
+    {
+        return $query->where( 'is_active', true );
+    }
+
+    /**
+     * Check if role has specific permission.
+     */
+    public function hasPermission( string $permissionName ): bool
+    {
+        return $this->permissions()->where( 'name', $permissionName )->exists();
+    }
+
+    /**
+     * Assign permission to role.
+     */
+    public function givePermissionTo( string $permissionName ): void
+    {
+        $permission = Permission::where( 'name', $permissionName )->first();
+        if ( $permission && !$this->hasPermission( $permissionName ) ) {
+            $this->permissions()->attach( $permission->id );
+        }
+    }
+
+    /**
+     * Revoke permission from role.
+     */
+    public function revokePermissionTo( string $permissionName ): void
+    {
+        $permission = Permission::where( 'name', $permissionName )->first();
+        if ( $permission ) {
+            $this->permissions()->detach( $permission->id );
+        }
     }
 
 }

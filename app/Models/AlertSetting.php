@@ -2,60 +2,94 @@
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
+use App\Enums\AlertSeverityEnum;
+use App\Enums\AlertTypeEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AlertSetting extends Model
 {
-    use TenantScoped;
+    use HasFactory;
 
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        static::bootTenantScoped();
-    }
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'alert_settings';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'tenant_id',
-        'settings',
+        'alert_type',
+        'metric_name',
+        'severity',
+        'threshold_value',
+        'evaluation_window_minutes',
+        'cooldown_minutes',
+        'is_active',
+        'notification_channels',
+        'notification_emails',
+        'slack_webhook_url',
+        'custom_message',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'settings'   => 'array',
-        'created_at' => 'immutable_datetime',
-        'updated_at' => 'datetime',
+        'threshold_value' => 'decimal:3',
+        'evaluation_window_minutes' => 'integer',
+        'cooldown_minutes' => 'integer',
+        'is_active' => 'boolean',
+        'notification_channels' => 'array',
+        'notification_emails' => 'array',
     ];
 
-    /**
-     * Regras de validação para o modelo Plan.
-     */
-    public static function businessRules(): array
+    public function tenant(): BelongsTo
     {
-        return [
-            'tenant_id' => 'required|integer|exists:tenants,id',
-            'settings'  => 'required|array',
-        ];
+        return $this->belongsTo(Tenant::class);
     }
 
+    public function monitoringAlertsHistory(): HasMany
+    {
+        return $this->hasMany(MonitoringAlertsHistory::class, 'alert_setting_id');
+    }
+
+    public function getAlertTypeEnum(): AlertTypeEnum
+    {
+        return AlertTypeEnum::from($this->alert_type);
+    }
+
+    public function getSeverityEnum(): AlertSeverityEnum
+    {
+        return AlertSeverityEnum::from($this->severity);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByType($query, AlertTypeEnum $type)
+    {
+        return $query->where('alert_type', $type->value);
+    }
+
+    public function scopeBySeverity($query, AlertSeverityEnum $severity)
+    {
+        return $query->where('severity', $severity->value);
+    }
+
+    public function shouldNotify(): bool
+    {
+        return $this->getSeverityEnum()->shouldNotify();
+    }
+
+    public function getNotificationDelay(): int
+    {
+        return $this->getSeverityEnum()->notificationDelay();
+    }
+
+    public function isInCooldown(): bool
+    {
+        $lastAlert = $this->monitoringAlertsHistory()
+            ->where('created_at', '>=', now()->subMinutes($this->cooldown_minutes))
+            ->exists();
+
+        return $lastAlert;
+    }
 }

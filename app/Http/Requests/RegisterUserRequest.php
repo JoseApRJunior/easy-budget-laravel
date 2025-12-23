@@ -33,21 +33,21 @@ class RegisterUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name'            => [
+            'first_name' => [
                 'required',
                 'string',
                 'min:2',
                 'max:100',
                 'regex:/^[a-zA-ZÀ-ÿ0-9\s\.\-]+$/u', // Letras, números, espaços, pontos e hífens
             ],
-            'last_name'             => [
+            'last_name' => [
                 'required',
                 'string',
                 'min:2',
                 'max:100',
                 'regex:/^[a-zA-ZÀ-ÿ0-9\s\.\-]+$/u', // Letras, números, espaços, pontos e hífens
             ],
-            'email'                 => [
+            'email' => [
                 'required',
                 'string',
                 'lowercase',
@@ -55,13 +55,13 @@ class RegisterUserRequest extends FormRequest
                 'max:255',
                 'unique:users,email',
             ],
-            'phone'                 => [
+            'phone' => [
                 'required',
                 'string',
-                'regex:/^\(\d{2}\)\s\d{4,5}-\d{4}$/', // Formato: (11) 99999-9999
+                'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/', // Formato: (11) 99999-9999
                 'max:20',
             ],
-            'password'              => [
+            'password' => [
                 'required',
                 'confirmed',
                 'min:8',
@@ -72,7 +72,7 @@ class RegisterUserRequest extends FormRequest
                 'required',
                 'string',
             ],
-            'terms_accepted'        => [
+            'terms_accepted' => [
                 'required',
                 'accepted',
             ],
@@ -87,36 +87,36 @@ class RegisterUserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'first_name.required'            => 'O nome é obrigatório.',
-            'first_name.min'                 => 'O nome deve ter pelo menos 2 caracteres.',
-            'first_name.max'                 => 'O nome não pode ter mais de 100 caracteres.',
-            'first_name.regex'               => 'O nome deve conter apenas letras, números, espaços, pontos e hífens.',
+            'first_name.required' => 'O nome é obrigatório.',
+            'first_name.min' => 'O nome deve ter pelo menos 2 caracteres.',
+            'first_name.max' => 'O nome não pode ter mais de 100 caracteres.',
+            'first_name.regex' => 'O nome deve conter apenas letras, números, espaços, pontos e hífens.',
 
-            'last_name.required'             => 'O sobrenome é obrigatório.',
-            'last_name.min'                  => 'O sobrenome deve ter pelo menos 2 caracteres.',
-            'last_name.max'                  => 'O sobrenome não pode ter mais de 100 caracteres.',
-            'last_name.regex'                => 'O sobrenome deve conter apenas letras, números, espaços, pontos e hífens.',
+            'last_name.required' => 'O sobrenome é obrigatório.',
+            'last_name.min' => 'O sobrenome deve ter pelo menos 2 caracteres.',
+            'last_name.max' => 'O sobrenome não pode ter mais de 100 caracteres.',
+            'last_name.regex' => 'O sobrenome deve conter apenas letras, números, espaços, pontos e hífens.',
 
-            'email.required'                 => 'O e-mail é obrigatório.',
-            'email.email'                    => 'Digite um e-mail válido.',
-            'email.lowercase'                => 'O e-mail deve estar em letras minúsculas.',
-            'email.max'                      => 'O e-mail não pode ter mais de 255 caracteres.',
-            'email.unique'                   => 'Este e-mail já está cadastrado em nosso sistema.',
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Digite um e-mail válido.',
+            'email.lowercase' => 'O e-mail deve estar em letras minúsculas.',
+            'email.max' => 'O e-mail não pode ter mais de 255 caracteres.',
+            'email.unique' => 'Este e-mail já está cadastrado em nosso sistema.',
 
-            'phone.required'                 => 'O telefone é obrigatório.',
-            'phone.regex'                    => 'Digite o telefone no formato (11) 99999-9999.',
-            'phone.max'                      => 'O telefone não pode ter mais de 20 caracteres.',
+            'phone.required' => 'O telefone é obrigatório.',
+            'phone.regex' => 'Digite o telefone no formato (11) 99999-9999.',
+            'phone.max' => 'O telefone não pode ter mais de 20 caracteres.',
 
-            'password.required'              => 'A senha é obrigatória.',
-            'password.confirmed'             => 'A confirmação da senha não coincide.',
-            'password.min'                   => 'A senha deve ter pelo menos 8 caracteres.',
-            'password.max'                   => 'A senha não pode ter mais de 100 caracteres.',
-            'password.regex'                 => 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula, um número e um símbolo.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.confirmed' => 'A confirmação da senha não coincide.',
+            'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
+            'password.max' => 'A senha não pode ter mais de 100 caracteres.',
+            'password.regex' => 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula, um número e um símbolo.',
 
             'password_confirmation.required' => 'A confirmação da senha é obrigatória.',
 
-            'terms_accepted.required'        => 'Você deve aceitar os termos de serviço.',
-            'terms_accepted.accepted'        => 'Você deve aceitar os termos de serviço.',
+            'terms_accepted.required' => 'Você deve aceitar os termos de serviço.',
+            'terms_accepted.accepted' => 'Você deve aceitar os termos de serviço.',
         ];
     }
 
@@ -128,13 +128,13 @@ class RegisterUserRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'first_name'            => 'nome',
-            'last_name'             => 'sobrenome',
-            'email'                 => 'e-mail',
-            'phone'                 => 'telefone',
-            'password'              => 'senha',
+            'first_name' => 'nome',
+            'last_name' => 'sobrenome',
+            'email' => 'e-mail',
+            'phone' => 'telefone',
+            'password' => 'senha',
             'password_confirmation' => 'confirmação da senha',
-            'terms_accepted'        => 'termos de serviço',
+            'terms_accepted' => 'termos de serviço',
         ];
     }
 
@@ -144,33 +144,30 @@ class RegisterUserRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Formatar telefone se necessário
-        if ( $this->phone ) {
-            $this->request->set( 'phone', $this->formatPhone( $this->phone ) );
+        if ($this->phone) {
+            $this->request->set('phone', $this->formatPhone($this->phone));
         }
     }
 
     /**
      * Formata o telefone para o padrão brasileiro.
-     *
-     * @param string $phone
-     * @return string
      */
-    private function formatPhone( string $phone ): string
+    private function formatPhone(string $phone): string
     {
         // Remove todos os caracteres não numéricos
-        $phone = preg_replace( '/\D/', '', $phone );
+        $phone = preg_replace('/\D/', '', $phone);
 
         // Se tiver 10 dígitos, adiciona o 9º dígito (São Paulo)
-        if ( strlen( $phone ) === 10 ) {
-            $phone = '9' . $phone;
+        if (strlen($phone) === 10) {
+            $phone = '9'.$phone;
         }
 
         // Formata no padrão (11) 99999-9999
-        if ( strlen( $phone ) === 11 ) {
-            return sprintf( '(%s) %s-%s',
-                substr( $phone, 0, 2 ),
-                substr( $phone, 2, 5 ),
-                substr( $phone, 7 ),
+        if (strlen($phone) === 11) {
+            return sprintf('(%s) %s-%s',
+                substr($phone, 0, 2),
+                substr($phone, 2, 5),
+                substr($phone, 7),
             );
         }
 
@@ -179,21 +176,18 @@ class RegisterUserRequest extends FormRequest
 
     /**
      * Obtém os dados validados e preparados para o service.
-     *
-     * @return array
      */
     public function getValidatedData(): array
     {
         $validated = $this->validated();
 
         return [
-            'first_name'     => $validated[ 'first_name' ],
-            'last_name'      => $validated[ 'last_name' ],
-            'email'          => $validated[ 'email' ],
-            'phone'          => $validated[ 'phone' ],
-            'password'       => $validated[ 'password' ],
-            'terms_accepted' => (bool) $validated[ 'terms_accepted' ],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => $validated['password'],
+            'terms_accepted' => (bool) $validated['terms_accepted'],
         ];
     }
-
 }

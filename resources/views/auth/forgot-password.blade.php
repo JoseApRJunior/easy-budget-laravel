@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container py-4">
+@section('content')
+    <div class="container py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -17,7 +17,7 @@
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-5">
-                        <form method="POST" action="{{ route( 'password.email' ) }}" id="forgotPasswordForm">
+                        <form method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm">
                             @csrf
 
                             <!-- Dados de Recuperação -->
@@ -35,10 +35,10 @@
                                         <span class="input-group-text">
                                             <i class="bi bi-envelope"></i>
                                         </span>
-                                        <input id="email" name="email" type="email" value="{{ old( 'email' ) }}" required
-                                            autofocus class="form-control @error( 'email' ) is-invalid @enderror"
+                                        <input id="email" name="email" type="email" value="{{ old('email') }}"
+                                            required autofocus class="form-control @error('email') is-invalid @enderror"
                                             placeholder="seu@email.com">
-                                        @error( 'email' )
+                                        @error('email')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -56,7 +56,7 @@
 
                             <!-- Botões de ação -->
                             <div class="d-flex justify-content-between pt-4 border-top">
-                                <a href="{{ route( 'login' ) }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('login') }}" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-left me-2"></i>Voltar ao Login
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg">
@@ -71,7 +71,7 @@
     </div>
 @endsection
 
-@push( 'styles' )
+@push('styles')
     <style>
         /* Estilos específicos do formulário de recuperação */
         .form-section {
@@ -133,48 +133,48 @@
     </style>
 @endpush
 
-@push( 'scripts' )
+@push('scripts')
     <script>
         // Funcionalidades do formulário de recuperação
-        document.addEventListener( 'DOMContentLoaded', function () {
-            const form = document.getElementById( 'forgotPasswordForm' );
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('forgotPasswordForm');
 
-            if ( form ) {
+            if (form) {
                 // Validação em tempo real
                 setupRealTimeValidation();
 
                 // Submit com indicador de loading
-                form.addEventListener( 'submit', function ( e ) {
-                    const submitBtn = form.querySelector( 'button[type="submit"]' );
-                    if ( submitBtn ) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
                         submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
                         submitBtn.disabled = true;
                     }
-                } );
+                });
             }
 
             function setupRealTimeValidation() {
-                const emailInput = document.getElementById( 'email' );
+                const emailInput = document.getElementById('email');
 
-                if ( emailInput ) {
-                    emailInput.addEventListener( 'blur', function () {
+                if (emailInput) {
+                    emailInput.addEventListener('blur', function() {
                         const email = this.value.trim();
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-                        if ( email && !emailRegex.test( email ) ) {
-                            this.classList.add( 'is-invalid' );
+                        if (email && !emailRegex.test(email)) {
+                            this.classList.add('is-invalid');
                         } else {
-                            this.classList.remove( 'is-invalid' );
+                            this.classList.remove('is-invalid');
                         }
-                    } );
+                    });
 
-                    emailInput.addEventListener( 'input', function () {
-                        if ( this.classList.contains( 'is-invalid' ) ) {
-                            this.classList.remove( 'is-invalid' );
+                    emailInput.addEventListener('input', function() {
+                        if (this.classList.contains('is-invalid')) {
+                            this.classList.remove('is-invalid');
                         }
-                    } );
+                    });
                 }
             }
-        } );
+        });
     </script>
 @endpush

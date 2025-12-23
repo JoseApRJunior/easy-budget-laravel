@@ -8,7 +8,6 @@ use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo CustomerInteraction - Interações com clientes

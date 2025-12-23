@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
-use Illuminate\View\View;
 
 /**
  * Controller para páginas de erro personalizadas
@@ -17,7 +16,7 @@ class ErrorController extends Controller
      */
     public function notAllowed(): View
     {
-        return view( 'errors.not-allowed' );
+        return view('errors.not-allowed');
     }
 
     /**
@@ -25,7 +24,7 @@ class ErrorController extends Controller
      */
     public function notFound(): View
     {
-        return view( 'errors.not-found' );
+        return view('errors.not-found');
     }
 
     /**
@@ -33,7 +32,6 @@ class ErrorController extends Controller
      */
     public function internal(): View
     {
-        return view( 'errors.internal' );
+        return view('errors.internal');
     }
-
 }

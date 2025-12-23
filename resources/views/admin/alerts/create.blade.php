@@ -1,0 +1,167 @@
+@extends('layouts.admin')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Criar Novo Alerta
+                </h1>
+                <a href="{{ route('admin.alerts.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Detalhes do Alerta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('admin.alerts.store') }}" method="POST">
+                        @csrf
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Tipo de Alerta
+                                    </label>
+                                    <select class="form-select @error('type') is-invalid @enderror" 
+                                            id="type" 
+                                            name="type" 
+                                            required>
+                                        <option value="">Selecione o tipo...</option>
+                                        @foreach($alertTypes as $value => $label)
+                                            <option value="{{ $value }}" {{ old('type') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="severity" class="form-label">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Severidade
+                                    </label>
+                                    <select class="form-select @error('severity') is-invalid @enderror" 
+                                            id="severity" 
+                                            name="severity" 
+                                            required>
+                                        <option value="">Selecione a severidade...</option>
+                                        @foreach($severities as $value => $label)
+                                            <option value="{{ $value }}" {{ old('severity') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('severity')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                <i class="bi bi-card-text me-1"></i>Título do Alerta
+                            </label>
+                            <input type="text" 
+                                   class="form-control @error('title') is-invalid @enderror" 
+                                   id="title" 
+                                   name="title" 
+                                   value="{{ old('title') }}" 
+                                   placeholder="Digite um título descritivo para o alerta..."
+                                   required>
+                            @error('title')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>Mensagem do Alerta
+                            </label>
+                            <textarea class="form-control @error('message') is-invalid @enderror" 
+                                      id="message" 
+                                      name="message" 
+                                      rows="4" 
+                                      placeholder="Descreva detalhadamente o que este alerta está reportando..."
+                                      required>{{ old('message') }}</textarea>
+                            @error('message')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">
+                                <i class="bi bi-toggle-on me-1"></i>Status
+                            </label>
+                            <select class="form-select @error('status') is-invalid @enderror" 
+                                    id="status" 
+                                    name="status" 
+                                    required>
+                                <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>
+                                    Ativo
+                                </option>
+                                <option value="resolved" {{ old('status') == 'resolved' ? 'selected' : '' }}>
+                                    Resolvido
+                                </option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ route('admin.alerts.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Criar Alerta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    // Adicionar validação dinâmica
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const severitySelect = document.getElementById('severity');
+        const typeSelect = document.getElementById('type');
+        
+        // Mudar cor do select baseado na severidade
+        severitySelect.addEventListener('change', function() {
+            this.className = this.className.replace(/bg-\w+/, '');
+            if (this.value === 'danger') {
+                this.classList.add('bg-danger', 'text-white');
+            } else if (this.value === 'warning') {
+                this.classList.add('bg-warning', 'text-dark');
+            } else if (this.value === 'info') {
+                this.classList.add('bg-info', 'text-white');
+            }
+        });
+        
+        // Trigger inicial
+        severitySelect.dispatchEvent(new Event('change'));
+    });
+</script>
+@endpush

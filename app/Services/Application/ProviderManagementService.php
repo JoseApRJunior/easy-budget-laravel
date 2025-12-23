@@ -95,10 +95,27 @@ class ProviderManagementService
             $financialSummary = $financialResult->getData();
         }
 
+        // Buscar compromissos do dia
+        $events = [];
+        if (class_exists('App\Models\Schedule')) {
+            $events = \App\Models\Schedule::where( 'tenant_id', $tenantId )
+                ->with( 'service' ) // Carregar o relacionamento com o serviço
+                ->whereDate( 'start_date_time', today() )
+                ->where(function($query) {
+                    // Verificar se end_date_time é nulo ou no futuro (compromissos não concluídos)
+                    $query->whereNull('end_date_time')
+                          ->orWhere('end_date_time', '>', now());
+                })
+                ->orderBy( 'start_date_time' )
+                ->limit( 5 )
+                ->get();
+        }
+
         return [
             'budgets'           => $budgets,
             'activities'        => $activities,
             'financial_summary' => $financialSummary,
+            'events'            => $events,
         ];
     }
 
@@ -479,39 +496,54 @@ class ProviderManagementService
     {
         try {
             // Criar Provider primeiro
-            $provider = Provider::create( [
-                'tenant_id'      => $tenant->id,
-                'user_id'        => $user->id,
-                'terms_accepted' => $userData[ 'terms_accepted' ],
-            ] );
+            $provider = Provider::firstOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'user_id'   => $user->id,
+                ],
+                [
+                    'terms_accepted' => $userData[ 'terms_accepted' ],
+                ]
+            );
 
             // Criar CommonData vinculado ao Provider
-            $commonData = CommonData::create( [
-                'tenant_id'    => $tenant->id,
-                'provider_id'  => $provider->id,
-                'type'         => CommonData::TYPE_INDIVIDUAL,
-                'first_name'   => $userData[ 'first_name' ],
-                'last_name'    => $userData[ 'last_name' ],
-                'cpf'          => null,
-                'birth_date'   => null,
-                'company_name' => null,
-                'cnpj'         => null,
-                'description'  => null,
-            ] );
+            $commonData = CommonData::firstOrCreate(
+                [
+                    'tenant_id'   => $tenant->id,
+                    'provider_id' => $provider->id,
+                ],
+                [
+                    'type'         => CommonData::TYPE_INDIVIDUAL,
+                    'first_name'   => $userData[ 'first_name' ],
+                    'last_name'    => $userData[ 'last_name' ],
+                    'cpf'          => null,
+                    'birth_date'   => null,
+                    'company_name' => null,
+                    'cnpj'         => null,
+                    'description'  => null,
+                ]
+            );
 
             // Criar Contact vinculado ao Provider
-            $contact = Contact::create( [
-                'tenant_id'      => $tenant->id,
-                'provider_id'    => $provider->id,
-                'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
-                'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
-            ] );
+            $contact = Contact::firstOrCreate(
+                [
+                    'tenant_id'   => $tenant->id,
+                    'provider_id' => $provider->id,
+                ],
+                [
+                    'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
+                    'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
+                ]
+            );
 
             // Criar Address vinculado ao Provider (vazio inicialmente)
-            $address = Address::create( [
-                'tenant_id'   => $tenant->id,
-                'provider_id' => $provider->id,
-            ] );
+            $address = Address::firstOrCreate(
+                [
+                    'tenant_id'   => $tenant->id,
+                    'provider_id' => $provider->id,
+                ],
+                []
+            );
 
             $savedProvider = $provider;
 
@@ -525,10 +557,12 @@ class ProviderManagementService
                 );
             }
 
-            $user->roles()->attach( $providerRole->id, [
-                'tenant_id'  => $tenant->id,
-                'created_at' => now(),
-                'updated_at' => now()
+            $user->roles()->syncWithoutDetaching( [
+                $providerRole->id => [
+                    'tenant_id'  => $tenant->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
             ] );
 
             // Find Trial Plan

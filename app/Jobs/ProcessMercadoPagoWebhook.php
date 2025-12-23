@@ -18,8 +18,6 @@ use Illuminate\Support\Facades\Log;
  * Handles payment notifications from Mercado Pago with retry logic
  * and error handling. Delegates processing to specialized services
  * based on payment type.
- *
- * @package App\Jobs
  */
 class ProcessMercadoPagoWebhook implements ShouldQueue
 {
@@ -27,41 +25,37 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
 
     /**
      * Number of retry attempts.
-     *
-     * @var int
      */
     public int $tries = 3;
 
     /**
      * Seconds to wait before retrying.
-     *
-     * @var int
      */
     public int $backoff = 60;
 
     /**
      * Creates a new job instance.
      *
-     * @param array $webhookData Webhook notification data
-     * @param string $type Payment type (plan|invoice)
+     * @param  array  $webhookData  Webhook notification data
+     * @param  string  $type  Payment type (plan|invoice)
      */
     public function __construct(
-        private array $webhookData,
-        private string $type
+        public array $webhookData,
+        public string $type,
+        private ?string $requestId = null
     ) {}
 
     /**
      * Executes the job.
      *
-     * @param MercadoPagoWebhookService $webhookService Webhook processing service
-     * @return void
+     * @param  MercadoPagoWebhookService  $webhookService  Webhook processing service
      */
     public function handle(MercadoPagoWebhookService $webhookService): void
     {
         try {
-            $paymentId = $this->webhookData['data']['id'];
+            $paymentId = (string) ($this->webhookData['data']['id'] ?? '');
 
-            Log::info("Processing Mercado Pago webhook", [
+            Log::info('Processing Mercado Pago webhook', [
                 'type' => $this->type,
                 'payment_id' => $paymentId,
                 'attempt' => $this->attempts(),
@@ -73,16 +67,25 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
                 default => throw new \InvalidArgumentException("Invalid payment type: {$this->type}"),
             };
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 throw new \Exception($result['message'] ?? 'Payment processing failed');
             }
 
-            Log::info("Webhook processed successfully", [
+            Log::info('Webhook processed successfully', [
                 'type' => $this->type,
                 'payment_id' => $paymentId,
             ]);
+
+            if ($this->requestId) {
+                \App\Models\WebhookRequest::where('request_id', $this->requestId)
+                    ->where('type', $this->type)
+                    ->update([
+                        'status' => 'processed',
+                        'processed_at' => now(),
+                    ]);
+            }
         } catch (\Exception $e) {
-            Log::error("Webhook processing failed", [
+            Log::error('Webhook processing failed', [
                 'type' => $this->type,
                 'payment_id' => $this->webhookData['data']['id'] ?? null,
                 'error' => $e->getMessage(),
@@ -96,16 +99,24 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
     /**
      * Handles job failure.
      *
-     * @param \Throwable $exception Exception that caused failure
-     * @return void
+     * @param  \Throwable  $exception  Exception that caused failure
      */
     public function failed(\Throwable $exception): void
     {
-        Log::critical("Webhook processing failed permanently", [
+        Log::critical('Webhook processing failed permanently', [
             'type' => $this->type,
             'payment_id' => $this->webhookData['data']['id'] ?? null,
             'error' => $exception->getMessage(),
             'attempts' => $this->tries,
         ]);
+
+        if ($this->requestId) {
+            \App\Models\WebhookRequest::where('request_id', $this->requestId)
+                ->where('type', $this->type)
+                ->update([
+                    'status' => 'failed',
+                    'processed_at' => now(),
+                ]);
+        }
     }
 }

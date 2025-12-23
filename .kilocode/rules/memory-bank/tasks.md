@@ -233,6 +233,53 @@ class NovoModeloService extends BaseTenantService
 -  Verificar changelog das dependências por breaking changes
 -  Ter estratégia de rollback em caso de problemas
 
+### **🌳 Implementar Sistema Hierárquico com Soft Delete**
+
+**Última execução:** Durante desenvolvimento do módulo Categories (02/01/2025)
+**Arquivos modificados:**
+
+-  `app/Models/Category.php` - Modelo com estrutura hierárquica
+-  `app/Repositories/CategoryRepository.php` - Repository com filtros e Soft Delete
+-  `app/Services/CategoryService.php` - Service para operações hierárquicas
+-  `app/Http/Controllers/CategoryController.php` - Controller com filtros e Soft Delete
+-  `database/migrations/2025_01_01_000000_create_categories_table.php` - Tabela com parent_id
+-  `resources/views/pages/category/` - Views com filtros e gestão de Soft Delete
+-  `resources/js/categories.js` - JavaScript para interface com filtros
+
+**Passos:**
+
+1. Criar modelo com trait SoftDeletes e relacionamento hierárquico
+2. Implementar relacionamento parent/children com eager loading
+3. Criar migration com campo parent_id e índice adequado
+4. Implementar Repository com métodos específicos para hierarquia:
+   -  getAllByTenantWithHierarchy() - Lista com estrutura hierárquica
+   -  getRootCategories() - Categorias de nível superior
+   -  getChildrenByParentId() - Categorias filhas de um pai
+5. Implementar Service com operações hierárquicas:
+   -  buildCategoryTree() - Constrói árvore hierárquica
+   -  validateParentCategory() - Valida categoria pai
+   -  moveCategory() - Move categoria na hierarquia
+6. Criar Controller com filtros específicos:
+   -  currentDeleted() - Filtro para "Atuais/Deletados"
+   -  byParent() - Filtro por categoria pai
+7. Implementar views com interface para Soft Delete e hierarquia
+8. Adicionar JavaScript para interatividade e filtros
+9. Implementar exportação com filtros aplicados
+10.   Testar todos os cenários de hierarquia e Soft Delete
+
+**Considerações importantes:**
+
+-  **Estrutura hierárquica:** Usar parent_id com índices adequados para performance
+-  **Eager loading:** Sempre usar with('children') para evitar N+1 queries
+-  **Soft Delete granular:** Implementar filtros diferentes para Prestador vs Admin
+-  **Rotas Padronizadas:** Rotas de categoria agora seguem o padrão `provider.categories.*`.
+-  **Validações hierárquicas:** Não permitir categoria ser pai de si mesma
+-  **Cache de hierarquia:** Implementar cache para estruturas hierárquicas grandes
+-  **Interface responsiva:** Garantir que interface funcione bem em diferentes dispositivos
+-  **JavaScript eficiente:** Otimizar scripts para grandes volumes de dados
+-  **Formato brasileiro:** Implementar formatação de datas e valores
+-  **Exportação filtrada:** Manter filtros na exportação (XLSX, CSV, PDF)
+
 ## 📊 Tarefas de Monitoramento
 
 ### **📈 Análise de Performance**
@@ -421,6 +468,135 @@ class NovoModeloService extends BaseTenantService
 -  ✅ Total: 8/8 testes passando (20 assertions)
 -  ✅ Duração total: ~9 segundos
 
+### **🔢 Corrigir Padrões de Códigos em Seeders**
+
+**Última execução:** 12/11/2025
+**Arquivos modificados:**
+
+-  `database/seeders/BudgetTestSeeder.php` - Padrões de códigos corrigidos
+-  `check_codes.php` - Script de verificação criado
+-  _(Referência histórica: `old-system/test-DoctrineORM/database/seeds/inserts/insert.sql` - Removido)_
+
+**Problema identificado:**
+
+-  BudgetTestSeeder estava usando padrões de códigos novos em vez dos padrões do sistema antigo
+-  Causando inconsistência entre sistema novo e antigo (agora migrado)
+-  Faturas duplicando códigos
+
+**Padrões do sistema legado identificados:**
+
+-  **Orçamento:** `ORC-YYYYMMDD-0001` (ORC + data + sequencial 4 dígitos)
+-  **Serviço:** `YYYYMMDD-0001-S001` (data + orçamento + sequencial S001, S002, etc.)
+-  **Fatura:** `FAT-YYYYMMDD-0001` (FAT + data + sequencial 4 dígitos)
+
+**Correções implementadas:**
+
+1. **Analisar SQL de produção antigo:**
+
+   ```sql
+   INSERT INTO `budgets` (code) VALUES ('ORC-20250630-0001')
+   INSERT INTO `services` (code) VALUES ('20250630-0001-S001')
+   INSERT INTO `invoices` (code) VALUES ('FAT-20250809-0001')
+   ```
+
+2. **Corrigir BudgetTestSeeder:**
+
+   -  Implementar contadores globais únicos ($globalBudgetCounter, $globalInvoiceCounter)
+   -  Usar data atual para gerar códigos (20251112)
+   -  Sequencial de 4 dígitos com padding zero
+   -  Para serviços, usar ORC-YYYYMMDD-0001-S001 (mais consistente)
+
+3. **Implementar padrões corretos:**
+
+   ```php
+   // Orçamentos
+   $budgetCode = "ORC-{$budgetDate}-{$budgetSequential}";
+
+   // Serviços
+   $serviceCode = "{$budgetCode}-S" . str_pad((string)$serviceIndex, 3, '0', STR_PAD_LEFT);
+
+   // Faturas
+   $invoiceCode = "FAT-{$budgetDate}-{$invoiceSequential}";
+   ```
+
+**Resultado verificado:**
+
+-  ✅ Orçamentos: ORC-20251112-0001, ORC-20251112-0002, ORC-20251112-0003...
+-  ✅ Serviços: ORC-20251112-0001-S001, ORC-20251112-0001-S002, ORC-20251112-0001-S003...
+-  ✅ Faturas: FAT-20251112-0001, FAT-20251112-0002, FAT-20251112-0003...
+-  ✅ Comando `php artisan migrate:fresh --seed` executa sem erros
+-  ✅ Nenhuma duplicação de códigos
+
+**Considerações importantes:**
+
+-  **Análise de dados históricos:** Verificar padrões estabelecidos para manter consistência
+-  **Padrões sequenciais:** Usar contadores globais para evitar duplicação entre diferentes providers
+-  **Data atual:** Usar `now()->format('Ymd')` para refletir data real do seeding
+-  **Validação:** Criar scripts de verificação para confirmar padrões corretos
+-  **Documentação:** Atualizar memory bank com novos padrões identificados
+
+### **🛠️ Refinamento de UX e Dashboard de Categorias**
+
+**Última execução:** 21/12/2024
+**Arquivos modificados:**
+
+-  `app/Services/Domain/CategoryService.php` - Refatoração de segurança e lógica de dashboard
+-  `app/Services/Domain/CategoryExportService.php` - Remoção de slug e alinhamento centralizado
+-  `app/Http/Controllers/CategoryController.php` - Injeção do novo ExportService
+-  `resources/views/pages/category/dashboard.blade.php` - Novo layout de métricas responsivo
+-  `resources/views/pages/category/*.blade.php` - Remoção visual de Slugs
+
+**Passos executados:**
+
+1. **Diferenciação de Métricas:** Implementado contador para categorias deletadas e lógica de inativas.
+2. **Simplificação de UI:** Ocultado o campo Slug em todas as telas voltadas ao prestador para reduzir complexidade.
+3. **Melhoria na Exportação:** Ajustado alinhamento das colunas numéricas no Excel para padrão profissional.
+4. **Segurança de Tenant:** Refatorado helpers do `CategoryService` para garantir que toda busca valide a propriedade do registro via `ServiceResult`.
+
+**Considerações importantes:**
+
+-  **Slugs como identificadores:** Devem ser mantidos nas URLs por SEO/Estética, mas ocultos nos formulários.
+-  **Métricas:** Sempre considerar registros deletados (`withTrashed`) ao calcular estatísticas totais.
+-  **Consistência Visual:** Usar classes utilitárias CSS globais em vez de estilos inline no Blade.
+
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
-**Última atualização:** 07/11/2025 - Melhorada tarefa "Adicionar Novo Modelo Eloquent" para incluir arquitetura completa Controller → Services → Repositories → Models e adicionada tarefa "Corrigir Testes Budget que Estão Falhando".
+**Última atualização:** 21/12/2024 - Refinamento do módulo de categorias e dashboard.
+
+### **🛠️ Correção e Melhoria na Exportação de Categorias**
+
+**Data:** 21/12/2024
+**Arquivos modificados:**
+
+-  `app/Repositories/Traits/RepositoryFiltersTrait.php` - Correção no filtro `deleted` para aceitar string vazia.
+-  `app/Http/Controllers/CategoryController.php` - Ajuste na extração de dados do Paginator para preservar `deleted_at`.
+-  `app/Services/Domain/CategoryExportService.php` - Adição da coluna "Situação" (Ativo/Inativo/Deletado) e lógica robusta de detecção.
+-  `resources/views/pages/category/index.blade.php` - Correção nos links de exportação para persistir filtros vazios.
+
+**Passos executados:**
+
+1. **Filtros Persistentes:** Links de exportação agora forçam parâmetros (ex: `deleted=''`) para evitar limpeza automática do Laravel.
+2. **Coluna Situação:** Exportação agora mostra claramente itens Deletados, diferenciando de Inativos.
+3. **Correção Backend:** Repositório agora entende que filtro vazio significa `withTrashed()` (Todos).
+
+**Lições Aprendidas:**
+
+-  O helper `route()` remove parâmetros nulos; usar string vazia `''` para forçar presença.
+-  `getCollection()` em Paginators pode perder atributos crus do banco; usar `items()` ou coleta manual.
+-  `filemtime()` em Windows/Laragon é lento; usar versionamento estático para assets.
+
+### **🚀 Implementação "Gold Standard" no Módulo de Produtos**
+
+**Data:** 21/12/2024
+**Arquivos modificados:**
+
+-  `app/Services/Domain/ProductService.php`: Refatorado para usar Repository Pattern no Dashboard e paginação dinâmica.
+-  `app/Services/Domain/ProductExportService.php`: Criado novo serviço de exportação.
+-  `app/Http/Controllers/ProductController.php`: Implementada exportação e injeção de dependências.
+-  `resources/views/pages/product/index.blade.php`: Adicionado botão de exportação.
+
+**Melhorias Implementadas:**
+
+1. **Exportação Completa:** Excel e PDF agora disponíveis para produtos, com suporte a filtros (preço, status, search).
+2. **Dashboard Otimizado:** Consultas diretas ao Eloquent substituídas por métodos do Repository, garantindo escopo de Tenant e performance.
+3. **Consistência:** Módulo alinhado com a arquitetura de Categorias, facilitando manutenção futura.

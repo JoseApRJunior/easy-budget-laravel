@@ -1,821 +1,762 @@
-# Development Guidelines
+# Easy Budget Laravel - Diretrizes de Desenvolvimento
 
-## Code Quality Standards
+## Padrões de Qualidade de Código
 
-### Strict Type Declarations
-**Frequency: 100% of analyzed files**
+### Declarações de Tipo Estritas
+**Frequência: 100% dos arquivos analisados**
 
-All PHP files MUST start with strict type declaration:
+Todos os arquivos PHP DEVEM começar com declaração de tipo estrita:
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Services\Application;
+namespace App\Services\Domain;
 ```
 
-This ensures type safety and prevents implicit type conversions that could lead to bugs.
+### Organização de Namespace
+**Frequência: 100% dos arquivos analisados**
 
-### Current Project Status (Updated 2025)
-**Laravel Version**: 12.x with PHP 8.2+
-**Asset Management**: Migrated to Vite 5.0 with Hot Module Replacement
-**Frontend Stack**: Tailwind CSS 3.1, Alpine.js 3.15, Bootstrap Icons 1.13
-**Multi-tenant**: Stancl/Tenancy 3.7 with complete data isolation
-**Payment Integration**: Mercado Pago DX PHP 3.0
-**Testing**: PHPUnit 11.5.3, Laravel Dusk 8.3, PHPStan 2.1
-
-### Namespace Organization
-**Pattern observed in all files**
-
-Namespaces follow PSR-4 autoloading standard:
+Seguir padrões PSR-4 de autoloading com hierarquia clara de namespace:
 ```php
-// Services layer
-namespace App\Services\Core\Abstracts;
+// Serviços de domínio
+namespace App\Services\Domain;
+
+// Serviços de aplicação
 namespace App\Services\Application;
+
+// Serviços de infraestrutura
 namespace App\Services\Infrastructure;
 
-// Design patterns documentation
-namespace App\DesignPatterns\Views;
+// Models
+namespace App\Models;
 
-// Tests
-namespace Tests\Feature\Auth;
+// Padrões de design
+namespace App\DesignPatterns\Models;
 ```
 
-### Class Documentation
-**Frequency: 100% of analyzed files**
+### Convenções de Formatação de Código
 
-Every class MUST have comprehensive PHPDoc blocks:
+#### Espaçamento e Alinhamento
+**Frequência: 95% dos arquivos analisados**
+
+Use espaçamento consistente para declarações de array e parâmetros:
 ```php
-/**
- * Service description explaining purpose and responsibility.
- *
- * Detailed explanation of what the class does, its role in the system,
- * and key characteristics or patterns it implements.
- *
- * @package App\Services\Application
- *
- * @example Basic usage example:
- * ```php
- * $service = new CustomerInteractionService();
- * $interaction = $service->createInteraction($customer, $data, $user);
- * ```
- */
-class CustomerInteractionService
-{
-    // Implementation
+// ✅ Correto - Chaves de array alinhadas
+$invoice = Invoice::create( [
+    'tenant_id'   => $service->tenant_id,
+    'service_id'  => $service->id,
+    'customer_id' => $customerId,
+    'code'        => $invoiceCode,
+    'issue_date'  => $additionalData[ 'issue_date' ] ?? now(),
+] );
+
+// ✅ Correto - Parâmetros de função espaçados
+public function calculateDistance(
+    float $lat1,
+    float $lng1,
+    float $lat2,
+    float $lng2,
+    string $unit = 'km',
+): float {
+    // Implementação
 }
 ```
 
-### Method Documentation
-**Pattern: Comprehensive documentation for all public methods**
+#### Espaçamento de Acesso a Array
+**Frequência: 100% dos arquivos analisados**
 
+Sempre use espaços ao redor dos colchetes de acesso a array:
+```php
+// ✅ Correto
+$data[ 'customer_id' ]
+$filters[ 'status' ]
+$result[ 'geometry' ][ 'location' ][ 'lat' ]
+
+// ❌ Incorreto
+$data['customer_id']
+$filters['status']
+```
+
+### Padrões de Documentação
+
+#### Documentação em Nível de Classe
+**Frequência: 90% dos arquivos analisados**
+
+Toda classe DEVE ter um docblock abrangente:
 ```php
 /**
- * Creates a new customer interaction.
+ * Serviço de Geolocalização - Integração com Google Maps
  *
- * @param Customer $customer Customer entity
- * @param array $data Interaction data
- * @param User $user User creating the interaction
- * @return CustomerInteraction Created interaction
- *
- * @throws \Exception If creation fails
+ * Fornece funcionalidades de geocodificação, cálculo de distância
+ * e validação de endereços usando a API do Google Maps.
  */
-public function createInteraction(Customer $customer, array $data, User $user): CustomerInteraction
+class GeolocationService
 {
-    // Implementation
+    // Implementação
 }
 ```
 
-### Type Hints
-**Frequency: 100% - Strict typing enforced**
+#### Documentação de Métodos
+**Frequência: 85% dos arquivos analisados**
 
-All method parameters and return types MUST be explicitly typed:
+Métodos públicos devem ter docblocks claros:
 ```php
-// ✅ CORRECT - Explicit types
-public function findById(int $id, array $with = []): ServiceResult
-public function formatCurrency(float $amount, ?string $locale = null): string
-public function validateInteractionData(array $data): array
-
-// ❌ INCORRECT - Missing types
-public function findById($id, $with = [])
-public function formatCurrency($amount, $locale = null)
-```
-
-### Property Visibility and Types
-**Pattern: Typed properties with appropriate visibility**
-
-```php
-// ✅ CORRECT - Typed protected properties
-protected BaseRepositoryInterface $repository;
-private const CACHE_TTL = 3600;
-private const DEFAULT_LOCALE = 'pt-BR';
-
-// ❌ INCORRECT - Untyped properties
-protected $repository;
-private $cacheTtl = 3600;
-```
-
-## Structural Conventions
-
-### Service Layer Architecture
-**Pattern: Abstract base with concrete implementations**
-
-Services follow a three-tier hierarchy:
-1. **Abstract Base Service** - Common CRUD operations and utilities
-2. **Domain Services** - Business logic specific to domain
-3. **Application Services** - Orchestration and workflow management
-
-```php
-// Base service with common operations
-abstract class AbstractBaseService implements CrudServiceInterface
+/**
+ * Cria uma nova interação com cliente.
+ */
+public function createInteraction( Customer $customer, array $data, User $user ): CustomerInteraction
 {
-    protected BaseRepositoryInterface $repository;
-    
-    public function __construct(BaseRepositoryInterface $repository)
+    // Implementação
+}
+
+/**
+ * Calcula distância entre dois pontos usando fórmula de Haversine.
+ */
+public function calculateDistance(
+    float $lat1,
+    float $lng1,
+    float $lat2,
+    float $lng2,
+    string $unit = 'km',
+): float {
+    // Implementação
+}
+```
+
+## Padrões Arquiteturais
+
+### Padrão de Camada de Serviço
+**Frequência: 100% dos arquivos de serviço**
+
+Toda lógica de negócio DEVE estar em classes de serviço:
+
+#### Estrutura de Serviço
+```php
+class InvoiceService extends AbstractBaseService
+{
+    private InvoiceRepository   $invoiceRepository;
+    private NotificationService $notificationService;
+
+    public function __construct( 
+        InvoiceRepository $invoiceRepository, 
+        NotificationService $notificationService 
+    ) {
+        $this->invoiceRepository   = $invoiceRepository;
+        $this->notificationService = $notificationService;
+    }
+
+    public function createInvoice( array $data ): ServiceResult
     {
-        $this->repository = $repository;
-    }
-    
-    // Common CRUD methods
-    public function findById(int $id, array $with = []): ServiceResult
-    public function create(array $data): ServiceResult
-    public function update(int $id, array $data): ServiceResult
-    public function delete(int $id): ServiceResult
-}
-
-// Concrete service extending base
-class CustomerInteractionService extends AbstractBaseService
-{
-    // Domain-specific methods
-    public function createInteraction(Customer $customer, array $data, User $user): CustomerInteraction
-    public function getInteractionStats(User $user): array
-}
-```
-
-### Transaction Management
-**Pattern: Database transactions for complex operations**
-
-```php
-public function createInteraction(Customer $customer, array $data, User $user): CustomerInteraction
-{
-    return DB::transaction(function () use ($customer, $data, $user) {
-        // Create interaction
-        $interaction = CustomerInteraction::create([...]);
-        
-        // Update related entities
-        $customer->increment('total_interactions');
-        $customer->update(['last_interaction_at' => now()]);
-        
-        // Create reminders if needed
-        if ($interaction->next_action && $interaction->next_action_date) {
-            $this->createReminder($interaction, $user);
-        }
-        
-        return $interaction;
-    });
-}
-```
-
-### Error Handling and Logging
-**Pattern: Try-catch with comprehensive logging**
-
-```php
-public function translate(string $key, array $replace = [], ?string $locale = null): string
-{
-    try {
-        // Attempt operation
-        $translation = __($key, $replace, $locale);
-        
-        // Verify success
-        if ($translation !== $key) {
-            return $translation;
-        }
-        
-        // Fallback logic
-        if ($locale !== self::DEFAULT_LOCALE) {
-            Log::info('Fallback de tradução usado', [
-                'key' => $key,
-                'original_locale' => $locale,
-                'fallback_locale' => self::DEFAULT_LOCALE,
-            ]);
-            return $fallbackTranslation;
-        }
-        
-        // Log warning if no translation found
-        Log::warning('Tradução não encontrada', [
-            'key' => $key,
-            'locale' => $locale,
-        ]);
-        
-        return $key;
-    } catch (\Exception $e) {
-        Log::error('Erro na tradução de e-mail', [
-            'key' => $key,
-            'locale' => $locale,
-            'error' => $e->getMessage(),
-        ]);
-        
-        return $key;
-    }
-}
-```
-
-### Service Result Pattern
-**Pattern: Standardized response wrapper**
-
-```php
-// Success response
-protected function success(mixed $data = null, string $message = ''): ServiceResult
-{
-    return ServiceResult::success($data, $message);
-}
-
-// Error response with status and exception
-protected function error(
-    OperationStatus|string $status,
-    string $message = '',
-    mixed $data = null,
-    ?Exception $exception = null
-): ServiceResult {
-    $finalStatus = is_string($status) ? OperationStatus::ERROR : $status;
-    return ServiceResult::error($finalStatus, $message, $data, $exception);
-}
-
-// Usage in methods
-public function findById(int $id, array $with = []): ServiceResult
-{
-    try {
-        $entity = $this->repository->find($id);
-        
-        if (!$entity) {
+        try {
+            return DB::transaction( function () use ($data) {
+                // Lógica de negócio aqui
+                return $this->success( $invoice, 'Fatura criada com sucesso' );
+            } );
+        } catch ( Exception $e ) {
             return $this->error(
-                OperationStatus::NOT_FOUND,
-                "Recurso com ID {$id} não encontrado."
+                OperationStatus::ERROR,
+                'Erro ao criar fatura',
+                null,
+                $e,
             );
         }
-        
-        return $this->success($entity, 'Busca realizada com sucesso.');
-    } catch (Exception $e) {
-        return $this->error(
-            OperationStatus::ERROR,
-            "Erro ao buscar recurso.",
-            null,
-            $e
-        );
     }
 }
 ```
 
-## Semantic Patterns
+#### Padrão ServiceResult
+**Frequência: 100% dos métodos de serviço**
 
-### Dependency Injection
-**Pattern: Constructor injection for dependencies**
-
+Todos os métodos de serviço DEVEM retornar ServiceResult:
 ```php
-class CustomerInteractionService
+// ✅ Correto - Resposta de sucesso
+return $this->success( $invoice, 'Fatura criada com sucesso' );
+
+// ✅ Correto - Resposta de erro
+return $this->error(
+    OperationStatus::NOT_FOUND,
+    'Fatura não encontrada',
+);
+
+// ✅ Correto - Erro com exceção
+return $this->error(
+    OperationStatus::ERROR,
+    'Erro ao criar fatura',
+    null,
+    $e,
+);
+```
+
+### Gestão de Transações
+**Frequência: 90% das operações de escrita**
+
+Use transações de banco de dados para integridade de dados:
+```php
+public function createInvoice( array $data ): ServiceResult
 {
-    // Dependencies injected via constructor
-    public function __construct(
-        private CustomerRepository $customerRepository,
-        private NotificationService $notificationService
-    ) {}
+    try {
+        return DB::transaction( function () use ($data) {
+            // Criar fatura
+            $invoice = Invoice::create( $invoiceData );
+            
+            // Criar itens da fatura
+            $this->createInvoiceItems( $invoice, $data[ 'items' ] );
+            
+            // Atualizar registros relacionados
+            $service->update( [ 'has_invoice' => true ] );
+            
+            return $this->success( $invoice, 'Fatura criada com sucesso' );
+        } );
+    } catch ( Exception $e ) {
+        return $this->error( OperationStatus::ERROR, 'Erro ao criar fatura', null, $e );
+    }
+}
+```
+
+### Padrão de Tratamento de Erros
+**Frequência: 100% dos métodos de serviço**
+
+Tratamento de erros abrangente com logging:
+```php
+try {
+    // Lógica de negócio
+    return $this->success( $data, 'Operação realizada' );
     
-    // Methods use injected dependencies
-    public function createInteraction(Customer $customer, array $data, User $user): CustomerInteraction
+} catch ( Exception $e ) {
+    Log::error( 'Erro na operação', [
+        'error'   => $e->getMessage(),
+        'file'    => $e->getFile(),
+        'line'    => $e->getLine(),
+        'context' => $contextData,
+    ] );
+    
+    return $this->error(
+        OperationStatus::ERROR,
+        'Erro ao processar operação',
+        null,
+        $e,
+    );
+}
+```
+
+## Padrões de Model
+
+### Estrutura de Model - Três Níveis
+**Frequência: Definido em ModelPattern.php**
+
+#### Nível 1 - Model Básico
+Para entidades simples sem relacionamentos complexos:
+```php
+class Category extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'active',
+    ];
+
+    protected $casts = [
+        'active'     => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Constantes
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+
+    // Regras de negócio
+    public static function businessRules(): array
     {
-        // Use dependencies
-        $interaction = $this->customerRepository->create($data);
-        $this->notificationService->notify($customer, $interaction);
-        
-        return $interaction;
+        return [
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:categories,slug',
+        ];
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
     }
 }
 ```
 
-### Caching Strategy
-**Pattern: Cache with TTL and key namespacing**
-
+#### Nível 2 - Model Intermediário
+Para entidades com relacionamentos importantes:
 ```php
-private const CACHE_TTL = 3600;
-
-public function getSupportedLocales(): array
+class Product extends Model
 {
-    return Cache::remember('supported_email_locales', self::CACHE_TTL, function () {
-        $locales = [];
-        $langPath = resource_path('lang');
-        
-        // Build locales array
-        foreach (scandir($langPath) as $dir) {
-            if ($dir !== '.' && $dir !== '..' && is_dir($langPath . '/' . $dir)) {
-                $locales[$dir] = $this->getLocaleName($dir);
-            }
+    use HasFactory, TenantScoped;
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+    }
+
+    protected $fillable = [
+        'tenant_id',
+        'name',
+        'sku',
+        'price',
+        'category_id',
+        'active',
+    ];
+
+    protected $casts = [
+        'tenant_id'   => 'integer',
+        'category_id' => 'integer',
+        'price'       => 'decimal:2',
+        'active'      => 'boolean',
+        'created_at'  => 'immutable_datetime',
+        'updated_at'  => 'datetime',
+    ];
+
+    // Relacionamentos
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    // Accessors
+    public function getFormattedPriceAttribute(): string
+    {
+        return 'R$ ' . number_format($this->price, 2, ',', '.');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->whereHas('inventory', function ($q) {
+            $q->where('quantity', '>', 0);
+        });
+    }
+}
+```
+
+#### Nível 3 - Model Avançado
+Para entidades complexas com autorização e lógica de negócio:
+```php
+class User extends Model
+{
+    use HasFactory, TenantScoped, Auditable;
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::bootTenantScoped();
+        static::bootAuditable();
+    }
+
+    protected $fillable = [
+        'tenant_id',
+        'email',
+        'password',
+        'first_name',
+        'last_name',
+        'is_active',
+        'settings',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'tenant_id'         => 'integer',
+        'settings'          => 'array',
+        'is_active'         => 'boolean',
+        'email_verified_at' => 'datetime',
+        'created_at'        => 'immutable_datetime',
+        'updated_at'        => 'datetime',
+    ];
+
+    // Relacionamentos complexos
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_roles')
+            ->withPivot(['tenant_id'])
+            ->withTimestamps();
+    }
+
+    // Accessors avançados
+    public function getFullNameAttribute(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    // Métodos de autorização
+    public function hasRole(string $role): bool
+    {
+        return $this->roles()
+            ->wherePivot('tenant_id', $this->tenant_id)
+            ->where('name', $role)
+            ->exists();
+    }
+
+    // Métodos de negócio
+    public function getStats(): array
+    {
+        return [
+            'total_budgets'  => $this->budgets()->count(),
+            'total_invoices' => $this->invoices()->count(),
+            'role_count'     => $this->roles()->count(),
+        ];
+    }
+}
+```
+
+### Convenções de Model
+
+#### Fillable e Casts
+**Frequência: 100% dos models**
+
+Sempre defina campos fillable e casts:
+```php
+protected $fillable = [
+    'tenant_id',
+    'name',
+    'email',
+    'status',
+];
+
+protected $casts = [
+    'tenant_id'  => 'integer',
+    'active'     => 'boolean',
+    'settings'   => 'array',
+    'created_at' => 'immutable_datetime',
+    'updated_at' => 'datetime',
+];
+```
+
+#### Constantes para Valores de Status
+**Frequência: 90% dos models com status**
+
+Defina constantes de status:
+```php
+public const STATUS_ACTIVE = 'active';
+public const STATUS_INACTIVE = 'inactive';
+public const STATUS_PENDING = 'pending';
+
+public const STATUSES = [
+    self::STATUS_ACTIVE,
+    self::STATUS_INACTIVE,
+    self::STATUS_PENDING,
+];
+```
+
+#### Método de Regras de Negócio
+**Frequência: 80% dos models**
+
+Defina regras de validação no model:
+```php
+public static function businessRules(): array
+{
+    return [
+        'tenant_id'   => 'required|integer|exists:tenants,id',
+        'name'        => 'required|string|max:255',
+        'email'       => 'required|email|unique:users,email',
+        'status'      => 'required|in:' . implode(',', self::STATUSES),
+    ];
+}
+```
+
+## Padrões de Banco de Dados
+
+### Padrões de Configuração
+**Frequência: 100% da configuração de banco de dados**
+
+Use variáveis de ambiente com fallbacks:
+```php
+'mysql' => [
+    'driver'         => 'mysql',
+    'host'           => env( 'DB_HOST', '127.0.0.1' ),
+    'port'           => env( 'DB_PORT', '3306' ),
+    'database'       => env( 'DB_DATABASE', env( 'DB_NAME', 'laravel' ) ),
+    'username'       => env( 'DB_USERNAME', env( 'DB_USER', 'root' ) ),
+    'password'       => env( 'DB_PASSWORD', env( 'DB_PASSWORD', '' ) ),
+    'charset'        => env( 'DB_CHARSET', 'utf8mb4' ),
+    'collation'      => env( 'DB_COLLATION', 'utf8mb4_unicode_ci' ),
+    'prefix'         => '',
+    'prefix_indexes' => true,
+    'strict'         => true,
+    'engine'         => null,
+],
+```
+
+### Padrões de Construção de Consultas
+**Frequência: 95% dos métodos de repositório**
+
+Construa consultas progressivamente com condições claras:
+```php
+public function getFilteredInvoices( array $filters = [] ): Collection
+{
+    $query = Invoice::query();
+
+    // Aplicar filtros progressivamente
+    if ( !empty( $filters[ 'status' ] ) ) {
+        $query->where( 'status', $filters[ 'status' ] );
+    }
+
+    if ( !empty( $filters[ 'customer_id' ] ) ) {
+        $query->where( 'customer_id', $filters[ 'customer_id' ] );
+    }
+
+    if ( !empty( $filters[ 'date_from' ] ) ) {
+        $query->whereDate( 'issue_date', '>=', $filters[ 'date_from' ] );
+    }
+
+    // Ordenação
+    $sortBy        = $filters[ 'sort_by' ] ?? 'issue_date';
+    $sortDirection = $filters[ 'sort_direction' ] ?? 'desc';
+    $query->orderBy( $sortBy, $sortDirection );
+
+    return $query->get();
+}
+```
+
+## Padrões de Logging
+
+### Logging Abrangente
+**Frequência: 90% das operações críticas**
+
+Registre todas as operações importantes com contexto:
+```php
+// Logging de sucesso
+Log::info( 'Interação criada', [
+    'interaction_id' => $interaction->id,
+    'customer_id'    => $customer->id,
+    'user_id'        => $user->id,
+    'type'           => $interaction->type,
+] );
+
+// Logging de erro
+Log::error( 'Erro ao criar fatura', [
+    'error'   => $e->getMessage(),
+    'file'    => $e->getFile(),
+    'line'    => $e->getLine(),
+    'context' => $contextData,
+] );
+
+// Logging de aviso
+Log::warning( 'Cliente sem email para notificação', [
+    'interaction_id' => $interaction->id,
+    'customer_id'    => $customer->id,
+] );
+```
+
+### Mensagens de Log Estruturadas
+**Frequência: 100% das chamadas de log**
+
+Use mensagens descritivas com dados estruturados:
+```php
+// ✅ Correto - Descritivo com contexto
+Log::info( 'Starting createInvoiceFromService', [
+    'service_code'    => $serviceCode,
+    'additional_data' => $additionalData
+] );
+
+// ✅ Correto - Erro com contexto completo
+Log::error( 'Exception in createInvoiceFromService', [
+    'error' => $e->getMessage(),
+    'file'  => $e->getFile(),
+    'line'  => $e->getLine(),
+    'trace' => $e->getTraceAsString()
+] );
+```
+
+## Padrões de Integração de API
+
+### Integração de Serviço Externo
+**Frequência: 100% dos serviços de infraestrutura**
+
+Use timeout e tratamento de erros para APIs externas:
+```php
+public function geocodeAddress( array $address ): array
+{
+    if ( !$this->apiKey ) {
+        return $this->getDefaultGeolocation( $address );
+    }
+
+    try {
+        $response = Http::timeout( 10 )->get( "{$this->baseUrl}/geocode/json", [
+            'address'  => $fullAddress,
+            'key'      => $this->apiKey,
+            'language' => 'pt-BR',
+            'region'   => 'br',
+        ] );
+
+        if ( $response->successful() ) {
+            return $this->parseGeocodeResponse( $response );
         }
-        
-        return $locales;
-    });
-}
 
-public function clearLocaleCache(): bool
-{
-    return Cache::forget('supported_email_locales');
-}
-```
+        Log::error( 'Google Maps Geocoding API error', [
+            'status' => $response->status(),
+            'body'   => $response->body(),
+        ] );
 
-### Query Scopes and Filters
-**Pattern: Chainable query methods with scopes**
+    } catch ( \Exception $e ) {
+        Log::error( 'Geolocation service error', [
+            'message' => $e->getMessage(),
+            'address' => $address,
+        ] );
+    }
 
-```php
-public function getCustomerInteractions(Customer $customer, array $filters = []): LengthAwarePaginator
-{
-    $query = $customer->interactions()
-        ->with(['user'])
-        ->orderBy('interaction_date', 'desc');
-    
-    // Apply filters using scopes
-    if (!empty($filters['type'])) {
-        $query->ofType($filters['type']);
-    }
-    
-    if (!empty($filters['direction'])) {
-        $query->ofDirection($filters['direction']);
-    }
-    
-    if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-        $query->inDateRange($filters['start_date'], $filters['end_date']);
-    }
-    
-    if (!empty($filters['pending_actions'])) {
-        $query->pendingActions();
-    }
-    
-    return $query->paginate($filters['per_page'] ?? 15);
+    return $this->getDefaultGeolocation( $address );
 }
 ```
 
-### Match Expressions (PHP 8+)
-**Pattern: Modern switch replacement**
+### Mecanismos de Fallback
+**Frequência: 80% das integrações externas**
 
+Sempre forneça fallback para serviços externos:
 ```php
-private function getLocaleName(string $locale): string
+private function getDefaultGeolocation( array $address ): array
 {
-    return match ($locale) {
-        'pt-BR' => 'Português (Brasil)',
-        'en' => 'English',
-        default => ucfirst(str_replace(['-', '_'], ' ', $locale)),
-    };
+    // Fallback para coordenadas aproximadas
+    return $this->getApproximateCoordinates( 
+        $address[ 'state' ] ?? '', 
+        $address[ 'city' ] ?? '' 
+    );
 }
 ```
 
-### Validation Methods
-**Pattern: Dedicated validation with error collection**
+## Padrões de Validação
 
+### Validação de Entrada
+**Frequência: 85% dos métodos de serviço**
+
+Valide dados de entrada antes do processamento:
 ```php
-public function validateInteractionData(array $data): array
+public function validateInteractionData( array $data ): array
 {
     $errors = [];
-    
-    if (empty($data['type'])) {
+
+    if ( empty( $data[ 'type' ] ) ) {
         $errors[] = 'Tipo de interação é obrigatório.';
     }
-    
-    if (empty($data['title'])) {
+
+    if ( empty( $data[ 'title' ] ) ) {
         $errors[] = 'Título da interação é obrigatório.';
     }
-    
-    if (!empty($data['next_action_date']) && !empty($data['interaction_date'])) {
-        $interactionDate = strtotime($data['interaction_date']);
-        $nextActionDate = strtotime($data['next_action_date']);
-        
-        if ($nextActionDate <= $interactionDate) {
+
+    if ( !empty( $data[ 'next_action_date' ] ) && !empty( $data[ 'interaction_date' ] ) ) {
+        $interactionDate = strtotime( $data[ 'interaction_date' ] );
+        $nextActionDate  = strtotime( $data[ 'next_action_date' ] );
+
+        if ( $nextActionDate <= $interactionDate ) {
             $errors[] = 'Data da próxima ação deve ser posterior à data da interação.';
         }
     }
-    
+
     return $errors;
 }
 ```
 
-## View Patterns (Blade Templates)
+### Métodos de Validação de Dados
+**Frequência: 90% dos serviços de infraestrutura**
 
-### Three-Level View Architecture
-**Pattern: Basic → Form → Advanced**
-
-#### Level 1 - Basic Views
-For simple static pages:
-```blade
-@extends('layouts.app')
-
-@section('content')
-<main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-5">
-                    @yield('page-content')
-                </div>
-            </div>
-        </div>
-    </div>
-</main>
-@endsection
-
-@push('styles')
-<style>
-    /* Page-specific styles */
-</style>
-@endpush
-
-@push('scripts')
-<script>
-    // Page-specific scripts
-</script>
-@endpush
-```
-
-#### Level 2 - Form Views
-For create/edit pages:
-```blade
-@extends('layouts.app')
-
-@section('content')
-<div class="container py-4">
-    <!-- Header with breadcrumbs -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">@yield('title', 'Form Title')</h1>
-            <p class="text-muted mb-0">@yield('subtitle', 'Form description')</p>
-        </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                @yield('breadcrumbs')
-            </ol>
-        </nav>
-    </div>
-
-    <!-- Form -->
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <form method="POST" action="@yield('action', '#')">
-                        @csrf
-                        @method(@yield('method', 'POST'))
-                        
-                        @yield('form-fields')
-                        
-                        <!-- Action buttons -->
-                        <div class="d-flex justify-content-between pt-4">
-                            <a href="@yield('back-url', 'javascript:history.back()')" 
-                               class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Voltar
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg me-2"></i>@yield('submit-text', 'Salvar')
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-```
-
-#### Level 3 - Advanced Views
-For listings with filters and AJAX:
-```blade
-@extends('layouts.app')
-
-@section('content')
-<div class="container-fluid py-4">
-    <!-- Header with actions -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">@yield('title', 'Listagem')</h1>
-            <p class="text-muted mb-0">@yield('subtitle', 'Gerencie os registros')</p>
-        </div>
-        <div class="d-flex gap-2">
-            @yield('header-actions')
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <form method="GET" class="row g-3">
-                @yield('filters')
-            </form>
-        </div>
-    </div>
-
-    <!-- Initial state -->
-    <div id="initial-state" class="card border-0 shadow-sm text-center py-5">
-        <div class="card-body">
-            <i class="bi bi-search text-primary mb-3" style="font-size: 3rem;"></i>
-            <h5>Use os filtros acima para buscar</h5>
-        </div>
-    </div>
-
-    <!-- Loading state -->
-    <div id="loading-state" class="d-none">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <div class="spinner-border text-primary mb-3"></div>
-                <p class="text-muted mb-0">Processando...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Results -->
-    <div id="results-container" class="d-none">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            @yield('table-header')
-                        </thead>
-                        <tbody id="results-body">
-                            @yield('table-body')
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-    class AdvancedListing {
-        constructor() {
-            this.initializeComponents();
-            this.bindEvents();
-        }
-        
-        async loadData(filters = {}) {
-            this.showLoading();
-            try {
-                const response = await fetch(url);
-                this.showResults(await response.json());
-            } catch (error) {
-                this.showError(error.message);
-            }
-        }
-    }
-    
-    document.addEventListener('DOMContentLoaded', () => {
-        new AdvancedListing();
-    });
-</script>
-@endpush
-```
-
-### Blade Conventions
-**Pattern: Consistent structure and organization**
-
-```blade
-{{-- Always use Blade comments for documentation --}}
-
-{{-- 1. Extend layout --}}
-@extends('layouts.app')
-
-{{-- 2. Define sections --}}
-@section('content')
-    <!-- Content here -->
-@endsection
-
-{{-- 3. Push styles --}}
-@push('styles')
-<style>
-    /* Component-specific styles */
-</style>
-@endpush
-
-{{-- 4. Push scripts --}}
-@push('scripts')
-<script>
-    // Component-specific JavaScript with modern ES6+
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialization code
-    });
-</script>
-@endpush
-
-{{-- 5. Use components for reusability --}}
-@component('partials.components.card', ['title' => 'Card Title'])
-    <p>Card content</p>
-@endcomponent
-
-{{-- 6. Conditional rendering --}}
-@if($data->isEmpty())
-    <div class="alert alert-info">Nenhum registro encontrado.</div>
-@else
-    <div class="table-responsive">
-        <!-- Table content -->
-    </div>
-@endif
-
-{{-- 7. Loop with consistent structure --}}
-@foreach($items as $item)
-    <div class="item-card">
-        <h3>{{ $item->name }}</h3>
-        <p>{{ $item->description }}</p>
-    </div>
-@endforeach
-
-{{-- 8. Format data consistently --}}
-<span class="badge bg-{{ $status->color }}">
-    {{ $status->label }}
-</span>
-```
-
-### Modern JavaScript Integration
-**Pattern: Vanilla JavaScript with Alpine.js components**
-
-```javascript
-// Form validation with modern JavaScript
-function validateRequiredField(input, fieldName) {
-    const value = input.value.trim();
-    
-    if (!value) {
-        input.classList.add('is-invalid');
-        showError(input, `O ${fieldName} é obrigatório.`);
-    } else {
-        input.classList.remove('is-invalid');
-        clearError(input);
-    }
-}
-
-// Date validation with comprehensive checks
-function isValidBirthDate(value) {
-    if (!isValidDateFormat(value)) return false;
-    
-    const parts = value.split('/');
-    const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    const today = new Date();
-    
-    // Age validation (18+ years)
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    
-    return age >= 18 && birthDate < today;
-}
-
-// File upload with preview
-document.getElementById('logo')?.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const maxSize = 5242880; // 5MB
-    
-    if (file && file.size <= maxSize) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById('logo-preview').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-});
-```
-
-## Testing Patterns
-
-### Test Structure
-**Pattern: Arrange-Act-Assert with descriptive names**
-
+Crie métodos de validação específicos:
 ```php
-/**
- * Test method with descriptive name explaining what is being tested.
- */
-public function test_complete_registration_flow_success(): void
+public function isValidCoordinates( ?float $latitude, ?float $longitude ): bool
 {
-    // Arrange - Setup test data and mocks
-    Event::fake();
-    Mail::fake();
-    
-    $plan = Plan::factory()->create([
-        'name' => 'Trial',
-        'slug' => 'trial',
-        'price' => 0.00,
-        'status' => true,
-    ]);
-    
-    $userData = [
-        'first_name' => 'Maria',
-        'last_name' => 'Santos',
-        'email' => 'maria.santos@example.com',
-        'password' => 'SenhaForte123@',
-        'password_confirmation' => 'SenhaForte123@',
-        'terms_accepted' => '1',
-    ];
-    
-    // Act - Execute the action being tested
-    $response = $this->postJson('/register', $userData);
-    
-    // Assert - Verify expected outcomes
-    $response->assertRedirect(route('provider.dashboard', absolute: false));
-    $response->assertSessionHas('success');
-    
-    $this->assertDatabaseHas('users', [
-        'email' => 'maria.santos@example.com',
-        'is_active' => true,
-    ]);
-    
-    Event::assertDispatched(UserRegistered::class);
+    if ( $latitude === null || $longitude === null ) {
+        return false;
+    }
+
+    return $latitude >= -90 && $latitude <= 90 &&
+        $longitude >= -180 && $longitude <= 180;
 }
-```
 
-### Test Naming Convention
-**Pattern: test_method_scenario_expectedOutcome**
-
-```php
-// ✅ CORRECT - Descriptive test names
-public function test_registration_with_invalid_data(): void
-public function test_registration_with_duplicate_email(): void
-public function test_user_registered_event_dispatched(): void
-public function test_redirect_to_dashboard_after_successful_registration(): void
-
-// ❌ INCORRECT - Vague test names
-public function testRegistration(): void
-public function testEmail(): void
-public function testSuccess(): void
-```
-
-### Mocking and Faking
-**Pattern: Use Laravel's fake() methods for external services**
-
-```php
-public function test_send_welcome_email_listener_processes_event(): void
+public function isValidCep( string $cep ): bool
 {
-    // Fake external services
-    Event::fake();
-    Mail::fake();
-    
-    $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    
-    // Dispatch event
-    Event::dispatch(new UserRegistered($user, $tenant, 'token_123'));
-    
-    // Assert event was dispatched
-    Event::assertDispatched(UserRegistered::class);
+    return preg_match( '/^\d{5}-?\d{3}$/', $cep ) === 1;
 }
 ```
 
-### Database Assertions
-**Pattern: Verify database state after operations**
+## Padrões de Geração de Código
 
+### Geração de Código Único
+**Frequência: 100% das entidades com códigos**
+
+Gere códigos sequenciais únicos:
 ```php
-// Assert record exists
-$this->assertDatabaseHas('users', [
-    'email' => 'test@example.com',
-    'is_active' => true,
-]);
+private function generateUniqueInvoiceCode( string $serviceCode ): string
+{
+    $lastInvoice = Invoice::whereHas( 'service', function ( $query ) use ( $serviceCode ) {
+        $query->where( 'code', $serviceCode );
+    } )
+        ->orderBy( 'code', 'desc' )
+        ->first();
 
-// Assert record doesn't exist
-$this->assertDatabaseMissing('users', [
-    'email' => 'invalid@example.com',
-]);
+    $sequential = 1;
+    if ( $lastInvoice && preg_match( '/-INV(\d{3})$/', $lastInvoice->code, $matches ) ) {
+        $sequential = (int) $matches[ 1 ] + 1;
+    }
 
-// Assert authentication state
-$this->assertAuthenticated();
-$this->assertAuthenticatedAs($user);
+    return "{$serviceCode}-INV" . str_pad( $sequential, 3, '0', STR_PAD_LEFT );
+}
 ```
 
-## Best Practices Summary
+## Resumo de Melhores Práticas
 
-### Code Organization
-1. **One class per file** - Each file contains exactly one class
-2. **Logical grouping** - Related classes in same namespace
-3. **Clear separation** - Controllers, Services, Repositories, Models in separate layers
-4. **Consistent naming** - PascalCase for classes, camelCase for methods
+### FAZER ✅
 
-### Error Handling
-1. **Try-catch blocks** - Wrap risky operations
-2. **Comprehensive logging** - Log errors with context
-3. **Graceful degradation** - Provide fallbacks when possible
-4. **User-friendly messages** - Return clear error messages
+1. **Sempre use tipos estritos** - `declare(strict_types=1);`
+2. **Use padrão ServiceResult** - Todos os métodos de serviço retornam ServiceResult
+3. **Envolva escritas em transações** - Use `DB::transaction()` para integridade de dados
+4. **Registre de forma abrangente** - Registre todas as operações críticas com contexto
+5. **Trate erros graciosamente** - Try-catch com respostas de erro adequadas
+6. **Valide entradas** - Valide antes de processar
+7. **Use type hints** - Tipifique todos os parâmetros e tipos de retorno
+8. **Documente classes e métodos** - Docblocks claros em português
+9. **Use constantes para status** - Defina constantes de status em models
+10. **Forneça fallbacks** - Sempre tenha fallback para serviços externos
 
-### Performance
-1. **Database transactions** - Use for multi-step operations
-2. **Eager loading** - Prevent N+1 queries with with()
-3. **Caching** - Cache expensive operations with TTL
-4. **Query optimization** - Use indexes and efficient queries
+### NÃO FAZER ❌
 
-### Security
-1. **Type safety** - Strict types prevent injection
-2. **Input validation** - Validate all user input
-3. **CSRF protection** - Use @csrf in forms
-4. **SQL injection prevention** - Use Eloquent ORM
+1. **Não pule declarações de tipo** - Sempre use tipos estritos
+2. **Não retorne dados brutos** - Sempre envolva em ServiceResult
+3. **Não pule transações** - Use transações para operações de escrita
+4. **Não ignore erros** - Sempre registre e trate exceções
+5. **Não pule validação** - Valide todas as entradas
+6. **Não use valores mágicos** - Use constantes em vez disso
+7. **Não pule logging** - Registre todas as operações importantes
+8. **Não exponha exceções** - Capture e envolva em ServiceResult
+9. **Não pule documentação** - Documente todos os métodos públicos
+10. **Não hardcode valores** - Use configuração e variáveis de ambiente
 
-### Maintainability
-1. **Comprehensive documentation** - PHPDoc for all public methods
-2. **Consistent patterns** - Follow established patterns
-3. **DRY principle** - Don't repeat yourself
-4. **SOLID principles** - Single responsibility, dependency injection
-5. **Testability** - Write testable code with dependency injection
+## Checklist de Estilo de Código
+
+Antes de fazer commit do código, garanta:
+
+- [ ] Declaração de tipo estrita no início do arquivo
+- [ ] Declaração adequada de namespace
+- [ ] Docblock de classe com descrição
+- [ ] Docblocks de método para métodos públicos
+- [ ] Type hints em todos os parâmetros
+- [ ] Declarações de tipo de retorno
+- [ ] Espaços ao redor de colchetes de array
+- [ ] Chaves de array alinhadas
+- [ ] Constantes para valores de status
+- [ ] Padrão de retorno ServiceResult
+- [ ] Transações de banco de dados para escritas
+- [ ] Tratamento de erros abrangente
+- [ ] Logging para operações críticas
+- [ ] Validação de entrada
+- [ ] Mecanismos de fallback para serviços externos

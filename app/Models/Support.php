@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class Support extends Model
 {
@@ -65,6 +63,7 @@ class Support extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'code',
         'first_name',
         'last_name',
         'email',
@@ -80,6 +79,7 @@ class Support extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'code'       => 'string',
         'tenant_id'  => 'integer',
         'status'     => 'string',
         'created_at' => 'immutable_datetime',

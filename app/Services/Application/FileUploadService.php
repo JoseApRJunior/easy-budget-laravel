@@ -132,6 +132,68 @@ class FileUploadService
         }
     }
 
+    public function uploadImageWithProcessing( UploadedFile $file, int $tenantId, array $options = [] ): array
+    {
+        $this->validateFile( $file, 'generic' );
+        $filename = $this->generateUniqueFilename( $file, 'image', $tenantId );
+        $directory = "uploads/{$tenantId}";
+
+        $originalPath = $file->storeAs( $directory, $filename, 'public' );
+        $targetPath = "{$directory}/processed_{$filename}";
+
+        $image = $this->imageManager->read( Storage::disk( 'public' )->path( $originalPath ) );
+
+        if ( isset( $options['resize'] ) ) {
+            $resize = $options['resize'];
+            $width = $resize['width'] ?? null;
+            $height = $resize['height'] ?? null;
+            if ( $width && $height ) {
+                $image->resize( $width, $height );
+            } elseif ( $width ) {
+                $image->scale( width: $width );
+            } elseif ( $height ) {
+                $image->scale( height: $height );
+            }
+        }
+
+        if ( !empty( $options['watermark'] ) && !empty( $options['watermark']['enabled'] ) ) {
+            $wm = $options['watermark'];
+            $wmFile = $wm['file'] ?? Storage::disk( 'public' )->path( 'watermarks/watermark.png' );
+            if ( is_string( $wmFile ) && file_exists( $wmFile ) ) {
+                $position = $wm['position'] ?? 'top-right';
+                $x = (int)($wm['x'] ?? 10);
+                $y = (int)($wm['y'] ?? 10);
+                $opacity = (int)($wm['opacity'] ?? 70);
+                $watermark = $this->imageManager->read( $wmFile );
+                if ( isset( $wm['width'] ) || isset( $wm['height'] ) ) {
+                    $w = $wm['width'] ?? null;
+                    $h = $wm['height'] ?? null;
+                    if ( $w && $h ) {
+                        $watermark->resize( $w, $h );
+                    } elseif ( $w ) {
+                        $watermark->scale( width: $w );
+                    } elseif ( $h ) {
+                        $watermark->scale( height: $h );
+                    }
+                }
+                $watermark->opacity( $opacity );
+                $image->place( $watermark, $position, $x, $y );
+            }
+        }
+
+        $image->toJpeg( quality: (int)($options['quality'] ?? 90) )->save( Storage::disk( 'public' )->path( $targetPath ) );
+
+        return [
+            'success' => true,
+            'paths' => [
+                'original' => $originalPath,
+                'processed' => $targetPath,
+            ],
+            'url' => asset( 'storage/' . $targetPath ),
+            'filename' => $filename,
+        ];
+    }
+
     /**
      * Remove arquivo do storage
      */

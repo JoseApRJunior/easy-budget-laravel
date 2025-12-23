@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\ServiceStatusEnum;
+use App\Enums\ServiceStatus;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\ServiceItem;
@@ -13,9 +13,6 @@ use App\Models\Traits\TenantScoped;
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Service extends Model
 {
@@ -78,7 +75,7 @@ class Service extends Model
         'tenant_id'                  => 'integer',
         'budget_id'                  => 'integer',
         'category_id'                => 'integer',
-        'status'                     => ServiceStatusEnum::class,
+        'status'                     => ServiceStatus::class,
         'user_confirmation_token_id' => 'integer',
         'code'                       => 'string',
         'description'                => 'string',
@@ -102,7 +99,7 @@ class Service extends Model
             'tenant_id'                  => 'required|integer|exists:tenants,id',
             'budget_id'                  => 'required|integer|exists:budgets,id',
             'category_id'                => 'required|integer|exists:categories,id',
-            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatusEnum::cases(), 'value' ) ),
+            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatus::cases(), 'value' ) ),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code'                       => 'required|string|max:50|unique:services,code',
             'description'                => 'nullable|string',
@@ -159,9 +156,41 @@ class Service extends Model
     /**
      * Get the service status enum.
      */
-    public function getServiceStatusAttribute(): ?ServiceStatusEnum
+    public function getServiceStatusAttribute(): ?ServiceStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Get the name of the service status for backward compatibility with views.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->status?->getDescription();
+    }
+
+    /**
+     * Get the color of the service status for backward compatibility with views.
+     */
+    public function getColorAttribute(): string
+    {
+        return $this->status?->getColor() ?? '#6c757d';
+    }
+
+    /**
+     * Get the slug of the service status for backward compatibility with views.
+     */
+    public function getSlugAttribute(): string
+    {
+        return $this->status?->value ?? '';
+    }
+
+    /**
+     * Get the description of the service status for backward compatibility with views.
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->status?->getDescription();
     }
 
     /**
@@ -186,6 +215,19 @@ class Service extends Model
     public function schedules()
     {
         return $this->hasMany( Schedule::class);
+    }
+
+    public function canBeEdited(): bool
+    {
+        $status = $this->status instanceof \App\Enums\ServiceStatus
+            ? $this->status
+            : \App\Enums\ServiceStatus::fromString((string) $this->status);
+        return $status?->canEdit() ?? false;
+    }
+
+    public function canEdit(): bool
+    {
+        return $this->canBeEdited();
     }
 
     /**

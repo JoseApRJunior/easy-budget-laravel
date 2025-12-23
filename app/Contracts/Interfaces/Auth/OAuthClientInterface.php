@@ -17,38 +17,31 @@ interface OAuthClientInterface
 {
     /**
      * Redireciona o usuário para o provedor OAuth
-     *
-     * @return RedirectResponse
      */
     public function redirectToProvider(): RedirectResponse;
 
     /**
      * Processa o callback do provedor OAuth
      *
-     * @param Request $request
      * @return array Dados do usuário do provedor OAuth
      */
-    public function handleProviderCallback( Request $request ): array;
+    public function handleProviderCallback(Request $request): array;
 
     /**
      * Obtém informações básicas do usuário do provedor
      *
-     * @param string $accessToken Token de acesso do provedor
+     * @param  string  $accessToken  Token de acesso do provedor
      * @return array Dados básicos do usuário (id, name, email, avatar)
      */
-    public function getUserInfo( string $accessToken ): array;
+    public function getUserInfo(string $accessToken): array;
 
     /**
      * Valida se o provedor está configurado corretamente
-     *
-     * @return bool
      */
     public function isConfigured(): bool;
 
     /**
      * Obtém o nome do provedor (google, facebook, etc.)
-     *
-     * @return string
      */
     public function getProviderName(): string;
 }

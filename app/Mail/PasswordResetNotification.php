@@ -26,24 +26,24 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
     /**
      * Cria uma nova instância da mailable.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param string $token Token de redefinição de senha
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  string  $token  Token de redefinição de senha
      */
     public function __construct(
         User $user,
         string $token,
     ) {
-        parent::__construct( $user, null, [
+        parent::__construct($user, null, [
             'token' => $token,
-        ] );
+        ]);
 
         $this->token = $token;
 
         // Log da operação de criação do e-mail
-        $this->logEmailOperation( 'password_reset_notification_created', [
-            'token_length' => strlen( $token ),
-            'user_email'   => $this->getUserEmail(),
-        ] );
+        $this->logEmailOperation('password_reset_notification_created', [
+            'token_length' => strlen($token),
+            'user_email' => $this->getUserEmail(),
+        ]);
     }
 
     /**
@@ -65,41 +65,41 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
             $templateData = $this->getTemplateData();
 
             $resetLink = $this->generateResetLink();
-            $expiresAt = now()->addHours( 1 )->format( 'd/m/Y H:i:s' );
-            $appName   = config( 'app.name', 'Easy Budget' );
+            $expiresAt = now()->addHours(1)->format('d/m/Y H:i:s');
+            $appName = config('app.name', 'Easy Budget');
 
             // Log dos dados do template para auditoria
-            $this->logEmailOperation( 'password_reset_content_generated', [
-                'has_reset_link' => !empty( $resetLink ),
-                'expires_at'     => $expiresAt,
-                'app_name'       => $appName,
-            ] );
+            $this->logEmailOperation('password_reset_content_generated', [
+                'has_reset_link' => ! empty($resetLink),
+                'expires_at' => $expiresAt,
+                'app_name' => $appName,
+            ]);
 
             return new Content(
                 view: 'emails.users.forgot-password',
-                with: array_merge( $templateData, [
+                with: array_merge($templateData, [
                     'reset_link' => $resetLink,
                     'expires_at' => $expiresAt,
-                    'app_name'   => $appName,
-                ] ),
+                    'app_name' => $appName,
+                ]),
             );
 
-        } catch ( \Throwable $e ) {
-            $this->handleEmailError( $e, 'generate_password_reset_content', [
+        } catch (\Throwable $e) {
+            $this->handleEmailError($e, 'generate_password_reset_content', [
                 'user_email' => $this->getUserEmail(),
-                'token'      => substr( $this->token, 0, 10 ) . '...', // Log parcial do token por segurança
-            ] );
+                'token' => substr($this->token, 0, 10).'...', // Log parcial do token por segurança
+            ]);
 
             // Em caso de erro, fornecer dados mínimos para o template não quebrar
             return new Content(
                 view: 'emails.users.forgot-password',
                 with: [
                     'first_name' => $this->getUserFirstName(),
-                    'name'       => $this->getUserName(),
-                    'email'      => $this->getUserEmail(),
-                    'reset_link' => route( 'password.reset', [ 'token' => $this->token ], true ),
-                    'expires_at' => now()->addHours( 1 )->format( 'd/m/Y H:i:s' ),
-                    'app_name'   => config( 'app.name', 'Easy Budget' ),
+                    'name' => $this->getUserName(),
+                    'email' => $this->getUserEmail(),
+                    'reset_link' => route('password.reset', ['token' => $this->token], true),
+                    'expires_at' => now()->addHours(1)->format('d/m/Y H:i:s'),
+                    'app_name' => config('app.name', 'Easy Budget'),
                 ],
             );
         }
@@ -130,27 +130,26 @@ class PasswordResetNotification extends AbstractBaseSimpleEmail
         try {
             // Usar route() helper para gerar URL com rota nomeada
             // A rota 'password.reset' espera um parâmetro 'token'
-            $resetUrl = route( 'password.reset', [ 'token' => $this->token ], true );
+            $resetUrl = route('password.reset', ['token' => $this->token], true);
 
             // Log da geração do link para auditoria
-            $this->logEmailOperation( 'password_reset_link_generated', [
-                'route_name'   => 'password.reset',
-                'token_length' => strlen( $this->token ),
-                'user_email'   => $this->getUserEmail(),
-                'reset_url'    => $resetUrl,
-            ] );
+            $this->logEmailOperation('password_reset_link_generated', [
+                'route_name' => 'password.reset',
+                'token_length' => strlen($this->token),
+                'user_email' => $this->getUserEmail(),
+                'reset_url' => $resetUrl,
+            ]);
 
             return $resetUrl;
 
-        } catch ( \Throwable $e ) {
-            $this->handleEmailError( $e, 'generate_password_reset_link', [
-                'user_email'   => $this->getUserEmail(),
-                'token_length' => strlen( $this->token ),
-            ] );
+        } catch (\Throwable $e) {
+            $this->handleEmailError($e, 'generate_password_reset_link', [
+                'user_email' => $this->getUserEmail(),
+                'token_length' => strlen($this->token),
+            ]);
 
             // Fallback para URL padrão em caso de erro
-            return route( 'password.reset', [ 'token' => $this->token ], true );
+            return route('password.reset', ['token' => $this->token], true);
         }
     }
-
 }

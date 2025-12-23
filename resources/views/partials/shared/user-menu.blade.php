@@ -3,12 +3,12 @@
 
 {{-- Botão de login --}}
 @guest
-    <li class="nav-item">
-        <a class="nav-link btn btn-primary d-flex align-items-center" href="{{ route( 'login' ) }}">
-            <i class="bi bi-box-arrow-in-right me-2"></i>
-            <span>Entrar</span>
-        </a>
-    </li>
+<li class="nav-item">
+    <a class="nav-link btn btn-primary d-flex align-items-center" href="{{ route( 'login' ) }}">
+        <i class="bi bi-box-arrow-in-right me-2"></i>
+        <span>Entrar</span>
+    </a>
+</li>
 @endguest
 
 {{-- Usuário autenticado - Dropdown com menu completo --}}
@@ -32,7 +32,7 @@
         <li>
             <hr class="dropdown-divider">
         </li>
-        <li><a class="dropdown-item" href="{{ route( 'admin.dashboard' ) }}">
+        <li><a class="dropdown-item" href="{{ route( 'admin.index' ) }}">
                 <i class="bi bi-shield-lock me-2"></i>Administração</a></li>
         @endrole
 

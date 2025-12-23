@@ -38,7 +38,7 @@ class InvoiceFactory extends Factory
             'total'          => $this->faker->randomFloat( 2, 100, 1000 ),
             'due_date'       => $this->faker->dateTimeBetween( '+1 week', '+1 month' ),
             'payment_method' => 'pix',
-            'status'         => 'pending',
+            'status'         => 'PENDING',
         ];
     }
 

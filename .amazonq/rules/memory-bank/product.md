@@ -1,148 +1,153 @@
-# Product Overview
+# Easy Budget Laravel - Visão Geral do Produto
 
-## Project Purpose
-Easy Budget Laravel is a comprehensive enterprise management system designed for service providers and small-to-medium businesses. It provides complete business operations management with multi-tenant architecture, enabling multiple companies to operate independently within a single platform while maintaining complete data isolation.
+## Identidade do Projeto
 
-## Value Proposition
-- **Complete Business Management**: Unified platform for CRM, financial management, inventory control, and reporting
-- **Multi-tenant Architecture**: Secure data isolation allowing multiple businesses to operate independently
-- **Modern Technology Stack**: Built on Laravel 12 with PHP 8.2+, Vite 5.0, Tailwind CSS 3.1, Alpine.js 3.15
-- **Scalable Design**: Service-oriented architecture with 50+ services supporting business growth
-- **Payment Integration**: Native Mercado Pago DX PHP 3.0 integration for seamless payment processing
-- **Modern Frontend**: Vite-powered development with Hot Module Replacement and optimized builds
+**Nome:** Easy Budget Laravel  
+**Tipo:** Sistema de Gestão Empresarial  
+**Mercado-Alvo:** Prestadores de serviços, pequenas e médias empresas  
+**Licença:** MIT
 
-## Key Features
+## Proposta de Valor
 
-### Customer Relationship Management (CRM)
-- Complete customer management for both individuals (pessoa física) and businesses (pessoa jurídica)
-- Customer interaction tracking and history
-- Contact management with multiple communication channels
-- Customer tagging and categorization
-- Address management with multiple locations per customer
+Easy Budget Laravel é um sistema completo de gestão empresarial que oferece controle total sobre relacionamento com clientes, operações financeiras, estoque e inteligência de negócios. Construído em Laravel 12 com padrões arquiteturais modernos, entrega recursos de nível empresarial com isolamento multi-tenant para operações seguras e escaláveis.
 
-### Financial Management
-- Budget creation, tracking, and approval workflows
-- Invoice generation and management with multiple status tracking
-- Budget templates for recurring services
-- Budget versioning and history tracking
-- Budget sharing and collaboration features
-- Financial reporting and analytics
+## Funcionalidades Principais
 
-### Inventory & Product Management
-- Product and service catalog management
-- Inventory tracking with movement history
-- Stock level monitoring and alerts
-- Unit of measurement management
-- Category-based organization
-- Service item management with pricing
+### 🏢 Arquitetura Multi-Tenant
+- Isolamento completo de dados por empresa/tenant
+- Consultas e operações com escopo de tenant seguro
+- Arquitetura escalável suportando múltiplas organizações
+- Autenticação e autorização com consciência de tenant
 
-### Multi-tenant System
-- Complete tenant isolation at database level
-- Tenant-specific configurations and settings
-- Provider credential management
-- Subscription plan management
-- Trial period support with automatic expiration handling
+### 👥 CRM (Gestão de Relacionamento com Clientes)
+- Tipos duplos de clientes: Pessoa Física (CPF) e Jurídica (CNPJ)
+- Perfis completos de clientes com informações de contato
+- Rastreamento e histórico de interações com clientes
+- Marcação e categorização de clientes
+- Busca de clientes baseada em geolocalização (CEP)
+- Gestão de status de clientes (ativo/inativo)
+- Exclusão suave com capacidade de restauração
 
-### Authentication & Authorization
-- Hybrid email verification system (Laravel Sanctum + Custom)
-- Role-based access control (RBAC) with granular permissions
-- Social authentication (Google, Facebook, etc.)
-- Password reset with secure token management
-- Session management with Redis support
+### 💰 Gestão Financeira
+- **Orçamentos/Cotações:** Criar, gerenciar e rastrear propostas de orçamento
+- **Faturas:** Gerar faturas a partir de orçamentos ou independentes
+- **Integração de Pagamento:** Integração com Mercado Pago para pagamentos online
+- **Relatórios Financeiros:** Análises e relatórios financeiros abrangentes
+- **Rastreamento de Pagamentos:** Monitorar status e histórico de pagamentos
+- **Versionamento de Orçamentos:** Rastrear mudanças em orçamentos
+- **Templates de Orçamento:** Templates de orçamento reutilizáveis
 
-### Reporting & Analytics
-- Executive dashboards with real-time KPIs
-- Custom report generation
-- Scheduled report execution
-- Report export to multiple formats (PDF, Excel)
-- Chart visualization with interactive data
-- Metrics tracking and monitoring
+### 📦 Gestão de Estoque e Produtos
+- Gestão de catálogo de produtos e serviços
+- Rastreamento de estoque com histórico de movimentações
+- Monitoramento e alertas de níveis de estoque
+- Gestão de unidades (kg, litros, peças, etc.)
+- Organização baseada em categorias
+- Rastreamento de preços e custos de produtos
 
-### Advanced Features
-- Comprehensive audit logging for all operations
-- Email notification system with customizable templates
-- Background job processing with queue management
-- System monitoring with alert history
-- Backup management and scheduling
-- PDF generation for documents and reports
-- Real-time form validation with JavaScript
-- File upload with preview functionality
-- CEP integration for automatic address completion
-- Modern responsive UI with Bootstrap 5.3 components
+### 📊 Inteligência de Negócios
+- Dashboards executivos com KPIs em tempo real
+- Análises e estatísticas de clientes
+- Métricas de desempenho financeiro
+- Relatórios e insights de estoque
+- Geração de relatórios personalizados
+- Serviços de visualização de gráficos
 
-## Target Users
+### 🔐 Autenticação e Segurança
+- Verificação híbrida de e-mail (Laravel Sanctum + Customizado)
+- Login social (Google, Facebook via Socialite)
+- Controle de acesso baseado em funções (RBAC)
+- Sistema de gestão de permissões
+- Sistema de tokens únicos com expiração de 30 minutos
+- Registro de auditoria abrangente
+- Gestão e segurança de sessões
 
-### Primary Users
-- **Service Providers**: Companies offering professional services (consulting, IT, marketing, etc.)
-- **Small Businesses**: Retail, wholesale, and service-based businesses
-- **Medium Enterprises**: Growing companies needing comprehensive management tools
+### 📧 Comunicação e Notificações
+- Sistema de notificações por e-mail
+- Geração de e-mails baseada em templates
+- Notificações de status de orçamento
+- Notificações de faturas
+- Sistema de tickets de suporte
+- Registro e rastreamento de e-mails
 
-### User Roles
-- **Admin**: Full system access and configuration
-- **Manager**: Business operations and team management
-- **Editor**: Content and data management
-- **User**: Standard access for daily operations
+### 🎨 Experiência do Usuário
+- Interface responsiva Bootstrap 5.3
+- Pipeline de assets moderno com Vite
+- Hot Module Replacement (HMR) para desenvolvimento
+- Recursos interativos com AJAX
+- Validação de formulários em tempo real
+- Sistema de alertas e notificações
+- Layouts otimizados para mobile
 
-## Use Cases
+## Usuários-Alvo
 
-### Budget Management
-1. Create detailed budgets with multiple line items
-2. Apply templates for recurring services
-3. Track budget status through approval workflow
-4. Generate invoices from approved budgets
-5. Share budgets with customers for review
+### Usuários Primários
+- **Prestadores de Serviços:** Empresas oferecendo serviços profissionais
+- **Pequenas Empresas:** Negócios de varejo, atacado e serviços
+- **Médias Empresas:** Empresas em crescimento precisando de soluções escaláveis
+- **Freelancers:** Profissionais individuais gerenciando múltiplos clientes
 
-### Customer Management
-1. Register new customers with complete profile information
-2. Track all interactions and communication history
-3. Manage multiple addresses and contacts per customer
-4. Categorize customers with tags for segmentation
-5. View customer financial history and outstanding balances
+### Funções de Usuário
+- **Administradores:** Acesso completo ao sistema e configuração
+- **Gerentes:** Operações de negócios e relatórios
+- **Equipe:** Operações do dia-a-dia e gestão de clientes
+- **Clientes:** Acesso limitado a faturas e pagamentos (área pública)
 
-### Financial Operations
-1. Generate invoices from budgets or standalone
-2. Track payment status and history
-3. Process payments through Mercado Pago integration
-4. Generate financial reports and analytics
-5. Monitor cash flow and revenue metrics
+## Casos de Uso Principais
 
-### Inventory Control
-1. Register products and services with detailed information
-2. Track inventory movements (in/out)
-3. Monitor stock levels with automatic alerts
-4. Manage product categories and units
-5. Generate inventory reports
+### Fluxo de Gestão de Orçamentos
+1. Criar perfil de cliente (pessoa física ou jurídica)
+2. Gerar orçamento/cotação com itens de linha
+3. Compartilhar orçamento com cliente
+4. Rastrear status do orçamento (pendente, aprovado, rejeitado)
+5. Converter orçamento aprovado em fatura
+6. Processar pagamento via Mercado Pago
+7. Gerar relatórios financeiros
 
-### Multi-tenant Operations
-1. Register new tenants with subscription plans
-2. Manage tenant-specific configurations
-3. Monitor tenant usage and metrics
-4. Handle subscription renewals and upgrades
-5. Enforce trial period limitations
+### Fluxo de Gestão de Estoque
+1. Adicionar produtos/serviços ao catálogo
+2. Definir níveis iniciais de estoque
+3. Rastrear movimentações de estoque (entrada/saída)
+4. Monitorar alertas de estoque
+5. Gerar relatórios de estoque
+6. Atualizar preços e custos
 
-## Technical Capabilities
+### Fluxo de Relacionamento com Clientes
+1. Registrar novo cliente (CPF/CNPJ)
+2. Registrar interações com clientes
+3. Rastrear histórico de clientes
+4. Gerenciar status de clientes
+5. Buscar clientes por localização
+6. Gerar análises de clientes
 
-### Performance
-- Redis caching for improved response times
-- Database query optimization with eager loading
-- Asset optimization with Vite bundling
-- Background job processing for heavy operations
+### Fluxo de Relatórios Financeiros
+1. Acessar dashboard executivo
+2. Visualizar KPIs financeiros em tempo real
+3. Gerar relatórios personalizados
+4. Exportar dados para análise
+5. Monitorar status de pagamentos
+6. Rastrear tendências de receita
 
-### Security
-- CSRF protection on all forms
-- SQL injection prevention through Eloquent ORM
-- XSS protection with Blade templating
-- Secure password hashing with bcrypt
-- Token-based API authentication
+## Vantagens Competitivas
 
-### Scalability
-- Service-oriented architecture for modular growth
-- Repository pattern for flexible data access
-- Event-driven architecture for decoupled operations
-- Queue system for asynchronous processing
+- **Stack Tecnológico Moderno:** Laravel 12, PHP 8.2+, Vite, Bootstrap 5.3
+- **Pronto para Multi-Tenant:** Isolamento integrado para múltiplas organizações
+- **Conjunto Abrangente de Recursos:** CRM + Finanças + Estoque em uma plataforma
+- **Arquitetura Extensível:** Separação clara de responsabilidades com camada de serviço
+- **Integração de Pagamento:** Integração pronta para uso com Mercado Pago
+- **Amigável para Desenvolvedores:** Padrões e diretrizes de design bem documentados
+- **Código Aberto:** Licença MIT permite customização e extensão
+- **Desenvolvimento Ativo:** Atualizações e melhorias regulares
 
-### Maintainability
-- Comprehensive design pattern documentation
-- Standardized code structure across layers
-- Automated testing with PHPUnit
-- Code quality tools (PHPStan, Laravel Pint)
+## Destaques Técnicos
+
+- **PHP 8.2+** com recursos modernos da linguagem
+- **Laravel 12** framework com recursos mais recentes
+- **Vite** para bundling de assets rápido e moderno
+- **MySQL 8.0+** com InnoDB para confiabilidade
+- **Redis 7.0+** para cache e sessões
+- **Multi-tenant** via pacote stancl/tenancy
+- **Arquitetura orientada a eventos** para escalabilidade
+- **Padrão repository** para abstração de dados
+- **Camada de serviço** para lógica de negócio
+- **Testes abrangentes** com PHPUnit e Dusk

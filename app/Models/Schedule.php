@@ -6,7 +6,6 @@ use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class Schedule extends Model
 {
@@ -40,6 +39,12 @@ class Schedule extends Model
         'start_date_time',
         'location',
         'end_date_time',
+        'status',
+        'confirmed_at',
+        'completed_at',
+        'no_show_at',
+        'cancelled_at',
+        'cancellation_reason',
     ];
 
     /**
@@ -53,6 +58,12 @@ class Schedule extends Model
         'user_confirmation_token_id' => 'integer',
         'start_date_time'            => 'immutable_datetime',
         'end_date_time'              => 'immutable_datetime',
+        'status'                     => 'string',
+        'confirmed_at'               => 'datetime',
+        'completed_at'               => 'datetime',
+        'no_show_at'                 => 'datetime',
+        'cancelled_at'               => 'datetime',
+        'cancellation_reason'        => 'string',
         'created_at'                 => 'immutable_datetime',
         'updated_at'                 => 'datetime',
     ];

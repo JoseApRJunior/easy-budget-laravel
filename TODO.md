@@ -1,25 +1,18 @@
+# TODO - Breve Descrição
 
-Aqui estão dois arquivos de referência. O objetivo é alinhar o padrão do ARQUIVO_PRODUTO com o padrão do ARQUIVO_SERVICO.
+Este arquivo foi dividido em duas partes:
 
---- INSTRUÇÕES ---
-1. Analise a estrutura detalhada do ARQUIVO_SERVICO (Referência).
-2. Verifique o ARQUIVO_PRODUTO e compare-o com o padrão da Referência.
-3. Reescreva completamente o conteúdo do ARQUIVO_PRODUTO (mantendo o foco em 'PRODUCT') para que ele siga exatamente o mesmo padrão, estrutura e nível de detalhe do ARQUIVO_SERVICO.
+1. **Frontend**: [TODO-FRONT.MD](TODO-FRONT.MD)
 
---- ARQUIVO_SERVICO (REFERENCIA) ---
-"""
-C:\xampp\htdocs\easy-budget-laravel\documentsIA\migrate laravel\PROMPTS\PROMPTS_DETALHADOS_MIGRACAO_SERVICE.md
-"""
+   -  Padrões de interface
+   -  Componentes e layouts
+   -  Responsividade
+   -  Ícones e estilos
 
---- ARQUIVO_PRODUTO (A SER ATUALIZADO) ---
-"""
-C:\xampp\htdocs\easy-budget-laravel\documentsIA\migrate laravel\PROMPTS\PROMPTS_DETALHADOS_MIGRACAO_PRODUCT.md
-"""
+2. **Backend**: [TODO-BACK.MD](TODO-BACK.MD)
+   -  Padrões de Enums
+   -  Uso em controllers
+   -  Validação
+   -  Lógica de negócio
 
---- RELATORIO_ANALISE (CONTEXTO ADICIONAL) ---
-"""
-C:\xampp\htdocs\easy-budget-laravel\documentsIA\old-sistem\RELATORIO_ANALISE_PRODUCT_CONTROLLER.md
-"""
-
---- RESULTADO ESPERADO ---
-Forneça apenas o novo conteúdo completo para o ARQUIVO_PRODUTO, formatado em Markdown, sem explicações adicionais.
+Ambos arquivos contêm informações detalhadas sobre os padrões a serem seguidos no projeto.

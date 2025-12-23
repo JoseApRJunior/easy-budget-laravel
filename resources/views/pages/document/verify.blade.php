@@ -1,67 +1,58 @@
-@extends( 'layouts.app' )
+@extends('layouts.guest')
 
-@section( 'title', 'Verificação de Documento' )
-
-@section( 'content' )
-    <div class="container-fluid py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-light py-3">
-                        <h2 class="h4 mb-0 text-primary">
-                            <i class="bi bi-patch-check-fill me-2"></i>
-                            Verificação de Autenticidade
-                        </h2>
+@section('content')
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 class="h4 mt-2">Verificação de Documento</h1>
                     </div>
-                    <div class="card-body p-4">
-                        @if ( $found )
-                            <div class="alert alert-success d-flex align-items-center" role="alert">
-                                <i class="bi bi-check-circle-fill flex-shrink-0 me-3" style="font-size: 1.5rem;"></i>
-                                <div>
-                                    <h5 class="alert-heading mb-1">Documento Autêntico</h5>
-                                    Este documento foi verificado em nosso sistema e é genuíno.
-                                </div>
-                            </div>
 
-                            <div class="mt-4">
-                                <h5 class="mb-3">Detalhes do Documento</h5>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span class="fw-medium text-muted">Tipo de Documento</span>
-                                        <strong>{{ $type }}</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span class="fw-medium text-muted">Código</span>
-                                        <strong>{{ $document->code }}</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span class="fw-medium text-muted">Data de Geração</span>
-                                        <span>{{ \Carbon\Carbon::parse( $document->created_at )->format( 'd/m/Y H:i:s' ) }}</span>
-                                    </li>
-                                    <li class="list-group-item">
-                                        <div class="fw-medium text-muted mb-1">Hash de Verificação</div>
-                                        <div class="text-break bg-light p-2 rounded"
-                                            style="font-family: monospace; font-size: 0.85rem;">{{ $hash }}</div>
-                                    </li>
-                                </ul>
-                            </div>
+                    @if($found)
+                        <div class="alert alert-success">
+                            <strong>Documento Autêntico</strong>
+                        </div>
 
-                        @else
-                            <div class="alert alert-danger d-flex align-items-center" role="alert">
-                                <i class="bi bi-x-circle-fill flex-shrink-0 me-3" style="font-size: 1.5rem;"></i>
-                                <div>
-                                    <h5 class="alert-heading mb-1">Documento Inválido ou Não Encontrado</h5>
-                                    Não foi possível verificar a autenticidade. O código pode estar incorreto ou o documento
-                                    pode não existir
-                                    em nosso sistema.
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="card-footer text-center bg-light">
-                        <button onclick="window.history.back();" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Voltar
-                        </button>
+                        <div class="p-3" style="background:#f8f9fa;border-radius:.5rem;">
+                            <table class="table table-borderless mb-0">
+                                <tr>
+                                    <th width="30%">Tipo</th>
+                                    <td><span class="badge bg-primary">{{ $type }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Código</th>
+                                    <td>{{ $document->code ?? 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Data de Emissão</th>
+                                    <td>{{ optional($document->created_at)->format('d/m/Y H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Hash</th>
+                                    <td><code class="small">{{ $hash }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Verificado em</th>
+                                    <td>{{ $verified_at->format('d/m/Y H:i:s') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            Este documento foi gerado pelo sistema Easy Budget.
+                        </div>
+                    @else
+                        <div class="alert alert-danger">
+                            <strong>Documento Não Encontrado</strong>
+                        </div>
+                        <p class="text-muted">O hash de verificação fornecido não corresponde a nenhum documento.</p>
+                        <p class="small text-muted">Hash: <code>{{ $hash }}</code></p>
+                    @endif
+
+                    <div class="text-center mt-4">
+                        <a href="{{ route('home') }}" class="btn btn-outline-primary">Voltar para Home</a>
                     </div>
                 </div>
             </div>

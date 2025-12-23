@@ -77,12 +77,12 @@
       <ul>
         <li><strong>Assunto:</strong> {{ $confirmationData[ 'subject' ] }}</li>
         <li><strong>Enviada em:</strong> {{ $confirmationData[ 'submitted_at' ] }}</li>
-        <li><strong>Protocolo:</strong> #{{ $confirmationData[ 'support_id' ] }}</li>
+        <li><strong>Protocolo:</strong> {{ $confirmationData[ 'support_code' ] }}</li>
       </ul>
 
       <p>Nossa equipe irá analisar sua solicitação e entrará em contato o mais breve possível.</p>
 
-      <p>Para acompanhar o status da sua solicitação, você pode usar o protocolo #{{ $confirmationData[ 'support_id' ] }}.
+      <p>Para acompanhar o status da sua solicitação, você pode usar o protocolo {{ $confirmationData[ 'support_code' ] }}.
       </p>
 
       <hr>

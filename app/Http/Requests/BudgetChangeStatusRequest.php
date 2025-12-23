@@ -26,28 +26,28 @@ class BudgetChangeStatusRequest extends FormRequest
      */
     public function rules(): array
     {
-        $budget        = $this->route( 'budget' );
+        $budget = $this->route('budget');
         $currentStatus = $budget?->status;
 
         return [
             'new_status' => [
                 'required',
-                Rule::in( array_column( BudgetStatus::cases(), 'value' ) ),
-                function ( $attribute, $value, $fail ) use ( $currentStatus ) {
-                    if ( $currentStatus ) {
+                Rule::in(array_column(BudgetStatus::cases(), 'value')),
+                function ($attribute, $value, $fail) use ($currentStatus) {
+                    if ($currentStatus) {
                         try {
-                            $targetStatus = BudgetStatus::from( $value );
-                            if ( !$currentStatus->canTransitionTo( $targetStatus ) ) {
-                                $fail( 'Transição de status não permitida de ' . $currentStatus->getDescription() . ' para ' . $targetStatus->getDescription() );
+                            $targetStatus = BudgetStatus::from($value);
+                            if (! $currentStatus->canTransitionTo($targetStatus)) {
+                                $fail('Transição de status não permitida de '.$currentStatus->getDescription().' para '.$targetStatus->getDescription());
                             }
-                        } catch ( \ValueError $e ) {
-                            $fail( 'Status inválido' );
+                        } catch (\ValueError $e) {
+                            $fail('Status inválido');
                         }
                     }
-                }
+                },
             ],
-            'notes'      => 'nullable|string|max:500',
-            'reason'     => 'nullable|string|max:200',
+            'notes' => 'nullable|string|max:500',
+            'reason' => 'nullable|string|max:200',
         ];
     }
 
@@ -58,9 +58,9 @@ class BudgetChangeStatusRequest extends FormRequest
     {
         return [
             'new_status.required' => 'O novo status é obrigatório.',
-            'new_status.in'       => 'Status inválido.',
-            'notes.max'           => 'As observações não podem ter mais de 500 caracteres.',
-            'reason.max'          => 'O motivo não pode ter mais de 200 caracteres.',
+            'new_status.in' => 'Status inválido.',
+            'notes.max' => 'As observações não podem ter mais de 500 caracteres.',
+            'reason.max' => 'O motivo não pode ter mais de 200 caracteres.',
         ];
     }
 
@@ -71,8 +71,8 @@ class BudgetChangeStatusRequest extends FormRequest
     {
         return [
             'new_status' => 'novo status',
-            'notes'      => 'observações',
-            'reason'     => 'motivo',
+            'notes' => 'observações',
+            'reason' => 'motivo',
         ];
     }
 
@@ -82,12 +82,11 @@ class BudgetChangeStatusRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Converte valores vazios para null
-        if ( $this->notes === '' ) {
-            $this->merge( [ 'notes' => null ] );
+        if ($this->notes === '') {
+            $this->merge(['notes' => null]);
         }
-        if ( $this->reason === '' ) {
-            $this->merge( [ 'reason' => null ] );
+        if ($this->reason === '') {
+            $this->merge(['reason' => null]);
         }
     }
-
 }

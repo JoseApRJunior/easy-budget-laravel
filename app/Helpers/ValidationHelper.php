@@ -135,7 +135,13 @@ class ValidationHelper
         }
 
         try {
-            $date = \Carbon\Carbon::parse($birthDate);
+            // Usa DateHelper para converter a data para formato padrão
+            $parsedDate = DateHelper::parseBirthDate($birthDate);
+            if ($parsedDate === null) {
+                return false;
+            }
+
+            $date = \Carbon\Carbon::parse($parsedDate);
             $today = \Carbon\Carbon::today();
 
             // Deve ser anterior a hoje
@@ -143,8 +149,9 @@ class ValidationHelper
                 return false;
             }
 
-            // Verifica idade mínima
-            $age = $today->diffInYears($date);
+            // Verifica idade mínima (data de nascimento até hoje)
+            $age = $date->diffInYears($today);
+
             return $age >= $minAge;
         } catch (\Exception $e) {
             return false;
@@ -183,7 +190,7 @@ class ValidationHelper
             substr($cpf, 0, 3),
             substr($cpf, 3, 3),
             substr($cpf, 6, 3),
-            substr($cpf, 9, 2)
+            substr($cpf, 9, 2),
         );
     }
 
@@ -208,7 +215,7 @@ class ValidationHelper
             substr($cnpj, 2, 3),
             substr($cnpj, 5, 3),
             substr($cnpj, 8, 4),
-            substr($cnpj, 12, 2)
+            substr($cnpj, 12, 2),
         );
     }
 
@@ -229,7 +236,7 @@ class ValidationHelper
                 '(%s) %s-%s',
                 substr($phone, 0, 2),
                 substr($phone, 2, 5),
-                substr($phone, 7, 4)
+                substr($phone, 7, 4),
             );
         } elseif (strlen($phone) === 10) {
             // (11) 8888-8888
@@ -237,7 +244,7 @@ class ValidationHelper
                 '(%s) %s-%s',
                 substr($phone, 0, 2),
                 substr($phone, 2, 4),
-                substr($phone, 6, 4)
+                substr($phone, 6, 4),
             );
         }
 

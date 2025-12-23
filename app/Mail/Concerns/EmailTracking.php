@@ -32,14 +32,14 @@ trait EmailTracking
     /**
      * Adiciona tags para rastreamento do e-mail.
      *
-     * @param array|string $tags Tags para categorização
+     * @param  array|string  $tags  Tags para categorização
      * @return $this
      */
-    public function withTrackingTags( array|string $tags ): static
+    public function withTrackingTags(array|string $tags): static
     {
         $this->trackingTags = array_merge(
             $this->trackingTags,
-            is_array( $tags ) ? $tags : [ $tags ]
+            is_array($tags) ? $tags : [$tags]
         );
 
         return $this;
@@ -48,12 +48,12 @@ trait EmailTracking
     /**
      * Adiciona metadados para rastreamento do e-mail.
      *
-     * @param array $metadata Metadados personalizados
+     * @param  array  $metadata  Metadados personalizados
      * @return $this
      */
-    public function withTrackingMetadata( array $metadata ): static
+    public function withTrackingMetadata(array $metadata): static
     {
-        $this->trackingMetadata = array_merge( $this->trackingMetadata, $metadata );
+        $this->trackingMetadata = array_merge($this->trackingMetadata, $metadata);
 
         return $this;
     }
@@ -61,10 +61,10 @@ trait EmailTracking
     /**
      * Define o ID de rastreamento do e-mail.
      *
-     * @param string|null $trackingId ID personalizado (opcional)
+     * @param  string|null  $trackingId  ID personalizado (opcional)
      * @return $this
      */
-    public function withTrackingId( ?string $trackingId = null ): static
+    public function withTrackingId(?string $trackingId = null): static
     {
         $this->trackingId = $trackingId ?? $this->generateTrackingId();
 
@@ -108,53 +108,50 @@ trait EmailTracking
      */
     private function generateTrackingId(): string
     {
-        return 'email_' . Str::uuid()->toString();
+        return 'email_'.Str::uuid()->toString();
     }
 
     /**
      * Adiciona headers de rastreamento ao e-mail.
      *
-     * @param \Symfony\Component\Mime\Email $message Mensagem de e-mail
+     * @param  \Symfony\Component\Mime\Email  $message  Mensagem de e-mail
      * @return \Symfony\Component\Mime\Email Mensagem com headers adicionados
      */
-    protected function addTrackingHeaders( \Symfony\Component\Mime\Email $message ): \Symfony\Component\Mime\Email
+    protected function addTrackingHeaders(\Symfony\Component\Mime\Email $message): \Symfony\Component\Mime\Email
     {
         // Adicionar ID de rastreamento
-        if ( $this->trackingId ) {
-            $message->getHeaders()->addTextHeader( 'X-Tracking-ID', $this->trackingId );
+        if ($this->trackingId) {
+            $message->getHeaders()->addTextHeader('X-Tracking-ID', $this->trackingId);
         }
 
         // Adicionar tags como headers
-        foreach ( $this->trackingTags as $tag ) {
-            $message->getHeaders()->addTextHeader( 'X-Tag', $tag );
+        foreach ($this->trackingTags as $tag) {
+            $message->getHeaders()->addTextHeader('X-Tag', $tag);
         }
 
         // Adicionar metadados como headers
-        foreach ( $this->trackingMetadata as $key => $value ) {
-            $headerName = 'X-Metadata-' . str_replace( [ ' ', '-' ], '_', ucwords( $key ) );
-            $message->getHeaders()->addTextHeader( $headerName, (string) $value );
+        foreach ($this->trackingMetadata as $key => $value) {
+            $headerName = 'X-Metadata-'.str_replace([' ', '-'], '_', ucwords($key));
+            $message->getHeaders()->addTextHeader($headerName, (string) $value);
         }
 
         // Adicionar timestamp de envio
-        $message->getHeaders()->addDateHeader( 'X-Sent-At', now() );
+        $message->getHeaders()->addDateHeader('X-Sent-At', now());
 
         return $message;
     }
 
     /**
      * Registra o envio do e-mail para rastreamento.
-     *
-     * @return void
      */
     protected function logEmailTracking(): void
     {
-        \Illuminate\Support\Facades\Log::info( 'Email enviado com rastreamento', [
-            'tracking_id'    => $this->getTrackingId(),
-            'tags'           => $this->trackingTags,
-            'metadata'       => $this->trackingMetadata,
+        \Illuminate\Support\Facades\Log::info('Email enviado com rastreamento', [
+            'tracking_id' => $this->getTrackingId(),
+            'tags' => $this->trackingTags,
+            'metadata' => $this->trackingMetadata,
             'mailable_class' => static::class,
-            'sent_at'        => now()->toISOString(),
-        ] );
+            'sent_at' => now()->toISOString(),
+        ]);
     }
-
 }

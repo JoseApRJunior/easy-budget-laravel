@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
@@ -9,7 +9,7 @@
             </h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Unidades</li>
                 </ol>
             </nav>
@@ -17,7 +17,7 @@
 
         <!-- Botão de Adicionar -->
         <div class="mb-4">
-            <a href="{{ route( 'admin.units.create' ) }}" class="btn btn-primary">
+            <a href="{{ route('admin.units.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>Nova Unidade
             </a>
         </div>
@@ -38,23 +38,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ( $units as $unit )
+                            @forelse ($units as $unit)
                                 <tr>
                                     <td class="ps-4">{{ $unit->id }}</td>
                                     <td>{{ $unit->name }}</td>
                                     <td><span class="badge bg-secondary">{{ $unit->abbreviation }}</span></td>
-                                    <td><code>{{ $unit->slug }}</code></td>
-                                    <td>{{ $unit->created_at->format( 'd/m/Y H:i' ) }}</td>
+                                    <td><span class="text-code">{{ $unit->slug }}</span></td>
+                                    <td>{{ $unit->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group">
-                                            <a href="{{ route( 'admin.units.edit', $unit ) }}"
+                                            <a href="{{ route('admin.units.edit', $unit) }}"
                                                 class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
-                                            <form action="{{ route( 'admin.units.destroy', $unit ) }}" method="POST"
+                                            <form action="{{ route('admin.units.destroy', $unit) }}" method="POST"
                                                 onsubmit="return confirm('Tem certeza que deseja excluir esta unidade?')">
                                                 @csrf
-                                                @method( 'DELETE' )
+                                                @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="bi bi-trash-fill"></i>
                                                 </button>
@@ -64,7 +64,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">Nenhuma unidade encontrada.</td>
+                                    <td colspan="6" class="text-center py-1">Nenhuma unidade encontrada.</td>
                                 </tr>
                             @endforelse
                         </tbody>

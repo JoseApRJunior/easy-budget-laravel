@@ -19,113 +19,112 @@ class MetricsController extends Controller
     /**
      * Obtém métricas principais do dashboard
      */
-    public function index( Request $request ): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $request->validate( [
-            'period'  => 'string|in:today,week,month,year',
-            'refresh' => 'boolean'
-        ] );
+        $request->validate([
+            'period' => 'string|in:today,week,month,year',
+            'refresh' => 'boolean',
+        ]);
 
-        $userId       = auth()->id();
-        $period       = $request->get( 'period', 'month' );
-        $forceRefresh = $request->boolean( 'refresh', false );
+        $userId = auth()->id();
+        $period = $request->get('period', 'month');
+        $forceRefresh = $request->boolean('refresh', false);
 
         // Cache inteligente com diferentes TTLs por período
         $cacheKey = "dashboard.metrics.{$userId}.{$period}";
-        $ttl      = $this->getCacheTtl( $period );
+        $ttl = $this->getCacheTtl($period);
 
-        if ( $forceRefresh ) {
-            Cache::forget( $cacheKey );
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
         }
 
-        $metrics = Cache::remember( $cacheKey, $ttl, function () use ($userId, $period) {
-            return $this->metricsService->getMetrics( $userId, $period );
-        } );
+        $metrics = Cache::remember($cacheKey, $ttl, function () use ($userId, $period) {
+            return $this->metricsService->getMetrics($userId, $period);
+        });
 
-        return response()->json( [
+        return response()->json([
             'success' => true,
-            'data'    => [
-                'metrics'      => $metrics,
-                'period'       => $period,
-                'timestamp'    => now()->toISOString(),
-                'cached_until' => now()->addSeconds( $ttl )->toISOString()
-            ]
-        ] );
+            'data' => [
+                'metrics' => $metrics,
+                'period' => $period,
+                'timestamp' => now()->toISOString(),
+                'cached_until' => now()->addSeconds($ttl)->toISOString(),
+            ],
+        ]);
     }
 
     /**
      * Obtém métricas detalhadas para gráficos
      */
-    public function charts( Request $request ): JsonResponse
+    public function charts(Request $request): JsonResponse
     {
-        $request->validate( [
-            'period'  => 'string|in:today,week,month,year',
-            'refresh' => 'boolean'
-        ] );
+        $request->validate([
+            'period' => 'string|in:today,week,month,year',
+            'refresh' => 'boolean',
+        ]);
 
-        $userId       = auth()->id();
-        $period       = $request->get( 'period', 'month' );
-        $forceRefresh = $request->boolean( 'refresh', false );
+        $userId = auth()->id();
+        $period = $request->get('period', 'month');
+        $forceRefresh = $request->boolean('refresh', false);
 
         $cacheKey = "dashboard.charts.{$userId}.{$period}";
-        $ttl      = $this->getCacheTtl( $period );
+        $ttl = $this->getCacheTtl($period);
 
-        if ( $forceRefresh ) {
-            Cache::forget( $cacheKey );
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
         }
 
-        $charts = Cache::remember( $cacheKey, $ttl, function () use ($userId, $period) {
-            return $this->metricsService->getChartData( $userId, $period );
-        } );
+        $charts = Cache::remember($cacheKey, $ttl, function () use ($userId, $period) {
+            return $this->metricsService->getChartData($userId, $period);
+        });
 
-        return response()->json( [
+        return response()->json([
             'success' => true,
-            'data'    => [
-                'charts'       => $charts,
-                'period'       => $period,
-                'timestamp'    => now()->toISOString(),
-                'cached_until' => now()->addSeconds( $ttl )->toISOString()
-            ]
-        ] );
+            'data' => [
+                'charts' => $charts,
+                'period' => $period,
+                'timestamp' => now()->toISOString(),
+                'cached_until' => now()->addSeconds($ttl)->toISOString(),
+            ],
+        ]);
     }
 
     /**
      * Obtém métricas em tempo real (sem cache)
      */
-    public function realtime( Request $request ): JsonResponse
+    public function realtime(Request $request): JsonResponse
     {
-        $request->validate( [
-            'period' => 'string|in:today,week,month,year'
-        ] );
+        $request->validate([
+            'period' => 'string|in:today,week,month,year',
+        ]);
 
         $userId = auth()->id();
-        $period = $request->get( 'period', 'month' );
+        $period = $request->get('period', 'month');
 
-        $metrics = $this->metricsService->getMetrics( $userId, $period, true );
+        $metrics = $this->metricsService->getMetrics($userId, $period, true);
 
-        return response()->json( [
+        return response()->json([
             'success' => true,
-            'data'    => [
-                'metrics'   => $metrics,
-                'period'    => $period,
+            'data' => [
+                'metrics' => $metrics,
+                'period' => $period,
                 'timestamp' => now()->toISOString(),
-                'realtime'  => true
-            ]
-        ] );
+                'realtime' => true,
+            ],
+        ]);
     }
 
     /**
      * Define TTL do cache baseado no período
      */
-    private function getCacheTtl( string $period ): int
+    private function getCacheTtl(string $period): int
     {
-        return match ( $period ) {
+        return match ($period) {
             'today' => 60,      // 1 minuto
-            'week'  => 300,      // 5 minutos
+            'week' => 300,      // 5 minutos
             'month' => 900,     // 15 minutos
-            'year'  => 3600,     // 1 hora
+            'year' => 3600,     // 1 hora
             default => 900      // 15 minutos
         };
     }
-
 }

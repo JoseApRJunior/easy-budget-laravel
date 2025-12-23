@@ -111,7 +111,7 @@ class PlanSubscription extends Model
     /**
      * Get the tenant that owns the PlanSubscription.
      */
-    public function tenant(): BelongsTo
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo( Tenant::class);
     }
@@ -119,7 +119,7 @@ class PlanSubscription extends Model
     /**
      * Get the provider that owns the PlanSubscription.
      */
-    public function provider(): BelongsTo
+    public function provider(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo( Provider::class);
     }
@@ -127,7 +127,7 @@ class PlanSubscription extends Model
     /**
      * Get the plan that owns the PlanSubscription.
      */
-    public function plan(): BelongsTo
+    public function plan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo( Plan::class);
     }

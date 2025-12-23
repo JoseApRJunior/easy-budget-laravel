@@ -4,461 +4,531 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\InvoiceStatusEnum;
-use App\Events\InvoiceCreated;
+use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\InvoiceRequest;
-use App\Models\Customer;
+use App\Http\Requests\InvoiceStoreFromBudgetRequest;
+use App\Http\Requests\InvoiceStoreRequest;
+use App\Http\Requests\InvoiceUpdateRequest;
+use App\Models\Budget;
 use App\Models\Invoice;
-use App\Models\Tenant;
-use App\Models\UserConfirmationToken;
-use App\Repositories\InvoiceStatusRepository;
+use App\Models\Product;
+use App\Models\User;
+use App\Services\Domain\CustomerService;
 use App\Services\Domain\InvoiceService;
-use App\Support\ServiceResult;
+use Exception;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Controller para gerenciamento de faturas.
  *
- * Este controller demonstra como usar eventos customizados para notificações
- * ao invés de chamar MailerService diretamente.
- *
- * Exemplo de migração:
- * ANTES: $mailerService->sendInvoiceNotification($invoice, $customer, $tenant);
- * DEPOIS: Event::dispatch(new InvoiceCreated($invoice, $customer, $tenant));
+ * Versão final mínima para resolver problemas de sintaxe
  */
 class InvoiceController extends Controller
 {
-    private InvoiceService          $invoiceService;
-    private InvoiceStatusRepository $invoiceStatusRepository;
-
     public function __construct(
-        InvoiceService $invoiceService,
-        InvoiceStatusRepository $invoiceStatusRepository,
-    ) {
-        $this->invoiceService          = $invoiceService;
-        $this->invoiceStatusRepository = $invoiceStatusRepository;
-    }
+        private InvoiceService $invoiceService,
+        private CustomerService $customerService,
+    ) {}
 
     /**
      * Exibe lista de faturas.
-     *
-     * @param Request $request
-     * @return View
      */
     public function index( Request $request ): View
     {
-        $filters = $request->only( [ 'status', 'customer_id', 'date_from', 'date_to' ] );
-        $result  = $this->invoiceService->listInvoices( $filters );
+        /** @var User $user */
+        $user    = Auth::user();
+        $filters = $request->only( [ 'status', 'customer_id', 'date_from', 'date_to', 'search' ] );
 
-        return $this->view( 'invoices.index', $result );
+        $result = $this->invoiceService->getFilteredInvoices( $filters, [
+            'customer:id,name',
+            'service:id,code,description',
+        ] );
+
+        if ( !$result->isSuccess() ) {
+            abort( 500, 'Erro ao carregar lista de faturas' );
+        }
+
+        $invoices = $result->getData();
+
+        $customersResult = $this->customerService->listCustomers( [] );
+
+        return view( 'pages.invoice.index', [
+            'invoices'      => $invoices,
+            'filters'       => $filters,
+            'statusOptions' => InvoiceStatus::cases(),
+            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+        ] );
+    }
+
+    public function dashboard( Request $request ): View
+    {
+        /** @var User $user */
+        $user     = Auth::user();
+        $tenantId = (int) ( $user->tenant_id ?? 0 );
+
+        $total     = Invoice::where( 'tenant_id', $tenantId )->count();
+        $paid      = Invoice::where( 'tenant_id', $tenantId )->where( 'status', InvoiceStatus::PAID->value )->count();
+        $pending   = Invoice::where( 'tenant_id', $tenantId )->where( 'status', InvoiceStatus::PENDING->value )->count();
+        $overdue   = Invoice::where( 'tenant_id', $tenantId )->where( 'status', InvoiceStatus::OVERDUE->value )->count();
+        $cancelled = Invoice::where( 'tenant_id', $tenantId )->where( 'status', InvoiceStatus::CANCELLED->value )->count();
+
+        $totalBilled   = (float) Invoice::where( 'tenant_id', $tenantId )->sum( 'total' );
+        $totalReceived = (float) Invoice::where( 'tenant_id', $tenantId )->where( 'status', InvoiceStatus::PAID->value )->sum( 'transaction_amount' );
+        $totalPending  = (float) Invoice::where( 'tenant_id', $tenantId )->whereIn( 'status', [ InvoiceStatus::PENDING->value, InvoiceStatus::OVERDUE->value ] )->sum( 'total' );
+
+        $statusBreakdown = [
+            'PENDENTE'  => [ 'count' => $pending, 'color' => InvoiceStatus::PENDING->getColor() ],
+            'VENCIDA'   => [ 'count' => $overdue, 'color' => InvoiceStatus::OVERDUE->getColor() ],
+            'PAGA'      => [ 'count' => $paid, 'color' => InvoiceStatus::PAID->getColor() ],
+            'CANCELADA' => [ 'count' => $cancelled, 'color' => InvoiceStatus::CANCELLED->getColor() ],
+        ];
+
+        $recent = Invoice::where( 'tenant_id', $tenantId )
+            ->latest( 'created_at' )
+            ->limit( 10 )
+            ->with( [ 'customer.commonData', 'service' ] )
+            ->get();
+
+        $stats = [
+            'total_invoices'     => $total,
+            'paid_invoices'      => $paid,
+            'pending_invoices'   => $pending,
+            'overdue_invoices'   => $overdue,
+            'cancelled_invoices' => $cancelled,
+            'total_billed'       => $totalBilled,
+            'total_received'     => $totalReceived,
+            'total_pending'      => $totalPending,
+            'status_breakdown'   => $statusBreakdown,
+            'recent_invoices'    => $recent,
+        ];
+
+        return view( 'pages.invoice.dashboard', compact( 'stats' ) );
     }
 
     /**
      * Exibe formulário de criação de fatura.
-     *
-     * @return View
      */
-    public function create(): View
+    public function create( Request $request ): View
     {
-        $customersResult = $this->invoiceService->getAvailableCustomers();
+        /** @var User $user */
+        $user     = Auth::user();
+        $products = Product::byTenant( (int) ( $user->tenant_id ?? 0 ) )->active()->orderBy( 'name' )->get();
 
-        return view( 'invoices.create', [
-            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : []
+        $customersResult = $this->customerService->listCustomers( [] );
+
+        return view( 'pages.invoice.create', [
+            'service'       => null,
+            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'services'      => [],
+            'products'      => $products,
+            'statusOptions' => InvoiceStatus::cases(),
         ] );
     }
 
     /**
      * Armazena nova fatura no sistema.
-     *
-     * Este método demonstra o uso de eventos para notificações:
-     * - Dispara evento InvoiceCreated para processamento assíncrono
-     * - Não chama MailerService diretamente
-     * - Mantém compatibilidade com código existente
-     *
-     * @param InvoiceRequest $request
-     * @return RedirectResponse
      */
-    public function store( InvoiceRequest $request ): RedirectResponse
+    public function store( InvoiceStoreRequest $request ): RedirectResponse
     {
-        try {
-            // Criar fatura usando o service
-            $result = $this->invoiceService->createInvoice( $request->validated() );
+        $result = $this->invoiceService->createInvoice( $request->validated() );
 
-            if ( $result->isSuccess() ) {
-                $invoice  = $result->getData()[ 'invoice' ];
-                $customer = $result->getData()[ 'customer' ];
-                $tenant   = $result->getData()[ 'tenant' ];
-
-                // Disparar evento para envio de notificação por e-mail
-                // AO INVÉS de chamar MailerService diretamente
-                Event::dispatch( new InvoiceCreated( $invoice, $customer, $tenant ) );
-
-                Log::info( 'Evento InvoiceCreated disparado para nova fatura', [
-                    'invoice_id'   => $invoice->id,
-                    'invoice_code' => $invoice->code,
-                    'customer_id'  => $customer->id,
-                    'tenant_id'    => $tenant->id,
-                ] );
-
-                return $this->redirectSuccess(
-                    route( 'invoices.show', $invoice->id ),
-                    'Fatura criada com sucesso. Notificação será enviada em segundo plano.',
-                );
-            }
-
-            return $this->redirectError(
-                route( 'invoices.create' ),
-                $this->getServiceErrorMessage( $result ),
-            );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao criar fatura', [
-                'error'        => $e->getMessage(),
-                'request_data' => $request->validated(),
-            ] );
-
-            return $this->redirectError(
-                route( 'invoices.create' ),
-                'Erro interno ao criar fatura. Tente novamente.',
-            );
+        if ( !$result->isSuccess() ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', $result->getMessage() );
         }
+
+        $invoice = $result->getData();
+
+        return redirect()->route( 'provider.invoices.show', $invoice->code )
+            ->with( 'success', 'Fatura criada com sucesso!' );
     }
 
     /**
      * Exibe detalhes de uma fatura específica.
-     *
-     * @param Invoice $invoice
-     * @return View
      */
     public function show( Invoice $invoice ): View
     {
-        $result = $this->invoiceService->getInvoiceDetails( $invoice->id );
 
-        return $this->view( 'invoices.show', $result );
+        $invoice->load( [
+            'customer',
+            'service',
+            'invoiceItems',
+            'paymentMercadoPagoInvoice',
+        ] );
+
+        return view( 'pages.invoice.show', [
+            'invoice' => $invoice,
+        ] );
     }
 
     /**
      * Exibe formulário de edição de fatura.
-     *
-     * @param Invoice $invoice
-     * @return View
      */
     public function edit( Invoice $invoice ): View
     {
-        $customersResult = $this->invoiceService->getAvailableCustomers();
+        /** @var User $user */
+        $user = Auth::user();
 
-        return view( 'invoices.edit', [
-            'invoice'   => $invoice,
-            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : []
+        $invoice->load( [
+            'invoiceItems.product',
+            'customer',
+            'service',
+        ] );
+
+        $customersResult = $this->customerService->listCustomers( [] );
+
+        return view( 'pages.invoice.edit', [
+            'invoice'       => $invoice,
+            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'services'      => [],
+            'statusOptions' => InvoiceStatus::cases(),
         ] );
     }
 
     /**
      * Atualiza fatura existente.
-     *
-     * @param InvoiceRequest $request
-     * @param Invoice $invoice
-     * @return RedirectResponse
      */
-    public function update( InvoiceRequest $request, Invoice $invoice ): RedirectResponse
+    public function update( InvoiceUpdateRequest $request, Invoice $invoice ): RedirectResponse
     {
-        try {
-            $result = $this->invoiceService->updateInvoice( $invoice->id, $request->validated() );
+        $data = $request->validated();
+        $invoice->update( $data );
 
-            if ( $result->isSuccess() ) {
-                return $this->redirectSuccess(
-                    route( 'invoices.show', $invoice->id ),
-                    'Fatura atualizada com sucesso.',
-                );
-            }
-
-            return $this->redirectError(
-                route( 'invoices.edit', $invoice->id ),
-                $this->getServiceErrorMessage( $result ),
-            );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao atualizar fatura', [
-                'invoice_id'   => $invoice->id,
-                'error'        => $e->getMessage(),
-                'request_data' => $request->validated(),
-            ] );
-
-            return $this->redirectError(
-                route( 'invoices.edit', $invoice->id ),
-                'Erro interno ao atualizar fatura. Tente novamente.',
-            );
-        }
+        return redirect()->route( 'provider.invoices.show', $invoice->code )
+            ->with( 'success', 'Fatura atualizada com sucesso!' );
     }
 
     /**
      * Remove fatura do sistema.
-     *
-     * @param Invoice $invoice
-     * @return RedirectResponse
      */
     public function destroy( Invoice $invoice ): RedirectResponse
     {
-        try {
-            $result = $this->invoiceService->deleteInvoice( $invoice->id );
+        $invoice->delete();
 
-            if ( $result->isSuccess() ) {
-                return $this->redirectSuccess(
-                    route( 'invoices.index' ),
-                    'Fatura removida com sucesso.',
-                );
-            }
-
-            return $this->redirectError(
-                route( 'invoices.show', $invoice->id ),
-                $this->getServiceErrorMessage( $result ),
-            );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao remover fatura', [
-                'invoice_id' => $invoice->id,
-                'error'      => $e->getMessage(),
-            ] );
-
-            return $this->redirectError(
-                route( 'invoices.show', $invoice->id ),
-                'Erro interno ao remover fatura. Tente novamente.',
-            );
-        }
+        return redirect()->route( 'provider.invoices.index' )
+            ->with( 'success', 'Fatura excluída com sucesso!' );
     }
 
     /**
      * Atualiza status da fatura.
-     *
-     * Este método demonstra como disparar evento StatusUpdated
-     * quando o status de uma entidade é alterado.
-     *
-     * @param Request $request
-     * @param Invoice $invoice
-     * @return RedirectResponse
      */
-    public function updateStatus( Request $request, Invoice $invoice ): RedirectResponse
+    public function change_status( Invoice $invoice, Request $request ): RedirectResponse
     {
+        $request->validate( [
+            'status' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $case ) => $case->value, InvoiceStatus::cases() ) ) ],
+        ] );
+
+        $invoice->update( [ 'status' => $request->input( 'status' ) ] );
+
+        return redirect()->route( 'provider.invoices.show', $invoice->code )
+            ->with( 'success', 'Status da fatura alterado com sucesso!' );
+    }
+
+    /**
+     * Create invoice from budget.
+     */
+    public function createFromBudget( Budget $budget ): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $budget->load( [
+            'customer.commonData',
+            'services.serviceItems.product',
+        ] );
+
+        $customersResult = $this->customerService->listCustomers( [] );
+
+        return view( 'pages.invoice.create-from-budget', [
+            'budget'           => $budget,
+            'alreadyBilled'    => 0,
+            'remainingBalance' => 0,
+            'customers'        => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'statusOptions'    => InvoiceStatus::cases(),
+        ] );
+    }
+
+    /**
+     * Create partial invoice from service (Interface para faturas parciais)
+     */
+    public function createPartialFromService( string $serviceCode ): View|RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
         try {
-            $oldStatus  = $invoice->status;
-            $newStatus  = $request->input( 'status' );
-            $statusName = $request->input( 'status_name', ucfirst( $newStatus ) );
+            // Gerar dados da fatura a partir do serviço
+            $result = $this->invoiceService->generateInvoiceDataFromService( $serviceCode );
 
-            // Atualizar status usando o service
-            $result = $this->invoiceService->updateInvoiceStatus( $invoice->id, $newStatus );
-
-            if ( $result->isSuccess() ) {
-                // Disparar evento para envio de notificação de atualização de status
-                // AO INVÉS de chamar MailerService diretamente
-                Event::dispatch( new StatusUpdated(
-                    $invoice,
-                    $oldStatus,
-                    $newStatus,
-                    $statusName,
-                    $invoice->tenant,
-                ) );
-
-                Log::info( 'Evento StatusUpdated disparado para fatura', [
-                    'invoice_id'  => $invoice->id,
-                    'old_status'  => $oldStatus,
-                    'new_status'  => $newStatus,
-                    'status_name' => $statusName,
-                ] );
-
-                return $this->redirectSuccess(
-                    route( 'invoices.show', $invoice->id ),
-                    'Status da fatura atualizado com sucesso. Notificação será enviada em segundo plano.',
-                );
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->with( 'error', $result->getMessage() );
             }
 
-            return $this->redirectError(
-                route( 'invoices.show', $invoice->id ),
-                $this->getServiceErrorMessage( $result ),
-            );
+            $invoiceData = $result->getData();
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao atualizar status da fatura', [
-                'invoice_id'   => $invoice->id,
+            $customersResult = $this->customerService->listCustomers( [] );
+
+            return view( 'pages.invoice.create-partial-from-service', [
+                'invoiceData'   => $invoiceData,
+                'serviceCode'   => $serviceCode,
+                'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+                'statusOptions' => InvoiceStatus::cases(),
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao criar interface de fatura parcial a partir do serviço', [
+                'service_code' => $serviceCode,
                 'error'        => $e->getMessage(),
-                'request_data' => $request->all(),
             ] );
 
-            return $this->redirectError(
-                route( 'invoices.show', $invoice->id ),
-                'Erro interno ao atualizar status da fatura. Tente novamente.',
+            return redirect()->back()
+                ->with( 'error', 'Erro ao processar solicitação. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Create invoice from service (Nova funcionalidade do sistema antigo)
+     */
+    public function createFromService( string $serviceCode ): View|RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        try {
+            // Gerar dados da fatura a partir do serviço
+            $result = $this->invoiceService->generateInvoiceDataFromService( $serviceCode );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            $invoiceData = $result->getData();
+
+            // Verificar se já existe fatura para este serviço
+            if ( $this->invoiceService->checkExistingInvoiceForService( $invoiceData[ 'service_id' ] ) ) {
+                return redirect()->route( 'provider.invoices.index' )
+                    ->with( 'error', 'Já existe uma fatura para este serviço.' );
+            }
+
+            $customersResult = $this->customerService->listCustomers( [] );
+
+            return view( 'pages.invoice.create-from-service', [
+                'invoiceData'   => $invoiceData,
+                'serviceCode'   => $serviceCode,
+                'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+                'statusOptions' => InvoiceStatus::cases(),
+            ] );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao criar fatura a partir do serviço', [
+                'service_code' => $serviceCode,
+                'error'        => $e->getMessage(),
+            ] );
+
+            return redirect()->back()
+                ->with( 'error', 'Erro ao processar solicitação. Tente novamente.' );
+        }
+    }
+
+    /**
+     * Store manual invoice from service (Nova funcionalidade para faturas manuais)
+     */
+    public function storeManualFromService( Request $request, string $serviceCode ): RedirectResponse
+    {
+        $request->validate( [
+            'issue_date'         => 'required|date',
+            'due_date'           => 'required|date|after_or_equal:issue_date',
+            'notes'              => 'nullable|string|max:1000',
+            'items'              => 'nullable|array',
+            'items.*.product_id' => 'required|integer|exists:products,id',
+            'items.*.quantity'   => 'required|numeric|min:0.01',
+            'items.*.unit_value' => 'required|numeric|min:0.01',
+        ] );
+
+        try {
+            // Preparar dados adicionais para fatura manual
+            $additionalData = array_merge(
+                $request->only( [ 'issue_date', 'due_date', 'notes' ] ),
+                [ 'is_automatic' => false ] // Marcar como fatura manual
             );
+
+            // Se houver itens específicos, incluir
+            if ( $request->has( 'items' ) ) {
+                $additionalData[ 'items' ] = $request->input( 'items' );
+            }
+
+            $result = $this->invoiceService->createInvoiceFromService( $serviceCode, $additionalData );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
+            }
+
+            $invoice = $result->getData();
+
+            return redirect()->route( 'provider.invoices.show', $invoice->code )
+                ->with( 'success', 'Fatura manual criada com sucesso!' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao criar fatura manual a partir do serviço', [
+                'service_code' => $serviceCode,
+                'error'        => $e->getMessage(),
+            ] );
+
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao processar fatura manual. Tente novamente.' );
         }
     }
 
     /**
-     * Display the invoice status page for public access.
+     * Store invoice from service (Nova funcionalidade do sistema antigo)
      */
-    public function viewInvoiceStatus( string $code, string $token ): View|RedirectResponse
+    public function storeFromService( Request $request ): RedirectResponse
     {
-        try {
-            // Find the invoice by code and token
-            $invoice = Invoice::where( 'code', $code )
-                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
-                    $query->where( 'token', $token )
-                        ->where( 'expires_at', '>', now() );
-                } )
-                ->with( [ 'customer', 'userConfirmationToken', 'service', 'tenant' ] )
-                ->first();
+        $request->validate( [
+            'service_code' => 'required|string|exists:services,code',
+            'issue_date'   => 'required|date',
+            'due_date'     => 'required|date|after_or_equal:issue_date',
+        ] );
 
-            if ( !$invoice ) {
-                Log::warning( 'Invoice not found or token expired', [
-                    'code'  => $code,
-                    'token' => $token,
-                    'ip'    => request()->ip()
-                ] );
-                return redirect()->route( 'error.not-found' );
+        try {
+            $result = $this->invoiceService->createInvoiceFromService(
+                $request->input( 'service_code' ),
+                $request->only( [ 'issue_date', 'due_date' ] ),
+            );
+
+            if ( !$result->isSuccess() ) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with( 'error', $result->getMessage() );
             }
 
-            // Get the status enum using the repository
-            $invoiceStatus = $this->invoiceStatusRepository->findById( $invoice->invoice_statuses_id );
+            $invoice = $result->getData();
 
-            return view( 'invoices.public.view-status', [
-                'invoice'       => $invoice,
-                'invoiceStatus' => $invoiceStatus,
-                'token'         => $token
+            return redirect()->route( 'provider.invoices.show', $invoice->code )
+                ->with( 'success', 'Fatura gerada com sucesso a partir do serviço!' );
+
+        } catch ( Exception $e ) {
+            Log::error( 'Erro ao salvar fatura a partir do serviço', [
+                'service_code' => $request->input( 'service_code' ),
+                'error'        => $e->getMessage(),
             ] );
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Error in viewInvoiceStatus', [
-                'code'  => $code,
-                'token' => $token,
-                'error' => $e->getMessage(),
-                'ip'    => request()->ip()
-            ] );
-            return redirect()->route( 'error.internal' );
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', 'Erro ao processar fatura. Tente novamente.' );
         }
     }
 
     /**
-     * Process the invoice status selection for public access.
+     * Store invoice from budget.
      */
-    public function chooseInvoiceStatus( Request $request ): RedirectResponse
+    public function storeFromBudget( Budget $budget, InvoiceStoreFromBudgetRequest $request ): RedirectResponse
     {
-        try {
-            $request->validate( [
-                'invoice_code'      => 'required|string',
-                'token'             => 'required|string|size:43', // base64url format: 32 bytes = 43 caracteres
-                'invoice_status_id' => [ 'required', 'string', 'in:' . implode( ',', array_map( fn( $status ) => $status->value, InvoiceStatusEnum::cases() ) ) ]
-            ] );
+        $payload = $request->validated();
+        $result  = $this->invoiceService->createPartialInvoiceFromBudget( $budget->code, $payload );
 
-            // Find the invoice by code and token
-            $invoice = Invoice::where( 'code', $request->invoice_code )
-                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $request ) {
-                    $query->where( 'token', $request->token )
-                        ->where( 'expires_at', '>', now() );
-                } )
-                ->with( [ 'customer', 'userConfirmationToken' ] )
-                ->first();
-
-            if ( !$invoice ) {
-                Log::warning( 'Invoice not found or token expired in choose status', [
-                    'code'  => $request->invoice_code,
-                    'token' => $request->token,
-                    'ip'    => request()->ip()
-                ] );
-                return redirect()->route( 'error.not-found' );
-            }
-
-            // Validate that the selected status is allowed for public updates
-            $allowedStatuses = [ InvoiceStatusEnum::PAID->value, InvoiceStatusEnum::CANCELLED->value, InvoiceStatusEnum::OVERDUE->value ];
-            if ( !in_array( $request->invoice_status_id, $allowedStatuses ) ) {
-                Log::warning( 'Invalid invoice status selected', [
-                    'invoice_code' => $request->invoice_code,
-                    'status_id'    => $request->invoice_status_id,
-                    'ip'           => request()->ip()
-                ] );
-                return redirect()->back()->with( 'error', 'Status inválido selecionado.' );
-            }
-
-            // Update invoice status using enum value
-            $invoice->update( [
-                'invoice_statuses_id' => $request->invoice_status_id,
-                'updated_at'          => now()
-            ] );
-
-            // Log the action
-            $newStatusEnum = InvoiceStatusEnum::tryFrom( $request->invoice_status_id );
-            $oldStatusEnum = $this->invoiceStatusRepository->findById( $invoice->getOriginal( 'invoice_statuses_id' ) );
-
-            Log::info( 'Invoice status updated via public link', [
-                'invoice_id'   => $invoice->id,
-                'invoice_code' => $invoice->code,
-                'old_status'   => $oldStatusEnum?->getName() ?? 'Unknown',
-                'new_status'   => $newStatusEnum?->getName() ?? 'Unknown',
-                'ip'           => request()->ip()
-            ] );
-
-            return redirect()->route( 'invoices.public.view-status', [
-                'code'  => $invoice->code,
-                'token' => $request->token
-            ] )->with( 'success', 'Status da fatura atualizado com sucesso!' );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Error in chooseInvoiceStatus', [
-                'error'   => $e->getMessage(),
-                'request' => $request->all(),
-                'ip'      => request()->ip()
-            ] );
-            return redirect()->route( 'error.internal' );
+        if ( !$result->isSuccess() ) {
+            return redirect()->back()
+                ->withInput()
+                ->with( 'error', $result->getMessage() );
         }
+
+        $invoice = $result->getData();
+
+        return redirect()->route( 'provider.invoices.show', $invoice->code )
+            ->with( 'success', 'Fatura criada a partir do orçamento!' );
     }
 
     /**
-     * Print invoice for public access.
+     * Search invoices via AJAX.
      */
-    public function print( string $code, string $token ): View|RedirectResponse
+    public function search( Request $request ): JsonResponse
     {
-        try {
-            // Find the invoice by code and token
-            $invoice = Invoice::where( 'code', $code )
-                ->whereHas( 'userConfirmationToken', function ( $query ) use ( $token ) {
-                    $query->where( 'token', $token )
-                        ->where( 'expires_at', '>', now() );
-                } )
-                ->with( [
-                    'customer',
-                    'items.product',
-                    'userConfirmationToken',
-                    'service.budget.tenant'
-                ] )
-                ->first();
+        $query = $request->get( 'q', '' );
+        $limit = $request->get( 'limit', 10 );
 
-            if ( !$invoice ) {
-                Log::warning( 'Invoice not found or token expired for print', [
-                    'code'  => $code,
-                    'token' => $token,
-                    'ip'    => request()->ip()
-                ] );
-                return redirect()->route( 'error.not-found' );
-            }
+        $result = $this->invoiceService->searchInvoices( $query, $limit );
 
-            // Get the status enum using the repository
-            $invoiceStatus = $this->invoiceStatusRepository->findById( $invoice->invoice_statuses_id );
-
-            return view( 'invoices.public.print', [
-                'invoice'       => $invoice,
-                'invoiceStatus' => $invoiceStatus
-            ] );
-
-        } catch ( \Exception $e ) {
-            Log::error( 'Error in invoice print', [
-                'code'  => $code,
-                'token' => $token,
-                'error' => $e->getMessage(),
-                'ip'    => request()->ip()
-            ] );
-            return redirect()->route( 'error.internal' );
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'success' => false,
+                'message' => $result->getMessage(),
+            ], 400 );
         }
+
+        return response()->json( [
+            'success' => true,
+            'data'    => $result->getData(),
+        ] );
+    }
+
+    /**
+     * Export invoices to Excel/CSV.
+     */
+    public function export( Request $request ): BinaryFileResponse|JsonResponse
+    {
+        $format  = $request->get( 'format', 'xlsx' );
+        $filters = $request->only( [ 'status', 'customer_id', 'date_from', 'date_to' ] );
+
+        $result = $this->invoiceService->exportInvoices( $filters, $format );
+
+        if ( !$result->isSuccess() ) {
+            return response()->json( [
+                'success' => false,
+                'message' => $result->getMessage(),
+            ], 400 );
+        }
+
+        $data = $result->getData();
+
+        return response()->download( $data[ 'file_path' ], $data[ 'filename' ] )
+            ->deleteFileAfterSend();
+    }
+
+    /**
+     * AJAX endpoint para filtrar faturas.
+     */
+    public function ajaxFilter( Request $request ): JsonResponse
+    {
+        $filters = $request->only( [ 'status', 'customer_id', 'service_id', 'date_from', 'date_to', 'due_date_from', 'due_date_to', 'min_amount', 'max_amount', 'search', 'sort_by', 'sort_direction' ] );
+        $result  = $this->invoiceService->getFilteredInvoices( $filters, [ 'customer:id,name', 'service:id,code,description', 'invoiceStatus' ] );
+
+        return $result->isSuccess()
+            ? response()->json( [ 'success' => true, 'data' => $result->getData() ] )
+            : response()->json( [ 'success' => false, 'message' => $result->getMessage() ], 400 );
+    }
+
+    /**
+     * Print invoice for provider access.
+     */
+    public function print( Invoice $invoice ): View
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ( $invoice->tenant_id !== ( $user->tenant_id ?? 0 ) ) {
+            abort( 404 );
+        }
+
+        $invoice->load( [
+            'customer.commonData',
+            'service',
+            'invoiceItems.product',
+        ] );
+
+        return view( 'pages.invoice.print', [
+            'invoice' => $invoice,
+        ] );
     }
 
 }

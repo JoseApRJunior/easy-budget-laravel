@@ -1,7 +1,7 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <div class="container-fluid py-1">
         <div class="row">
             <div class="col-12">
                 <h2 class="mb-4"><i class="bi bi-graph-up me-2"></i>Monitoramento do Sistema</h2>
@@ -9,17 +9,17 @@
                 <!-- Navegação por Abas -->
                 <ul class="nav nav-tabs mb-4" id="monitoringTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" href="{{ url( '/admin/monitoring/dashboard' ) }}">
+                        <a class="nav-link" href="{{ url('/admin/monitoring/dashboard') }}">
                             <i class="bi bi-speedometer2 me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" href="{{ url( '/admin/monitoring/metrics' ) }}">
+                        <a class="nav-link active" href="{{ url('/admin/monitoring/metrics') }}">
                             <i class="bi bi-graph-up me-1"></i>Métricas
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" href="{{ url( '/admin/monitoring/middleware' ) }}">
+                        <a class="nav-link" href="{{ url('/admin/monitoring/middleware') }}">
                             <i class="bi bi-lightning me-1"></i>Middlewares
                         </a>
                     </li>
@@ -44,7 +44,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-layers fs-1 text-primary mb-2"></i>
                                         <h5 class="card-title">Total de Middlewares</h5>
-                                        <h3 class="text-primary">{{ count( $middlewares ) }}</h3>
+                                        <h3 class="text-primary">{{ count($middlewares) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -54,7 +54,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-play-circle fs-1 text-success mb-2"></i>
                                         <h5 class="card-title">Total de Execuções</h5>
-                                        <h3 class="text-success">{{ number_format( $total_executions ) }}</h3>
+                                        <h3 class="text-success">{{ number_format($total_executions) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-speedometer2 fs-1 text-warning mb-2"></i>
                                         <h5 class="card-title">Tempo Médio</h5>
-                                        <h3 class="text-warning">{{ number_format( $average_response_time, 4 ) }}s</h3>
+                                        <h3 class="text-warning">{{ number_format($average_response_time, 4) }}s</h3>
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-check-circle fs-1 text-info mb-2"></i>
                                         <h5 class="card-title">Taxa de Sucesso</h5>
-                                        <h3 class="text-info">{{ number_format( $success_rate, 2 ) }}%</h3>
+                                        <h3 class="text-info">{{ number_format($success_rate, 2) }}%</h3>
                                     </div>
                                 </div>
                             </div>
@@ -116,53 +116,56 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ( $middlewares as $middleware )
+                                            @forelse ($middlewares as $middleware)
                                                 <tr>
                                                     <td class="text-center">{{ $loop->iteration }}</td>
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             <i class="bi bi-shield-shaded me-2 fs-5"></i>
                                                             <div>
-                                                                <strong>{{ $middleware[ 'name' ] }}</strong><br>
-                                                                <small class="text-muted">{{ $middleware[ 'class' ] }}</small>
+                                                                <strong>{{ $middleware['name'] }}</strong><br>
+                                                                <small
+                                                                    class="text-muted">{{ $middleware['class'] }}</small>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
-                                                        {{ number_format( $middleware[ 'metrics' ][ 'total_executions' ] ) }}</td>
+                                                        {{ number_format($middleware['metrics']['total_executions']) }}
+                                                    </td>
                                                     <td class="text-center">
-                                                        {{ number_format( $middleware[ 'metrics' ][ 'average_response_time' ] * 1000, 2 ) }}
+                                                        {{ number_format($middleware['metrics']['average_response_time'] * 1000, 2) }}
                                                         ms</td>
                                                     <td class="text-center">
-                                                        {{ number_format( $middleware[ 'metrics' ][ 'average_memory_usage' ] / 1024, 2 ) }}
+                                                        {{ number_format($middleware['metrics']['average_memory_usage'] / 1024, 2) }}
                                                         KB</td>
                                                     <td class="text-center">
                                                         <div class="progress" style="height: 20px;">
-                                                            <div class="progress-bar bg-{{ $middleware[ 'metrics' ][ 'success_rate' ] >= 95 ? 'success' : ( $middleware[ 'metrics' ][ 'success_rate' ] >= 80 ? 'warning' : 'danger' ) }}"
+                                                            <div class="progress-bar bg-{{ $middleware['metrics']['success_rate'] >= 95 ? 'success' : ($middleware['metrics']['success_rate'] >= 80 ? 'warning' : 'danger') }}"
                                                                 role="progressbar"
-                                                                style="width: {{ $middleware[ 'metrics' ][ 'success_rate' ] }}%;"
-                                                                aria-valuenow="{{ $middleware[ 'metrics' ][ 'success_rate' ] }}"
+                                                                style="width: {{ $middleware['metrics']['success_rate'] }}%;"
+                                                                aria-valuenow="{{ $middleware['metrics']['success_rate'] }}"
                                                                 aria-valuemin="0" aria-valuemax="100">
-                                                                {{ number_format( $middleware[ 'metrics' ][ 'success_rate' ], 1 ) }}%
+                                                                {{ number_format($middleware['metrics']['success_rate'], 1) }}%
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
                                                         <span
-                                                            class="badge bg-{{ $middleware[ 'health' ][ 'status' ] == 'Saudável' ? 'success' : ( $middleware[ 'health' ][ 'status' ] == 'Atenção' ? 'warning' : 'danger' ) }}">
-                                                            {{ $middleware[ 'health' ][ 'status' ] }}
+                                                            class="badge bg-{{ $middleware['health']['status'] == 'Saudável' ? 'success' : ($middleware['health']['status'] == 'Atenção' ? 'warning' : 'danger') }}">
+                                                            {{ $middleware['health']['status'] }}
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                            data-bs-target="#detailsModal-{{ $middleware[ 'id' ] }}">
+                                                        <button class="btn btn-sm btn-outline-primary"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#detailsModal-{{ $middleware['id'] }}">
                                                             <i class="bi bi-search"></i> Detalhes
                                                         </button>
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="8" class="text-center py-4">
+                                                    <td colspan="8" class="text-center py-1">
                                                         <i class="bi bi-info-circle fs-3 text-muted"></i>
                                                         <p class="mb-0 mt-2">Nenhuma métrica de middleware encontrada.</p>
                                                     </td>
@@ -179,13 +182,13 @@
         </div>
     </div>
 
-    @foreach ( $middlewares as $middleware )
+    @foreach ($middlewares as $middleware)
         <!-- Modal de Detalhes -->
-        <div class="modal fade" id="detailsModal-{{ $middleware[ 'id' ] }}" tabindex="-1">
+        <div class="modal fade" id="detailsModal-{{ $middleware['id'] }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Detalhes de {{ $middleware[ 'name' ] }}</h5>
+                        <h5 class="modal-title">Detalhes de {{ $middleware['name'] }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -195,10 +198,9 @@
             </div>
         </div>
     @endforeach
-
 @endsection
 
-@section( 'scripts' )
+@section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Funções de ordenação e filtro
@@ -206,7 +208,7 @@
 
         function exportMetrics() {
             // Lógica para exportar métricas
-            console.log( 'Exportando métricas...' );
+            console.log('Exportando métricas...');
         }
     </script>
 @endsection

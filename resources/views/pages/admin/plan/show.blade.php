@@ -1,206 +1,253 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'content' )
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Detalhes da Assinatura #{{ $subscription->id }}</h1>
-            <a href="javascript:history.back()" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar para a Lista
+@section('content')
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-box-seam me-2"></i>Detalhes do Plano: {{ $plan->name }}</h1>
+        <div>
+            <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+            <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-warning me-2">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-info">
+                <i class="bi bi-people me-1"></i>Assinantes
             </a>
         </div>
+    </div>
 
-        @php
-            $status_map = [
-                'pending'      => [ 'class' => 'bg-warning text-dark', 'text' => 'Pendente' ],
-                'authorized'   => [ 'class' => 'bg-info text-dark', 'text' => 'Autorizado' ],
-                'in_process'   => [ 'class' => 'bg-primary', 'text' => 'Em Processamento' ],
-                'in_mediation' => [ 'class' => 'bg-secondary', 'text' => 'Em Mediação' ],
-                'active'       => [ 'class' => 'bg-success', 'text' => 'Ativa' ],
-                'approved'     => [ 'class' => 'bg-success', 'text' => 'Aprovado' ],
-                'recovered'    => [ 'class' => 'bg-success', 'text' => 'Recuperado' ],
-                'rejected'     => [ 'class' => 'bg-danger', 'text' => 'Rejeitado' ],
-                'cancelled'    => [ 'class' => 'bg-dark', 'text' => 'Cancelado' ],
-                'refunded'     => [ 'class' => 'bg-light text-dark border', 'text' => 'Estornado' ],
-                'charged_back' => [ 'class' => 'bg-danger', 'text' => 'Chargeback' ]
-            ];
-          @endphp
+    <div class="row">
+        <!-- Plan Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informações do Plano</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>ID:</th>
+                            <td>{{ $plan->id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nome:</th>
+                            <td>{{ $plan->name }}</td>
+                        </tr>
+                        @if($plan->slug)
+                        <tr>
+                            <th>Slug:</th>
+                            <td><code>{{ $plan->slug }}</code></td>
+                        </tr>
+                        @endif
+                        <tr>
+                            <th>Descrição:</th>
+                            <td>{{ $plan->description ?? 'Nenhuma descrição' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Preço:</th>
+                            <td>R$ {{ number_format($plan->price, 2, ',', '.') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                @php
+                                    $statusClass = match($plan->status) {
+                                        'active' => 'bg-success',
+                                        'inactive' => 'bg-danger',
+                                        'draft' => 'bg-secondary',
+                                        default => 'bg-light text-dark'
+                                    };
+                                @endphp
+                                <span class="badge {{ $statusClass }}">{{ ucfirst($plan->status) }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Criado em:</th>
+                            <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Atualizado em:</th>
+                            <td>{{ $plan->updated_at ? $plan->updated_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-        <div class="row">
-            <!-- Coluna de Detalhes da Assinatura e Pagamento -->
-            <div class="col-md-8">
-                <!-- Card de Detalhes da Assinatura -->
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-file-text-fill me-2"></i>Detalhes da Assinatura</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-sm-6 mb-3">
-                                <strong>Plano:</strong><br>
-                                <span>{{ $subscription->plan_name }}</span>
-                            </div>
-                            <div class="col-sm-6 mb-3">
-                                <strong>Prestador:</strong><br>
-                                <span>{{ $subscription->provider_name }} (ID: {{ $subscription->provider_id }})</span>
-                            </div>
-                            <div class="col-sm-6 mb-3">
-                                <strong>Status da Assinatura:</strong><br>
-                                <span class="badge {{ $status_map[ $subscription->status ][ 'class' ] ?? 'bg-secondary' }}">
-                                    {{ $status_map[ $subscription->status ][ 'text' ] ?? ucfirst( $subscription->status ) }}
-                                </span>
-                            </div>
-                            <div class="col-sm-6 mb-3">
-                                <strong>Preço Pago:</strong><br>
-                                <span>R$ {{ number_format( $subscription->transaction_amount, 2, ',', '.' ) }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <strong>Data de Início:</strong><br>
-                                <span>{{ $subscription->start_date ? date( 'd/m/Y H:i', strtotime( $subscription->start_date ) ) : 'N/A' }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <strong>Data de Expiração:</strong><br>
-                                <span>{{ $subscription->end_date ? date( 'd/m/Y H:i', strtotime( $subscription->end_date ) ) : 'N/A' }}</span>
-                            </div>
+        <!-- Plan Limits -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-limits me-2"></i>Limites do Plano</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>Máximo de Orçamentos:</th>
+                            <td>{{ $plan->max_budgets }}</td>
+                        </tr>
+                        <tr>
+                            <th>Máximo de Clientes:</th>
+                            <td>{{ $plan->max_clients }}</td>
+                        </tr>
+                    </table>
+
+                    @if($plan->features)
+                        <hr>
+                        <h6>Recursos Incluídos:</h6>
+                        <ul class="list-unstyled">
+                            @foreach($plan->features as $feature)
+                                <li><i class="bi bi-check-circle text-success me-2"></i>{{ $feature }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Estatísticas</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>Total de Assinaturas:</th>
+                            <td><span class="badge bg-primary">{{ $stats['total_subscriptions'] }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Assinaturas Ativas:</th>
+                            <td><span class="badge bg-success">{{ $stats['active_subscriptions'] }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Assinaturas Canceladas:</th>
+                            <td><span class="badge bg-danger">{{ $stats['cancelled_subscriptions'] }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Assinaturas em Trial:</th>
+                            <td><span class="badge bg-info">{{ $stats['trial_subscriptions'] }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Receita Total:</th>
+                            <td><strong>R$ {{ number_format($stats['total_revenue'], 2, ',', '.') }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Receita Mensal:</th>
+                            <td><strong>R$ {{ number_format($stats['monthly_revenue'], 2, ',', '.') }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Taxa de Churn:</th>
+                            <td>{{ number_format($stats['churn_rate'], 2, ',', '.') }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Taxa de Conversão:</th>
+                            <td>{{ number_format($stats['conversion_rate'], 2, ',', '.') }}%</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Subscriptions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Assinaturas Recentes</h5>
+                    <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-sm btn-outline-primary">
+                        Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if($subscriptions->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tenant</th>
+                                        <th>Usuário</th>
+                                        <th>Status</th>
+                                        <th>Início</th>
+                                        <th>Fim</th>
+                                        <th>Valor</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($subscriptions as $subscription)
+                                        <tr>
+                                            <td>{{ $subscription->id }}</td>
+                                            <td>{{ $subscription->tenant->name ?? 'N/A' }}</td>
+                                            <td>{{ $subscription->provider->name ?? 'N/A' }}</td>
+                                            <td>
+                                                @php
+                                                    $statusClass = match($subscription->status) {
+                                                        'active' => 'bg-success',
+                                                        'cancelled' => 'bg-danger',
+                                                        'trial' => 'bg-info',
+                                                        'pending' => 'bg-warning text-dark',
+                                                        default => 'bg-light text-dark'
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $statusClass }}">{{ ucfirst($subscription->status) }}</span>
+                                            </td>
+                                            <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
+                                            <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
+                                            <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
+                                            <td>
+                                                <a href="{{ route('admin.plans.subscribers', [$plan, 'search' => $subscription->id]) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Card de Detalhes do Pagamento -->
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-credit-card-fill me-2"></i>Detalhes do Pagamento (Mercado Pago)
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if ( $payment_found )
-                            <div class="row">
-                                <div class="col-sm-6 mb-3"><strong>ID do Pagamento
-                                        (MP):</strong><br><span>{{ $payment->payment_id }}</span>
-                                </div>
-                                <div class="col-sm-6 mb-3"><strong>Status do Pagamento:</strong><br><span
-                                        class="badge {{ $status_map[ $payment->status ][ 'class' ] ?? 'bg-secondary' }}">
-                                        {{ $status_map[ $payment->status ][ 'text' ] ?? ucfirst( $payment->status ) }}
-                                    </span></div>
-                                <div class="col-sm-6 mb-3"><strong>Método de Pagamento:</strong><br><span>
-                                        {{ ucfirst( $payment->payment_method ) }}
-                                    </span></div>
-                                <div class="col-sm-6 mb-3"><strong>Valor da Transação:</strong><br><span>R$
-                                        {{ number_format( $payment->transaction_amount, 2, ',', '.' ) }}
-                                    </span></div>
-                                <div class="col-sm-6"><strong>Data de Criação:</strong><br><span>
-                                        {{ date( 'd/m/Y H:i', strtotime( $payment->created_at ) ) }}
-                                    </span></div>
-                                <div class="col-sm-6"><strong>Última Atualização:</strong><br><span>
-                                        {{ date( 'd/m/Y H:i', strtotime( $payment->updated_at ) ) }}
-                                    </span></div>
-                            </div>
-                        @else
-                            <div class="alert alert-warning" role="alert">Nenhum registro de pagamento encontrado para esta
-                                assinatura.
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Coluna de Ações -->
-            <div class="col-md-4">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Ações do Prestador</h5>
-                    </div>
-                    <div class="card-body d-grid gap-2">
-                        <a href="{{ url( '/admin/plans/provider-history/' . $subscription->provider_id ) }}"
-                            class="btn btn-info">
-                            <i class="bi bi-clock-history me-2"></i>Ver Histórico do Prestador
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i>Ações Administrativas</h5>
-                    </div>
-                    <div class="card-body">
-                        @if ( $payment_found )
-                            @php
-                                $pending_statuses = [ 'pending', 'authorized', 'in_process', 'in_mediation' ];
-                            @endphp
-                            @if ( in_array( $payment->status, $pending_statuses ) )
-                                <p class="text-muted small">O pagamento desta assinatura ainda não foi concluído. Você pode
-                                    cancelá-lo para permitir que o usuário tente novamente.</p>
-                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/cancel' ) }}"
-                                    method="POST" class="d-grid" id="cancelForm">
-                                    @csrf
-                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal"
-                                        data-bs-target="#cancelModal">
-                                        <i class="bi bi-x-circle me-2"></i>Cancelar Pagamento Pendente
-                                    </button>
-                                </form>
-                            @elseif ( $payment->status == 'approved' )
-                                <p class="text-muted small">Este pagamento foi aprovado. Você pode estornar o valor para o cliente,
-                                    o que também cancelará a assinatura.</p>
-                                <form action="{{ url( '/admin/plans/subscription/' . $subscription->id . '/refund' ) }}"
-                                    method="POST" class="d-grid" id="refundForm">
-                                    @csrf
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#refundModal">
-                                        <i class="bi bi-arrow-counterclockwise me-2"></i>Estornar Pagamento
-                                    </button>
-                                </form>
-                            @else
-                                <div class="alert alert-info" role="alert">Nenhuma ação disponível para o status de pagamento atual
-                                    ({{ $status_map[ $payment->status ][ 'text' ] ?? ucfirst( $payment->status ) }}).</div>
-                            @endif
-                        @else
-                            <div class="alert alert-secondary" role="alert">Nenhuma ação disponível, pois não há pagamento
-                                associado.</div>
-                        @endif
-                    </div>
+                    @else
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Nenhuma assinatura encontrada para este plano.
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmação para Cancelar -->
-    <div class="modal fade" id="cancelModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Cancelamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    @if(!$plan->planSubscriptions()->exists())
+                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este plano?')">
+                                <i class="bi bi-trash me-1"></i>Excluir Plano
+                            </button>
+                        </form>
+                    @endif
                 </div>
-                <div class="modal-body">
-                    <p>Tem certeza que deseja cancelar este pagamento pendente?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning"
-                        onclick="document.getElementById('cancelForm').submit();">Confirmar Cancelamento</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação para Estorno -->
-    <div class="modal fade" id="refundModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Estorno</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Tem certeza que deseja estornar este pagamento?</p>
-                    <p class="text-danger"><strong>Atenção:</strong> A ação não pode ser desfeita e o valor será devolvido
-                        ao cliente.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger"
-                        onclick="document.getElementById('refundForm').submit();">Confirmar Estorno</button>
+                <div>
+                    <a href="{{ route('admin.plans.duplicate', $plan) }}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-copy me-1"></i>Duplicar
+                    </a>
+                    <a href="{{ route('admin.plans.analytics', $plan) }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-graph-up me-1"></i>Análises
+                    </a>
+                    <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Editar Plano
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @endsection

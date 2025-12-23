@@ -35,17 +35,14 @@ class ProductObserver
     private function log(Product $product, string $action, string $description, array $extra = []): void
     {
         try {
-            AuditLog::withoutTenant()->create([
-                'tenant_id' => $product->tenant_id,
-                'user_id' => auth()->id(),
-                'action' => $action,
-                'model_type' => Product::class,
-                'model_id' => $product->id,
-                'description' => $description,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'metadata' => $extra,
-            ]);
+            $oldValues = $extra['old_values'] ?? null;
+            $newValues = $extra['new_values'] ?? null;
+
+            $log = AuditLog::log($action, $product, $oldValues, $newValues, $extra);
+
+            if ($log instanceof AuditLog && $log->getKey()) {
+                $log->update(['description' => $description]);
+            }
         } catch (\Exception $e) {
             \Log::error('Failed to create audit log', [
                 'action' => $action,
