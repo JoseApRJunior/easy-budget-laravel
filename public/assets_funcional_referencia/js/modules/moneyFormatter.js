@@ -1,7 +1,7 @@
 export const MoneyFormatter = {
    format(value) {
-      if (!value) return "R$ 0,00";
-      return `R$ ${parseFloat(value).toLocaleString("pt-BR", {
+      if (!value) return "0,00";
+      return `${parseFloat(value).toLocaleString("pt-BR", {
          minimumFractionDigits: 2,
          maximumFractionDigits: 2,
       })}`;
@@ -18,7 +18,7 @@ export const MoneyFormatter = {
          value = (parseInt(value) / 100).toFixed(2);
          value = value.replace(".", ",");
          value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-         return `R$ ${value}`;
+         return `${value}`;
       }
 
       // Formata valor inicial

@@ -1,1 +1,5 @@
-A classe PermissionService apresenta redundâncias referentes à antiga lógica de categorias globais e deve ser refatorada, visto que Categoria agora é um módulo padrão. Além disso, é necessário padronizar as rotas de Categoria para seguir o mesmo modelo de Produtos e Budget (ex: .../p/products/dashboard), corrigindo a estrutura atual .../categories/dashboard, e todas as rotas e views que sao mensuradas
+Essa é uma excelente ideia! Desativar o _auto-submit_ melhora a performance (evita requisições desnecessárias enquanto o usuário ainda está preenchendo os campos) e dá mais controle ao usuário, que decide exatamente quando quer processar os filtros.
+
+Vou remover a função de submissão automática e garantir que, ao clicar em "Filtrar", os valores de moeda sejam normalizados corretamente antes do envio.
+
+C:\laragon\www\easy-budget-laravel\resources\views\pages\product\index.blade.php

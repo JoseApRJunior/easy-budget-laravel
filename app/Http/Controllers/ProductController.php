@@ -50,8 +50,6 @@ class ProductController extends Controller
     {
         $filters = $request->only( [ 'search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price' ] );
 
-        // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
-        // O helper $this->view lida com o ServiceResult automaticamente
         if ( empty( $request->query() ) ) {
             $result = $this->emptyResult();
         } else {

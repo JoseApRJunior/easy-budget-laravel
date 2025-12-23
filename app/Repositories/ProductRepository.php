@@ -33,6 +33,7 @@ class ProductRepository extends AbstractTenantRepository
     public function findBySku( string $sku, array $with = [] ): ?Model
     {
         return $this->model->newQuery()
+            ->withTrashed()
             ->where( 'sku', $sku )
             ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
             ->first();
@@ -121,11 +122,11 @@ class ProductRepository extends AbstractTenantRepository
         } );
 
         // Filtros de Preço
-        $query->when( !empty( $filters[ 'min_price' ] ), function ( $q ) use ( $filters ) {
+        $query->when( isset( $filters[ 'min_price' ] ) && $filters[ 'min_price' ] !== '', function ( $q ) use ( $filters ) {
             $q->where( 'price', '>=', $filters[ 'min_price' ] );
         } );
 
-        $query->when( !empty( $filters[ 'max_price' ] ), function ( $q ) use ( $filters ) {
+        $query->when( isset( $filters[ 'max_price' ] ) && $filters[ 'max_price' ] !== '', function ( $q ) use ( $filters ) {
             $q->where( 'price', '<=', $filters[ 'max_price' ] );
         } );
     }

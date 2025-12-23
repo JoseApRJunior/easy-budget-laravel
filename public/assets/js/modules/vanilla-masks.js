@@ -314,24 +314,26 @@ function formatDate(value) {
  */
 function formatCurrencyBRLFromString(value) {
    const digits = removeNonDigits(String(value));
-   const intVal = parseInt(digits || "0", 10);
+   if (!digits) return "";
+
+   const intVal = parseInt(digits, 10);
    const cents = (intVal % 100).toString().padStart(2, "0");
    const integer = Math.floor(intVal / 100).toString();
    const withSeparators = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-   return `R$ ${withSeparators},${cents}`;
+   return `${withSeparators},${cents}`;
 }
 
 /**
  * Formata moeda BRL a partir de número decimal
  * @param {number} num - Valor numérico
- * @returns {string} Valor formatado como BRL
+ * @returns {string} Valor formatado como BRL (sem prefixo R$)
  */
 function formatCurrencyBRL(num) {
    const value = Math.floor(Math.max(0, Math.round(Number(num || 0) * 100)));
    const cents = (value % 100).toString().padStart(2, "0");
    const integer = Math.floor(value / 100).toString();
    const withSeparators = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-   return `R$ ${withSeparators},${cents}`;
+   return `${withSeparators},${cents}`;
 }
 
 /**
@@ -468,10 +470,20 @@ class VanillaMask {
     * @param {string} options.placeholder - Placeholder do campo
     * @param {Function} options.validator - Função de validação customizada
     * @param {string} options.errorMessage - Mensagem de erro customizada
+    * @param {string|HTMLElement} elementId - ID do elemento ou o próprio elemento DOM
+    * @param {string} type - Tipo da máscara (cpf, cnpj, cep, phone, date)
+    * @param {Object} options - Opções de configuração
+    * @param {boolean} options.clearIfNotMatch - Limpar campo se inválido no blur
+    * @param {string} options.placeholder - Placeholder do campo
+    * @param {Function} options.validator - Função de validação customizada
+    * @param {string} options.errorMessage - Mensagem de erro customizada
     * @param {string} options.locale - Idioma para mensagens (pt, en, es)
     */
    constructor(elementId, type, options = {}) {
-      this.element = document.getElementById(elementId);
+      this.element =
+         typeof elementId === "string"
+            ? document.getElementById(elementId)
+            : elementId;
       this.type = type;
       this.options = {
          clearIfNotMatch: true,
@@ -497,6 +509,11 @@ class VanillaMask {
    #init() {
       this.#applyMaxLength();
       this.#addEventListeners();
+
+      // Formata o valor inicial se existir
+      if (this.element.value) {
+         this.element.value = this.#format(this.element.value);
+      }
    }
 
    /**
@@ -530,18 +547,16 @@ class VanillaMask {
     */
    #handleInput(event) {
       const input = event.target;
+      const formattedValue = this.#format(input.value);
 
-      // Usa debounce para otimizar performance em entradas rápidas
-      const debouncedFormat = debounce(() => {
-         const formattedValue = this.#format(input.value);
+      // Evita recursão infinita se o valor não mudou
+      if (input.value !== formattedValue) {
          input.value = formattedValue;
+      }
 
-         if (this.options.validator) {
-            this.#validateField(formattedValue);
-         }
-      }, 100); // Delay reduzido para resposta mais rápida
-
-      debouncedFormat();
+      if (this.options.validator) {
+         this.#validateField(formattedValue);
+      }
    }
 
    /**
@@ -628,20 +643,20 @@ class VanillaMask {
     */
    #format(value) {
       switch (this.type) {
-        case "cnpj":
-           return formatCNPJ(value);
-        case "cpf":
-           return formatCPF(value);
-        case "cep":
-           return formatCEP(value);
-        case "phone":
-           return formatPhone(value);
-        case "date":
-           return formatDate(value);
-        case "currency":
-           return formatCurrencyBRLFromString(value);
-        default:
-           return value;
+         case "cnpj":
+            return formatCNPJ(value);
+         case "cpf":
+            return formatCPF(value);
+         case "cep":
+            return formatCEP(value);
+         case "phone":
+            return formatPhone(value);
+         case "date":
+            return formatDate(value);
+         case "currency":
+            return formatCurrencyBRLFromString(value);
+         default:
+            return value;
       }
    }
 
@@ -745,6 +760,18 @@ function initializeMasksFromConfig(config) {
  */
 function initializeMasks() {
    initializeMasksFromConfig(DEFAULT_MASK_CONFIG);
+
+   // Auto-inicializa qualquer campo com a classe .currency-brl
+   document.querySelectorAll(".currency-brl").forEach((el) => {
+      if (el.id) {
+         new VanillaMask(el.id, "currency");
+      } else {
+         // Se não tiver ID, gera um temporário para a classe funcionar
+         const tempId = "v-mask-" + Math.random().toString(36).substr(2, 9);
+         el.id = tempId;
+         new VanillaMask(tempId, "currency");
+      }
+   });
 }
 
 // ========================================
@@ -839,28 +866,30 @@ if (typeof window !== "undefined" && document.readyState === "loading") {
    // DOM já carregado
    initializeMasks();
 }
-;(function(){
+(function () {
    try {
-     if (typeof window !== 'undefined') {
-       window.VANILLA_DEBUG = false;
-       if (typeof VanillaMask !== 'undefined') {
-         window.VanillaMask = window.VanillaMask || VanillaMask;
-       }
-       if (!window.parseCurrencyBRLToNumber) {
-         window.parseCurrencyBRLToNumber = function(str){
-           var digits = String(str||'').replace(/\D/g,'');
-           return parseInt(digits||'0',10)/100;
-         };
-       }
-       if (!window.formatCurrencyBRL) {
-         window.formatCurrencyBRL = function(num){
-           var n = Number(num||0);
-           var value = Math.floor(Math.max(0, Math.round(n*100)));
-           var cents = (value % 100).toString().padStart(2,'0');
-           var integer = Math.floor(value/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-           return 'R$ ' + integer + ',' + cents;
-         };
-       }
-     }
-   } catch(e) {}
+      if (typeof window !== "undefined") {
+         window.VANILLA_DEBUG = false;
+         if (typeof VanillaMask !== "undefined") {
+            window.VanillaMask = window.VanillaMask || VanillaMask;
+         }
+         if (!window.parseCurrencyBRLToNumber) {
+            window.parseCurrencyBRLToNumber = function (str) {
+               var digits = String(str || "").replace(/\D/g, "");
+               return parseInt(digits || "0", 10) / 100;
+            };
+         }
+         if (!window.formatCurrencyBRL) {
+            window.formatCurrencyBRL = function (num) {
+               var n = Number(num || 0);
+               var value = Math.floor(Math.max(0, Math.round(n * 100)));
+               var cents = (value % 100).toString().padStart(2, "0");
+               var integer = Math.floor(value / 100)
+                  .toString()
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+               return integer + "," + cents;
+            };
+         }
+      }
+   } catch (e) {}
 })();

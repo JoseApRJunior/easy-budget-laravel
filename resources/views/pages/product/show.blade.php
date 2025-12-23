@@ -30,12 +30,16 @@
                             class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; object-fit: cover;">
 
                         <div class="d-grid gap-2">
-                            @if ($product->active)
+                            @if ($product->deleted_at)
+                                <div class="alert alert-danger py-2 mb-0">
+                                    <i class="bi bi-trash-fill me-1"></i> Produto Deletado
+                                </div>
+                            @elseif ($product->active)
                                 <div class="alert alert-success py-2 mb-0">
                                     <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
                                 </div>
                             @else
-                                <div class="alert alert-danger py-2 mb-0">
+                                <div class="alert alert-warning py-2 mb-0">
                                     <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
                                 </div>
                             @endif
@@ -188,22 +192,30 @@
                 <i class="bi bi-arrow-left me-2"></i>Voltar
             </a>
             <div class="d-flex gap-2">
-                <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary">
-                    <i class="bi bi-pencil-fill me-2"></i>Editar
-                </a>
-                <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
-                    data-bs-toggle="modal" data-bs-target="#toggleModal"
-                    data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
-                    data-product-name="{{ $product->name }}"
-                    data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}">
-                    <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                    {{ $product->active ? 'Desativar' : 'Ativar' }}
-                </button>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                    data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                    data-product-name="{{ $product->name }}">
-                    <i class="bi bi-trash-fill me-2"></i>Excluir
-                </button>
+                @if ($product->deleted_at)
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#restoreModal"
+                        data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                        data-product-name="{{ $product->name }}">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar
+                    </button>
+                @else
+                    <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar
+                    </a>
+                    <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
+                        data-bs-toggle="modal" data-bs-target="#toggleModal"
+                        data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
+                        data-product-name="{{ $product->name }}"
+                        data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}">
+                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
+                        {{ $product->active ? 'Desativar' : 'Ativar' }}
+                    </button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                        data-product-name="{{ $product->name }}">
+                        <i class="bi bi-trash-fill me-2"></i>Excluir
+                    </button>
+                @endif
             </div>
         </div>
     </div>
@@ -260,12 +272,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Confirmação de Restauração -->
+    <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja restaurar o produto <strong id="restoreProductName"></strong>?
+                    <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="restoreForm" action="#" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Restaurar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script>
-        // Script para o modal de exclusão
+        // Script para os modais
         document.addEventListener('DOMContentLoaded', function() {
+            // Modal de exclusão
             const deleteModal = document.getElementById('deleteModal');
             if (deleteModal) {
                 deleteModal.addEventListener('show.bs.modal', function(event) {
@@ -281,7 +317,7 @@
                 });
             }
 
-            // Script para o modal de ativação/desativação
+            // Modal de ativação/desativação
             const toggleModal = document.getElementById('toggleModal');
             if (toggleModal) {
                 toggleModal.addEventListener('show.bs.modal', function(event) {
@@ -302,6 +338,22 @@
                     toggleTitle.textContent = action === 'Desativar' ? 'Confirmar Desativação' :
                         'Confirmar Ativação';
                     toggleButton.textContent = action;
+                });
+            }
+
+            // Modal de restauração
+            const restoreModal = document.getElementById('restoreModal');
+            if (restoreModal) {
+                restoreModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const restoreUrl = button.getAttribute('data-restore-url');
+                    const productName = button.getAttribute('data-product-name');
+
+                    const restoreProductName = restoreModal.querySelector('#restoreProductName');
+                    const restoreForm = restoreModal.querySelector('#restoreForm');
+
+                    restoreProductName.textContent = productName;
+                    restoreForm.action = restoreUrl;
                 });
             }
         });

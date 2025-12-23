@@ -75,15 +75,17 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            @php($selectedActive = request()->has('active') ? request('active') : '')
+                                            @php($selectedActive = request()->has('active') ? request('active') : '1')
                                             <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                                 Ativo
                                             </option>
                                             <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
-                                                Inativo</option>
+                                                Inativo
+                                            </option>
                                             <option value=""
                                                 {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
-                                                Todos</option>
+                                                Todos
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -101,14 +103,16 @@
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
-                                        <select class="form-control" id="deleted" name="deleted">
-                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : '')
+                                        <select name="deleted" id="deleted" class="form-control">
+                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : 'current')
+                                            <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
+                                                Atuais
+                                            </option>
+                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
+                                                Deletados
+                                            </option>
                                             <option value=""
                                                 {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
-                                                Atuais</option>
-                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
-                                                Deletados</option>
-                                            <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -144,9 +148,8 @@
                                             aria-label="Filtrar">
                                             <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                                         </button>
-                                        <a href="{{ route('provider.products.index') }}" class="btn btn-secondary"
-                                            aria-label="Limpar filtros">
-                                            <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
+                                        <a href="{{ route('provider.products.index') }}" class="btn btn-secondary">
+                                            <i class="bi bi-x me-1"></i>Limpar
                                         </a>
                                     </div>
                                 </div>
@@ -243,7 +246,12 @@
                                                 <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-2">
                                                         @if ($product->deleted_at)
-                                                            {{-- Produto deletado: apenas restaurar --}}
+                                                            {{-- Produto deletado: visualizar e restaurar --}}
+                                                            <a href="{{ route('provider.products.show', $product->sku) }}"
+                                                                class="btn btn-info" title="Visualizar"
+                                                                aria-label="Visualizar">
+                                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            </a>
                                                             <button type="button" class="btn btn-success"
                                                                 data-bs-toggle="modal" data-bs-target="#restoreModal"
                                                                 data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
@@ -300,28 +308,56 @@
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @forelse($products as $product)
-                                    <a href="{{ route('provider.products.show', $product->sku) }}"
-                                        class="list-group-item list-group-item-action py-3">
+                                    <div class="list-group-item py-3 {{ $product->deleted_at ? 'bg-light' : '' }}">
                                         <div class="d-flex align-items-start">
                                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                                 class="rounded me-2"
                                                 style="width: 40px; height: 40px; object-fit: cover;">
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-2">{{ $product->name }}</div>
+                                                <div class="fw-semibold mb-1">{{ $product->name }}</div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
                                                     <span class="badge bg-secondary">{{ $product->sku }}</span>
-                                                    @if ($product->active)
+                                                    @if ($product->deleted_at)
+                                                        <span class="badge bg-danger">Deletado</span>
+                                                    @elseif ($product->active)
                                                         <span class="badge bg-success-subtle text-success">Ativo</span>
                                                     @else
                                                         <span class="badge bg-danger-subtle text-danger">Inativo</span>
                                                     @endif
                                                 </div>
-                                                <small class="text-muted">R$
-                                                    {{ number_format($product->price, 2, ',', '.') }}</small>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small class="text-muted">R$
+                                                        {{ number_format($product->price, 2, ',', '.') }}</small>
+                                                    <div class="d-flex gap-2">
+                                                        <a href="{{ route('provider.products.show', $product->sku) }}"
+                                                            class="btn btn-sm btn-info" title="Visualizar">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        @if ($product->deleted_at)
+                                                            <button type="button" class="btn btn-sm btn-success"
+                                                                data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                                data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                                                                data-product-name="{{ $product->name }}"
+                                                                title="Restaurar">
+                                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                                            </button>
+                                                        @else
+                                                            <a href="{{ route('provider.products.edit', $product->sku) }}"
+                                                                class="btn btn-sm btn-primary" title="Editar">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-sm btn-danger"
+                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                                                                data-product-name="{{ $product->name }}" title="Excluir">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
                                         </div>
-                                    </a>
+                                    </div>
                                 @empty
                                     <div class="p-4 text-center text-muted">
                                         <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
@@ -409,5 +445,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/product.js') }}"></script>
+    <script type="module" src="{{ asset('assets/js/product.js') }}?v={{ time() }}"></script>
 @endpush

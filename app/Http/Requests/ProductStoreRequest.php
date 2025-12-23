@@ -14,6 +14,19 @@ class ProductStoreRequest extends FormRequest
         return auth()->check();
     }
 
+    /**
+     * Prepara os dados para validação.
+     * Converte o preço de BRL (string) para float.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ( $this->has( 'price' ) ) {
+            $this->merge( [
+                'price' => \App\Helpers\CurrencyHelper::unformat( $this->input( 'price' ) ),
+            ] );
+        }
+    }
+
     public function rules(): array
     {
         return [

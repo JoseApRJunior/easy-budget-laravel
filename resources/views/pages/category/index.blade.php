@@ -81,7 +81,8 @@
                                             </option>
                                             <option value=""
                                                 {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
-                                                Todos</option>
+                                                Todos
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -259,20 +260,22 @@
                                                         @else
                                                             {{-- Categoria ativa: show, edit, delete --}}
                                                             <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                                class="btn btn-info" title="Visualizar" aria-label="Visualizar">
+                                                                class="btn btn-info" title="Visualizar"
+                                                                aria-label="Visualizar">
                                                                 <i class="bi bi-eye" aria-hidden="true"></i>
                                                             </a>
                                                             @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
                                                             <a href="{{ route('provider.categories.edit', $category->slug) }}"
-                                                                class="btn btn-primary" title="Editar" aria-label="Editar">
+                                                                class="btn btn-primary" title="Editar"
+                                                                aria-label="Editar">
                                                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                                             </a>
                                                             @if ($canDelete)
                                                                 <button type="button" class="btn btn-danger"
                                                                     data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                                     data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
-                                                                    data-category-name="{{ $category->name }}" title="Excluir"
-                                                                    aria-label="Excluir">
+                                                                    data-category-name="{{ $category->name }}"
+                                                                    title="Excluir" aria-label="Excluir">
                                                                     <i class="bi bi-trash" aria-hidden="true"></i>
                                                                 </button>
                                                             @endif

@@ -1,104 +1,72 @@
 /**
- * Product Index JavaScript - External File
- * Following established patterns from customer.js and category.js
- *
- * Provides:
- * - Filter confirmation modal handling
- * - BRL currency formatting and normalization
- * - Auto-submit functionality
- * - AJAX status toggle operations
+ * Product Index JavaScript - Optimized Version
+ * - Sem auto-submit (melhor performance)
+ * - Normalização de moeda no momento do envio
+ * - Tratamento de modais de exclusão e restauração
  */
 
 (function () {
    "use strict";
 
-   // State management
+   // Gerenciamento de estado interno
    let productState = {
-      filterTimeout: null,
       modalInstance: null,
    };
 
    /**
-    * Initialize delete modal functionality
-    */
-   function initializeDeleteModal() {
-      const deleteModal = document.getElementById("deleteModal");
-      if (!deleteModal) return;
-
-      // Move modal to body if not already there
-      if (deleteModal.parentElement !== document.body) {
-         document.body.appendChild(deleteModal);
-      }
-
-      deleteModal.addEventListener("show.bs.modal", function (event) {
-         const button = event.relatedTarget;
-         if (!button) return;
-
-         const deleteUrl = button.getAttribute("data-delete-url");
-         const productName = button.getAttribute("data-product-name");
-         const form = document.getElementById("deleteForm");
-         const nameEl = document.getElementById("deleteProductName");
-
-         if (form && deleteUrl) {
-            form.setAttribute("action", deleteUrl);
-         }
-         if (nameEl) {
-            nameEl.textContent = '"' + (productName || "") + '"';
-         }
-      });
-   }
-
-   /**
-    * Initialize restore modal functionality
-    */
-   function initializeRestoreModal() {
-      const restoreModal = document.getElementById("restoreModal");
-      if (!restoreModal) return;
-
-      // Move modal to body if not already there
-      if (restoreModal.parentElement !== document.body) {
-         document.body.appendChild(restoreModal);
-      }
-
-      restoreModal.addEventListener("show.bs.modal", function (event) {
-         const button = event.relatedTarget;
-         if (!button) return;
-
-         const restoreUrl = button.getAttribute("data-restore-url");
-         const productName = button.getAttribute("data-product-name");
-         const form = document.getElementById("restoreForm");
-         const nameEl = document.getElementById("restoreProductName");
-
-         if (form && restoreUrl) {
-            form.setAttribute("action", restoreUrl);
-         }
-         if (nameEl) {
-            nameEl.textContent = '"' + (productName || "") + '"';
-         }
-      });
-   }
-
-   /**
-    * Initialize all product index functionality
+    * Inicialização principal
     */
    function initializeProductIndex() {
-      initializeFilterConfirmation();
-      initializeCurrencyFormatting();
-      initializeStatusToggle();
+      // 1. Modais de Ação
       initializeDeleteModal();
       initializeRestoreModal();
+
+      // 2. Filtros e Formulário
+      initializeFilterConfirmation();
       initializeFormSubmission();
+
+      // 3. UI e Máscaras
+      initializeCurrencyFormatting();
+      initializeStatusToggle();
    }
 
    /**
-    * Filter confirmation modal - prevents bulk loads without filters
+    * Inicializa as máscaras de moeda usando VanillaMask
+    */
+   function initializeCurrencyFormatting() {
+      const applyMask = () => {
+         if (typeof window.VanillaMask !== "undefined") {
+            const minPrice = document.getElementById("min_price");
+            const maxPrice = document.getElementById("max_price");
+
+            if (minPrice && !minPrice.dataset.maskApplied) {
+               new window.VanillaMask(minPrice, "currency");
+               minPrice.dataset.maskApplied = "true";
+            }
+            if (maxPrice && !maxPrice.dataset.maskApplied) {
+               new window.VanillaMask(maxPrice, "currency");
+               maxPrice.dataset.maskApplied = "true";
+            }
+         } else {
+            console.warn(
+               "Product JS: VanillaMask ainda não disponível, tentando novamente em 100ms..."
+            );
+            setTimeout(applyMask, 100);
+         }
+      };
+
+      applyMask();
+   }
+
+   /**
+    * Intercepta o envio para validar se há filtros aplicados
     */
    function initializeFilterConfirmation() {
       const form = document.getElementById("filtersFormProducts");
       if (!form) return;
 
       form.addEventListener("submit", function (e) {
-         // If the form is being submitted with the 'all' flag, don't validate
+         // Se o campo oculto 'all' existir (vindo do modal), ignora a validação
          if (form.querySelector('input[name="all"]')) return;
 
          const search = (form.querySelector("#search")?.value || "").trim();
@@ -129,17 +97,27 @@
    }
 
    /**
-    * Show filter confirmation modal
+    * Normaliza os valores de moeda antes de enviar ao Laravel
+    * Removido: O backend agora utiliza CurrencyHelper::unformat para lidar com o formato BRL
+    */
+   function initializeFormSubmission() {
+      // Não é mais necessário normalizar no front-end para os filtros,
+      // pois o ProductService agora usa o CurrencyHelper para desformatar.
+   }
+
+   /**
+    * Exibe o modal avisando que carregar tudo pode ser lento
     */
    function showFilterConfirmationModal(form) {
       const modalEl = document.getElementById("confirmAllProductsModal");
+      if (!modalEl) return;
+
       const confirmBtn = modalEl.querySelector(".btn-confirm-all-products");
 
-      // Remove any existing listeners
+      // Limpa listeners antigos para evitar múltiplas submissões
       const newConfirmBtn = confirmBtn.cloneNode(true);
       confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
-      // Add confirmation handler
       newConfirmBtn.addEventListener("click", function () {
          const hiddenInput = document.createElement("input");
          hiddenInput.type = "hidden";
@@ -147,220 +125,104 @@
          hiddenInput.value = "1";
          form.appendChild(hiddenInput);
 
-         productState.modalInstance.hide();
-         normalizeCurrencyInputs(form);
+         if (productState.modalInstance) productState.modalInstance.hide();
+
+         // normalizeCurrencyInputs(form); // Removido: O backend agora trata
          form.submit();
       });
 
       if (typeof window.bootstrap !== "undefined") {
          productState.modalInstance = new window.bootstrap.Modal(modalEl);
+         productState.modalInstance.show();
       } else {
-         console.error("Bootstrap 5 not found in window scope");
-         // Fallback manual or retry logic could go here
-         return;
+         console.error("Bootstrap 5 não encontrado.");
       }
-      productState.modalInstance.show();
    }
 
    /**
-    * Initialize manual form submission handling
-    */
-   function initializeFormSubmission() {
-      const form = document.getElementById("filtersFormProducts");
-      if (!form) return;
-
-      form.addEventListener("submit", function () {
-         normalizeCurrencyInputs(form);
-      });
-   }
-
-   /**
-    * BRL Currency formatting and normalization
-    */
-   function initializeCurrencyFormatting() {
-      const currencyInputs = document.querySelectorAll(".currency-brl");
-
-      currencyInputs.forEach(function (input) {
-         // Format existing value
-         if (input.value) {
-            input.value = formatBRL(input.value);
-         }
-
-         // Focus: show raw value
-         input.addEventListener("focus", function () {
-            input.value = normalizeCurrency(input.value);
-         });
-
-         // Blur: format as BRL
-         input.addEventListener("blur", function () {
-            input.value = formatBRL(input.value);
-         });
-      });
-   }
-
-   /**
-    * Format value as BRL currency
-    */
-   function formatBRL(value) {
-      if (value === null || value === undefined) return "";
-
-      let onlyDigits = String(value).replace(/[^0-9,\.]/g, "");
-
-      // Handle decimal separator
-      if (onlyDigits.indexOf(".") !== -1 && onlyDigits.indexOf(",") === -1) {
-         onlyDigits = onlyDigits.replace(/\./g, ",");
-      }
-
-      let digits = onlyDigits.replace(/[^0-9]/g, "");
-      if (digits.length === 0) return "";
-
-      // Ensure at least 3 digits for proper decimal formatting
-      while (digits.length < 3) {
-         digits = "0" + digits;
-      }
-
-      const intPart = digits.slice(0, -2);
-      const decPart = digits.slice(-2);
-
-      // Add thousand separators
-      intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-      return intPart + "," + decPart;
-   }
-
-   /**
-    * Normalize currency to decimal format
-    */
-   function normalizeCurrency(val) {
-      if (!val) return "";
-
-      const digits = String(val).replace(/[^0-9]/g, "");
-      if (digits.length === 0) return "";
-
-      if (digits.length === 1) digits = "0" + digits;
-
-      const intPart = digits.slice(0, -2);
-      const decPart = digits.slice(-2);
-
-      return (intPart.length ? intPart : "0") + "." + decPart;
-   }
-
-   /**
-    * Normalize all currency inputs in form
+    * Funções de normalização removidas em favor do VanillaMask e CurrencyHelper (Backend)
     */
    function normalizeCurrencyInputs(form) {
-      const currencyInputs = form.querySelectorAll(".currency-brl");
-      currencyInputs.forEach(function (input) {
-         input.value = normalizeCurrency(input.value);
+      // Mantido apenas como stub se necessário, mas a lógica foi movida para o backend
+   }
+
+   /**
+    * Modais de Deleção e Restauração
+    */
+   function initializeDeleteModal() {
+      const modal = document.getElementById("deleteModal");
+      if (!modal) return;
+      if (modal.parentElement !== document.body)
+         document.body.appendChild(modal);
+
+      modal.addEventListener("show.bs.modal", function (event) {
+         const button = event.relatedTarget;
+         const url = button.getAttribute("data-delete-url");
+         const name = button.getAttribute("data-product-name");
+
+         document.getElementById("deleteForm")?.setAttribute("action", url);
+         const nameEl = document.getElementById("deleteProductName");
+         if (nameEl) nameEl.textContent = `"${name}"`;
+      });
+   }
+
+   function initializeRestoreModal() {
+      const modal = document.getElementById("restoreModal");
+      if (!modal) return;
+      if (modal.parentElement !== document.body)
+         document.body.appendChild(modal);
+
+      modal.addEventListener("show.bs.modal", function (event) {
+         const button = event.relatedTarget;
+         const url = button.getAttribute("data-restore-url");
+         const name = button.getAttribute("data-product-name");
+
+         document.getElementById("restoreForm")?.setAttribute("action", url);
+         const nameEl = document.getElementById("restoreProductName");
+         if (nameEl) nameEl.textContent = `"${name}"`;
       });
    }
 
    /**
-    * Initialize AJAX status toggle functionality
+    * Toggle de Status via AJAX
     */
    function initializeStatusToggle() {
-      const toggleForms = document.querySelectorAll(".toggle-status-form");
-
-      toggleForms.forEach(function (form) {
+      document.querySelectorAll(".toggle-status-form").forEach((form) => {
          form.addEventListener("submit", function (e) {
             e.preventDefault();
-
-            const url = form.getAttribute("action");
-            const btn = form.querySelector("button");
-
-            // Disable button during request
+            const btn = this.querySelector("button");
             btn.disabled = true;
 
-            const headers = {
-               Accept: "application/json",
-               "X-Requested-With": "XMLHttpRequest",
-            };
-
-            fetch(url, {
+            fetch(this.getAttribute("action"), {
                method: "PATCH",
-               headers: headers,
+               headers: {
+                  Accept: "application/json",
+                  "X-Requested-With": "XMLHttpRequest",
+                  "X-CSRF-TOKEN": document.querySelector(
+                     'meta[name="csrf-token"]'
+                  )?.content,
+               },
             })
-               .then(function (response) {
-                  return response.json();
-               })
-               .then(function (data) {
-                  if (data && data.success) {
-                     handleStatusToggleSuccess(form, btn, data.message);
+               .then((res) => res.json())
+               .then((data) => {
+                  if (data.success) {
+                     window.location.reload(); // Recarregar é mais seguro para manter a consistência da lista
                   } else {
-                     const message =
-                        data && data.message
-                           ? data.message
-                           : "Erro ao atualizar status";
-                     window.easyAlert.error(message);
+                     window.easyAlert.error(
+                        data.message || "Erro ao atualizar"
+                     );
                   }
                })
-               .catch(function () {
-                  window.easyAlert.error("Erro de comunicação");
-               })
-               .finally(function () {
-                  btn.disabled = false;
-               });
+               .catch(() => window.easyAlert.error("Erro de conexão"))
+               .finally(() => (btn.disabled = false));
          });
       });
    }
 
-   /**
-    * Handle successful status toggle
-    */
-   function handleStatusToggleSuccess(form, btn, message) {
-      window.easyAlert.success(message || "Status atualizado");
-
-      const statusCell = form
-         .closest("tr")
-         .querySelector("td:nth-child(6) .badge");
-      if (!statusCell) return;
-
-      const isActive = statusCell.classList.contains("badge-success");
-
-      if (isActive) {
-         // Change to inactive
-         statusCell.classList.remove("badge-success");
-         statusCell.classList.add("badge-danger");
-         statusCell.textContent = "Inativo";
-
-         btn.classList.remove("btn-warning");
-         btn.classList.add("btn-success");
-         btn.querySelector("i").className = "bi bi-check-lg";
-         btn.setAttribute("aria-label", "Ativar produto");
-         form.setAttribute(
-            "onsubmit",
-            "return confirm('Ativar este produto?')"
-         );
-      } else {
-         // Change to active
-         statusCell.classList.remove("badge-danger");
-         statusCell.classList.add("badge-success");
-         statusCell.textContent = "Ativo";
-
-         btn.classList.remove("btn-success");
-         btn.classList.add("btn-warning");
-         btn.querySelector("i").className = "bi bi-slash-circle";
-         btn.setAttribute("aria-label", "Desativar produto");
-         form.setAttribute(
-            "onsubmit",
-            "return confirm('Desativar este produto?')"
-         );
-      }
-   }
-
-   // Initialize when DOM is ready
+   // Execução
    if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initializeProductIndex);
    } else {
       initializeProductIndex();
    }
-
-   // Export for external access if needed
-   window.ProductIndexJS = {
-      initialize: initializeProductIndex,
-      normalizeCurrencyInputs: normalizeCurrencyInputs,
-      formatBRL: formatBRL,
-      normalizeCurrency: normalizeCurrency,
-      initializeRestoreModal: initializeRestoreModal,
-   };
 })();

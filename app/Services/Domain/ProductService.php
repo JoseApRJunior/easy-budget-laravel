@@ -495,9 +495,7 @@ class ProductService extends AbstractBaseService
      */
     private function normalizePrice( string $price ): float
     {
-        // Remove R$, pontos de milhar e substitui vírgula por ponto
-        $clean = preg_replace( '/[^\d,]/', '', $price );
-        return (float) str_replace( ',', '.', $clean );
+        return \App\Helpers\CurrencyHelper::unformat( $price );
     }
 
 }

@@ -38,19 +38,16 @@ document.addEventListener("DOMContentLoaded", function () {
    function setupFilters() {
       if (filtersForm) {
          filtersForm.addEventListener("submit", function (e) {
-            if (!e.submitter || e.submitter.id !== "btnFilterCategories")
-               return;
-
-            // Permitir carregamento inicial sem modal
-            if (isInitialLoad) {
-               isInitialLoad = false;
-               return; // Permitir submissão normal
-            }
+            // Se o campo oculto 'all' existir (vindo do modal), ignora a validação
+            if (filtersForm.querySelector('input[name="all"]')) return;
 
             var search = (searchInput?.value || "").trim();
             var status = (statusSelect?.value || "").trim();
             var deleted = (deletedSelect?.value || "").trim();
-            var hasFilters = !!(search || status || deleted);
+            
+            // Consideramos filtros ativos se search não estiver vazio,
+            // ou se status não for "Todos" (''), ou se deleted não for "Atuais" ('current')
+            var hasFilters = !!(search || (status !== "") || (deleted !== "current"));
 
             if (!hasFilters) {
                e.preventDefault();
@@ -58,22 +55,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
          });
       }
-   }
-
-   // Auto-submeter ao alterar filtros
-   function setupAutoFilter() {
-      [searchInput, statusSelect, perPageSelect, deletedSelect].forEach(
-         function (element) {
-            if (!element) return;
-
-            element.addEventListener("change", function () {
-               clearTimeout(window.filterTimeout);
-               window.filterTimeout = setTimeout(function () {
-                  element.closest("form").submit();
-               }, 500);
-            });
-         }
-      );
    }
 
    // Modal de confirmação para mostrar todos
@@ -85,11 +66,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       var confirmBtn = modalEl.querySelector(".btn-confirm-all-categories");
+      
+      // Limpa listeners antigos para evitar múltiplas submissões
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
       var modal = new bootstrap.Modal(modalEl);
 
-      var handler = function () {
-         confirmBtn.removeEventListener("click", handler);
-
+      newConfirmBtn.addEventListener("click", function () {
          var hidden = document.createElement("input");
          hidden.type = "hidden";
          hidden.name = "all";
@@ -98,16 +82,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
          modal.hide();
          filtersForm.submit();
-      };
+      });
 
-      confirmBtn.addEventListener("click", handler);
       modal.show();
    }
 
    // Inicialização
    setupDeleteModal();
    setupFilters();
-   setupAutoFilter();
 
    // Marcar que o carregamento inicial foi completado
    setTimeout(() => {
