@@ -1,0 +1,125 @@
+/* ==========================================================================
+   EASY BUDGET - SISTEMA DE VARIÁVEIS (REFATORADO)
+   ========================================================================== */
+
+:root {
+   /* 1. PALETA DE CORES BASE (Tokens) */
+   --brand-primary: #093172;
+   --brand-primary-hover: #1d4ed8;
+
+   /* Tons Dark */
+   --dark-background: #1e293b; /* Ajustado para um fundo mais profundo e estável */
+   --dark-surface: #334155;
+   --dark-surface-light: #475569;
+   --dark-text-main: #f8fafc;
+   --dark-text-muted: #cbd5e1;
+
+   /* Tons Light */
+   --light-background: #f1f5f9; /* Ajustado para cinza ultra-leve (mais moderno que o azulado anterior) */
+   --light-surface: #ffffff;
+   --light-border: #e2e8f0;
+   --light-text-main: #1e293b;
+   --light-text-muted: #64748b;
+
+   /* Status e Feedback */
+   --color-success: #10b981;
+   --color-error: #ef4444;
+   --color-warning: #f59e0b;
+   --color-info: #3b82f6;
+
+   /* 2. TIPOGRAFIA E ESPAÇAMENTO */
+   --font-primary: "Inter", system-ui, -apple-system, sans-serif;
+   --spacing-md: 1rem;
+   --border-radius-md: 0.5rem;
+   --transition-speed: 0.25s;
+   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+   /* Z-Index e Sombras */
+   --z-sticky: 1020;
+   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* ==========================================================================
+   3. APLICAÇÃO DOS TEMAS (Onde a mágica acontece)
+   ========================================================================== */
+
+/* TEMA CLARO (Padrão) */
+:root,
+:root[data-bs-theme="light"],
+.theme-light {
+   --bg-color: var(--light-background);
+   --surface-color: var(--light-surface);
+   --text-color: var(--light-text-main);
+   --small-text: var(--light-text-muted);
+   --primary-color: var(--brand-primary);
+
+   /* Forms */
+   --form-bg: var(--light-surface);
+   --form-border: var(--light-border);
+   --form-input-bg: #ffffff;
+   --form-text: var(--light-text-main);
+
+   /* Cards */
+   --card-bg: var(--light-surface);
+   --card-border: var(--light-border);
+   --card-shadow: var(--shadow-sm);
+}
+
+/* TEMA ESCURO */
+:root[data-bs-theme="dark"],
+.theme-dark {
+   --bg-color: var(--dark-background);
+   --surface-color: var(--dark-surface);
+   --text-color: var(--dark-text-main);
+   --small-text: var(--dark-text-muted);
+   --primary-color: var(--brand-primary);
+
+   /* Forms */
+   --form-bg: var(--dark-surface);
+   --form-border: var(--dark-surface-light);
+   --form-input-bg: #1e293b;
+   --form-text: var(--dark-text-main);
+
+   /* Cards */
+   --card-bg: var(--dark-surface);
+   --card-border: var(--dark-surface-light);
+   --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+}
+
+/* ==========================================================================
+   4. STATUS E ÍCONES (Unificado)
+   ========================================================================== */
+
+.theme-light,
+.theme-dark,
+:root {
+   --status-completed-color: var(--color-success);
+   --status-pending-color: var(--color-warning);
+   --status-cancelled-color: var(--color-error);
+   --status-in-progress-color: var(--color-info);
+}
+
+/* ==========================================================================
+   5. FIXAÇÃO DE PERFORMANCE (ESTABILIDADE)
+   ========================================================================== */
+
+body {
+   background-color: var(--bg-color) !important;
+   color: var(--text-color) !important;
+   font-family: var(--font-primary);
+   /* A transição aqui deve ser sutil para evitar lag no scroll */
+   transition: background-color var(--transition-speed) var(--transition-timing),
+      color var(--transition-speed) var(--transition-timing);
+   margin: 0;
+   min-height: 100vh;
+}
+
+/* Evita que inputs fiquem brancos ao carregar no Dark Mode */
+input,
+select,
+textarea {
+   background-color: var(--form-input-bg) !important;
+   color: var(--form-text) !important;
+   border-color: var(--form-border) !important;
+}
