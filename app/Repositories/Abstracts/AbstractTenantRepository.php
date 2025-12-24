@@ -201,17 +201,41 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function findByTenantAndSlug( string $slug ): ?Model
+    public function findByTenantAndSlug( string $slug, bool $withTrashed = false ): ?Model
     {
-        return $this->model->where( 'slug', $slug )->first();
+        return $this->model->newQuery()
+            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
+            ->where( 'slug', $slug )
+            ->first();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findByTenantAndCode( string $code ): ?Model
+    public function findByTenantAndCode( string $code, bool $withTrashed = false ): ?Model
     {
-        return $this->model->where( 'code', $code )->first();
+        return $this->model->newQuery()
+            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
+            ->where( 'code', $code )
+            ->first();
+    }
+
+    /**
+     * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
+     *
+     * @param string $field Campo para busca.
+     * @param mixed $value Valor do campo.
+     * @param array $with Relacionamentos para carregar.
+     * @param bool $withTrashed Se deve incluir registros deletados.
+     * @return Model|null
+     */
+    public function findOneBy( string $field, mixed $value, array $with = [], bool $withTrashed = false ): ?Model
+    {
+        return $this->model->newQuery()
+            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
+            ->where( $field, $value )
+            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
+            ->first();
     }
 
     /**

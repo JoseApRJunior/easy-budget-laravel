@@ -40,11 +40,12 @@ class ProviderRepository extends AbstractTenantRepository
      * Busca provedor por slug dentro do tenant atual.
      *
      * @param string $slug
+     * @param bool $withTrashed
      * @return Provider|null
      */
-    public function findBySlug( string $slug ): ?Provider
+    public function findBySlug( string $slug, bool $withTrashed = false ): ?Provider
     {
-        return $this->findByTenantAndSlug( $slug );
+        return $this->findByTenantAndSlug( $slug, $withTrashed );
     }
 
     /**

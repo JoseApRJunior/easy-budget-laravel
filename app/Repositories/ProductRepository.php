@@ -30,13 +30,9 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Busca produto por SKU.
      */
-    public function findBySku( string $sku, array $with = [] ): ?Model
+    public function findBySku( string $sku, array $with = [], bool $withTrashed = true ): ?Model
     {
-        return $this->model->newQuery()
-            ->withTrashed()
-            ->where( 'sku', $sku )
-            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
-            ->first();
+        return $this->findOneBy( 'sku', $sku, $with, $withTrashed );
     }
 
     /**

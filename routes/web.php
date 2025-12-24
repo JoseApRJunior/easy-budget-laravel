@@ -185,7 +185,7 @@ Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'pr
         Route::get( '/{slug}/edit', [ CategoryController::class, 'edit' ] )->name( 'edit' );
         Route::put( '/{slug}', [ CategoryController::class, 'update' ] )->name( 'update' );
         Route::delete( '/{slug}', [ CategoryController::class, 'destroy' ] )->name( 'destroy' );
-        Route::post( '/{slug}/toggle-status', [ CategoryController::class, 'toggleStatus' ] )->name( 'toggle-status' );
+        Route::patch( '/{slug}/toggle-status', [ CategoryController::class, 'toggleStatus' ] )->name( 'toggle-status' );
         Route::post( '/{slug}/set-default', [ CategoryController::class, 'setDefault' ] )->name( 'set-default' );
         Route::post( '/{slug}/restore', [ CategoryController::class, 'restore' ] )->name( 'restore' );
         Route::get( '/{id}/children', [ CategoryController::class, 'getChildren' ] )->name( 'children' );

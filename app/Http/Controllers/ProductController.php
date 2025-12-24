@@ -103,14 +103,10 @@ class ProductController extends Controller
     {
 
         $result = $this->productService->findBySku( $sku, [ 'category', 'inventory' ] );
+        
         if ( $result->isError() ) {
             return $this->redirectError( 'provider.products.index', $result->getMessage() );
         }
-
-        $result->getData()->load( [
-            'category',
-            'inventory',
-        ] );
 
         return $this->view( 'pages.product.show', $result, 'product' );
     }
@@ -196,10 +192,10 @@ class ProductController extends Controller
         $result = $this->productService->deleteProductBySku( $sku );
 
         if ( $result->isError() ) {
-            return redirect()->route( 'provider.products.index' )->with( 'error', $result->getMessage() ?: 'Erro ao excluir produto.' );
+            return $this->redirectError( 'provider.products.index', $result->getMessage() ?: 'Erro ao excluir produto.' );
         }
 
-        return redirect()->route( 'provider.products.index' )->with( 'success', 'Produto excluído com sucesso.' );
+        return $this->redirectSuccess( 'provider.products.index', 'Produto excluído com sucesso.' );
     }
 
     /**

@@ -3,7 +3,8 @@
 @section('title', 'Detalhes do Produto: ' . $product->name)
 
 @section('content')
-    <div class="container-fluid py-1">
+<div class="container-fluid py-1 d-flex flex-column" style="min-height: calc(100vh - 200px);">
+    <div class="flex-grow-1">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -24,24 +25,24 @@
         <div class="row">
             <!-- Coluna Esquerda: Imagem e Status -->
             <div class="col-md-4 mb-4">
-                <div class="card">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body text-center">
                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                             class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; object-fit: cover;">
 
                         <div class="d-grid gap-2">
                             @if ($product->deleted_at)
-                                <div class="alert alert-danger py-2 mb-0">
-                                    <i class="bi bi-trash-fill me-1"></i> Produto Deletado
-                                </div>
+                            <div class="alert alert-danger py-2 mb-0">
+                                <i class="bi bi-trash-fill me-1"></i> Produto Deletado
+                            </div>
                             @elseif ($product->active)
-                                <div class="alert alert-success py-2 mb-0">
-                                    <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
-                                </div>
+                            <div class="alert alert-success py-2 mb-0">
+                                <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
+                            </div>
                             @else
-                                <div class="alert alert-warning py-2 mb-0">
-                                    <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
-                                </div>
+                            <div class="alert alert-warning py-2 mb-0">
+                                <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
+                            </div>
                             @endif
                         </div>
                     </div>
@@ -50,7 +51,7 @@
 
             <!-- Coluna Direita: Detalhes e Abas -->
             <div class="col-md-8">
-                <div class="card">
+                <div class="card border-0 shadow-sm">
                     <div class="card-header p-0 border-bottom-0">
                         <ul class="nav nav-tabs" id="productTabs" role="tablist">
                             <li class="nav-item" role="presentation">
@@ -81,15 +82,15 @@
                                         <label class="text-muted small text-uppercase fw-bold">Categoria</label>
                                         <p class="h5">
                                             @if ($product->category)
-                                                <span class="badge bg-primary">
-                                                    @if ($product->category->parent_id)
-                                                        {{ $product->category->getFormattedHierarchy() }}
-                                                    @else
-                                                        {{ $product->category->name }}
-                                                    @endif
-                                                </span>
+                                            <span class="badge bg-primary">
+                                                @if ($product->category->parent_id)
+                                                {{ $product->category->getFormattedHierarchy() }}
+                                                @else
+                                                {{ $product->category->name }}
+                                                @endif
+                                            </span>
                                             @else
-                                                <span class="text-muted">Sem categoria</span>
+                                            <span class="text-muted">Sem categoria</span>
                                             @endif
                                         </p>
                                     </div>
@@ -113,29 +114,30 @@
                             <!-- Aba Inventário -->
                             <div class="tab-pane fade" id="inventory" role="tabpanel">
                                 @php
-                                    $inventory = $product->inventory->first();
-                                    $quantity = $inventory ? $inventory->quantity : 0;
-                                    $minQuantity = $inventory ? $inventory->min_quantity : 0;
-                                    $maxQuantity = $inventory ? $inventory->max_quantity : null;
+                                $inventory = $product->inventory->first();
+                                $quantity = $inventory ? $inventory->quantity : 0;
+                                $minQuantity = $inventory ? $inventory->min_quantity : 0;
+                                $maxQuantity = $inventory ? $inventory->max_quantity : null;
 
-                                    $statusClass = 'success';
-                                    $statusLabel = 'Estoque OK';
+                                $statusClass = 'success';
+                                $statusLabel = 'Estoque OK';
 
-                                    if ($quantity <= 0) {
-                                        $statusClass = 'danger';
-                                        $statusLabel = 'Sem Estoque';
-                                    } elseif ($quantity <= $minQuantity) {
-                                        $statusClass = 'warning';
-                                        $statusLabel = 'Estoque Baixo';
+                                if ($quantity <= 0) {
+                                    $statusClass='danger' ;
+                                    $statusLabel='Sem Estoque' ;
+                                    } elseif ($quantity <=$minQuantity) {
+                                    $statusClass='warning' ;
+                                    $statusLabel='Estoque Baixo' ;
                                     }
-                                @endphp
+                                    @endphp
 
-                                <div class="row mb-4 ">
+                                    <div class="row mb-4 ">
                                     <div class="col-md-4 text-center">
                                         <div class="p-3 border rounded">
                                             <small class="text-muted text-uppercase">Quantidade Atual</small>
                                             <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-0">
-                                                {{ $quantity }}</h2>
+                                                {{ $quantity }}
+                                            </h2>
                                             <span
                                                 class="modern-badge {{ $statusClass === 'success' ? 'badge-active' : ($statusClass === 'danger' ? 'badge-inactive' : 'badge-warning') }}">
                                                 {{ $statusLabel }}
@@ -174,41 +176,49 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                            </div>
 
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    Para ver o histórico completo de movimentações, acesse o <a
-                                        href="{{ route('provider.inventory.show', $product->sku) }}"
-                                        class="alert-link">Painel de Inventário</a> deste produto.
-                                </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Para ver o histórico completo de movimentações, acesse o <a
+                                    href="{{ route('provider.inventory.show', $product->sku) }}"
+                                    class="alert-link">Painel de Inventário</a> deste produto.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Footer com Ações -->
-        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mt-4">
-            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary w-100 mb-2 mb-md-0">
-                <i class="bi bi-arrow-left me-2"></i>Voltar
-            </a>
-            <small class="text-muted d-none d-md-block">
-                Última atualização: {{ $product->updated_at?->format('d/m/Y H:i') }}
-            </small>
-            <div class="d-grid gap-2 d-md-flex flex-wrap justify-content-md-end w-100 w-md-auto">
-                @if ($product->deleted_at)
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#restoreModal"
+    <!-- Footer com Ações -->
+    <div class="mt-auto pt-4 pb-2">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-md-auto order-2 order-md-1">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary w-100 w-md-auto px-md-3">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <div class="col-12 col-md text-center d-none d-md-block order-md-2">
+                <small class="text-muted">
+                    Última atualização: {{ $product->updated_at?->format('d/m/Y H:i') }}
+                </small>
+            </div>
+
+            <div class="col-12 col-md-auto order-1 order-md-3">
+                <div class="d-grid d-md-flex gap-2">
+                    @if ($product->deleted_at)
+                    <button type="button" class="btn btn-success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
                         data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
                         data-product-name="{{ $product->name }}">
                         <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar
                     </button>
-                @else
-                    <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary">
+                    @else
+                    <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary" style="min-width: 120px;">
                         <i class="bi bi-pencil-fill me-2"></i>Editar
                     </a>
-                    <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}"
+                    <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}" style="min-width: 120px;"
                         data-bs-toggle="modal" data-bs-target="#toggleModal"
                         data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
                         data-product-name="{{ $product->name }}"
@@ -216,152 +226,155 @@
                         <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
                         {{ $product->active ? 'Desativar' : 'Ativar' }}
                     </button>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                    <button type="button" class="btn btn-danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                         data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
                         data-product-name="{{ $product->name }}">
                         <i class="bi bi-trash-fill me-2"></i>Excluir
                     </button>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal de Confirmação de Ativação/Desativação -->
-    <div class="modal fade" id="toggleModal" tabindex="-1" aria-labelledby="toggleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="toggleModalLabel">Confirmar
-                        {{ $product->active ? 'Desativação' : 'Ativação' }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza de que deseja {{ $product->active ? 'desativar' : 'ativar' }} o produto <strong
-                        id="toggleProductName"></strong>?
-                    <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="toggleForm" action="#" method="POST" class="d-inline">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
-                            <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                            {{ $product->active ? 'Desativar' : 'Ativar' }}
-                        </button>
-                    </form>
-                </div>
+<!-- Modal de Confirmação de Ativação/Desativação -->
+<div class="modal fade" id="toggleModal" tabindex="-1" aria-labelledby="toggleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleModalLabel">Confirmar
+                    {{ $product->active ? 'Desativação' : 'Ativação' }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja {{ $product->active ? 'desativar' : 'ativar' }} o produto <strong
+                    id="toggleProductName"></strong>?
+                <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="toggleForm" action="#" method="POST" class="d-inline">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
+                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
+                        {{ $product->active ? 'Desativar' : 'Ativar' }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
-                    <br><small class="text-muted">Esta ação pode ser desfeita.</small>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="deleteForm" action="#" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </form>
-                </div>
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir o produto <strong id="deleteProductName"></strong>?
+                <br><small class="text-muted">Esta ação pode ser desfeita.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" action="#" method="POST" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal de Confirmação de Restauração -->
-    <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza de que deseja restaurar o produto <strong id="restoreProductName"></strong>?
-                    <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="restoreForm" action="#" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Restaurar</button>
-                    </form>
-                </div>
+<!-- Modal de Confirmação de Restauração -->
+<div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja restaurar o produto <strong id="restoreProductName"></strong>?
+                <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="restoreForm" action="#" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-success">Restaurar</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script>
-        // Script para os modais
-        document.addEventListener('DOMContentLoaded', function() {
-            // Modal de exclusão
-            const deleteModal = document.getElementById('deleteModal');
-            if (deleteModal) {
-                deleteModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const deleteUrl = button.getAttribute('data-delete-url');
-                    const productName = button.getAttribute('data-product-name');
+<script>
+    // Script para os modais
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal de exclusão
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const deleteUrl = button.getAttribute('data-delete-url');
+                const productName = button.getAttribute('data-product-name');
 
-                    const deleteProductName = deleteModal.querySelector('#deleteProductName');
-                    const deleteForm = deleteModal.querySelector('#deleteForm');
+                const deleteProductName = deleteModal.querySelector('#deleteProductName');
+                const deleteForm = deleteModal.querySelector('#deleteForm');
 
-                    deleteProductName.textContent = productName;
-                    deleteForm.action = deleteUrl;
-                });
-            }
+                deleteProductName.textContent = productName;
+                deleteForm.action = deleteUrl;
+            });
+        }
 
-            // Modal de ativação/desativação
-            const toggleModal = document.getElementById('toggleModal');
-            if (toggleModal) {
-                toggleModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const toggleUrl = button.getAttribute('data-toggle-url');
-                    const productName = button.getAttribute('data-product-name');
-                    const action = button.getAttribute('data-action');
+        // Modal de ativação/desativação
+        const toggleModal = document.getElementById('toggleModal');
+        if (toggleModal) {
+            toggleModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const toggleUrl = button.getAttribute('data-toggle-url');
+                const productName = button.getAttribute('data-product-name');
+                const action = button.getAttribute('data-action');
 
-                    const toggleProductName = toggleModal.querySelector('#toggleProductName');
-                    const toggleForm = toggleModal.querySelector('#toggleForm');
-                    const toggleTitle = toggleModal.querySelector('#toggleModalLabel');
-                    const toggleButton = toggleModal.querySelector('button[type="submit"]');
+                const toggleProductName = toggleModal.querySelector('#toggleProductName');
+                const toggleForm = toggleModal.querySelector('#toggleForm');
+                const toggleTitle = toggleModal.querySelector('#toggleModalLabel');
+                const toggleButton = toggleModal.querySelector('button[type="submit"]');
 
-                    toggleProductName.textContent = productName;
-                    toggleForm.action = toggleUrl;
+                toggleProductName.textContent = productName;
+                toggleForm.action = toggleUrl;
 
-                    // Atualiza o título e texto do modal com base na ação
-                    toggleTitle.textContent = action === 'Desativar' ? 'Confirmar Desativação' :
-                        'Confirmar Ativação';
-                    toggleButton.textContent = action;
-                });
-            }
+                // Atualiza o título e texto do modal com base na ação
+                toggleTitle.textContent = action === 'Desativar' ? 'Confirmar Desativação' :
+                    'Confirmar Ativação';
+                toggleButton.textContent = action;
+            });
+        }
 
-            // Modal de restauração
-            const restoreModal = document.getElementById('restoreModal');
-            if (restoreModal) {
-                restoreModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const restoreUrl = button.getAttribute('data-restore-url');
-                    const productName = button.getAttribute('data-product-name');
+        // Modal de restauração
+        const restoreModal = document.getElementById('restoreModal');
+        if (restoreModal) {
+            restoreModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const restoreUrl = button.getAttribute('data-restore-url');
+                const productName = button.getAttribute('data-product-name');
 
-                    const restoreProductName = restoreModal.querySelector('#restoreProductName');
-                    const restoreForm = restoreModal.querySelector('#restoreForm');
+                const restoreProductName = restoreModal.querySelector('#restoreProductName');
+                const restoreForm = restoreModal.querySelector('#restoreForm');
 
-                    restoreProductName.textContent = productName;
-                    restoreForm.action = restoreUrl;
-                });
-            }
-        });
-    </script>
+                restoreProductName.textContent = productName;
+                restoreForm.action = restoreUrl;
+            });
+        }
+    });
+</script>
 @endpush

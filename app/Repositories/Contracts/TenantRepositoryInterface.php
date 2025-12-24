@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories\Contracts;
@@ -95,29 +96,31 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @example
      * $activeClientsCount = $repository->countByTenant(['status' => 'active']);
      */
-    public function countByTenant( array $filters = [] ): int;
+    public function countByTenant(array $filters = []): int;
 
     /**
      * Busca registros por slug único dentro do tenant atual.
      *
      * @param string $slug Slug único do registro.
+     * @param bool $withTrashed Se deve incluir registros deletados (soft delete).
      * @return Model|null Registro encontrado ou null.
      *
      * @example
      * $category = $repository->findByTenantAndSlug('produtos-eletronicos');
      */
-    public function findByTenantAndSlug( string $slug ): ?Model;
+    public function findByTenantAndSlug(string $slug, bool $withTrashed = false): ?Model;
 
     /**
      * Busca registros por código único dentro do tenant atual.
      *
      * @param string $code Código único do registro.
+     * @param bool $withTrashed Se deve incluir registros deletados (soft delete).
      * @return Model|null Registro encontrado ou null.
      *
      * @example
      * $product = $repository->findByTenantAndCode('PROD-001');
      */
-    public function findByTenantAndCode( string $code ): ?Model;
+    public function findByTenantAndCode(string $code, bool $withTrashed = false): ?Model;
 
     /**
      * Verifica se um valor de campo único já existe dentro do tenant atual.
@@ -130,7 +133,18 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @example
      * $emailExists = $repository->isUniqueInTenant('email', 'user@example.com', 1);
      */
-    public function isUniqueInTenant( string $field, mixed $value, ?int $excludeId = null ): bool;
+    public function isUniqueInTenant(string $field, mixed $value, ?int $excludeId = null): bool;
+
+    /**
+     * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
+     *
+     * @param string $field Campo para busca.
+     * @param mixed $value Valor do campo.
+     * @param array $with Relacionamentos para carregar.
+     * @param bool $withTrashed Se deve incluir registros deletados.
+     * @return Model|null
+     */
+    public function findOneBy( string $field, mixed $value, array $with = [], bool $withTrashed = false ): ?Model;
 
     /**
      * Busca registros por múltiplos IDs dentro do tenant atual.
@@ -141,7 +155,7 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @example
      * $products = $repository->findManyByTenant([1, 2, 3, 4]);
      */
-    public function findManyByTenant( array $ids ): Collection;
+    public function findManyByTenant(array $ids): Collection;
 
     /**
      * Remove múltiplos registros por IDs dentro do tenant atual.
@@ -152,7 +166,7 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @example
      * $deletedCount = $repository->deleteManyByTenant([1, 2, 3]);
      */
-    public function deleteManyByTenant( array $ids ): int;
+    public function deleteManyByTenant(array $ids): int;
 
     /**
      * Busca registros por nome/descrição com pesquisa parcial.
@@ -216,5 +230,5 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @example
      * $restoredCount = $repository->restoreManyByTenant([1, 2, 3]);
      */
-    public function restoreManyByTenant( array $ids ): int;
+    public function restoreManyByTenant(array $ids): int;
 }
