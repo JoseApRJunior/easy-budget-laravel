@@ -205,6 +205,19 @@ class TenantMiddleware
 }
 ```
 
+#### **🛠️ Inicialização e Tratamento de Exceções**
+
+**Garantia de disponibilidade de Facades em views de erro:**
+
+```php
+// bootstrap/app.php
+->withExceptions( function ( Exceptions $exceptions ): void {
+    // Resolução explícita para evitar "A facade root has not been set"
+    // Garante que o ViewServiceProvider esteja booted antes do registro de caminhos de erro
+    app('view');
+} )
+```
+
 #### **📧 Sistema de Verificação de E-mail**
 
 **Arquitetura híbrida implementada com integração Laravel Sanctum + sistema customizado:**

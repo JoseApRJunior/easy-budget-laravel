@@ -38,6 +38,20 @@
 -  **Gestão de credenciais** criptografadas
 -  **Painel administrativo** para assinaturas
 
+### **✅ Correção de Erro de Inicialização de Facade (Novo)**
+
+**Problema Resolvido:** Erro intermitente "A facade root has not been set" ao renderizar views de erro em estágios iniciais do ciclo de vida da aplicação.
+
+#### **🏗️ Solução Implementada**
+
+-  **bootstrap/app.php**: Adicionada a resolução explícita de `app('view')` dentro do callback `withExceptions`.
+-  **Motivo**: Garante que o `ViewServiceProvider` seja inicializado (booted) antes que o Laravel tente registrar os caminhos das views de erro, evitando que a facade `View` seja acessada sem um root definido.
+
+### **✅ Investigação da Pasta app/View (Novo)**
+
+-  **Status**: Confirmado que a pasta `app/View` não é utilizada como namespace `App\View` no código PHP atual.
+-  **Conclusão**: Provável resquício de arquitetura herdada ou usada apenas para templates Blade não vinculados a classes.
+
 ### **✅ ProviderBusinessController Implementado (Novo)**
 
 **Implementação completa do controller para gerenciamento de dados empresariais do provider:**

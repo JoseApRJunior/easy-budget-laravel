@@ -559,9 +559,28 @@ class NovoModeloService extends BaseTenantService
 -  **Métricas:** Sempre considerar registros deletados (`withTrashed`) ao calcular estatísticas totais.
 -  **Consistência Visual:** Usar classes utilitárias CSS globais em vez de estilos inline no Blade.
 
+### **🔧 Garantir Disponibilidade de Facades em Views de Erro**
+
+**Última execução:** 24/12/2025
+**Arquivos modificados:**
+
+-  `bootstrap/app.php` - Adicionada resolução explícita de `app('view')`
+
+**Passos:**
+
+1. Identificar se o erro "A facade root has not been set" ocorre ao renderizar views de erro.
+2. No arquivo `bootstrap/app.php`, localizar o método `withExceptions`.
+3. Adicionar `app('view');` dentro do callback para forçar o boot do `ViewServiceProvider`.
+4. Testar recarregando páginas que costumavam apresentar o erro intermitente.
+
+**Considerações importantes:**
+
+-  Este erro ocorre quando uma exceção é lançada antes da inicialização completa dos provedores de serviços.
+-  A resolução explícita garante que o Laravel prepare o ambiente de views antes de tentar registrar os caminhos de erro.
+
 Este documento será atualizado conforme novas tarefas repetitivas forem identificadas e executadas no projeto.
 
-**Última atualização:** 21/12/2024 - Refinamento do módulo de categorias e dashboard.
+**Última atualização:** 24/12/2025 - Correção de erro de inicialização de Facade e investigação de pasta app/View.
 
 ### **🛠️ Correção e Melhoria na Exportação de Categorias**
 
