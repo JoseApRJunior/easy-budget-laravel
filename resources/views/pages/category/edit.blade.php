@@ -47,10 +47,11 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="form-floating mb-3">
+                            <div class="form-group mb-3">
+                                <label for="parent_id" class="form-label">Categoria Pai (opcional)</label>
                                 @if ($hasChildren)
                                     <input type="hidden" name="parent_id" value="{{ $category->parent_id }}">
-                                    <select class="form-control" id="parent_id" disabled>
+                                    <select class="form-select tom-select" id="parent_id" disabled>
                                         <option value="">Sem categoria pai</option>
                                         @foreach ($parents ?? collect() as $p)
                                             <option value="{{ $p->id }}"
@@ -58,13 +59,12 @@
                                                 {{ $p->name }}</option>
                                         @endforeach
                                     </select>
-                                    <label for="parent_id">Categoria Pai (opcional)</label>
                                     <div class="alert alert-warning mt-2 mb-0" role="alert">
                                         <i class="bi bi-exclamation-triangle me-2"></i>
                                         Esta categoria possui subcategorias e não pode ter categoria pai alterada.
                                     </div>
                                 @else
-                                    <select class="form-control" id="parent_id" name="parent_id">
+                                    <select class="form-select tom-select" id="parent_id" name="parent_id">
                                         <option value="">Sem categoria pai</option>
                                         @foreach ($parents ?? collect() as $p)
                                             <option value="{{ $p->id }}"
@@ -72,7 +72,6 @@
                                                 {{ $p->name }}</option>
                                         @endforeach
                                     </select>
-                                    <label for="parent_id">Categoria Pai (opcional)</label>
                                 @endif
                             </div>
                             @if ($canDeactivate)

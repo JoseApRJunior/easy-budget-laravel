@@ -30,9 +30,9 @@ return Application::configure( basePath: dirname( __DIR__ ) )
         ] );
 
         // Adicionar middleware de otimização ao grupo web
-        $middleware->web(append: [
+        $middleware->web( append: [
             \App\Http\Middleware\OptimizeAuthUser::class,
-        ]);
+        ] );
 
         // Trust Cloudflare proxies for correct URL generation
         $middleware->trustProxies(
@@ -42,5 +42,8 @@ return Application::configure( basePath: dirname( __DIR__ ) )
 
     } )
     ->withExceptions( function ( Exceptions $exceptions ): void {
-        //
+        // Explicitly resolve the 'view' instance to ensure the ViewServiceProvider is booted.
+        // This helps prevent "A facade root has not been set" errors when rendering error views
+        // very early in the application lifecycle.
+        app( 'view' );
     } )->create();

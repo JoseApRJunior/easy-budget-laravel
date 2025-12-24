@@ -1,6 +1,7 @@
 :root {
    /* Sistema de cores */
    --dark-primary: #093172; /* Azul mais moderno e vibrante */
+   --primary-rgb: 9, 49, 114;
    --dark-secondary: #1e293b; /* Fundo escuro mais suave */
    --dark-background: #58667a; /* Cinza azulado mais sofisticado */
    --dark-surface: #334155; /* Superfície escura mais agradável */
@@ -95,6 +96,7 @@
    --small-text: #cbd5e1;
    --bs-form-invalid-color: #f87171;
    --bs-form-invalid-border-color: #f87171;
+   --card-bg: var(--dark-surface);
 }
 
 .theme-light {

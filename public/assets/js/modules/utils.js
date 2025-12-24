@@ -1,3 +1,7 @@
+/**
+ * Utilitários Globais - Versão 1.0.1
+ */
+
 // Função para scroll suave
 export function scrollToElement(elementId) {
    const element = document.getElementById(elementId);
@@ -98,6 +102,45 @@ export function handleFormSubmit(event) {
    if (isValid) {
       event.target.submit();
    }
+}
+
+/**
+ * Inicializa o Tom Select em um elemento ou grupo de elementos
+ * @param {string|HTMLElement} selector - Seletor CSS ou elemento HTML
+ * @param {object} options - Opções adicionais para o Tom Select
+ */
+export function initTomSelect(selector, options = {}) {
+   if (typeof TomSelect === 'undefined') {
+      console.warn('TomSelect não está carregado.');
+      return;
+   }
+
+   const elements = typeof selector === 'string' ? document.querySelectorAll(selector) : [selector];
+   
+   elements.forEach(el => {
+      if (el.tomselect) return; // Evita inicializar múltiplas vezes
+
+      const defaultOptions = {
+         create: false,
+         allowEmptyOption: true,
+         maxOptions: null, // Mostra todas as opções (importante para categorias)
+         plugins: ['dropdown_input'], // Adiciona campo de busca no dropdown
+         render: {
+             option: function(data, escape) {
+                 // Estilização customizada para optgroups ou níveis de hierarquia
+                 const isSub = data.text.includes('\u00A0\u00A0') || data.text.startsWith('  ');
+                 return `<div>
+                     <span class="${isSub ? 'ps-3 text-muted' : 'fw-bold'}">${escape(data.text)}</span>
+                 </div>`;
+             },
+             item: function(data, escape) {
+                 return `<div>${escape(data.text)}</div>`;
+             }
+         }
+      };
+
+      new TomSelect(el, { ...defaultOptions, ...options });
+   });
 }
 
 const rules = [

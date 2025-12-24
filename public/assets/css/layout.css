@@ -190,6 +190,14 @@ header {
    background-color: var(--card-bg);
    border: 1px solid var(--card-border);
    box-shadow: var(--card-shadow);
+   position: relative; /* Adicionado para contexto de z-index */
+   z-index: 1;
+}
+
+/* Filtros de busca precisam de z-index maior para o dropdown aparecer por cima */
+.card:has(.tom-select),
+.card:has(.ts-wrapper) {
+    z-index: 10;
 }
 
 /* Botões personalizados */
@@ -809,6 +817,114 @@ main .main-container {
 
 .status-badge i {
    font-size: 0.875rem;
+}
+
+/* Estilos para Tom Select */
+.ts-wrapper.form-select, .ts-wrapper.form-control {
+    padding: 0;
+    border: none;
+    height: auto;
+    box-shadow: none !important;
+}
+
+.ts-control {
+   border: 1px solid var(--form-border) !important;
+   border-radius: 0.5rem !important;
+   padding: 0.6rem 0.75rem !important;
+   background-color: var(--card-bg) !important;
+   color: var(--text-color) !important;
+   min-height: 45px;
+   display: flex;
+   align-items: center;
+   transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.ts-wrapper.focus .ts-control {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25) !important;
+}
+
+.ts-dropdown {
+   background-color: var(--bg-color) !important;
+   color: var(--text-color) !important;
+   border: 1px solid var(--form-border) !important;
+   border-radius: 0.5rem !important;
+   box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+   margin-top: 5px !important;
+   padding: 0 !important;
+   overflow: hidden;
+   z-index: 2000 !important; /* Aumentado para garantir que fique sobre tudo */
+   animation: ts-dropdown-slide 0.2s ease-out;
+}
+
+.ts-dropdown-content {
+   background-color: var(--bg-color) !important;
+}
+
+@keyframes ts-dropdown-slide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilo do campo de busca dentro do dropdown */
+.plugin-dropdown_input .dropdown-input {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    border-bottom: 1px solid var(--form-border) !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+}
+
+.plugin-dropdown_input .dropdown-input:focus {
+    box-shadow: none !important;
+    background-color: var(--surface-color) !important;
+}
+
+.ts-dropdown .option {
+    padding: 0.6rem 1rem !important;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.ts-dropdown .active {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+.ts-dropdown .option:hover:not(.active) {
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+}
+
+.ts-dropdown .optgroup-header {
+    font-weight: 600 !important;
+    background-color: var(--bg-color) !important;
+    color: var(--primary-color) !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Hierarquia no Tom Select */
+.ts-dropdown .option.ps-3 {
+    padding-left: 2rem !important;
+    position: relative;
+}
+
+.ts-dropdown .option.ps-3::before {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    width: 0.5rem;
+    border-top: 1px solid var(--form-border);
+}
+
+@media (max-width: 768px) {
+    .ts-control {
+        font-size: 16px !important; /* Evita zoom no iOS */
+    }
 }
 
 /* Footer */

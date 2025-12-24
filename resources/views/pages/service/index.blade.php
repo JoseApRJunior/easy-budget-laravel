@@ -4,21 +4,15 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-gear me-2"></i>Serviços
-                </h1>
-                <p class="text-muted">Lista de todos os serviços registrados no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Listar</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header 
+            title="Serviços" 
+            icon="gear" 
+            :breadcrumb-items="[
+                'Serviços' => '#'
+            ]"
+        >
+            <p class="text-muted mb-0">Lista de todos os serviços registrados no sistema</p>
+        </x-page-header>
 
         {{-- Conteúdo dos serviços --}}
         <div class="row">

@@ -77,7 +77,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="category_id" class="form-label">Categoria</label>
-                                        <select class="form-select @error('category_id') is-invalid @enderror"
+                                        <select class="form-select tom-select @error('category_id') is-invalid @enderror"
                                             id="category_id" name="category_id">
                                             <option value="">Selecione uma categoria</option>
                                             @foreach ($categories as $category)

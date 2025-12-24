@@ -35,7 +35,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="active">Status</label>
-                                    <select class="form-control" id="active" name="active">
+                                    <select class="form-select tom-select" id="active" name="active">
                                         @php($selectedActive = empty($filters) ? '1' : $filters['active'] ?? '')
                                         <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                             Ativo
@@ -52,7 +52,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="per_page" class="text-nowrap">Por página</label>
-                                    <select class="form-control" id="per_page" name="per_page">
+                                    <select class="form-select tom-select" id="per_page" name="per_page">
                                         @php($pp = (int) request('per_page', 10))
                                         <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
                                         <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
@@ -63,7 +63,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="deleted">Registros</label>
-                                    <select name="deleted" id="deleted" class="form-control">
+                                    <select name="deleted" id="deleted" class="form-select tom-select">
                                         @php($selectedDeleted = empty($filters) ? 'current' : $filters['deleted'] ?? '')
                                         <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
                                             Atuais

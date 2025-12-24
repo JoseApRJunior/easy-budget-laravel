@@ -4,23 +4,16 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    {{-- Cabeçalho --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-pencil-square me-2"></i>Editar Serviço
-            </h1>
-            <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.services.show', $service->code) }}">{{ $service->code }}</a></li>
-                <li class="breadcrumb-item active">Editar</li>
-            </ol>
-        </nav>
-    </div>
+    <x-page-header
+        title="Editar Serviço"
+        icon="pencil-square"
+        :breadcrumb-items="[
+                'Serviços' => route('provider.services.index'),
+                $service->code => route('provider.services.show', $service->code),
+                'Editar' => '#'
+            ]">
+        <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
+    </x-page-header>
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -46,7 +39,7 @@
                                     <label for="budget_id" class="form-label">
                                         Orçamento <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select @error('budget_id') is-invalid @enderror"
+                                    <select class="form-select tom-select @error('budget_id') is-invalid @enderror"
                                         id="budget_id"
                                         name="budget_id"
                                         required disabled>
@@ -70,7 +63,7 @@
                                     <label for="category_id" class="form-label">
                                         Categoria <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select @error('category_id') is-invalid @enderror"
+                                    <select class="form-select tom-select @error('category_id') is-invalid @enderror"
                                         id="category_id"
                                         name="category_id"
                                         required>
@@ -109,7 +102,7 @@
                                     <label for="status" class="form-label">
                                         Status <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select @error('status') is-invalid @enderror"
+                                    <select class="form-select tom-select @error('status') is-invalid @enderror"
                                         id="status"
                                         name="status"
                                         required>
@@ -240,10 +233,7 @@
                                 </h5>
 
                                 <div class="mb-3">
-                                    <button type="button" class="btn btn-success btn-sm" id="addItem" aria-label="Adicionar Item">
-                                        <i class="bi bi-plus me-1" aria-hidden="true"></i>
-                                        Adicionar Item
-                                    </button>
+                                    <x-button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" />
                                 </div>
 
                                 <div id="itemsContainer">
@@ -255,7 +245,7 @@
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
-                                                <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
+                                                <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
                                                     @foreach($products as $product)
                                                     <option value="{{ $product->id }}"
@@ -306,14 +296,8 @@
                                                 @else
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="create">
                                                 @endif
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                                    <span>Desfazer</span>
-                                                </button>
+                                                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
                                             </div>
                                             <div class="col-12 mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -327,7 +311,7 @@
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
-                                                <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
+                                                <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
                                                     @foreach($products as $product)
                                                     <option value="{{ $product->id }}"
@@ -374,14 +358,8 @@
                                             <div class="col-md-2">
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                                    <span>Desfazer</span>
-                                                </button>
+                                                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
                                             </div>
                                             <div class="col-12 mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -397,13 +375,9 @@
                         {{-- Botões de Ação (Footer) --}}
                         <div class="d-flex justify-content-between mt-4">
                             <div>
-                                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>Cancelar
-                                </a>
+                                <x-back-button index-route="provider.services.index" label="Cancelar" />
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Salvar
-                            </button>
+                            <x-button type="submit" icon="check-circle" label="Salvar Alterações" />
                         </div>
                     </form>
                 </div>
@@ -460,14 +434,8 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                    <i class="bi bi-trash"></i>
-                    <span>Excluir</span>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                    <span>Desfazer</span>
-                </button>
+                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
             </div>
             <div class="col-12 mt-2">
                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -498,6 +466,13 @@
             });
 
             container.appendChild(clone);
+
+            // Inicializar TomSelect no novo item
+            const newSelect = container.querySelector(`.item-row:last-child .product-select`);
+            if (newSelect && window.initTomSelect) {
+                window.initTomSelect(newSelect);
+            }
+
             itemIndex++;
 
             // Adicionar listeners para cálculos
