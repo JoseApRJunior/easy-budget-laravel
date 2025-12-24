@@ -4,21 +4,15 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-tag me-2"></i>Detalhes da Categoria
-            </h1>
-            <p class="text-muted mb-0">Visualize as informações completas da categoria </p>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
-            </ol>
-        </nav>
-    </div>
+    <x-page-header
+        title="Detalhes da Categoria"
+        icon="tag"
+        :breadcrumb-items="[
+            'Categorias' => route('provider.categories.index'),
+            $category->name => '#'
+        ]">
+        <p class="text-muted mb-0">Visualize as informações completas da categoria</p>
+    </x-page-header>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
@@ -142,13 +136,10 @@
         </div>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-auto pt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <a href="{{ url()->previous(route('provider.categories.index')) }}"
-                    class="btn btn-outline-secondary w-100 w-md-auto px-md-3">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                </a>
+                <x-back-button index-route="provider.categories.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -187,6 +178,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <div class="modal fade" id="deleteModal-{{ $category->slug }}" tabindex="-1"

@@ -5,22 +5,15 @@
 @section('content')
 <div class="container-fluid py-1 d-flex flex-column" style="min-height: calc(100vh - 200px);">
     <div class="flex-grow-1">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-box-seam me-2"></i>Detalhes do Produto
-                </h1>
-                <p class="text-muted mb-0">Visualize as informações completas do produto</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header
+            title="Detalhes do Produto"
+            icon="box-seam"
+            :breadcrumb-items="[
+                'Produtos' => route('provider.products.index'),
+                $product->name => '#'
+            ]">
+            <p class="text-muted mb-0">Visualize as informações completas do produto</p>
+        </x-page-header>
 
         <div class="row">
             <!-- Coluna Esquerda: Imagem e Status -->
@@ -195,9 +188,7 @@
     <div class="mt-auto pt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary w-100 w-md-auto px-md-3">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                </a>
+                <x-back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
