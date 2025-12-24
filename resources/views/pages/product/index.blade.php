@@ -75,15 +75,14 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            @php($selectedActive = request()->has('active') ? request('active') : '1')
+                                            @php($selectedActive = empty($filters) ? '1' : $filters['active'] ?? '')
                                             <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                                 Ativo
                                             </option>
                                             <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
                                                 Inativo
                                             </option>
-                                            <option value=""
-                                                {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
+                                            <option value="" {{ $selectedActive === '' ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -104,15 +103,14 @@
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select name="deleted" id="deleted" class="form-control">
-                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : 'current')
+                                            @php($selectedDeleted = empty($filters) ? 'current' : $filters['deleted'] ?? '')
                                             <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
                                                 Atuais
                                             </option>
                                             <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
                                                 Deletados
                                             </option>
-                                            <option value=""
-                                                {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
+                                            <option value="" {{ $selectedDeleted === '' ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -187,14 +185,14 @@
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('provider.products.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    href="{{ route('provider.products.export',array_merge(collect($filters ?? [])->map(fn($v) => is_null($v) ? '' : $v)->toArray(),['format' => 'xlsx'])) }}">
                                                     <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel
                                                     (.xlsx)
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item"
-                                                    href="{{ route('provider.products.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
+                                                    href="{{ route('provider.products.export',array_merge(collect($filters ?? [])->map(fn($v) => is_null($v) ? '' : $v)->toArray(),['format' => 'pdf'])) }}">
                                                     <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
                                                 </a>
                                             </li>
@@ -239,8 +237,8 @@
                                                 <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
                                                 <td>
                                                     <span
-                                                        class="modern-badge {{ $product->active ? 'badge-active' : 'badge-inactive' }}">
-                                                        {{ $product->active ? 'Ativo' : 'Inativo' }}
+                                                        class="modern-badge  {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
+                                                        {{ $product->deleted_at ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo') }}
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
@@ -308,7 +306,7 @@
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @forelse($products as $product)
-                                    <div class="list-group-item py-3 {{ $product->deleted_at ? 'bg-light' : '' }}">
+                                    <div class="list-group-item py-3">
                                         <div class="d-flex align-items-start">
                                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                                 class="rounded me-2"
@@ -374,7 +372,8 @@
                     </div>
                     @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
                         @include('partials.components.paginator', [
-                            'p' => $products->appends(request()->query()),
+                            'p' => $products->appends(
+                                collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()),
                             'show_info' => true,
                         ])
                     @endif
