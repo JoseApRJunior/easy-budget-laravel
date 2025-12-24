@@ -7,11 +7,11 @@ namespace App\Services\Domain;
 use App\DTOs\Customer\CustomerDTO;
 use App\Enums\OperationStatus;
 use App\Models\AreaOfActivity;
-use App\Models\AuditLog;
 use App\Models\CommonData;
 use App\Models\Customer;
 use App\Models\Profession;
 use App\Repositories\CustomerRepository;
+use App\Services\Application\AuditLogService;
 use App\Services\Application\CustomerInteractionService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
@@ -28,14 +28,17 @@ class CustomerService extends AbstractBaseService
 {
     private CustomerRepository         $customerRepository;
     private CustomerInteractionService $interactionService;
+    private AuditLogService            $auditLogService;
 
     public function __construct(
         CustomerRepository $customerRepository,
         CustomerInteractionService $interactionService,
+        AuditLogService $auditLogService,
     ) {
         parent::__construct($customerRepository);
         $this->customerRepository = $customerRepository;
         $this->interactionService = $interactionService;
+        $this->auditLogService = $auditLogService;
     }
 
     /**
@@ -55,7 +58,7 @@ class CustomerService extends AbstractBaseService
 
             $customer = $this->customerRepository->createWithRelations($data);
 
-            AuditLog::log('created', $customer, null, $customer->toArray(), [
+            $this->auditLogService->logCreated($customer, [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
                 'type'      => $dto->type,
@@ -96,7 +99,7 @@ class CustomerService extends AbstractBaseService
             $this->customerRepository->updateWithRelations($customer, $data);
             $customer->refresh();
 
-            AuditLog::log('updated', $customer, $oldData, $customer->toArray(), [
+            $this->auditLogService->logUpdated($customer, $oldData, $customer->toArray(), [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
                 'type'      => $dto->type,

@@ -93,12 +93,76 @@ class AuditLogRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca logs de auditoria por tenant.
+     * Cria um novo log de auditoria a partir de um DTO.
      */
-    public function findByTenantId(int $tenantId): Collection
+    public function createFromDTO(\App\DTOs\AuditLog\AuditLogDTO $dto): Model
     {
-        return $this->model->where('tenant_id', $tenantId)->get();
+        return $this->create($dto->toArrayWithoutNulls());
     }
+
+    /**
+     * Busca logs de auditoria com filtros.
+     */
+    public function getFiltered(array $filters = [], int $perPage = 50): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $query = $this->model->with(['user', 'tenant']);
+
+        if (isset($filters['search']) && $filters['search']) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('old_values', 'like', "%{$search}%")
+                    ->orWhere('new_values', 'like', "%{$search}%");
+            });
+        }
+
+        if (isset($filters['user_id']) && $filters['user_id']) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        if (isset($filters['action']) && $filters['action']) {
+            $query->where('action', $filters['action']);
+        }
+
+        if (isset($filters['severity']) && $filters['severity']) {
+            $query->where('severity', $filters['severity']);
+        }
+
+        if (isset($filters['date_from']) && $filters['date_from']) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (isset($filters['date_to']) && $filters['date_to']) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    /**
+     * Obtém estatísticas de auditoria.
+     */
+    public function getStats(int $tenantId, int $days = 30): array
+    {
+        $startDate = now()->subDays($days);
+        $baseQuery = $this->model->where('tenant_id', $tenantId)
+            ->where('created_at', '>=', $startDate);
+
+        return [
+            'total_logs'       => (clone $baseQuery)->count(),
+            'logs_by_severity' => (clone $baseQuery)->selectRaw('severity, COUNT(*) as count')
+                ->groupBy('severity')
+                ->pluck('count', 'severity')
+                ->toArray(),
+            'logs_by_action'   => (clone $baseQuery)->selectRaw('action, COUNT(*) as count')
+                ->groupBy('action')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->pluck('count', 'action')
+                ->toArray(),
+        ];
+    }
+}
 
     /**
      * Busca atividades recentes por tenant e usuário.

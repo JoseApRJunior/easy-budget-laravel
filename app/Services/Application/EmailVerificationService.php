@@ -50,6 +50,7 @@ class EmailVerificationService extends AbstractBaseService
         UserConfirmationTokenRepository $userConfirmationTokenRepository,
         UserRepository $userRepository,
     ) {
+        parent::__construct($userConfirmationTokenRepository);
         $this->userConfirmationTokenService    = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
         $this->userRepository                  = $userRepository;
@@ -58,70 +59,37 @@ class EmailVerificationService extends AbstractBaseService
     /**
      * Cria token de confirmação para verificação de e-mail.
      *
-     * Este método delega toda a lógica de criação de token para o UserConfirmationTokenService,
-     * que agora é responsável por gerar o token seguro e gerenciar sua persistência.
-     * Este serviço foca apenas em orquestrar o processo e disparar eventos.
-     *
      * @param User $user Usuário que receberá o token de verificação
      * @return ServiceResult Resultado da operação
      */
-    public function createConfirmationToken( User $user ): ServiceResult
+    public function createConfirmationToken(User $user): ServiceResult
     {
-        try {
-            Log::info( 'Iniciando criação de token de verificação', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-            ] );
+        return $this->safeExecute(function () use ($user) {
+            Log::info('Iniciando criação de token de verificação', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+            ]);
 
             // Usar método de conveniência para criar token de verificação de e-mail
-            $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken( $user );
+            $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken($user);
 
-            if ( !$tokenResult->isSuccess() ) {
+            if (!$tokenResult->isSuccess()) {
                 return $tokenResult;
             }
 
             // Extrair token do resultado para disparar evento
             $tokenData = $tokenResult->getData();
-            $token     = $tokenData[ 'token' ];
+            $token     = $tokenData['token'];
 
             // Disparar evento para envio de e-mail de verificação
-            Log::info( 'Disparando evento EmailVerificationRequested', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-            ] );
-
-            Event::dispatch( new EmailVerificationRequested(
+            Event::dispatch(new EmailVerificationRequested(
                 $user,
                 $user->tenant,
                 $token,
-            ) );
+            ));
 
-            Log::info( 'Evento EmailVerificationRequested disparado com sucesso', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-            ] );
-
-            return ServiceResult::success( $tokenData, 'Token de verificação criado com sucesso. E-mail enviado.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao criar token de verificação', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
-
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro interno ao criar token de verificação. Tente novamente.',
-                null,
-                $e,
-            );
-        }
+            return $this->success(['token' => $token], 'Token de verificação enviado com sucesso.');
+        }, 'Erro ao criar token de verificação.');
     }
 
     /**

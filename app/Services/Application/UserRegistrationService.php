@@ -135,32 +135,6 @@ class UserRegistrationService extends AbstractBaseService
     }
 
     /**
-     * Valida dados obrigatórios para registro de usuário.
-     *
-     * @param array $userData Dados do usuário
-     * @return ServiceResult Resultado da validação
-     */
-    private function validateUserData(array $userData): ServiceResult
-    {
-        // Para registros sociais, phone não é obrigatório
-        $isSocialRegistration = ($userData['password'] === null && $userData['phone'] === null);
-
-        if (
-            empty($userData['first_name']) || empty($userData['last_name']) ||
-            empty($userData['email']) ||
-            (!$isSocialRegistration && empty($userData['password']) && $userData['password'] !== null) ||
-            (!$isSocialRegistration && empty($userData['phone'])) || // Phone obrigatório apenas para registros normais
-            empty($userData['terms_accepted'])
-        ) {
-            return ServiceResult::error(
-                OperationStatus::INVALID_DATA,
-                'Dados obrigatórios ausentes para registro de usuário.',
-            );
-        }
-        return ServiceResult::success(null, 'Dados válidos.');
-    }
-
-    /**
      * Registra um log para um passo específico.
      *
      * @param string $message Mensagem do log
@@ -197,20 +171,17 @@ class UserRegistrationService extends AbstractBaseService
     /**
      * Solicita redefinição de senha para um usuário.
      *
-     * Este método cria o token de redefinição e dispara evento para
-     * envio de e-mail ao invés de chamar MailerService diretamente.
-     *
      * @param string $email E-mail do usuário
      * @return ServiceResult Resultado da operação
      */
     public function requestPasswordReset(string $email): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($email) {
             // Buscar usuário por e-mail
             $user = $this->userRepository->findByEmail($email);
             if (!$user) {
                 // Não revelar se o e-mail existe ou não por segurança
-                return ServiceResult::success(
+                return $this->success(
                     null,
                     'Se o e-mail existir em nosso sistema, você receberá instruções de redefinição.',
                 );
@@ -236,7 +207,6 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             // Disparar evento para envio de e-mail de redefinição
-            // AO INVÉS de chamar MailerService diretamente
             Event::dispatch(new PasswordResetRequested($user, $token, $tenant));
 
             Log::info('Solicitação de redefinição de senha processada com eventos', [
@@ -244,20 +214,10 @@ class UserRegistrationService extends AbstractBaseService
                 'email'   => $user->email,
             ]);
 
-            return ServiceResult::success(
+            return $this->success(
                 null,
                 'Instruções de redefinição de senha foram enviadas para seu e-mail.',
             );
-        } catch (Exception $e) {
-            Log::error('Erro ao solicitar redefinição de senha', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao processar solicitação de redefinição de senha.',
-            );
-        }
+        }, 'Erro ao solicitar redefinição de senha.');
     }
 }

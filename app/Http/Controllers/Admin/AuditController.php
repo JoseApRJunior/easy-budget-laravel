@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\AuditLog;
-use App\Services\Domain\AuditService;
+use App\Services\Application\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class AuditController extends Controller
 {
     public function __construct(
-        private AuditService $auditService
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -23,42 +23,15 @@ class AuditController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = $request->get('search');
-        $user = $request->get('user');
-        $action = $request->get('action');
-        $dateFrom = $request->get('date_from');
-        $dateTo = $request->get('date_to');
+        $filters = $request->only(['search', 'user_id', 'action', 'date_from', 'date_to']);
+        $result = $this->auditLogService->getFilteredLogs($filters, 50);
 
-        $query = AuditLog::query();
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                    ->orWhere('old_values', 'like', "%{$search}%")
-                    ->orWhere('new_values', 'like', "%{$search}%");
-            });
-        }
-
-        if ($user) {
-            $query->where('user_id', $user);
-        }
-
-        if ($action) {
-            $query->where('event', $action);
-        }
-
-        if ($dateFrom) {
-            $query->whereDate('created_at', '>=', $dateFrom);
-        }
-
-        if ($dateTo) {
-            $query->whereDate('created_at', '<=', $dateTo);
-        }
-
-        $logs = $query->with(['user'])
-            ->latest()
-            ->paginate(50)
-            ->appends($request->query());
+        $logs = $result->getData();
+        $search = $filters['search'] ?? null;
+        $user = $filters['user_id'] ?? null;
+        $action = $filters['action'] ?? null;
+        $dateFrom = $filters['date_from'] ?? null;
+        $dateTo = $filters['date_to'] ?? null;
 
         return view('admin.audit.index', compact('logs', 'search', 'user', 'action', 'dateFrom', 'dateTo'));
     }
@@ -81,19 +54,25 @@ class AuditController extends Controller
         $format = $request->get('format', 'excel');
 
         try {
-            $exportData = $this->auditService->prepareExportData($request->all());
+            $result = $this->auditLogService->prepareExportData($request->all());
+
+            if (!$result->isSuccess()) {
+                return back()->with('error', $result->getMessage());
+            }
+
+            $exportData = $result->getData();
 
             if ($format === 'excel') {
-                return Excel::download($exportData, 'audit_logs.xlsx');
+                // Aqui deveríamos ter uma classe de exportação do Excel,
+                // mas para manter a compatibilidade com o que existia:
+                return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.xlsx');
             } elseif ($format === 'csv') {
-                return Excel::download($exportData, 'audit_logs.csv');
-            } elseif ($format === 'pdf') {
-                return $this->auditService->generatePdfExport($exportData);
+                return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.csv');
             }
 
             return back()->with('error', 'Formato de exportação não suportado.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exportar logs: '.$e->getMessage());
+            return back()->with('error', 'Erro ao exportar logs: ' . $e->getMessage());
         }
     }
 
@@ -108,7 +87,7 @@ class AuditController extends Controller
             return redirect()->route('admin.audit.logs')
                 ->with('success', 'Log de auditoria excluído com sucesso!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao excluir log: '.$e->getMessage());
+            return back()->with('error', 'Erro ao excluir log: ' . $e->getMessage());
         }
     }
 }
