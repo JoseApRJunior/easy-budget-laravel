@@ -4,23 +4,15 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-tags me-2"></i>
-                Categorias
-            </h1>
-            <p class="text-muted">Lista de suas categorias </p>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.categories.dashboard') }}">Categorias</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Listar</li>
-            </ol>
-        </nav>
-    </div>
+    <x-page-header
+        title="Categorias"
+        icon="tags"
+        :breadcrumb-items="[
+            'Categorias' => route('provider.categories.dashboard'),
+            'Listar' => '#'
+        ]">
+        <p class="text-muted mb-0">Lista de suas categorias</p>
+    </x-page-header>
 
     <div class="row">
         <div class="col-12">
@@ -87,14 +79,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
-                                    <button type="submit" id="btnFilterCategories" class="btn btn-primary"
-                                        aria-label="Filtrar">
-                                        <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                    </button>
-                                    <a href="{{ route('provider.categories.index') }}" class="btn btn-secondary"
-                                        aria-label="Limpar filtros">
-                                        <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                    </a>
+                                    <x-button type="submit" icon="search" label="Filtrar" id="btnFilterCategories" />
+                                    <x-button type="link" :href="route('provider.categories.index')" variant="secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -124,10 +110,7 @@
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end gap-2">
                                 <div class="dropdown">
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
-                                        id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-download me-1"></i> Exportar
-                                    </button>
+                                    <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                         <li>
                                             <a class="dropdown-item"
@@ -143,10 +126,7 @@
                                         </li>
                                     </ul>
                                 </div>
-                                <a href="{{ route('provider.categories.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-plus" aria-hidden="true"></i>
-                                    <span class="ms-1">Nova</span>
-                                </a>
+                                <x-button type="link" :href="route('provider.categories.create')" size="sm" icon="plus" label="Nova" />
                             </div>
                         </div>
                     </div>
@@ -188,35 +168,22 @@
                                             </small>
                                             <div class="d-flex gap-2">
                                                 @if ($category->deleted_at)
-                                                <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                    class="btn btn-sm btn-info" title="Visualizar">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-success"
+                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-button variant="success" size="sm" icon="arrow-counterclockwise"
                                                     data-bs-toggle="modal" data-bs-target="#restoreModal"
                                                     data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
                                                     data-category-name="{{ $category->name }}"
-                                                    title="Restaurar">
-                                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                                </button>
+                                                    title="Restaurar" />
                                                 @else
-                                                <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                    class="btn btn-sm btn-info" title="Visualizar">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
+                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                <a href="{{ route('provider.categories.edit', $category->slug) }}"
-                                                    class="btn btn-sm btn-primary" title="Editar">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
+                                                <x-button type="link" :href="route('provider.categories.edit', $category->slug)" size="sm" icon="pencil-square" title="Editar" />
                                                 @if ($canDelete)
-                                                <button type="button" class="btn btn-sm btn-danger"
+                                                <x-button variant="danger" size="sm" icon="trash"
                                                     data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                     data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
                                                     data-category-name="{{ $category->name }}"
-                                                    title="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                    title="Excluir" />
                                                 @endif
                                                 @endif
                                             </div>
@@ -291,40 +258,23 @@
                                             <div class="action-btn-group">
                                                 @if ($category->deleted_at)
                                                 {{-- Categoria deletada: visualizar e restaurar --}}
-                                                <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                    class="btn btn-info" title="Visualizar"
-                                                    aria-label="Visualizar">
-                                                    <i class="bi bi-eye" aria-hidden="true"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-success"
+                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />
+                                                <x-button variant="success" icon="arrow-counterclockwise"
                                                     data-bs-toggle="modal" data-bs-target="#restoreModal"
                                                     data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
                                                     data-category-name="{{ $category->name }}"
-                                                    title="Restaurar" aria-label="Restaurar">
-                                                    <i class="bi bi-arrow-counterclockwise"
-                                                        aria-hidden="true"></i>
-                                                </button>
+                                                    title="Restaurar" />
                                                 @else
                                                 {{-- Categoria ativa: show, edit, delete --}}
-                                                <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                    class="btn btn-info" title="Visualizar"
-                                                    aria-label="Visualizar">
-                                                    <i class="bi bi-eye" aria-hidden="true"></i>
-                                                </a>
+                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />
+                                                <x-button type="link" :href="route('provider.categories.edit', $category->slug)" icon="pencil-square" title="Editar" />
                                                 @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                <a href="{{ route('provider.categories.edit', $category->slug) }}"
-                                                    class="btn btn-primary" title="Editar"
-                                                    aria-label="Editar">
-                                                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                                </a>
                                                 @if ($canDelete)
-                                                <button type="button" class="btn btn-danger"
+                                                <x-button variant="danger" icon="trash"
                                                     data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                     data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
                                                     data-category-name="{{ $category->name }}"
-                                                    title="Excluir" aria-label="Excluir">
-                                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                                </button>
+                                                    title="Excluir" />
                                                 @endif
                                                 @endif
                                             </div>
@@ -373,12 +323,11 @@
                                 <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                    data-bs-dismiss="modal">Cancelar</button>
+                                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                                 <form id="deleteForm" action="#" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                    <x-button type="submit" variant="danger" label="Excluir" />
                                 </form>
                             </div>
                         </div>
@@ -398,9 +347,8 @@
                         <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary btn-confirm-all-categories">Listar
-                            todos</button>
+                        <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                        <x-button type="button" class="btn-confirm-all-categories" label="Listar todos" />
                     </div>
                 </div>
             </div>
@@ -422,10 +370,10 @@
                             novamente.</small>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                         <form id="restoreForm" action="#" method="POST" class="d-inline">
                             @csrf
-                            <button type="submit" class="btn btn-success">Restaurar</button>
+                            <x-button type="submit" variant="success" label="Restaurar" />
                         </form>
                     </div>
                 </div>

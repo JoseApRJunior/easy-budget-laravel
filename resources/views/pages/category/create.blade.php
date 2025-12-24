@@ -4,21 +4,16 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-plus-circle me-2"></i>Nova Categoria
-                </h1>
-                <p class="text-muted mb-0">Preencha os dados para criar uma nova categoria</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Nova</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header 
+            title="Nova Categoria" 
+            icon="plus-circle" 
+            :breadcrumb-items="[
+                'Categorias' => route('provider.categories.index'),
+                'Nova' => '#'
+            ]"
+        >
+            <p class="text-muted mb-0">Preencha os dados para criar uma nova categoria</p>
+        </x-page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
@@ -69,13 +64,9 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <div>
-                            <a href="{{ route('provider.categories.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Cancelar
-                            </a>
+                            <x-back-button index-route="provider.categories.index" label="Cancelar" />
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Criar
-                        </button>
+                        <x-button type="submit" icon="check-circle" label="Criar" />
                     </div>
                 </form>
             </div>

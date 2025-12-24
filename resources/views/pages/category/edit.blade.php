@@ -4,23 +4,17 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Categoria
-                </h1>
-                <p class="text-muted mb-0">Atualize as informações da categoria</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.index') }}">Categorias</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route('provider.categories.show', $category->slug) }}">{{ $category->name }}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Editar</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header 
+            title="Editar Categoria" 
+            icon="pencil-square" 
+            :breadcrumb-items="[
+                'Categorias' => route('provider.categories.index'),
+                $category->name => route('provider.categories.show', $category->slug),
+                'Editar' => '#'
+            ]"
+        >
+            <p class="text-muted mb-0">Atualize as informações da categoria</p>
+        </x-page-header>
 
         @php
             $hasChildren = $category->children_count > 0;
@@ -107,14 +101,9 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <div>
-                            <a href="{{ url()->previous(route('provider.categories.index')) }}"
-                                class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Cancelar
-                            </a>
+                            <x-back-button index-route="provider.categories.index" label="Cancelar" />
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Salvar
-                        </button>
+                        <x-button type="submit" icon="check-circle" label="Salvar" />
                     </div>
                 </form>
             </div>

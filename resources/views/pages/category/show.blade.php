@@ -151,27 +151,20 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($category->deleted_at)
-                    <button type="button" class="btn btn-success" style="min-width: 120px;" data-bs-toggle="modal"
-                        data-bs-target="#restoreModal-{{ $category->slug }}">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar
-                    </button>
+                    <x-button variant="success" style="min-width: 120px;" data-bs-toggle="modal"
+                        data-bs-target="#restoreModal-{{ $category->slug }}" icon="arrow-counterclockwise" label="Restaurar" />
                     @else
-                    <a href="{{ route('provider.categories.edit', $category->slug) }}" class="btn btn-primary" style="min-width: 120px;">
-                        <i class="bi bi-pencil-fill me-2"></i>Editar
-                    </a>
+                    <x-button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 
-                    <button type="button" class="btn {{ $category->is_active ? 'btn-warning' : 'btn-success' }}" style="min-width: 120px;"
-                        data-bs-toggle="modal" data-bs-target="#toggleModal-{{ $category->slug }}">
-                        <i class="bi bi-{{ $category->is_active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                        {{ $category->is_active ? 'Desativar' : 'Ativar' }}
-                    </button>
+                    <x-button :variant="$category->is_active ? 'warning' : 'success'" style="min-width: 120px;"
+                        data-bs-toggle="modal" data-bs-target="#toggleModal-{{ $category->slug }}"
+                        :icon="$category->is_active ? 'slash-circle' : 'check-lg'"
+                        :label="$category->is_active ? 'Desativar' : 'Ativar'" />
 
                     @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
                     @if ($canDelete)
-                    <button type="button" class="btn btn-outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal-{{ $category->slug }}">
-                        <i class="bi bi-trash-fill me-2"></i>Excluir
-                    </button>
+                    <x-button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" />
                     @endif
                     @endif
                 </div>
@@ -194,12 +187,12 @@
                 <br><small class="text-muted">Esta ação pode ser desfeita através da lixeira.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form action="{{ route('provider.categories.destroy', $category->slug) }}" method="POST"
                     class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <x-button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>
@@ -223,15 +216,14 @@
                 <br><small class="text-muted">Esta ação altera a visibilidade da categoria no sistema.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form action="{{ route('provider.categories.toggle-status', $category->slug) }}" method="POST"
                     class="d-inline">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="btn {{ $category->is_active ? 'btn-warning' : 'btn-success' }}">
-                        <i class="bi bi-{{ $category->is_active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                        {{ $category->is_active ? 'Desativar' : 'Ativar' }}
-                    </button>
+                    <x-button type="submit" :variant="$category->is_active ? 'warning' : 'success'"
+                        :icon="$category->is_active ? 'slash-circle' : 'check-lg'"
+                        :label="$category->is_active ? 'Desativar' : 'Ativar'" />
                 </form>
             </div>
         </div>
@@ -252,13 +244,11 @@
                 <br><small class="text-muted">A categoria será restaurada e ficará disponível novamente.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form action="{{ route('provider.categories.restore', $category->slug) }}" method="POST"
                     class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar
-                    </button>
+                    <x-button type="submit" variant="success" icon="arrow-counterclockwise" label="Restaurar" />
                 </form>
             </div>
         </div>

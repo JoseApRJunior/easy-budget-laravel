@@ -153,18 +153,9 @@
                                             </div>
                                             <div class="col-12">
                                                 <div class="d-flex gap-2 mt-2">
-                                                    <a href="{{ route('provider.inventory.entry', $product->sku) }}"
-                                                        class="btn btn-success flex-grow-1">
-                                                        <i class="bi bi-arrow-down-circle me-1"></i> Entrada
-                                                    </a>
-                                                    <a href="{{ route('provider.inventory.exit', $product->sku) }}"
-                                                        class="btn btn-warning flex-grow-1">
-                                                        <i class="bi bi-arrow-up-circle me-1"></i> Saída
-                                                    </a>
-                                                    <a href="{{ route('provider.inventory.adjust', $product->sku) }}"
-                                                        class="btn btn-secondary flex-grow-1">
-                                                        <i class="bi bi-sliders me-1"></i> Ajustar
-                                                    </a>
+                                                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
+                                                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
+                                                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
                                                 </div>
                                             </div>
                                         </div>
@@ -200,28 +191,23 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($product->deleted_at)
-                    <button type="button" class="btn btn-success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
+                    <x-button variant="success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
                         data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                        data-product-name="{{ $product->name }}">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar
-                    </button>
+                        data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" />
                     @else
-                    <a href="{{ route('provider.products.edit', $product->sku) }}" class="btn btn-primary" style="min-width: 120px;">
-                        <i class="bi bi-pencil-fill me-2"></i>Editar
-                    </a>
-                    <button type="button" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}" style="min-width: 120px;"
+                    <x-button type="link" :href="route('provider.products.edit', $product->sku)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+
+                    <x-button :variant="$product->active ? 'warning' : 'success'" style="min-width: 120px;"
                         data-bs-toggle="modal" data-bs-target="#toggleModal"
                         data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
                         data-product-name="{{ $product->name }}"
-                        data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}">
-                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                        {{ $product->active ? 'Desativar' : 'Ativar' }}
-                    </button>
-                    <button type="button" class="btn btn-danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}"
+                        :icon="$product->active ? 'slash-circle' : 'check-lg'"
+                        :label="$product->active ? 'Desativar' : 'Ativar'" />
+
+                    <x-button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                         data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                        data-product-name="{{ $product->name }}">
-                        <i class="bi bi-trash-fill me-2"></i>Excluir
-                    </button>
+                        data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" />
                     @endif
                 </div>
             </div>
@@ -245,14 +231,13 @@
                 <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="toggleForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="btn {{ $product->active ? 'btn-warning' : 'btn-success' }}">
-                        <i class="bi bi-{{ $product->active ? 'slash-circle' : 'check-lg' }} me-2"></i>
-                        {{ $product->active ? 'Desativar' : 'Ativar' }}
-                    </button>
+                    <x-button type="submit" :variant="$product->active ? 'warning' : 'success'"
+                        :icon="$product->active ? 'slash-circle' : 'check-lg'"
+                        :label="$product->active ? 'Desativar' : 'Ativar'" />
                 </form>
             </div>
         </div>
@@ -272,11 +257,11 @@
                 <br><small class="text-muted">Esta ação pode ser desfeita.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <x-button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>
@@ -296,10 +281,10 @@
                 <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="restoreForm" action="#" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-success">Restaurar</button>
+                    <x-button type="submit" variant="success" label="Restaurar" />
                 </form>
             </div>
         </div>

@@ -4,23 +4,17 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Produto
-                </h1>
-                <p class="text-muted mb-0">Atualize as informações do produto</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.products.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route('provider.products.show', $product->sku) }}">{{ $product->name }}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Editar</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header 
+            title="Editar Produto" 
+            icon="pencil-square" 
+            :breadcrumb-items="[
+                'Produtos' => route('provider.products.index'),
+                $product->name => route('provider.products.show', $product->sku),
+                'Editar' => '#'
+            ]"
+        >
+            <p class="text-muted mb-0">Atualize as informações do produto</p>
+        </x-page-header>
 
         <form action="{{ route('provider.products.update', $product->sku) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -206,13 +200,9 @@
 
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ url()->previous(route('provider.products.index')) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Cancelar
-                    </a>
+                    <x-back-button index-route="provider.products.index" label="Cancelar" />
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Salvar
-                </button>
+                <x-button type="submit" icon="check-circle" label="Salvar" />
             </div>
         </form>
     </div>
