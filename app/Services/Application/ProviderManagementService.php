@@ -5,42 +5,44 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-
-use App\Models\Address;
 use App\Models\AreaOfActivity;
-use App\Models\AuditLog;
-use App\Models\Budget;
-use App\Models\BusinessData;
 use App\Models\CommonData;
-use App\Models\Contact;
-use App\Models\Customer;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Profession;
 use App\Models\Provider;
 use App\Models\Role;
-use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\CommonDataRepository;
 use App\Repositories\PlanRepository;
 use App\Repositories\ProviderRepository;
-
 use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\BudgetRepository;
+use App\Repositories\AuditLogRepository;
+use App\Repositories\ScheduleRepository;
+use App\Repositories\CustomerRepository;
+use App\Repositories\ServiceRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\AddressRepository;
+use App\Repositories\BusinessDataRepository;
 use App\Services\Domain\ProviderService;
 use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
+use App\DTOs\Provider\ProviderUpdateDTO;
+use App\DTOs\Provider\ProviderRegistrationDTO;
+use App\Services\Core\Traits\HasSafeExecution;
+use App\Services\Core\Traits\HasTenantIsolation;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 // Constants for magic strings to improve maintainability
@@ -52,9 +54,10 @@ const TRIAL_DAYS                 = 7;
 
 class ProviderManagementService
 {
+    use HasSafeExecution, HasTenantIsolation;
+
     public function __construct(
         private FinancialSummary $financialSummary,
-
         private ProviderService $providerService,
         private EntityDataService $entityDataService,
         private FileUploadService $fileUploadService,
@@ -64,59 +67,45 @@ class ProviderManagementService
         private RoleRepository $roleRepository,
         private TenantRepository $tenantRepository,
         private UserRepository $userRepository,
+        private BudgetRepository $budgetRepository,
+        private AuditLogRepository $auditLogRepository,
+        private ScheduleRepository $scheduleRepository,
+        private CustomerRepository $customerRepository,
+        private ServiceRepository $serviceRepository,
+        private ContactRepository $contactRepository,
+        private AddressRepository $addressRepository,
+        private BusinessDataRepository $businessDataRepository,
     ) {}
 
     /**
      * Get provider dashboard data.
      */
-    public function getDashboardData( int $tenantId ): array
+    public function getDashboardData(): ServiceResult
     {
-        $user = Auth::user();
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
+            $user = Auth::user();
 
-        // Buscar orçamentos recentes
-        $budgets = Budget::where( 'tenant_id', $tenantId )
-            ->with( [ 'customer', 'items' ] )
-            ->latest()
-            ->limit( 10 )
-            ->get();
+            // Buscar orçamentos recentes
+            $budgets = $this->budgetRepository->getRecentBudgets($tenantId, 10);
 
-        // Buscar atividades recentes
-        $activities = AuditLog::where( 'tenant_id', $tenantId )
-            ->where( 'user_id', $user->id )
-            ->latest()
-            ->limit( 10 )
-            ->get();
+            // Buscar atividades recentes
+            $activities = $this->auditLogRepository->getRecentActivities($tenantId, $user->id, 10);
 
-        // Buscar resumo financeiro
-        $financialResult = $this->financialSummary->getMonthlySummary( $tenantId );
+            // Buscar resumo financeiro
+            $financialResult = $this->financialSummary->getMonthlySummary($tenantId);
+            $financialSummary = $financialResult->isSuccess() ? $financialResult->getData() : [];
 
-        $financialSummary = [];
-        if ( $financialResult->isSuccess() ) {
-            $financialSummary = $financialResult->getData();
-        }
+            // Buscar compromissos do dia
+            $events = $this->scheduleRepository->getTodayEvents($tenantId, 5);
 
-        // Buscar compromissos do dia
-        $events = [];
-        if (class_exists('App\Models\Schedule')) {
-            $events = \App\Models\Schedule::where( 'tenant_id', $tenantId )
-                ->with( 'service' ) // Carregar o relacionamento com o serviço
-                ->whereDate( 'start_date_time', today() )
-                ->where(function($query) {
-                    // Verificar se end_date_time é nulo ou no futuro (compromissos não concluídos)
-                    $query->whereNull('end_date_time')
-                          ->orWhere('end_date_time', '>', now());
-                })
-                ->orderBy( 'start_date_time' )
-                ->limit( 5 )
-                ->get();
-        }
-
-        return [
-            'budgets'           => $budgets,
-            'activities'        => $activities,
-            'financial_summary' => $financialSummary,
-            'events'            => $events,
-        ];
+            return ServiceResult::success([
+                'budgets'           => $budgets,
+                'activities'        => $activities,
+                'financial_summary' => $financialSummary,
+                'events'            => $events,
+            ]);
+        }, 'Erro ao obter dados do dashboard do provedor.');
     }
 
     /**
@@ -124,573 +113,472 @@ class ProviderManagementService
      */
     public function getProviderForUpdate(): ServiceResult
     {
-        $user     = Auth::user();
-        $provider = $this->providerService->getByUserId( $user->id, $user->tenant_id );
+        return $this->safeExecute(function () {
+            $user = Auth::user();
+            $tenantId = $this->ensureTenantId();
 
-        if ( !$provider ) {
-            return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
-        }
+            $provider = $this->providerService->getByUserId($user->id, $tenantId);
 
-        return ServiceResult::success( [
-            'provider'          => $provider,
-            'areas_of_activity' => AreaOfActivity::get(),
-            'professions'       => Profession::get(),
-        ] );
+            if (!$provider) {
+                return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
+            }
+
+            return ServiceResult::success([
+                'provider'          => $provider,
+                'areas_of_activity' => AreaOfActivity::all(),
+                'professions'       => Profession::all(),
+            ]);
+        }, 'Erro ao carregar dados para atualização do provedor.');
     }
 
     /**
      * Update provider data.
      */
-    public function updateProvider( array $data ): ServiceResult
+    public function updateProvider(ProviderUpdateDTO $dto): ServiceResult
     {
-        try {
-            $user     = Auth::user();
+        return $this->safeExecute(function () use ($dto) {
+            $user = Auth::user();
             $provider = $user->provider;
+            $tenantId = $this->ensureTenantId();
 
-            if ( !$provider ) {
-                return ServiceResult::error( OperationStatus::NOT_FOUND, 'Provider não encontrado' );
+            if (!$provider) {
+                return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
             // Load relationships if not already loaded
-            $provider->load( [ 'commonData', 'contact', 'address', 'businessData' ] );
+            $provider->load(['commonData', 'contact', 'address', 'businessData']);
 
-            // Transação garante rollback automático se qualquer operação falhar
-            DB::transaction( function () use ($provider, $data, $user) {
+            $data = $dto->toArray();
+
+            return DB::transaction(function () use ($provider, $data, $user, $tenantId) {
                 // Handle logo upload
-                if ( isset( $data[ 'logo' ] ) && $data[ 'logo' ] instanceof UploadedFile ) {
-                    $logoPath       = $this->fileUploadService->uploadProviderLogo( $data[ 'logo' ], $user->logo );
-                    $data[ 'logo' ] = $logoPath;
+                if (isset($data['logo']) && $data['logo'] instanceof UploadedFile) {
+                    $logoPath = $this->fileUploadService->uploadProviderLogo($data['logo'], $user->logo);
+                    $data['logo'] = $logoPath;
                 }
 
                 // Update User (email and logo only)
-                $userUpdate = array_filter( [
-                    'email' => $data[ 'email' ] ?? null,
-                    'logo'  => $data[ 'logo' ] ?? null,
-                ], fn( $value ) => $value !== null );
+                $userUpdate = array_filter([
+                    'email' => $data['email'] ?? null,
+                    'logo'  => $data['logo'] ?? null,
+                ], fn($value) => $value !== null);
 
-                if ( !empty( $userUpdate ) ) {
-                    $this->userRepository->update( $user->id, $userUpdate );
+                if (!empty($userUpdate)) {
+                    $this->userRepository->update($user->id, $userUpdate);
                 }
 
                 // Detectar tipo (PF ou PJ)
-                $type = !empty( $data[ 'cnpj' ] ) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+                $type = !empty($data['cnpj']) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
                 // Limpar máscaras e converter datas
-                $data[ 'cpf' ]        = !empty($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : null;
-                $data[ 'cnpj' ]       = !empty($data['cnpj']) ? preg_replace('/\D/', '', $data['cnpj']) : null;
-                $data[ 'birth_date' ] = !empty( $data[ 'birth_date' ] ) ? Carbon::createFromFormat( 'd/m/Y', $data[ 'birth_date' ] )->format( 'Y-m-d' ) : null;
+                $cpf = !empty($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : null;
+                $cnpj = !empty($data['cnpj']) ? preg_replace('/\D/', '', $data['cnpj']) : null;
+                $birthDate = !empty($data['birth_date']) ? Carbon::createFromFormat('d/m/Y', $data['birth_date'])->format('Y-m-d') : null;
 
-                // Atualizar CommonData (preserva dados de ambos os tipos)
-                if ( $provider->commonData ) {
-                    $provider->commonData->update( [
+                // Atualizar CommonData
+                if ($provider->commonData) {
+                    $this->commonDataRepository->update($provider->commonData->id, [
                         'type'                => $type,
-                        'first_name'          => $data[ 'first_name' ] ?? null,
-                        'last_name'           => $data[ 'last_name' ] ?? null,
-                        'cpf'                 => $data[ 'cpf' ],
-                        'birth_date'          => $data[ 'birth_date' ],
-                        'company_name'        => $data[ 'company_name' ] ?? null,
-                        'cnpj'                => $data[ 'cnpj' ],
-                        'description'         => $data[ 'description' ] ?? null,
-                        'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-                        'profession_id'       => $data[ 'profession_id' ] ?? null,
-                    ] );
+                        'first_name'          => $data['first_name'] ?? null,
+                        'last_name'           => $data['last_name'] ?? null,
+                        'cpf'                 => $cpf,
+                        'birth_date'          => $birthDate,
+                        'company_name'        => $data['company_name'] ?? null,
+                        'cnpj'                => $cnpj,
+                        'description'         => $data['description'] ?? null,
+                        'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
+                        'profession_id'       => $data['profession_id'] ?? null,
+                    ]);
                 }
 
                 // Atualizar Contact
-                if ( $provider->contact ) {
-                    $provider->contact->update( [
-                        'email_personal' => $data[ 'email_personal' ] ?? $data[ 'email' ] ?? null,
-                        'phone_personal' => $data[ 'phone_personal' ] ?? $data[ 'phone' ] ?? null,
-                        'email_business' => $data[ 'email_business' ] ?? null,
-                        'phone_business' => $data[ 'phone_business' ] ?? null,
-                        'website'        => $data[ 'website' ] ?? null,
-                    ] );
+                if ($provider->contact) {
+                    $this->contactRepository->update($provider->contact->id, [
+                        'email_personal' => $data['email_personal'] ?? $data['email'] ?? null,
+                        'phone_personal' => $data['phone_personal'] ?? $data['phone'] ?? null,
+                        'email_business' => $data['email_business'] ?? null,
+                        'phone_business' => $data['phone_business'] ?? null,
+                        'website'        => $data['website'] ?? null,
+                    ]);
                 }
 
                 // Atualizar Address
-                if ( $provider->address ) {
-                    $provider->address->update( [
-                        'address'        => $data[ 'address' ] ?? null,
-                        'address_number' => $data[ 'address_number' ] ?? null,
-                        'neighborhood'   => $data[ 'neighborhood' ] ?? null,
-                        'city'           => $data[ 'city' ] ?? null,
-                        'state'          => $data[ 'state' ] ?? null,
-                        'cep'            => $data[ 'cep' ] ?? null,
-                    ] );
+                if ($provider->address) {
+                    $this->addressRepository->update($provider->address->id, [
+                        'address'        => $data['address'] ?? null,
+                        'address_number' => $data['address_number'] ?? null,
+                        'neighborhood'   => $data['neighborhood'] ?? null,
+                        'city'           => $data['city'] ?? null,
+                        'state'          => $data['state'] ?? null,
+                        'cep'            => $data['cep'] ?? null,
+                    ]);
                 }
 
-                // Atualizar dados empresariais (sempre atualiza/cria se for PJ)
-                if ( $type === CommonData::TYPE_COMPANY ) {
+                // Atualizar dados empresariais
+                if ($type === CommonData::TYPE_COMPANY) {
+                    $foundingDate = !empty($data['founding_date']) ? Carbon::createFromFormat('d/m/Y', $data['founding_date'])->format('Y-m-d') : null;
                     $businessData = [
-                        'fantasy_name'           => $data[ 'fantasy_name' ] ?? null,
-                        'state_registration'     => $data[ 'state_registration' ] ?? null,
-                        'municipal_registration' => $data[ 'municipal_registration' ] ?? null,
-                        'founding_date'          => !empty( $data[ 'founding_date' ] ) ? Carbon::createFromFormat( 'd/m/Y', $data[ 'founding_date' ] )->format( 'Y-m-d' ) : null,
-                        'industry'               => $data[ 'industry' ] ?? null,
-                        'company_size'           => $data[ 'company_size' ] ?? null,
-                        'notes'                  => $data[ 'notes' ] ?? null,
+                        'fantasy_name'           => $data['fantasy_name'] ?? null,
+                        'state_registration'     => $data['state_registration'] ?? null,
+                        'municipal_registration' => $data['municipal_registration'] ?? null,
+                        'founding_date'          => $foundingDate,
+                        'industry'               => $data['industry'] ?? null,
+                        'company_size'           => $data['company_size'] ?? null,
+                        'notes'                  => $data['notes'] ?? null,
                     ];
 
-                    if ( $provider->businessData ) {
-                        $provider->businessData->update( $businessData );
+                    if ($provider->businessData) {
+                        $this->businessDataRepository->update($provider->businessData->id, $businessData);
                     } else {
-                        BusinessData::create( array_merge( $businessData, [
-                            'tenant_id'   => $provider->tenant_id,
+                        $this->businessDataRepository->create(array_merge($businessData, [
+                            'tenant_id'   => $tenantId,
                             'provider_id' => $provider->id,
-                        ] ) );
+                        ]));
                     }
                 }
-            } );
 
-            $provider->refresh();
-            return ServiceResult::success( $provider, 'Provider atualizado com sucesso' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao atualizar provider: ' . $e->getMessage()
-            );
-        }
+                $provider->refresh();
+                return ServiceResult::success($provider, 'Provider atualizado com sucesso');
+            });
+        }, 'Erro ao atualizar provider.');
     }
 
     /**
      * Change provider password.
      */
-    public function changePassword( string $newPassword ): void
+    public function changePassword(string $newPassword): ServiceResult
     {
-        $user = Auth::user();
-
-        $this->userRepository->update( $user->id, [
-            'password' => Hash::make( $newPassword )
-        ] );
-
-        // Activity logged automatically by UserObserver
+        return $this->safeExecute(function () use ($newPassword) {
+            $user = Auth::user();
+            $this->userRepository->update($user->id, [
+                'password' => Hash::make($newPassword)
+            ]);
+            return ServiceResult::success(null, 'Senha alterada com sucesso.');
+        }, 'Erro ao alterar senha.');
     }
 
     /**
      * Get provider by user ID.
      */
-    public function getProviderByUserId( int $userId, int $tenantId ): ?Provider
+    public function getProviderByUserId(int $userId, ?int $tenantId = null): ?Provider
     {
-        return $this->providerService->getByUserId( $userId, $tenantId );
+        $tenantId = $tenantId ?? $this->ensureTenantId();
+        return $this->providerService->getByUserId($userId, $tenantId);
     }
 
     /**
      * Check if email exists for another user.
      */
-    public function isEmailAvailable( string $email, int $excludeUserId, int $tenantId ): bool
+    public function isEmailAvailable(string $email, int $excludeUserId, ?int $tenantId = null): bool
     {
-        return $this->providerService->isEmailAvailable( $email, $excludeUserId, $tenantId );
+        $tenantId = $tenantId ?? $this->ensureTenantId();
+        return $this->providerService->isEmailAvailable($email, $excludeUserId, $tenantId);
     }
 
     /**
      * Get financial reports data for provider.
      */
-    public function getFinancialReports( int $tenantId ): array
+    public function getFinancialReports(): ServiceResult
     {
-        // Buscar resumo financeiro mensal
-        $financialResult = $this->financialSummary->getMonthlySummary( $tenantId );
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
 
-        $financialSummary = [];
-        if ( $financialResult->isSuccess() ) {
-            $financialSummary = $financialResult->getData();
-        }
+            // Buscar resumo financeiro mensal
+            $financialResult = $this->financialSummary->getMonthlySummary($tenantId);
+            $financialSummary = $financialResult->isSuccess() ? $financialResult->getData() : [];
 
-        // Buscar receitas mensais
-        $monthlyRevenue = Budget::where( 'tenant_id', $tenantId )
-            ->where( 'status', 'approved' )
-            ->whereMonth( 'created_at', now()->month )
-            ->whereYear( 'created_at', now()->year )
-            ->sum( 'total' );
+            // Buscar receitas mensais
+            $monthlyRevenue = $this->budgetRepository->getMonthlyRevenue($tenantId, now()->month, now()->year);
 
-        // Buscar orçamentos pendentes
-        $pendingBudgets = Budget::where( 'tenant_id', $tenantId )
-            ->where( 'status', 'pending' )
-            ->with( [ 'customer' ] )
-            ->latest()
-            ->limit( 10 )
-            ->get();
+            // Buscar orçamentos pendentes
+            $pendingBudgets = $this->budgetRepository->getPendingBudgets($tenantId, 10);
 
-        // Buscar pagamentos em atraso
-        $overduePayments = Budget::where( 'tenant_id', $tenantId )
-            ->where( 'status', 'approved' )
-            ->where( 'due_date', '<', now() )
-            ->with( [ 'customer' ] )
-            ->latest()
-            ->limit( 10 )
-            ->get();
+            // Buscar pagamentos em atraso
+            $overduePayments = $this->budgetRepository->getOverduePayments($tenantId, 10);
 
-        return [
-            'financial_summary' => $financialSummary,
-            'monthly_revenue'   => $monthlyRevenue,
-            'pending_budgets'   => $pendingBudgets,
-            'overdue_payments'  => $overduePayments,
-        ];
+            return ServiceResult::success([
+                'financial_summary' => $financialSummary,
+                'monthly_revenue'   => $monthlyRevenue,
+                'pending_budgets'   => $pendingBudgets,
+                'overdue_payments'  => $overduePayments,
+            ]);
+        }, 'Erro ao obter relatórios financeiros.');
     }
 
     /**
      * Get budget reports data for provider.
      */
-    public function getBudgetReports( int $tenantId ): array
+    public function getBudgetReports(): ServiceResult
     {
-        // Buscar orçamentos do mês atual
-        $budgets = Budget::where( 'tenant_id', $tenantId )
-            ->with( [ 'customer', 'items' ] )
-            ->whereMonth( 'created_at', now()->month )
-            ->whereYear( 'created_at', now()->year )
-            ->latest()
-            ->get();
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
 
-        // Estatísticas dos orçamentos
-        $budgetStats = [
-            'total_budgets'    => $budgets->count(),
-            'approved_budgets' => $budgets->where( 'status', 'approved' )->count(),
-            'pending_budgets'  => $budgets->where( 'status', 'pending' )->count(),
-            'rejected_budgets' => $budgets->where( 'status', 'rejected' )->count(),
-            'total_value'      => $budgets->sum( 'total' ),
-            'average_value'    => $budgets->count() > 0 ? $budgets->avg( 'total' ) : 0,
-        ];
+            // Buscar orçamentos do mês atual
+            $budgets = $this->budgetRepository->getBudgetsByMonth($tenantId, now()->month, now()->year);
 
-        return [
-            'budgets'      => $budgets,
-            'budget_stats' => $budgetStats,
-            'period'       => now()->format( 'F Y' ),
-        ];
+            // Estatísticas dos orçamentos
+            $budgetStats = [
+                'total_budgets'    => $budgets->count(),
+                'approved_budgets' => $budgets->where('status', 'approved')->count(),
+                'pending_budgets'  => $budgets->where('status', 'pending')->count(),
+                'rejected_budgets' => $budgets->where('status', 'rejected')->count(),
+                'total_value'      => $budgets->sum('total'),
+                'average_value'    => $budgets->count() > 0 ? $budgets->avg('total') : 0,
+            ];
+
+            return ServiceResult::success([
+                'budgets'      => $budgets,
+                'budget_stats' => $budgetStats,
+                'period'       => now()->format('F Y'),
+            ]);
+        }, 'Erro ao obter relatórios de orçamentos.');
     }
 
     /**
      * Get service reports data for provider.
      */
-    public function getServiceReports( int $tenantId ): array
+    public function getServiceReports(): ServiceResult
     {
-        // Buscar serviços do mês atual
-        $services = Service::where( 'tenant_id', $tenantId )
-            ->with( [ 'budget.customer', 'items' ] )
-            ->whereMonth( 'created_at', now()->month )
-            ->whereYear( 'created_at', now()->year )
-            ->latest()
-            ->get();
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
 
-        // Estatísticas dos serviços
-        $serviceStats = [
-            'total_services'     => $services->count(),
-            'completed_services' => $services->where( 'status', 'completed' )->count(),
-            'pending_services'   => $services->where( 'status', 'pending' )->count(),
-            'cancelled_services' => $services->where( 'status', 'cancelled' )->count(),
-            'total_value'        => $services->sum( 'total' ),
-            'average_value'      => $services->count() > 0 ? $services->avg( 'total' ) : 0,
-        ];
+            // Buscar serviços do mês atual
+            $services = $this->serviceRepository->getServicesByMonth($tenantId, now()->month, now()->year);
 
-        return [
-            'services'      => $services,
-            'service_stats' => $serviceStats,
-            'period'        => now()->format( 'F Y' ),
-        ];
+            // Estatísticas dos serviços
+            $serviceStats = [
+                'total_services'     => $services->count(),
+                'completed_services' => $services->where('status', 'completed')->count(),
+                'pending_services'   => $services->where('status', 'pending')->count(),
+                'cancelled_services' => $services->where('status', 'cancelled')->count(),
+                'total_value'        => $services->sum('total'),
+                'average_value'      => $services->count() > 0 ? $services->avg('total') : 0,
+            ];
+
+            return ServiceResult::success([
+                'services'      => $services,
+                'service_stats' => $serviceStats,
+                'period'        => now()->format('F Y'),
+            ]);
+        }, 'Erro ao obter relatórios de serviços.');
     }
 
     /**
      * Get customer reports data for provider.
      */
-    public function getCustomerReports( int $tenantId ): array
+    public function getCustomerReports(): ServiceResult
     {
-        // Buscar clientes ativos
-        $customers = Customer::where( 'tenant_id', $tenantId )
-            ->with( [ 'budgets', 'invoices', 'commonData', 'contact' ] )
-            ->latest()
-            ->limit( 50 )
-            ->get();
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
 
-        // Estatísticas dos clientes
-        $customerStats = [
-            'total_customers'     => $customers->count(),
-            'active_customers'    => $customers->where( 'status', 'active' )->count(),
-            'inactive_customers'  => $customers->where( 'status', 'inactive' )->count(),
-            'new_customers_month' => $customers->filter( function ( $customer ) {
-                return $customer->created_at->month === now()->month && 
-                       $customer->created_at->year === now()->year;
-            } )->count(),
-            'total_budgets'       => $customers->sum( function ( $customer ) {
-                return $customer->budgets->count();
-            } ),
-            'total_invoices'      => $customers->sum( function ( $customer ) {
-                return $customer->invoices->count();
-            } ),
-        ];
+            // Buscar clientes ativos
+            $customers = $this->customerRepository->getActiveWithStats($tenantId, 50);
 
-        return [
-            'customers'      => $customers,
-            'customer_stats' => $customerStats,
-            'period'         => now()->format( 'F Y' ),
-        ];
+            // Estatísticas dos clientes
+            $customerStats = [
+                'total_customers'     => $customers->count(),
+                'active_customers'    => $customers->where('status', 'active')->count(),
+                'inactive_customers'  => $customers->where('status', 'inactive')->count(),
+                'new_customers_month' => $customers->filter(function ($customer) {
+                    return $customer->created_at->month === now()->month &&
+                        $customer->created_at->year === now()->year;
+                })->count(),
+                'total_budgets'       => $customers->sum(fn($c) => $c->budgets_count ?? $c->budgets->count()),
+                'total_invoices'      => $customers->sum(fn($c) => $c->invoices_count ?? $c->invoices->count()),
+            ];
+
+            return ServiceResult::success([
+                'customers'      => $customers,
+                'customer_stats' => $customerStats,
+                'period'         => now()->format('F Y'),
+            ]);
+        }, 'Erro ao obter relatórios de clientes.');
     }
 
     /**
      * Create complete registration from user data.
-     *
-     * This method handles the complete registration flow:
-     * 1. Create Tenant
-     * 2. Create User
-     * 3. Create Provider with all related data
-     *
-     * @param array $userData User registration data
-     * @return ServiceResult Result of the operation with user, tenant, provider, plan, and subscription
      */
-    public function createProviderFromRegistration( array $userData ): ServiceResult
+    public function createProviderFromRegistration(ProviderRegistrationDTO $dto): ServiceResult
     {
-        try {
-            DB::beginTransaction();
+        return $this->safeExecute(function () use ($dto) {
+            return DB::transaction(function () use ($dto) {
+                $userData = $dto->toArray();
 
-            // Step 1: Create Tenant
-            $tenantResult = $this->createTenant( $userData );
-            if ( !$tenantResult->isSuccess() ) {
-                DB::rollBack();
-                return $tenantResult;
-            }
-            $tenant = $tenantResult->getData();
+                // Step 1: Create Tenant
+                $tenantResult = $this->createTenant($userData);
+                if (!$tenantResult->isSuccess()) {
+                    throw new Exception($tenantResult->getMessage());
+                }
+                $tenant = $tenantResult->getData();
 
-            // Step 2: Create User
-            $userResult = $this->createUser( $userData, $tenant );
-            if ( !$userResult->isSuccess() ) {
-                DB::rollBack();
-                return $userResult;
-            }
-            $user = $userResult->getData();
+                // Step 2: Create User
+                $userResult = $this->createUser($userData, $tenant);
+                if (!$userResult->isSuccess()) {
+                    throw new Exception($userResult->getMessage());
+                }
+                $user = $userResult->getData();
 
-            // Step 3: Create Provider with all related data
-            $providerResult = $this->createProviderWithRelatedData( $userData, $user, $tenant );
-            if ( !$providerResult->isSuccess() ) {
-                DB::rollBack();
-                return $providerResult;
-            }
+                // Step 3: Create Provider with all related data
+                $providerResult = $this->createProviderWithRelatedData($userData, $user, $tenant);
+                if (!$providerResult->isSuccess()) {
+                    throw new Exception($providerResult->getMessage());
+                }
 
-            $providerData = $providerResult->getData();
+                $providerData = $providerResult->getData();
 
-            DB::commit();
-
-            return ServiceResult::success( [
-                'user'         => $user,
-                'tenant'       => $tenant,
-                'provider'     => $providerData[ 'provider' ],
-                'plan'         => $providerData[ 'plan' ],
-                'subscription' => $providerData[ 'subscription' ],
-            ], 'Registro completo realizado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            DB::rollBack();
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar provider: ' . $e->getMessage()
-            );
-        }
+                return ServiceResult::success([
+                    'user'         => $user,
+                    'tenant'       => $tenant,
+                    'provider'     => $providerData['provider'],
+                    'plan'         => $providerData['plan'],
+                    'subscription' => $providerData['subscription'],
+                ], 'Registro completo realizado com sucesso.');
+            });
+        }, 'Erro ao criar registro do provedor.');
     }
 
     /**
-     * Create provider with all related data (CommonData, Role, Plan, Subscription).
-     *
-     * @param array $userData User registration data
-     * @param User $user The created user
-     * @param Tenant $tenant The created tenant
-     * @return ServiceResult Result of the operation
+     * Create provider with all related data.
      */
-    private function createProviderWithRelatedData( array $userData, User $user, Tenant $tenant ): ServiceResult
+    private function createProviderWithRelatedData(array $userData, User $user, Tenant $tenant): ServiceResult
     {
         try {
             // Criar Provider primeiro
-            $provider = Provider::firstOrCreate(
-                [
-                    'tenant_id' => $tenant->id,
-                    'user_id'   => $user->id,
-                ],
-                [
-                    'terms_accepted' => $userData[ 'terms_accepted' ],
-                ]
-            );
+            $provider = $this->providerRepository->create([
+                'tenant_id'      => $tenant->id,
+                'user_id'        => $user->id,
+                'terms_accepted' => $userData['terms_accepted'],
+            ]);
 
             // Criar CommonData vinculado ao Provider
-            $commonData = CommonData::firstOrCreate(
-                [
-                    'tenant_id'   => $tenant->id,
-                    'provider_id' => $provider->id,
-                ],
-                [
-                    'type'         => CommonData::TYPE_INDIVIDUAL,
-                    'first_name'   => $userData[ 'first_name' ],
-                    'last_name'    => $userData[ 'last_name' ],
-                    'cpf'          => null,
-                    'birth_date'   => null,
-                    'company_name' => null,
-                    'cnpj'         => null,
-                    'description'  => null,
-                ]
-            );
+            $this->commonDataRepository->create([
+                'tenant_id'   => $tenant->id,
+                'provider_id' => $provider->id,
+                'type'        => CommonData::TYPE_INDIVIDUAL,
+                'first_name'  => $userData['first_name'],
+                'last_name'   => $userData['last_name'],
+            ]);
 
             // Criar Contact vinculado ao Provider
-            $contact = Contact::firstOrCreate(
-                [
-                    'tenant_id'   => $tenant->id,
-                    'provider_id' => $provider->id,
-                ],
-                [
-                    'email_personal' => $userData[ 'email_personal' ] ?? $userData[ 'email' ],
-                    'phone_personal' => $userData[ 'phone_personal' ] ?? $userData[ 'phone' ] ?? null,
-                ]
-            );
+            $this->contactRepository->create([
+                'tenant_id'      => $tenant->id,
+                'provider_id'    => $provider->id,
+                'email_personal' => $userData['email_personal'] ?? $userData['email'],
+                'phone_personal' => $userData['phone_personal'] ?? $userData['phone'] ?? null,
+            ]);
 
-            // Criar Address vinculado ao Provider (vazio inicialmente)
-            $address = Address::firstOrCreate(
-                [
-                    'tenant_id'   => $tenant->id,
-                    'provider_id' => $provider->id,
-                ],
-                []
-            );
-
-            $savedProvider = $provider;
+            // Criar Address vinculado ao Provider
+            $this->addressRepository->create([
+                'tenant_id'   => $tenant->id,
+                'provider_id' => $provider->id,
+            ]);
 
             // Assign Provider Role
-            $providerRole = Role::where( 'name', ROLE_PROVIDER )->first();
+            $providerRole = $this->roleRepository->findByName(ROLE_PROVIDER);
 
-            if ( !$providerRole ) {
-                return ServiceResult::error(
-                    OperationStatus::ERROR,
-                    'Role provider não encontrado no banco de dados',
-                );
+            if (!$providerRole) {
+                return ServiceResult::error(OperationStatus::ERROR, 'Role provider não encontrado.');
             }
 
-            $user->roles()->syncWithoutDetaching( [
+            $user->roles()->syncWithoutDetaching([
                 $providerRole->id => [
                     'tenant_id'  => $tenant->id,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
-            ] );
+            ]);
 
             // Find Trial Plan
-            $plan = Plan::where( 'slug', PLAN_SLUG_TRIAL )->first();
-
-            if ( !$plan ) {
-                $plan = Plan::where( 'status', true )->where( 'price', 0.00 )->first();
+            $plan = $this->planRepository->findBySlug(PLAN_SLUG_TRIAL);
+            if (!$plan) {
+                // Se não encontrar por slug, busca qualquer plano ativo com preço 0
+                $plan = Plan::where('status', true)->where('price', 0.00)->first();
             }
 
-            if ( !$plan ) {
-                return ServiceResult::error(
-                    OperationStatus::ERROR,
-                    'Plano trial não encontrado. Entre em contato com nosso suporte para ativar seu acesso gratuito.',
-                );
+            if (!$plan) {
+                return ServiceResult::error(OperationStatus::ERROR, 'Plano trial não encontrado.');
             }
 
             // Create Plan Subscription
-            $planSubscription = new PlanSubscription( [
+            $planSubscription = new PlanSubscription([
                 'tenant_id'          => $tenant->id,
                 'plan_id'            => $plan->id,
-                'provider_id'        => $savedProvider->id,
+                'provider_id'        => $provider->id,
                 'status'             => SUBSCRIPTION_STATUS_ACTIVE,
                 'transaction_amount' => $plan->price ?? 0.00,
                 'start_date'         => now(),
-                'end_date'           => now()->addDays( TRIAL_DAYS ),
+                'end_date'           => now()->addDays(TRIAL_DAYS),
                 'transaction_date'   => now(),
                 'payment_method'     => PAYMENT_METHOD_TRIAL,
                 'payment_id'         => 'TRIAL_' . uniqid(),
                 'public_hash'        => 'TRIAL_HASH_' . uniqid(),
-            ] );
+            ]);
 
-            $savedSubscription = $this->planRepository->saveSubscription( $planSubscription );
+            $savedSubscription = $this->planRepository->saveSubscription($planSubscription);
 
-            return ServiceResult::success( [
-                'provider'     => $savedProvider,
+            return ServiceResult::success([
+                'provider'     => $provider,
                 'role'         => $providerRole,
                 'plan'         => $plan,
                 'subscription' => $savedSubscription,
-            ], 'Provider criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar provider: ' . $e->getMessage()
-            );
+            ]);
+        } catch (Exception $e) {
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar dados vinculados: ' . $e->getMessage());
         }
     }
 
     /**
-     * Cria um tenant único para o usuário durante o registro.
-     *
-     * @param array $userData Dados do usuário
-     * @return ServiceResult Resultado da operação
+     * Cria um tenant único para o usuário.
      */
-    private function createTenant( array $userData ): ServiceResult
+    private function createTenant(array $userData): ServiceResult
     {
         try {
-            $tenantName = $this->generateUniqueTenantName( $userData[ 'first_name' ], $userData[ 'last_name' ] );
+            $tenantName = $this->generateUniqueTenantName($userData['first_name'], $userData['last_name']);
 
-            $tenant = new Tenant( [
+            $tenant = $this->tenantRepository->create([
                 'name'      => $tenantName,
                 'is_active' => true,
-            ] );
+            ]);
 
-            $savedTenant = $this->tenantRepository->create( $tenant->toArray() );
-
-            return ServiceResult::success( $savedTenant, 'Tenant criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar tenant: ' . $e->getMessage()
-            );
+            return ServiceResult::success($tenant);
+        } catch (Exception $e) {
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar tenant: ' . $e->getMessage());
         }
     }
 
     /**
-     * Cria um usuário no sistema durante o registro.
-     *
-     * @param array $userData Dados do usuário
-     * @param Tenant $tenant Tenant do usuário
-     * @return ServiceResult Resultado da operação
+     * Cria um usuário no sistema.
      */
-    private function createUser( array $userData, Tenant $tenant ): ServiceResult
+    private function createUser(array $userData, Tenant $tenant): ServiceResult
     {
         try {
-            // Handle password: let the model cast handle hashing for regular registration
-            // For social registration, password is null
-            $password            = isset( $userData[ 'password' ] ) && $userData[ 'password' ] !== null
-                ? $userData[ 'password' ]  // Plain password, model will hash it
-                : null;
-            $userDataForCreation = [
+            $savedUser = $this->userRepository->create([
                 'tenant_id' => $tenant->id,
-                'email'     => $userData[ 'email' ],
-                'password'  => $password,
+                'email'     => $userData['email'],
+                'password'  => $userData['password'] ?? null,
                 'is_active' => true,
-            ];
-            $savedUser           = $this->userRepository->create( $userDataForCreation );
+            ]);
 
-            return ServiceResult::success( $savedUser, 'Usuário criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao criar usuário: ' . $e->getMessage()
-            );
+            return ServiceResult::success($savedUser);
+        } catch (Exception $e) {
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar usuário: ' . $e->getMessage());
         }
     }
 
     /**
-     * Gera um nome único para o tenant baseado no nome do usuário.
-     *
-     * @param string $firstName Primeiro nome
-     * @param string $lastName Sobrenome
-     * @return string Nome único para o tenant
+     * Gera um nome único para o tenant.
      */
-    private function generateUniqueTenantName( string $firstName, string $lastName ): string
+    private function generateUniqueTenantName(string $firstName, string $lastName): string
     {
-        $baseName   = Str::slug( $firstName . '-' . $lastName );
+        $baseName   = Str::slug($firstName . '-' . $lastName);
         $tenantName = $baseName;
         $counter    = 1;
 
-        while ( $this->tenantRepository->findByName( $tenantName ) ) {
+        while ($this->tenantRepository->findByName($tenantName)) {
             $tenantName = $baseName . '-' . $counter;
             $counter++;
         }
 
         return $tenantName;
     }
-
 }

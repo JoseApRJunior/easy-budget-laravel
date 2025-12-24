@@ -91,6 +91,74 @@ class BudgetRepository extends AbstractTenantRepository
         return $this->getAllByTenant( $filters, $orderBy, $limit, $offset );
     }
 
+    /**
+     * Busca orçamentos recentes por tenant.
+     */
+    public function getRecentBudgets( int $tenantId, int $limit = 10 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->with( 'customer' )
+            ->latest()
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
+     * Calcula a receita mensal por tenant.
+     */
+    public function getMonthlyRevenue( int $tenantId, int $month, int $year ): float
+    {
+        return (float) $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->whereYear( 'created_at', $year )
+            ->whereMonth( 'created_at', $month )
+            ->whereIn( 'status', [ \App\Enums\BudgetStatus::APPROVED, \App\Enums\BudgetStatus::COMPLETED ] )
+            ->sum( 'total' );
+    }
+
+    /**
+     * Busca orçamentos pendentes por tenant.
+     */
+    public function getPendingBudgets( int $tenantId, int $limit = 10 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', \App\Enums\BudgetStatus::PENDING )
+            ->with( 'customer' )
+            ->latest()
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
+     * Busca orçamentos com pagamento em atraso por tenant.
+     */
+    public function getOverduePayments( int $tenantId, int $limit = 10 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'due_date', '<', now() )
+            ->whereIn( 'status', [ \App\Enums\BudgetStatus::APPROVED, \App\Enums\BudgetStatus::PENDING ] )
+            ->with( 'customer' )
+            ->latest()
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
+     * Busca orçamentos de um mês específico por tenant.
+     */
+    public function getBudgetsByMonth( int $tenantId, int $month, int $year ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->whereYear( 'created_at', $year )
+            ->whereMonth( 'created_at', $month )
+            ->with( 'customer' )
+            ->get();
+    }
+
     // ========== MÉTODOS BASEADOS NO SISTEMA ANTIGO ==========
 
     /**

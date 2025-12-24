@@ -250,12 +250,12 @@ class CustomerRepository extends AbstractTenantRepository
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
-        array $with = [ 'commonData' ],
+        array $with = [ 'commonData', 'contact' ],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
         $query = $this->model->newQuery();
 
-        // Eager loading paramétrico - simplificado
+        // Eager loading paramétrico
         if ( !empty( $with ) ) {
             $query->with( $with );
         }
@@ -263,37 +263,86 @@ class CustomerRepository extends AbstractTenantRepository
         // Aplicar filtros avançados do trait
         $this->applyFilters( $query, $filters );
 
-        // Aplicar filtro de soft delete se necessário
+        // Aplicar filtro de soft delete
         $this->applySoftDeleteFilter( $query, $filters );
 
-        // Filtros específicos de cliente - SIMPLIFICADOS
-
-        // Filtro por status (direto na tabela customers)
+        // Filtro por status
         if ( !empty( $filters[ 'status' ] ) ) {
             $query->where( 'status', $filters[ 'status' ] );
         }
 
-        // Filtro por texto simplificado (busca apenas na tabela customers)
+        // Busca avançada em relações
         if ( !empty( $filters[ 'search' ] ) ) {
-            // Buscar apenas por ID ou status se especificado, mantendo simples
             $search = $filters[ 'search' ];
             $query->where( function ( $q ) use ( $search ) {
-                // Busca simples por ID numérico
                 if ( is_numeric( $search ) ) {
                     $q->where( 'id', (int) $search );
                 }
-                // Filtros diretos adicionais podem ser adicionados aqui se necessário
+
+                $q->orWhereHas( 'commonData', function ( $cq ) use ( $search ) {
+                    $cq->where( 'first_name', 'like', "%{$search}%" )
+                        ->orWhere( 'last_name', 'like', "%{$search}%" )
+                        ->orWhere( 'company_name', 'like', "%{$search}%" )
+                        ->orWhere( 'cpf', 'like', "%{$search}%" )
+                        ->orWhere( 'cnpj', 'like', "%{$search}%" );
+                } )->orWhereHas( 'contact', function ( $cq ) use ( $search ) {
+                    $cq->where( 'email_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'email_business', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'phone_business', 'like', "%{$search}%" );
+                } );
             } );
         }
 
-        // Aplicar ordenação simples (padrão: created_at desc)
+        // Filtro por tipo
+        if ( !empty( $filters[ 'type' ] ) ) {
+            $type = $filters[ 'type' ];
+            $query->whereHas( 'commonData', function ( $q ) use ( $type ) {
+                $q->where( 'type', $type );
+            } );
+        }
+
+        // Filtro por área de atuação
+        if ( !empty( $filters[ 'area_of_activity_id' ] ) ) {
+            $areaId = $filters[ 'area_of_activity_id' ];
+            $query->whereHas( 'commonData', function ( $q ) use ( $areaId ) {
+                $q->where( 'area_of_activity_id', $areaId );
+            } );
+        }
+
+        // Ordenação
         $defaultOrderBy = $orderBy ?: [ 'created_at' => 'desc' ];
         $this->applyOrderBy( $query, $defaultOrderBy );
 
-        // Per page dinâmico
+        // Per page
         $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
 
         return $query->paginate( $effectivePerPage );
+    }
+
+    /**
+     * Busca simplificada para autocompletar
+     */
+    public function findBySearch( string $search, int $tenantId, int $limit = 10 ): Collection
+    {
+        return $this->model->newQuery()
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->where( function ( $q ) use ( $search ) {
+                $q->whereHas( 'commonData', function ( $cq ) use ( $search ) {
+                    $cq->where( 'first_name', 'like', "%{$search}%" )
+                        ->orWhere( 'last_name', 'like', "%{$search}%" )
+                        ->orWhere( 'company_name', 'like', "%{$search}%" )
+                        ->orWhere( 'cpf', 'like', "%{$search}%" )
+                        ->orWhere( 'cnpj', 'like', "%{$search}%" );
+                } )->orWhereHas( 'contact', function ( $cq ) use ( $search ) {
+                    $cq->where( 'email_personal', 'like', "%{$search}%" )
+                        ->orWhere( 'email_business', 'like', "%{$search}%" );
+                } );
+            } )
+            ->with( [ 'commonData', 'contact' ] )
+            ->limit( $limit )
+            ->get();
     }
 
     /**
@@ -674,4 +723,17 @@ class CustomerRepository extends AbstractTenantRepository
             ->get();
     }
 
+    /**
+     * Busca clientes ativos com estatísticas (counts de orçamentos e faturas).
+     */
+    public function getActiveWithStats( int $tenantId, int $limit = 50 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->withCount( [ 'budgets', 'invoices' ] )
+            ->latest()
+            ->limit( $limit )
+            ->get();
+    }
 }

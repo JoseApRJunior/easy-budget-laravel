@@ -101,12 +101,26 @@ class AuditLogRepository extends AbstractTenantRepository
     }
 
     /**
+     * Busca atividades recentes por tenant e usuário.
+     */
+    public function getRecentActivities( int $tenantId, int $userId, int $limit = 10 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'user_id', $userId )
+            ->latest()
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
      * Busca logs de auditoria por usuário.
      */
     public function findByUserId( int $userId ): Collection
     {
         return $this->model->where( 'user_id', $userId )->get();
     }
+}
 
     /**
      * Busca logs de auditoria por ação.

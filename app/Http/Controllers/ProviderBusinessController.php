@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Provider\ProviderUpdateDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProviderBusinessUpdateRequest;
 use App\Models\Provider;
@@ -53,15 +54,11 @@ class ProviderBusinessController extends Controller
      */
     public function update(ProviderBusinessUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-
-        // Adicionar arquivo de logo aos dados validados se fornecido
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo');
-        }
+        // Criar DTO a partir do request
+        $dto = ProviderUpdateDTO::fromRequest($request);
 
         // Usar o serviço para atualizar os dados empresariais
-        $result = $this->providerManagementService->updateProvider($validated);
+        $result = $this->providerManagementService->updateProvider($dto);
 
         // Verificar resultado do serviço
         if (! $result->isSuccess()) {

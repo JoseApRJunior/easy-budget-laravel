@@ -36,19 +36,28 @@ class ProviderController extends Controller
      */
     public function index(): View
     {
-        /** @var User $user */
-        $user = Auth::user();
+        $result = $this->providerService->getDashboardData();
 
-        $dashboardData = $this->providerService->getDashboardData(
-            $user->tenant_id,
-        );
+        if (!$result->isSuccess()) {
+            // Em caso de erro, podemos redirecionar ou mostrar uma view de erro
+            // Por enquanto, vamos passar dados vazios para não quebrar a view
+            return view('pages.provider.index', [
+                'budgets'           => collect(),
+                'activities'        => collect(),
+                'financial_summary' => [],
+                'total_activities'  => 0,
+                'events'            => collect(),
+            ])->with('error', $result->getMessage());
+        }
+
+        $dashboardData = $result->getData();
 
         return view('pages.provider.index', [
-            'budgets' => $dashboardData['budgets'],
-            'activities' => $dashboardData['activities'],
+            'budgets'           => $dashboardData['budgets'],
+            'activities'        => $dashboardData['activities'],
             'financial_summary' => $dashboardData['financial_summary'],
-            'total_activities' => count($dashboardData['activities']),
-            'events' => $dashboardData['events'] ?? [],
+            'total_activities'  => count($dashboardData['activities']),
+            'events'            => $dashboardData['events'] ?? [],
         ]);
     }
 
@@ -90,19 +99,12 @@ class ProviderController extends Controller
      */
     public function change_password_store(ChangePasswordRequest $request): RedirectResponse
     {
-        try {
-            $this->providerService->changePassword($request->validated()['password']);
+        $result = $this->providerService->changePassword($request->validated()['password']);
 
-            /** @var User $user */
-            $user = Auth::user();
-            $isGoogleUser = is_null($user->password);
-            $successMessage = $isGoogleUser ? 'Senha definida com sucesso!' : 'Senha alterada com sucesso!';
-
-            return redirect()->route('settings.index')
-                ->with('success', $successMessage);
-        } catch (\Exception $e) {
-            return redirect()->route('provider.change_password')
-                ->with('error', 'Erro ao atualizar senha: '.$e->getMessage());
+        if (!$result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
         }
+
+        return redirect()->back()->with('success', $result->getMessage());
     }
 }

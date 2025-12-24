@@ -9,8 +9,10 @@ use App\Enums\OperationStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Repositories\PaymentRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
+use App\DTOs\Payment\PaymentDTO;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,67 +22,67 @@ use Illuminate\Support\Facades\Log;
  */
 class PaymentService extends AbstractBaseService
 {
-    /**
-     * Processa um novo pagamento.
-     */
-    public function processPayment(array $data): ServiceResult
+    public function __construct(PaymentRepository $paymentRepository)
     {
-        try {
-            return DB::transaction(function () use ($data) {
+        parent::__construct($paymentRepository);
+    }
+
+    /**
+     * Lista pagamentos filtrados.
+     */
+    public function getFilteredPayments(array $filters = []): ServiceResult
+    {
+        return $this->safeExecute(function () use ($filters) {
+            $tenantId = $this->ensureTenantId();
+            $payments = $this->repository->getFilteredPayments($tenantId, $filters);
+            return ServiceResult::success($payments);
+        });
+    }
+
+    /**
+     * Processa um novo pagamento usando DTO.
+     */
+    public function processPayment(PaymentDTO $dto): ServiceResult
+    {
+        return $this->safeExecute(function () use ($dto) {
+            $tenantId = $this->ensureTenantId($dto->tenant_id);
+
+            return DB::transaction(function () use ($dto, $tenantId) {
                 // Buscar fatura
-                $invoice = Invoice::find($data['invoice_id']);
+                $invoice = Invoice::find($dto->invoice_id);
                 if (!$invoice) {
-                    return $this->error(
-                        OperationStatus::NOT_FOUND,
-                        'Fatura não encontrada'
-                    );
+                    return ServiceResult::error('Fatura não encontrada');
                 }
 
                 // Verificar se fatura pode receber pagamento
                 if (!$invoice->status->isPending()) {
-                    return $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        'Fatura não está disponível para pagamento'
-                    );
+                    return ServiceResult::error('Fatura não está disponível para pagamento');
                 }
 
-                // Criar registro de pagamento
-                $payment = Payment::create([
-                    'tenant_id' => $invoice->tenant_id,
-                    'invoice_id' => $invoice->id,
-                    'customer_id' => $invoice->customer_id,
-                    'status' => PaymentStatus::PENDING,
-                    'method' => $data['method'],
-                    'amount' => $data['amount'],
-                    'notes' => $data['notes'] ?? null,
-                ]);
+                // Dados do pagamento a partir do DTO
+                $paymentData = $dto->toArray();
+                $paymentData['tenant_id'] = $tenantId;
+                $paymentData['status'] = PaymentStatus::PENDING;
+
+                // Criar registro de pagamento via repositório
+                $payment = $this->repository->create($paymentData);
 
                 // Processar pagamento baseado no método
-                $result = match ($data['method']) {
-                    Payment::METHOD_PIX => $this->processPixPayment($payment, $data),
-                    Payment::METHOD_BOLETO => $this->processBoletoPayment($payment, $data),
-                    Payment::METHOD_CREDIT_CARD => $this->processCreditCardPayment($payment, $data),
-                    Payment::METHOD_CASH => $this->processCashPayment($payment, $data),
-                    default => $this->error(
-                        OperationStatus::VALIDATION_ERROR,
-                        'Método de pagamento não suportado'
-                    )
+                $result = match ($dto->method) {
+                    Payment::METHOD_PIX => $this->processPixPayment($payment, $paymentData),
+                    Payment::METHOD_BOLETO => $this->processBoletoPayment($payment, $paymentData),
+                    Payment::METHOD_CREDIT_CARD => $this->processCreditCardPayment($payment, $paymentData),
+                    Payment::METHOD_CASH => $this->processCashPayment($payment, $paymentData),
+                    default => ServiceResult::error('Método de pagamento não suportado')
                 };
 
-                if (!$result->isSuccess()) {
+                if ($result->isError()) {
                     return $result;
                 }
 
-                return $this->success($payment->fresh(), 'Pagamento processado com sucesso');
+                return ServiceResult::success($payment->fresh(), 'Pagamento processado com sucesso');
             });
-        } catch (Exception $e) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao processar pagamento',
-                null,
-                $e
-            );
-        }
+        });
     }
 
     /**
@@ -88,14 +90,11 @@ class PaymentService extends AbstractBaseService
      */
     public function confirmPayment(int $paymentId, array $data = []): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($paymentId, $data) {
             return DB::transaction(function () use ($paymentId, $data) {
-                $payment = Payment::find($paymentId);
+                $payment = $this->repository->find($paymentId);
                 if (!$payment) {
-                    return $this->error(
-                        OperationStatus::NOT_FOUND,
-                        'Pagamento não encontrado'
-                    );
+                    return ServiceResult::error('Pagamento não encontrado');
                 }
 
                 // Atualizar status do pagamento
@@ -119,19 +118,12 @@ class PaymentService extends AbstractBaseService
                 Log::info('Pagamento confirmado', [
                     'payment_id' => $payment->id,
                     'invoice_id' => $invoice->id,
-                    'amount' => $payment->amount,
+                    'amount'     => $payment->amount,
                 ]);
 
-                return $this->success($payment->fresh(), 'Pagamento confirmado com sucesso');
+                return ServiceResult::success($payment->fresh(), 'Pagamento confirmado com sucesso');
             });
-        } catch (Exception $e) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao confirmar pagamento',
-                null,
-                $e
-            );
-        }
+        });
     }
 
     /**
@@ -139,30 +131,19 @@ class PaymentService extends AbstractBaseService
      */
     private function processPixPayment(Payment $payment, array $data): ServiceResult
     {
-        try {
-            // Aqui seria integrado com o gateway de pagamento (Mercado Pago, etc.)
-            // Por enquanto, simular processamento
-            
+        return $this->safeExecute(function () use ($payment) {
             $payment->update([
-                'status' => PaymentStatus::PROCESSING,
-                'processed_at' => now(),
+                'status'           => PaymentStatus::PROCESSING,
+                'processed_at'     => now(),
                 'gateway_response' => [
-                    'method' => 'pix',
+                    'method'  => 'pix',
                     'qr_code' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
                     'pix_key' => config('payment.pix_key', 'pix@empresa.com'),
                 ],
             ]);
 
-            return $this->success($payment, 'PIX gerado com sucesso');
-        } catch (Exception $e) {
-            $payment->update(['status' => PaymentStatus::FAILED]);
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao processar PIX',
-                null,
-                $e
-            );
-        }
+            return ServiceResult::success($payment, 'PIX gerado com sucesso');
+        }, 'Erro ao processar PIX');
     }
 
     /**
@@ -170,28 +151,19 @@ class PaymentService extends AbstractBaseService
      */
     private function processBoletoPayment(Payment $payment, array $data): ServiceResult
     {
-        try {
-            // Integração com gateway para gerar boleto
+        return $this->safeExecute(function () use ($payment) {
             $payment->update([
-                'status' => PaymentStatus::PROCESSING,
-                'processed_at' => now(),
+                'status'           => PaymentStatus::PROCESSING,
+                'processed_at'     => now(),
                 'gateway_response' => [
-                    'method' => 'boleto',
-                    'barcode' => '12345678901234567890123456789012345678901234',
+                    'method'   => 'boleto',
+                    'barcode'  => '12345678901234567890123456789012345678901234',
                     'due_date' => $payment->invoice->due_date->format('Y-m-d'),
                 ],
             ]);
 
-            return $this->success($payment, 'Boleto gerado com sucesso');
-        } catch (Exception $e) {
-            $payment->update(['status' => PaymentStatus::FAILED]);
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao gerar boleto',
-                null,
-                $e
-            );
-        }
+            return ServiceResult::success($payment, 'Boleto gerado com sucesso');
+        }, 'Erro ao gerar boleto');
     }
 
     /**
@@ -199,32 +171,23 @@ class PaymentService extends AbstractBaseService
      */
     private function processCreditCardPayment(Payment $payment, array $data): ServiceResult
     {
-        try {
-            // Integração com gateway para processar cartão
+        return $this->safeExecute(function () use ($payment, $data) {
             $payment->update([
-                'status' => PaymentStatus::PROCESSING,
-                'processed_at' => now(),
+                'status'           => PaymentStatus::PROCESSING,
+                'processed_at'     => now(),
                 'gateway_response' => [
-                    'method' => 'credit_card',
+                    'method'           => 'credit_card',
                     'card_last_digits' => $data['card_last_digits'] ?? '****',
-                    'installments' => $data['installments'] ?? 1,
+                    'installments'     => $data['installments'] ?? 1,
                 ],
             ]);
 
             // Simular aprovação imediata para cartão
             return $this->confirmPayment($payment->id, [
-                'transaction_id' => 'CC_' . uniqid(),
+                'transaction_id'   => 'CC_' . uniqid(),
                 'gateway_response' => ['status' => 'approved'],
             ]);
-        } catch (Exception $e) {
-            $payment->update(['status' => PaymentStatus::FAILED]);
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao processar cartão',
-                null,
-                $e
-            );
-        }
+        }, 'Erro ao processar cartão');
     }
 
     /**
@@ -232,21 +195,13 @@ class PaymentService extends AbstractBaseService
      */
     private function processCashPayment(Payment $payment, array $data): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($payment) {
             // Pagamento em dinheiro é confirmado imediatamente
             return $this->confirmPayment($payment->id, [
-                'transaction_id' => 'CASH_' . uniqid(),
+                'transaction_id'   => 'CASH_' . uniqid(),
                 'gateway_response' => ['method' => 'cash'],
             ]);
-        } catch (Exception $e) {
-            $payment->update(['status' => PaymentStatus::FAILED]);
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao processar pagamento em dinheiro',
-                null,
-                $e
-            );
-        }
+        }, 'Erro ao processar pagamento em dinheiro');
     }
 
     /**
@@ -256,7 +211,7 @@ class PaymentService extends AbstractBaseService
     {
         try {
             // Validar assinatura do webhook (implementar conforme gateway)
-            
+
             $transactionId = $webhookData['transaction_id'] ?? null;
             if (!$transactionId) {
                 return $this->error(
@@ -276,7 +231,7 @@ class PaymentService extends AbstractBaseService
 
             // Processar status do webhook
             $status = $webhookData['status'] ?? 'unknown';
-            
+
             return match ($status) {
                 'approved', 'paid' => $this->confirmPayment($payment->id, $webhookData),
                 'rejected', 'cancelled' => $this->failPayment($payment->id, $webhookData),
@@ -367,43 +322,30 @@ class PaymentService extends AbstractBaseService
     /**
      * Retorna estatísticas de pagamentos.
      */
-    public function getPaymentStats(int $tenantId): array
+    public function getPaymentStats(): ServiceResult
     {
-        try {
-            $total = Payment::where('tenant_id', $tenantId)->count();
-            $completed = Payment::where('tenant_id', $tenantId)
-                ->where('status', PaymentStatus::COMPLETED)->count();
-            $pending = Payment::where('tenant_id', $tenantId)
-                ->where('status', PaymentStatus::PENDING)->count();
-            $failed = Payment::where('tenant_id', $tenantId)
-                ->where('status', PaymentStatus::FAILED)->count();
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
+
+            $total     = Payment::where('tenant_id', $tenantId)->count();
+            $completed = Payment::where('tenant_id', $tenantId)->where('status', PaymentStatus::COMPLETED)->count();
+            $pending   = Payment::where('tenant_id', $tenantId)->where('status', PaymentStatus::PENDING)->count();
+            $failed    = Payment::where('tenant_id', $tenantId)->where('status', PaymentStatus::FAILED)->count();
 
             $totalAmount = Payment::where('tenant_id', $tenantId)
                 ->where('status', PaymentStatus::COMPLETED)
                 ->sum('amount');
 
-            return [
-                'total_payments' => $total,
+            $stats = [
+                'total_payments'     => $total,
                 'completed_payments' => $completed,
-                'pending_payments' => $pending,
-                'failed_payments' => $failed,
-                'total_amount' => $totalAmount,
-                'success_rate' => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+                'pending_payments'   => $pending,
+                'failed_payments'    => $failed,
+                'total_amount'       => $totalAmount,
+                'success_rate'       => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
             ];
-        } catch (Exception $e) {
-            Log::error('Erro ao obter estatísticas de pagamentos', [
-                'error' => $e->getMessage(),
-                'tenant_id' => $tenantId,
-            ]);
 
-            return [
-                'total_payments' => 0,
-                'completed_payments' => 0,
-                'pending_payments' => 0,
-                'failed_payments' => 0,
-                'total_amount' => 0,
-                'success_rate' => 0,
-            ];
-        }
+            return ServiceResult::success($stats);
+        }, 'Erro ao obter estatísticas de pagamentos.');
     }
 }

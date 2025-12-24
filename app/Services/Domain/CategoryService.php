@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\DTOs\Category\CategoryDTO;
 use App\Enums\OperationStatus;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
@@ -38,7 +39,7 @@ class CategoryService extends AbstractBaseService
     /**
      * Gera slug único para o tenant.
      */
-    public function generateUniqueSlug(string $name, int $tenantId, ?int $excludeId = null): string
+    private function generateUniqueSlug(string $name, int $tenantId, ?int $excludeId = null): string
     {
         $base = Str::slug($name);
         $slug = $base;
@@ -159,17 +160,14 @@ class CategoryService extends AbstractBaseService
     /**
      * Cria nova categoria para o tenant.
      */
-    public function createCategory(array $data): ServiceResult
+    public function createCategory(CategoryDTO $dto): ServiceResult
     {
-        return $this->safeExecute(function () use ($data) {
+        return $this->safeExecute(function () use ($dto) {
             $tenantId = $this->ensureTenantId();
-
-            if (isset($data['name'])) {
-                $data['name'] = mb_convert_case($data['name'], MB_CASE_TITLE, 'UTF-8');
-            }
+            $data = $dto->toArray();
 
             if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($data['name'], $tenantId);
+                $data['slug'] = $this->generateUniqueSlug($dto->name, $tenantId);
             }
 
             if (!Category::validateUniqueSlug($data['slug'], $tenantId)) {
@@ -192,25 +190,21 @@ class CategoryService extends AbstractBaseService
     /**
      * Atualiza categoria.
      */
-    public function updateCategory(int $id, array $data): ServiceResult
+    public function updateCategory(int $id, CategoryDTO $dto): ServiceResult
     {
-        return $this->safeExecute(function () use ($id, $data) {
+        return $this->safeExecute(function () use ($id, $dto) {
             $ownerResult = $this->findAndVerifyOwnership($id);
             if ($ownerResult->isError()) return $ownerResult;
 
             $category = $ownerResult->getData();
-
             $tenantId = $this->tenantId();
+            $data = $dto->toArray();
 
-            if (isset($data['name'])) {
-                $data['name'] = mb_convert_case($data['name'], MB_CASE_TITLE, 'UTF-8');
+            if (empty($data['slug'])) {
+                $data['slug'] = $this->generateUniqueSlug($dto->name, $tenantId, $id);
             }
 
-            if (isset($data['name']) && empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($data['name'], $tenantId, $id);
-            }
-
-            if (isset($data['slug']) && !Category::validateUniqueSlug($data['slug'], $tenantId, $id)) {
+            if (!Category::validateUniqueSlug($data['slug'], $tenantId, $id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
@@ -338,6 +332,32 @@ class CategoryService extends AbstractBaseService
 
             return $entity;
         }, 'Erro ao buscar categoria.');
+    }
+
+    /**
+     * Alterna status (ativo/inativo) de uma categoria via slug.
+     */
+    public function toggleCategoryStatus(string $slug): ServiceResult
+    {
+        return $this->safeExecute(function () use ($slug) {
+            $ownerResult = $this->findBySlug($slug);
+            if ($ownerResult->isError()) return $ownerResult;
+
+            $category = $ownerResult->getData();
+            $newStatus = !$category->is_active;
+
+            $updateResult = $this->updateCategory($category->id, new CategoryDTO(
+                name: $category->name,
+                slug: $category->slug,
+                parent_id: $category->parent_id,
+                is_active: $newStatus
+            ));
+
+            if ($updateResult->isError()) return $updateResult;
+
+            $message = $newStatus ? 'Categoria ativada com sucesso' : 'Categoria desativada com sucesso';
+            return $this->success($updateResult->getData(), $message);
+        }, 'Erro ao alterar status da categoria.');
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\Domain\PaymentService;
+use App\DTOs\Payment\PaymentDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ use Illuminate\View\View;
 class PaymentController extends Controller
 {
     public function __construct(
-        private PaymentService $paymentService
+        private readonly PaymentService $paymentService
     ) {}
 
     /**
@@ -29,10 +30,10 @@ class PaymentController extends Controller
     public function index(Request $request): View
     {
         $filters = $request->only(['status', 'method', 'customer_id', 'date_from', 'date_to']);
-        
+
         $result = $this->paymentService->getFilteredPayments($filters);
-        
-        if (!$result->isSuccess()) {
+
+        if ($result->isError()) {
             abort(500, 'Erro ao carregar pagamentos');
         }
 
@@ -56,9 +57,15 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $result = $this->paymentService->processPayment($request->validated());
+        // Adiciona o customer_id da fatura ao request para o DTO
+        $invoice = Invoice::findOrFail($request->invoice_id);
+        $data = $request->validated();
+        $data['customer_id'] = $invoice->customer_id;
 
-        if (!$result->isSuccess()) {
+        $dto = PaymentDTO::fromRequest($data);
+        $result = $this->paymentService->processPayment($dto);
+
+        if ($result->isError()) {
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $result->getMessage()], 400)
                 : redirect()->back()->with('error', $result->getMessage());
@@ -69,7 +76,7 @@ class PaymentController extends Controller
         return $request->expectsJson()
             ? response()->json(['success' => true, 'data' => $payment])
             : redirect()->route('provider.invoices.show', $payment->invoice->code)
-                ->with('success', 'Pagamento processado com sucesso!');
+            ->with('success', 'Pagamento processado com sucesso!');
     }
 
     /**
@@ -84,7 +91,7 @@ class PaymentController extends Controller
 
         $result = $this->paymentService->confirmPayment($payment->id, $request->validated());
 
-        if (!$result->isSuccess()) {
+        if ($result->isError()) {
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $result->getMessage()], 400)
                 : redirect()->back()->with('error', $result->getMessage());
@@ -113,9 +120,14 @@ class PaymentController extends Controller
      */
     public function dashboard(): View
     {
-        $tenantId = auth()->user()->tenant_id;
-        $stats = $this->paymentService->getPaymentStats($tenantId);
+        $result = $this->paymentService->getPaymentStats();
 
-        return view('pages.payment.dashboard', compact('stats'));
+        if ($result->isError()) {
+            abort(500, 'Erro ao carregar estatísticas do dashboard.');
+        }
+
+        return view('pages.payment.dashboard', [
+            'stats' => $result->getData(),
+        ]);
     }
 }

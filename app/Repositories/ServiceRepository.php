@@ -192,4 +192,16 @@ class ServiceRepository extends AbstractTenantRepository
         return $this->findByCode( $code, $with );
     }
 
+    /**
+     * Busca serviços de um mês específico por tenant.
+     */
+    public function getServicesByMonth( int $tenantId, int $month, int $year ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->whereYear( 'created_at', $year )
+            ->whereMonth( 'created_at', $month )
+            ->get();
+    }
+
 }

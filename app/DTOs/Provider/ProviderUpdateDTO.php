@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DTOs\Provider;
+
+use App\DTOs\AbstractDTO;
+use Illuminate\Http\UploadedFile;
+
+readonly class ProviderUpdateDTO extends AbstractDTO
+{
+    public function __construct(
+        // User
+        public ?string $email = null,
+        public ?UploadedFile $logo = null,
+
+        // CommonData
+        public ?string $first_name = null,
+        public ?string $last_name = null,
+        public ?string $cpf = null,
+        public ?string $birth_date = null,
+        public ?string $company_name = null,
+        public ?string $cnpj = null,
+        public ?string $description = null,
+        public ?int $area_of_activity_id = null,
+        public ?int $profession_id = null,
+
+        // Contact
+        public ?string $email_personal = null,
+        public ?string $phone_personal = null,
+        public ?string $email_business = null,
+        public ?string $phone_business = null,
+        public ?string $website = null,
+
+        // Address
+        public ?string $address = null,
+        public ?string $address_number = null,
+        public ?string $neighborhood = null,
+        public ?string $city = null,
+        public ?string $state = null,
+        public ?string $cep = null,
+
+        // BusinessData
+        public ?string $fantasy_name = null,
+        public ?string $state_registration = null,
+        public ?string $municipal_registration = null,
+        public ?string $founding_date = null,
+        public ?string $industry = null,
+        public ?string $company_size = null,
+        public ?string $notes = null
+    ) {}
+
+    public static function fromRequest(array $data): self
+    {
+        return new self(
+            email: $data['email'] ?? null,
+            logo: $data['logo'] ?? null,
+            first_name: $data['first_name'] ?? null,
+            last_name: $data['last_name'] ?? null,
+            cpf: $data['cpf'] ?? null,
+            birth_date: $data['birth_date'] ?? null,
+            company_name: $data['company_name'] ?? null,
+            cnpj: $data['cnpj'] ?? null,
+            description: $data['description'] ?? null,
+            area_of_activity_id: isset($data['area_of_activity_id']) ? (int) $data['area_of_activity_id'] : null,
+            profession_id: isset($data['profession_id']) ? (int) $data['profession_id'] : null,
+            email_personal: $data['email_personal'] ?? null,
+            phone_personal: $data['phone_personal'] ?? null,
+            email_business: $data['email_business'] ?? null,
+            phone_business: $data['phone_business'] ?? null,
+            website: $data['website'] ?? null,
+            address: $data['address'] ?? null,
+            address_number: $data['address_number'] ?? null,
+            neighborhood: $data['neighborhood'] ?? null,
+            city: $data['city'] ?? null,
+            state: $data['state'] ?? null,
+            cep: $data['cep'] ?? null,
+            fantasy_name: $data['fantasy_name'] ?? null,
+            state_registration: $data['state_registration'] ?? null,
+            municipal_registration: $data['municipal_registration'] ?? null,
+            founding_date: $data['founding_date'] ?? null,
+            industry: $data['industry'] ?? null,
+            company_size: $data['company_size'] ?? null,
+            notes: $data['notes'] ?? null
+        );
+    }
+
+    public function toArray(): array
+    {
+        return array_filter([
+            'email' => $this->email,
+            'logo' => $this->logo,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'cpf' => $this->cpf,
+            'birth_date' => $this->birth_date,
+            'company_name' => $this->company_name,
+            'cnpj' => $this->cnpj,
+            'description' => $this->description,
+            'area_of_activity_id' => $this->area_of_activity_id,
+            'profession_id' => $this->profession_id,
+            'email_personal' => $this->email_personal,
+            'phone_personal' => $this->phone_personal,
+            'email_business' => $this->email_business,
+            'phone_business' => $this->phone_business,
+            'website' => $this->website,
+            'address' => $this->address,
+            'address_number' => $this->address_number,
+            'neighborhood' => $this->neighborhood,
+            'city' => $this->city,
+            'state' => $this->state,
+            'cep' => $this->cep,
+            'fantasy_name' => $this->fantasy_name,
+            'state_registration' => $this->state_registration,
+            'municipal_registration' => $this->municipal_registration,
+            'founding_date' => $this->founding_date,
+            'industry' => $this->industry,
+            'company_size' => $this->company_size,
+            'notes' => $this->notes,
+        ], fn($value) => $value !== null);
+    }
+}

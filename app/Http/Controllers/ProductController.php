@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Product\ProductDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
@@ -38,7 +39,7 @@ class ProductController extends Controller
      */
     public function dashboard()
     {
-        return $this->view( 'pages.product.dashboard', $this->productService->getDashboardData(), 'stats' );
+        return $this->view('pages.product.dashboard', $this->productService->getDashboardData(), 'stats');
     }
 
     /**
@@ -46,22 +47,21 @@ class ProductController extends Controller
      *
      * Rota: products.index
      */
-    public function index( Request $request ): View
+    public function index(Request $request): View
     {
-        $filters = $request->only( [ 'search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price' ] );
+        $filters = $request->only(['search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price']);
 
-        if ( empty( $request->query() ) ) {
+        if (empty($request->query())) {
             $result = $this->emptyResult();
         } else {
-            $perPage = (int) ( $filters[ 'per_page' ] ?? 10 );
-            $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ], $perPage );
-
+            $perPage = (int) ($filters['per_page'] ?? 10);
+            $result  = $this->productService->getFilteredProducts($filters, ['category'], $perPage);
         }
 
-        return $this->view( 'pages.product.index', $result, 'products', [
+        return $this->view('pages.product.index', $result, 'products', [
             'filters'    => $filters,
             'categories' => $this->categoryService->getActive()->getData(),
-        ] );
+        ]);
     }
 
     /**
@@ -73,9 +73,9 @@ class ProductController extends Controller
     {
         $result = $this->categoryService->getActive();
 
-        return $this->view( 'pages.product.create', $result, 'categories', [
-            'defaults' => [ 'is_active' => true ],
-        ] );
+        return $this->view('pages.product.create', $result, 'categories', [
+            'defaults' => ['is_active' => true],
+        ]);
     }
 
     /**
@@ -83,15 +83,16 @@ class ProductController extends Controller
      *
      * Rota: products.store
      */
-    public function store( ProductStoreRequest $request ): RedirectResponse
+    public function store(ProductStoreRequest $request): RedirectResponse
     {
-        $result = $this->productService->createProduct( $request->validated() );
+        $dto = ProductDTO::fromRequest($request->validated());
+        $result = $this->productService->createProduct($dto);
 
-        if ( !$result->isSuccess() ) {
-            return $this->redirectBackWithServiceResult( $result, 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
+        if (!$result->isSuccess()) {
+            return $this->redirectBackWithServiceResult($result, 'Produto criado com sucesso! Você pode cadastrar outro produto agora.');
         }
 
-        return $this->redirectSuccess( 'provider.products.create', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.' );
+        return $this->redirectSuccess('provider.products.create', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.');
     }
 
     /**
@@ -99,16 +100,16 @@ class ProductController extends Controller
      *
      * Rota: products.show
      */
-    public function show( string $sku ): View|RedirectResponse
+    public function show(string $sku): View|RedirectResponse
     {
 
-        $result = $this->productService->findBySku( $sku, [ 'category', 'inventory' ] );
-        
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        $result = $this->productService->findBySku($sku, ['category', 'inventory']);
+
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        return $this->view( 'pages.product.show', $result, 'product' );
+        return $this->view('pages.product.show', $result, 'product');
     }
 
     /**
@@ -116,12 +117,12 @@ class ProductController extends Controller
      *
      * Rota: products.edit
      */
-    public function edit( string $sku ): View|RedirectResponse
+    public function edit(string $sku): View|RedirectResponse
     {
-        $result = $this->productService->findBySku( $sku, [ 'category' ] );
+        $result = $this->productService->findBySku($sku, ['category']);
 
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
         $product      = $result->getData();
@@ -131,7 +132,7 @@ class ProductController extends Controller
             ? $parentResult->getData()
             : collect();
 
-        return view( 'pages.product.edit', compact( 'product', 'categories' ) );
+        return view('pages.product.edit', compact('product', 'categories'));
     }
 
     /**
@@ -139,17 +140,20 @@ class ProductController extends Controller
      *
      * Rota: products.update
      */
-    public function update( string $sku, ProductUpdateRequest $request ): RedirectResponse
+    public function update(string $sku, ProductUpdateRequest $request): RedirectResponse
     {
-        $result = $this->productService->updateProductBySku( $sku, $request->validated() );
+        $dto = ProductDTO::fromRequest($request->validated());
+        $removeImage = (bool) $request->input('remove_image', false);
 
-        if ( !$result->isSuccess() ) {
-            return $this->redirectBackWithServiceResult( $result, 'Produto atualizado com sucesso!' );
+        $result = $this->productService->updateProductBySku($sku, $dto, $removeImage);
+
+        if (!$result->isSuccess()) {
+            return $this->redirectBackWithServiceResult($result, 'Produto atualizado com sucesso!');
         }
 
         $product = $result->getData();
 
-        return $this->redirectSuccess( 'provider.products.show', 'Produto atualizado com sucesso!', [ 'sku' => $product->sku ] );
+        return $this->redirectSuccess('provider.products.show', 'Produto atualizado com sucesso!', ['sku' => $product->sku]);
     }
 
     /**
@@ -157,29 +161,29 @@ class ProductController extends Controller
      *
      * Rota: products.toggle-status (PATCH)
      */
-    public function toggleStatus( string $sku, Request $request )
+    public function toggleStatus(string $sku, Request $request)
     {
-        $result = $this->productService->toggleProductStatus( $sku );
+        $result = $this->productService->toggleProductStatus($sku);
 
-        if ( !$result->isSuccess() ) {
-            if ( $request->ajax() || $request->wantsJson() ) {
-                return response()->json( [
+        if ($result->isError()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
                     'success' => false,
                     'message' => $result->getMessage(),
-                ], 400 );
+                ], 400);
             }
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        if ( $request->ajax() || $request->wantsJson() ) {
-            return response()->json( [
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
                 'success' => true,
                 'message' => $result->getMessage(),
-            ] );
+            ]);
         }
 
         $product = $result->getData();
-        return $this->redirectSuccess( 'provider.products.show', $result->getMessage(), [ 'sku' => $product->sku ] );
+        return $this->redirectSuccess('provider.products.show', $result->getMessage(), ['sku' => $product->sku]);
     }
 
     /**
@@ -187,15 +191,15 @@ class ProductController extends Controller
      *
      * Rota: products.destroy (DELETE)
      */
-    public function destroy( string $sku ): RedirectResponse
+    public function destroy(string $sku): RedirectResponse
     {
-        $result = $this->productService->deleteProductBySku( $sku );
+        $result = $this->productService->deleteProductBySku($sku);
 
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() ?: 'Erro ao excluir produto.' );
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage() ?: 'Erro ao excluir produto.');
         }
 
-        return $this->redirectSuccess( 'provider.products.index', 'Produto excluído com sucesso.' );
+        return $this->redirectSuccess('provider.products.index', 'Produto excluído com sucesso.');
     }
 
     /**
@@ -203,9 +207,9 @@ class ProductController extends Controller
      *
      * Rota: products.delete_store (DELETE)
      */
-    public function delete_store( string $sku ): RedirectResponse
+    public function delete_store(string $sku): RedirectResponse
     {
-        return $this->destroy( $sku );
+        return $this->destroy($sku);
     }
 
     /**
@@ -213,63 +217,63 @@ class ProductController extends Controller
      *
      * Rota: products.restore (POST)
      */
-    public function restore( string $sku ): RedirectResponse
+    public function restore(string $sku): RedirectResponse
     {
-        $result = $this->productService->restoreProductBySku( $sku );
+        $result = $this->productService->restoreProductBySku($sku);
 
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        return $this->redirectSuccess( 'provider.products.show', 'Produto restaurado com sucesso!', [ 'sku' => $sku ] );
+        return $this->redirectSuccess('provider.products.show', 'Produto restaurado com sucesso!', ['sku' => $sku]);
     }
 
     /**
      * Métodos de conveniência que delegam ao index com filtros pré-definidos.
      */
-    public function search( Request $request ): View
+    public function search(Request $request): View
     {
-        return $this->index( $request );
+        return $this->index($request);
     }
 
-    public function active( Request $request ): View
+    public function active(Request $request): View
     {
-        $request->merge( [ 'active' => '1' ] );
-        return $this->index( $request );
+        $request->merge(['active' => '1']);
+        return $this->index($request);
     }
 
-    public function deleted( Request $request ): View
+    public function deleted(Request $request): View
     {
-        $request->merge( [ 'deleted' => 'only' ] );
-        return $this->index( $request );
+        $request->merge(['deleted' => 'only']);
+        return $this->index($request);
     }
 
-    public function restoreMultiple( Request $request ): RedirectResponse
+    public function restoreMultiple(Request $request): RedirectResponse
     {
-        $ids = $request->input( 'ids', [] );
+        $ids = $request->input('ids', []);
 
-        if ( empty( $ids ) ) {
-            return $this->redirectError( 'provider.products.index', 'Nenhum produto selecionado para restauração.' );
+        if (empty($ids)) {
+            return $this->redirectError('provider.products.index', 'Nenhum produto selecionado para restauração.');
         }
 
-        $result = $this->productService->restoreProducts( $ids );
+        $result = $this->productService->restoreProducts($ids);
 
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        return $this->redirectSuccess( 'provider.products.index', "Restaurados produtos com sucesso." );
+        return $this->redirectSuccess('provider.products.index', "Restaurados produtos com sucesso.");
     }
 
     /**
      * AJAX endpoint para buscar produtos com filtros.
      */
-    public function ajaxSearch( Request $request ): JsonResponse
+    public function ajaxSearch(Request $request): JsonResponse
     {
-        $filters = $request->only( [ 'search', 'active', 'category_id', 'min_price', 'max_price' ] );
-        $result  = $this->productService->getFilteredProducts( $filters, [ 'category' ] );
+        $filters = $request->only(['search', 'active', 'category_id', 'min_price', 'max_price']);
+        $result  = $this->productService->getFilteredProducts($filters, ['category']);
 
-        return $this->jsonResponse( $result );
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -277,27 +281,27 @@ class ProductController extends Controller
      *
      * Rota: products.export (GET)
      */
-    public function export( Request $request )
+    public function export(Request $request)
     {
-        $format = $request->get( 'format', 'xlsx' );
+        $format = $request->get('format', 'xlsx');
 
         // Captura TODOS os filtros aplicados na listagem (exceto paginação)
-        $filters = $request->only( [ 'search', 'active', 'deleted', 'category_id', 'min_price', 'max_price' ] );
+        $filters = $request->only(['search', 'active', 'deleted', 'category_id', 'min_price', 'max_price']);
 
         // Busca produtos com os filtros aplicados
-        $result = $this->productService->getFilteredProducts( $filters, [ 'category' ], 1000 );
+        $result = $this->productService->getFilteredProducts($filters, ['category'], 1000);
 
-        if ( $result->isError() ) {
-            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
         // Extrai a collection do paginator preservando todos os atributos
         $paginatorOrCollection = $result->getData();
 
-        if ( method_exists( $paginatorOrCollection, 'items' ) ) {
+        if (method_exists($paginatorOrCollection, 'items')) {
             // É um LengthAwarePaginator - pega os items diretamente
-            $products = collect( $paginatorOrCollection->items() );
-        } elseif ( method_exists( $paginatorOrCollection, 'getCollection' ) ) {
+            $products = collect($paginatorOrCollection->items());
+        } elseif (method_exists($paginatorOrCollection, 'getCollection')) {
             // É um Paginator - usa getCollection
             $products = $paginatorOrCollection->getCollection();
         } else {
@@ -306,8 +310,7 @@ class ProductController extends Controller
         }
 
         return $format === 'pdf'
-            ? $this->productExportService->exportToPdf( $products )
-            : $this->productExportService->exportToExcel( $products, $format );
+            ? $this->productExportService->exportToPdf($products)
+            : $this->productExportService->exportToExcel($products, $format);
     }
-
 }

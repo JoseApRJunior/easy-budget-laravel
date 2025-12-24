@@ -86,6 +86,20 @@ class ScheduleRepository extends AbstractTenantRepository
     }
 
     /**
+     * Busca eventos de hoje por tenant.
+     */
+    public function getTodayEvents( int $tenantId, int $limit = 5 ): Collection
+    {
+        return $this->model
+            ->where( 'tenant_id', $tenantId )
+            ->whereDate( 'start_date_time', now()->toDateString() )
+            ->with( [ 'service', 'service.customer' ] )
+            ->orderBy( 'start_date_time', 'asc' )
+            ->limit( $limit )
+            ->get();
+    }
+
+    /**
      * Check for scheduling conflicts.
      *
      * @param int $serviceId
