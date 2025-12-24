@@ -130,16 +130,19 @@
                                     }
                                 @endphp
 
-                                <div class="row mb-4">
+                                <div class="row mb-4 ">
                                     <div class="col-md-4 text-center">
                                         <div class="p-3 border rounded">
                                             <small class="text-muted text-uppercase">Quantidade Atual</small>
                                             <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-0">
                                                 {{ $quantity }}</h2>
-                                            <span class="badge bg-{{ $statusClass }}">{{ $statusLabel }}</span>
+                                            <span
+                                                class="modern-badge {{ $statusClass === 'success' ? 'badge-active' : ($statusClass === 'danger' ? 'badge-inactive' : 'badge-warning') }}">
+                                                {{ $statusLabel }}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-md-8 mt-2">
                                         <div class="row g-3">
                                             <div class="col-6">
                                                 <div class="p-3 border rounded">
@@ -187,11 +190,14 @@
         </div>
 
         <!-- Footer com Ações -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">
+        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mt-4">
+            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary w-100 mb-2 mb-md-0">
                 <i class="bi bi-arrow-left me-2"></i>Voltar
             </a>
-            <div class="d-flex gap-2">
+            <small class="text-muted d-none d-md-block">
+                Última atualização: {{ $product->updated_at?->format('d/m/Y H:i') }}
+            </small>
+            <div class="d-grid gap-2 d-md-flex flex-wrap justify-content-md-end w-100 w-md-auto">
                 @if ($product->deleted_at)
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#restoreModal"
                         data-restore-url="{{ route('provider.products.restore', $product->sku) }}"

@@ -54,7 +54,6 @@ class CategoryController extends Controller
 
         return $this->view( 'pages.category.index', $result, 'categories', [
             'filters' => $filters,
-            'error'   => $this->getServiceErrorMessage( $result, null ),
         ] );
     }
 
@@ -82,10 +81,6 @@ class CategoryController extends Controller
         }
 
         $result = $this->categoryService->createCategory( $data );
-
-        if ( $result->isError() && str_contains( $result->getMessage(), 'Slug já existe' ) ) {
-            return back()->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa.' ] )->withInput();
-        }
 
         return $this->redirectBackWithServiceResult( $result, 'Categoria criada com sucesso!' );
     }
@@ -146,11 +141,7 @@ class CategoryController extends Controller
 
         $updateResult = $this->categoryService->updateCategory( $category->id, $data );
 
-        if ( $updateResult->isError() && str_contains( $updateResult->getMessage(), 'Slug já existe' ) ) {
-            return back()->withErrors( [ 'slug' => 'Este slug já está em uso nesta empresa.' ] )->withInput();
-        }
-
-        return $this->redirectWithServiceResult( 'provider.categories.index', $updateResult, 'Categoria atualizada com sucesso.' );
+        return $this->redirectWithServiceResult( 'provider.categories.show', $updateResult, 'Categoria atualizada com sucesso.', [ 'category' => $slug ] );
     }
 
     /**
@@ -160,12 +151,16 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug( $slug );
         if ( $result->isError() ) {
-            return $this->redirectError( 'provider.categories.index', 'Categoria não encontrada' );
+            return redirect()->route( 'provider.categories.index' )->with( 'error', 'Categoria não encontrada' );
         }
 
         $deleteResult = $this->categoryService->deleteCategory( $result->getData()->id );
 
-        return $this->redirectWithServiceResult( 'provider.categories.index', $deleteResult, 'Categoria excluída com sucesso.' );
+        if ( $deleteResult->isSuccess() ) {
+            return redirect()->route( 'provider.categories.index' )->with( 'success', 'Categoria excluída com sucesso.' );
+        }
+
+        return redirect()->route( 'provider.categories.index' )->with( 'error', $deleteResult->getMessage() ?: 'Erro ao excluir categoria.' );
     }
 
     /**
@@ -202,7 +197,7 @@ class CategoryController extends Controller
             return $this->redirectError( 'provider.categories.index', $result->getMessage() );
         }
 
-        return $this->redirectSuccess( 'provider.categories.index', 'Categoria restaurada com sucesso!' );
+        return $this->redirectSuccess( 'provider.categories.show', 'Categoria restaurada com sucesso!', [ 'slug' => $slug ] );
     }
 
     /**

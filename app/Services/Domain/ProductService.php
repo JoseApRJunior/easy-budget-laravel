@@ -66,15 +66,7 @@ class ProductService extends AbstractBaseService
      */
     public function validate( array $data, bool $isUpdate = false ): ServiceResult
     {
-        $rules = [
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric|min:0',
-            'active'      => 'boolean',
-            'category_id' => 'nullable|exists:categories,id',
-            'image'       => 'nullable|image|max:2048',
-        ];
-
-        $validator = Validator::make( $data, $rules );
+        $validator = Validator::make( $data, Product::businessRules() );
 
         if ( $validator->fails() ) {
             return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $validator->errors()->all() ) );
@@ -170,19 +162,14 @@ class ProductService extends AbstractBaseService
     /**
      * Retorna produtos ativos.
      */
-    public function getActive(): Collection
+    public function getActive(): ServiceResult
     {
-        try {
+        return $this->safeExecute( function () {
             return $this->repository->getAllByTenant(
                 [ 'active' => true ],
                 [ 'name' => 'asc' ],
             );
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao buscar produtos ativos', [
-                'error' => $e->getMessage()
-            ] );
-            return new Collection();
-        }
+        }, 'Erro ao buscar produtos ativos.' );
     }
 
     public function findBySku( string $sku, array $with = [] ): ServiceResult

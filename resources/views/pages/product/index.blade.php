@@ -315,13 +315,10 @@
                                                 <div class="fw-semibold mb-1">{{ $product->name }}</div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
                                                     <span class="badge bg-secondary">{{ $product->sku }}</span>
-                                                    @if ($product->deleted_at)
-                                                        <span class="badge bg-danger">Deletado</span>
-                                                    @elseif ($product->active)
-                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                                    @endif
+                                                    <span
+                                                        class="modern-badge {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
+                                                        {{ $product->deleted_at ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo') }}
+                                                    </span>
                                                 </div>
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <small class="text-muted">R$

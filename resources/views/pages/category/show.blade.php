@@ -20,6 +20,22 @@
             </nav>
         </div>
 
+        <div class="d-grid gap-2 mb-4">
+            @if ($category->deleted_at)
+                <div class="alert alert-danger py-2 mb-0">
+                    <i class="bi bi-trash-fill me-1"></i> Categoria Deletada
+                </div>
+            @elseif ($category->is_active)
+                <div class="alert alert-success py-2 mb-0">
+                    <i class="bi bi-check-circle-fill me-1"></i> Categoria Ativa
+                </div>
+            @else
+                <div class="alert alert-warning py-2 mb-0">
+                    <i class="bi bi-x-circle-fill me-1"></i> Categoria Inativa
+                </div>
+            @endif
+        </div>
+
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="row g-4">
@@ -142,22 +158,21 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <div class="d-flex gap-2">
-                <a href="{{ url()->previous(route('provider.categories.index')) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                </a>
-            </div>
+        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mt-4">
+            <a href="{{ url()->previous(route('provider.categories.index')) }}"
+                class="btn btn-outline-secondary w-100 mb-2 mb-md-0">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+            </a>
             <small class="text-muted d-none d-md-block">
                 Última atualização: {{ $category->updated_at?->format('d/m/Y H:i') }}
             </small>
-            <div class="d-flex gap-2">
+            <div class="d-grid gap-2 d-md-flex flex-wrap justify-content-md-end w-100 w-md-auto">
                 @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                <a href="{{ route('provider.categories.edit', $category->slug) }}" class="btn btn-primary">
+                <a href="{{ route('provider.categories.edit', $category->slug) }}" class="btn btn-primary w-100 w-md-auto">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
                 @if ($canDelete)
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                    <button type="button" class="btn btn-outline-danger w-100 w-md-auto" data-bs-toggle="modal"
                         data-bs-target="#deleteModal-{{ $category->slug }}">
                         <i class="bi bi-trash-fill me-2"></i>Excluir
                     </button>

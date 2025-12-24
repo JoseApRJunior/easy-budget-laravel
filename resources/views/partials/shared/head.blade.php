@@ -36,8 +36,10 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/bootstrap-icons.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=1.0.0" />
-    <link rel="stylesheet" href="{{ asset('assets/css/components/alerts.css') }}?v=1.0.0">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/layout.css') }}?v={{ filemtime(public_path('assets/css/layout.css')) }}" />
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/components/alerts.css') }}?v={{ filemtime(public_path('assets/css/components/alerts.css')) }}">
     <link rel="preload" href="{{ asset('assets/img/logo.png') }}" as="image" type="image/png">
 
     @stack('styles')

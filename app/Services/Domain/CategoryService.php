@@ -350,13 +350,15 @@ class CategoryService extends AbstractBaseService
             $deleted          = $this->repository->countDeletedByTenantId();
             $recentCategories = $this->repository->getRecentByTenantId( 5 );
 
-            return [
+            $stats = [
                 'total_categories'    => $total,
                 'active_categories'   => $active,
                 'inactive_categories' => max( 0, $total - $active ),
                 'deleted_categories'  => $deleted,
                 'recent_categories'   => $recentCategories,
             ];
+
+            return $this->success( $stats, 'Estatísticas obtidas com sucesso' );
         }, 'Erro ao obter estatísticas de categorias.' );
     }
 

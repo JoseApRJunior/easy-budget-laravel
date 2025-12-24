@@ -195,7 +195,11 @@ class ProductController extends Controller
     {
         $result = $this->productService->deleteProductBySku( $sku );
 
-        return $this->redirectWithServiceResult( 'provider.products.index', $result );
+        if ( $result->isError() ) {
+            return redirect()->route( 'provider.products.index' )->with( 'error', $result->getMessage() ?: 'Erro ao excluir produto.' );
+        }
+
+        return redirect()->route( 'provider.products.index' )->with( 'success', 'Produto excluído com sucesso.' );
     }
 
     /**
@@ -217,7 +221,11 @@ class ProductController extends Controller
     {
         $result = $this->productService->restoreProductBySku( $sku );
 
-        return $this->redirectWithServiceResult( 'provider.products.index', $result );
+        if ( $result->isError() ) {
+            return $this->redirectError( 'provider.products.index', $result->getMessage() );
+        }
+
+        return $this->redirectSuccess( 'provider.products.show', 'Produto restaurado com sucesso!', [ 'sku' => $sku ] );
     }
 
     /**

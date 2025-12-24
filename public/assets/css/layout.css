@@ -249,6 +249,15 @@ header {
    font-weight: 500;
 }
 
+.modern-badge {
+   padding: 0.35rem 0.75rem;
+   border-radius: 2rem;
+   font-size: 0.75rem;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
 .badge-warning {
    background-color: rgba(217, 119, 6, 0.15);
    color: var(--text-warning);
@@ -1946,15 +1955,6 @@ input[type="number"] {
       font-weight: 600;
       color: var(--text-color);
       font-size: 0.95rem;
-   }
-
-   .modern-badge {
-      padding: 0.35rem 0.75rem;
-      border-radius: 2rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
    }
 
    .badge-deleted {

@@ -44,14 +44,15 @@
                                     <div class="form-group">
                                         <label for="active">Status</label>
                                         <select class="form-control" id="active" name="active">
-                                            @php($selectedActive = request()->has('active') ? request('active') : '1')
-                                            <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
+                                            <option value="1"
+                                                {{ old('active', $filters['active'] ?? '1') === '1' ? 'selected' : '' }}>
                                                 Ativo</option>
-                                            <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
+                                            <option value="0"
+                                                {{ old('active', $filters['active'] ?? '') === '0' ? 'selected' : '' }}>
                                                 Inativo
                                             </option>
                                             <option value=""
-                                                {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
+                                                {{ old('active', $filters['active'] ?? '') === '' ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -72,15 +73,16 @@
                                     <div class="form-group">
                                         <label for="deleted">Registros</label>
                                         <select name="deleted" id="deleted" class="form-control">
-                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : 'current')
-                                            <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
+                                            <option value="current"
+                                                {{ old('deleted', $filters['deleted'] ?? 'current') === 'current' ? 'selected' : '' }}>
                                                 Atuais
                                             </option>
-                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
+                                            <option value="only"
+                                                {{ old('deleted', $filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
                                                 Deletados
                                             </option>
                                             <option value=""
-                                                {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
+                                                {{ old('deleted', $filters['deleted'] ?? '') === '' ? 'selected' : '' }}>
                                                 Todos
                                             </option>
                                         </select>
@@ -158,28 +160,73 @@
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @forelse($categories as $category)
-                                    <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                        class="list-group-item list-group-item-action py-3">
+                                    <div class="list-group-item py-3">
                                         <div class="d-flex align-items-start">
-                                            <i class="bi bi-tag-fill text-muted me-2 mt-1"></i>
+                                            <div class="me-3 mt-1">
+                                                <div class="avatar-circle"
+                                                    style="width: 40px; height: 40px; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-tag-fill"></i>
+                                                </div>
+                                            </div>
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-2">
+                                                <div class="fw-semibold mb-1">
                                                     {{ $category->parent ? $category->parent->name : $category->name }}
                                                 </div>
                                                 <div class="d-flex gap-2 flex-wrap mb-2">
-                                                    @if ($category->is_active)
-                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                                    @endif
+                                                    <span
+                                                        class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
+                                                        {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
+                                                    </span>
                                                 </div>
                                                 @if ($category->parent)
-                                                    <small class="text-muted">Subcategoria: {{ $category->name }}</small>
+                                                    <div class="mb-2">
+                                                        <small class="text-muted">Subcategoria:
+                                                            {{ $category->name }}</small>
+                                                    </div>
                                                 @endif
+
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <small class="text-muted">
+                                                        {{ $category->created_at?->format('d/m/Y') ?? '—' }}
+                                                    </small>
+                                                    <div class="d-flex gap-2">
+                                                        @if ($category->deleted_at)
+                                                            <a href="{{ route('provider.categories.show', $category->slug) }}"
+                                                                class="btn btn-sm btn-info" title="Visualizar">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-sm btn-success"
+                                                                data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                                data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
+                                                                data-category-name="{{ $category->name }}"
+                                                                title="Restaurar">
+                                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                                            </button>
+                                                        @else
+                                                            <a href="{{ route('provider.categories.show', $category->slug) }}"
+                                                                class="btn btn-sm btn-info" title="Visualizar">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                            @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
+                                                            <a href="{{ route('provider.categories.edit', $category->slug) }}"
+                                                                class="btn btn-sm btn-primary" title="Editar">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </a>
+                                                            @if ($canDelete)
+                                                                <button type="button" class="btn btn-sm btn-danger"
+                                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                    data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
+                                                                    data-category-name="{{ $category->name }}"
+                                                                    title="Excluir">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
                                         </div>
-                                    </a>
+                                    </div>
                                 @empty
                                     <div class="p-4 text-center text-muted">
                                         <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
@@ -209,7 +256,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse( $categories as $category )
+                                        @forelse($categories as $category)
                                             <tr>
                                                 <td>
                                                     <div class="item-icon">
@@ -234,8 +281,8 @@
                                                 </td>
                                                 <td>
                                                     <span
-                                                        class="modern-badge {{ $category->is_active ? 'badge-active' : 'badge-inactive' }}">
-                                                        {{ $category->is_active ? 'Ativo' : 'Inativo' }}
+                                                        class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
+                                                        {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
                                                     </span>
                                                 </td>
                                                 <td>
@@ -246,17 +293,20 @@
                                                 <td>
                                                     <div class="action-btn-group">
                                                         @if ($category->deleted_at)
-                                                            {{-- Categoria deletada: apenas restaurar --}}
-                                                            <form
-                                                                action="{{ route('provider.categories.restore', $category->slug) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" class="btn btn-success"
-                                                                    title="Restaurar" aria-label="Restaurar">
-                                                                    <i class="bi bi-arrow-counterclockwise"
-                                                                        aria-hidden="true"></i>
-                                                                </button>
-                                                            </form>
+                                                            {{-- Categoria deletada: visualizar e restaurar --}}
+                                                            <a href="{{ route('provider.categories.show', $category->slug) }}"
+                                                                class="btn btn-info" title="Visualizar"
+                                                                aria-label="Visualizar">
+                                                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-success"
+                                                                data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                                data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
+                                                                data-category-name="{{ $category->name }}"
+                                                                title="Restaurar" aria-label="Restaurar">
+                                                                <i class="bi bi-arrow-counterclockwise"
+                                                                    aria-hidden="true"></i>
+                                                            </button>
                                                         @else
                                                             {{-- Categoria ativa: show, edit, delete --}}
                                                             <a href="{{ route('provider.categories.show', $category->slug) }}"
@@ -306,7 +356,8 @@
                     </div>
                     @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
                         @include('partials.components.paginator', [
-                            'p' => $categories->appends(request()->query()),
+                            'p' => $categories->appends(
+                                collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()),
                             'show_info' => true,
                         ])
                     @endif
@@ -338,27 +389,91 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+            <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Listar todas as categorias?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary btn-confirm-all-categories">Listar
+                                todos</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    @push('scripts')
-        <script src="{{ asset('assets/js/category.js') }}?v={{ time() }}"></script>
-    @endpush
-    <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Listar todas as categorias?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-confirm-all-categories">Listar todos</button>
+            <!-- Modal de Confirmação de Restauração -->
+            <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza de que deseja restaurar a categoria <strong id="restoreCategoryName"></strong>?
+                            <br><small class="text-muted">A categoria será restaurada e ficará disponível
+                                novamente.</small>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form id="restoreForm" action="#" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success">Restaurar</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/category.js') }}?v={{ time() }}"></script>
+    <script>
+        // Script para os modais
+        document.addEventListener('DOMContentLoaded', function() {
+            // Modal de exclusão
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const deleteUrl = button.getAttribute('data-delete-url');
+                    const categoryName = button.getAttribute('data-category-name');
+
+                    const deleteCategoryName = deleteModal.querySelector('#deleteCategoryName');
+                    const deleteForm = deleteModal.querySelector('#deleteForm');
+
+                    deleteCategoryName.textContent = categoryName;
+                    deleteForm.action = deleteUrl;
+                });
+            }
+
+            // Modal de restauração
+            const restoreModal = document.getElementById('restoreModal');
+            if (restoreModal) {
+                restoreModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const restoreUrl = button.getAttribute('data-restore-url');
+                    const categoryName = button.getAttribute('data-category-name');
+
+                    const restoreCategoryName = restoreModal.querySelector('#restoreCategoryName');
+                    const restoreForm = restoreModal.querySelector('#restoreForm');
+
+                    restoreCategoryName.textContent = categoryName;
+                    restoreForm.action = restoreUrl;
+                });
+            }
+        });
+    </script>
+@endpush
