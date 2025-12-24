@@ -22,135 +22,196 @@ class ScheduleRepository extends AbstractTenantRepository
 
     /**
      * Get the latest schedule for a specific service.
-     *
-     * @param int $serviceId
-     * @return Schedule|null
      */
-    public function findLatestByServiceId( int $serviceId ): ?Schedule
+    public function findLatestByServiceId(int $serviceId): ?Schedule
     {
         return $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where('service_id', $serviceId)
+            ->where('tenant_id', $this->getCurrentTenantId())
             ->latest()
             ->first();
     }
 
     /**
      * Get schedules by service ID with pagination.
-     *
-     * @param int $serviceId
-     * @param int $perPage
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getByServiceIdPaginated( int $serviceId, int $perPage = 15 )
+    public function getByServiceIdPaginated(int $serviceId, int $perPage = 15)
     {
         return $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where('service_id', $serviceId)
+            ->where('tenant_id', $this->getCurrentTenantId())
             ->latest()
-            ->paginate( $perPage );
+            ->paginate($perPage);
     }
 
     /**
      * Get upcoming schedules for a tenant.
-     *
-     * @param int $limit
-     * @return Collection
      */
-    public function getUpcomingSchedules( int $limit = 10 ): Collection
+    public function getUpcomingSchedules(int $limit = 10): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->where( 'start_date_time', '>', now() )
-            ->with( [ 'service', 'service.customer' ] )
-            ->orderBy( 'start_date_time', 'asc' )
-            ->limit( $limit )
+            ->where('tenant_id', $this->getCurrentTenantId())
+            ->where('start_date_time', '>', now())
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
+            ->limit($limit)
             ->get();
     }
 
     /**
      * Get schedules for a specific date range.
-     *
-     * @param string $startDate
-     * @param string $endDate
-     * @return Collection
      */
-    public function getByDateRange( string $startDate, string $endDate ): Collection
+    public function getByDateRange(string $startDate, string $endDate): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->whereBetween( 'start_date_time', [ $startDate, $endDate ] )
-            ->with( [ 'service', 'service.customer' ] )
-            ->orderBy( 'start_date_time', 'asc' )
+            ->where('tenant_id', $this->getCurrentTenantId())
+            ->whereBetween('start_date_time', [$startDate, $endDate])
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
             ->get();
     }
 
     /**
-     * Busca eventos de hoje por tenant.
+     * Get schedules by date range with relations.
      */
-    public function getTodayEvents( int $tenantId, int $limit = 5 ): Collection
-    {
-        return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->whereDate( 'start_date_time', now()->toDateString() )
-            ->with( [ 'service', 'service.customer' ] )
-            ->orderBy( 'start_date_time', 'asc' )
-            ->limit( $limit )
-            ->get();
-    }
-
-    /**
-     * Check for scheduling conflicts.
-     *
-     * @param int $serviceId
-     * @param string $startDateTime
-     * @param string $endDateTime
-     * @param int|null $excludeId
-     * @return bool
-     */
-    public function hasConflict( int $serviceId, string $startDateTime, string $endDateTime, ?int $excludeId = null ): bool
+    public function getByDateRangeWithRelations(string $startDate, string $endDate, array $filters = []): Collection
     {
         $query = $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->where( function ( Builder $query ) use ( $startDateTime, $endDateTime ) {
-                $query->where( function ( Builder $q ) use ( $startDateTime, $endDateTime ) {
-                    $q->where( 'start_date_time', '<', $endDateTime )
-                        ->where( 'end_date_time', '>', $startDateTime );
-                } );
-            } );
+            ->where('tenant_id', $this->getCurrentTenantId())
+            ->whereBetween('start_date_time', [$startDate, $endDate])
+            ->with(['service', 'service.customer', 'confirmationToken']);
 
-        if ( $excludeId ) {
-            $query->where( 'id', '!=', $excludeId );
+        if (isset($filters['service_id'])) {
+            $query->where('service_id', $filters['service_id']);
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['location'])) {
+            $query->where('location', 'like', '%' . $filters['location'] . '%');
+        }
+
+        return $query->orderBy('start_date_time', 'asc')->get();
+    }
+
+    /**
+     * Verifica conflitos de horário.
+     */
+    public function hasConflict(string $startTime, string $endTime, ?int $serviceId = null, ?int $excludeScheduleId = null): bool
+    {
+        $query = $this->model
+            ->where('tenant_id', $this->getCurrentTenantId())
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->where('start_date_time', '<', $endTime)
+                    ->where('end_date_time', '>', $startTime);
+            });
+
+        if ($serviceId) {
+            $query->where('service_id', $serviceId);
+        }
+
+        if ($excludeScheduleId) {
+            $query->where('id', '!=', $excludeScheduleId);
         }
 
         return $query->exists();
     }
 
     /**
-     * Create a new schedule.
-     *
-     * @param array $data
-     * @return Schedule
+     * Busca um agendamento por ID e Tenant.
      */
-    public function create( array $data ): Schedule
+    public function findByIdAndTenant(int $id, int $tenantId): ?Schedule
     {
-        $data[ 'tenant_id' ] = $this->getCurrentTenantId();
-        return $this->model->create( $data );
+        return $this->model
+            ->where('id', $id)
+            ->where('tenant_id', $tenantId)
+            ->first();
     }
 
     /**
-     * Delete a schedule.
-     *
-     * @param int $id
-     * @return bool
+     * Busca eventos de hoje por tenant.
      */
-    public function delete( int $id ): bool
+    public function getTodayEvents(int $tenantId, int $limit = 5): Collection
     {
         return $this->model
-            ->where( 'id', $id )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->delete();
+            ->where('tenant_id', $tenantId)
+            ->whereDate('start_date_time', now()->toDateString())
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
+            ->limit($limit)
+            ->get();
     }
 
+    /**
+     * Get count by status.
+     */
+    public function getCountByStatus(int $tenantId, string $status): int
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->where('status', $status)
+            ->count();
+    }
+
+    /**
+     * Get count of upcoming schedules.
+     */
+    public function getUpcomingCount(int $tenantId): int
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->where('status', '!=', 'cancelled')
+            ->where('start_date_time', '>=', now())
+            ->count();
+    }
+
+    /**
+     * Get recent upcoming schedules with relations.
+     */
+    public function getRecentUpcoming(int $tenantId, int $limit = 10): Collection
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->where('status', '!=', 'cancelled')
+            ->where('start_date_time', '>=', now()->subDays(1))
+            ->orderBy('start_date_time')
+            ->limit($limit)
+            ->with(['service.customer', 'service'])
+            ->get();
+    }
+
+    /**
+     * Get total count for tenant.
+     */
+    public function getTotalCount(int $tenantId): int
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->count();
+    }
+
+    /**
+     * Get count for past schedules (completed).
+     */
+    public function getPastCount(int $tenantId): int
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->where('end_date_time', '<', now())
+            ->count();
+    }
+
+    /**
+     * Get count for future schedules (pending).
+     */
+    public function getFutureCount(int $tenantId): int
+    {
+        return $this->model
+            ->where('tenant_id', $tenantId)
+            ->where('start_date_time', '>', now())
+            ->count();
+    }
 }

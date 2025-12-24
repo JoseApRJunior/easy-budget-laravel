@@ -84,39 +84,4 @@ readonly class ProviderUpdateDTO extends AbstractDTO
             notes: $data['notes'] ?? null
         );
     }
-
-    public function toArray(): array
-    {
-        return array_filter([
-            'email' => $this->email,
-            'logo' => $this->logo,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'cpf' => $this->cpf,
-            'birth_date' => $this->birth_date,
-            'company_name' => $this->company_name,
-            'cnpj' => $this->cnpj,
-            'description' => $this->description,
-            'area_of_activity_id' => $this->area_of_activity_id,
-            'profession_id' => $this->profession_id,
-            'email_personal' => $this->email_personal,
-            'phone_personal' => $this->phone_personal,
-            'email_business' => $this->email_business,
-            'phone_business' => $this->phone_business,
-            'website' => $this->website,
-            'address' => $this->address,
-            'address_number' => $this->address_number,
-            'neighborhood' => $this->neighborhood,
-            'city' => $this->city,
-            'state' => $this->state,
-            'cep' => $this->cep,
-            'fantasy_name' => $this->fantasy_name,
-            'state_registration' => $this->state_registration,
-            'municipal_registration' => $this->municipal_registration,
-            'founding_date' => $this->founding_date,
-            'industry' => $this->industry,
-            'company_size' => $this->company_size,
-            'notes' => $this->notes,
-        ], fn($value) => $value !== null);
-    }
 }

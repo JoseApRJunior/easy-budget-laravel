@@ -33,7 +33,7 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * Construtor do repositório.
      */
-    public function __construct( AuditLog $auditLog )
+    public function __construct(AuditLog $auditLog)
     {
         $this->model = $auditLog;
     }
@@ -41,9 +41,9 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * {@inheritdoc}
      */
-    public function find( int $id ): ?Model
+    public function find(int $id): ?Model
     {
-        return $this->model->find( $id );
+        return $this->model->find($id);
     }
 
     /**
@@ -57,23 +57,23 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * {@inheritdoc}
      */
-    public function create( array $data ): Model
+    public function create(array $data): Model
     {
-        return $this->model->create( $data );
+        return $this->model->create($data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function update( int $id, array $data ): ?Model
+    public function update(int $id, array $data): ?Model
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (!$model) {
             return null;
         }
 
-        $model->update( $data );
+        $model->update($data);
 
         return $model->fresh();
     }
@@ -81,11 +81,11 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * {@inheritdoc}
      */
-    public function delete( int $id ): bool
+    public function delete(int $id): bool
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (!$model) {
             return false;
         }
 
@@ -95,95 +95,93 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * Busca logs de auditoria por tenant.
      */
-    public function findByTenantId( int $tenantId ): Collection
+    public function findByTenantId(int $tenantId): Collection
     {
-        return $this->model->where( 'tenant_id', $tenantId )->get();
+        return $this->model->where('tenant_id', $tenantId)->get();
     }
 
     /**
      * Busca atividades recentes por tenant e usuário.
      */
-    public function getRecentActivities( int $tenantId, int $userId, int $limit = 10 ): Collection
+    public function getRecentActivities(int $tenantId, int $userId, int $limit = 10): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->where( 'user_id', $userId )
+            ->where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
             ->latest()
-            ->limit( $limit )
+            ->limit($limit)
             ->get();
     }
 
     /**
      * Busca logs de auditoria por usuário.
      */
-    public function findByUserId( int $userId ): Collection
+    public function findByUserId(int $userId): Collection
     {
-        return $this->model->where( 'user_id', $userId )->get();
+        return $this->model->where('user_id', $userId)->get();
     }
-}
 
     /**
      * Busca logs de auditoria por ação.
      */
-    public function findByAction( string $action ): Collection
+    public function findByAction(string $action): Collection
     {
-        return $this->model->where( 'action', $action )->get();
+        return $this->model->where('action', $action)->get();
     }
 
     /**
      * Busca logs de auditoria por severidade.
      */
-    public function findBySeverity( string $severity ): Collection
+    public function findBySeverity(string $severity): Collection
     {
-        return $this->model->where( 'severity', $severity )->get();
+        return $this->model->where('severity', $severity)->get();
     }
 
     /**
      * Busca logs de auditoria por categoria.
      */
-    public function findByCategory( string $category ): Collection
+    public function findByCategory(string $category): Collection
     {
-        return $this->model->where( 'category', $category )->get();
+        return $this->model->where('category', $category)->get();
     }
 
     /**
      * Busca logs de auditoria por tipo de modelo.
      */
-    public function findByModelType( string $modelType ): Collection
+    public function findByModelType(string $modelType): Collection
     {
-        return $this->model->where( 'model_type', $modelType )->get();
+        return $this->model->where('model_type', $modelType)->get();
     }
 
     /**
      * Busca logs de auditoria por ID do modelo.
      */
-    public function findByModelId( int $modelId ): Collection
+    public function findByModelId(int $modelId): Collection
     {
-        return $this->model->where( 'model_id', $modelId )->get();
+        return $this->model->where('model_id', $modelId)->get();
     }
 
     /**
      * Conta logs de auditoria por tenant.
      */
-    public function countByTenantId( int $tenantId ): int
+    public function countByTenantId(int $tenantId): int
     {
-        return $this->model->where( 'tenant_id', $tenantId )->count();
+        return $this->model->where('tenant_id', $tenantId)->count();
     }
 
     /**
      * Conta logs de auditoria por severidade.
      */
-    public function countBySeverity( string $severity ): int
+    public function countBySeverity(string $severity): int
     {
-        return $this->model->where( 'severity', $severity )->count();
+        return $this->model->where('severity', $severity)->count();
     }
 
     /**
      * Conta logs de auditoria por categoria.
      */
-    public function countByCategory( string $category ): int
+    public function countByCategory(string $category): int
     {
-        return $this->model->where( 'category', $category )->count();
+        return $this->model->where('category', $category)->count();
     }
-
 }

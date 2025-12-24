@@ -77,6 +77,14 @@ class PlanRepository extends AbstractGlobalRepository
     // --------------------------------------------------------------------------
 
     /**
+     * Encontra um plano gratuito ativo
+     */
+    public function findFreeActive(): ?Plan
+    {
+        return Plan::where( 'status', true )->where( 'price', 0.00 )->first();
+    }
+
+    /**
      * Encontra planos ativos
      */
     public function findActive(): mixed

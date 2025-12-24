@@ -7,7 +7,6 @@ namespace App\Services\Application;
 use App\Enums\OperationStatus;
 use App\Models\AreaOfActivity;
 use App\Models\CommonData;
-use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Profession;
 use App\Models\Provider;
@@ -492,7 +491,7 @@ class ProviderManagementService
             $plan = $this->planRepository->findBySlug(PLAN_SLUG_TRIAL);
             if (!$plan) {
                 // Se não encontrar por slug, busca qualquer plano ativo com preço 0
-                $plan = Plan::where('status', true)->where('price', 0.00)->first();
+                $plan = $this->planRepository->findFreeActive();
             }
 
             if (!$plan) {

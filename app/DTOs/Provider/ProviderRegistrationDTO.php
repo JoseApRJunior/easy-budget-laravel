@@ -32,18 +32,4 @@ readonly class ProviderRegistrationDTO extends AbstractDTO
             email_personal: $data['email_personal'] ?? null
         );
     }
-
-    public function toArray(): array
-    {
-        return [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'password' => $this->password,
-            'terms_accepted' => $this->terms_accepted,
-            'phone' => $this->phone,
-            'phone_personal' => $this->phone_personal,
-            'email_personal' => $this->email_personal,
-        ];
-    }
 }
