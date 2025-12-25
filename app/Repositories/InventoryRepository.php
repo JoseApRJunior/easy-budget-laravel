@@ -88,6 +88,20 @@ class InventoryRepository extends AbstractTenantRepository
             $query->whereColumn( 'quantity', '>=', 'max_quantity' );
         }
 
+        if ( isset( $filters[ 'quantity' ] ) ) {
+            $query->where( 'quantity', $filters[ 'quantity' ] );
+        }
+
+        if ( isset( $filters[ 'custom_sufficient' ] ) && $filters[ 'custom_sufficient' ] ) {
+            $query->whereColumn( 'quantity', '>', 'min_quantity' );
+        }
+
+        if ( !empty( $filters[ 'category' ] ) ) {
+            $query->whereHas( 'product', function ( $q ) use ( $filters ) {
+                $q->where( 'category_id', $filters[ 'category' ] );
+            } );
+        }
+
         // Aplicar ordenação
         $this->applyOrderBy( $query, $orderBy );
 

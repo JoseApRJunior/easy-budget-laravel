@@ -32,20 +32,15 @@ class ProductController extends Controller
 
     /**
      * Dashboard de Produtos.
-     *
-     * Rota: provider.products.dashboard
-     *
-     * Exibe métricas e atalhos rápidos, seguindo o padrão do dashboard de clientes.
      */
-    public function dashboard()
+    public function dashboard(): View
     {
-        return $this->view('pages.product.dashboard', $this->productService->getDashboardData(), 'stats');
+        $result = $this->productService->getDashboardData();
+        return $this->view('pages.product.dashboard', $result, 'stats');
     }
 
     /**
      * Lista de produtos com filtros avançados.
-     *
-     * Rota: products.index
      */
     public function index(Request $request): View
     {
@@ -54,7 +49,7 @@ class ProductController extends Controller
         if (empty($request->query())) {
             $result = $this->emptyResult();
         } else {
-            $perPage = (int) ($filters['per_page'] ?? 10);
+            $perPage = (int) ($filters['per_page'] ?? 15);
             $result  = $this->productService->getFilteredProducts($filters, ['category'], $perPage);
         }
 
@@ -80,29 +75,31 @@ class ProductController extends Controller
 
     /**
      * Armazena um novo produto.
-     *
-     * Rota: products.store
      */
     public function store(ProductStoreRequest $request): RedirectResponse
     {
-        $dto = ProductDTO::fromRequest($request->validated());
-        $result = $this->productService->createProduct($dto);
+        try {
+            $dto = ProductDTO::fromRequest($request->validated());
+            $result = $this->productService->createProduct($dto);
 
-        if (!$result->isSuccess()) {
-            return $this->redirectBackWithServiceResult($result, 'Produto criado com sucesso! Você pode cadastrar outro produto agora.');
+            return $this->redirectWithServiceResult(
+                'provider.products.create',
+                $result,
+                'Produto criado com sucesso! Você pode cadastrar outro produto agora.'
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro inesperado ao criar produto', [
+                'error' => $e->getMessage(),
+            ]);
+            return $this->redirectError('provider.products.create', 'Erro interno ao criar produto.');
         }
-
-        return $this->redirectSuccess('provider.products.create', 'Produto criado com sucesso! Você pode cadastrar outro produto agora.');
     }
 
     /**
      * Detalhes de um produto por SKU.
-     *
-     * Rota: products.show
      */
     public function show(string $sku): View|RedirectResponse
     {
-
         $result = $this->productService->findBySku($sku, ['category', 'inventory']);
 
         if ($result->isError()) {
@@ -114,8 +111,6 @@ class ProductController extends Controller
 
     /**
      * Formulário de edição de produto por SKU.
-     *
-     * Rota: products.edit
      */
     public function edit(string $sku): View|RedirectResponse
     {
@@ -125,107 +120,119 @@ class ProductController extends Controller
             return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        $product      = $result->getData();
-        $parentResult = $this->categoryService->getActive();
-
-        $categories = $parentResult->isSuccess()
-            ? $parentResult->getData()
-            : collect();
+        $product = $result->getData();
+        $categories = $this->categoryService->getActive()->getData();
 
         return view('pages.product.edit', compact('product', 'categories'));
     }
 
     /**
      * Atualiza um produto por SKU.
-     *
-     * Rota: products.update
      */
     public function update(string $sku, ProductUpdateRequest $request): RedirectResponse
     {
-        $dto = ProductDTO::fromRequest($request->validated());
-        $removeImage = (bool) $request->input('remove_image', false);
+        try {
+            $dto = ProductDTO::fromRequest($request->validated());
+            $removeImage = (bool) $request->input('remove_image', false);
 
-        $result = $this->productService->updateProductBySku($sku, $dto, $removeImage);
+            $result = $this->productService->updateProductBySku($sku, $dto, $removeImage);
 
-        if (!$result->isSuccess()) {
-            return $this->redirectBackWithServiceResult($result, 'Produto atualizado com sucesso!');
+            return $this->redirectWithServiceResult(
+                'provider.products.show',
+                $result,
+                'Produto atualizado com sucesso!',
+                ['sku' => $sku]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro inesperado ao atualizar produto', [
+                'sku'   => $sku,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->redirectError('provider.products.edit', 'Erro interno ao atualizar produto.', ['sku' => $sku]);
         }
-
-        $product = $result->getData();
-
-        return $this->redirectSuccess('provider.products.show', 'Produto atualizado com sucesso!', ['sku' => $product->sku]);
     }
 
     /**
      * Alterna status (ativo/inativo) de um produto via SKU.
-     *
-     * Rota: products.toggle-status (PATCH)
      */
-    public function toggleStatus(string $sku, Request $request)
+    public function toggleStatus(string $sku, Request $request): RedirectResponse|JsonResponse
     {
-        $result = $this->productService->toggleProductStatus($sku);
+        try {
+            $result = $this->productService->toggleProductStatus($sku);
 
-        if ($result->isError()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => $result->isSuccess(),
+                    'message' => $result->getMessage(),
+                ], $result->isSuccess() ? 200 : 400);
+            }
+
+            return $this->redirectWithServiceResult(
+                'provider.products.show',
+                $result,
+                $result->getMessage(),
+                ['sku' => $sku]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro inesperado ao alterar status do produto', [
+                'sku'   => $sku,
+                'error' => $e->getMessage(),
+            ]);
+
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400);
+                    'message' => 'Erro interno ao alterar status.',
+                ], 500);
             }
-            return $this->redirectError('provider.products.index', $result->getMessage());
-        }
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => $result->getMessage(),
-            ]);
+            return $this->redirectError('provider.products.index', 'Erro interno ao alterar status.');
         }
-
-        $product = $result->getData();
-        return $this->redirectSuccess('provider.products.show', $result->getMessage(), ['sku' => $product->sku]);
     }
 
     /**
      * Exclui um produto por SKU.
-     *
-     * Rota: products.destroy (DELETE)
      */
     public function destroy(string $sku): RedirectResponse
     {
-        $result = $this->productService->deleteProductBySku($sku);
+        try {
+            $result = $this->productService->deleteProductBySku($sku);
 
-        if ($result->isError()) {
-            return $this->redirectError('provider.products.index', $result->getMessage() ?: 'Erro ao excluir produto.');
+            return $this->redirectWithServiceResult(
+                'provider.products.index',
+                $result,
+                'Produto excluído com sucesso.'
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro inesperado ao excluir produto', [
+                'sku'   => $sku,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->redirectError('provider.products.index', 'Erro interno ao excluir produto.');
         }
-
-        return $this->redirectSuccess('provider.products.index', 'Produto excluído com sucesso.');
-    }
-
-    /**
-     * Exclui um produto por SKU (método alternativo mantido para compatibilidade).
-     *
-     * Rota: products.delete_store (DELETE)
-     */
-    public function delete_store(string $sku): RedirectResponse
-    {
-        return $this->destroy($sku);
     }
 
     /**
      * Restaura um produto deletado.
-     *
-     * Rota: products.restore (POST)
      */
     public function restore(string $sku): RedirectResponse
     {
-        $result = $this->productService->restoreProductBySku($sku);
+        try {
+            $result = $this->productService->restoreProductBySku($sku);
 
-        if ($result->isError()) {
-            return $this->redirectError('provider.products.index', $result->getMessage());
+            return $this->redirectWithServiceResult(
+                'provider.products.show',
+                $result,
+                'Produto restaurado com sucesso!',
+                ['sku' => $sku]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro inesperado ao restaurar produto', [
+                'sku'   => $sku,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->redirectError('provider.products.index', 'Erro interno ao restaurar produto.');
         }
-
-        return $this->redirectSuccess('provider.products.show', 'Produto restaurado com sucesso!', ['sku' => $sku]);
     }
 
     /**

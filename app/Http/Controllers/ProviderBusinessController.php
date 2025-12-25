@@ -31,21 +31,19 @@ class ProviderBusinessController extends Controller
      */
     public function edit(): View|RedirectResponse
     {
-        $user = Auth::user();
-        $provider = $user->provider;
+        $result = $this->providerManagementService->getProviderForUpdate();
 
-        if (! $provider) {
+        if (!$result->isSuccess()) {
             return redirect('/provider')
-                ->with('error', 'Provider não encontrado');
+                ->with('error', $result->getMessage());
         }
 
-        // Carregar relacionamentos necessários
-        $provider->load(['commonData', 'contact', 'address', 'businessData']);
+        $data = $result->getData();
 
         return view('pages.provider.business.edit', [
-            'provider' => $provider,
-            'areas_of_activity' => \App\Models\AreaOfActivity::all(),
-            'professions' => \App\Models\Profession::all(),
+            'provider'          => $data['provider'],
+            'areas_of_activity' => $data['areas_of_activity'],
+            'professions'       => $data['professions'],
         ]);
     }
 

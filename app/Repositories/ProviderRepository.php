@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Provider\ProviderDTO;
 use App\Models\Provider;
 use App\Models\User;
 use App\Repositories\Abstracts\AbstractTenantRepository;
@@ -26,6 +27,22 @@ class ProviderRepository extends AbstractTenantRepository
     }
 
     /**
+     * Cria um novo provider a partir de um DTO.
+     */
+    public function createFromDTO(ProviderDTO $dto): Provider
+    {
+        return $this->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um provider a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, ProviderDTO $dto): ?Provider
+    {
+        return $this->update($id, $dto->toArray());
+    }
+
+    /**
      * Busca provedor por ID de usuário dentro do tenant atual.
      *
      * @param int $userId
@@ -45,7 +62,13 @@ class ProviderRepository extends AbstractTenantRepository
      */
     public function findBySlug( string $slug, bool $withTrashed = false ): ?Provider
     {
-        return $this->findByTenantAndSlug( $slug, $withTrashed );
+        $query = $this->model->where('slug', $slug);
+        
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->first();
     }
 
     /**
@@ -53,7 +76,7 @@ class ProviderRepository extends AbstractTenantRepository
      */
     public function findByUserIdAndTenant( int $userId, int $tenantId ): ?Provider
     {
-        return Provider::where( 'user_id', $userId )
+        return $this->model->where( 'user_id', $userId )
             ->where( 'tenant_id', $tenantId )
             ->with( [ 'user', 'commonData', 'contact', 'address', 'businessData' ] )
             ->first();
@@ -75,7 +98,20 @@ class ProviderRepository extends AbstractTenantRepository
      */
     public function findWithRelations( int $providerId, array $relations = [] ): ?Provider
     {
-        return Provider::with( $relations )->find( $providerId );
+        return $this->model->with( $relations )->find( $providerId );
     }
 
+    /**
+     * Obtém estatísticas do dashboard para o provider.
+     */
+    public function getDashboardStats(int $tenantId): array
+    {
+        // Esta lógica pode ser expandida conforme necessário
+        return [
+            'total_customers' => \App\Models\Customer::where('tenant_id', $tenantId)->count(),
+            'total_budgets'   => \App\Models\Budget::where('tenant_id', $tenantId)->count(),
+            'total_invoices'  => \App\Models\Invoice::where('tenant_id', $tenantId)->count(),
+            'total_services'  => \App\Models\Service::where('tenant_id', $tenantId)->count(),
+        ];
+    }
 }

@@ -9,7 +9,8 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Repositories\AuditLogRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
-use App\Services\Core\Responses\ServiceResult;
+use App\Repositories\Contracts\BaseRepositoryInterface;
+use App\Support\ServiceResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -23,15 +24,12 @@ use Illuminate\Support\Facades\Request;
  */
 class AuditLogService extends AbstractBaseService
 {
-    /**
-     * @var AuditLogRepository
-     */
-    protected $repository;
+    protected BaseRepositoryInterface $repository;
 
     /**
      * Construtor do serviço.
      */
-    public function __construct(AuditLogRepository $repository)
+    public function __construct(BaseRepositoryInterface $repository)
     {
         parent::__construct($repository);
     }

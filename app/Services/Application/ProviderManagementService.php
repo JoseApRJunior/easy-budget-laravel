@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-use App\Models\AreaOfActivity;
 use App\Models\CommonData;
 use App\Models\PlanSubscription;
-use App\Models\Profession;
 use App\Models\Provider;
-use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Repositories\AreaOfActivityRepository;
+use App\Repositories\ProfessionRepository;
 use App\Repositories\CommonDataRepository;
 use App\Repositories\PlanRepository;
 use App\Repositories\ProviderRepository;
@@ -36,7 +35,6 @@ use App\DTOs\Provider\ProviderUpdateDTO;
 use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -74,6 +72,8 @@ class ProviderManagementService
         private ContactRepository $contactRepository,
         private AddressRepository $addressRepository,
         private BusinessDataRepository $businessDataRepository,
+        private AreaOfActivityRepository $areaOfActivityRepository,
+        private ProfessionRepository $professionRepository,
     ) {}
 
     /**
@@ -124,8 +124,8 @@ class ProviderManagementService
 
             return ServiceResult::success([
                 'provider'          => $provider,
-                'areas_of_activity' => AreaOfActivity::all(),
-                'professions'       => Profession::all(),
+                'areas_of_activity' => $this->areaOfActivityRepository->getAll(),
+                'professions'       => $this->professionRepository->getAll(),
             ]);
         }, 'Erro ao carregar dados para atualização do provedor.');
     }

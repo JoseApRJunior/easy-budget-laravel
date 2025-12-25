@@ -10,6 +10,8 @@ use App\Models\AreaOfActivity;
 use App\Models\CommonData;
 use App\Models\Customer;
 use App\Models\Profession;
+use App\Repositories\AreaOfActivityRepository;
+use App\Repositories\ProfessionRepository;
 use App\Repositories\CustomerRepository;
 use App\Services\Application\AuditLogService;
 use App\Services\Application\CustomerInteractionService;
@@ -29,16 +31,22 @@ class CustomerService extends AbstractBaseService
     private CustomerRepository         $customerRepository;
     private CustomerInteractionService $interactionService;
     private AuditLogService            $auditLogService;
+    private AreaOfActivityRepository   $areaOfActivityRepository;
+    private ProfessionRepository       $professionRepository;
 
     public function __construct(
         CustomerRepository $customerRepository,
         CustomerInteractionService $interactionService,
         AuditLogService $auditLogService,
+        AreaOfActivityRepository $areaOfActivityRepository,
+        ProfessionRepository $professionRepository,
     ) {
         parent::__construct($customerRepository);
         $this->customerRepository = $customerRepository;
         $this->interactionService = $interactionService;
         $this->auditLogService = $auditLogService;
+        $this->areaOfActivityRepository = $areaOfActivityRepository;
+        $this->professionRepository = $professionRepository;
     }
 
     /**
@@ -48,26 +56,18 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             $tenantId = $this->ensureTenantId();
-            $data = $dto->toArray();
-            $data['tenant_id'] = $tenantId;
 
-            $validation = $this->validateForCreate($data);
+            $validation = $this->validateForCreate($dto->toArray());
             if (!$validation->isSuccess()) {
                 return $validation;
             }
 
-            $customer = $this->customerRepository->createWithRelations($data);
+            $customer = $this->customerRepository->createFromDTO($dto);
 
             $this->auditLogService->logCreated($customer, [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
                 'type'      => $dto->type,
-            ]);
-
-            Log::info('Cliente criado', [
-                'customer_id' => $customer->id,
-                'tenant_id'   => $tenantId,
-                'type'        => $dto->type,
             ]);
 
             return $this->success($customer, 'Cliente criado com sucesso');
@@ -87,16 +87,13 @@ class CustomerService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
-            $data = $dto->toArray();
-            $data['tenant_id'] = $tenantId;
-
-            $validation = $this->validateForUpdate($customer, $data);
+            $validation = $this->validateForUpdate($customer, $dto->toArray());
             if (!$validation->isSuccess()) {
                 return $validation;
             }
 
             $oldData = $customer->toArray();
-            $this->customerRepository->updateWithRelations($customer, $data);
+            $this->customerRepository->updateFromDTO($customer, $dto);
             $customer->refresh();
 
             $this->auditLogService->logUpdated($customer, $oldData, $customer->toArray(), [
@@ -128,7 +125,7 @@ class CustomerService extends AbstractBaseService
             $customer->status = $newStatus;
             $customer->save();
 
-            AuditLog::log('updated', $customer, ['status' => $oldStatus], ['status' => $newStatus], [
+            $this->auditLogService->logUpdated($customer, ['status' => $oldStatus], ['status' => $newStatus], [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
                 'action'    => 'toggle_status',
@@ -159,7 +156,7 @@ class CustomerService extends AbstractBaseService
 
             $this->customerRepository->delete($customer->id);
 
-            AuditLog::log('deleted', $customer, $customer->toArray(), null, [
+            $this->auditLogService->logDeleted($customer, [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
             ]);
@@ -175,18 +172,13 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($id) {
             $tenantId = $this->ensureTenantId();
-            $customer = Customer::onlyTrashed()
-                ->where('id', $id)
-                ->where('tenant_id', $tenantId)
-                ->first();
+            $customer = $this->customerRepository->restore($id, $tenantId);
 
             if (!$customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado ou não está excluído');
             }
 
-            $customer->restore();
-
-            AuditLog::log('restored', $customer, null, $customer->toArray(), [
+            $this->auditLogService->logRestored($customer, [
                 'entity'    => 'customer',
                 'tenant_id' => $tenantId,
             ]);
@@ -202,23 +194,7 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $tenantId = $this->ensureTenantId();
-
-            $total    = Customer::where('tenant_id', $tenantId)->count();
-            $active   = Customer::where('tenant_id', $tenantId)->where('status', 'active')->count();
-            $inactive = Customer::where('tenant_id', $tenantId)->where('status', 'inactive')->count();
-
-            $recentCustomers = Customer::where('tenant_id', $tenantId)
-                ->latest()
-                ->limit(5)
-                ->with(['commonData', 'contact'])
-                ->get();
-
-            $stats = [
-                'total_customers'    => $total,
-                'active_customers'   => $active,
-                'inactive_customers' => $inactive,
-                'recent_customers'   => $recentCustomers,
-            ];
+            $stats = $this->customerRepository->getDashboardStats($tenantId);
 
             return $this->success($stats, 'Estatísticas obtidas com sucesso');
         }, 'Erro ao obter estatísticas de clientes.');
@@ -255,7 +231,7 @@ class CustomerService extends AbstractBaseService
     public function getAreasOfActivity(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $areas = AreaOfActivity::where('is_active', true)->orderBy('name')->get();
+            $areas = $this->areaOfActivityRepository->getActive();
             return $this->success($areas);
         }, 'Erro ao carregar áreas de atuação.');
     }
@@ -266,7 +242,7 @@ class CustomerService extends AbstractBaseService
     public function getProfessions(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $professions = Profession::where('is_active', true)->orderBy('name')->get();
+            $professions = $this->professionRepository->getActive();
             return $this->success($professions);
         }, 'Erro ao carregar profissões.');
     }
@@ -295,15 +271,7 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($cep) {
             $tenantId = $this->ensureTenantId();
-            // Implementação simplificada de busca por proximidade via CEP (primeiros 5 dígitos)
-            $cepPrefix = substr(preg_replace('/[^0-9]/', '', $cep), 0, 5);
-
-            $customers = Customer::where('tenant_id', $tenantId)
-                ->whereHas('address', function ($query) use ($cepPrefix) {
-                    $query->where('cep', 'like', $cepPrefix . '%');
-                })
-                ->with(['commonData', 'contact', 'address'])
-                ->get();
+            $customers = $this->customerRepository->findNearbyByCep($cep, $tenantId);
 
             return $this->success($customers, 'Clientes próximos encontrados');
         }, 'Erro ao buscar clientes próximos.');

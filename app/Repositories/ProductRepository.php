@@ -30,20 +30,82 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Busca produto por SKU.
      */
-    public function findBySku( string $sku, array $with = [], bool $withTrashed = true ): ?Model
+    public function findBySku(string $sku, array $with = [], bool $withTrashed = true): ?Model
     {
-        return $this->findOneBy( 'sku', $sku, $with, $withTrashed );
+        return $this->findOneBy('sku', $sku, $with, $withTrashed);
     }
 
     /**
-     * Verifica se o produto pode ser desativado ou deletado.
-     * (Ex: não está em uso em itens de serviço ativos, etc).
+     * Gera SKU único para o tenant.
      */
-    public function canBeDeactivatedOrDeleted( int $productId ): bool
+    public function generateUniqueSku(int $tenantId): string
     {
-        // Verifica se o produto está associado a algum service_item
-        // A lógica de negócio pode ser expandida aqui.
-        return !$this->model->where( 'id', $productId )->has( 'serviceItems' )->exists();
+        $lastProduct = $this->model->newQuery()
+            ->where('tenant_id', $tenantId)
+            ->where('sku', 'LIKE', 'PROD%')
+            ->withTrashed()
+            ->orderBy('sku', 'desc')
+            ->first();
+
+        if (!$lastProduct) {
+            return 'PROD000001';
+        }
+
+        $lastNumber = (int) filter_var($lastProduct->sku, FILTER_SANITIZE_NUMBER_INT);
+        $nextNumber = $lastNumber + 1;
+
+        return 'PROD' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Cria um novo produto a partir de um DTO.
+     */
+    public function createFromDTO(\App\DTOs\Product\ProductDTO $dto): Model
+    {
+        $data = $dto->toDatabaseArray();
+        
+        if (empty($data['sku'])) {
+            $data['sku'] = $this->generateUniqueSku((int) $data['tenant_id']);
+        }
+
+        return $this->create($data);
+    }
+
+    /**
+     * Atualiza um produto a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, \App\DTOs\Product\ProductDTO $dto): bool
+    {
+        $data = $dto->toDatabaseArray();
+        return $this->update($id, $data);
+    }
+
+    /**
+     * Obtém estatísticas do dashboard para produtos.
+     */
+    public function getDashboardStats(int $tenantId): array
+    {
+        $baseQuery = $this->model->newQuery()->where('tenant_id', $tenantId);
+
+        return [
+            'total_products'    => (clone $baseQuery)->count(),
+            'active_products'   => (clone $baseQuery)->where('active', true)->count(),
+            'inactive_products' => (clone $baseQuery)->where('active', false)->count(),
+            'low_stock_count'   => $this->getLowStockByTenant()->count(),
+            'recent_products'   => $this->getRecentByTenant(5),
+        ];
+    }
+
+    /**
+     * Restaura um produto deletado.
+     */
+    public function restore(int $id): bool
+    {
+        $product = $this->model->withTrashed()->find($id);
+        if ($product) {
+            return (bool) $product->restore();
+        }
+        return false;
     }
 
     /**

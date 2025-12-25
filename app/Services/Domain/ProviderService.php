@@ -32,8 +32,12 @@ class ProviderService extends AbstractBaseService
      */
     public function getByUserId( int $userId, ?int $tenantId = null ): ?Provider
     {
-        $tenantId = $tenantId ?? $this->ensureTenantId();
-        return $this->providerRepository->findByUserIdAndTenant( $userId, $tenantId );
+        try {
+            $tenantId = $tenantId ?? $this->ensureTenantId();
+            return $this->providerRepository->findByUserIdAndTenant( $userId, $tenantId );
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -41,8 +45,12 @@ class ProviderService extends AbstractBaseService
      */
     public function isEmailAvailable( string $email, int $excludeUserId, ?int $tenantId = null ): bool
     {
-        $tenantId = $tenantId ?? $this->ensureTenantId();
-        return $this->providerRepository->isEmailAvailable( $email, $excludeUserId, $tenantId );
+        try {
+            $tenantId = $tenantId ?? $this->ensureTenantId();
+            return $this->providerRepository->isEmailAvailable( $email, $excludeUserId, $tenantId );
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -69,13 +77,38 @@ class ProviderService extends AbstractBaseService
     public function createProvider(ProviderDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $data = $dto->toArray();
-            if (!isset($data['tenant_id'])) {
-                $data['tenant_id'] = $this->ensureTenantId();
-            }
-            
-            $provider = $this->providerRepository->create($data);
+            $this->ensureTenantId();
+            $provider = $this->providerRepository->createFromDTO($dto);
             return ServiceResult::success($provider, 'Provider criado com sucesso.');
         }, 'Erro ao criar provider.');
+    }
+
+    /**
+     * Atualiza um provider existente.
+     */
+    public function updateProvider(int $id, ProviderDTO $dto): ServiceResult
+    {
+        return $this->safeExecute(function () use ($id, $dto) {
+            $this->ensureTenantId();
+            $provider = $this->providerRepository->updateFromDTO($id, $dto);
+            
+            if (!$provider) {
+                return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Provider não encontrado para atualização.');
+            }
+
+            return ServiceResult::success($provider, 'Provider atualizado com sucesso.');
+        }, 'Erro ao atualizar provider.');
+    }
+
+    /**
+     * Obtém dados do dashboard para o provider.
+     */
+    public function getDashboardData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
+            $stats = $this->providerRepository->getDashboardStats($tenantId);
+            return ServiceResult::success($stats, 'Dados do dashboard obtidos com sucesso.');
+        }, 'Erro ao obter dados do dashboard do provider.');
     }
 }

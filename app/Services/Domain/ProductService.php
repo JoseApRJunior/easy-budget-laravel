@@ -40,26 +40,15 @@ class ProductService extends AbstractBaseService
     }
 
     /**
-     * Gera SKU único para o tenant.
+     * Dashboard de Produtos.
      */
-    private function generateUniqueSku(int $tenantId): string
+    public function getDashboardData(): ServiceResult
     {
-        $lastProduct = Product::where('tenant_id', $tenantId)
-            ->where('sku', 'LIKE', 'PROD%')
-            ->withTrashed() // ESSA É A CHAVE: Considera até os deletados para não repetir número
-            ->orderBy('sku', 'desc')
-            ->lockForUpdate()
-            ->first();
-
-        if (!$lastProduct) {
-            return 'PROD000001';
-        }
-
-        // Agora ele vai encontrar o PROD000030 corretamente
-        $lastNumber = (int) filter_var($lastProduct->sku, FILTER_SANITIZE_NUMBER_INT);
-        $nextNumber = $lastNumber + 1;
-
-        return 'PROD' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+        return $this->safeExecute(function () {
+            $tenantId = $this->ensureTenantId();
+            $stats = $this->repository->getDashboardStats($tenantId);
+            return $this->success($stats, 'Estatísticas de produtos obtidas com sucesso');
+        }, 'Erro ao obter estatísticas de produtos.');
     }
 
     /**
@@ -204,25 +193,24 @@ class ProductService extends AbstractBaseService
         return $this->safeExecute(function () use ($dto) {
             $tenantId = $this->ensureTenantId();
 
-            // A transação envolve todo o processo de escrita
             $product = DB::transaction(function () use ($dto, $tenantId) {
                 $data = $dto->toDatabaseArray();
-
-                if (empty($data['sku'])) {
-                    // O lockForUpdate aqui dentro agora segura o banco até o final deste bloco
-                    $data['sku'] = $this->generateUniqueSku((int) $tenantId);
-                }
-
-                // 2. Upload e Tenant ID
-                if (isset($data['image'])) {
-                    $data['image'] = $this->uploadProductImage($data['image']);
-                }
                 $data['tenant_id'] = $tenantId;
 
-                // 3. Persistência (Insert no Banco)
+                // 1. SKU Generation if empty
+                if (empty($data['sku'])) {
+                    $data['sku'] = $this->repository->generateUniqueSku((int) $tenantId);
+                }
+
+                // 2. Upload image
+                if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+                    $data['image'] = $this->uploadProductImage($data['image']);
+                }
+
+                // 3. Persistência
                 $product = $this->repository->create($data);
 
-                // 4. Inventário
+                // 4. Inventário Inicial
                 \App\Models\ProductInventory::create([
                     'tenant_id'    => $product->tenant_id,
                     'product_id'   => $product->id,
@@ -250,34 +238,27 @@ class ProductService extends AbstractBaseService
                     throw new Exception($ownerResult->getMessage());
                 }
 
+                /** @var Product $product */
                 $product = $ownerResult->getData();
                 $data = $dto->toDatabaseArray();
 
-                // Remover imagem existente se solicitado explicitamente
+                // 1. Gerenciar Imagem
                 if ($removeImage && $product->image) {
-                    $relative = $this->resolveRelativeStoragePath($product->image);
-                    if ($relative) {
-                        Storage::disk('public')->delete($relative);
-                    }
+                    $this->deletePhysicalImage($product->image);
                     $data['image'] = null;
-                }
-
-                // Processar nova imagem se fornecida no DTO
-                if (isset($data['image']) && is_a($data['image'], 'Illuminate\Http\UploadedFile')) {
-                    // Deletar imagem antiga se existir
+                } elseif (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
                     if ($product->image) {
-                        $relative = $this->resolveRelativeStoragePath($product->image);
-                        if ($relative) {
-                            Storage::disk('public')->delete($relative);
-                        }
+                        $this->deletePhysicalImage($product->image);
                     }
                     $data['image'] = $this->uploadProductImage($data['image']);
-                } else if (isset($data['image']) && $data['image'] === null && !$removeImage) {
-                    // Se a imagem no DTO é null e não pedimos para remover, mantemos a antiga
+                } else {
+                    // Mantém a imagem atual se nada foi enviado
                     unset($data['image']);
                 }
 
-                return $this->repository->update($product->id, $data);
+                // 2. Atualizar
+                $this->repository->update($product->id, $data);
+                return $product->fresh();
             });
 
             return $this->success($product, 'Produto atualizado com sucesso');
@@ -336,12 +317,7 @@ class ProductService extends AbstractBaseService
                 }
 
                 // Deletar imagem física se existir
-                if ($product->image) {
-                    $relative = $this->resolveRelativeStoragePath($product->image);
-                    if ($relative) {
-                        Storage::disk('public')->delete($relative);
-                    }
-                }
+                $this->deletePhysicalImage($product->image);
 
                 $this->repository->delete($product->id);
             });
@@ -353,18 +329,15 @@ class ProductService extends AbstractBaseService
     public function getDeleted(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
-            if (!$this->tenantId()) {
-                return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
-            }
+            $tenantId = $this->ensureTenantId();
 
             $filters['deleted'] = 'only';
-            $paginator            = $this->repository->getPaginated(
+            $paginator = $this->repository->getPaginated(
                 $this->normalizeFilters($filters),
                 $perPage,
                 $with,
             );
 
-            Log::info('Produtos deletados carregados', ['total' => $paginator->total()]);
             return $paginator;
         }, 'Erro ao carregar produtos deletados.');
     }
@@ -373,39 +346,17 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku) {
             $tenantId = $this->ensureTenantId();
-            $product  = Product::onlyTrashed()
-                ->where('tenant_id', $tenantId)
-                ->where('sku', $sku)
-                ->first();
+            $product = $this->repository->findBySku($sku, [], true);
 
-            if (!$product) {
+            if (!$product || !$product->trashed()) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Produto não encontrado ou não está excluído');
             }
 
-            $product->restore();
+            $this->repository->restore($product->id);
             return $this->success($product, 'Produto restaurado com sucesso');
         }, 'Erro ao restaurar produto.');
     }
 
-    // Método para dashboard
-    public function getDashboardData(?int $tenantId = null): ServiceResult
-    {
-        return $this->safeExecute(function () {
-            $total   = $this->repository->countByTenant();
-            $active  = $this->repository->countActiveByTenant();
-            $deleted = $this->repository->countOnlyTrashedByTenant();
-
-            $stats = [
-                'total_products'    => $total,
-                'active_products'   => $active,
-                'inactive_products' => max(0, $total - $active),
-                'deleted_products'  => $deleted,
-                'recent_products'   => $this->getRecentProducts(5, ['category']), // Usa método do service
-            ];
-
-            return $this->success($stats, 'Estatísticas obtidas com sucesso');
-        }, 'Erro ao obter estatísticas de produtos.');
-    }
 
     public function getFilteredProducts(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
@@ -473,6 +424,16 @@ class ProductService extends AbstractBaseService
             return Str::after($trimmed, 'storage/');
         }
         return $trimmed;
+    }
+
+    private function deletePhysicalImage(?string $image): void
+    {
+        if (!$image) return;
+
+        $relative = $this->resolveRelativeStoragePath($image);
+        if ($relative && Storage::disk('public')->exists($relative)) {
+            Storage::disk('public')->delete($relative);
+        }
     }
 
     /**
