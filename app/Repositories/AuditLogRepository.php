@@ -162,7 +162,6 @@ class AuditLogRepository extends AbstractTenantRepository
                 ->toArray(),
         ];
     }
-}
 
     /**
      * Busca atividades recentes por tenant e usuário.

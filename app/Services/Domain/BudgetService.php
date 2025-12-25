@@ -32,18 +32,13 @@ class BudgetService extends AbstractBaseService
      */
     public function getBudgetsForProvider(int $userId, array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($userId, $filters) {
-            $user = User::find($userId);
-
-            if (!$user || !$user->tenant_id) {
-                return ServiceResult::error('Usuário ou tenant não encontrado.');
-            }
-
+        return $this->safeExecute(function () use ($filters) {
+            $tenantId = $this->ensureTenantId();
             $perPage = (int) ($filters['per_page'] ?? 10);
             unset($filters['per_page']);
 
             $budgets = $this->repository->getPaginatedBudgets(
-                tenantId: $user->tenant_id,
+                tenantId: $tenantId,
                 filters: $filters,
                 perPage: $perPage,
             );
@@ -76,21 +71,7 @@ class BudgetService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $tenantId = $this->ensureTenantId();
-
-            $stats = [
-                'total_count'     => Budget::where('tenant_id', $tenantId)->count(),
-                'pending_count'   => Budget::where('tenant_id', $tenantId)->where('status', BudgetStatus::PENDING->value)->count(),
-                'approved_count'  => Budget::where('tenant_id', $tenantId)->where('status', BudgetStatus::APPROVED->value)->count(),
-                'rejected_count'  => Budget::where('tenant_id', $tenantId)->where('status', BudgetStatus::REJECTED->value)->count(),
-                'total_value'     => Budget::where('tenant_id', $tenantId)->sum('total'),
-                'approved_value'  => Budget::where('tenant_id', $tenantId)->where('status', BudgetStatus::APPROVED->value)->sum('total'),
-                'recent_budgets'  => Budget::where('tenant_id', $tenantId)
-                    ->with(['customer.commonData'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-            ];
-
+            $stats = $this->repository->getDashboardStats($tenantId);
             return ServiceResult::success($stats);
         }, 'Erro ao obter estatísticas do dashboard.');
     }

@@ -53,7 +53,7 @@ class ScheduleService extends AbstractBaseService
             $data['tenant_id'] = $tenantId;
 
             // Cria o agendamento
-            return $this->repository->create($data);
+            return $this->scheduleRepository->createFromDTO($dto);
         }, 'Erro ao criar agendamento.');
     }
 
@@ -69,22 +69,20 @@ class ScheduleService extends AbstractBaseService
             $schedule = $this->scheduleRepository->findByIdAndTenant($scheduleId, $tenantId);
 
             if (!$schedule) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
+                return $this->error('Agendamento não encontrado.');
             }
 
-            $data = $dto->toArrayWithoutNulls();
-
             // Verifica conflitos se houver mudança de horário
-            if (isset($data['start_date_time']) || isset($data['end_date_time'])) {
-                $startTime = $data['start_date_time'] ?? $schedule->start_date_time->format('Y-m-d H:i:s');
-                $endTime = $data['end_date_time'] ?? $schedule->end_date_time->format('Y-m-d H:i:s');
+            if ($dto->start_date_time || $dto->end_date_time) {
+                $startTime = $dto->start_date_time ?? $schedule->start_date_time->format('Y-m-d H:i:s');
+                $endTime = $dto->end_date_time ?? $schedule->end_date_time->format('Y-m-d H:i:s');
 
                 if ($this->scheduleRepository->hasConflict($startTime, $endTime, $schedule->service_id, $scheduleId)) {
-                    return $this->error(OperationStatus::CONFLICT, 'Conflito de horário detectado.');
+                    return $this->error('Conflito de horário detectado.');
                 }
             }
 
-            return $this->repository->update($scheduleId, $data);
+            return $this->scheduleRepository->updateFromDTO($scheduleId, $dto);
         }, 'Erro ao atualizar agendamento.');
     }
 

@@ -101,6 +101,23 @@ class SupportRepository extends AbstractTenantRepository
     }
 
     /**
+     * Cria um novo ticket de suporte a partir de um DTO.
+     */
+    public function createFromDTO(\App\DTOs\Support\SupportDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    /**
+     * Atualiza um ticket de suporte a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, \App\DTOs\Support\SupportUpdateDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+}
+
+    /**
      * Obtém estatísticas de tickets por status dentro do tenant atual.
      *
      * @return array<string, int> Array com contadores por status

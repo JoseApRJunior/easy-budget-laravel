@@ -8,6 +8,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
+use App\Services\Application\AuditLogService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class SettingsApiController extends Controller
         private SettingsService $settingsService,
         private SettingsBackupService $backupService,
         private FileUploadService $fileUploadService,
+        private AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -39,7 +41,6 @@ class SettingsApiController extends Controller
                     'system_settings' => $systemSettings,
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -85,7 +86,6 @@ class SettingsApiController extends Controller
                 'message' => 'Configurações atualizadas com sucesso',
                 'data' => $settings,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -131,7 +131,6 @@ class SettingsApiController extends Controller
                 'message' => 'Configurações atualizadas com sucesso',
                 'data' => $settings,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -158,7 +157,6 @@ class SettingsApiController extends Controller
                 'message' => 'Avatar atualizado com sucesso',
                 'data' => $result,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -180,7 +178,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Avatar removido com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -216,7 +213,6 @@ class SettingsApiController extends Controller
                 'message' => 'Backup criado com sucesso',
                 'data' => $result,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -251,7 +247,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Backup restaurado com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -280,7 +275,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $backups,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -306,7 +300,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Backup removido com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -340,7 +333,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $backupInfo,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -367,7 +359,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $validation,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -384,19 +375,27 @@ class SettingsApiController extends Controller
     {
         try {
             $filters = $request->only([
-                'action', 'user_id', 'severity', 'category', 'model_type',
-                'start_date', 'end_date', 'security_only', 'data_modifications_only',
-                'sort_by', 'sort_direction',
+                'action',
+                'user_id',
+                'severity',
+                'category',
+                'model_type',
+                'start_date',
+                'end_date',
+                'security_only',
+                'data_modifications_only',
+                'sort_by',
+                'sort_direction',
             ]);
 
             $perPage = $request->get('per_page', 50);
-            $logs = app(\App\Services\AuditService::class)->getAuditLogs($filters, $perPage);
+            $result = $this->auditLogService->getFilteredLogs($filters, $perPage);
+            $logs = $result->getData();
 
             return response()->json([
                 'success' => true,
                 'data' => $logs,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -412,7 +411,8 @@ class SettingsApiController extends Controller
     public function auditDetail(int $id): JsonResponse
     {
         try {
-            $log = app(\App\Services\AuditService::class)->getAuditLogs(['id' => $id], 1)->first();
+            $result = $this->auditLogService->getFilteredLogs(['id' => $id], 1);
+            $log = $result->getData()->first();
 
             if (! $log) {
                 return response()->json([
@@ -425,7 +425,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $log,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -455,7 +454,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $sessions,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -482,7 +480,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Sessão terminada com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -505,7 +502,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $stats,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -534,11 +530,10 @@ class SettingsApiController extends Controller
                 'message' => 'Teste de integração realizado com sucesso',
                 'data' => [
                     'status' => 'connected',
-                    'response_time' => rand(100, 500).'ms',
+                    'response_time' => rand(100, 500) . 'ms',
                     'last_sync' => now(),
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -561,7 +556,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $integrations,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -587,7 +581,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Configurações de integração atualizadas com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -619,7 +612,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => $message,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -649,7 +641,6 @@ class SettingsApiController extends Controller
                     'system_security' => $systemSettings->getSecuritySettings(),
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

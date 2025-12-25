@@ -183,35 +183,21 @@ class ScheduleRepository extends AbstractTenantRepository
             ->get();
     }
 
+    public function createFromDTO(\App\DTOs\Schedule\ScheduleDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    public function updateFromDTO(int $id, \App\DTOs\Schedule\ScheduleUpdateDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+
     /**
      * Get total count for tenant.
      */
     public function getTotalCount(int $tenantId): int
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
-            ->count();
-    }
-
-    /**
-     * Get count for past schedules (completed).
-     */
-    public function getPastCount(int $tenantId): int
-    {
-        return $this->model
-            ->where('tenant_id', $tenantId)
-            ->where('end_date_time', '<', now())
-            ->count();
-    }
-
-    /**
-     * Get count for future schedules (pending).
-     */
-    public function getFutureCount(int $tenantId): int
-    {
-        return $this->model
-            ->where('tenant_id', $tenantId)
-            ->where('start_date_time', '>', now())
-            ->count();
+        return $this->model->where('tenant_id', $tenantId)->count();
     }
 }

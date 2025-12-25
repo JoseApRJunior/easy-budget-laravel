@@ -98,10 +98,21 @@ class ReportRepository extends AbstractTenantRepository
     {
         return $this->model->with( [ 'user' ] )
             ->where( 'status', 'completed' )
-            ->orderBy( 'generated_at', 'desc' )
+            ->orderBy( 'created_at', 'desc' )
             ->limit( $limit )
             ->get();
     }
+
+    public function createFromDTO(\App\DTOs\Report\ReportDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    public function updateFromDTO(int $id, \App\DTOs\Report\ReportDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+}
 
     public function getModel()
     {

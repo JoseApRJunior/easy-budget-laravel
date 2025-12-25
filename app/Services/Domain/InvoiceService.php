@@ -66,43 +66,9 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $tenantId = $this->ensureTenantId();
-
-            $total     = Invoice::where('tenant_id', $tenantId)->count();
-            $paid      = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PAID->value)->count();
-            $pending   = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PENDING->value)->count();
-            $overdue   = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::OVERDUE->value)->count();
-            $cancelled = Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::CANCELLED->value)->count();
-
-            $totalBilled   = (float) Invoice::where('tenant_id', $tenantId)->sum('total');
-            $totalReceived = (float) Invoice::where('tenant_id', $tenantId)->where('status', InvoiceStatus::PAID->value)->sum('transaction_amount');
-            $totalPending  = (float) Invoice::where('tenant_id', $tenantId)->whereIn('status', [InvoiceStatus::PENDING->value, InvoiceStatus::OVERDUE->value])->sum('total');
-
-            $statusBreakdown = [
-                'PENDENTE'  => ['count' => $pending, 'color' => InvoiceStatus::PENDING->getColor()],
-                'VENCIDA'   => ['count' => $overdue, 'color' => InvoiceStatus::OVERDUE->getColor()],
-                'PAGA'      => ['count' => $paid, 'color' => InvoiceStatus::PAID->getColor()],
-                'CANCELADA' => ['count' => $cancelled, 'color' => InvoiceStatus::CANCELLED->getColor()],
-            ];
-
-            $recent = Invoice::where('tenant_id', $tenantId)
-                ->latest('created_at')
-                ->limit(10)
-                ->with(['customer.commonData', 'service'])
-                ->get();
-
-            return ServiceResult::success([
-                'total_invoices'     => $total,
-                'paid_invoices'      => $paid,
-                'pending_invoices'   => $pending,
-                'overdue_invoices'   => $overdue,
-                'cancelled_invoices' => $cancelled,
-                'total_billed'       => $totalBilled,
-                'total_received'     => $totalReceived,
-                'total_pending'      => $totalPending,
-                'status_breakdown'   => $statusBreakdown,
-                'recent_invoices'    => $recent,
-            ]);
-        }, 'Erro ao carregar estatísticas do dashboard');
+            $stats = $this->repository->getDashboardStats($tenantId);
+            return ServiceResult::success($stats);
+        }, 'Erro ao obter estatísticas do dashboard');
     }
 
     public function createInvoice(InvoiceDTO $dto): ServiceResult
