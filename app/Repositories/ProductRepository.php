@@ -63,7 +63,7 @@ class ProductRepository extends AbstractTenantRepository
     public function createFromDTO(\App\DTOs\Product\ProductDTO $dto): Model
     {
         $data = $dto->toDatabaseArray();
-        
+
         if (empty($data['sku'])) {
             $data['sku'] = $this->generateUniqueSku((int) $data['tenant_id']);
         }
@@ -113,15 +113,15 @@ class ProductRepository extends AbstractTenantRepository
      */
     public function countActiveByTenant(): int
     {
-        return $this->countByTenant( [ 'active' => true ] );
+        return $this->countByTenant(['active' => true]);
     }
 
     /**
      * Obtém produtos recentes por tenant.
      */
-    public function getRecentByTenant( int $limit = 5 ): Collection
+    public function getRecentByTenant(int $limit = 5): Collection
     {
-        return $this->getAllByTenant( [], [ 'created_at' => 'desc' ], $limit );
+        return $this->getAllByTenant([], ['created_at' => 'desc'], $limit);
     }
 
     /**
@@ -132,10 +132,10 @@ class ProductRepository extends AbstractTenantRepository
         // Join manual para acessar inventário.
         // Idealmente isso seria via relacionamento, mas para performance ok.
         return $this->model->newQuery()
-            ->join( 'product_inventory', 'products.id', '=', 'product_inventory.product_id' )
-            ->where( 'products.active', true )
-            ->whereColumn( 'product_inventory.quantity', '<=', 'product_inventory.min_quantity' )
-            ->select( 'products.*', 'product_inventory.quantity', 'product_inventory.min_quantity' )
+            ->join('product_inventory', 'products.id', '=', 'product_inventory.product_id')
+            ->where('products.active', true)
+            ->whereColumn('product_inventory.quantity', '<=', 'product_inventory.min_quantity')
+            ->select('products.*', 'product_inventory.quantity', 'product_inventory.min_quantity')
             ->get();
     }
 
@@ -147,18 +147,41 @@ class ProductRepository extends AbstractTenantRepository
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
-        array $with = [ 'category', 'inventory' ],
+        array $with = ['category', 'inventory'],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
         // Remove duplicatas de with
-        $with = array_unique( $with );
+        $with = array_unique($with);
 
         return $this->model->newQuery()
-            ->with( $with )
-            ->tap( fn( $q ) => $this->applyAllProductFilters( $q, $filters ) )
-            ->when( !$orderBy, fn( $q ) => $q->orderBy( 'name' ) )
-            ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
-            ->paginate( $this->getEffectivePerPage( $filters, $perPage ) );
+            ->with($with)
+            ->tap(fn($q) => $this->applyAllProductFilters($q, $filters))
+            ->when(!$orderBy, fn($q) => $q->orderBy('name'))
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
+
+    /**
+     * Verifica se o produto pode ser desativado ou deletado.
+     *
+     * Regra: Não pode ser desativado/deletado se estiver em uso em algum service_item.
+     */
+    public function canBeDeactivatedOrDeleted(int $productId): bool
+    {
+        return !$this->model->newQuery()
+            ->where('id', $productId)
+            ->whereHas('serviceItems')
+            ->exists();
+    }
+
+    /**
+     * Atualiza o status do produto.
+     */
+    public function updateStatus(int $id, bool $active): bool
+    {
+        return (bool) $this->model->newQuery()
+            ->where('id', $id)
+            ->update(['active' => $active]);
     }
 
     /**
@@ -167,26 +190,25 @@ class ProductRepository extends AbstractTenantRepository
      * Substitui o uso genérico de applyFilters para evitar problemas com strings vazias
      * e garantir que cada filtro seja aplicado corretamente.
      */
-    protected function applyAllProductFilters( Builder $query, array $filters ): void
+    protected function applyAllProductFilters(Builder $query, array $filters): void
     {
         // Filtros padrão da Trait (Search, Boolean, SoftDelete)
-        $this->applySearchFilter( $query, $filters, [ 'name', 'sku', 'description' ] );
-        $this->applyBooleanFilter( $query, $filters, 'active', 'active' );
-        $this->applySoftDeleteFilter( $query, $filters );
+        $this->applySearchFilter($query, $filters, ['name', 'sku', 'description']);
+        $this->applyBooleanFilter($query, $filters, 'active', 'active');
+        $this->applySoftDeleteFilter($query, $filters);
 
         // Filtro de Categoria
-        $query->when( !empty( $filters[ 'category_id' ] ), function ( $q ) use ( $filters ) {
-            $q->where( 'category_id', $filters[ 'category_id' ] );
-        } );
+        $query->when(!empty($filters['category_id']), function ($q) use ($filters) {
+            $q->where('category_id', $filters['category_id']);
+        });
 
         // Filtros de Preço
-        $query->when( isset( $filters[ 'min_price' ] ) && $filters[ 'min_price' ] !== '', function ( $q ) use ( $filters ) {
-            $q->where( 'price', '>=', $filters[ 'min_price' ] );
-        } );
+        $query->when(isset($filters['min_price']) && $filters['min_price'] !== '', function ($q) use ($filters) {
+            $q->where('price', '>=', $filters['min_price']);
+        });
 
-        $query->when( isset( $filters[ 'max_price' ] ) && $filters[ 'max_price' ] !== '', function ( $q ) use ( $filters ) {
-            $q->where( 'price', '<=', $filters[ 'max_price' ] );
-        } );
+        $query->when(isset($filters['max_price']) && $filters['max_price'] !== '', function ($q) use ($filters) {
+            $q->where('price', '<=', $filters['max_price']);
+        });
     }
-
 }

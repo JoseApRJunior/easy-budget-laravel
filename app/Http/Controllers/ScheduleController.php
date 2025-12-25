@@ -7,14 +7,15 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ScheduleRequest;
 use App\Models\Schedule;
-use App\Models\Service;
 use App\Models\User;
+use App\Repositories\ServiceRepository;
 use App\Services\Domain\ScheduleService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Controller para gerenciamento de agendamentos
@@ -26,7 +27,8 @@ use Illuminate\Support\Facades\Schema;
 class ScheduleController extends Controller
 {
     public function __construct(
-        private ScheduleService $scheduleService,
+        private readonly ScheduleService $scheduleService,
+        private readonly ServiceRepository $serviceRepository,
     ) {}
 
     /**
@@ -94,23 +96,21 @@ class ScheduleController extends Controller
      */
     public function create(Request $request, string $serviceCode): View
     {
-        /** @var User $user */
-        $user = Auth::user();
+        $tenantId = (int) (Auth::user()->tenant_id ?? 0);
 
-        // Buscar o serviço pelo código
-        $service = Service::where('code', $serviceCode)
-            ->where('tenant_id', $user->tenant_id)
-            ->with(['customer.commonData', 'status'])
-            ->first();
+        // Buscar o serviço pelo código usando o repositório
+        $service = $this->serviceRepository->findByCode($serviceCode, $tenantId, [
+            'customer.commonData',
+            'serviceStatus'
+        ]);
 
         if (!$service) {
             abort(404, 'Serviço não encontrado');
         }
 
-        // Verificar se o usuário tem permissão para agendar este serviço
-        if (!$user->isAdmin() && $service->customer_id !== $user->id) {
-            abort(403, 'Acesso não autorizado');
-        }
+        // A autorização já deve ser tratada por policies ou no service,
+        // mas mantemos aqui por segurança se necessário ou removemos se o service garantir.
+        $this->authorize('view', $service);
 
         return view('pages.schedule.create', [
             'service'      => $service,
@@ -150,10 +150,7 @@ class ScheduleController extends Controller
      */
     public function show(string $id): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $result = $this->scheduleService->getSchedule($id);
+        $result = $this->scheduleService->getSchedule((int) $id);
 
         if (!$result->isSuccess()) {
             abort(404, 'Agendamento não encontrado');
@@ -161,14 +158,8 @@ class ScheduleController extends Controller
 
         $schedule = $result->getData();
 
-        // Verifica se o usuário tem permissão para ver este agendamento
-        if (
-            !$user->isAdmin() &&
-            $schedule->customer_id !== $user->id &&
-            $schedule->provider_id !== $user->id
-        ) {
-            abort(403, 'Acesso não autorizado');
-        }
+        // A autorização é tratada pela Policy
+        $this->authorize('view', $schedule);
 
         return view('pages.schedule.show', [
             'schedule' => $schedule,
@@ -180,24 +171,28 @@ class ScheduleController extends Controller
      */
     public function updateStatus(Request $request, string $id): JsonResponse
     {
-        /** @var User $user */
-        $user = Auth::user();
-
         $request->validate([
             'status' => 'required|in:confirmed,cancelled,completed,no_show',
         ]);
 
-        try {
-            $result = $this->scheduleService->updateScheduleStatus(
-                $id,
-                $request->input('status'),
-                $user->id,
-            );
+        $result = $this->scheduleService->updateScheduleStatus(
+            (int) $id,
+            $request->input('status'),
+            (int) Auth::id()
+        );
 
-            return $this->jsonResponse($result);
-        } catch (\Exception $e) {
-            return $this->jsonError('Erro ao atualizar status: ' . $e->getMessage());
+        if ($result->isError()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result->getMessage()
+            ], 400);
         }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result->getData(),
+            'message' => 'Status atualizado com sucesso'
+        ]);
     }
 
     /**
@@ -205,21 +200,14 @@ class ScheduleController extends Controller
      */
     public function cancel(string $id): RedirectResponse
     {
-        /** @var User $user */
-        $user = Auth::user();
+        $result = $this->scheduleService->cancelSchedule((int) $id);
 
-        try {
-            $result = $this->scheduleService->cancelSchedule($id, $user->id);
-
-            return $this->redirectWithServiceResult(
-                'schedules.index',
-                $result,
-                'Agendamento cancelado com sucesso!',
-            );
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Erro ao cancelar agendamento: ' . $e->getMessage());
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
         }
+
+        return redirect()->route('provider.schedules.index')
+            ->with('success', 'Agendamento cancelado com sucesso!');
     }
 
     /**
@@ -233,40 +221,49 @@ class ScheduleController extends Controller
             'duration'    => 'nullable|integer|min:30|max:480', // 30 minutos a 8 horas
         ]);
 
-        try {
-            $result = $this->scheduleService->checkAvailability(
-                $request->input('provider_id'),
-                $request->input('date'),
-                $request->input('duration', 60),
-            );
+        $result = $this->scheduleService->checkAvailability(
+            (int) $request->input('provider_id'),
+            (string) $request->input('date'),
+            (int) $request->input('duration', 60),
+        );
 
-            return $this->jsonResponse($result);
-        } catch (\Exception $e) {
-            return $this->jsonError('Erro ao verificar disponibilidade: ' . $e->getMessage());
+        if ($result->isError()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result->getMessage()
+            ], 400);
         }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result->getData()
+        ]);
     }
 
-    /**
-     * Obtém os horários disponíveis de um prestador em uma data específica
-     */
-    public function getAvailableSlots(Request $request): JsonResponse
+    public function getTimeSlots(Request $request): JsonResponse
     {
         $request->validate([
-            'provider_id'      => 'required|exists:users,id',
-            'date'             => 'required|date|after:today',
-            'service_duration' => 'nullable|integer|min:30|max:480',
+            'provider_id' => 'required|exists:users,id',
+            'date'        => 'required|date',
+            'duration'    => 'nullable|integer|min:30|max:480',
         ]);
 
-        try {
-            $result = $this->scheduleService->getAvailableTimeSlots(
-                $request->input('provider_id'),
-                $request->input('date'),
-                $request->input('service_duration', 60),
-            );
+        $result = $this->scheduleService->getAvailableTimeSlots(
+            (int) $request->input('provider_id'),
+            (string) $request->input('date'),
+            (int) $request->input('duration', 60),
+        );
 
-            return $this->jsonResponse($result);
-        } catch (\Exception $e) {
-            return $this->jsonError('Erro ao obter horários disponíveis: ' . $e->getMessage());
+        if ($result->isError()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result->getMessage()
+            ], 400);
         }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result->getData()
+        ]);
     }
 }

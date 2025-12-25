@@ -33,6 +33,7 @@ class CategoryController extends Controller
      */
     public function dashboard(): View
     {
+        $this->authorize('viewAny', \App\Models\Category::class);
         return $this->view('pages.category.dashboard', $this->categoryService->getDashboardData(), 'stats');
     }
 
@@ -41,6 +42,7 @@ class CategoryController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', \App\Models\Category::class);
         $filters = $request->only(['search', 'active', 'per_page', 'deleted', 'all']);
 
         // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
@@ -62,6 +64,7 @@ class CategoryController extends Controller
      */
     public function create(): View|RedirectResponse
     {
+        $this->authorize('create', \App\Models\Category::class);
         $result = $this->categoryService->getParentCategories();
 
         return $this->view('pages.category.create', $result, 'parents', [
@@ -74,6 +77,7 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
+        $this->authorize('create', \App\Models\Category::class);
         $dto = CategoryDTO::fromRequest($request->validated());
         $result = $this->categoryService->createCategory($dto);
 
@@ -94,7 +98,10 @@ class CategoryController extends Controller
             return $this->redirectError('provider.categories.index', $result->getMessage());
         }
 
-        $result->getData()->loadCount(['children', 'services', 'products']);
+        $category = $result->getData();
+        $this->authorize('view', $category);
+
+        $category->loadCount(['children', 'services', 'products']);
 
         return $this->view('pages.category.show', $result, 'category');
     }
@@ -109,7 +116,10 @@ class CategoryController extends Controller
             return $this->redirectError('provider.categories.index', $result->getMessage());
         }
 
-        $category     = $result->getData()->loadCount(['children', 'services', 'products']);
+        $category = $result->getData();
+        $this->authorize('update', $category);
+
+        $category->loadCount(['children', 'services', 'products']);
         $parentResult = $this->categoryService->getParentCategories();
 
         $parents = $parentResult->isSuccess()
@@ -130,8 +140,9 @@ class CategoryController extends Controller
         }
 
         $category = $result->getData();
-        $dto = CategoryDTO::fromRequest($request->validated());
+        $this->authorize('update', $category);
 
+        $dto = CategoryDTO::fromRequest($request->validated());
         $updateResult = $this->categoryService->updateCategory($category->id, $dto);
 
         return $this->redirectWithServiceResult('provider.categories.show', $updateResult, 'Categoria atualizada com sucesso.', ['slug' => $slug]);
@@ -147,7 +158,10 @@ class CategoryController extends Controller
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $deleteResult = $this->categoryService->deleteCategory($result->getData()->id);
+        $category = $result->getData();
+        $this->authorize('delete', $category);
+
+        $deleteResult = $this->categoryService->deleteCategory($category->id);
 
         if ($deleteResult->isError()) {
             return $this->redirectError('provider.categories.index', $deleteResult->getMessage() ?: 'Erro ao excluir categoria.');
@@ -161,13 +175,21 @@ class CategoryController extends Controller
      */
     public function toggleStatus(string $slug): RedirectResponse
     {
-        $result = $this->categoryService->toggleCategoryStatus($slug);
-
+        $result = $this->categoryService->findBySlug($slug);
         if ($result->isError()) {
-            return $this->redirectError('provider.categories.index', $result->getMessage());
+            return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        return $this->redirectSuccess('provider.categories.show', $result->getMessage(), ['slug' => $slug]);
+        $category = $result->getData();
+        $this->authorize('update', $category);
+
+        $toggleResult = $this->categoryService->toggleCategoryStatus($slug);
+
+        if ($toggleResult->isError()) {
+            return $this->redirectError('provider.categories.index', $toggleResult->getMessage());
+        }
+
+        return $this->redirectSuccess('provider.categories.show', $toggleResult->getMessage(), ['slug' => $slug]);
     }
 
     /**
@@ -175,10 +197,18 @@ class CategoryController extends Controller
      */
     public function restore(string $slug): RedirectResponse
     {
-        $result = $this->categoryService->restoreCategoriesBySlug($slug);
-
+        $result = $this->categoryService->findBySlug($slug, [], true);
         if ($result->isError()) {
-            return $this->redirectError('provider.categories.index', $result->getMessage());
+            return $this->redirectError('provider.categories.index', 'Categoria não encontrada para restauração.');
+        }
+
+        $category = $result->getData();
+        $this->authorize('update', $category);
+
+        $restoreResult = $this->categoryService->restoreCategoriesBySlug($slug);
+
+        if ($restoreResult->isError()) {
+            return $this->redirectError('provider.categories.index', $restoreResult->getMessage());
         }
 
         return $this->redirectSuccess('provider.categories.show', 'Categoria restaurada com sucesso!', ['slug' => $slug]);
@@ -209,6 +239,7 @@ class CategoryController extends Controller
 
     public function restoreMultiple(Request $request): RedirectResponse
     {
+        $this->authorize('update', \App\Models\Category::class);
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {
@@ -226,6 +257,7 @@ class CategoryController extends Controller
 
     public function export(Request $request): StreamedResponse|RedirectResponse
     {
+        $this->authorize('viewAny', \App\Models\Category::class);
         $format = $request->get('format', 'xlsx');
 
         // Captura TODOS os filtros aplicados na listagem (exceto paginação)

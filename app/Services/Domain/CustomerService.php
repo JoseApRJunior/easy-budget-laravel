@@ -422,10 +422,7 @@ class CustomerService extends AbstractBaseService
 
     private function validateCanDelete(int $customerId, int $tenantId): ServiceResult
     {
-        $hasBudgets = Customer::where('id', $customerId)
-            ->where('tenant_id', $tenantId)
-            ->whereHas('budgets')
-            ->exists();
+        $hasBudgets = $this->customerRepository->hasBudgets($customerId, $tenantId);
 
         if ($hasBudgets) {
             return $this->error(OperationStatus::CONFLICT, 'Cliente possui orçamentos cadastrados e não pode ser removido.');

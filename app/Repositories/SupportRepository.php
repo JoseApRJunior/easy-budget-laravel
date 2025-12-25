@@ -115,7 +115,6 @@ class SupportRepository extends AbstractTenantRepository
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }
-}
 
     /**
      * Obtém estatísticas de tickets por status dentro do tenant atual.

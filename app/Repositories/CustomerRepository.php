@@ -366,7 +366,8 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function findWithCompleteData(int $id, int $tenantId): ?Customer
     {
-        return Customer::where('id', $id)
+        return $this->model->newQuery()
+            ->where('id', $id)
             ->where('tenant_id', $tenantId)
             ->with([
                 'commonData' => function ($q) {
@@ -378,6 +379,26 @@ class CustomerRepository extends AbstractTenantRepository
                 'budgets' // REMOVIDO: 'services' - causava ambiguidade
             ])
             ->first();
+    }
+
+    /**
+     * Verifica se o cliente possui orçamentos cadastrados.
+     */
+    public function hasBudgets(int $customerId, int $tenantId): bool
+    {
+        return $this->model->newQuery()
+            ->where('id', $customerId)
+            ->where('tenant_id', $tenantId)
+            ->whereHas('budgets')
+            ->exists();
+    }
+
+    /**
+     * Atualiza o status do cliente.
+     */
+    public function updateStatus(int $id, string $status): bool
+    {
+        return $this->update($id, ['status' => $status]);
     }
 
     // ========================================

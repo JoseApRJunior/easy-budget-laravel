@@ -14,6 +14,7 @@ use App\Repositories\AreaOfActivityRepository;
 use App\Repositories\ProfessionRepository;
 use App\Repositories\CommonDataRepository;
 use App\Repositories\PlanRepository;
+use App\Repositories\PlanSubscriptionRepository;
 use App\Repositories\ProviderRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\TenantRepository;
@@ -37,6 +38,7 @@ use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
 use Exception;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -74,6 +76,7 @@ class ProviderManagementService
         private BusinessDataRepository $businessDataRepository,
         private AreaOfActivityRepository $areaOfActivityRepository,
         private ProfessionRepository $professionRepository,
+        private PlanSubscriptionRepository $planSubscriptionRepository,
     ) {}
 
     /**
@@ -137,93 +140,90 @@ class ProviderManagementService
     {
         return $this->safeExecute(function () use ($dto) {
             $user = Auth::user();
-            $provider = $user->provider;
             $tenantId = $this->ensureTenantId();
+
+            $provider = $this->providerRepository->findWithRelations($user->provider->id, [
+                'commonData',
+                'contact',
+                'address',
+                'businessData'
+            ]);
 
             if (!$provider) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
-            // Load relationships if not already loaded
-            $provider->load(['commonData', 'contact', 'address', 'businessData']);
-
-            $data = $dto->toArray();
-
-            return DB::transaction(function () use ($provider, $data, $user, $tenantId) {
+            return DB::transaction(function () use ($provider, $dto, $user, $tenantId) {
                 // Handle logo upload
-                if (isset($data['logo']) && $data['logo'] instanceof UploadedFile) {
-                    $logoPath = $this->fileUploadService->uploadProviderLogo($data['logo'], $user->logo);
-                    $data['logo'] = $logoPath;
+                $logoPath = $user->logo;
+                if ($dto->logo instanceof UploadedFile) {
+                    $logoPath = $this->fileUploadService->uploadProviderLogo($dto->logo, $user->logo);
                 }
 
                 // Update User (email and logo only)
-                $userUpdate = array_filter([
-                    'email' => $data['email'] ?? null,
-                    'logo'  => $data['logo'] ?? null,
-                ], fn($value) => $value !== null);
-
-                if (!empty($userUpdate)) {
-                    $this->userRepository->update($user->id, $userUpdate);
-                }
+                $this->userRepository->update($user->id, array_filter([
+                    'email' => $dto->email,
+                    'logo'  => $logoPath,
+                ], fn($value) => $value !== null));
 
                 // Detectar tipo (PF ou PJ)
-                $type = !empty($data['cnpj']) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+                $type = !empty($dto->cnpj) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
                 // Limpar máscaras e converter datas
-                $cpf = !empty($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : null;
-                $cnpj = !empty($data['cnpj']) ? preg_replace('/\D/', '', $data['cnpj']) : null;
-                $birthDate = !empty($data['birth_date']) ? Carbon::createFromFormat('d/m/Y', $data['birth_date'])->format('Y-m-d') : null;
+                $cpf = !empty($dto->cpf) ? preg_replace('/\D/', '', $dto->cpf) : null;
+                $cnpj = !empty($dto->cnpj) ? preg_replace('/\D/', '', $dto->cnpj) : null;
+                $birthDate = !empty($dto->birth_date) ? Carbon::createFromFormat('d/m/Y', $dto->birth_date)->format('Y-m-d') : null;
 
                 // Atualizar CommonData
                 if ($provider->commonData) {
                     $this->commonDataRepository->update($provider->commonData->id, [
                         'type'                => $type,
-                        'first_name'          => $data['first_name'] ?? null,
-                        'last_name'           => $data['last_name'] ?? null,
+                        'first_name'          => $dto->first_name,
+                        'last_name'           => $dto->last_name,
                         'cpf'                 => $cpf,
                         'birth_date'          => $birthDate,
-                        'company_name'        => $data['company_name'] ?? null,
+                        'company_name'        => $dto->company_name,
                         'cnpj'                => $cnpj,
-                        'description'         => $data['description'] ?? null,
-                        'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
-                        'profession_id'       => $data['profession_id'] ?? null,
+                        'description'         => $dto->description,
+                        'area_of_activity_id' => $dto->area_of_activity_id,
+                        'profession_id'       => $dto->profession_id,
                     ]);
                 }
 
                 // Atualizar Contact
                 if ($provider->contact) {
                     $this->contactRepository->update($provider->contact->id, [
-                        'email_personal' => $data['email_personal'] ?? $data['email'] ?? null,
-                        'phone_personal' => $data['phone_personal'] ?? $data['phone'] ?? null,
-                        'email_business' => $data['email_business'] ?? null,
-                        'phone_business' => $data['phone_business'] ?? null,
-                        'website'        => $data['website'] ?? null,
+                        'email_personal' => $dto->email_personal ?? $dto->email,
+                        'phone_personal' => $dto->phone_personal,
+                        'email_business' => $dto->email_business,
+                        'phone_business' => $dto->phone_business,
+                        'website'        => $dto->website,
                     ]);
                 }
 
                 // Atualizar Address
                 if ($provider->address) {
                     $this->addressRepository->update($provider->address->id, [
-                        'address'        => $data['address'] ?? null,
-                        'address_number' => $data['address_number'] ?? null,
-                        'neighborhood'   => $data['neighborhood'] ?? null,
-                        'city'           => $data['city'] ?? null,
-                        'state'          => $data['state'] ?? null,
-                        'cep'            => $data['cep'] ?? null,
+                        'address'        => $dto->address,
+                        'address_number' => $dto->address_number,
+                        'neighborhood'   => $dto->neighborhood,
+                        'city'           => $dto->city,
+                        'state'          => $dto->state,
+                        'cep'            => $dto->cep,
                     ]);
                 }
 
                 // Atualizar dados empresariais
                 if ($type === CommonData::TYPE_COMPANY) {
-                    $foundingDate = !empty($data['founding_date']) ? Carbon::createFromFormat('d/m/Y', $data['founding_date'])->format('Y-m-d') : null;
+                    $foundingDate = !empty($dto->founding_date) ? Carbon::createFromFormat('d/m/Y', $dto->founding_date)->format('Y-m-d') : null;
                     $businessData = [
-                        'fantasy_name'           => $data['fantasy_name'] ?? null,
-                        'state_registration'     => $data['state_registration'] ?? null,
-                        'municipal_registration' => $data['municipal_registration'] ?? null,
+                        'fantasy_name'           => $dto->fantasy_name,
+                        'state_registration'     => $dto->state_registration,
+                        'municipal_registration' => $dto->municipal_registration,
                         'founding_date'          => $foundingDate,
-                        'industry'               => $data['industry'] ?? null,
-                        'company_size'           => $data['company_size'] ?? null,
-                        'notes'                  => $data['notes'] ?? null,
+                        'industry'               => $dto->industry,
+                        'company_size'           => $dto->company_size,
+                        'notes'                  => $dto->notes,
                     ];
 
                     if ($provider->businessData) {
@@ -499,7 +499,7 @@ class ProviderManagementService
             }
 
             // Create Plan Subscription
-            $planSubscription = new PlanSubscription([
+            $savedSubscription = $this->planSubscriptionRepository->create([
                 'tenant_id'          => $tenant->id,
                 'plan_id'            => $plan->id,
                 'provider_id'        => $provider->id,
@@ -512,8 +512,6 @@ class ProviderManagementService
                 'payment_id'         => 'TRIAL_' . uniqid(),
                 'public_hash'        => 'TRIAL_HASH_' . uniqid(),
             ]);
-
-            $savedSubscription = $this->planRepository->saveSubscription($planSubscription);
 
             return ServiceResult::success([
                 'provider'     => $provider,

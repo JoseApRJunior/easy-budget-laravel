@@ -9,6 +9,7 @@ use App\Repositories\InventoryMovementRepository;
 use App\Repositories\InventoryRepository;
 use App\Repositories\ProductRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
+use App\Services\Domain\InventoryService;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
 
@@ -18,9 +19,108 @@ class InventoryManagementService extends AbstractBaseService
         private InventoryRepository $inventoryRepository,
         private InventoryMovementRepository $movementRepository,
         private ProductRepository $productRepository,
-        private CategoryRepository $categoryRepository
+        private CategoryRepository $categoryRepository,
+        private InventoryService $inventoryService
     ) {
         parent::__construct($inventoryRepository);
+    }
+
+    /**
+     * Add stock to a product.
+     */
+    public function addStock(string $sku, int $quantity, ?string $reason = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $quantity, $reason) {
+            $tenantId = $this->ensureTenantId();
+            $product = $this->productRepository->findBySku($sku);
+
+            if (!$product) {
+                return ServiceResult::error(404, 'Produto não encontrado.');
+            }
+
+            return $this->inventoryService->addStock(
+                (int) $product->id,
+                $tenantId,
+                $quantity,
+                $reason ?? 'Entrada manual'
+            );
+        }, 'Erro ao adicionar estoque.');
+    }
+
+    /**
+     * Remove stock from a product.
+     */
+    public function removeStock(string $sku, int $quantity, ?string $reason = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $quantity, $reason) {
+            $tenantId = $this->ensureTenantId();
+            $product = $this->productRepository->findBySku($sku);
+
+            if (!$product) {
+                return ServiceResult::error(404, 'Produto não encontrado.');
+            }
+
+            return $this->inventoryService->removeStock(
+                (int) $product->id,
+                $tenantId,
+                $quantity,
+                $reason ?? 'Saída manual'
+            );
+        }, 'Erro ao remover estoque.');
+    }
+
+    /**
+     * Set stock for a product.
+     */
+    public function setStock(string $sku, int $quantity, string $reason): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $quantity, $reason) {
+            $tenantId = $this->ensureTenantId();
+            $product = $this->productRepository->findBySku($sku);
+
+            if (!$product) {
+                return ServiceResult::error(404, 'Produto não encontrado.');
+            }
+
+            return $this->inventoryService->setStock(
+                (int) $product->id,
+                $tenantId,
+                $quantity,
+                $reason
+            );
+        }, 'Erro ao ajustar estoque.');
+    }
+
+    /**
+     * Add stock by product ID (for API).
+     */
+    public function addStockById(int $productId, int $quantity, ?string $reason = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($productId, $quantity, $reason) {
+            $tenantId = $this->ensureTenantId();
+            return $this->inventoryService->addStock(
+                $productId,
+                $tenantId,
+                $quantity,
+                $reason ?? 'Entrada via API'
+            );
+        }, 'Erro ao adicionar estoque via API.');
+    }
+
+    /**
+     * Remove stock by product ID (for API).
+     */
+    public function removeStockById(int $productId, int $quantity, ?string $reason = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($productId, $quantity, $reason) {
+            $tenantId = $this->ensureTenantId();
+            return $this->inventoryService->removeStock(
+                $productId,
+                $tenantId,
+                $quantity,
+                $reason ?? 'Saída via API'
+            );
+        }, 'Erro ao remover estoque via API.');
     }
 
     /**
@@ -45,7 +145,7 @@ class InventoryManagementService extends AbstractBaseService
 
             // Additional stats that might not be in getStatistics
             $outOfStockCount = $this->inventoryRepository->countByTenant(['quantity' => 0]);
-            
+
             $highStockCount = $this->inventoryRepository->getQuery()
                 ->where('tenant_id', $tenantId)
                 ->whereNotNull('max_quantity')
@@ -74,7 +174,7 @@ class InventoryManagementService extends AbstractBaseService
             $this->ensureTenantId();
 
             $categories = $this->categoryRepository->getAllByTenant([], ['name' => 'asc']);
-            
+
             // Map controller status filters to repository filters
             if (isset($filters['status'])) {
                 switch ($filters['status']) {
@@ -112,7 +212,7 @@ class InventoryManagementService extends AbstractBaseService
             $this->ensureTenantId();
 
             $products = $this->productRepository->getAllByTenant([], ['name' => 'asc']);
-            
+
             $movements = $this->movementRepository->getPaginated(
                 $filters,
                 15,
@@ -142,7 +242,7 @@ class InventoryManagementService extends AbstractBaseService
             $tenantId = $this->ensureTenantId();
 
             $categories = $this->categoryRepository->getAllByTenant([], ['name' => 'asc']);
-            
+
             // This is a complex query that might need a dedicated repository method
             // For now, let's keep it similar to the controller but using repositories
             $stockTurnover = $this->productRepository->getPaginated(
@@ -155,19 +255,19 @@ class InventoryManagementService extends AbstractBaseService
             // This is better done in the repository, but for a quick refactor:
             $items = $stockTurnover->getCollection()->map(function ($product) use ($filters, $tenantId) {
                 $inventory = $this->inventoryRepository->findByProduct((int)$product->id, $tenantId);
-                
+
                 $stats = $this->movementRepository->getStatisticsByPeriod(
                     $filters['start_date'] ?? null,
                     $filters['end_date'] ?? null
                 );
-                
+
                 // Note: This is still a bit inefficient (N+1), should be moved to repository query
                 return $product;
             });
 
-            // For now, let's return a basic structure. 
+            // For now, let's return a basic structure.
             // TODO: Move the complex turnover query to ProductRepository or a specialized reporter.
-            
+
             return ServiceResult::success([
                 'filters'       => $filters,
                 'categories'    => $categories,
@@ -219,7 +319,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku) {
             $this->ensureTenantId();
             $product = $this->productRepository->findBySku($sku, ['inventory']);
-            
+
             if (!$product) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Produto não encontrado.');
             }

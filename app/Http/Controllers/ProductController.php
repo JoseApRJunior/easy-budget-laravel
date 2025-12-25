@@ -35,6 +35,7 @@ class ProductController extends Controller
      */
     public function dashboard(): View
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->productService->getDashboardData();
         return $this->view('pages.product.dashboard', $result, 'stats');
     }
@@ -44,6 +45,7 @@ class ProductController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $filters = $request->only(['search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price']);
 
         if (empty($request->query())) {
@@ -66,6 +68,7 @@ class ProductController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('create', \App\Models\Product::class);
         $result = $this->categoryService->getActive();
 
         return $this->view('pages.product.create', $result, 'categories', [
@@ -78,6 +81,7 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request): RedirectResponse
     {
+        $this->authorize('create', \App\Models\Product::class);
         try {
             $dto = ProductDTO::fromRequest($request->validated());
             $result = $this->productService->createProduct($dto);
@@ -106,6 +110,9 @@ class ProductController extends Controller
             return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
+        $product = $result->getData();
+        $this->authorize('view', $product);
+
         return $this->view('pages.product.show', $result, 'product');
     }
 
@@ -121,6 +128,8 @@ class ProductController extends Controller
         }
 
         $product = $result->getData();
+        $this->authorize('update', $product);
+
         $categories = $this->categoryService->getActive()->getData();
 
         return view('pages.product.edit', compact('product', 'categories'));
@@ -132,14 +141,22 @@ class ProductController extends Controller
     public function update(string $sku, ProductUpdateRequest $request): RedirectResponse
     {
         try {
+            $result = $this->productService->findBySku($sku);
+            if ($result->isError()) {
+                return $this->redirectError('provider.products.index', $result->getMessage());
+            }
+
+            $product = $result->getData();
+            $this->authorize('update', $product);
+
             $dto = ProductDTO::fromRequest($request->validated());
             $removeImage = (bool) $request->input('remove_image', false);
 
-            $result = $this->productService->updateProductBySku($sku, $dto, $removeImage);
+            $updateResult = $this->productService->updateProductBySku($sku, $dto, $removeImage);
 
             return $this->redirectWithServiceResult(
                 'provider.products.show',
-                $result,
+                $updateResult,
                 'Produto atualizado com sucesso!',
                 ['sku' => $sku]
             );
@@ -158,19 +175,30 @@ class ProductController extends Controller
     public function toggleStatus(string $sku, Request $request): RedirectResponse|JsonResponse
     {
         try {
-            $result = $this->productService->toggleProductStatus($sku);
+            $result = $this->productService->findBySku($sku);
+            if ($result->isError()) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $result->getMessage()], 404);
+                }
+                return $this->redirectError('provider.products.index', $result->getMessage());
+            }
+
+            $product = $result->getData();
+            $this->authorize('update', $product);
+
+            $toggleResult = $this->productService->toggleProductStatus($sku);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success' => $result->isSuccess(),
-                    'message' => $result->getMessage(),
-                ], $result->isSuccess() ? 200 : 400);
+                    'success' => $toggleResult->isSuccess(),
+                    'message' => $toggleResult->getMessage(),
+                ], $toggleResult->isSuccess() ? 200 : 400);
             }
 
             return $this->redirectWithServiceResult(
                 'provider.products.show',
-                $result,
-                $result->getMessage(),
+                $toggleResult,
+                $toggleResult->getMessage(),
                 ['sku' => $sku]
             );
         } catch (\Exception $e) {
@@ -196,11 +224,19 @@ class ProductController extends Controller
     public function destroy(string $sku): RedirectResponse
     {
         try {
-            $result = $this->productService->deleteProductBySku($sku);
+            $result = $this->productService->findBySku($sku);
+            if ($result->isError()) {
+                return $this->redirectError('provider.products.index', $result->getMessage());
+            }
+
+            $product = $result->getData();
+            $this->authorize('delete', $product);
+
+            $deleteResult = $this->productService->deleteProductBySku($sku);
 
             return $this->redirectWithServiceResult(
                 'provider.products.index',
-                $result,
+                $deleteResult,
                 'Produto excluído com sucesso.'
             );
         } catch (\Exception $e) {
@@ -218,11 +254,20 @@ class ProductController extends Controller
     public function restore(string $sku): RedirectResponse
     {
         try {
-            $result = $this->productService->restoreProductBySku($sku);
+            $result = $this->productService->findBySku($sku, [], true);
+
+            if ($result->isError()) {
+                return $this->redirectError('provider.products.index', 'Produto não encontrado para restauração.');
+            }
+
+            $product = $result->getData();
+            $this->authorize('update', $product);
+
+            $restoreResult = $this->productService->restoreProductBySku($sku);
 
             return $this->redirectWithServiceResult(
                 'provider.products.show',
-                $result,
+                $restoreResult,
                 'Produto restaurado com sucesso!',
                 ['sku' => $sku]
             );
@@ -257,6 +302,7 @@ class ProductController extends Controller
 
     public function restoreMultiple(Request $request): RedirectResponse
     {
+        $this->authorize('update', \App\Models\Product::class);
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {
@@ -277,6 +323,7 @@ class ProductController extends Controller
      */
     public function ajaxSearch(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $filters = $request->only(['search', 'active', 'category_id', 'min_price', 'max_price']);
         $result  = $this->productService->getFilteredProducts($filters, ['category']);
 
@@ -290,6 +337,7 @@ class ProductController extends Controller
      */
     public function export(Request $request)
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $format = $request->get('format', 'xlsx');
 
         // Captura TODOS os filtros aplicados na listagem (exceto paginação)

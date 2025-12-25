@@ -244,8 +244,9 @@ Route::prefix( 'p' )->name( 'provider.' )->middleware( [ 'auth', 'verified', 'pr
 
         // Status e exclusão via SKU
         Route::patch( '/{sku}/toggle-status', [ ProductController::class, 'toggleStatus' ] )->name( 'toggle-status' );
-        Route::delete( '/{sku}', [ ProductController::class, 'delete_store' ] )->name( 'destroy' );
+        Route::delete( '/{sku}', [ ProductController::class, 'destroy' ] )->name( 'destroy' );
         Route::post( '/{sku}/restore', [ ProductController::class, 'restore' ] )->name( 'restore' );
+        Route::post( '/restore-multiple', [ ProductController::class, 'restoreMultiple' ] )->name( 'restore-multiple' );
 
         // Inventory Management
         Route::post( '/{id}/inventory/add', [ InventoryController::class, 'add' ] )->name( 'inventory.add' );

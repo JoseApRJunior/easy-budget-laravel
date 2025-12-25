@@ -76,7 +76,7 @@ class CustomerController extends Controller
         return view('pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
             'professions'       => $professions,
-            'customer'          => new \App\Models\Customer,
+            'customer'          => null, // Removido new \App\Models\Customer
         ]);
     }
 

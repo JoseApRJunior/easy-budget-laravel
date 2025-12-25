@@ -32,6 +32,7 @@ class BudgetController extends Controller
      */
     public function dashboard(Request $request): View
     {
+        $this->authorize('viewAny', Budget::class);
         $result = $this->budgetService->getDashboardStats();
 
         if ($result->isError()) {
@@ -45,6 +46,7 @@ class BudgetController extends Controller
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Budget::class);
         /** @var User $user */
         $user = Auth::user();
         $result = $this->budgetService->getBudgetsForProvider($user->id, $request->all());
@@ -60,6 +62,7 @@ class BudgetController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Budget::class);
         $customersResult = $this->customerService->getFilteredCustomers(['per_page' => 200]);
 
         return view('pages.budget.create', [
@@ -69,6 +72,7 @@ class BudgetController extends Controller
 
     public function store(BudgetStoreRequest $request): RedirectResponse
     {
+        $this->authorize('create', Budget::class);
         try {
             $dto = BudgetDTO::fromRequest($request->validated());
             $result = $this->budgetService->create($dto);
@@ -90,14 +94,7 @@ class BudgetController extends Controller
 
     public function show(string $code): View
     {
-        $result = $this->budgetService->findByCode($code);
-
-        if ($result->isError()) {
-            abort(404, 'Orçamento não encontrado.');
-        }
-
-        $budget = $result->getData();
-        $budget->load([
+        $result = $this->budgetService->findByCode($code, [
             'customer.commonData',
             'customer.contact',
             'items' => function ($q) {
@@ -106,6 +103,13 @@ class BudgetController extends Controller
             'services.category',
         ]);
 
+        if ($result->isError()) {
+            abort(404, 'Orçamento não encontrado.');
+        }
+
+        $budget = $result->getData();
+        $this->authorize('view', $budget);
+
         return view('pages.budget.show', [
             'budget' => $budget,
         ]);
@@ -113,14 +117,14 @@ class BudgetController extends Controller
 
     public function edit(string $code): View
     {
-        $result = $this->budgetService->findByCode($code);
+        $result = $this->budgetService->findByCode($code, ['customer', 'items']);
 
         if ($result->isError()) {
             abort(404, 'Orçamento não encontrado.');
         }
 
         $budget = $result->getData();
-        $budget->load(['customer', 'items']);
+        $this->authorize('update', $budget);
 
         $customersResult = $this->customerService->getFilteredCustomers(['per_page' => 200]);
 
@@ -132,17 +136,25 @@ class BudgetController extends Controller
 
     public function update(BudgetUpdateRequest $request, string $code): RedirectResponse
     {
+        $result = $this->budgetService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $budget = $result->getData();
+        $this->authorize('update', $budget);
+
         try {
             $dto = BudgetDTO::fromRequest($request->validated());
-            $result = $this->budgetService->update($code, $dto);
+            $updateResult = $this->budgetService->update($code, $dto);
 
-            if ($result->isError()) {
+            if ($updateResult->isError()) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', $result->getMessage());
+                    ->with('error', $updateResult->getMessage());
             }
 
-            return redirect()->route('provider.budgets.show', $result->getData()->code)
+            return redirect()->route('provider.budgets.show', $updateResult->getData()->code)
                 ->with('success', 'Orçamento atualizado com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -153,13 +165,21 @@ class BudgetController extends Controller
 
     public function toggleStatus(Request $request, string $code): RedirectResponse
     {
+        $result = $this->budgetService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $budget = $result->getData();
+        $this->authorize('update', $budget);
+
         $status = $request->input('status');
         $comment = $request->input('comment', '');
 
-        $result = $this->budgetService->changeStatusByCode($code, (string) $status, (string) $comment);
+        $toggleResult = $this->budgetService->changeStatusByCode($code, (string) $status, (string) $comment);
 
-        if ($result->isError()) {
-            return redirect()->back()->with('error', $result->getMessage());
+        if ($toggleResult->isError()) {
+            return redirect()->back()->with('error', $toggleResult->getMessage());
         }
 
         return redirect()->back()->with('success', 'Status atualizado com sucesso!');
@@ -167,10 +187,18 @@ class BudgetController extends Controller
 
     public function destroy(string $code): RedirectResponse
     {
-        $result = $this->budgetService->deleteByCode($code);
-
+        $result = $this->budgetService->findByCode($code);
         if ($result->isError()) {
             return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $budget = $result->getData();
+        $this->authorize('delete', $budget);
+
+        $deleteResult = $this->budgetService->deleteByCode($code);
+
+        if ($deleteResult->isError()) {
+            return redirect()->back()->with('error', $deleteResult->getMessage());
         }
 
         return redirect()->route('provider.budgets.index')

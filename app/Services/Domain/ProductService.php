@@ -8,6 +8,7 @@ use App\DTOs\Product\ProductDTO;
 use App\Enums\OperationStatus;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
+use App\Repositories\ProductInventoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
@@ -29,8 +30,10 @@ use Illuminate\Support\Str;
  */
 class ProductService extends AbstractBaseService
 {
-    public function __construct(ProductRepository $repository)
-    {
+    public function __construct(
+        ProductRepository $repository,
+        private ProductInventoryRepository $inventoryRepository
+    ) {
         parent::__construct($repository);
     }
 
@@ -162,10 +165,10 @@ class ProductService extends AbstractBaseService
         }, 'Erro ao buscar produtos ativos.');
     }
 
-    public function findBySku(string $sku, array $with = []): ServiceResult
+    public function findBySku(string $sku, array $with = [], bool $withTrashed = false): ServiceResult
     {
         try {
-            $product = $this->repository->findBySku($sku, $with);
+            $product = $this->repository->findBySku($sku, $with, $withTrashed);
 
             if (!$product) {
                 return $this->error(
@@ -211,13 +214,7 @@ class ProductService extends AbstractBaseService
                 $product = $this->repository->create($data);
 
                 // 4. Inventário Inicial
-                \App\Models\ProductInventory::create([
-                    'tenant_id'    => $product->tenant_id,
-                    'product_id'   => $product->id,
-                    'quantity'     => 0,
-                    'min_quantity' => 0,
-                    'max_quantity' => null,
-                ]);
+                $this->inventoryRepository->initialize($product->id, (int) $tenantId);
 
                 return $product;
             });
@@ -281,19 +278,9 @@ class ProductService extends AbstractBaseService
                 }
 
                 $newStatus = !$product->active;
+                $this->repository->updateStatus($product->id, $newStatus);
 
-                $dto = new ProductDTO(
-                    name: $product->name,
-                    price: (float) $product->price,
-                    category_id: $product->category_id,
-                    description: $product->description,
-                    sku: $product->sku,
-                    unit: $product->unit,
-                    is_active: $newStatus,
-                    image: $product->image
-                );
-
-                return $this->repository->update($product->id, $dto->toDatabaseArray());
+                return $product->fresh();
             });
 
             $message = $product->active ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
@@ -345,7 +332,6 @@ class ProductService extends AbstractBaseService
     public function restoreProductBySku(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            $tenantId = $this->ensureTenantId();
             $product = $this->repository->findBySku($sku, [], true);
 
             if (!$product || !$product->trashed()) {
@@ -355,6 +341,23 @@ class ProductService extends AbstractBaseService
             $this->repository->restore($product->id);
             return $this->success($product, 'Produto restaurado com sucesso');
         }, 'Erro ao restaurar produto.');
+    }
+
+    /**
+     * Restaura múltiplos produtos pelos seus IDs.
+     */
+    public function restoreProducts(array $ids): ServiceResult
+    {
+        return $this->safeExecute(function () use ($ids) {
+            $count = 0;
+            foreach ($ids as $id) {
+                if ($this->repository->restore((int) $id)) {
+                    $count++;
+                }
+            }
+
+            return $this->success(null, "{$count} produtos restaurados com sucesso");
+        }, 'Erro ao restaurar produtos.');
     }
 
 

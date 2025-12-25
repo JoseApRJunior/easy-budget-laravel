@@ -92,12 +92,11 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca orçamentos recentes por tenant.
+     * Busca orçamentos recentes.
      */
-    public function getRecentBudgets(int $tenantId, int $limit = 10): Collection
+    public function getRecentBudgets(int $limit = 10): Collection
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->with(['customer.commonData'])
             ->latest()
             ->limit($limit)
@@ -105,29 +104,46 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca um orçamento por código e tenant.
+     * Busca o último orçamento criado em um determinado mês/ano.
      */
-    public function findByCode(string $code, int $tenantId): ?Budget
+    public function getLastBudgetByMonth(string $year, string $month): ?Budget
     {
-        return $this->model
-            ->where('code', $code)
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->orderBy('id', 'desc')
             ->first();
+    }
+
+    /**
+     * Busca um orçamento por código.
+     */
+    public function findByCode(string $code, array $with = []): ?Budget
+    {
+        $query = $this->model->newQuery()->where('code', $code);
+
+        if (!empty($with)) {
+            $query->with($with);
+        }
+
+        return $query->first();
     }
 
     /**
      * Obtém estatísticas de orçamentos para o dashboard.
      */
-    public function getDashboardStats(int $tenantId): array
+    public function getDashboardStats(): array
     {
+        $baseQuery = $this->model->newQuery();
+
         return [
-            'total_count'    => $this->model->where('tenant_id', $tenantId)->count(),
-            'pending_count'  => $this->model->where('tenant_id', $tenantId)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
-            'approved_count' => $this->model->where('tenant_id', $tenantId)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->count(),
-            'rejected_count' => $this->model->where('tenant_id', $tenantId)->where('status', \App\Enums\BudgetStatus::REJECTED->value)->count(),
-            'total_value'    => (float) $this->model->where('tenant_id', $tenantId)->sum('total'),
-            'approved_value' => (float) $this->model->where('tenant_id', $tenantId)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->sum('total'),
-            'recent_budgets' => $this->getRecentBudgets($tenantId, 5),
+            'total_count'    => (clone $baseQuery)->count(),
+            'pending_count'  => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
+            'approved_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->count(),
+            'rejected_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::REJECTED->value)->count(),
+            'total_value'    => (float) (clone $baseQuery)->sum('total'),
+            'approved_value' => (float) (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->sum('total'),
+            'recent_budgets' => $this->getRecentBudgets(5),
         ];
     }
 
@@ -150,9 +166,9 @@ class BudgetRepository extends AbstractTenantRepository
     /**
      * Paginação de orçamentos com filtros.
      */
-    public function getPaginatedBudgets(int $tenantId, array $filters = [], int $perPage = 10): LengthAwarePaginator
+    public function getPaginatedBudgets(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
-        $query = $this->model->where('tenant_id', $tenantId)->with(['customer.commonData']);
+        $query = $this->model->newQuery()->with(['customer.commonData']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -178,12 +194,11 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Calcula a receita mensal por tenant.
+     * Calcula a receita mensal.
      */
-    public function getMonthlyRevenue(int $tenantId, int $month, int $year): float
+    public function getMonthlyRevenue(int $month, int $year): float
     {
-        return (float) $this->model
-            ->where('tenant_id', $tenantId)
+        return (float) $this->model->newQuery()
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->whereIn('status', [\App\Enums\BudgetStatus::APPROVED, \App\Enums\BudgetStatus::COMPLETED])
@@ -191,12 +206,11 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca orçamentos pendentes por tenant.
+     * Busca orçamentos pendentes.
      */
-    public function getPendingBudgets(int $tenantId, int $limit = 10): Collection
+    public function getPendingBudgets(int $limit = 10): Collection
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->where('status', \App\Enums\BudgetStatus::PENDING)
             ->with('customer')
             ->latest()
@@ -205,12 +219,11 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca orçamentos com pagamento em atraso por tenant.
+     * Busca orçamentos com pagamento em atraso.
      */
-    public function getOverduePayments(int $tenantId, int $limit = 10): Collection
+    public function getOverduePayments(int $limit = 10): Collection
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->where('due_date', '<', now())
             ->whereIn('status', [\App\Enums\BudgetStatus::APPROVED, \App\Enums\BudgetStatus::PENDING])
             ->with('customer')
@@ -220,12 +233,11 @@ class BudgetRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca orçamentos de um mês específico por tenant.
+     * Busca orçamentos de um mês específico.
      */
-    public function getBudgetsByMonth(int $tenantId, int $month, int $year): Collection
+    public function getBudgetsByMonth(int $month, int $year): Collection
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->get();

@@ -20,10 +20,18 @@ use InvalidArgumentException;
 use App\DTOs\Budget\BudgetDTO;
 use App\DTOs\Budget\BudgetItemDTO;
 
+use App\Repositories\BudgetItemRepository;
+use App\Repositories\ServiceRepository;
+use App\Services\Domain\BudgetCodeGeneratorService;
+
 class BudgetService extends AbstractBaseService
 {
-    public function __construct(BudgetRepository $budgetRepository)
-    {
+    public function __construct(
+        BudgetRepository $budgetRepository,
+        private readonly BudgetItemRepository $budgetItemRepository,
+        private readonly ServiceRepository $serviceRepository,
+        private readonly BudgetCodeGeneratorService $codeGeneratorService
+    ) {
         parent::__construct($budgetRepository);
     }
 
@@ -33,12 +41,10 @@ class BudgetService extends AbstractBaseService
     public function getBudgetsForProvider(int $userId, array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $tenantId = $this->ensureTenantId();
             $perPage = (int) ($filters['per_page'] ?? 10);
             unset($filters['per_page']);
 
             $budgets = $this->repository->getPaginatedBudgets(
-                tenantId: $tenantId,
                 filters: $filters,
                 perPage: $perPage,
             );
@@ -48,13 +54,12 @@ class BudgetService extends AbstractBaseService
     }
 
     /**
-     * Busca um orçamento por código.
+     * Busca um orçamento por código com relações opcionais.
      */
-    public function findByCode(string $code): ServiceResult
+    public function findByCode(string $code, array $with = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($code) {
-            $tenantId = $this->ensureTenantId();
-            $budget = $this->repository->findByCode($code, $tenantId);
+        return $this->safeExecute(function () use ($code, $with) {
+            $budget = $this->repository->findByCode($code, $with);
 
             if (!$budget) {
                 return ServiceResult::error('Orçamento não encontrado.');
@@ -70,8 +75,7 @@ class BudgetService extends AbstractBaseService
     public function getDashboardStats(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-            $stats = $this->repository->getDashboardStats($tenantId);
+            $stats = $this->repository->getDashboardStats();
             return ServiceResult::success($stats);
         }, 'Erro ao obter estatísticas do dashboard.');
     }
@@ -85,20 +89,28 @@ class BudgetService extends AbstractBaseService
             $tenantId = $this->ensureTenantId($dto->tenant_id);
 
             return DB::transaction(function () use ($dto, $tenantId) {
-                $code = $dto->code ?? $this->generateUniqueBudgetCode($tenantId);
+                // Gera o código usando o serviço especializado
+                $codeResult = $this->codeGeneratorService->generateUniqueCode($tenantId);
+                if ($codeResult->isError()) {
+                    throw new \Exception($codeResult->getMessage());
+                }
 
-                $budgetData = $dto->toArray();
-                $budgetData['code'] = $code;
-                $budgetData['tenant_id'] = $tenantId;
+                $code = $dto->code ?? $codeResult->getData();
 
+                // Prepara dados para criação
+                $budgetData = array_merge($dto->toArray(), [
+                    'code'      => $code,
+                    'tenant_id' => $tenantId,
+                ]);
+
+                // Cria o orçamento usando o repositório
                 $budget = $this->repository->create($budgetData);
 
+                // Cria os itens usando o repositório de itens
                 if (!empty($dto->items)) {
                     foreach ($dto->items as $itemDto) {
                         /** @var BudgetItemDTO $itemDto */
-                        $itemData = $itemDto->toArray();
-                        $itemData['tenant_id'] = $tenantId;
-                        $budget->items()->create($itemData);
+                        $this->budgetItemRepository->createFromDTO($itemDto, $budget->id);
                     }
                 }
 
@@ -113,27 +125,24 @@ class BudgetService extends AbstractBaseService
     public function update($id, BudgetDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $dto) {
-            $tenantId = $this->ensureTenantId($dto->tenant_id);
-
-            return DB::transaction(function () use ($id, $dto, $tenantId) {
+            return DB::transaction(function () use ($id, $dto) {
                 $budget = is_numeric($id)
                     ? $this->repository->find((int) $id)
-                    : $this->repository->findByCode((string) $id, $tenantId);
+                    : $this->repository->findByCode((string) $id);
 
                 if (!$budget) {
                     return ServiceResult::error('Orçamento não encontrado.');
                 }
 
-                $budgetData = $dto->toArray();
-                $this->repository->update($budget, $budgetData);
+                // Atualiza o orçamento principal
+                $this->repository->update($budget->id, $dto->toArray());
 
+                // Atualiza os itens: remove antigos e insere novos (estratégia simples)
                 if (isset($dto->items)) {
-                    $budget->items()->delete();
+                    $this->budgetItemRepository->deleteByBudgetId($budget->id);
                     foreach ($dto->items as $itemDto) {
                         /** @var BudgetItemDTO $itemDto */
-                        $itemData = $itemDto->toArray();
-                        $itemData['tenant_id'] = $tenantId;
-                        $budget->items()->create($itemData);
+                        $this->budgetItemRepository->createFromDTO($itemDto, $budget->id);
                     }
                 }
 
@@ -148,9 +157,7 @@ class BudgetService extends AbstractBaseService
     public function changeStatusByCode(string $code, string $status, string $comment = ''): ServiceResult
     {
         return $this->safeExecute(function () use ($code, $status, $comment) {
-            $tenantId = $this->ensureTenantId();
-
-            $budget = $this->repository->findByCode($code, $tenantId);
+            $budget = $this->repository->findByCode($code);
 
             if (!$budget) {
                 return ServiceResult::error('Orçamento não encontrado.');
@@ -189,7 +196,7 @@ class BudgetService extends AbstractBaseService
                 // Disparar evento para notificação
                 event(new BudgetStatusChanged($updatedBudget, $oldStatus, $status, $comment));
 
-                // Atualizar serviços em cascata se necessário
+                // Atualizar serviços em cascata se necessário usando o repositório
                 $this->updateRelatedServices($updatedBudget, $status);
 
                 return ServiceResult::success($updatedBudget, 'Status do orçamento alterado com sucesso.');
@@ -203,39 +210,19 @@ class BudgetService extends AbstractBaseService
     public function deleteByCode(string $code): ServiceResult
     {
         return $this->safeExecute(function () use ($code) {
-            $tenantId = $this->ensureTenantId();
-            $budget = $this->repository->findByCode($code, $tenantId);
+            $budget = $this->repository->findByCode($code);
 
             if (!$budget) {
                 return ServiceResult::error('Orçamento não encontrado.');
             }
 
+            // Remove itens antes de excluir o orçamento (ou depende de cascade delete no DB)
+            $this->budgetItemRepository->deleteByBudgetId($budget->id);
+
             return $this->repository->delete($budget->id)
                 ? ServiceResult::success(null, 'Orçamento excluído com sucesso.')
                 : ServiceResult::error('Falha ao excluir orçamento.');
         });
-    }
-
-    /**
-     * Gera um código único para o orçamento.
-     */
-    private function generateUniqueBudgetCode(int $tenantId): string
-    {
-        $year = date('Y');
-        $month = date('m');
-        $prefix = "BUD-{$year}{$month}-";
-
-        $lastBudget = $this->repository->getLastBudgetByMonth($year, $month, $tenantId);
-
-        if (!$lastBudget) {
-            return "{$prefix}0001";
-        }
-
-        $lastCode = $lastBudget->code;
-        $lastNumber = (int) substr($lastCode, -4);
-        $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
-
-        return "{$prefix}{$newNumber}";
     }
 
     /**
@@ -257,8 +244,8 @@ class BudgetService extends AbstractBaseService
             default                 => null
         };
 
-        if ($serviceStatus && $budget->services()->exists()) {
-            $budget->services()->update(['status' => $serviceStatus]);
+        if ($serviceStatus) {
+            $this->serviceRepository->updateStatusByBudgetId($budget->id, $serviceStatus);
         }
     }
 }

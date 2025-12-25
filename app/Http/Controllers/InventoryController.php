@@ -6,8 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Application\InventoryManagementService;
-use App\Services\Domain\InventoryService;
-use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,14 +13,11 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    private InventoryService $inventoryService;
     private InventoryManagementService $inventoryManagementService;
 
     public function __construct(
-        InventoryService $inventoryService,
         InventoryManagementService $inventoryManagementService
     ) {
-        $this->inventoryService = $inventoryService;
         $this->inventoryManagementService = $inventoryManagementService;
     }
 
@@ -31,6 +26,7 @@ class InventoryController extends Controller
      */
     public function dashboard(): View|RedirectResponse
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getDashboardData();
 
         if (!$result->isSuccess()) {
@@ -45,6 +41,7 @@ class InventoryController extends Controller
      */
     public function index(Request $request): View|RedirectResponse
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getIndexData($request->all());
 
         if (!$result->isSuccess()) {
@@ -59,6 +56,7 @@ class InventoryController extends Controller
      */
     public function movements(Request $request): View|RedirectResponse
     {
+        $this->authorize('viewMovements', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getMovementsData($request->all());
 
         if (!$result->isSuccess()) {
@@ -73,6 +71,7 @@ class InventoryController extends Controller
      */
     public function stockTurnover(Request $request): View|RedirectResponse
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
 
         if (!$result->isSuccess()) {
@@ -87,6 +86,7 @@ class InventoryController extends Controller
      */
     public function mostUsedProducts(): View
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         return view('pages.inventory.most-used');
     }
 
@@ -95,6 +95,7 @@ class InventoryController extends Controller
      */
     public function alerts(): View|RedirectResponse
     {
+        $this->authorize('manageAlerts', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getAlertsData();
 
         if (!$result->isSuccess()) {
@@ -109,6 +110,7 @@ class InventoryController extends Controller
      */
     public function report(Request $request): View
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         $type      = $request->input('type', 'summary');
         $startDate = $request->input('start_date');
         $endDate   = $request->input('end_date');
@@ -124,6 +126,7 @@ class InventoryController extends Controller
      */
     public function export()
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         // TODO: implementar exportação
         return redirect()->back()->with('warning', 'Exportação em desenvolvimento');
     }
@@ -133,6 +136,7 @@ class InventoryController extends Controller
      */
     public function exportMovements()
     {
+        $this->authorize('viewMovements', \App\Models\Product::class);
         // TODO: implementar exportação
         return redirect()->back()->with('warning', 'Exportação em desenvolvimento');
     }
@@ -142,6 +146,7 @@ class InventoryController extends Controller
      */
     public function exportStockTurnover()
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         // TODO: implementar exportação
         return redirect()->back()->with('warning', 'Exportação em desenvolvimento');
     }
@@ -151,6 +156,7 @@ class InventoryController extends Controller
      */
     public function exportMostUsed()
     {
+        $this->authorize('viewReports', \App\Models\Product::class);
         // TODO: implementar exportação
         return redirect()->back()->with('warning', 'Exportação em desenvolvimento');
     }
@@ -166,7 +172,10 @@ class InventoryController extends Controller
             return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return view('pages.inventory.show', ['product' => $result->getData()]);
+        $product = $result->getData();
+        $this->authorize('view', $product);
+
+        return view('pages.inventory.show', ['product' => $product]);
     }
 
     /**
@@ -180,7 +189,10 @@ class InventoryController extends Controller
             return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return view('pages.inventory.entry', ['product' => $result->getData()]);
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
+        return view('pages.inventory.entry', ['product' => $product]);
     }
 
     /**
@@ -188,27 +200,26 @@ class InventoryController extends Controller
      */
     public function entry(Request $request, $sku)
     {
+        $result = $this->inventoryManagementService->getProductBySku($sku);
+        if (!$result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
         $request->validate([
             'quantity' => 'required|integer|min:1',
             'reason'   => 'nullable|string|max:255',
         ]);
 
-        $productResult = $this->inventoryManagementService->getProductBySku($sku);
-
-        if (!$productResult->isSuccess()) {
-            return redirect()->back()->with('error', $productResult->getMessage());
-        }
-
-        $product = $productResult->getData();
-
-        $result = $this->inventoryService->addStock(
-            (int) $product->id,
-            (int) $product->tenant_id,
+        $entryResult = $this->inventoryManagementService->addStock(
+            (string) $sku,
             (int) $request->input('quantity'),
             (string) $request->input('reason', 'Entrada manual')
         );
 
-        if ($result->isSuccess()) {
+        if ($entryResult->isSuccess()) {
             return redirect()
                 ->route('provider.inventory.index')
                 ->with('success', 'Estoque adicionado com sucesso!');
@@ -216,7 +227,7 @@ class InventoryController extends Controller
 
         return redirect()
             ->back()
-            ->with('error', $result->getMessage());
+            ->with('error', $entryResult->getMessage());
     }
 
     /**
@@ -230,7 +241,10 @@ class InventoryController extends Controller
             return redirect()->back()->with('error', $productResult->getMessage());
         }
 
-        return view('pages.inventory.exit', ['product' => $productResult->getData()]);
+        $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
+        return view('pages.inventory.exit', ['product' => $product]);
     }
 
     /**
@@ -238,22 +252,21 @@ class InventoryController extends Controller
      */
     public function exit(Request $request, $sku)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1',
-            'reason'   => 'nullable|string|max:255',
-        ]);
-
         $productResult = $this->inventoryManagementService->getProductBySku($sku);
-
         if (!$productResult->isSuccess()) {
             return redirect()->back()->with('error', $productResult->getMessage());
         }
 
         $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
 
-        $result = $this->inventoryService->removeStock(
-            (int) $product->id,
-            (int) $product->tenant_id,
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'reason'   => 'nullable|string|max:255',
+        ]);
+
+        $result = $this->inventoryManagementService->removeStock(
+            (string) $sku,
             (int) $request->input('quantity'),
             (string) $request->input('reason', 'Saída manual')
         );
@@ -281,6 +294,8 @@ class InventoryController extends Controller
         }
 
         $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
         $inventory = $product->inventory;
 
         return view('pages.inventory.adjust', compact('product', 'inventory'));
@@ -291,22 +306,21 @@ class InventoryController extends Controller
      */
     public function adjustStock(Request $request, $sku)
     {
-        $request->validate([
-            'new_quantity' => 'required|integer|min:0',
-            'reason'       => 'required|string|min:10|max:255',
-        ]);
-
         $productResult = $this->inventoryManagementService->getProductBySku($sku);
-
         if (!$productResult->isSuccess()) {
             return redirect()->back()->with('error', $productResult->getMessage());
         }
 
         $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
 
-        $result = $this->inventoryService->setStock(
-            (int) $product->id,
-            (int) $product->tenant_id,
+        $request->validate([
+            'new_quantity' => 'required|integer|min:0',
+            'reason'       => 'required|string|min:10|max:255',
+        ]);
+
+        $result = $this->inventoryManagementService->setStock(
+            (string) $sku,
             (int) $request->input('new_quantity'),
             (string) $request->input('reason')
         );
@@ -327,6 +341,7 @@ class InventoryController extends Controller
      */
     public function checkAvailability(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', \App\Models\Product::class);
         // TODO: implementar verificação de disponibilidade
         return response()->json([
             'available' => true,
@@ -341,36 +356,25 @@ class InventoryController extends Controller
      */
     public function add(Request $request, int $productId): JsonResponse
     {
+        $product = \App\Models\Product::findOrFail($productId);
+        $this->authorize('adjustInventory', $product);
+
         $request->validate([
             'quantity' => 'required|integer|min:1',
             'reason'   => 'nullable|string|max:255',
         ]);
 
-        try {
-            $result = $this->inventoryService->addStock(
-                $productId,
-                (int) $request->input('quantity'),
-                (string) $request->input('reason', '')
-            );
+        $result = $this->inventoryManagementService->addStockById(
+            $productId,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', '')
+        );
 
-            if (!$result->isSuccess()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Estoque adicionado com sucesso',
-                'data'    => $result->getData(),
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao adicionar estoque: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'data'    => $result->getData(),
+        ], $result->isSuccess() ? 200 : 400);
     }
 
     /**
@@ -380,35 +384,24 @@ class InventoryController extends Controller
      */
     public function remove(Request $request, int $productId): JsonResponse
     {
+        $product = \App\Models\Product::findOrFail($productId);
+        $this->authorize('adjustInventory', $product);
+
         $request->validate([
             'quantity' => 'required|integer|min:1',
             'reason'   => 'nullable|string|max:255',
         ]);
 
-        try {
-            $result = $this->inventoryService->removeStock(
-                $productId,
-                (int) $request->input('quantity'),
-                (string) $request->input('reason', '')
-            );
+        $result = $this->inventoryManagementService->removeStockById(
+            $productId,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', '')
+        );
 
-            if (!$result->isSuccess()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Estoque removido com sucesso',
-                'data'    => $result->getData(),
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao remover estoque: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'data'    => $result->getData(),
+        ], $result->isSuccess() ? 200 : 400);
     }
 }

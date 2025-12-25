@@ -13,7 +13,7 @@ use App\DTOs\Common\ContactDTO;
 readonly class ProviderDTO extends AbstractDTO
 {
     public function __construct(
-        public int $user_id,
+        public ?int $user_id = null,
         public bool $terms_accepted = false,
         public ?UserDTO $user = null,
         public ?CommonDataDTO $common_data = null,
@@ -25,12 +25,12 @@ readonly class ProviderDTO extends AbstractDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            user_id: (int) $data['user_id'],
+            user_id: isset($data['user_id']) ? (int) $data['user_id'] : null,
             terms_accepted: (bool) ($data['terms_accepted'] ?? false),
-            user: isset($data['user']) ? UserDTO::fromRequest($data['user']) : null,
-            common_data: isset($data['common_data']) ? CommonDataDTO::fromRequest($data['common_data']) : null,
-            address: isset($data['address']) ? AddressDTO::fromRequest($data['address']) : null,
-            contact: isset($data['contact']) ? ContactDTO::fromRequest($data['contact']) : null,
+            user: isset($data['user']) ? UserDTO::fromRequest($data['user']) : (isset($data['name']) ? UserDTO::fromRequest($data) : null),
+            common_data: isset($data['common_data']) ? CommonDataDTO::fromRequest($data['common_data']) : (isset($data['document']) ? CommonDataDTO::fromRequest($data) : null),
+            address: isset($data['address']) ? AddressDTO::fromRequest($data['address']) : (isset($data['zip_code']) || isset($data['address']) ? AddressDTO::fromRequest($data) : null),
+            contact: isset($data['contact']) ? ContactDTO::fromRequest($data['contact']) : (isset($data['phone']) ? ContactDTO::fromRequest($data) : null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

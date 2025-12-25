@@ -82,8 +82,8 @@ class SupportService extends AbstractBaseService
                     $data['status'] = Support::STATUS_ABERTO;
                 }
 
-                // Salva o ticket no banco de dados
-                $support = $this->repository->create($data);
+                // Salva o ticket no banco de dados usando o repositório e o DTO
+                $support = $this->repository->createFromDTO($dto instanceof SupportDTO ? $dto : SupportDTO::fromRequest($data));
 
                 // Gerar e persistir código de protocolo no padrão SUP-YYYY-MM-XXXX
                 $supportCode = $this->generateProtocolCode($support);

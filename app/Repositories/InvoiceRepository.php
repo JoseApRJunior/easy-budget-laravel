@@ -27,14 +27,48 @@ class InvoiceRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca uma fatura por ID e Tenant.
+     * Busca uma fatura por código com relações opcionais.
      */
-    public function findByIdAndTenantId(int $id, int $tenantId): ?Invoice
+    public function findByCode(string $code, array $with = []): ?Invoice
     {
-        return $this->model
-            ->where('id', $id)
-            ->where('tenant_id', $tenantId)
-            ->first();
+        $query = $this->model->newQuery()->where('code', $code);
+
+        if (!empty($with)) {
+            $query->with($with);
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Verifica se a fatura possui pagamentos.
+     */
+    public function hasPayments(int $invoiceId): bool
+    {
+        return $this->model->newQuery()
+            ->where('id', $invoiceId)
+            ->whereHas('payments')
+            ->exists();
+    }
+
+    /**
+     * Deleta fatura pelo código.
+     */
+    public function deleteByCode(string $code): bool
+    {
+        return (bool) $this->model->newQuery()
+            ->where('code', $code)
+            ->delete();
+    }
+
+    /**
+     * Atualiza status pelo código.
+     */
+    public function updateStatusByCode(string $code, string $status): bool
+    {
+        return (bool) $this->model->newQuery()
+            ->where('code', $code)
+            ->update(['status' => $status]);
     }
 
     /**
@@ -70,9 +104,9 @@ class InvoiceRepository extends AbstractTenantRepository
     /**
      * Obtém estatísticas de faturas para o dashboard.
      */
-    public function getDashboardStats(int $tenantId): array
+    public function getDashboardStats(): array
     {
-        $baseQuery = $this->model->where('tenant_id', $tenantId);
+        $baseQuery = $this->model->newQuery();
 
         $total     = (clone $baseQuery)->count();
         $paid      = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PAID->value)->count();
@@ -125,5 +159,42 @@ class InvoiceRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, \App\DTOs\Invoice\InvoiceUpdateDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+
+    /**
+     * Soma o total de faturas vinculadas a um orçamento com determinados status.
+     */
+    public function sumTotalByBudgetId(int $budgetId, array $statuses): float
+    {
+        return (float) $this->model->newQuery()->whereHas('service', function ($query) use ($budgetId) {
+            $query->where('budget_id', $budgetId);
+        })
+            ->whereIn('status', $statuses)
+            ->sum('total');
+    }
+
+    /**
+     * Verifica se já existe uma fatura para um determinado serviço.
+     */
+    public function existsForService(int $serviceId): bool
+    {
+        return $this->model->newQuery()->where('service_id', $serviceId)->exists();
+    }
+
+    /**
+     * Pesquisa faturas por código ou nome do cliente.
+     */
+    public function search(string $query, int $limit = 10): Collection
+    {
+        return $this->model->newQuery()
+            ->where(function ($q) use ($query) {
+                $q->where('code', 'like', "%{$query}%")
+                    ->orWhereHas('customer', function ($cq) use ($query) {
+                        $cq->where('name', 'like', "%{$query}%");
+                    });
+            })
+            ->limit($limit)
+            ->with('customer')
+            ->get(['id', 'code', 'customer_id']);
     }
 }

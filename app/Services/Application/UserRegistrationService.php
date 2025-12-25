@@ -191,14 +191,12 @@ class UserRegistrationService extends AbstractBaseService
             $token     = generateSecureTokenUrl();
             $expiresAt = now()->addMinutes((int) config('auth.passwords.users.expire', 60));
 
-            $confirmationToken = new UserConfirmationToken([
+            $this->userConfirmationTokenRepository->create([
                 'user_id'    => $user->id,
                 'token'      => $token,
                 'expires_at' => $expiresAt,
                 'type'       => 'password_reset',
             ]);
-
-            $this->userConfirmationTokenRepository->create($confirmationToken->toArray());
 
             // Buscar tenant do usuário
             $tenant = null;

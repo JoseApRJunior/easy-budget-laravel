@@ -24,12 +24,15 @@ use Illuminate\Support\Facades\Request;
  */
 class AuditLogService extends AbstractBaseService
 {
-    protected BaseRepositoryInterface $repository;
+    /**
+     * @var AuditLogRepository
+     */
+    protected $repository;
 
     /**
      * Construtor do serviço.
      */
-    public function __construct(BaseRepositoryInterface $repository)
+    public function __construct(AuditLogRepository $repository)
     {
         parent::__construct($repository);
     }

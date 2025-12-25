@@ -12,10 +12,12 @@ use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\InvoiceStoreRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
+use App\Http\Requests\InvoiceStoreFromBudgetRequest;
 use App\Models\Budget;
 use App\Models\Invoice;
-use App\Models\Product;
-use App\Models\User;
+use App\Repositories\BudgetRepository;
+use App\Repositories\ProductRepository;
+use App\Services\Domain\BudgetService;
 use App\Services\Domain\CustomerService;
 use App\Services\Domain\InvoiceService;
 use Exception;
@@ -31,10 +33,13 @@ class InvoiceController extends Controller
     public function __construct(
         private readonly InvoiceService $invoiceService,
         private readonly CustomerService $customerService,
+        private readonly ProductRepository $productRepository,
+        private readonly BudgetService $budgetService,
     ) {}
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Invoice::class);
         $filters = $request->only(['status', 'customer_id', 'date_from', 'date_to', 'search']);
 
         $result = $this->invoiceService->getFilteredInvoices($filters, [
@@ -59,6 +64,7 @@ class InvoiceController extends Controller
 
     public function dashboard(Request $request): View
     {
+        $this->authorize('viewAny', Invoice::class);
         $result = $this->invoiceService->getDashboardStats();
 
         if ($result->isError()) {
@@ -75,9 +81,8 @@ class InvoiceController extends Controller
      */
     public function create(Request $request): View
     {
-        /** @var User $user */
-        $user     = Auth::user();
-        $products = Product::byTenant((int) ($user->tenant_id ?? 0))->active()->orderBy('name')->get();
+        $this->authorize('create', Invoice::class);
+        $products = $this->productRepository->getAllByTenant(['active' => true], ['name' => 'asc']);
 
         $customersResult = $this->customerService->listCustomers([]);
 
@@ -92,6 +97,7 @@ class InvoiceController extends Controller
 
     public function store(InvoiceStoreRequest $request): RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
         $dto = InvoiceDTO::fromRequest($request->validated());
         $result = $this->invoiceService->createInvoice($dto);
 
@@ -110,15 +116,21 @@ class InvoiceController extends Controller
     /**
      * Exibe detalhes de uma fatura específica.
      */
-    public function show(Invoice $invoice): View
+    public function show(string $code): View
     {
-
-        $invoice->load([
+        $result = $this->invoiceService->findByCode($code, [
             'customer',
             'service',
             'invoiceItems',
             'paymentMercadoPagoInvoice',
         ]);
+
+        if ($result->isError()) {
+            abort(404, $result->getMessage());
+        }
+
+        $invoice = $result->getData();
+        $this->authorize('view', $invoice);
 
         return view('pages.invoice.show', [
             'invoice' => $invoice,
@@ -128,16 +140,20 @@ class InvoiceController extends Controller
     /**
      * Exibe formulário de edição de fatura.
      */
-    public function edit(Invoice $invoice): View
+    public function edit(string $code): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $invoice->load([
+        $result = $this->invoiceService->findByCode($code, [
             'invoiceItems.product',
             'customer',
             'service',
         ]);
+
+        if ($result->isError()) {
+            abort(404, $result->getMessage());
+        }
+
+        $invoice = $result->getData();
+        $this->authorize('update', $invoice);
 
         $customersResult = $this->customerService->listCustomers([]);
 
@@ -152,58 +168,89 @@ class InvoiceController extends Controller
     /**
      * Atualiza fatura existente.
      */
-    public function update(InvoiceUpdateRequest $request, Invoice $invoice): RedirectResponse
+    public function update(InvoiceUpdateRequest $request, string $code): RedirectResponse
     {
-        $dto = InvoiceUpdateDTO::fromRequest($request->validated());
-        $result = $this->invoiceService->updateInvoiceByCode($invoice->code, $dto);
-
+        $result = $this->invoiceService->findByCode($code);
         if ($result->isError()) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $result->getMessage());
+            return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return redirect()->route('provider.invoices.show', $invoice->code)
+        $invoice = $result->getData();
+        $this->authorize('update', $invoice);
+
+        $dto = InvoiceUpdateDTO::fromRequest($request->validated());
+        $updateResult = $this->invoiceService->updateInvoiceByCode($code, $dto);
+
+        if ($updateResult->isError()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $updateResult->getMessage());
+        }
+
+        return redirect()->route('provider.invoices.show', $code)
             ->with('success', 'Fatura atualizada com sucesso!');
     }
 
-    public function destroy(Invoice $invoice): RedirectResponse
+    public function destroy(string $code): RedirectResponse
     {
-        $result = $this->invoiceService->deleteByCode($invoice->code);
-
+        $result = $this->invoiceService->findByCode($code);
         if ($result->isError()) {
             return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $invoice = $result->getData();
+        $this->authorize('delete', $invoice);
+
+        $deleteResult = $this->invoiceService->deleteByCode($code);
+
+        if ($deleteResult->isError()) {
+            return redirect()->back()->with('error', $deleteResult->getMessage());
         }
 
         return redirect()->route('provider.invoices.index')
             ->with('success', 'Fatura excluída com sucesso!');
     }
 
-    public function change_status(Invoice $invoice, Request $request): RedirectResponse
+    public function change_status(string $code, Request $request): RedirectResponse
     {
-        $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))],
-        ]);
-
-        $result = $this->invoiceService->updateStatusByCode($invoice->code, $request->input('status'));
-
+        $result = $this->invoiceService->findByCode($code);
         if ($result->isError()) {
             return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return redirect()->route('provider.invoices.show', $invoice->code)
+        $invoice = $result->getData();
+        $this->authorize('update', $invoice);
+
+        $request->validate([
+            'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))],
+        ]);
+
+        $statusResult = $this->invoiceService->updateStatusByCode($code, $request->input('status'));
+
+        if ($statusResult->isError()) {
+            return redirect()->back()->with('error', $statusResult->getMessage());
+        }
+
+        return redirect()->route('provider.invoices.show', $code)
             ->with('success', 'Status da fatura alterado com sucesso!');
     }
 
     /**
      * Create invoice from budget.
      */
-    public function createFromBudget(Budget $budget): View
+    public function createFromBudget(string $budgetCode): View
     {
-        $budget->load([
+        $result = $this->budgetService->findByCode($budgetCode, [
             'customer.commonData',
             'services.serviceItems.product',
         ]);
+
+        if ($result->isError()) {
+            abort(404, $result->getMessage());
+        }
+
+        $budget = $result->getData();
+        $this->authorize('view', $budget);
 
         $customersResult = $this->customerService->listCustomers([]);
 
@@ -219,6 +266,7 @@ class InvoiceController extends Controller
      */
     public function createPartialFromService(string $serviceCode): View|RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
         $result = $this->invoiceService->generateInvoiceDataFromService($serviceCode);
 
         if ($result->isError()) {
@@ -242,6 +290,7 @@ class InvoiceController extends Controller
      */
     public function createFromService(string $serviceCode): View|RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
         $result = $this->invoiceService->generateInvoiceDataFromService($serviceCode);
 
         if ($result->isError()) {
@@ -272,6 +321,7 @@ class InvoiceController extends Controller
      */
     public function storeManualFromService(Request $request, string $serviceCode): RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
         $request->validate([
             'issue_date'         => 'required|date',
             'due_date'           => 'required|date|after_or_equal:issue_date',
@@ -306,6 +356,7 @@ class InvoiceController extends Controller
      */
     public function storeFromService(Request $request): RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
         $request->validate([
             'service_code' => 'required|string|exists:services,code',
             'issue_date'   => 'required|date',
@@ -332,6 +383,9 @@ class InvoiceController extends Controller
      */
     public function storeFromBudget(Budget $budget, InvoiceStoreFromBudgetRequest $request): RedirectResponse
     {
+        $this->authorize('view', $budget);
+        $this->authorize('create', Invoice::class);
+
         $dto = InvoiceFromBudgetDTO::fromRequest($request->validated());
         $result = $this->invoiceService->createPartialInvoiceFromBudget($budget->code, $dto);
 
@@ -352,6 +406,7 @@ class InvoiceController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Invoice::class);
         $query = $request->get('q', '');
         $limit = $request->get('limit', 10);
 
@@ -375,6 +430,7 @@ class InvoiceController extends Controller
      */
     public function export(Request $request): BinaryFileResponse|JsonResponse
     {
+        $this->authorize('viewAny', Invoice::class);
         $format  = $request->get('format', 'xlsx');
         $filters = $request->only(['status', 'customer_id', 'date_from', 'date_to']);
 
@@ -398,6 +454,7 @@ class InvoiceController extends Controller
      */
     public function ajaxFilter(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Invoice::class);
         $filters = $request->only(['status', 'customer_id', 'service_id', 'date_from', 'date_to', 'due_date_from', 'due_date_to', 'min_amount', 'max_amount', 'search', 'sort_by', 'sort_direction']);
         $result  = $this->invoiceService->getFilteredInvoices($filters, ['customer:id,name', 'service:id,code,description', 'invoiceStatus']);
 
@@ -411,21 +468,19 @@ class InvoiceController extends Controller
      */
     public function print(Invoice $invoice): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        if ($invoice->tenant_id !== ($user->tenant_id ?? 0)) {
-            abort(404);
-        }
-
-        $invoice->load([
+        $this->authorize('view', $invoice);
+        $result = $this->invoiceService->findByCode($invoice->code, [
             'customer.commonData',
             'service',
             'invoiceItems.product',
         ]);
 
+        if ($result->isError()) {
+            abort(404, $result->getMessage());
+        }
+
         return view('pages.invoice.print', [
-            'invoice' => $invoice,
+            'invoice' => $result->getData(),
         ]);
     }
 }

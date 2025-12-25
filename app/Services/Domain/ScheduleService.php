@@ -104,13 +104,17 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::CONFLICT, 'Agendamento já está cancelado.');
             }
 
-            $updated = $this->repository->update($scheduleId, [
+            $success = $this->scheduleRepository->update($scheduleId, [
                 'status'              => 'cancelled',
                 'cancellation_reason' => $reason,
                 'cancelled_at'        => now(),
             ]);
 
-            return $this->success($updated->getData(), 'Agendamento cancelado com sucesso.');
+            if (!$success) {
+                return $this->error('Falha ao cancelar agendamento.');
+            }
+
+            return $this->success($schedule->fresh(), 'Agendamento cancelado com sucesso.');
         }, 'Erro ao cancelar agendamento.');
     }
 
@@ -134,7 +138,13 @@ class ScheduleService extends AbstractBaseService
             if ($status === 'no_show') $data['no_show_at'] = now();
             if ($status === 'cancelled') $data['cancelled_at'] = now();
 
-            return $this->repository->update($id, $data);
+            $success = $this->scheduleRepository->update($id, $data);
+
+            if (!$success) {
+                return $this->error('Falha ao atualizar status do agendamento.');
+            }
+
+            return $this->success($schedule->fresh(), 'Status atualizado com sucesso.');
         }, 'Erro ao atualizar status do agendamento.');
     }
 
@@ -203,12 +213,16 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::CONFLICT, 'Apenas agendamentos pendentes podem ser confirmados.');
             }
 
-            $updated = $this->repository->update($scheduleId, [
+            $success = $this->scheduleRepository->update($scheduleId, [
                 'status'       => 'confirmed',
                 'confirmed_at' => now(),
             ]);
 
-            return $this->success($updated->getData(), 'Agendamento confirmado com sucesso.');
+            if (!$success) {
+                return $this->error('Falha ao confirmar agendamento.');
+            }
+
+            return $this->success($schedule->fresh(), 'Agendamento confirmado com sucesso.');
         }, 'Erro ao confirmar agendamento.');
     }
 

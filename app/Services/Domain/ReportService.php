@@ -32,29 +32,20 @@ class ReportService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
-                $data = $dto->toArrayWithoutNulls();
+                // Prepara os dados finais mesclando o DTO com valores padrão e contextuais
+                $finalData = array_merge($dto->toArray(), [
+                    'status'      => $dto->status ?? 'processing',
+                    'description' => $dto->description ?? $this->generateDescription($dto->filters ?? []),
+                    'file_name'   => $dto->file_name ?? $this->generateFileName($dto->type, $dto->format),
+                    'tenant_id'   => $dto->tenant_id ?? $this->getEffectiveTenantId(),
+                    'user_id'     => $dto->user_id ?? (int) auth()->id(),
+                ]);
 
-                if (!isset($data['status'])) {
-                    $data['status'] = 'processing';
-                }
+                // Cria um novo DTO com os dados completos
+                $finalDto = ReportDTO::fromRequest($finalData);
 
-                if (!isset($data['description'])) {
-                    $data['description'] = $this->generateDescription($dto->filters ?? []);
-                }
-
-                if (!isset($data['file_name'])) {
-                    $data['file_name'] = $this->generateFileName($dto->type, $dto->format);
-                }
-
-                if (!isset($data['tenant_id'])) {
-                    $data['tenant_id'] = $this->getEffectiveTenantId();
-                }
-
-                if (!isset($data['user_id'])) {
-                    $data['user_id'] = (int) auth()->id();
-                }
-
-                $report = $this->repository->create($data);
+                // Salva o relatório usando o repositório
+                $report = $this->repository->createFromDTO($finalDto);
 
                 // Dispara evento para processamento assíncrono
                 event(new \App\Events\ReportGenerated($report));

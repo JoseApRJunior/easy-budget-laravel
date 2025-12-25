@@ -93,8 +93,30 @@ class ServiceRepository extends AbstractTenantRepository
     }
 
     /**
+     * Atualiza o status de todos os serviços vinculados a um orçamento.
+     */
+    public function updateStatusByBudgetId(int $budgetId, string $status): void
+    {
+        $this->model->where('budget_id', $budgetId)->update(['status' => $status]);
+    }
+
+    /**
+     * Busca um serviço por código e tenant com relações opcionais.
+     */
+    public function findByCode(string $code, int $tenantId, array $with = []): ?Service
+    {
+        $query = $this->model->where('code', $code)->where('tenant_id', $tenantId);
+
+        if (!empty($with)) {
+            $query->with($with);
+        }
+
+        return $query->first();
+    }
+
+    /**
      * Busca serviços ativos dentro do tenant atual.
-     *
+     */
      * @param array<string, string>|null $orderBy Ordenação
      * @return Collection<Service> Serviços ativos
      */
