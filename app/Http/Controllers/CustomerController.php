@@ -73,8 +73,8 @@ class CustomerController extends Controller
         $professions = $this->customerService->getProfessions()->getData();
 
         return view('pages.customer.create', [
-            'areas_of_activity' => $areasOfActivity,
-            'professions' => $professions,
+            'areas_of_activity' => $areasOfActivity ?? [],
+            'professions' => $professions ?? [],
             'customer' => null, // Removido new \App\Models\Customer
         ]);
     }

@@ -10,6 +10,7 @@ use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -125,11 +126,19 @@ class Customer extends Model
     }
 
     /**
+     * Get the contacts associated with the Customer.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    /**
      * Get the contact associated with the Customer.
      */
     public function contact(): HasOne
     {
-        return $this->hasOne(Contact::class);
+        return $this->hasOne(Contact::class)->latest(); // Assumindo que o singular retorna o mais recente ou principal
     }
 
     /**
@@ -199,7 +208,7 @@ class Customer extends Model
     /**
      * Get the tags for the Customer.
      */
-    public function tags()
+    public function tags(): BelongsToMany
     {
         return $this->belongsToMany(CustomerTag::class, 'customer_tag_assignments');
     }
@@ -613,121 +622,121 @@ class Customer extends Model
         return implode(', ', $parts);
     }
 
-    /**
-     * Formatar CPF (XXX.XXX.XXX-XX)
-     */
-    public function formatCpf(string $cpf): string
-    {
-        // Remove tudo que não é número
-        $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    // /**
+    //  * Formatar CPF (XXX.XXX.XXX-XX)
+    //  */
+    // public function formatCpf(string $cpf): string
+    // {
+    //     // Remove tudo que não é número
+    //     $cpf = preg_replace('/[^0-9]/', '', $cpf);
 
-        // Aplica a máscara
-        return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf);
-    }
+    //     // Aplica a máscara
+    //     return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf);
+    // }
 
-    /**
-     * Formatar CNPJ (XX.XXX.XXX/XXXX-XX)
-     */
-    public function formatCnpj(string $cnpj): string
-    {
-        // Remove tudo que não é número
-        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+    // /**
+    //  * Formatar CNPJ (XX.XXX.XXX/XXXX-XX)
+    //  */
+    // public function formatCnpj(string $cnpj): string
+    // {
+    //     // Remove tudo que não é número
+    //     $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
 
-        // Aplica a máscara
-        return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
-    }
+    //     // Aplica a máscara
+    //     return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
+    // }
 
-    /**
-     * Formatar telefone ((XX) XXXXX-XXXX)
-     */
-    public function formatPhone(string $phone): string
-    {
-        // Remove tudo que não é número
-        $phone = preg_replace('/[^0-9]/', '', $phone);
+    // /**
+    //  * Formatar telefone ((XX) XXXXX-XXXX)
+    //  */
+    // public function formatPhone(string $phone): string
+    // {
+    //     // Remove tudo que não é número
+    //     $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        // Aplica a máscara baseada no tamanho
-        if (strlen($phone) === 11) {
-            return preg_replace('/(\d{2})(\d{5})(\d{4})/', '($1) $2-$3', $phone);
-        } elseif (strlen($phone) === 10) {
-            return preg_replace('/(\d{2})(\d{4})(\d{4})/', '($1) $2-$3', $phone);
-        }
+    //     // Aplica a máscara baseada no tamanho
+    //     if (strlen($phone) === 11) {
+    //         return preg_replace('/(\d{2})(\d{5})(\d{4})/', '($1) $2-$3', $phone);
+    //     } elseif (strlen($phone) === 10) {
+    //         return preg_replace('/(\d{2})(\d{4})(\d{4})/', '($1) $2-$3', $phone);
+    //     }
 
-        return $phone; // Retorna original se não conseguir formatar
-    }
+    //     return $phone; // Retorna original se não conseguir formatar
+    // }
 
-    /**
-     * Validar CPF usando algoritmo oficial
-     */
-    public function isValidCpf(string $cpf): bool
-    {
-        // Remove caracteres não numéricos
-        $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    // /**
+    //  * Validar CPF usando algoritmo oficial
+    //  */
+    // public function isValidCpf(string $cpf): bool
+    // {
+    //     // Remove caracteres não numéricos
+    //     $cpf = preg_replace('/[^0-9]/', '', $cpf);
 
-        // Verifica se tem 11 dígitos
-        if (strlen($cpf) != 11) {
-            return false;
-        }
+    //     // Verifica se tem 11 dígitos
+    //     if (strlen($cpf) != 11) {
+    //         return false;
+    //     }
 
-        // Verifica se todos os dígitos são iguais
-        if (preg_match('/^(\d)\1{10}$/', $cpf)) {
-            return false;
-        }
+    //     // Verifica se todos os dígitos são iguais
+    //     if (preg_match('/^(\d)\1{10}$/', $cpf)) {
+    //         return false;
+    //     }
 
-        // Calcula primeiro dígito verificador
-        $sum = 0;
-        for ($i = 0; $i < 9; $i++) {
-            $sum += $cpf[$i] * (10 - $i);
-        }
-        $remainder = $sum % 11;
-        $digit1 = ($remainder < 2) ? 0 : 11 - $remainder;
+    //     // Calcula primeiro dígito verificador
+    //     $sum = 0;
+    //     for ($i = 0; $i < 9; $i++) {
+    //         $sum += $cpf[$i] * (10 - $i);
+    //     }
+    //     $remainder = $sum % 11;
+    //     $digit1 = ($remainder < 2) ? 0 : 11 - $remainder;
 
-        // Calcula segundo dígito verificador
-        $sum = 0;
-        for ($i = 0; $i < 10; $i++) {
-            $sum += $cpf[$i] * (11 - $i);
-        }
-        $remainder = $sum % 11;
-        $digit2 = ($remainder < 2) ? 0 : 11 - $remainder;
+    //     // Calcula segundo dígito verificador
+    //     $sum = 0;
+    //     for ($i = 0; $i < 10; $i++) {
+    //         $sum += $cpf[$i] * (11 - $i);
+    //     }
+    //     $remainder = $sum % 11;
+    //     $digit2 = ($remainder < 2) ? 0 : 11 - $remainder;
 
-        return $cpf[9] == $digit1 && $cpf[10] == $digit2;
-    }
+    //     return $cpf[9] == $digit1 && $cpf[10] == $digit2;
+    // }
 
-    /**
-     * Validar CNPJ usando algoritmo oficial
-     */
-    public function isValidCnpj(string $cnpj): bool
-    {
-        // Remove caracteres não numéricos
-        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+    // /**
+    //  * Validar CNPJ usando algoritmo oficial
+    //  */
+    // public function isValidCnpj(string $cnpj): bool
+    // {
+    //     // Remove caracteres não numéricos
+    //     $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
 
-        // Verifica se tem 14 dígitos
-        if (strlen($cnpj) != 14) {
-            return false;
-        }
+    //     // Verifica se tem 14 dígitos
+    //     if (strlen($cnpj) != 14) {
+    //         return false;
+    //     }
 
-        // Verifica se todos os dígitos são iguais
-        if (preg_match('/^(\d)\1{13}$/', $cnpj)) {
-            return false;
-        }
+    //     // Verifica se todos os dígitos são iguais
+    //     if (preg_match('/^(\d)\1{13}$/', $cnpj)) {
+    //         return false;
+    //     }
 
-        // Calcula primeiro dígito verificador
-        $weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $sum += $cnpj[$i] * $weights1[$i];
-        }
-        $remainder = $sum % 11;
-        $digit1 = ($remainder < 2) ? 0 : 11 - $remainder;
+    //     // Calcula primeiro dígito verificador
+    //     $weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    //     $sum = 0;
+    //     for ($i = 0; $i < 12; $i++) {
+    //         $sum += $cnpj[$i] * $weights1[$i];
+    //     }
+    //     $remainder = $sum % 11;
+    //     $digit1 = ($remainder < 2) ? 0 : 11 - $remainder;
 
-        // Calcula segundo dígito verificador
-        $weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-        $sum = 0;
-        for ($i = 0; $i < 13; $i++) {
-            $sum += $cnpj[$i] * $weights2[$i];
-        }
-        $remainder = $sum % 11;
-        $digit2 = ($remainder < 2) ? 0 : 11 - $remainder;
+    //     // Calcula segundo dígito verificador
+    //     $weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    //     $sum = 0;
+    //     for ($i = 0; $i < 13; $i++) {
+    //         $sum += $cnpj[$i] * $weights2[$i];
+    //     }
+    //     $remainder = $sum % 11;
+    //     $digit2 = ($remainder < 2) ? 0 : 11 - $remainder;
 
-        return $cnpj[12] == $digit1 && $cnpj[13] == $digit2;
-    }
+    //     return $cnpj[12] == $digit1 && $cnpj[13] == $digit2;
+    // }
 }

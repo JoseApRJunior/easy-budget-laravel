@@ -7,10 +7,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerPessoaFisicaRequest;
 use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Models\Address;
 use App\Models\CommonData;
+use App\Models\Contact;
 use App\Models\Customer;
-use App\Models\CustomerAddress;
-use App\Models\CustomerContact;
 use App\Models\CustomerInteraction;
 use App\Services\Application\CustomerInteractionService;
 use App\Services\Domain\CustomerService;
@@ -202,13 +202,13 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        $request->validate(CustomerAddress::businessRules());
+        $request->validate(Address::businessRules());
 
         try {
             $addressData = $request->validated();
             $addressData['customer_id'] = $customer->id;
 
-            $address = CustomerAddress::create($addressData);
+            $address = Address::create($addressData);
 
             return response()->json([
                 'message' => 'Endereço adicionado com sucesso',
@@ -226,16 +226,16 @@ class CustomerApiController extends Controller
     /**
      * Atualiza endereço do cliente.
      */
-    public function updateAddress(Request $request, Customer $customer, CustomerAddress $address): JsonResponse
+    public function updateAddress(Request $request, Customer $customer, Address $address): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $address->customer_id !== $customer->id) {
             return response()->json(['message' => 'Endereço não encontrado'], 404);
         }
 
-        $request->validate(CustomerAddress::businessRules());
+        $request->validate(Address::businessRules());
 
         try {
-            $address->updateCustomer($request->validated());
+            $address->update($request->validated());
 
             return response()->json([
                 'message' => 'Endereço atualizado com sucesso',
@@ -253,7 +253,7 @@ class CustomerApiController extends Controller
     /**
      * Remove endereço do cliente.
      */
-    public function removeAddress(Customer $customer, CustomerAddress $address): JsonResponse
+    public function removeAddress(Customer $customer, Address $address): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $address->customer_id !== $customer->id) {
             return response()->json(['message' => 'Endereço não encontrado'], 404);
@@ -283,13 +283,13 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        $request->validate(CustomerContact::businessRules());
+        $request->validate(Contact::businessRules());
 
         try {
             $contactData = $request->validated();
             $contactData['customer_id'] = $customer->id;
 
-            $contact = CustomerContact::create($contactData);
+            $contact = Contact::create($contactData);
 
             return response()->json([
                 'message' => 'Contato adicionado com sucesso',
@@ -307,16 +307,16 @@ class CustomerApiController extends Controller
     /**
      * Atualiza contato do cliente.
      */
-    public function updateContact(Request $request, Customer $customer, CustomerContact $contact): JsonResponse
+    public function updateContact(Request $request, Customer $customer, Contact $contact): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $contact->customer_id !== $customer->id) {
             return response()->json(['message' => 'Contato não encontrado'], 404);
         }
 
-        $request->validate(CustomerContact::businessRules());
+        $request->validate(Contact::businessRules());
 
         try {
-            $contact->updateCustomer($request->validated());
+            $contact->update($request->validated());
 
             return response()->json([
                 'message' => 'Contato atualizado com sucesso',
@@ -334,7 +334,7 @@ class CustomerApiController extends Controller
     /**
      * Remove contato do cliente.
      */
-    public function removeContact(Customer $customer, CustomerContact $contact): JsonResponse
+    public function removeContact(Customer $customer, Contact $contact): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $contact->customer_id !== $customer->id) {
             return response()->json(['message' => 'Contato não encontrado'], 404);
@@ -515,7 +515,7 @@ class CustomerApiController extends Controller
         );
 
         return response()->json([
-            'customers' => $nearbyCustomers->map(function ($customer) {
+            'customers' => $nearbyCustomers->map(function ($customer) use ($request) {
                 return [
                     'id' => $customer->id,
                     'name' => $customer->name ?? $customer->company_name,

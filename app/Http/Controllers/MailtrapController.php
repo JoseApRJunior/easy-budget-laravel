@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 /**
  * Controller para gerenciamento da interface web do Mailtrap e ferramentas de teste de e-mail.

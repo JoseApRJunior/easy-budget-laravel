@@ -206,7 +206,7 @@ class BackupService extends AbstractBaseService
     {
         try {
             // Busca o backup
-            $backup = $this->find($backupId);
+            $backup = $this->findById($backupId);
             if (! $backup->isSuccess()) {
                 return $backup;
             }

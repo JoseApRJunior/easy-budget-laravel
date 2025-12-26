@@ -144,7 +144,7 @@ class MercadoPagoController extends Controller
             }
         }
         if ($accessToken === '') {
-            $accessToken = (string) (config('services.mercadopago.access_token') ?? env('MERCADO_PAGO_ACCESS_TOKEN', ''));
+            $accessToken = (string) (config('services.mercadopago.access_token') ?? '');
         }
 
         if ($accessToken === '') {

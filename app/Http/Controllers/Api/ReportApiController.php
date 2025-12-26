@@ -27,7 +27,7 @@ class ReportApiController extends Controller
     {
         $result = $this->reportService->getFilteredReports($request->all());
 
-        return $this->response($result);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -39,7 +39,7 @@ class ReportApiController extends Controller
             $dto = ReportDTO::fromRequest($request->all());
             $result = $this->reportService->generateReport($dto);
 
-            return $this->response($result);
+            return $this->jsonResponse($result);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -55,7 +55,7 @@ class ReportApiController extends Controller
     {
         $result = $this->reportService->getReportStats();
 
-        return $this->response($result);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -65,7 +65,7 @@ class ReportApiController extends Controller
     {
         $result = $this->reportService->downloadReport($hash);
 
-        return $this->response($result);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -76,6 +76,6 @@ class ReportApiController extends Controller
         $limit = (int) $request->get('limit', 10);
         $result = $this->reportService->getRecentReports($limit);
 
-        return $this->response($result);
+        return $this->jsonResponse($result);
     }
 }

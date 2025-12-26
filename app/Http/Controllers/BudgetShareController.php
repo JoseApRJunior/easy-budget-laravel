@@ -169,7 +169,7 @@ class BudgetShareController extends Controller
         $result = $this->budgetShareService->find($id);
 
         if (! $result->isSuccess()) {
-            return $this->redirectWithError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
+            return $this->redirectError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
         }
 
         return view('pages.budget-share.show', [
@@ -189,7 +189,7 @@ class BudgetShareController extends Controller
         $result = $this->budgetShareService->find($id);
 
         if (! $result->isSuccess()) {
-            return $this->redirectWithError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
+            return $this->redirectError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
         }
 
         // Obtém orçamentos disponíveis

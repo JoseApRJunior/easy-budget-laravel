@@ -18,6 +18,8 @@ use App\Services\Infrastructure\EmailPreviewService;
 use App\Services\Infrastructure\QueueService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -281,28 +283,29 @@ class EmailPreviewController extends Controller
      */
     private function createTestMailable(string $emailType, array $data, string $recipient)
     {
-        return new class($emailType, $data, $recipient) extends \Illuminate\Mail\Mailable
+        $subject = $this->getEmailSubject($emailType, $data);
+        $html = $this->renderEmailHtml($emailType, $data);
+
+        return new class($subject, $html, $data, $recipient) extends \Illuminate\Mail\Mailable
         {
-            private string $emailType;
-
+            private string $emailSubject;
+            private string $htmlContent;
             private array $data;
-
             private string $recipient;
 
-            public function __construct(string $emailType, array $data, string $recipient)
+            public function __construct(string $subject, string $html, array $data, string $recipient)
             {
-                $this->emailType = $emailType;
+                $this->emailSubject = $subject;
+                $this->htmlContent = $html;
                 $this->data = $data;
                 $this->recipient = $recipient;
             }
 
             public function build()
             {
-                $subject = $this->getEmailSubject($this->emailType, $this->data);
-
                 return $this->to($this->recipient)
-                    ->subject('[TESTE] '.$subject)
-                    ->html($this->renderEmailHtml($this->emailType, $this->data))
+                    ->subject('[TESTE] '.$this->emailSubject)
+                    ->html($this->htmlContent)
                     ->with('data', $this->data);
             }
         };

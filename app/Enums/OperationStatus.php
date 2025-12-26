@@ -36,6 +36,9 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     /** Erro de validação */
     case VALIDATION_ERROR = 'validation_error';
 
+    /** Token expirado */
+    case EXPIRED = 'expired';
+
     /**
      * Retorna uma descrição para o status
      */
@@ -49,7 +52,8 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
             self::UNAUTHORIZED => 'Operação não autorizada',
             self::INVALID_DATA => 'Dados inválidos fornecidos',
             self::CONFLICT => 'Conflito de dados',
-            self::VALIDATION_ERROR => 'Erro de validação'
+            self::VALIDATION_ERROR => 'Erro de validação',
+            self::EXPIRED => 'Token expirado'
         };
     }
 
@@ -62,7 +66,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     {
         return match ($this) {
             self::SUCCESS => '#28a745', // Verde
-            self::NOT_FOUND, self::INVALID_DATA, self::VALIDATION_ERROR => '#ffc107', // Amarelo
+            self::NOT_FOUND, self::INVALID_DATA, self::VALIDATION_ERROR, self::EXPIRED => '#ffc107', // Amarelo
             self::ERROR, self::FORBIDDEN, self::UNAUTHORIZED, self::CONFLICT => '#dc3545', // Vermelho
         };
     }
@@ -83,6 +87,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
             self::INVALID_DATA => 'bi-exclamation-circle',
             self::CONFLICT => 'bi-arrow-left-right',
             self::VALIDATION_ERROR => 'bi-exclamation-diamond',
+            self::EXPIRED => 'bi-hourglass-bottom',
         };
     }
 
@@ -95,7 +100,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     {
         return match ($this) {
             self::SUCCESS, self::ERROR, self::NOT_FOUND, self::FORBIDDEN, self::UNAUTHORIZED,
-            self::INVALID_DATA, self::CONFLICT, self::VALIDATION_ERROR => true,
+            self::INVALID_DATA, self::CONFLICT, self::VALIDATION_ERROR, self::EXPIRED => true,
         };
     }
 
@@ -182,10 +187,11 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
                 self::NOT_FOUND->value => 2,
                 self::INVALID_DATA->value => 3,
                 self::VALIDATION_ERROR->value => 4,
-                self::FORBIDDEN->value => 5,
-                self::UNAUTHORIZED->value => 6,
-                self::CONFLICT->value => 7,
-                self::ERROR->value => 8,
+                self::EXPIRED->value => 5,
+                self::FORBIDDEN->value => 6,
+                self::UNAUTHORIZED->value => 7,
+                self::CONFLICT->value => 8,
+                self::ERROR->value => 9,
             ];
 
             return ($order[$a->value] ?? 99) <=> ($order[$b->value] ?? 99);

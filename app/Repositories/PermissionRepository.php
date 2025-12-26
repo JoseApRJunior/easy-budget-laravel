@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\Permission;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -159,10 +160,16 @@ class PermissionRepository extends AbstractGlobalRepository
      * @param  int  $permissionId  ID da permissão
      * @return bool True se possui roles associadas
      */
+    /**
+     * Verifica se uma permissão possui roles associadas
+     *
+     * @param  int  $permissionId  ID da permissão
+     * @return bool True se possui roles associadas
+     */
     public function hasAssociatedRoles(int $permissionId): bool
     {
         try {
-            $hasRoles = Permission::find($permissionId)
+            $hasRoles = \App\Models\Permission::find($permissionId)
                 ->roles()
                 ->exists();
 
@@ -177,5 +184,24 @@ class PermissionRepository extends AbstractGlobalRepository
 
             return false;
         }
+    }
+
+    /**
+     * Log operation details.
+     */
+    protected function logOperation(string $operation, array $context = []): void
+    {
+        Log::info("PermissionRepository: {$operation}", $context);
+    }
+
+    /**
+     * Log error details.
+     */
+    protected function logError(string $operation, Throwable $e, array $context = []): void
+    {
+        Log::error("PermissionRepository Error: {$operation}", array_merge($context, [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]));
     }
 }

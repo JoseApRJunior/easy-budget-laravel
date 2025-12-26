@@ -143,7 +143,7 @@
                                     class="form-select @error('area_of_activity_id') is-invalid @enderror"
                                     id="area_of_activity_id">
                                     <option value="">Selecione uma área</option>
-                                    @foreach ($areas_of_activity as $area)
+                                    @foreach ($areas_of_activity ?? [] as $area)
                                         <option value="{{ $area->id }}"
                                             {{ old('area_of_activity_id') == $area->id ? 'selected' : '' }}>
                                             {{ $area->name }}
@@ -160,7 +160,7 @@
                                 <select name="profession_id"
                                     class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
                                     <option value="">Selecione uma profissão</option>
-                                    @foreach ($professions as $prof)
+                                    @foreach ($professions ?? [] as $prof)
                                         <option value="{{ $prof->id }}"
                                             {{ old('profession_id') == $prof->id ? 'selected' : '' }}>
                                             {{ $prof->name }}

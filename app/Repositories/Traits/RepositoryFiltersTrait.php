@@ -191,4 +191,21 @@ trait RepositoryFiltersTrait
             fn ($q) => $q->where($fieldName, $filters[$filterName])
         );
     }
+
+    /**
+     * Aplica filtro de intervalo de datas.
+     */
+    public function applyDateRangeFilter(
+        Builder $query,
+        array $filters,
+        string $fieldName,
+        string $startKey = 'date_start',
+        string $endKey = 'date_end'
+    ): Builder {
+        $startDate = $filters[$startKey] ?? null;
+        $endDate = $filters[$endKey] ?? null;
+
+        return $query->when($startDate, fn ($q) => $q->whereDate($fieldName, '>=', $startDate))
+            ->when($endDate, fn ($q) => $q->whereDate($fieldName, '<=', $endDate));
+    }
 }

@@ -126,7 +126,7 @@
                                 <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                                     <h5 class="mb-0 d-flex align-items-center flex-wrap">
                                         <span class="me-2">
-                                            <i class="bi bi-list-ul me-1"></i> 
+                                            <i class="bi bi-list-ul me-1"></i>
                                             <span class="d-none d-sm-inline">Lista de Clientes</span>
                                             <span class="d-sm-none">Clientes</span>
                                         </span>
@@ -134,7 +134,7 @@
                                             @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                                 ({{ $customers->total() }})
                                             @elseif(isset($customers))
-                                                ({{ $customers->count() }})
+                                                ({{ count($customers) }})
                                             @endif
                                         </span>
                                     </h5>

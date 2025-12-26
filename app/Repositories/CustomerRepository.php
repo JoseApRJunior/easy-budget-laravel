@@ -118,7 +118,7 @@ class CustomerRepository extends AbstractTenantRepository
 
     public function findByIdAndTenantId(int $id): ?Customer
     {
-        return $this->findById($id);
+        return $this->find($id);
     }
 
     /**
@@ -142,7 +142,7 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function isEmailUnique(string $email, ?int $excludeCustomerId = null): bool
     {
-        $query = Contact::newQuery()
+        $query = Contact::query()
             ->where(function ($q) use ($email) {
                 $q->where('email_personal', $email)
                     ->orWhere('email_business', $email);
@@ -164,7 +164,7 @@ class CustomerRepository extends AbstractTenantRepository
             return false;
         }
 
-        $query = CommonData::newQuery()
+        $query = CommonData::query()
             ->where('cpf', $cpf)
             ->whereNotNull('cpf');
 
@@ -186,7 +186,7 @@ class CustomerRepository extends AbstractTenantRepository
             return false;
         }
 
-        $query = CommonData::newQuery()
+        $query = CommonData::query()
             ->where('cnpj', $cnpj)
             ->whereNotNull('cnpj');
 
@@ -764,5 +764,13 @@ class CustomerRepository extends AbstractTenantRepository
             ->latest()
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * Obtém o ID do tenant atual.
+     */
+    protected function getTenantId(): int
+    {
+        return auth()->user()->tenant_id; // @phpstan-ignore-line
     }
 }

@@ -29,11 +29,6 @@ class ServiceRepository extends AbstractTenantRepository
         return new Service;
     }
 
-    public function __construct(Service $model)
-    {
-        parent::__construct($model);
-    }
-
     /**
      * Lista serviços por status dentro do tenant atual.
      */

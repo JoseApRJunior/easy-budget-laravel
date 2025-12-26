@@ -244,10 +244,11 @@ class PlanManagementController extends Controller
         $newPlan->status = 'draft';
         $newPlan->save();
 
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($newPlan)
-            ->log('Plano duplicado: '.$plan->name.' -> '.$newPlan->name);
+        AuditLog::log(
+            action: 'created',
+            model: $newPlan,
+            metadata: ['description' => 'Plano duplicado: '.$plan->name.' -> '.$newPlan->name]
+        );
 
         return redirect()->route('admin.plans.edit', $newPlan)
             ->with('success', 'Plano duplicado com sucesso!');

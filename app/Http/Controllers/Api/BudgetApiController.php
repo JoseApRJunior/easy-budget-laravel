@@ -50,7 +50,7 @@ class BudgetApiController extends Controller
 
         try {
             $query = Budget::where('tenant_id', $user->tenant_id)
-                ->with(['customer', 'budgetStatus', 'items']);
+                ->with(['customer', 'items']);
 
             // Aplicar filtros
             if (! empty($filters['search'])) {
@@ -139,7 +139,7 @@ class BudgetApiController extends Controller
             $budget = Budget::create([
                 'tenant_id' => $user->tenant_id,
                 'customer_id' => $validated['customer_id'],
-                'budget_statuses_id' => BudgetStatus::DRAFT->value,
+                'status' => BudgetStatus::DRAFT->value,
                 'user_id' => $user->id,
                 'code' => $this->generateBudgetCode(),
                 'description' => $validated['description'] ?? null,
@@ -172,7 +172,7 @@ class BudgetApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $budget->load(['customer', 'budgetStatus', 'items']),
+                'data' => $budget->load(['customer', 'items']),
                 'message' => 'Orçamento criado com sucesso.',
             ], 201);
 
@@ -200,7 +200,6 @@ class BudgetApiController extends Controller
 
         $budget->load([
             'customer',
-            'budgetStatus',
             'items.category',
             'versions.user',
             'attachments',
@@ -286,7 +285,7 @@ class BudgetApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $budget->load(['customer', 'budgetStatus', 'items']),
+                'data' => $budget->load(['customer', 'items']),
                 'message' => 'Orçamento atualizado com sucesso.',
             ]);
 
@@ -320,7 +319,7 @@ class BudgetApiController extends Controller
                 $budget->id,
                 Auth::id(),
                 'deleted',
-                $budget->budgetStatus->slug,
+                $budget->budgetStatus()->value,
                 null,
                 'Orçamento excluído via API',
             );
@@ -498,7 +497,7 @@ class BudgetApiController extends Controller
 
         try {
             // Alterar status
-            $budget->budget_statuses_id = BudgetStatus::PENDING->value;
+            $budget->status = BudgetStatus::PENDING;
             $budget->save();
 
             // Criar nova versão
@@ -541,7 +540,7 @@ class BudgetApiController extends Controller
         }
 
         try {
-            $budget->budget_statuses_id = BudgetStatus::APPROVED->value;
+            $budget->status = BudgetStatus::APPROVED;
             $budget->save();
 
             // Criar nova versão
@@ -588,7 +587,7 @@ class BudgetApiController extends Controller
         ]);
 
         try {
-            $budget->budget_statuses_id = BudgetStatus::REJECTED->value;
+            $budget->status = BudgetStatus::REJECTED;
             $budget->save();
 
             // Criar nova versão

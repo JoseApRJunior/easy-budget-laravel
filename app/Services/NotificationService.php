@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Mail\AlertNotificationMail;
 use App\Models\MonitoringAlertsHistory;
 use App\Models\Notification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;

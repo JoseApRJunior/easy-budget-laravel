@@ -9,6 +9,7 @@ use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -18,9 +19,12 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
 {
     use RepositoryFiltersTrait;
 
-    public function __construct(Payment $model)
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
     {
-        parent::__construct($model);
+        return new Payment;
     }
 
     /**
@@ -33,6 +37,14 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
             ->tap(fn ($q) => $this->applyAllPaymentFilters($q, $filters))
             ->latest()
             ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
+
+    /**
+     * Implementação do método da interface.
+     */
+    public function getFilteredPayments(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->getFilteredPaginated($filters, $perPage);
     }
 
     /**

@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\DTOs\Budget\BudgetDTO;
 use App\DTOs\Budget\BudgetItemDTO;
 use App\Enums\BudgetStatus;
+use App\Enums\ServiceStatus;
 use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
 use App\Repositories\BudgetItemRepository;

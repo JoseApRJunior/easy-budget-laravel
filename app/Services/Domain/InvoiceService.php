@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Storage;
 class InvoiceService extends AbstractBaseService
 {
     public function __construct(
-        private readonly InvoiceRepository $repository,
+        InvoiceRepository $repository,
         private readonly InvoiceItemRepository $itemRepository,
         private readonly ServiceRepository $serviceRepository,
         private readonly BudgetRepository $budgetRepository,
@@ -34,7 +34,9 @@ class InvoiceService extends AbstractBaseService
         private readonly ServiceItemRepository $serviceItemRepository,
         private readonly InvoiceCodeGeneratorService $codeGenerator,
         private readonly NotificationService $notificationService
-    ) {}
+    ) {
+        parent::__construct($repository);
+    }
 
     public function findByCode(string $code, array $with = []): ServiceResult
     {
