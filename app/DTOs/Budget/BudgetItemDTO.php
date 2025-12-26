@@ -42,23 +42,4 @@ readonly class BudgetItemDTO extends AbstractDTO
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
-
-    public function toArray(): array
-    {
-        return [
-            'title'                   => $this->title,
-            'quantity'                => $this->quantity,
-            'unit'                    => $this->unit,
-            'unit_price'              => $this->unit_price,
-            'budget_item_category_id' => $this->budget_item_category_id,
-            'description'             => $this->description,
-            'discount_percentage'     => $this->discount_percentage,
-            'tax_percentage'          => $this->tax_percentage,
-            'total_price'             => $this->total_price,
-            'net_total'               => $this->net_total,
-            'order_index'             => $this->order_index,
-            'metadata'                => $this->metadata,
-            'tenant_id'               => $this->tenant_id,
-        ];
-    }
 }

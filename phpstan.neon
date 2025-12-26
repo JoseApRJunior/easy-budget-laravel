@@ -17,6 +17,6 @@ parameters:
         - app/Support
         - app/Models
     excludePaths:
-        - old-system (?)
+        - old-system-legado
         - node_modules
         - vendor

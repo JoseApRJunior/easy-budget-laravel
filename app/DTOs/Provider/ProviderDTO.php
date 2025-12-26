@@ -34,13 +34,4 @@ readonly class ProviderDTO extends AbstractDTO
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
-
-    public function toArray(): array
-    {
-        return [
-            'user_id'        => $this->user_id,
-            'terms_accepted' => $this->terms_accepted,
-            'tenant_id'      => $this->tenant_id,
-        ];
-    }
 }

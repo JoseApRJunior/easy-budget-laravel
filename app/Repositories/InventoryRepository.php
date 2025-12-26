@@ -157,27 +157,7 @@ class InventoryRepository extends AbstractTenantRepository
         return $query->paginate($effectivePerPage);
     }
 
-    public function findByProduct(int $productId): ?ProductInventory
-    {
-        return $this->model
-            ->where('product_id', $productId)
-            ->first();
-    }
 
-    public function updateOrCreate(int $productId, array $data): ProductInventory
-    {
-        return $this->model->updateOrCreate(
-            ['product_id' => $productId],
-            $data,
-        );
-    }
-
-    public function updateQuantity(int $productId, int $quantity): bool
-    {
-        return $this->model
-            ->where('product_id', $productId)
-            ->update(['quantity' => $quantity]);
-    }
 
     public function updateMinQuantity(int $productId, int $minQuantity): bool
     {

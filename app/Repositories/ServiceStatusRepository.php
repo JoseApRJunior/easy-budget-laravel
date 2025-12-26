@@ -341,23 +341,23 @@ if ( $orderBy ) {
 
             public function getKey()
             {
-                return $this->enum->0;
+                return $this->enum->value;
             }
 
             public function getKeyName()
             {
-                return 'id';
+                return 'slug'; // Alterado para slug pois é o valor único do enum
             }
 
             public function __get( $key )
             {
                 return match ( $key ) {
-                    'id'          => $this->enum->0,
+                    'id'          => $this->enum->value, // ID agora é o value (slug)
                     'slug'        => $this->enum->value,
                     'name'        => $this->enum->getDescription(),
                     'color'       => $this->enum->getColor(),
                     'icon'        => $this->enum->getIcon(),
-                    'order_index' => $this->enum->0,
+                    'order_index' => $this->enum->getOrderIndex(),
                     'is_active'   => $this->enum->isActive(),
                     default       => null,
                 };
@@ -366,12 +366,12 @@ if ( $orderBy ) {
             public function toArray(): array
             {
                 return [
-                    'id'          => $this->enum->0,
+                    'id'          => $this->enum->value,
                     'slug'        => $this->enum->value,
                     'name'        => $this->enum->getDescription(),
                     'color'       => $this->enum->getColor(),
                     'icon'        => $this->enum->getIcon(),
-                    'order_index' => $this->enum->0,
+                    'order_index' => $this->enum->getOrderIndex(),
                     'is_active'   => $this->enum->isActive(),
                 ];
             }

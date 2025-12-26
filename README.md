@@ -1,12 +1,33 @@
 # Easy Budget - Plataforma de Orçamentos Inteligente
 
+## Antigo sistema legado na pasta old-system-legado somente para referência e histórico de uso, caso precise de para comparar parte da logica de negocio antiga.
+
 ## 🎯 Nossa Missão
 
 No **Easy Budget**, nossa missão é revolucionar a forma como prestadores de serviços e clientes se conectam. Buscamos simplificar e otimizar todo o processo de orçamentação, gestão e execução de serviços. Oferecemos ferramentas intuitivas e poderosas para que **Pessoas Físicas** e **Jurídicas** possam profissionalizar seus negócios, economizar tempo e aumentar sua lucratividade com transparência e eficiência.
 
 ---
 
-## 💼 Recursos Principais para o Prestador
+## �️ Atualizações Recentes de Desenvolvimento (Dez/2025)
+
+### 🔧 Correções Críticas e Refatoração
+1.  **Refatoração do Sistema de DTOs**:
+    *   **AbstractDTO**: A implementação do método `fromArray` foi reescrita utilizando Reflection para garantir robustez. Agora o sistema ignora chaves extras passadas em arrays (prevenindo crashes) e mapeia corretamente tipos nulos e valores padrão.
+    *   **Correção de Perda de Dados**: `ProviderDTO` e `BudgetDTO` foram atualizados para incluir estruturas aninhadas (como dados do usuário, endereço, e itens do orçamento) no método `toArray`. Isso corrige falhas onde dados relacionados eram perdidos durante a persistência ou transferência para views/APIs.
+
+2.  **Integração com Mercado Pago (Restaurada e Completada)**:
+    *   **Pagamento de Faturas (Customer -> Provider)**: Implementado `PaymentMercadoPagoInvoiceService` para permitir que clientes paguem faturas/orçamentos via Mercado Pago. O sistema agora gera preferências de pagamento corretamente utilizando as credenciais do Prestador.
+    *   **Assinatura de Planos (Provider -> Plataforma)**: Corrigido o `PaymentMercadoPagoPlanService` para utilizar as credenciais da **Plataforma** (definidas no `.env`) ao cobrar assinaturas de prestadores, corrigindo o erro onde o sistema tentava usar as credenciais do próprio prestador para se cobrar.
+    *   **Novo MercadoPagoService**: Implementada uma camada de infraestrutura (`MercadoPagoService`) robusta e agnóstica para comunicação com a API do Mercado Pago, padronizando a criação de preferências e webhooks.
+
+### ✅ Status dos Módulos
+*   **Provider, Category, Product, Customer**: Validados e operacionais com a nova estrutura de DTOs.
+*   **Budget & Service**: Lógica de backend validada. Views de criação de serviços suportam adição dinâmica de itens.
+*   **Financeiro**: Fluxos de pagamento de Faturas e Assinaturas operacionais.
+
+---
+
+## �💼 Recursos Principais para o Prestador
 
 O Easy Budget oferece um ecossistema completo para a gestão do seu negócio:
 
