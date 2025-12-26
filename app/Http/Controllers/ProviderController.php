@@ -38,26 +38,26 @@ class ProviderController extends Controller
     {
         $result = $this->providerService->getDashboardData();
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             // Em caso de erro, podemos redirecionar ou mostrar uma view de erro
             // Por enquanto, vamos passar dados vazios para não quebrar a view
             return view('pages.provider.index', [
-                'budgets'           => collect(),
-                'activities'        => collect(),
+                'budgets' => collect(),
+                'activities' => collect(),
                 'financial_summary' => [],
-                'total_activities'  => 0,
-                'events'            => collect(),
+                'total_activities' => 0,
+                'events' => collect(),
             ])->with('error', $result->getMessage());
         }
 
         $dashboardData = $result->getData();
 
         return view('pages.provider.index', [
-            'budgets'           => $dashboardData['budgets'],
-            'activities'        => $dashboardData['activities'],
+            'budgets' => $dashboardData['budgets'],
+            'activities' => $dashboardData['activities'],
             'financial_summary' => $dashboardData['financial_summary'],
-            'total_activities'  => count($dashboardData['activities']),
-            'events'            => $dashboardData['events'] ?? [],
+            'total_activities' => count($dashboardData['activities']),
+            'events' => $dashboardData['events'] ?? [],
         ]);
     }
 
@@ -101,7 +101,7 @@ class ProviderController extends Controller
     {
         $result = $this->providerService->changePassword($request->validated()['password']);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->back()->with('error', $result->getMessage());
         }
 

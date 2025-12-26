@@ -34,13 +34,13 @@ readonly class MerchantOrderDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'merchant_order_id'    => $this->merchant_order_id,
-            'provider_id'          => $this->provider_id,
+            'merchant_order_id' => $this->merchant_order_id,
+            'provider_id' => $this->provider_id,
             'plan_subscription_id' => $this->plan_subscription_id,
-            'status'               => $this->status,
-            'order_status'         => $this->order_status,
-            'total_amount'         => $this->total_amount,
-            'tenant_id'            => $this->tenant_id,
+            'status' => $this->status,
+            'order_status' => $this->order_status,
+            'total_amount' => $this->total_amount,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

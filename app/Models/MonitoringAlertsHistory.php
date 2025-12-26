@@ -97,7 +97,7 @@ class MonitoringAlertsHistory extends Model
         return $query->where('created_at', '>=', now()->subMinutes($minutes));
     }
 
-    public function markAsResolved(int $resolvedBy, string $resolutionNotes = null): bool
+    public function markAsResolved(int $resolvedBy, ?string $resolutionNotes = null): bool
     {
         return $this->update([
             'is_resolved' => true,

@@ -8,7 +8,6 @@ use App\Enums\OperationStatus;
 use App\Models\Invoice;
 use App\Models\ProviderCredential;
 use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
-use App\Services\Infrastructure\EncryptionService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +29,7 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                 ->with(['customer.contact', 'service'])
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Fatura não encontrada');
             }
 
@@ -38,15 +37,15 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                 ->where('payment_gateway', 'mercadopago')
                 ->first();
 
-            if (!$credential) {
+            if (! $credential) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Credenciais do provider não configuradas');
             }
 
             $tokenResult = $this->encryptionService->decryptStringLaravel($credential->access_token_encrypted);
-            if (!$tokenResult->isSuccess()) {
+            if (! $tokenResult->isSuccess()) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Falha ao descriptografar access token');
             }
-            $accessToken = (string)($tokenResult->getData()['decrypted'] ?? '');
+            $accessToken = (string) ($tokenResult->getData()['decrypted'] ?? '');
 
             if (empty($accessToken)) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Access token vazio');
@@ -56,16 +55,16 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
             $preferenceData = [
                 'items' => [
                     [
-                        'title'       => 'Fatura ' . $invoice->code,
-                        'quantity'    => 1,
+                        'title' => 'Fatura '.$invoice->code,
+                        'quantity' => 1,
                         'currency_id' => 'BRL',
-                        'unit_price'  => (float)$invoice->total,
+                        'unit_price' => (float) $invoice->total,
                     ],
                 ],
-                'external_reference' => 'invoice:' . $invoice->code . ':tenant:' . $invoice->tenant_id,
+                'external_reference' => 'invoice:'.$invoice->code.':tenant:'.$invoice->tenant_id,
                 'payer' => [
-                    'email' => $invoice->customer?->contact?->email_personal 
-                            ?? $invoice->customer?->contact?->email_business 
+                    'email' => $invoice->customer?->contact?->email_personal
+                            ?? $invoice->customer?->contact?->email_business
                             ?? 'customer@example.com', // MP requer email
                 ],
                 'notification_url' => route('webhooks.mercadopago.invoices'),
@@ -79,24 +78,25 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
 
             $result = $this->mercadoPagoService->createPreference($accessToken, $preferenceData);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return $result;
             }
 
             $data = $result->getData();
             $initPoint = $data['init_point'] ?? null; // Link de pagamento (Checkout Pro)
 
-            if (!$initPoint) {
+            if (! $initPoint) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Link de pagamento não retornado pelo MP');
             }
 
             return ServiceResult::success([
-                'init_point'    => $initPoint,
+                'init_point' => $initPoint,
                 'preference_id' => $data['id'] ?? null,
             ], 'Preferência de pagamento criada');
 
         } catch (Exception $e) {
             Log::error('create_mp_preference_error', ['invoice' => $invoiceCode, 'error' => $e->getMessage()]);
+
             return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar preferência de pagamento', null, $e);
         }
     }

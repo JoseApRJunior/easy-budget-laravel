@@ -17,8 +17,11 @@ class BudgetStatusChanged
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Budget $budget;
+
     public string $oldStatus;
+
     public string $newStatus;
+
     public ?string $comment;
 
     public function __construct(Budget $budget, string $oldStatus, string $newStatus, ?string $comment = null)

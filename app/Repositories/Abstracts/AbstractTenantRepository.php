@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
@@ -8,7 +9,6 @@ use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -29,7 +29,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * - Validação de unicidade dentro do tenant
  * - Operações em lote
  *
- * @package App\Repositories\Abstracts
  *
  * @example Exemplo de implementação concreta:
  * ```php
@@ -48,7 +47,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  *     }
  * }
  * ```
- *
  * @example Uso em Service Layer:
  * ```php
  * class ProductService extends AbstractBaseService
@@ -68,7 +66,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  *     }
  * }
  * ```
- *
  * @example Cenários de uso recomendados:
  * - **Produtos/Serviços** - Cada empresa gerencia seu catálogo
  * - **Clientes/CRM** - Dados isolados por empresa
@@ -98,9 +95,9 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function find( int $id ): ?Model
+    public function find(int $id): ?Model
     {
-        return $this->model->find( $id );
+        return $this->model->find($id);
     }
 
     /**
@@ -114,32 +111,33 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create( array $data ): Model
+    public function create(array $data): Model
     {
-        return $this->model->create( $data );
+        return $this->model->create($data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function update( int $id, array $data ): ?Model
+    public function update(int $id, array $data): ?Model
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (! $model) {
             return null;
         }
 
-        $model->update( $data );
+        $model->update($data);
+
         return $model->fresh();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function delete( int $id ): bool
+    public function delete(int $id): bool
     {
-        return (bool) $this->model->where( 'id', $id )->delete();
+        return (bool) $this->model->where('id', $id)->delete();
     }
 
     // --------------------------------------------------------------------------
@@ -158,20 +156,20 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         $query = $this->model->newQuery();
 
         // Aplica filtros e ordenação usando trait
-        return $this->applyFilters( $query, $criteria )
-            ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
-            ->when( $offset !== null, fn( $q ) => $q->offset( $offset ) )
-            ->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+        return $this->applyFilters($query, $criteria)
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($offset !== null, fn ($q) => $q->offset($offset))
+            ->when($limit !== null, fn ($q) => $q->limit($limit))
             ->get();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function countByTenant( array $filters = [] ): int
+    public function countByTenant(array $filters = []): int
     {
         $query = $this->model->newQuery();
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
         return $query->count();
     }
@@ -179,10 +177,10 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Conta incluindo deletadas.
      */
-    public function countByTenantWithTrashed( array $filters = [] ): int
+    public function countByTenantWithTrashed(array $filters = []): int
     {
         $query = $this->model->newQuery()->withTrashed();
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
         return $query->count();
     }
@@ -190,10 +188,10 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Conta apenas deletadas.
      */
-    public function countOnlyTrashedByTenant( array $filters = [] ): int
+    public function countOnlyTrashedByTenant(array $filters = []): int
     {
         $query = $this->model->newQuery()->onlyTrashed();
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
         return $query->count();
     }
@@ -201,67 +199,66 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function findByTenantAndSlug( string $slug, bool $withTrashed = false ): ?Model
+    public function findByTenantAndSlug(string $slug, bool $withTrashed = false): ?Model
     {
         return $this->model->newQuery()
-            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
-            ->where( 'slug', $slug )
+            ->when($withTrashed, fn ($q) => $q->withTrashed())
+            ->where('slug', $slug)
             ->first();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findByTenantAndCode( string $code, bool $withTrashed = false ): ?Model
+    public function findByTenantAndCode(string $code, bool $withTrashed = false): ?Model
     {
         return $this->model->newQuery()
-            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
-            ->where( 'code', $code )
+            ->when($withTrashed, fn ($q) => $q->withTrashed())
+            ->where('code', $code)
             ->first();
     }
 
     /**
      * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
      *
-     * @param string $field Campo para busca.
-     * @param mixed $value Valor do campo.
-     * @param array $with Relacionamentos para carregar.
-     * @param bool $withTrashed Se deve incluir registros deletados.
-     * @return Model|null
+     * @param  string  $field  Campo para busca.
+     * @param  mixed  $value  Valor do campo.
+     * @param  array  $with  Relacionamentos para carregar.
+     * @param  bool  $withTrashed  Se deve incluir registros deletados.
      */
-    public function findOneBy( string $field, mixed $value, array $with = [], bool $withTrashed = false ): ?Model
+    public function findOneBy(string $field, mixed $value, array $with = [], bool $withTrashed = false): ?Model
     {
         return $this->model->newQuery()
-            ->when( $withTrashed, fn( $q ) => $q->withTrashed() )
-            ->where( $field, $value )
-            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
+            ->when($withTrashed, fn ($q) => $q->withTrashed())
+            ->where($field, $value)
+            ->when(! empty($with), fn ($q) => $q->with($with))
             ->first();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isUniqueInTenant( string $field, mixed $value, ?int $excludeId = null ): bool
+    public function isUniqueInTenant(string $field, mixed $value, ?int $excludeId = null): bool
     {
-        return $this->model->where( $field, $value )
-            ->when( $excludeId !== null, fn( $q ) => $q->where( 'id', '!=', $excludeId ) )
+        return $this->model->where($field, $value)
+            ->when($excludeId !== null, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findManyByTenant( array $ids ): Collection
+    public function findManyByTenant(array $ids): Collection
     {
-        return $this->model->whereIn( 'id', $ids )->get();
+        return $this->model->whereIn('id', $ids)->get();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deleteManyByTenant( array $ids ): int
+    public function deleteManyByTenant(array $ids): int
     {
-        return $this->model->whereIn( 'id', $ids )->delete();
+        return $this->model->whereIn('id', $ids)->delete();
     }
 
     /**
@@ -275,14 +272,14 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     ): Collection {
         $query = $this->model->newQuery();
 
-        if ( !empty( $search ) ) {
-            $filters[ 'search' ] = $search;
-            $this->applySearchFilter( $query, $filters, [ 'name', 'description' ] );
+        if (! empty($search)) {
+            $filters['search'] = $search;
+            $this->applySearchFilter($query, $filters, ['name', 'description']);
         }
 
-        return $this->applyFilters( $query, $filters )
-            ->when( $orderBy, fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
-            ->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+        return $this->applyFilters($query, $filters)
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit !== null, fn ($q) => $q->limit($limit))
             ->get();
     }
 
@@ -298,14 +295,14 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
 
         // Se usar SoftDeletes, o default do newQuery() já filtra ativos.
         // Caso contrário, filtramos manualmente se a coluna existir.
-        if ( !method_exists( $this->model, 'runSoftDelete' ) && $this->isValidField( 'deleted_at' ) ) {
-            $query->whereNull( 'deleted_at' );
+        if (! method_exists($this->model, 'runSoftDelete') && $this->isValidField('deleted_at')) {
+            $query->whereNull('deleted_at');
         }
 
-        $this->applyFilters( $query, $filters );
-        $this->applyOrderBy( $query, $orderBy );
+        $this->applyFilters($query, $filters);
+        $this->applyOrderBy($query, $orderBy);
 
-        return $query->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+        return $query->when($limit !== null, fn ($q) => $q->limit($limit))
             ->get();
     }
 
@@ -319,27 +316,27 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     ): Collection {
         $query = $this->model->newQuery();
 
-        if ( method_exists( $this->model, 'runSoftDelete' ) ) {
+        if (method_exists($this->model, 'runSoftDelete')) {
             $query->onlyTrashed();
         } else {
-            $query->whereNotNull( 'deleted_at' );
+            $query->whereNotNull('deleted_at');
         }
 
-        $this->applyFilters( $query, $filters );
-        $this->applyOrderBy( $query, $orderBy );
+        $this->applyFilters($query, $filters);
+        $this->applyOrderBy($query, $orderBy);
 
-        return $query->when( $limit !== null, fn( $q ) => $q->limit( $limit ) )
+        return $query->when($limit !== null, fn ($q) => $q->limit($limit))
             ->get();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function restoreManyByTenant( array $ids ): int
+    public function restoreManyByTenant(array $ids): int
     {
-        return $this->model->whereIn( 'id', $ids )
-            ->whereNotNull( 'deleted_at' )
-            ->update( [ 'deleted_at' => null ] );
+        return $this->model->whereIn('id', $ids)
+            ->whereNotNull('deleted_at')
+            ->update(['deleted_at' => null]);
     }
 
     // --------------------------------------------------------------------------
@@ -349,27 +346,27 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Busca registros com relacionamento específico carregado.
      *
-     * @param array<int> $ids
-     * @param array<string> $with
+     * @param  array<int>  $ids
+     * @param  array<string>  $with
      * @return Collection<Model>
      */
-    public function findManyWithRelations( array $ids, array $with = [] ): Collection
+    public function findManyWithRelations(array $ids, array $with = []): Collection
     {
-        return $this->model->whereIn( 'id', $ids )
-            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
+        return $this->model->whereIn('id', $ids)
+            ->when(! empty($with), fn ($q) => $q->with($with))
             ->get();
     }
 
     /**
      * Busca registros por múltiplos critérios dentro do tenant.
      *
-     * @param array<string, mixed> $criteria
+     * @param  array<string, mixed>  $criteria
      * @return Collection<Model>
      */
-    public function findByMultipleCriteria( array $criteria ): Collection
+    public function findByMultipleCriteria(array $criteria): Collection
     {
         $query = $this->model->newQuery();
-        $this->applyFilters( $query, $criteria );
+        $this->applyFilters($query, $criteria);
 
         return $query->get();
     }
@@ -381,10 +378,10 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Método padrão de paginação com funcionalidades avançadas.
      *
-     * @param array<string, mixed> $filters Filtros a aplicar
-     * @param int $perPage Número padrão de itens por página
-     * @param array<string> $with Relacionamentos para eager loading
-     * @param array<string, string>|null $orderBy Ordenação personalizada
+     * @param  array<string, mixed>  $filters  Filtros a aplicar
+     * @param  int  $perPage  Número padrão de itens por página
+     * @param  array<string>  $with  Relacionamentos para eager loading
+     * @param  array<string, string>|null  $orderBy  Ordenação personalizada
      * @return LengthAwarePaginator Resultado paginado
      */
     public function getPaginated(
@@ -394,11 +391,10 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
         ?array $orderBy = null,
     ): LengthAwarePaginator {
         return $this->model->newQuery()
-            ->when( !empty( $with ), fn( $q ) => $q->with( $with ) )
-            ->tap( fn( $q ) => $this->applyFilters( $q, $filters ) )
-            ->tap( fn( $q ) => $this->applySoftDeleteFilter( $q, $filters ) )
-            ->tap( fn( $q ) => $this->applyOrderBy( $q, $orderBy ) )
-            ->paginate( $this->getEffectivePerPage( $filters, $perPage ) );
+            ->when(! empty($with), fn ($q) => $q->with($with))
+            ->tap(fn ($q) => $this->applyFilters($q, $filters))
+            ->tap(fn ($q) => $this->applySoftDeleteFilter($q, $filters))
+            ->tap(fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
-
 }

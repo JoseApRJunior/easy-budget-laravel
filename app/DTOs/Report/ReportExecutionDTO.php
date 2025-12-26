@@ -44,16 +44,16 @@ readonly class ReportExecutionDTO extends AbstractDTO
     {
         return [
             'report_definition_id' => $this->report_definition_id,
-            'user_id'              => $this->user_id,
-            'status'               => $this->status,
-            'started_at'           => $this->started_at?->toDateTimeString(),
-            'completed_at'         => $this->completed_at?->toDateTimeString(),
-            'parameters'           => $this->parameters,
-            'result_path'          => $this->result_path,
-            'result_size'          => $this->result_size,
-            'execution_time_ms'    => $this->execution_time_ms,
-            'error_message'        => $this->error_message,
-            'tenant_id'            => $this->tenant_id,
+            'user_id' => $this->user_id,
+            'status' => $this->status,
+            'started_at' => $this->started_at?->toDateTimeString(),
+            'completed_at' => $this->completed_at?->toDateTimeString(),
+            'parameters' => $this->parameters,
+            'result_path' => $this->result_path,
+            'result_size' => $this->result_size,
+            'execution_time_ms' => $this->execution_time_ms,
+            'error_message' => $this->error_message,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

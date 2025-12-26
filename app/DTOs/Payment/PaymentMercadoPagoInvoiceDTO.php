@@ -42,17 +42,17 @@ readonly class PaymentMercadoPagoInvoiceDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'payment_id'              => $this->payment_id,
-            'invoice_id'              => $this->invoice_id,
+            'payment_id' => $this->payment_id,
+            'invoice_id' => $this->invoice_id,
             'mercado_pago_payment_id' => $this->mercado_pago_payment_id,
-            'status'                  => $this->status,
-            'status_detail'           => $this->status_detail,
-            'transaction_amount'      => $this->transaction_amount,
-            'net_received_amount'     => $this->net_received_amount,
-            'payment_method_id'       => $this->payment_method_id,
-            'payment_type_id'         => $this->payment_type_id,
-            'metadata'                => $this->metadata,
-            'tenant_id'               => $this->tenant_id,
+            'status' => $this->status,
+            'status_detail' => $this->status_detail,
+            'transaction_amount' => $this->transaction_amount,
+            'net_received_amount' => $this->net_received_amount,
+            'payment_method_id' => $this->payment_method_id,
+            'payment_type_id' => $this->payment_type_id,
+            'metadata' => $this->metadata,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

@@ -909,5 +909,4 @@ resources/views/
 - Documente funcionalidades complexas
 - Use nomes de classe descritivos';
     }
-
 }

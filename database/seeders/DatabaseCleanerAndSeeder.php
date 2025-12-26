@@ -86,7 +86,7 @@ class DatabaseCleanerAndSeeder extends Seeder
                     $this->command->info("   ✅ Tabela {$table} limpa");
                 }
             } catch (\Exception $e) {
-                $this->command->warn("   ⚠️  Erro ao limpar tabela {$table}: " . $e->getMessage());
+                $this->command->warn("   ⚠️  Erro ao limpar tabela {$table}: ".$e->getMessage());
             }
         }
 
@@ -122,13 +122,13 @@ class DatabaseCleanerAndSeeder extends Seeder
         ]);
 
         // 4. Criar Prestadores de teste completos
-        $this->command->info( '🏢 Criando prestadores de teste (4 providers + 16 clientes)...' );
+        $this->command->info('🏢 Criando prestadores de teste (4 providers + 16 clientes)...');
         $this->call([
             ProviderTestSeeder::class,
         ]);
 
         // 5. Criar dados de teste de budgets (orçamentos, serviços, faturas)
-        $this->command->info( '📊 Criando dados de teste de budgets (8 orçamentos, 16 serviços; apenas tenants >= 3)...' );
+        $this->command->info('📊 Criando dados de teste de budgets (8 orçamentos, 16 serviços; apenas tenants >= 3)...');
         $this->call([
             BudgetTestSeeder::class,
         ]);
@@ -140,12 +140,12 @@ class DatabaseCleanerAndSeeder extends Seeder
         $this->command->info('   • Admin Tenant criado (ID: 2) - Para administração');
         $this->command->info('   • Admin login: admin@easybudget.net.br (ID: 3)');
         $this->command->info('   • Senha admin: AdminPassword1@');
-        $this->command->info( '   • 4 Prestadores de teste criados (2 PJ + 2 PF)' );
-        $this->command->info( '   • 16 Clientes de teste criados (8 PF + 8 PJ)' );
-        $this->command->info( '   • 8 Orçamentos de teste criados (2 por provider, tenants >= 3)' );
-        $this->command->info( '   • 16 Serviços de teste criados (2 por orçamento: COMPLETED e APPROVED)' );
-        $this->command->info( '   • 48 Itens de serviço criados (3 produtos por serviço)' );
-        $this->command->info( '   • 16 Faturas geradas (1 parcial + 1 total por orçamento)' );
+        $this->command->info('   • 4 Prestadores de teste criados (2 PJ + 2 PF)');
+        $this->command->info('   • 16 Clientes de teste criados (8 PF + 8 PJ)');
+        $this->command->info('   • 8 Orçamentos de teste criados (2 por provider, tenants >= 3)');
+        $this->command->info('   • 16 Serviços de teste criados (2 por orçamento: COMPLETED e APPROVED)');
+        $this->command->info('   • 48 Itens de serviço criados (3 produtos por serviço)');
+        $this->command->info('   • 16 Faturas geradas (1 parcial + 1 total por orçamento)');
         $this->command->info('   • Login: provider1@test.com até provider4@test.com');
         $this->command->info('   • Senha padrão: Password1@');
         $this->command->info('');

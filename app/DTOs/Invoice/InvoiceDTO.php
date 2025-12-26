@@ -46,7 +46,7 @@ readonly class InvoiceDTO extends AbstractDTO
             transaction_date: isset($data['transaction_date']) ? Carbon::parse($data['transaction_date']) : null,
             notes: $data['notes'] ?? null,
             is_automatic: (bool) ($data['is_automatic'] ?? false),
-            items: array_map(fn($item) => InvoiceItemDTO::fromRequest($item), $data['items'] ?? []),
+            items: array_map(fn ($item) => InvoiceItemDTO::fromRequest($item), $data['items'] ?? []),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
@@ -54,21 +54,21 @@ readonly class InvoiceDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'service_id'         => $this->service_id,
-            'customer_id'        => $this->customer_id,
-            'status'             => $this->status->value,
-            'subtotal'           => $this->subtotal,
-            'total'              => $this->total,
-            'due_date'           => $this->due_date->toDateString(),
-            'code'               => $this->code,
-            'discount'           => $this->discount,
-            'payment_method'     => $this->payment_method,
-            'payment_id'         => $this->payment_id,
+            'service_id' => $this->service_id,
+            'customer_id' => $this->customer_id,
+            'status' => $this->status->value,
+            'subtotal' => $this->subtotal,
+            'total' => $this->total,
+            'due_date' => $this->due_date->toDateString(),
+            'code' => $this->code,
+            'discount' => $this->discount,
+            'payment_method' => $this->payment_method,
+            'payment_id' => $this->payment_id,
             'transaction_amount' => $this->transaction_amount,
-            'transaction_date'   => $this->transaction_date?->toDateTimeString(),
-            'notes'              => $this->notes,
-            'is_automatic'       => $this->is_automatic,
-            'tenant_id'          => $this->tenant_id,
+            'transaction_date' => $this->transaction_date?->toDateTimeString(),
+            'notes' => $this->notes,
+            'is_automatic' => $this->is_automatic,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

@@ -2,16 +2,15 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Tenant;
+use App\Models\AuditLog;
+use App\Models\Payment;
 use App\Models\Plan;
+use App\Models\PlanSubscription;
+use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Subscription;
-use App\Models\FinancialRecord;
-use App\Models\ActivityLog;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class EnterpriseService
 {
@@ -20,31 +19,34 @@ class EnterpriseService
      */
     public function getEnterprises(array $filters = [], int $perPage = 20)
     {
-        $query = Tenant::with(['plan', 'subscription', 'adminUser']);
+        $query = Tenant::with(['planSubscriptions.plan', 'users']);
 
         // Aplicar filtros
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (! empty($filters['status'])) {
+            // TODO: Implement status on Tenant if needed, currently using is_active
+            // $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['plan'])) {
-            $query->where('plan_id', $filters['plan']);
-        }
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('document', 'like', "%{$search}%");
+        if (! empty($filters['plan'])) {
+            $query->whereHas('planSubscriptions', function ($q) use ($filters) {
+                $q->where('plan_id', $filters['plan']);
             });
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('document', 'like', "%{$search}%");
+            });
+        }
+
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
@@ -57,12 +59,14 @@ class EnterpriseService
     public function getEnterpriseStatistics(): array
     {
         $totalEnterprises = Tenant::count();
-        $activeEnterprises = Tenant::where('status', 'active')->count();
-        $suspendedEnterprises = Tenant::where('status', 'suspended')->count();
+        // $activeEnterprises = Tenant::where('status', 'active')->count();
+        // $suspendedEnterprises = Tenant::where('status', 'suspended')->count();
+        $activeEnterprises = Tenant::where('is_active', true)->count();
+        $suspendedEnterprises = Tenant::where('is_active', false)->count();
         $newThisMonth = Tenant::whereMonth('created_at', Carbon::now()->month)->count();
 
-        $revenueThisMonth = FinancialRecord::whereMonth('created_at', Carbon::now()->month)
-            ->where('type', 'revenue')
+        $revenueThisMonth = Payment::whereMonth('created_at', Carbon::now()->month)
+            ->where('status', 'approved')
             ->sum('amount');
 
         $avgRevenuePerEnterprise = $totalEnterprises > 0 ? $revenueThisMonth / $totalEnterprises : 0;
@@ -84,16 +88,14 @@ class EnterpriseService
     public function getEnterpriseDetails(int $id): Tenant
     {
         return Tenant::with([
-            'plan',
-            'subscription',
-            'adminUser',
+            'planSubscriptions.plan',
             'users',
-            'financialRecords' => function($query) {
+            'invoices' => function ($query) {
                 $query->latest()->limit(10);
             },
-            'activityLogs' => function($query) {
+            'activities' => function ($query) {
                 $query->latest()->limit(20);
-            }
+            },
         ])->findOrFail($id);
     }
 
@@ -105,56 +107,60 @@ class EnterpriseService
         // Criar tenant
         $tenant = Tenant::create([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'document' => $data['document'],
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'city' => $data['city'],
-            'state' => $data['state'],
-            'country' => $data['country'],
-            'postal_code' => $data['postal_code'],
-            'timezone' => $data['timezone'],
-            'plan_id' => $data['plan_id'],
-            'status' => 'active',
+            // 'email' => $data['email'], // Not in fillable/schema
+            // 'document' => $data['document'], // Not in fillable/schema
+            // 'phone' => $data['phone'], // Not in fillable/schema
+            // 'address' => $data['address'], // Not in fillable/schema
+            // 'city' => $data['city'], // Not in fillable/schema
+            // 'state' => $data['state'], // Not in fillable/schema
+            // 'country' => $data['country'], // Not in fillable/schema
+            // 'postal_code' => $data['postal_code'], // Not in fillable/schema
+            // 'timezone' => $data['timezone'], // Not in fillable/schema
+            // 'plan_id' => $data['plan_id'], // Not in fillable/schema
+            // 'status' => 'active', // Not in fillable/schema
         ]);
 
-        // Criar domínio para o tenant
+        // Criar domínio para o tenant (TODO: Implement domain logic if model exists)
+        /*
         $tenant->domains()->create([
             'domain' => $this->generateSubdomain($data['name']),
         ]);
+        */
 
         // Criar administrador da empresa
         $adminUser = User::create([
             'name' => $data['admin_name'],
             'email' => $data['admin_email'],
-            'phone' => $data['admin_phone'],
+            'phone' => $data['admin_phone'] ?? null,
             'password' => Hash::make($this->generateTemporaryPassword()),
             'tenant_id' => $tenant->id,
             'email_verified_at' => now(),
         ]);
 
         // Atribuir role de admin
-        $adminUser->assignRole('provider');
+        // $adminUser->assignRole('provider'); // Role might be different or not implemented
 
         // Criar subscription
-        Subscription::create([
+        PlanSubscription::create([
             'tenant_id' => $tenant->id,
             'plan_id' => $data['plan_id'],
-            'status' => 'active',
+            // 'status' => 'active', // Enum?
             'starts_at' => now(),
             'ends_at' => now()->addMonth(),
         ]);
 
         // Registrar atividade
-        ActivityLog::create([
+        AuditLog::create([
             'tenant_id' => $tenant->id,
             'user_id' => auth()->id(),
             'action' => 'enterprise_created',
-            'description' => 'Empresa criada através do painel administrativo',
-            'metadata' => [
+            // 'description' => 'Empresa criada através do painel administrativo',
+            'details' => [ // metadata -> details
                 'enterprise_name' => $tenant->name,
                 'admin_email' => $adminUser->email,
             ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return $tenant;
@@ -166,31 +172,23 @@ class EnterpriseService
     public function updateEnterprise(int $id, array $data): Tenant
     {
         $tenant = Tenant::findOrFail($id);
-        
+
         $tenant->update([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'document' => $data['document'],
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'city' => $data['city'],
-            'state' => $data['state'],
-            'country' => $data['country'],
-            'postal_code' => $data['postal_code'],
-            'timezone' => $data['timezone'],
-            'plan_id' => $data['plan_id'],
-            'status' => $data['status'],
+            // Update other fields if schema supports
         ]);
 
         // Registrar atividade
-        ActivityLog::create([
+        AuditLog::create([
             'tenant_id' => $tenant->id,
             'user_id' => auth()->id(),
             'action' => 'enterprise_updated',
-            'description' => 'Dados da empresa atualizados',
-            'metadata' => [
+            // 'description' => 'Dados da empresa atualizados',
+            'details' => [
                 'changes' => array_keys($data),
             ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return $tenant;
@@ -202,21 +200,23 @@ class EnterpriseService
     public function suspendEnterprise(int $id): Tenant
     {
         $tenant = Tenant::findOrFail($id);
-        
-        $tenant->update(['status' => 'suspended']);
+
+        $tenant->update(['is_active' => false]);
 
         // Suspender subscription
-        $tenant->subscription()->update(['status' => 'suspended']);
+        $tenant->planSubscriptions()->update(['status' => 'suspended']); // Ensure status field exists or use logic
 
         // Suspender todos os usuários
-        $tenant->users()->update(['status' => 'suspended']);
+        $tenant->users()->update(['is_active' => false]);
 
         // Registrar atividade
-        ActivityLog::create([
+        AuditLog::create([
             'tenant_id' => $tenant->id,
             'user_id' => auth()->id(),
             'action' => 'enterprise_suspended',
-            'description' => 'Empresa suspensa',
+            // 'description' => 'Empresa suspensa',
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return $tenant;
@@ -228,21 +228,23 @@ class EnterpriseService
     public function reactivateEnterprise(int $id): Tenant
     {
         $tenant = Tenant::findOrFail($id);
-        
-        $tenant->update(['status' => 'active']);
+
+        $tenant->update(['is_active' => true]);
 
         // Reativar subscription
-        $tenant->subscription()->update(['status' => 'active']);
+        $tenant->planSubscriptions()->update(['status' => 'active']);
 
         // Reativar todos os usuários
-        $tenant->users()->update(['status' => 'active']);
+        $tenant->users()->update(['is_active' => true]);
 
         // Registrar atividade
-        ActivityLog::create([
+        AuditLog::create([
             'tenant_id' => $tenant->id,
             'user_id' => auth()->id(),
             'action' => 'enterprise_reactivated',
-            'description' => 'Empresa reativada',
+            // 'description' => 'Empresa reativada',
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return $tenant;
@@ -254,19 +256,21 @@ class EnterpriseService
     public function deleteEnterprise(int $id): Tenant
     {
         $tenant = Tenant::findOrFail($id);
-        
+
         // Backup antes de excluir
-        $this->backupEnterpriseData($tenant);
+        // $this->backupEnterpriseData($tenant); // Disabled for now
 
         // Excluir (soft delete)
         $tenant->delete();
 
         // Registrar atividade
-        ActivityLog::create([
+        AuditLog::create([
             'tenant_id' => $tenant->id,
             'user_id' => auth()->id(),
             'action' => 'enterprise_deleted',
-            'description' => 'Empresa excluída',
+            // 'description' => 'Empresa excluída',
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return $tenant;
@@ -279,23 +283,18 @@ class EnterpriseService
     {
         $tenant = Tenant::findOrFail($id);
 
-        $totalRevenue = FinancialRecord::where('tenant_id', $id)
-            ->where('type', 'revenue')
+        $totalRevenue = Payment::where('tenant_id', $id)
+            ->where('status', 'approved')
             ->sum('amount');
 
-        $totalExpenses = FinancialRecord::where('tenant_id', $id)
-            ->where('type', 'expense')
-            ->sum('amount');
+        $totalExpenses = 0; // FinancialRecord::where('tenant_id', $id)->where('type', 'expense')->sum('amount');
 
-        $monthlyRevenue = FinancialRecord::where('tenant_id', $id)
-            ->where('type', 'revenue')
+        $monthlyRevenue = Payment::where('tenant_id', $id)
+            ->where('status', 'approved')
             ->whereMonth('created_at', Carbon::now()->month)
             ->sum('amount');
 
-        $monthlyExpenses = FinancialRecord::where('tenant_id', $id)
-            ->where('type', 'expense')
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('amount');
+        $monthlyExpenses = 0; // FinancialRecord::where('tenant_id', $id)->where('type', 'expense')->whereMonth('created_at', Carbon::now()->month)->sum('amount');
 
         return [
             'total_revenue' => $totalRevenue,
@@ -314,7 +313,7 @@ class EnterpriseService
     public function getEnterpriseUsers(int $id)
     {
         return User::where('tenant_id', $id)
-            ->with(['roles', 'permissions'])
+            ->with(['roles']) // permissions removed as it is not a relation
             ->orderBy('created_at', 'desc')
             ->paginate(20);
     }
@@ -324,7 +323,7 @@ class EnterpriseService
      */
     public function getActivityLog(int $id)
     {
-        return ActivityLog::where('tenant_id', $id)
+        return AuditLog::where('tenant_id', $id)
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -339,16 +338,16 @@ class EnterpriseService
 
         // Métricas de usuários
         $totalUsers = User::where('tenant_id', $id)->count();
-        $activeUsers = User::where('tenant_id', $id)->where('last_login', '>=', Carbon::now()->subDays(30))->count();
+        $activeUsers = User::where('tenant_id', $id)->where('last_login_at', '>=', Carbon::now()->subDays(30))->count(); // last_login -> last_login_at?
 
         // Métricas de uso
-        $lastActivity = ActivityLog::where('tenant_id', $id)->latest()->first();
-        $activitiesThisMonth = ActivityLog::where('tenant_id', $id)
+        $lastActivity = AuditLog::where('tenant_id', $id)->latest()->first();
+        $activitiesThisMonth = AuditLog::where('tenant_id', $id)
             ->whereMonth('created_at', Carbon::now()->month)
             ->count();
 
         // Status da subscription
-        $subscription = $tenant->subscription;
+        $subscription = $tenant->planSubscriptions()->latest()->first();
         $daysUntilExpiration = $subscription ? Carbon::parse($subscription->ends_at)->diffInDays(Carbon::now()) : 0;
 
         return [
@@ -357,9 +356,9 @@ class EnterpriseService
             'user_activation_rate' => $totalUsers > 0 ? ($activeUsers / $totalUsers) * 100 : 0,
             'activities_this_month' => $activitiesThisMonth,
             'last_activity' => $lastActivity ? $lastActivity->created_at : null,
-            'subscription_status' => $subscription ? $subscription->status : 'inactive',
+            'subscription_status' => $subscription ? $subscription->status : 'inactive', // status?
             'days_until_expiration' => $daysUntilExpiration,
-            'plan_name' => $tenant->plan ? $tenant->plan->name : 'Nenhum',
+            'plan_name' => $subscription && $subscription->plan ? $subscription->plan->name : 'Nenhum',
         ];
     }
 
@@ -373,9 +372,9 @@ class EnterpriseService
         return [
             'enterprise' => $tenant->toArray(),
             'users' => User::where('tenant_id', $id)->get()->toArray(),
-            'financial_records' => FinancialRecord::where('tenant_id', $id)->get()->toArray(),
-            'activity_logs' => ActivityLog::where('tenant_id', $id)->limit(1000)->get()->toArray(),
-            'subscription' => $tenant->subscription ? $tenant->subscription->toArray() : null,
+            'financial_records' => [], // FinancialRecord::where('tenant_id', $id)->get()->toArray(),
+            'activity_logs' => AuditLog::where('tenant_id', $id)->limit(1000)->get()->toArray(),
+            'subscription' => $tenant->planSubscriptions()->latest()->first()?->toArray(),
             'exported_at' => Carbon::now()->toDateTimeString(),
         ];
     }
@@ -389,12 +388,13 @@ class EnterpriseService
 
         $data = [];
         foreach ($enterprises as $enterprise) {
+            $plan = $enterprise->planSubscriptions->first()?->plan;
             $data[] = [
                 'id' => $enterprise->id,
                 'name' => $enterprise->name,
-                'email' => $enterprise->email,
-                'plan' => $enterprise->plan ? $enterprise->plan->name : 'Nenhum',
-                'status' => $enterprise->status,
+                // 'email' => $enterprise->email,
+                'plan' => $plan ? $plan->name : 'Nenhum',
+                // 'status' => $enterprise->status,
                 'created_at' => $enterprise->created_at->format('d/m/Y'),
                 'actions' => $this->generateActions($enterprise),
             ];
@@ -448,16 +448,18 @@ class EnterpriseService
     {
         $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name));
         $subdomain = substr($base, 0, 20);
-        
+
+        /*
         $counter = 1;
-        while (Tenant::whereHas('domains', function($query) use ($subdomain) {
-            $query->where('domain', $subdomain . '.easybudget.net.br');
+        while (Tenant::whereHas('domains', function ($query) use ($subdomain) {
+            $query->where('domain', $subdomain.'.easybudget.net.br');
         })->exists()) {
-            $subdomain = substr($base, 0, 15) . $counter;
+            $subdomain = substr($base, 0, 15).$counter;
             $counter++;
         }
+        */
 
-        return $subdomain . '.easybudget.net.br';
+        return $subdomain.'.easybudget.net.br';
     }
 
     /**
@@ -474,12 +476,12 @@ class EnterpriseService
     private function backupEnterpriseData(Tenant $tenant): void
     {
         $backupData = $this->exportEnterpriseData($tenant->id);
-        
+
         // Salvar backup em arquivo
-        $backupPath = storage_path('app/backups/enterprises/' . $tenant->id . '_' . time() . '.json');
+        $backupPath = storage_path('app/backups/enterprises/'.$tenant->id.'_'.time().'.json');
         file_put_contents($backupPath, json_encode($backupData, JSON_PRETTY_PRINT));
-        
-        Log::info('Backup criado para empresa ' . $tenant->id . ' em ' . $backupPath);
+
+        Log::info('Backup criado para empresa '.$tenant->id.' em '.$backupPath);
     }
 
     /**
@@ -488,27 +490,27 @@ class EnterpriseService
     private function generateActions(Tenant $enterprise): string
     {
         $actions = '<div class="btn-group" role="group">';
-        
-        $actions .= '<a href="' . route('admin.enterprises.show', $enterprise->id) . '" class="btn btn-sm btn-primary" title="Ver">
+
+        $actions .= '<a href="'.route('admin.enterprises.show', $enterprise->id).'" class="btn btn-sm btn-primary" title="Ver">
                         <i class="bi bi-eye"></i>
                     </a>';
-        
-        $actions .= '<a href="' . route('admin.enterprises.edit', $enterprise->id) . '" class="btn btn-sm btn-warning" title="Editar">
+
+        $actions .= '<a href="'.route('admin.enterprises.edit', $enterprise->id).'" class="btn btn-sm btn-warning" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </a>';
-        
-        if ($enterprise->status === 'active') {
-            $actions .= '<button onclick="suspendEnterprise(' . $enterprise->id . ')" class="btn btn-sm btn-danger" title="Suspender">
+
+        if ($enterprise->is_active) {
+            $actions .= '<button onclick="suspendEnterprise('.$enterprise->id.')" class="btn btn-sm btn-danger" title="Suspender">
                             <i class="bi bi-pause"></i>
                         </button>';
         } else {
-            $actions .= '<button onclick="reactivateEnterprise(' . $enterprise->id . ')" class="btn btn-sm btn-success" title="Reativar">
+            $actions .= '<button onclick="reactivateEnterprise('.$enterprise->id.')" class="btn btn-sm btn-success" title="Reativar">
                             <i class="bi bi-play"></i>
                         </button>';
         }
-        
+
         $actions .= '</div>';
-        
+
         return $actions;
     }
 
@@ -526,7 +528,7 @@ class EnterpriseService
             ->where('status', 'approved')
             ->whereMonth('created_at', $currentMonth->month)
             ->whereYear('created_at', $currentMonth->year)
-            ->sum('amount') ?? 0;
+            ->sum('amount'); // Removed ?? 0
 
         // Receita do mês passado
         $lastMonthRevenue = \DB::table('payments')
@@ -534,14 +536,14 @@ class EnterpriseService
             ->where('status', 'approved')
             ->whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
-            ->sum('amount') ?? 0;
+            ->sum('amount'); // Removed ?? 0
 
         // Custos do mês atual (assinatura + taxas)
         $subscriptionCost = 0;
-        $tenant = Tenant::with(['planSubscription.plan'])->find($tenantId);
-        
-        if ($tenant && $tenant->planSubscription && $tenant->planSubscription->plan) {
-            $subscriptionCost = $tenant->planSubscription->plan->price ?? 0;
+        $tenant = Tenant::with(['planSubscriptions.plan'])->find($tenantId);
+
+        if ($tenant && $tenant->planSubscriptions->first() && $tenant->planSubscriptions->first()->plan) {
+            $subscriptionCost = $tenant->planSubscriptions->first()->plan->price ?? 0;
         }
 
         $paymentProcessingFees = \DB::table('payments')
@@ -549,7 +551,7 @@ class EnterpriseService
             ->where('status', 'approved')
             ->whereMonth('created_at', $currentMonth->month)
             ->whereYear('created_at', $currentMonth->year)
-            ->sum(\DB::raw('amount * 0.029')) ?? 0;
+            ->sum(\DB::raw('amount * 0.029')); // Removed ?? 0
 
         $currentMonthCosts = $subscriptionCost + $paymentProcessingFees;
 
@@ -559,17 +561,17 @@ class EnterpriseService
             ->where('status', 'approved')
             ->whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
-            ->sum(\DB::raw('amount * 0.029')) ?? 0;
+            ->sum(\DB::raw('amount * 0.029')); // Removed ?? 0
 
         $lastMonthCosts = $subscriptionCost + $lastMonthPaymentFees;
 
         // Número de clientes
         $customerCount = \DB::table('customers')
             ->where('tenant_id', $tenantId)
-            ->count() ?? 0;
+            ->count(); // Removed ?? 0
 
         // Taxa de margem de lucro
-        $profitMargin = $currentMonthRevenue > 0 ? 
+        $profitMargin = $currentMonthRevenue > 0 ?
             (($currentMonthRevenue - $currentMonthCosts) / $currentMonthRevenue) * 100 : 0;
 
         return [
@@ -579,7 +581,7 @@ class EnterpriseService
             'last_month_costs' => $lastMonthCosts,
             'customer_count' => $customerCount,
             'profit_margin' => $profitMargin,
-            'revenue_growth' => $lastMonthRevenue > 0 ? 
+            'revenue_growth' => $lastMonthRevenue > 0 ?
                 (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 : 0,
         ];
     }

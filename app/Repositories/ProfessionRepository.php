@@ -16,7 +16,7 @@ class ProfessionRepository extends AbstractGlobalRepository
 
     protected function makeModel(): Model
     {
-        return new Profession();
+        return new Profession;
     }
 
     public function getActive(): Collection

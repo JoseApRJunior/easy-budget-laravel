@@ -21,7 +21,7 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     protected function makeModel(): Model
     {
-        return new UserConfirmationToken();
+        return new UserConfirmationToken;
     }
 
     /**
@@ -29,24 +29,18 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      *
      * Busca case-insensitive para evitar problemas de compatibilidade
      * entre geração e validação de tokens.
-     *
-     * @param string $tokenHash
-     * @return UserConfirmationToken|null
      */
-    public function findByToken( string $tokenHash ): ?UserConfirmationToken
+    public function findByToken(string $tokenHash): ?UserConfirmationToken
     {
-        return $this->model->newQuery()->whereRaw( 'LOWER(token) = LOWER(?)', [ $tokenHash ] )->first();
+        return $this->model->newQuery()->whereRaw('LOWER(token) = LOWER(?)', [$tokenHash])->first();
     }
 
     /**
      * Deleta tokens por user ID dentro do tenant atual.
-     *
-     * @param mixed $userId
-     * @return bool
      */
-    public function deleteByUserId( mixed $userId ): bool
+    public function deleteByUserId(mixed $userId): bool
     {
-        return $this->model->newQuery()->where( 'user_id', $userId )->delete() > 0;
+        return $this->model->newQuery()->where('user_id', $userId)->delete() > 0;
     }
 
     /**
@@ -56,7 +50,7 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function findExpired()
     {
-        return $this->model->newQuery()->where( 'expires_at', '<', now() )->get();
+        return $this->model->newQuery()->where('expires_at', '<', now())->get();
     }
 
     /**
@@ -66,7 +60,6 @@ class UserConfirmationTokenRepository extends AbstractGlobalRepository
      */
     public function deleteExpired(): int
     {
-        return $this->model->newQuery()->where( 'expires_at', '<', now() )->delete();
+        return $this->model->newQuery()->where('expires_at', '<', now())->delete();
     }
-
 }

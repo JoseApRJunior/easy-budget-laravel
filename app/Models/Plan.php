@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Modelo Plan para gerenciar planos de assinatura do sistema.
@@ -40,13 +40,13 @@ class Plan extends Model
      * Casts para os campos do modelo Plan.
      */
     protected $casts = [
-        'price'       => 'decimal:2',
-        'status'      => 'boolean',
+        'price' => 'decimal:2',
+        'status' => 'boolean',
         'max_budgets' => 'integer',
         'max_clients' => 'integer',
-        'features'    => 'array',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
+        'features' => 'array',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -55,31 +55,31 @@ class Plan extends Model
     public static function businessRules(): array
     {
         return [
-            'name'        => 'required|string|max:50',
-            'slug'        => 'required|string|max:50|unique:plans,slug',
+            'name' => 'required|string|max:50',
+            'slug' => 'required|string|max:50|unique:plans,slug',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
-            'status'      => 'boolean',
+            'price' => 'required|numeric|min:0',
+            'status' => 'boolean',
             'max_budgets' => 'required|integer|min:1',
             'max_clients' => 'required|integer|min:1',
-            'features'    => 'nullable|array',
+            'features' => 'nullable|array',
         ];
     }
 
     /**
      * Scope para planos ativos.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'status', true );
+        return $query->where('status', true);
     }
 
     /**
      * Scope para planos ordenados por preço.
      */
-    public function scopeOrderedByPrice( $query )
+    public function scopeOrderedByPrice($query)
     {
-        return $query->orderBy( 'price' );
+        return $query->orderBy('price');
     }
 
     /**
@@ -93,7 +93,7 @@ class Plan extends Model
     /**
      * Verifica se o plano permite um determinado número de orçamentos.
      */
-    public function allowsBudgets( int $count ): bool
+    public function allowsBudgets(int $count): bool
     {
         return $this->max_budgets >= $count;
     }
@@ -101,7 +101,7 @@ class Plan extends Model
     /**
      * Verifica se o plano permite um determinado número de clientes.
      */
-    public function allowsClients( int $count ): bool
+    public function allowsClients(int $count): bool
     {
         return $this->max_clients >= $count;
     }
@@ -111,7 +111,6 @@ class Plan extends Model
      */
     public function planSubscriptions(): HasMany
     {
-        return $this->hasMany( PlanSubscription::class);
+        return $this->hasMany(PlanSubscription::class);
     }
-
 }

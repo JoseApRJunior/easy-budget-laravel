@@ -10,7 +10,6 @@ use App\Http\Requests\SupportContactRequest;
 use App\Services\Domain\SupportService;
 use Exception;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Controller para gerenciamento da página de suporte
@@ -62,7 +61,7 @@ class SupportController extends Controller
             return $this->redirectSuccess('support', 'Ticket de suporte criado com sucesso! Em breve entraremos em contato.');
 
         } catch (Exception $e) {
-            return $this->redirectError('support', 'Erro ao processar ticket: ' . $e->getMessage())
+            return $this->redirectError('support', 'Erro ao processar ticket: '.$e->getMessage())
                 ->withInput();
         }
     }

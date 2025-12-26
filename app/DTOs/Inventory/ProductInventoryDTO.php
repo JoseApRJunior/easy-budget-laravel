@@ -30,11 +30,11 @@ readonly class ProductInventoryDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'product_id'   => $this->product_id,
-            'quantity'     => $this->quantity,
+            'product_id' => $this->product_id,
+            'quantity' => $this->quantity,
             'min_quantity' => $this->min_quantity,
             'max_quantity' => $this->max_quantity,
-            'tenant_id'    => $this->tenant_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

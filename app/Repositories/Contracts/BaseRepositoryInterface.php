@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories\Contracts;
@@ -14,15 +15,13 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Esta interface serve como base para especializações como GlobalRepositoryInterface
  * e TenantRepositoryInterface, seguindo o princípio da Segregação de Interfaces (ISP).
- *
- * @package App\Repositories\Contracts
  */
 interface BaseRepositoryInterface
 {
     /**
      * Encontra um registro pelo seu identificador único.
      *
-     * @param int $id Identificador único do registro.
+     * @param  int  $id  Identificador único do registro.
      * @return Model|null Retorna o modelo encontrado ou null se não existir.
      *
      * @example
@@ -31,7 +30,7 @@ interface BaseRepositoryInterface
      *     echo $user->name;
      * }
      */
-    public function find( int $id ): ?Model;
+    public function find(int $id): ?Model;
 
     /**
      * Recupera todos os registros disponíveis.
@@ -49,8 +48,9 @@ interface BaseRepositoryInterface
     /**
      * Cria um novo registro com os dados fornecidos.
      *
-     * @param array<string, mixed> $data Dados para criação do registro.
+     * @param  array<string, mixed>  $data  Dados para criação do registro.
      * @return Model Modelo criado com os dados persistidos.
+     *
      * @throws \Illuminate\Database\QueryException Em caso de violação de constraints.
      *
      * @example
@@ -61,24 +61,24 @@ interface BaseRepositoryInterface
      * ];
      * $user = $userRepository->create($userData);
      */
-    public function create( array $data ): Model;
+    public function create(array $data): Model;
 
     /**
      * Atualiza um registro existente pelo seu ID.
      *
-     * @param int $id Identificador único do registro a ser atualizado.
-     * @param array<string, mixed> $data Dados para atualização.
+     * @param  int  $id  Identificador único do registro a ser atualizado.
+     * @param  array<string, mixed>  $data  Dados para atualização.
      * @return Model|null Retorna o modelo atualizado ou null se não encontrado.
      *
      * @example
      * $updatedUser = $userRepository->update(1, ['name' => 'João Atualizado']);
      */
-    public function update( int $id, array $data ): ?Model;
+    public function update(int $id, array $data): ?Model;
 
     /**
      * Remove um registro pelo seu ID.
      *
-     * @param int $id Identificador único do registro a ser removido.
+     * @param  int  $id  Identificador único do registro a ser removido.
      * @return bool Retorna true se removido com sucesso, false caso contrário.
      *
      * @example
@@ -87,5 +87,5 @@ interface BaseRepositoryInterface
      *     echo "Usuário removido com sucesso";
      * }
      */
-    public function delete( int $id ): bool;
+    public function delete(int $id): bool;
 }

@@ -30,10 +30,10 @@ readonly class ResourceDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'      => $this->name,
-            'slug'      => $this->slug,
-            'in_dev'    => $this->in_dev,
-            'status'    => $this->status,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'in_dev' => $this->in_dev,
+            'status' => $this->status,
             'tenant_id' => $this->tenant_id,
         ];
     }

@@ -21,33 +21,33 @@ class FlashMessageServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Compartilhar flash messages com todas as views
-        View::composer( '*', function ( $view ) {
-            $flash = session()->get( 'flash', [] );
+        View::composer('*', function ($view) {
+            $flash = session()->get('flash', []);
 
             // Converter para formato padronizado
-            $messages = $this->formatFlashMessages( $flash );
+            $messages = $this->formatFlashMessages($flash);
 
-            $view->with( 'flashMessages', $messages );
-        } );
+            $view->with('flashMessages', $messages);
+        });
     }
 
     /**
      * Formatar mensagens flash para uso no componente
      */
-    private function formatFlashMessages( $flash )
+    private function formatFlashMessages($flash)
     {
         $messages = [
             'success' => [],
-            'error'   => [],
+            'error' => [],
             'warning' => [],
-            'info'    => [],
+            'info' => [],
         ];
 
-        foreach ( $flash as $type => $content ) {
-            if ( isset( $messages[ $type ] ) ) {
-                $message             = is_array( $content ) ? $content[ 'message' ] : $content;
-                $messages[ $type ][] = [
-                    'id'   => uniqid(),
+        foreach ($flash as $type => $content) {
+            if (isset($messages[$type])) {
+                $message = is_array($content) ? $content['message'] : $content;
+                $messages[$type][] = [
+                    'id' => uniqid(),
                     'text' => $message,
                     'type' => $type,
                 ];
@@ -56,5 +56,4 @@ class FlashMessageServiceProvider extends ServiceProvider
 
         return $messages;
     }
-
 }

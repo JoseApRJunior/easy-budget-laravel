@@ -2,14 +2,14 @@
 
 namespace App\Services\Domain;
 
-use App\Repositories\InventoryRepository;
+use App\DTOs\Inventory\InventoryMovementDTO;
+use App\DTOs\Inventory\ProductInventoryDTO;
 use App\Repositories\InventoryMovementRepository;
+use App\Repositories\InventoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\DTOs\Inventory\ProductInventoryDTO;
-use App\DTOs\Inventory\InventoryMovementDTO;
 
 class InventoryService extends AbstractBaseService
 {
@@ -27,6 +27,7 @@ class InventoryService extends AbstractBaseService
         if ($quantity < 0) {
             return $this->error('Quantidade não pode ser negativa');
         }
+
         return $this->success();
     }
 
@@ -34,7 +35,7 @@ class InventoryService extends AbstractBaseService
     {
         $inventory = $this->inventoryRepository->findByProduct($productId);
 
-        if (!$inventory) {
+        if (! $inventory) {
             return $this->error('Produto não encontrado no estoque');
         }
 
@@ -70,14 +71,14 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $validation = $this->validateQuantity($quantity);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
             return DB::transaction(function () use ($productId, $quantity, $reason) {
                 $inventory = $this->inventoryRepository->findByProduct($productId);
 
-                if (!$inventory) {
+                if (! $inventory) {
                     $inventory = $this->inventoryRepository->createFromDTO(new ProductInventoryDTO(
                         product_id: $productId,
                         quantity: $quantity,
@@ -102,9 +103,9 @@ class InventoryService extends AbstractBaseService
 
                 Log::info('Stock added', [
                     'product_id' => $productId,
-                    'quantity'   => $quantity,
-                    'new_total'  => $inventory->quantity,
-                    'reason'     => $reason,
+                    'quantity' => $quantity,
+                    'new_total' => $inventory->quantity,
+                    'reason' => $reason,
                 ]);
 
                 return $this->success($inventory, 'Estoque adicionado com sucesso');
@@ -116,17 +117,17 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $validation = $this->validateQuantity($quantity);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
             $stockValidation = $this->validateSufficientStock($productId, $quantity);
-            if (!$stockValidation->isSuccess()) {
+            if (! $stockValidation->isSuccess()) {
                 return $stockValidation;
             }
 
             return DB::transaction(function () use ($productId, $quantity, $reason, $stockValidation) {
-                $inventory   = $stockValidation->getData();
+                $inventory = $stockValidation->getData();
                 $previousQuantity = $inventory->quantity;
                 $newQuantity = $previousQuantity - $quantity;
 
@@ -145,9 +146,9 @@ class InventoryService extends AbstractBaseService
 
                 Log::info('Stock removed', [
                     'product_id' => $productId,
-                    'quantity'   => $quantity,
-                    'new_total'  => $newQuantity,
-                    'reason'     => $reason,
+                    'quantity' => $quantity,
+                    'new_total' => $newQuantity,
+                    'reason' => $reason,
                 ]);
 
                 return $this->success($inventory, 'Estoque removido com sucesso');
@@ -159,7 +160,7 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $validation = $this->validateQuantity($quantity);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
@@ -167,7 +168,7 @@ class InventoryService extends AbstractBaseService
                 $inventory = $this->inventoryRepository->findByProduct($productId);
                 $previousQuantity = $inventory ? $inventory->quantity : 0;
 
-                if (!$inventory) {
+                if (! $inventory) {
                     $inventory = $this->inventoryRepository->createFromDTO(new ProductInventoryDTO(
                         product_id: $productId,
                         quantity: $quantity,
@@ -192,7 +193,7 @@ class InventoryService extends AbstractBaseService
                 Log::info('Stock set', [
                     'product_id' => $productId,
                     'quantity' => $quantity,
-                    'reason' => $reason
+                    'reason' => $reason,
                 ]);
 
                 return $this->success($inventory, 'Estoque ajustado com sucesso');
@@ -204,13 +205,13 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $minQuantity, $maxQuantity) {
             $validation = $this->validateMinMaxQuantity($minQuantity, $maxQuantity);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
             $inventory = $this->inventoryRepository->findByProduct($productId);
 
-            if (!$inventory) {
+            if (! $inventory) {
                 $inventory = $this->inventoryRepository->createFromDTO(new ProductInventoryDTO(
                     product_id: $productId,
                     quantity: 0,
@@ -235,6 +236,7 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $requiredQuantity) {
             $validation = $this->validateSufficientStock($productId, $requiredQuantity);
+
             return $validation->isSuccess()
                 ? $this->success(true, 'Estoque suficiente')
                 : $this->error($validation->getMessage());
@@ -245,6 +247,7 @@ class InventoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $lowStockItems = $this->inventoryRepository->getLowStockItems(50);
+
             return $this->success(['items' => $lowStockItems, 'count' => $lowStockItems->count()], 'Alertas de estoque baixo recuperados');
         }, 'Erro ao buscar alertas de estoque.');
     }
@@ -268,9 +271,10 @@ class InventoryService extends AbstractBaseService
     ): ServiceResult {
         Log::info('Product reserved', [
             'product_id' => $productId,
-            'quantity'   => $quantity,
-            'reason'     => $reason,
+            'quantity' => $quantity,
+            'reason' => $reason,
         ]);
+
         return $this->success(null, 'Produto reservado');
     }
 
@@ -283,9 +287,10 @@ class InventoryService extends AbstractBaseService
     ): ServiceResult {
         Log::info('Reservation released', [
             'product_id' => $productId,
-            'quantity'   => $quantity,
-            'reason'     => $reason,
+            'quantity' => $quantity,
+            'reason' => $reason,
         ]);
+
         return $this->success(null, 'Reserva liberada');
     }
 
@@ -319,11 +324,11 @@ class InventoryService extends AbstractBaseService
     {
         $normalized = [];
 
-        if (!empty($filters['product_name'])) {
+        if (! empty($filters['product_name'])) {
             $normalized['search'] = $filters['product_name'];
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $normalized['stock_status'] = $filters['status'];
         }
 

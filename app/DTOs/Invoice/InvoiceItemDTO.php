@@ -32,12 +32,12 @@ readonly class InvoiceItemDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'product_id'  => $this->product_id,
-            'quantity'    => $this->quantity,
-            'unit_price'  => $this->unit_price,
-            'total'       => $this->total,
+            'product_id' => $this->product_id,
+            'quantity' => $this->quantity,
+            'unit_price' => $this->unit_price,
+            'total' => $this->total,
             'description' => $this->description,
-            'tenant_id'   => $this->tenant_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

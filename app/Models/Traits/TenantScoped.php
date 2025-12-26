@@ -19,36 +19,29 @@ class TenantScope implements Scope
 
     /**
      * Apply the scope to the given query builder.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
      */
-    public function apply( Builder $builder, Model $model ): void
+    public function apply(Builder $builder, Model $model): void
     {
         // Skip applying scope if we're already resolving tenant to prevent infinite loop
-        if ( self::$resolvingTenant ) {
+        if (self::$resolvingTenant) {
             return;
         }
 
-        $tenantId = $this->getCurrentTenantId( $model );
+        $tenantId = $this->getCurrentTenantId($model);
 
-        if ( $tenantId !== null ) {
-            $builder->where( 'tenant_id', $tenantId );
+        if ($tenantId !== null) {
+            $builder->where('tenant_id', $tenantId);
         }
     }
 
     /**
      * Get the current tenant ID from auth context or request.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return int|null
      */
-    public function getCurrentTenantId( Model $model ): ?int
+    public function getCurrentTenantId(Model $model): ?int
     {
         // Verificação especial para contexto de testes: usa config('tenant.testing_id')
-        $testingTenantId = config( 'tenant.testing_id' );
-        if ( $testingTenantId !== null ) {
+        $testingTenantId = config('tenant.testing_id');
+        if ($testingTenantId !== null) {
             return (int) $testingTenantId;
         }
 
@@ -57,16 +50,16 @@ class TenantScope implements Scope
 
         try {
             // Prioritize authenticated user tenant
-            if ( Auth::check() ) {
+            if (Auth::check()) {
                 $user = Auth::user();
-                if ( method_exists( $user, 'tenant' ) && $user->tenant ) {
+                if (method_exists($user, 'tenant') && $user->tenant) {
                     return $user->tenant->id;
                 }
             }
 
             // Fallback to request context if available
-            if ( request()->has( 'tenant_id' ) ) {
-                return (int) request()->get( 'tenant_id' );
+            if (request()->has('tenant_id')) {
+                return (int) request()->get('tenant_id');
             }
 
             // Return null if no tenant resolved to avoid applying scope
@@ -78,7 +71,6 @@ class TenantScope implements Scope
 
         // Note: In production, implement proper tenant resolution middleware
     }
-
 }
 
 /**
@@ -94,62 +86,49 @@ class TenantScope implements Scope
  */
 trait TenantScoped
 {
-
     /**
      * Boot the trait and apply the tenant scope.
-     *
-     * @return void
      */
     public static function bootTenantScoped(): void
     {
-        static::addGlobalScope( new TenantScope() );
+        static::addGlobalScope(new TenantScope);
     }
 
     /**
      * Remove the tenant scope from the query.
      *
      * @param  \Illuminate\Database\Eloquent\Builder|null  $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeWithoutTenant( Builder $query ): Builder
+    public function scopeWithoutTenant(Builder $query): Builder
     {
-        return $query->withoutGlobalScope( TenantScope::class);
+        return $query->withoutGlobalScope(TenantScope::class);
     }
 
     /**
      * Get the current tenant ID.
-     *
-     * @return int|null
      */
     public static function getCurrentTenantId(): ?int
     {
-        $scope      = new TenantScope();
-        $dummyModel = new class extends Model
-        {
-        };
-        $dummyModel->setRawAttributes( [] );
-        return $scope->getCurrentTenantId( $dummyModel );
+        $scope = new TenantScope;
+        $dummyModel = new class extends Model {};
+        $dummyModel->setRawAttributes([]);
+
+        return $scope->getCurrentTenantId($dummyModel);
     }
 
     /**
      * Set the testing tenant ID for test environments.
      * This method allows setting a fixed tenant_id for testing purposes.
-     *
-     * @param  int|null  $tenantId
-     * @return void
      */
-    public static function setTestingTenantId( ?int $tenantId ): void
+    public static function setTestingTenantId(?int $tenantId): void
     {
-        config( [ 'tenant.testing_id' => $tenantId ] );
+        config(['tenant.testing_id' => $tenantId]);
     }
 
     /**
      * Check if the model is scoped to a specific tenant.
-     *
-     * @param  int  $tenantId
-     * @return bool
      */
-    public function isScopedToTenant( int $tenantId ): bool
+    public function isScopedToTenant(int $tenantId): bool
     {
         return $this->tenant_id === $tenantId;
     }
@@ -157,24 +136,20 @@ trait TenantScoped
     /**
      * Set the tenant ID explicitly (for seeding or admin operations).
      *
-     * @param  int  $tenantId
      * @return $this
      */
-    public function setTenantId( int $tenantId ): static
+    public function setTenantId(int $tenantId): static
     {
         $this->tenant_id = $tenantId;
+
         return $this;
     }
 
     /**
      * Get all records without tenant scoping (admin only).
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeAllTenants( Builder $query ): Builder
+    public function scopeAllTenants(Builder $query): Builder
     {
-        return $query->withoutGlobalScope( TenantScope::class);
+        return $query->withoutGlobalScope(TenantScope::class);
     }
-
 }

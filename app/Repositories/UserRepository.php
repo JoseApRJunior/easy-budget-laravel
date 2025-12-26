@@ -26,7 +26,7 @@ class UserRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new User();
+        return new User;
     }
 
     /**
@@ -43,17 +43,17 @@ class UserRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, UserDTO $dto): bool
     {
         $user = $this->find($id);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        return $user->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $user->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     /**
      * Encontra usuário por email independentemente do tenant (busca global).
      *
-     * @param string $email Email do usuário
+     * @param  string  $email  Email do usuário
      * @return User|null Usuário encontrado ou null
      */
     public function findByEmail(string $email): ?User
@@ -74,15 +74,15 @@ class UserRepository extends AbstractTenantRepository
     /**
      * Valida se email é único dentro do tenant atual.
      *
-     * @param string $email Email a ser verificado
-     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @param  string  $email  Email a ser verificado
+     * @param  int|null  $excludeId  ID do usuário a ser excluído da verificação
      * @return bool True se é único, false caso contrário
      */
     public function isEmailUnique(string $email, ?int $excludeId = null): bool
     {
-        return !$this->model->newQuery()
+        return ! $this->model->newQuery()
             ->where('email', $email)
-            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
     }
 
@@ -99,15 +99,15 @@ class UserRepository extends AbstractTenantRepository
     /**
      * Verifica se slug existe dentro do tenant atual.
      *
-     * @param string $slug Slug a ser verificado
-     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @param  string  $slug  Slug a ser verificado
+     * @param  int|null  $excludeId  ID do usuário a ser excluído da verificação
      * @return bool True se existe, false caso contrário
      */
     public function existsBySlug(string $slug, ?int $excludeId = null): bool
     {
         return $this->model->newQuery()
             ->where('slug', $slug)
-            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
     }
 

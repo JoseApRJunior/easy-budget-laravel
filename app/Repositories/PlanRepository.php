@@ -27,7 +27,7 @@ class PlanRepository extends AbstractGlobalRepository
      */
     protected function makeModel(): Model
     {
-        return new Plan();
+        return new Plan;
     }
 
     /**
@@ -44,11 +44,11 @@ class PlanRepository extends AbstractGlobalRepository
     public function updateFromDTO(int $id, PlanDTO $dto): bool
     {
         $plan = $this->find($id);
-        if (!$plan) {
+        if (! $plan) {
             return false;
         }
 
-        return $plan->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $plan->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     // --------------------------------------------------------------------------
@@ -92,9 +92,9 @@ class PlanRepository extends AbstractGlobalRepository
      */
     public function validateUniqueName(string $name, ?int $excludeId = null): bool
     {
-        return !$this->model->newQuery()
+        return ! $this->model->newQuery()
             ->where('name', $name)
-            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
     }
 
@@ -134,6 +134,7 @@ class PlanRepository extends AbstractGlobalRepository
     public function saveSubscription($subscription): mixed
     {
         $subscription->save();
+
         return $subscription;
     }
 
@@ -144,11 +145,11 @@ class PlanRepository extends AbstractGlobalRepository
     {
         $query = $this->model->newQuery();
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('slug', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                $q->where('name', 'like', '%'.$filters['search'].'%')
+                    ->orWhere('slug', 'like', '%'.$filters['search'].'%')
+                    ->orWhere('description', 'like', '%'.$filters['search'].'%');
             });
         }
 
@@ -156,8 +157,12 @@ class PlanRepository extends AbstractGlobalRepository
             $query->where('status', (bool) $filters['status']);
         }
 
-        if (!empty($filters['min_price'])) $query->where('price', '>=', $filters['min_price']);
-        if (!empty($filters['max_price'])) $query->where('price', '<=', $filters['max_price']);
+        if (! empty($filters['min_price'])) {
+            $query->where('price', '>=', $filters['min_price']);
+        }
+        if (! empty($filters['max_price'])) {
+            $query->where('price', '<=', $filters['max_price']);
+        }
 
         return $query->orderBy('price', 'asc')->paginate($perPage);
     }
@@ -175,6 +180,6 @@ class PlanRepository extends AbstractGlobalRepository
      */
     public function canBeDeactivatedOrDeleted(int $id): bool
     {
-        return !$this->model->newQuery()->where('id', $id)->has('planSubscriptions')->exists();
+        return ! $this->model->newQuery()->where('id', $id)->has('planSubscriptions')->exists();
     }
 }

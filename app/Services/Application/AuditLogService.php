@@ -9,10 +9,8 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Repositories\AuditLogRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
-use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Support\ServiceResult;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 
@@ -21,14 +19,11 @@ use Illuminate\Support\Facades\Request;
  *
  * Esta classe fornece métodos para registrar e recuperar logs de auditoria,
  * seguindo os padrões do sistema (DTOs, Repositórios, safeExecute).
+ *
+ * @property AuditLogRepository $repository
  */
 class AuditLogService extends AbstractBaseService
 {
-    /**
-     * @var AuditLogRepository
-     */
-    protected $repository;
-
     /**
      * Construtor do serviço.
      */
@@ -45,7 +40,7 @@ class AuditLogService extends AbstractBaseService
         return $this->safeExecute(function () use ($action, $model, $oldValues, $newValues, $metadata) {
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error('Usuário não autenticado para registro de log.');
             }
 
@@ -65,6 +60,7 @@ class AuditLogService extends AbstractBaseService
             );
 
             $log = $this->repository->createFromDTO($dto);
+
             return $this->success($log, 'Log registrado com sucesso.');
         }, 'Erro ao registrar log de auditoria.');
     }
@@ -241,12 +237,13 @@ class AuditLogService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($limit) {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return $this->error('Usuário não autenticado.');
             }
 
             // Usando getFiltered sem filtros para pegar os mais recentes
             $logs = $this->repository->getFiltered([], $limit);
+
             return $this->success($logs);
         }, 'Erro ao recuperar logs recentes.');
     }
@@ -258,6 +255,7 @@ class AuditLogService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters, $perPage) {
             $logs = $this->repository->getFiltered($filters, $perPage);
+
             return $this->success($logs);
         }, 'Erro ao recuperar logs filtrados.');
     }
@@ -269,6 +267,7 @@ class AuditLogService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($days) {
             $stats = $this->repository->getStats($days);
+
             return $this->success($stats);
         }, 'Erro ao recuperar estatísticas de auditoria.');
     }
@@ -280,6 +279,7 @@ class AuditLogService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters) {
             $logs = $this->repository->getFiltered($filters, 1000);
+
             return $this->success($logs->items());
         }, 'Erro ao preparar dados para exportação.');
     }
@@ -293,9 +293,15 @@ class AuditLogService extends AbstractBaseService
         $highActions = ['deleted', 'session_terminated', 'backup_restored'];
         $warningActions = ['created', 'updated', 'two_factor_enabled'];
 
-        if (in_array($action, $criticalActions)) return 'critical';
-        if (in_array($action, $highActions)) return 'high';
-        if (in_array($action, $warningActions)) return 'warning';
+        if (in_array($action, $criticalActions)) {
+            return 'critical';
+        }
+        if (in_array($action, $highActions)) {
+            return 'high';
+        }
+        if (in_array($action, $warningActions)) {
+            return 'warning';
+        }
 
         return 'info';
     }

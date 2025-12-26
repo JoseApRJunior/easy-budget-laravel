@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Serviço para gerenciamento de configurações do sistema
- * 
+ *
  * Este serviço gerencia as configurações globais do sistema,
  * incluindo preferências de tenant, integrações, notificações
  * e outras configurações administrativas.
@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 class SystemSettingsService extends AbstractBaseService
 {
     private const CACHE_PREFIX = 'system_settings_';
+
     private const CACHE_TTL = 3600; // 1 hora
 
     public function __construct(
@@ -36,15 +37,15 @@ class SystemSettingsService extends AbstractBaseService
     public function getSetting(string $key, mixed $default = null): ServiceResult
     {
         try {
-            $cacheKey = self::CACHE_PREFIX . $this->tenantId() . '_' . $key;
-            
+            $cacheKey = self::CACHE_PREFIX.$this->tenantId().'_'.$key;
+
             $setting = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($key) {
                 return SystemSettings::where('tenant_id', $this->tenantId())
                     ->where('key', $key)
                     ->first();
             });
 
-            if (!$setting) {
+            if (! $setting) {
                 return $this->success($default, 'Configuração não encontrada, retornando valor padrão.');
             }
 
@@ -59,7 +60,7 @@ class SystemSettingsService extends AbstractBaseService
                 'tenant_id' => $this->tenantId(),
                 'error' => $e->getMessage(),
             ]);
-            
+
             return $this->error(OperationStatus::ERROR, 'Erro ao obter configuração.', null, $e);
         }
     }
@@ -71,12 +72,12 @@ class SystemSettingsService extends AbstractBaseService
     {
         try {
             // Valida chave
-            if (!$this->validateSettingKey($key)) {
+            if (! $this->validateSettingKey($key)) {
                 return $this->error(OperationStatus::VALIDATION_ERROR, 'Chave de configuração inválida.');
             }
 
             // Valida tipo
-            if (!$this->validateSettingType($type)) {
+            if (! $this->validateSettingType($type)) {
                 return $this->error(OperationStatus::VALIDATION_ERROR, 'Tipo de configuração inválido.');
             }
 
@@ -117,7 +118,7 @@ class SystemSettingsService extends AbstractBaseService
                 'tenant_id' => $this->tenantId(),
                 'error' => $e->getMessage(),
             ]);
-            
+
             return $this->error(OperationStatus::ERROR, 'Erro ao salvar configuração.', null, $e);
         }
     }
@@ -139,11 +140,12 @@ class SystemSettingsService extends AbstractBaseService
                     $setting['metadata'] ?? []
                 );
 
-                if (!$result->isSuccess()) {
+                if (! $result->isSuccess()) {
                     DB::rollBack();
+
                     return $this->error(
                         OperationStatus::ERROR,
-                        "Erro ao definir configuração '{$setting['key']}': " . $result->getMessage()
+                        "Erro ao definir configuração '{$setting['key']}': ".$result->getMessage()
                     );
                 }
 
@@ -156,6 +158,7 @@ class SystemSettingsService extends AbstractBaseService
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $this->error(OperationStatus::ERROR, 'Erro ao salvar configurações.', null, $e);
         }
     }
@@ -167,12 +170,12 @@ class SystemSettingsService extends AbstractBaseService
     {
         try {
             $settings = SystemSettings::where('tenant_id', $this->tenantId())
-                ->where('key', 'like', $group . '.%')
+                ->where('key', 'like', $group.'.%')
                 ->get();
 
             $groupedSettings = [];
             foreach ($settings as $setting) {
-                $subKey = str_replace($group . '.', '', $setting->key);
+                $subKey = str_replace($group.'.', '', $setting->key);
                 $groupedSettings[$subKey] = $this->decodeSettingValue($setting->value, $setting->type);
             }
 
@@ -191,9 +194,9 @@ class SystemSettingsService extends AbstractBaseService
         try {
             $settingsToSave = [];
             foreach ($settings as $subKey => $value) {
-                $fullKey = $group . '.' . $subKey;
+                $fullKey = $group.'.'.$subKey;
                 $type = is_bool($value) ? 'boolean' : (is_int($value) ? 'integer' : (is_array($value) || is_object($value) ? 'json' : 'string'));
-                
+
                 $settingsToSave[] = [
                     'key' => $fullKey,
                     'value' => $value,
@@ -218,7 +221,7 @@ class SystemSettingsService extends AbstractBaseService
                 ->where('key', $key)
                 ->first();
 
-            if (!$setting) {
+            if (! $setting) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Configuração não encontrada.');
             }
 
@@ -255,8 +258,9 @@ class SystemSettingsService extends AbstractBaseService
                         ->where('key', $setting['key'])
                         ->exists();
 
-                    if ($exists && !$overwrite) {
+                    if ($exists && ! $overwrite) {
                         $skipped++;
+
                         continue;
                     }
 
@@ -270,11 +274,11 @@ class SystemSettingsService extends AbstractBaseService
                     if ($result->isSuccess()) {
                         $imported++;
                     } else {
-                        $errors[] = "Erro em '{$setting['key']}': " . $result->getMessage();
+                        $errors[] = "Erro em '{$setting['key']}': ".$result->getMessage();
                     }
 
                 } catch (\Exception $e) {
-                    $errors[] = "Erro em '{$setting['key']}': " . $e->getMessage();
+                    $errors[] = "Erro em '{$setting['key']}': ".$e->getMessage();
                 }
             }
 
@@ -298,7 +302,7 @@ class SystemSettingsService extends AbstractBaseService
             $query = SystemSettings::where('tenant_id', $this->tenantId());
 
             if (isset($filters['group'])) {
-                $query->where('key', 'like', $filters['group'] . '.%');
+                $query->where('key', 'like', $filters['group'].'.%');
             }
 
             if (isset($filters['type'])) {
@@ -362,6 +366,7 @@ class SystemSettingsService extends AbstractBaseService
     private function validateSettingType(string $type): bool
     {
         $validTypes = ['string', 'integer', 'boolean', 'float', 'json', 'array'];
+
         return in_array($type, $validTypes, true);
     }
 
@@ -397,7 +402,7 @@ class SystemSettingsService extends AbstractBaseService
      */
     private function clearSettingCache(string $key): void
     {
-        $cacheKey = self::CACHE_PREFIX . $this->tenantId() . '_' . $key;
+        $cacheKey = self::CACHE_PREFIX.$this->tenantId().'_'.$key;
         Cache::forget($cacheKey);
     }
 
@@ -406,7 +411,7 @@ class SystemSettingsService extends AbstractBaseService
      */
     private function clearAllSettingsCache(): void
     {
-        // Como não temos uma forma direta de limpar por padrão, 
+        // Como não temos uma forma direta de limpar por padrão,
         // podemos usar tags se o cache driver suportar
         // Por enquanto, limpamos individualmente
         $settings = SystemSettings::where('tenant_id', $this->tenantId())->pluck('key');

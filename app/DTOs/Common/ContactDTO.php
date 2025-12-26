@@ -40,10 +40,10 @@ readonly class ContactDTO extends AbstractDTO
             'phone_personal' => $this->phone_personal,
             'email_business' => $this->email_business,
             'phone_business' => $this->phone_business,
-            'website'        => $this->website,
-            'customer_id'    => $this->customer_id,
-            'provider_id'    => $this->provider_id,
-            'tenant_id'      => $this->tenant_id,
+            'website' => $this->website,
+            'customer_id' => $this->customer_id,
+            'provider_id' => $this->provider_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

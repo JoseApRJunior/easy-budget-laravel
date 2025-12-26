@@ -43,17 +43,17 @@ readonly class ProviderCredentialDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'provider_id'   => $this->provider_id,
-            'type'          => $this->type,
-            'access_token'  => $this->access_token,
+            'provider_id' => $this->provider_id,
+            'type' => $this->type,
+            'access_token' => $this->access_token,
             'refresh_token' => $this->refresh_token,
-            'client_id'     => $this->client_id,
+            'client_id' => $this->client_id,
             'client_secret' => $this->client_secret,
-            'public_key'    => $this->public_key,
-            'expires_at'    => $this->expires_at?->toDateTimeString(),
-            'environment'   => $this->environment,
-            'metadata'      => $this->metadata,
-            'tenant_id'     => $this->tenant_id,
+            'public_key' => $this->public_key,
+            'expires_at' => $this->expires_at?->toDateTimeString(),
+            'environment' => $this->environment,
+            'metadata' => $this->metadata,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

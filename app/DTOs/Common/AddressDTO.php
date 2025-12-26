@@ -38,15 +38,15 @@ readonly class AddressDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'address'        => $this->address,
+            'address' => $this->address,
             'address_number' => $this->address_number,
-            'neighborhood'   => $this->neighborhood,
-            'city'           => $this->city,
-            'state'          => $this->state,
-            'cep'            => $this->cep,
-            'customer_id'    => $this->customer_id,
-            'provider_id'    => $this->provider_id,
-            'tenant_id'      => $this->tenant_id,
+            'neighborhood' => $this->neighborhood,
+            'city' => $this->city,
+            'state' => $this->state,
+            'cep' => $this->cep,
+            'customer_id' => $this->customer_id,
+            'provider_id' => $this->provider_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

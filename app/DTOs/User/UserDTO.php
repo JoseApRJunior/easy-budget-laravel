@@ -36,12 +36,12 @@ readonly class UserDTO extends AbstractDTO
     public function toArray(): array
     {
         $data = [
-            'name'        => $this->name,
-            'email'       => $this->email,
-            'is_active'   => $this->is_active,
-            'tenant_id'   => $this->tenant_id,
-            'avatar'      => $this->avatar,
-            'logo'        => $this->logo,
+            'name' => $this->name,
+            'email' => $this->email,
+            'is_active' => $this->is_active,
+            'tenant_id' => $this->tenant_id,
+            'avatar' => $this->avatar,
+            'logo' => $this->logo,
             'extra_links' => $this->extra_links,
         ];
 

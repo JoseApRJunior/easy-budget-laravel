@@ -26,7 +26,7 @@ class InvoiceRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Invoice();
+        return new Invoice;
     }
 
     /**
@@ -36,7 +36,7 @@ class InvoiceRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery()->where('code', $code);
 
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -80,9 +80,9 @@ class InvoiceRepository extends AbstractTenantRepository
     public function getFiltered(array $filters = [], ?array $orderBy = null, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->tap(fn($q) => $this->applyAllInvoiceFilters($q, $filters))
-            ->when(!$orderBy, fn($q) => $q->latest())
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->tap(fn ($q) => $this->applyAllInvoiceFilters($q, $filters))
+            ->when(! $orderBy, fn ($q) => $q->latest())
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 
@@ -95,15 +95,15 @@ class InvoiceRepository extends AbstractTenantRepository
         $this->applyBooleanFilter($query, $filters, 'status', 'status');
         $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('due_date', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('due_date', '<=', $filters['date_to']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->orWhereHas('customer.commonData', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -120,20 +120,20 @@ class InvoiceRepository extends AbstractTenantRepository
     {
         $baseQuery = $this->model->newQuery();
 
-        $total     = (clone $baseQuery)->count();
-        $paid      = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PAID->value)->count();
-        $pending   = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PENDING->value)->count();
-        $overdue   = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::OVERDUE->value)->count();
+        $total = (clone $baseQuery)->count();
+        $paid = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PAID->value)->count();
+        $pending = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PENDING->value)->count();
+        $overdue = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::OVERDUE->value)->count();
         $cancelled = (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::CANCELLED->value)->count();
 
-        $totalBilled   = (float) (clone $baseQuery)->sum('total');
+        $totalBilled = (float) (clone $baseQuery)->sum('total');
         $totalReceived = (float) (clone $baseQuery)->where('status', \App\Enums\InvoiceStatus::PAID->value)->sum('transaction_amount');
-        $totalPending  = (float) (clone $baseQuery)->whereIn('status', [\App\Enums\InvoiceStatus::PENDING->value, \App\Enums\InvoiceStatus::OVERDUE->value])->sum('total');
+        $totalPending = (float) (clone $baseQuery)->whereIn('status', [\App\Enums\InvoiceStatus::PENDING->value, \App\Enums\InvoiceStatus::OVERDUE->value])->sum('total');
 
         $statusBreakdown = [
-            'PENDENTE'  => ['count' => $pending, 'color' => \App\Enums\InvoiceStatus::PENDING->getColor()],
-            'VENCIDA'   => ['count' => $overdue, 'color' => \App\Enums\InvoiceStatus::OVERDUE->getColor()],
-            'PAGA'      => ['count' => $paid, 'color' => \App\Enums\InvoiceStatus::PAID->getColor()],
+            'PENDENTE' => ['count' => $pending, 'color' => \App\Enums\InvoiceStatus::PENDING->getColor()],
+            'VENCIDA' => ['count' => $overdue, 'color' => \App\Enums\InvoiceStatus::OVERDUE->getColor()],
+            'PAGA' => ['count' => $paid, 'color' => \App\Enums\InvoiceStatus::PAID->getColor()],
             'CANCELADA' => ['count' => $cancelled, 'color' => \App\Enums\InvoiceStatus::CANCELLED->getColor()],
         ];
 
@@ -144,16 +144,16 @@ class InvoiceRepository extends AbstractTenantRepository
             ->get();
 
         return [
-            'total_invoices'     => $total,
-            'paid_invoices'      => $paid,
-            'pending_invoices'   => $pending,
-            'overdue_invoices'   => $overdue,
+            'total_invoices' => $total,
+            'paid_invoices' => $paid,
+            'pending_invoices' => $pending,
+            'overdue_invoices' => $overdue,
             'cancelled_invoices' => $cancelled,
-            'total_billed'       => $totalBilled,
-            'total_received'     => $totalReceived,
-            'total_pending'      => $totalPending,
-            'status_breakdown'   => $statusBreakdown,
-            'recent_invoices'    => $recent,
+            'total_billed' => $totalBilled,
+            'total_received' => $totalReceived,
+            'total_pending' => $totalPending,
+            'status_breakdown' => $statusBreakdown,
+            'recent_invoices' => $recent,
         ];
     }
 

@@ -56,7 +56,7 @@ class AuditController extends Controller
         try {
             $result = $this->auditLogService->prepareExportData($request->all());
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return back()->with('error', $result->getMessage());
             }
 
@@ -72,7 +72,7 @@ class AuditController extends Controller
 
             return back()->with('error', 'Formato de exportação não suportado.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exportar logs: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao exportar logs: '.$e->getMessage());
         }
     }
 
@@ -87,7 +87,7 @@ class AuditController extends Controller
             return redirect()->route('admin.audit.logs')
                 ->with('success', 'Log de auditoria excluído com sucesso!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao excluir log: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao excluir log: '.$e->getMessage());
         }
     }
 }

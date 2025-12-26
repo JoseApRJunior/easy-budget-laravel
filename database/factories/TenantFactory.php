@@ -6,7 +6,6 @@ namespace Database\Factories;
 
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class TenantFactory extends Factory
 {
@@ -14,13 +13,12 @@ class TenantFactory extends Factory
 
     public function definition(): array
     {
-        $name = $this->faker->unique()->company . ' ' . $this->faker->randomElement( [ 'Ltda.', 'S/A', 'ME' ] );
+        $name = $this->faker->unique()->company.' '.$this->faker->randomElement(['Ltda.', 'S/A', 'ME']);
 
-        return [ 
-            'name'       => $name,
+        return [
+            'name' => $name,
             'created_at' => now(),
             'updated_at' => now(),
         ];
     }
-
 }

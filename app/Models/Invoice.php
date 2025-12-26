@@ -1,12 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
-use App\Models\PaymentMercadoPagoInvoice;
 use App\Models\Traits\TenantScoped;
-use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Invoice extends Model
 {
-    use TenantScoped, SoftDeletes, HasFactory;
+    use HasFactory, SoftDeletes, TenantScoped;
 
     /**
      * Boot the model.
@@ -89,27 +88,27 @@ class Invoice extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'                  => 'integer',
-        'service_id'                 => 'integer',
-        'customer_id'                => 'integer',
-        'status'                     => InvoiceStatus::class,
+        'tenant_id' => 'integer',
+        'service_id' => 'integer',
+        'customer_id' => 'integer',
+        'status' => InvoiceStatus::class,
         'user_confirmation_token_id' => 'integer',
-        'code'                       => 'string',
-        'subtotal'                   => 'decimal:2',
-        'total'                      => 'decimal:2',
-        'due_date'                   => 'date',
-        'transaction_date'           => 'datetime',
-        'payment_method'             => 'string',
-        'payment_id'                 => 'string',
-        'transaction_amount'         => 'decimal:2',
-        'public_hash'                => 'string',
-        'public_token'               => 'string',
-        'public_expires_at'          => 'datetime',
-        'discount'                   => 'decimal:2',
-        'notes'                      => 'string',
-        'is_automatic'               => 'boolean',
-        'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'datetime',
+        'code' => 'string',
+        'subtotal' => 'decimal:2',
+        'total' => 'decimal:2',
+        'due_date' => 'date',
+        'transaction_date' => 'datetime',
+        'payment_method' => 'string',
+        'payment_id' => 'string',
+        'transaction_amount' => 'decimal:2',
+        'public_hash' => 'string',
+        'public_token' => 'string',
+        'public_expires_at' => 'datetime',
+        'discount' => 'decimal:2',
+        'notes' => 'string',
+        'is_automatic' => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -118,24 +117,24 @@ class Invoice extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'                  => 'required|integer|exists:tenants,id',
-            'service_id'                 => 'required|integer|exists:services,id',
-            'customer_id'                => 'required|integer|exists:customers,id',
-            'status'                     => 'required|string|in:' . implode( ',', array_column( InvoiceStatus::cases(), 'value' ) ),
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'service_id' => 'required|integer|exists:services,id',
+            'customer_id' => 'required|integer|exists:customers,id',
+            'status' => 'required|string|in:'.implode(',', array_column(InvoiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
-            'code'                       => 'required|string|max:50|unique:invoices,code',
-            'subtotal'                   => 'required|numeric|min:0|max:999999.99',
-            'discount'                   => 'required|numeric|min:0|max:999999.99',
-            'total'                      => 'required|numeric|min:0|max:999999.99',
-            'due_date'                   => 'nullable|date|after:today',
-            'payment_method'             => 'nullable|string|max:50',
-            'payment_id'                 => 'nullable|string|max:255',
-            'transaction_amount'         => 'nullable|numeric|min:0|max:999999.99',
-            'transaction_date'           => 'nullable|date',
-            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
-            'public_expires_at'          => 'nullable|date',
-            'notes'                      => 'nullable|string|max:65535',
-            'is_automatic'               => 'boolean',
+            'code' => 'required|string|max:50|unique:invoices,code',
+            'subtotal' => 'required|numeric|min:0|max:999999.99',
+            'discount' => 'required|numeric|min:0|max:999999.99',
+            'total' => 'required|numeric|min:0|max:999999.99',
+            'due_date' => 'nullable|date|after:today',
+            'payment_method' => 'nullable|string|max:50',
+            'payment_id' => 'nullable|string|max:255',
+            'transaction_amount' => 'nullable|numeric|min:0|max:999999.99',
+            'transaction_date' => 'nullable|date',
+            'public_token' => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at' => 'nullable|date',
+            'notes' => 'nullable|string|max:65535',
+            'is_automatic' => 'boolean',
         ];
     }
 
@@ -144,7 +143,7 @@ class Invoice extends Model
      */
     public function tenant()
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -152,7 +151,7 @@ class Invoice extends Model
      */
     public function customer()
     {
-        return $this->belongsTo( Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -168,7 +167,7 @@ class Invoice extends Model
      */
     public function service()
     {
-        return $this->belongsTo( Service::class);
+        return $this->belongsTo(Service::class);
     }
 
     /**
@@ -176,7 +175,7 @@ class Invoice extends Model
      */
     public function invoiceItems()
     {
-        return $this->hasMany( InvoiceItem::class);
+        return $this->hasMany(InvoiceItem::class);
     }
 
     /**
@@ -184,7 +183,7 @@ class Invoice extends Model
      */
     public function userConfirmationToken()
     {
-        return $this->belongsTo( UserConfirmationToken::class);
+        return $this->belongsTo(UserConfirmationToken::class);
     }
 
     /**
@@ -192,15 +191,15 @@ class Invoice extends Model
      */
     public function paymentMercadoPagoInvoice()
     {
-        return $this->hasMany( PaymentMercadoPagoInvoice::class, 'invoice_id' );
+        return $this->hasMany(PaymentMercadoPagoInvoice::class, 'invoice_id');
     }
 
     /**
      * Accessor para tratar valores zero-date no updated_at.
      */
-    public function getUpdatedAtAttribute( $value )
+    public function getUpdatedAtAttribute($value)
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+        return ($value === '0000-00-00 00:00:00' || empty($value)) ? null : new \DateTime($value);
     }
 
     /**
@@ -242,5 +241,4 @@ class Invoice extends Model
     {
         return 'code';
     }
-
 }

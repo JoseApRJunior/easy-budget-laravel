@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Core\Abstracts;
@@ -33,12 +34,15 @@ abstract class AbstractBaseService implements CrudServiceInterface
     {
         try {
             $data = $callback();
+
             return $data instanceof ServiceResult ? $data : $this->success($data);
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error($errorMessage, ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
             return $this->error(OperationStatus::CONFLICT, 'Erro de integridade de dados ou conflito no banco.', null, $e);
         } catch (Exception $e) {
             Log::error($errorMessage, ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
             return $this->error(OperationStatus::ERROR, $errorMessage, null, $e);
         }
     }
@@ -47,15 +51,16 @@ abstract class AbstractBaseService implements CrudServiceInterface
 
     public function findById(int $id, array $with = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($id) {
+        return $this->safeExecute(function () use ($id) {
             $entity = $this->repository->find($id);
+
             return $entity ?: $this->error(OperationStatus::NOT_FOUND, "Recurso com ID {$id} não encontrado.");
         });
     }
 
     public function list(array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($filters) {
+        return $this->safeExecute(function () use ($filters) {
             $criteria = $this->extractCriteriaFromFilters($filters);
             $orderBy = $this->extractOrderByFromFilters($filters);
 
@@ -69,10 +74,11 @@ abstract class AbstractBaseService implements CrudServiceInterface
 
     public function count(array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($filters) {
+        return $this->safeExecute(function () use ($filters) {
             if ($this->repository instanceof TenantRepositoryInterface) {
                 return $this->repository->countByTenant($this->extractCriteriaFromFilters($filters));
             }
+
             return $this->repository->getAll()->count();
         });
     }
@@ -81,20 +87,21 @@ abstract class AbstractBaseService implements CrudServiceInterface
 
     public function create(array $data): ServiceResult
     {
-        return $this->safeExecute(fn() => $this->repository->create($data), 'Erro ao criar recurso.');
+        return $this->safeExecute(fn () => $this->repository->create($data), 'Erro ao criar recurso.');
     }
 
     public function update(int $id, array $data): ServiceResult
     {
-        return $this->safeExecute(function() use ($id, $data) {
+        return $this->safeExecute(function () use ($id, $data) {
             $entity = $this->repository->update($id, $data);
+
             return $entity ?: $this->error(OperationStatus::NOT_FOUND, 'Recurso não encontrado para atualização.');
         }, 'Erro ao atualizar recurso.');
     }
 
     public function delete(int $id): ServiceResult
     {
-        return $this->safeExecute(function() use ($id) {
+        return $this->safeExecute(function () use ($id) {
             return $this->repository->delete($id)
                 ? $this->success(null, 'Recurso excluído.')
                 : $this->error(OperationStatus::NOT_FOUND, 'Recurso não encontrado.');
@@ -105,20 +112,23 @@ abstract class AbstractBaseService implements CrudServiceInterface
 
     public function deleteMany(array $ids): ServiceResult
     {
-        return $this->safeExecute(function() use ($ids) {
+        return $this->safeExecute(function () use ($ids) {
             if ($this->repository instanceof TenantRepositoryInterface) {
                 $count = $this->repository->deleteManyByTenant($ids);
+
                 return ['deleted_count' => $count];
             }
+
             // Fallback loop se necessário, mas idealmente todos os repos usam a interface tenant
-            return ['deleted_count' => collect($ids)->filter(fn($id) => $this->repository->delete($id))->count()];
+            return ['deleted_count' => collect($ids)->filter(fn ($id) => $this->repository->delete($id))->count()];
         });
     }
 
     public function updateMany(array $ids, array $data): ServiceResult
     {
-        return $this->safeExecute(function() use ($ids, $data) {
-            $count = collect($ids)->filter(fn($id) => $this->repository->update($id, $data))->count();
+        return $this->safeExecute(function () use ($ids, $data) {
+            $count = collect($ids)->filter(fn ($id) => $this->repository->update($id, $data))->count();
+
             return ['updated_count' => $count];
         });
     }
@@ -127,32 +137,35 @@ abstract class AbstractBaseService implements CrudServiceInterface
 
     public function findMany(array $ids, array $with = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($ids) {
+        return $this->safeExecute(function () use ($ids) {
             if ($this->repository instanceof TenantRepositoryInterface) {
                 return $this->repository->findManyByTenant($ids);
             }
+
             return $this->repository->getAll()->whereIn('id', $ids);
         });
     }
 
     public function exists(array $criteria): ServiceResult
     {
-        return $this->safeExecute(function() use ($criteria) {
+        return $this->safeExecute(function () use ($criteria) {
             if ($this->repository instanceof TenantRepositoryInterface) {
                 return $this->repository->countByTenant($criteria) > 0;
             }
+
             return false; // Implementar fallback se necessário
         });
     }
 
     public function restore(int $id): ServiceResult
     {
-        return $this->safeExecute(function() use ($id) {
+        return $this->safeExecute(function () use ($id) {
             if ($this->repository instanceof TenantRepositoryInterface) {
                 return $this->repository->restoreManyByTenant([$id]) > 0
                     ? $this->success(null, 'Recurso restaurado.')
                     : $this->error(OperationStatus::NOT_FOUND, 'Recurso não encontrado ou não deletado.');
             }
+
             return $this->error(OperationStatus::ERROR, 'Repositório não suporta restauração.');
         });
     }
@@ -168,6 +181,7 @@ abstract class AbstractBaseService implements CrudServiceInterface
     {
         $finalStatus = is_string($status) ? OperationStatus::ERROR : $status;
         $finalMessage = is_string($status) ? $status : $message;
+
         return ServiceResult::error($finalStatus, $finalMessage, $data, $exception);
     }
 
@@ -183,13 +197,39 @@ abstract class AbstractBaseService implements CrudServiceInterface
             : null;
     }
 
-    protected function authUser(): ?User { return Auth::user(); }
-    protected function tenantId(): ?int { return $this->authUser()?->tenant_id; }
+    protected function authUser(): ?User
+    {
+        return Auth::user();
+    }
+
+    protected function tenantId(): ?int
+    {
+        return $this->authUser()?->tenant_id;
+    }
 
     // Métodos vazios para evitar erro em instâncias que não os sobrescrevem
-    public function findOneBy(array $criteria, array $with = []): ServiceResult { return $this->error('Não implementado'); }
-    public function deleteByCriteria(array $criteria): ServiceResult { return $this->error('Não implementado'); }
-    public function duplicate(int $id, array $overrides = []): ServiceResult { return $this->error('Não implementado'); }
-    public function getStats(array $filters = []): ServiceResult { return $this->error('Não implementado'); }
-    protected function getSupportedFilters(): array { return []; }
+    public function findOneBy(array $criteria, array $with = []): ServiceResult
+    {
+        return $this->error('Não implementado');
+    }
+
+    public function deleteByCriteria(array $criteria): ServiceResult
+    {
+        return $this->error('Não implementado');
+    }
+
+    public function duplicate(int $id, array $overrides = []): ServiceResult
+    {
+        return $this->error('Não implementado');
+    }
+
+    public function getStats(array $filters = []): ServiceResult
+    {
+        return $this->error('Não implementado');
+    }
+
+    protected function getSupportedFilters(): array
+    {
+        return [];
+    }
 }

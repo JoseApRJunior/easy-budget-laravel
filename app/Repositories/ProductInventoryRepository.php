@@ -21,7 +21,7 @@ class ProductInventoryRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new ProductInventory();
+        return new ProductInventory;
     }
 
     /**
@@ -30,8 +30,8 @@ class ProductInventoryRepository extends AbstractTenantRepository
     public function initialize(int $productId): Model
     {
         return $this->create([
-            'product_id'   => $productId,
-            'quantity'     => 0,
+            'product_id' => $productId,
+            'quantity' => 0,
             'min_quantity' => 0,
             'max_quantity' => null,
         ]);

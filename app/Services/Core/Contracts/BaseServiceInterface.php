@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Core\Contracts;
@@ -16,14 +17,8 @@ namespace App\Services\Core\Contracts;
  * prefira injetar interfaces menores (CrudServiceInterface, ValidationServiceInterface)
  * sempre que possível. Use esta interface de composição apenas para classes
  * que realmente precisam de todas as funcionalidades.
- *
- * @package App\Services\Contracts
  */
-interface BaseServiceInterface extends
-    CrudServiceInterface,
-    CommandServiceInterface,
-    ValidationServiceInterface,
-    UtilityServiceInterface
+interface BaseServiceInterface extends CommandServiceInterface, CrudServiceInterface, UtilityServiceInterface, ValidationServiceInterface
 {
     // A interface fica vazia. Ela apenas herda e agrupa todos os métodos das sub-interfaces.
 

@@ -53,22 +53,22 @@ readonly class MonitoringAlertHistoryDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'alert_type'           => $this->alert_type,
-            'severity'             => $this->severity,
-            'middleware_name'      => $this->middleware_name,
-            'metric_name'          => $this->metric_name,
-            'metric_value'         => $this->metric_value,
-            'threshold_value'      => $this->threshold_value,
-            'message'              => $this->message,
-            'endpoint'             => $this->endpoint,
-            'additional_data'      => $this->additional_data,
-            'is_resolved'          => $this->is_resolved,
-            'resolved_at'          => $this->resolved_at?->toDateTimeString(),
-            'resolved_by'          => $this->resolved_by,
-            'resolution_notes'     => $this->resolution_notes,
-            'notification_sent'    => $this->notification_sent,
+            'alert_type' => $this->alert_type,
+            'severity' => $this->severity,
+            'middleware_name' => $this->middleware_name,
+            'metric_name' => $this->metric_name,
+            'metric_value' => $this->metric_value,
+            'threshold_value' => $this->threshold_value,
+            'message' => $this->message,
+            'endpoint' => $this->endpoint,
+            'additional_data' => $this->additional_data,
+            'is_resolved' => $this->is_resolved,
+            'resolved_at' => $this->resolved_at?->toDateTimeString(),
+            'resolved_by' => $this->resolved_by,
+            'resolution_notes' => $this->resolution_notes,
+            'notification_sent' => $this->notification_sent,
             'notification_sent_at' => $this->notification_sent_at?->toDateTimeString(),
-            'tenant_id'            => $this->tenant_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

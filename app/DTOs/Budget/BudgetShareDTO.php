@@ -6,21 +6,23 @@ namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
 
-class BudgetShareDTO extends AbstractDTO
+readonly class BudgetShareDTO extends AbstractDTO
 {
-    public ?int $tenant_id;
-    public int $budget_id;
-    public string $share_token;
-    public ?string $recipient_email;
-    public ?string $recipient_name;
-    public ?string $message;
-    public ?array $permissions;
-    public ?string $expires_at;
-    public bool $is_active = true;
-    public string $status = 'active';
-    public int $access_count = 0;
-    public ?string $last_accessed_at;
-    public ?string $rejected_at;
+    public function __construct(
+        public int $budget_id,
+        public string $share_token,
+        public ?int $tenant_id = null,
+        public ?string $recipient_email = null,
+        public ?string $recipient_name = null,
+        public ?string $message = null,
+        public ?array $permissions = null,
+        public ?string $expires_at = null,
+        public bool $is_active = true,
+        public string $status = 'active',
+        public int $access_count = 0,
+        public ?string $last_accessed_at = null,
+        public ?string $rejected_at = null,
+    ) {}
 
     public function toArray(): array
     {
@@ -41,23 +43,23 @@ class BudgetShareDTO extends AbstractDTO
         ];
     }
 
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): static
     {
-        $dto = new self();
-        $dto->tenant_id = $data['tenant_id'] ?? null;
-        $dto->budget_id = (int) $data['budget_id'];
-        $dto->share_token = $data['share_token'];
-        $dto->recipient_email = $data['recipient_email'] ?? null;
-        $dto->recipient_name = $data['recipient_name'] ?? null;
-        $dto->message = $data['message'] ?? null;
-        $dto->permissions = $data['permissions'] ?? null;
-        $dto->expires_at = $data['expires_at'] ?? null;
-        $dto->is_active = (bool) ($data['is_active'] ?? true);
-        $dto->status = $data['status'] ?? 'active';
-        $dto->access_count = (int) ($data['access_count'] ?? 0);
-        $dto->last_accessed_at = $data['last_accessed_at'] ?? null;
-        $dto->rejected_at = $data['rejected_at'] ?? null;
-
-        return $dto;
+        // @phpstan-ignore-next-line
+        return new static(
+            budget_id: (int) $data['budget_id'],
+            share_token: $data['share_token'],
+            tenant_id: $data['tenant_id'] ?? null,
+            recipient_email: $data['recipient_email'] ?? null,
+            recipient_name: $data['recipient_name'] ?? null,
+            message: $data['message'] ?? null,
+            permissions: $data['permissions'] ?? null,
+            expires_at: $data['expires_at'] ?? null,
+            is_active: (bool) ($data['is_active'] ?? true),
+            status: $data['status'] ?? 'active',
+            access_count: (int) ($data['access_count'] ?? 0),
+            last_accessed_at: $data['last_accessed_at'] ?? null,
+            rejected_at: $data['rejected_at'] ?? null,
+        );
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\DTOs\Common\CommonDataDTO;
-use App\Interfaces\RepositoryInterface;
 use App\Models\CommonData;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
@@ -20,7 +19,7 @@ class CommonDataRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new CommonData();
+        return new CommonData;
     }
 
     /**
@@ -37,11 +36,11 @@ class CommonDataRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, CommonDataDTO $dto): bool
     {
         $commonData = $this->find($id);
-        if (!$commonData) {
+        if (! $commonData) {
             return false;
         }
 
-        return $commonData->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $commonData->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     /**
@@ -50,6 +49,7 @@ class CommonDataRepository extends AbstractTenantRepository
     public function createForCustomer(array $data, int $customerId): Model
     {
         $data['customer_id'] = $customerId;
+
         return $this->createFromDTO(CommonDataDTO::fromRequest($data));
     }
 
@@ -67,6 +67,7 @@ class CommonDataRepository extends AbstractTenantRepository
     public function createForProvider(array $data, int $providerId): Model
     {
         $data['provider_id'] = $providerId;
+
         return $this->createFromDTO(CommonDataDTO::fromRequest($data));
     }
 
@@ -79,11 +80,12 @@ class CommonDataRepository extends AbstractTenantRepository
             ->where('provider_id', $providerId)
             ->first();
 
-        if (!$commonData) {
+        if (! $commonData) {
             return false;
         }
 
         $data['provider_id'] = $providerId;
+
         return $this->updateFromDTO($commonData->id, CommonDataDTO::fromRequest($data));
     }
 

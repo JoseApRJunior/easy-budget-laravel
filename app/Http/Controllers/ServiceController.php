@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServiceStatus;
+use App\DTOs\Service\ServiceDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
@@ -18,7 +18,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use App\DTOs\Service\ServiceDTO;
 
 /**
  * Controller para gestão de serviços - Interface Web
@@ -26,8 +25,11 @@ use App\DTOs\Service\ServiceDTO;
 class ServiceController extends Controller
 {
     protected ServiceService $serviceService;
+
     protected CategoryService $categoryService;
+
     protected BudgetService $budgetService;
+
     protected ProductService $productService;
 
     public function __construct(
@@ -83,6 +85,7 @@ class ServiceController extends Controller
             ]);
         } catch (Exception $e) {
             Log::error('Erro ao abrir formulário de criação de serviço', ['error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Erro ao abrir formulário de criação de serviço');
         }
     }
@@ -105,6 +108,7 @@ class ServiceController extends Controller
                 ->with('success', 'Serviço criado com sucesso');
         } catch (Exception $e) {
             Log::error('Erro ao criar serviço', ['error' => $e->getMessage()]);
+
             return redirect()->back()->withInput()->with('error', 'Erro ao criar serviço');
         }
     }
@@ -172,6 +176,7 @@ class ServiceController extends Controller
                 ->with('success', 'Serviço atualizado com sucesso');
         } catch (Exception $e) {
             Log::error('Erro ao atualizar serviço', ['error' => $e->getMessage()]);
+
             return redirect()->back()->withInput()->with('error', 'Erro ao atualizar serviço');
         }
     }
@@ -199,6 +204,7 @@ class ServiceController extends Controller
             return redirect()->back()->with('success', 'Status atualizado com sucesso');
         } catch (Exception $e) {
             Log::error('Erro ao atualizar status do serviço', ['error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Erro ao atualizar status do serviço');
         }
     }
@@ -226,6 +232,7 @@ class ServiceController extends Controller
             return redirect()->route('provider.services.dashboard')->with('success', 'Serviço excluído com sucesso');
         } catch (Exception $e) {
             Log::error('Erro ao excluir serviço', ['error' => $e->getMessage()]);
+
             return redirect()->back()->with('error', 'Erro ao excluir serviço');
         }
     }

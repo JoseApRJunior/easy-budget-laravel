@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Infrastructure;
 
 use App\Enums\OperationStatus;
-use App\Models\MerchantOrderMercadoPago;
-use App\Models\PaymentMercadoPagoInvoice;
-use App\Models\PaymentMercadoPagoPlan;
 use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
 use App\Support\ServiceResult;
 use Exception;
@@ -27,9 +24,8 @@ class MercadoPagoService extends BaseNoTenantService
     /**
      * Cria uma preferência de pagamento no Mercado Pago.
      *
-     * @param string $accessToken Token de acesso do Vendedor (Provider)
-     * @param array $preferenceData Dados da preferência (items, payer, back_urls, etc.)
-     * @return ServiceResult
+     * @param  string  $accessToken  Token de acesso do Vendedor (Provider)
+     * @param  array  $preferenceData  Dados da preferência (items, payer, back_urls, etc.)
      */
     public function createPreference(string $accessToken, array $preferenceData): ServiceResult
     {
@@ -37,31 +33,29 @@ class MercadoPagoService extends BaseNoTenantService
             $response = Http::withToken($accessToken)
                 ->post("{$this->baseUrl}/checkout/preferences", $preferenceData);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('Erro ao criar preferência MP', [
                     'status' => $response->status(),
                     'body' => $response->body(),
-                    'data' => $preferenceData
+                    'data' => $preferenceData,
                 ]);
+
                 return ServiceResult::error(
-                    OperationStatus::ERROR, 
-                    'Erro ao criar preferência de pagamento: ' . ($response->json()['message'] ?? 'Erro desconhecido')
+                    OperationStatus::ERROR,
+                    'Erro ao criar preferência de pagamento: '.($response->json()['message'] ?? 'Erro desconhecido')
                 );
             }
 
             return ServiceResult::success($response->json(), 'Preferência criada com sucesso.');
         } catch (Exception $e) {
             Log::error('Exceção ao criar preferência MP', ['error' => $e->getMessage()]);
+
             return ServiceResult::error(OperationStatus::ERROR, 'Erro interno ao comunicar com Mercado Pago.');
         }
     }
 
     /**
      * Busca informações de um pagamento pelo ID.
-     *
-     * @param string $accessToken
-     * @param string $paymentId
-     * @return ServiceResult
      */
     public function getPayment(string $accessToken, string $paymentId): ServiceResult
     {
@@ -69,25 +63,21 @@ class MercadoPagoService extends BaseNoTenantService
             $response = Http::withToken($accessToken)
                 ->get("{$this->baseUrl}/v1/payments/{$paymentId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return ServiceResult::error(
                     OperationStatus::ERROR,
-                    'Erro ao buscar pagamento: ' . ($response->json()['message'] ?? 'Erro desconhecido')
+                    'Erro ao buscar pagamento: '.($response->json()['message'] ?? 'Erro desconhecido')
                 );
             }
 
             return ServiceResult::success($response->json());
         } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro interno ao buscar pagamento: ' . $e->getMessage());
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro interno ao buscar pagamento: '.$e->getMessage());
         }
     }
 
     /**
      * Busca informações de uma Merchant Order.
-     *
-     * @param string $accessToken
-     * @param string $merchantOrderId
-     * @return ServiceResult
      */
     public function getMerchantOrder(string $accessToken, string $merchantOrderId): ServiceResult
     {
@@ -95,25 +85,24 @@ class MercadoPagoService extends BaseNoTenantService
             $response = Http::withToken($accessToken)
                 ->get("{$this->baseUrl}/merchant_orders/{$merchantOrderId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return ServiceResult::error(
                     OperationStatus::ERROR,
-                    'Erro ao buscar merchant order: ' . ($response->json()['message'] ?? 'Erro desconhecido')
+                    'Erro ao buscar merchant order: '.($response->json()['message'] ?? 'Erro desconhecido')
                 );
             }
 
             return ServiceResult::success($response->json());
         } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro interno ao buscar merchant order: ' . $e->getMessage());
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro interno ao buscar merchant order: '.$e->getMessage());
         }
     }
 
     /**
      * Processa webhook de notificação.
      *
-     * @param array $data Dados do webhook
-     * @param string $accessToken Token de acesso do Vendedor
-     * @return ServiceResult
+     * @param  array  $data  Dados do webhook
+     * @param  string  $accessToken  Token de acesso do Vendedor
      */
     public function processWebhook(array $data, string $accessToken): ServiceResult
     {
@@ -121,7 +110,7 @@ class MercadoPagoService extends BaseNoTenantService
         $topic = $data['topic'] ?? $data['type'] ?? null;
         $id = $data['data']['id'] ?? $data['id'] ?? null;
 
-        if (!$topic || !$id) {
+        if (! $topic || ! $id) {
             return ServiceResult::error(OperationStatus::INVALID_DATA, 'Dados de webhook inválidos.');
         }
 
@@ -131,6 +120,6 @@ class MercadoPagoService extends BaseNoTenantService
             return $this->getMerchantOrder($accessToken, (string) $id);
         }
 
-        return ServiceResult::success(null, 'Tópico ignorado: ' . $topic);
+        return ServiceResult::success(null, 'Tópico ignorado: '.$topic);
     }
 }

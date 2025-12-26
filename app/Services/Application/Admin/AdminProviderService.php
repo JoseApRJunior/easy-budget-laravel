@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace App\Services\Application\Admin;
 
+use App\DTOs\Provider\ProviderDTO;
 use App\Models\Provider;
-use App\Repositories\ProviderRepository;
-use App\Repositories\TenantRepository;
+use App\Repositories\AddressRepository;
+use App\Repositories\AreaOfActivityRepository;
+use App\Repositories\BusinessDataRepository;
+use App\Repositories\CommonDataRepository;
+use App\Repositories\ContactRepository;
 use App\Repositories\PlanRepository;
 use App\Repositories\ProfessionRepository;
-use App\Repositories\AreaOfActivityRepository;
+use App\Repositories\ProviderRepository;
+use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
-use App\Repositories\CommonDataRepository;
-use App\Repositories\AddressRepository;
-use App\Repositories\ContactRepository;
-use App\Repositories\BusinessDataRepository;
-use App\DTOs\Provider\ProviderDTO;
 use App\Services\Core\Traits\HasSafeExecution;
-use App\Support\ServiceResult;
 use App\Services\Shared\CacheService;
+use App\Support\ServiceResult;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class AdminProviderService
@@ -68,7 +68,7 @@ class AdminProviderService
             return ServiceResult::success([
                 'providers' => $providers,
                 'tenants' => $tenants,
-                'statistics' => $statistics
+                'statistics' => $statistics,
             ]);
         }, 'Erro ao listar fornecedores.');
     }
@@ -91,11 +91,11 @@ class AdminProviderService
         return $this->safeExecute(function () use ($providerId) {
             $provider = $this->providerRepository->findGlobalWithRelations($providerId);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(404, 'Fornecedor não encontrado.');
             }
 
-            $provider->is_active = !$provider->is_active;
+            $provider->is_active = ! $provider->is_active;
             $provider->save();
 
             $this->cacheService->forgetPattern('providers.*');
@@ -121,10 +121,10 @@ class AdminProviderService
                 'customers',
                 'budgets',
                 'services',
-                'invoices'
+                'invoices',
             ]);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(404, 'Fornecedor não encontrado.');
             }
 
@@ -179,10 +179,10 @@ class AdminProviderService
                 'customers',
                 'budgets',
                 'services',
-                'invoices'
+                'invoices',
             ]);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(404, 'Fornecedor não encontrado.');
             }
 
@@ -215,7 +215,7 @@ class AdminProviderService
                 'provider' => $provider,
                 'statistics' => $statistics,
                 'recentInteractions' => $recentInteractions,
-                'formData' => $this->getFormData()
+                'formData' => $this->getFormData(),
             ]);
         }, 'Erro ao carregar detalhes do fornecedor.');
     }
@@ -229,7 +229,7 @@ class AdminProviderService
             return DB::transaction(function () use ($dto) {
                 // 1. Create User
                 $userData = $dto->user->toArray();
-                if (!isset($userData['password'])) {
+                if (! isset($userData['password'])) {
                     $userData['password'] = bcrypt(Str::random(12));
                 }
                 $user = $this->userRepository->create($userData);
@@ -278,7 +278,7 @@ class AdminProviderService
         return $this->safeExecute(function () use ($id, $dto) {
             $provider = $this->providerRepository->findWithRelations($id, ['user', 'commonData', 'address', 'contact']);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(404, 'Fornecedor não encontrado.');
             }
 

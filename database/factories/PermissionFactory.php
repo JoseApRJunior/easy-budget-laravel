@@ -16,10 +16,9 @@ class PermissionFactory extends Factory
      */
     public function definition(): array
     {
-        return [ 
-            'name'       => $this->faker->randomElement( [ 'view-dashboard', 'create-budget', 'edit-service', 'delete-invoice', 'manage-users' ] ),
+        return [
+            'name' => $this->faker->randomElement(['view-dashboard', 'create-budget', 'edit-service', 'delete-invoice', 'manage-users']),
             'guard_name' => 'web',
         ];
     }
-
 }

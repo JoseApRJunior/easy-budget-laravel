@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\DTOs\Provider;
 
 use App\DTOs\AbstractDTO;
-use App\DTOs\User\UserDTO;
-use App\DTOs\Common\CommonDataDTO;
 use App\DTOs\Common\AddressDTO;
+use App\DTOs\Common\CommonDataDTO;
 use App\DTOs\Common\ContactDTO;
+use App\DTOs\User\UserDTO;
 
 readonly class ProviderDTO extends AbstractDTO
 {

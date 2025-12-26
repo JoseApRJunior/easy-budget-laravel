@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
@@ -36,6 +37,7 @@ class ServicePdfService
     public function generateHash(string $pdfPath): string
     {
         $content = Storage::get($pdfPath);
+
         return hash('sha256', $content);
     }
 }

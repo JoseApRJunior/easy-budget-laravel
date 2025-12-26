@@ -12,7 +12,7 @@ class ReportRepository extends AbstractTenantRepository
 {
     protected function makeModel(): Model
     {
-        return new Report();
+        return new Report;
     }
 
     public function getPaginated(
@@ -24,7 +24,7 @@ class ReportRepository extends AbstractTenantRepository
         $query = $this->model->newQuery();
 
         // Eager loading paramétrico - mescla com o padrão
-        $defaultWith   = ['tenant', 'user'];
+        $defaultWith = ['tenant', 'user'];
         $effectiveWith = array_unique(array_merge($defaultWith, $with));
         $query->with($effectiveWith);
 
@@ -53,11 +53,11 @@ class ReportRepository extends AbstractTenantRepository
         $this->applySearchFilter($query, $filters, ['file_name', 'description', 'hash']);
 
         // Filtros de data (start_date, end_date)
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->whereDate('created_at', '>=', $filters['start_date']);
         }
 
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->whereDate('created_at', '<=', $filters['end_date']);
         }
 
@@ -73,9 +73,10 @@ class ReportRepository extends AbstractTenantRepository
     public function findByHash(string $hash, array $with = []): ?Report
     {
         $query = $this->model->where('hash', $hash);
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         return $query->first();
     }
 
@@ -99,10 +100,10 @@ class ReportRepository extends AbstractTenantRepository
     public function getStats(): array
     {
         return [
-            'total_reports'   => $this->model->count(),
+            'total_reports' => $this->model->count(),
             'completed_today' => $this->model->where('status', 'completed')->whereDate('created_at', today())->count(),
-            'by_type'         => $this->model->selectRaw('type, count(*) as count')->groupBy('type')->pluck('count', 'type')->toArray(),
-            'by_status'       => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
+            'by_type' => $this->model->selectRaw('type, count(*) as count')->groupBy('type')->pluck('count', 'type')->toArray(),
+            'by_status' => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
         ];
     }
 

@@ -8,6 +8,9 @@ use App\Enums\BudgetStatus;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -173,7 +176,7 @@ class Budget extends Model
     /**
      * Get the tenant that owns the Budget.
      */
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
@@ -181,7 +184,7 @@ class Budget extends Model
     /**
      * Get the customer that owns the Budget.
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
@@ -202,7 +205,7 @@ class Budget extends Model
         return $this->status;
     }
 
-    public function userConfirmationToken()
+    public function userConfirmationToken(): BelongsTo
     {
         return $this->belongsTo(UserConfirmationToken::class);
     }
@@ -210,7 +213,7 @@ class Budget extends Model
     /**
      * Get the services for the Budget.
      */
-    public function services()
+    public function services(): HasMany
     {
         return $this->hasMany(Service::class);
     }
@@ -218,7 +221,7 @@ class Budget extends Model
     /**
      * Get the budget items for the Budget.
      */
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(BudgetItem::class);
     }
@@ -226,7 +229,7 @@ class Budget extends Model
     /**
      * Get the budget versions for the Budget.
      */
-    public function versions()
+    public function versions(): HasMany
     {
         return $this->hasMany(BudgetVersion::class);
     }
@@ -234,7 +237,7 @@ class Budget extends Model
     /**
      * Get the current budget version.
      */
-    public function currentVersion()
+    public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(BudgetVersion::class, 'current_version_id');
     }
@@ -242,7 +245,7 @@ class Budget extends Model
     /**
      * Get the budget attachments.
      */
-    public function attachments()
+    public function attachments(): HasMany
     {
         return $this->hasMany(BudgetAttachment::class);
     }
@@ -250,7 +253,7 @@ class Budget extends Model
     /**
      * Get the budget shares.
      */
-    public function shares()
+    public function shares(): HasMany
     {
         return $this->hasMany(BudgetShare::class);
     }
@@ -258,7 +261,7 @@ class Budget extends Model
     /**
      * Get the budget action history.
      */
-    public function actionHistory()
+    public function actionHistory(): HasMany
     {
         return $this->hasMany(BudgetActionHistory::class);
     }
@@ -266,7 +269,7 @@ class Budget extends Model
     /**
      * Get the budget notifications.
      */
-    public function notifications()
+    public function notifications(): HasMany
     {
         return $this->hasMany(BudgetNotification::class);
     }

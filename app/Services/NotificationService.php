@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Mail\AlertNotificationMail;
 use App\Models\MonitoringAlertsHistory;
 use App\Models\Notification;
-use App\Mail\AlertNotificationMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -21,7 +21,7 @@ class NotificationService
         try {
             $tenant = $alert->tenant;
             $subject = $this->getAlertEmailSubject($alert);
-            
+
             // Criar registro de notificação no banco
             $notification = Notification::create([
                 'tenant_id' => $alert->tenant_id,
@@ -57,7 +57,7 @@ class NotificationService
     {
         try {
             $payload = $this->buildSlackPayload($alert);
-            
+
             $response = Http::timeout(10)->post($webhookUrl, $payload);
 
             if ($response->successful()) {
@@ -102,7 +102,7 @@ class NotificationService
     {
         $severityColor = $this->getSlackColor($alert->severity);
         $severityEmoji = $this->getSlackEmoji($alert->severity);
-        
+
         return [
             'attachments' => [
                 [
@@ -183,7 +183,7 @@ class NotificationService
         $tenantName = $alert->tenant->name;
         $severityLabel = $alert->getSeverityLabel();
         $typeLabel = $alert->getAlertTypeLabel();
-        
+
         return "[EasyBudget] Alerta {$severityLabel} - {$typeLabel} - {$tenantName}";
     }
 

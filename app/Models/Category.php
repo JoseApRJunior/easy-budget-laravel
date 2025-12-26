@@ -37,11 +37,11 @@ class Category extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
-        'slug'       => 'string',
-        'name'       => 'string',
-        'parent_id'  => 'integer',
-        'is_active'  => 'boolean',
+        'tenant_id' => 'integer',
+        'slug' => 'string',
+        'name' => 'string',
+        'parent_id' => 'integer',
+        'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -70,24 +70,24 @@ class Category extends Model
     /**
      * Validação customizada para verificar se o slug é único dentro do tenant.
      */
-    public static function validateUniqueSlug( string $slug, int $tenantId, ?int $excludeCategoryId = null ): bool
+    public static function validateUniqueSlug(string $slug, int $tenantId, ?int $excludeCategoryId = null): bool
     {
-        $query = static::where( 'tenant_id', $tenantId )->where( 'slug', $slug );
+        $query = static::where('tenant_id', $tenantId)->where('slug', $slug);
 
         // Se excludeCategoryId for fornecido, ignorar a categoria com esse ID
-        if ( $excludeCategoryId !== null ) {
-            $query->where( 'id', '!=', $excludeCategoryId );
+        if ($excludeCategoryId !== null) {
+            $query->where('id', '!=', $excludeCategoryId);
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     /**
      * Validação customizada para verificar se o slug tem formato válido.
      */
-    public static function validateSlugFormat( string $slug ): bool
+    public static function validateSlugFormat(string $slug): bool
     {
-        return preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug );
+        return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug);
     }
 
     /**
@@ -95,27 +95,27 @@ class Category extends Model
      */
     public function services(): HasMany
     {
-        return $this->hasMany( Service::class);
+        return $this->hasMany(Service::class);
     }
 
     public function products(): HasMany
     {
-        return $this->hasMany( Product::class );
+        return $this->hasMany(Product::class);
     }
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo( Category::class, 'parent_id' );
+        return $this->belongsTo(Category::class, 'parent_id');
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany( Category::class, 'parent_id' );
+        return $this->hasMany(Category::class, 'parent_id');
     }
 
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     public function hasChildren(): bool
@@ -125,7 +125,7 @@ class Category extends Model
 
     public function getActiveChildrenCountAttribute(): int
     {
-        return $this->children()->where( 'is_active', true )->count();
+        return $this->children()->where('is_active', true)->count();
     }
 
     /**
@@ -138,20 +138,20 @@ class Category extends Model
     public function getFullHierarchy(): array
     {
         $hierarchy = [];
-        $current   = $this;
-        $maxDepth  = 50; // Proteção contra loops infinitos
-        $depth     = 0;
+        $current = $this;
+        $maxDepth = 50; // Proteção contra loops infinitos
+        $depth = 0;
 
-        while ( $current && $depth < $maxDepth ) {
-            array_unshift( $hierarchy, $current->name );
+        while ($current && $depth < $maxDepth) {
+            array_unshift($hierarchy, $current->name);
 
             // Se não tem parent, terminamos
-            if ( !$current->parent_id ) {
+            if (! $current->parent_id) {
                 break;
             }
 
             // Buscar o parent (incluindo deletados para reconstruir hierarquia completa)
-            $current = Category::withTrashed()->find( $current->parent_id );
+            $current = Category::withTrashed()->find($current->parent_id);
             $depth++;
         }
 
@@ -161,49 +161,48 @@ class Category extends Model
     /**
      * Retorna a hierarquia formatada como string.
      *
-     * @param string $separator Separador entre os níveis (padrão: ' > ')
-     * @return string
+     * @param  string  $separator  Separador entre os níveis (padrão: ' > ')
      */
-    public function getFormattedHierarchy( string $separator = ' > ' ): string
+    public function getFormattedHierarchy(string $separator = ' > '): string
     {
-        return implode( $separator, $this->getFullHierarchy() );
+        return implode($separator, $this->getFullHierarchy());
     }
 
     /**
      * Verifica se definir um parent_id criaria uma referência circular.
      *
-     * @param int $proposedParentId ID do parent que se deseja definir
+     * @param  int  $proposedParentId  ID do parent que se deseja definir
      * @return bool True se criar loop, false caso contrário
      */
-    public function wouldCreateCircularReference( int $proposedParentId ): bool
+    public function wouldCreateCircularReference(int $proposedParentId): bool
     {
         // Se não tem parent proposto, não há loop
-        if ( !$proposedParentId ) {
+        if (! $proposedParentId) {
             return false;
         }
 
         // Se o parent proposto é a própria categoria, é loop direto
-        if ( $proposedParentId === $this->id ) {
+        if ($proposedParentId === $this->id) {
             return true;
         }
 
         // Percorrer ancestrais do parent proposto
-        $visited   = [ $this->id ]; // Evitar loops infinitos
+        $visited = [$this->id]; // Evitar loops infinitos
         $currentId = $proposedParentId;
-        $maxDepth  = 20; // Limite de segurança
-        $depth     = 0;
+        $maxDepth = 20; // Limite de segurança
+        $depth = 0;
 
-        while ( $currentId && $depth < $maxDepth ) {
+        while ($currentId && $depth < $maxDepth) {
             // Se encontramos a categoria atual na cadeia de ancestrais, é loop
-            if ( in_array( $currentId, $visited ) ) {
+            if (in_array($currentId, $visited)) {
                 return true;
             }
 
             $visited[] = $currentId;
 
             // Buscar próximo ancestral (incluindo deletados)
-            $parent = Category::withTrashed()->find( $currentId );
-            if ( !$parent ) {
+            $parent = Category::withTrashed()->find($currentId);
+            if (! $parent) {
                 break; // Parent não existe, não há loop
             }
 
@@ -213,5 +212,4 @@ class Category extends Model
 
         return false;
     }
-
 }

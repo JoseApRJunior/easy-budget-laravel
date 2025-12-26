@@ -11,7 +11,7 @@ use Mpdf\Mpdf;
 
 class BudgetPdfService
 {
-    public function generatePdf( Budget $budget, array $extras = [] ): string
+    public function generatePdf(Budget $budget, array $extras = []): string
     {
         $viewData = array_merge(compact('budget'), $extras);
         $html = View::make('budgets.pdf', $viewData)->render();
@@ -35,10 +35,10 @@ class BudgetPdfService
         return $path;
     }
 
-    public function generateHash( string $pdfPath ): string
+    public function generateHash(string $pdfPath): string
     {
         $content = Storage::get($pdfPath);
+
         return hash('sha256', $content);
     }
-
 }

@@ -17,7 +17,7 @@ class CreateMissingInventoryRecords extends Command
         $this->info('Buscando produtos sem inventário...');
 
         $productsWithoutInventory = Product::query()
-            ->whereDoesntHave('productInventory')
+            ->whereDoesntHave('inventory')
             ->get();
 
         if ($productsWithoutInventory->isEmpty()) {

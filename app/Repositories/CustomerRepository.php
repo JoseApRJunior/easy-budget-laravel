@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Repositório para gerenciamento de clientes.
@@ -31,14 +30,13 @@ class CustomerRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Customer();
+        return new Customer;
     }
 
     /**
      * Lista clientes ativos dentro do tenant atual.
      *
-     * @param array<string, string>|null $orderBy
-     * @param int|null $limit
+     * @param  array<string, string>|null  $orderBy
      * @return Collection<Customer>
      */
     public function listActive(?array $orderBy = null, ?int $limit = null): Collection
@@ -50,7 +48,7 @@ class CustomerRepository extends AbstractTenantRepository
                     $q->orderBy($field, $dir);
                 }
             })
-            ->when($limit, fn($q) => $q->limit($limit))
+            ->when($limit, fn ($q) => $q->limit($limit))
             ->get();
     }
 
@@ -61,6 +59,7 @@ class CustomerRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery();
         $this->applyFilters($query, $filters);
+
         return $query->count();
     }
 
@@ -71,6 +70,7 @@ class CustomerRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery();
         $this->applyFilters($query, $criteria);
+
         return $query->exists();
     }
 
@@ -89,6 +89,7 @@ class CustomerRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery();
         $this->applyFilters($query, $criteria);
+
         return $query->update($updates);
     }
 
@@ -105,8 +106,12 @@ class CustomerRepository extends AbstractTenantRepository
         $this->applyFilters($query, $criteria);
         $this->applyOrderBy($query, $orderBy ?: ['created_at' => 'desc']);
 
-        if ($limit) $query->limit($limit);
-        if ($offset) $query->offset($offset);
+        if ($limit) {
+            $query->limit($limit);
+        }
+        if ($offset) {
+            $query->offset($offset);
+        }
 
         return $query->get();
     }
@@ -147,7 +152,7 @@ class CustomerRepository extends AbstractTenantRepository
             $query->where('customer_id', '!=', $excludeCustomerId);
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     /**
@@ -155,7 +160,9 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function isCpfUnique(string $cpf, ?int $excludeCustomerId = null): bool
     {
-        if (strlen($cpf) !== 11) return false;
+        if (strlen($cpf) !== 11) {
+            return false;
+        }
 
         $query = CommonData::newQuery()
             ->where('cpf', $cpf)
@@ -167,7 +174,7 @@ class CustomerRepository extends AbstractTenantRepository
             });
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     /**
@@ -175,7 +182,9 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function isCnpjUnique(string $cnpj, ?int $excludeCustomerId = null): bool
     {
-        if (strlen($cnpj) !== 14) return false;
+        if (strlen($cnpj) !== 14) {
+            return false;
+        }
 
         $query = CommonData::newQuery()
             ->where('cnpj', $cnpj)
@@ -187,7 +196,7 @@ class CustomerRepository extends AbstractTenantRepository
             });
         }
 
-        return !$query->exists();
+        return ! $query->exists();
     }
 
     // ========================================
@@ -199,17 +208,17 @@ class CustomerRepository extends AbstractTenantRepository
      *
      * Implementação específica para clientes com filtros avançados.
      *
-     * @param array<string, mixed> $filters Filtros específicos:
-     *   - search: termo de busca em nome, email, CPF/CNPJ, razão social
-     *   - type: 'pessoa_fisica' ou 'pessoa_juridica'
-     *   - status: status do cliente
-     *   - area_of_activity_id: ID da área de atuação
-     *   - profession_id: ID da profissão
-     *   - per_page: número de itens por página
-     *   - deleted: 'only' para mostrar apenas clientes deletados
-     * @param int $perPage Número padrão de itens por página (15)
-     * @param array<string> $with Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
-     * @param array<string, string>|null $orderBy Ordenação personalizada (padrão: ['created_at' => 'desc'])
+     * @param  array<string, mixed>  $filters  Filtros específicos:
+     *                                         - search: termo de busca em nome, email, CPF/CNPJ, razão social
+     *                                         - type: 'pessoa_fisica' ou 'pessoa_juridica'
+     *                                         - status: status do cliente
+     *                                         - area_of_activity_id: ID da área de atuação
+     *                                         - profession_id: ID da profissão
+     *                                         - per_page: número de itens por página
+     *                                         - deleted: 'only' para mostrar apenas clientes deletados
+     * @param  int  $perPage  Número padrão de itens por página (15)
+     * @param  array<string>  $with  Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
+     * @param  array<string, string>|null  $orderBy  Ordenação personalizada (padrão: ['created_at' => 'desc'])
      * @return LengthAwarePaginator Resultado paginado
      */
     /**
@@ -217,17 +226,17 @@ class CustomerRepository extends AbstractTenantRepository
      *
      * Implementação específica para clientes com filtros avançados.
      *
-     * @param array<string, mixed> $filters Filtros específicos:
-     *   - search: termo de busca em nome, email, CPF/CNPJ, razão social
-     *   - type: 'pessoa_fisica' ou 'pessoa_juridica'
-     *   - status: status do cliente
-     *   - area_of_activity_id: ID da área de atuação
-     *   - profession_id: ID da profissão
-     *   - per_page: número de itens por página
-     *   - deleted: 'only' para mostrar apenas clientes deletados
-     * @param int $perPage Número padrão de itens por página (15)
-     * @param array<string> $with Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
-     * @param array<string, string>|null $orderBy Ordenação personalizada (padrão: ['created_at' => 'desc'])
+     * @param  array<string, mixed>  $filters  Filtros específicos:
+     *                                         - search: termo de busca em nome, email, CPF/CNPJ, razão social
+     *                                         - type: 'pessoa_fisica' ou 'pessoa_juridica'
+     *                                         - status: status do cliente
+     *                                         - area_of_activity_id: ID da área de atuação
+     *                                         - profession_id: ID da profissão
+     *                                         - per_page: número de itens por página
+     *                                         - deleted: 'only' para mostrar apenas clientes deletados
+     * @param  int  $perPage  Número padrão de itens por página (15)
+     * @param  array<string>  $with  Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
+     * @param  array<string, string>|null  $orderBy  Ordenação personalizada (padrão: ['created_at' => 'desc'])
      * @return LengthAwarePaginator Resultado paginado
      */
     public function getPaginated(
@@ -238,7 +247,7 @@ class CustomerRepository extends AbstractTenantRepository
     ): LengthAwarePaginator {
         $query = $this->model->newQuery();
 
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -249,12 +258,12 @@ class CustomerRepository extends AbstractTenantRepository
         $this->applySoftDeleteFilter($query, $filters);
 
         // Filtro por status (se não foi tratado pelo applyFilters)
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Busca avançada em relações (customizado para Customer)
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 if (is_numeric($search)) {
@@ -277,7 +286,7 @@ class CustomerRepository extends AbstractTenantRepository
         }
 
         // Filtro por tipo
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $type = $filters['type'];
             $query->whereHas('commonData', function ($q) use ($type) {
                 $q->where('type', $type);
@@ -285,7 +294,7 @@ class CustomerRepository extends AbstractTenantRepository
         }
 
         // Filtro por área de atuação
-        if (!empty($filters['area_of_activity_id'])) {
+        if (! empty($filters['area_of_activity_id'])) {
             $areaId = $filters['area_of_activity_id'];
             $query->whereHas('commonData', function ($q) use ($areaId) {
                 $q->where('area_of_activity_id', $areaId);
@@ -293,10 +302,10 @@ class CustomerRepository extends AbstractTenantRepository
         }
 
         // Filtro por CEP
-        if (!empty($filters['cep'])) {
+        if (! empty($filters['cep'])) {
             $cepPrefix = substr(preg_replace('/[^0-9]/', '', $filters['cep']), 0, 5);
             $query->whereHas('address', function ($q) use ($cepPrefix) {
-                $q->where('cep', 'like', $cepPrefix . '%');
+                $q->where('cep', 'like', $cepPrefix.'%');
             });
         }
 
@@ -314,7 +323,7 @@ class CustomerRepository extends AbstractTenantRepository
 
         return $this->model->newQuery()
             ->whereHas('address', function ($query) use ($cepPrefix) {
-                $query->where('cep', 'like', $cepPrefix . '%');
+                $query->where('cep', 'like', $cepPrefix.'%');
             })
             ->with(['commonData', 'contact', 'address'])
             ->get();
@@ -358,7 +367,7 @@ class CustomerRepository extends AbstractTenantRepository
                 'contact',
                 'address',
                 'businessData',
-                'budgets' // REMOVIDO: 'services' - causava ambiguidade
+                'budgets', // REMOVIDO: 'services' - causava ambiguidade
             ])
             ->first();
     }
@@ -393,6 +402,7 @@ class CustomerRepository extends AbstractTenantRepository
     {
         $data = $dto->toArrayWithoutNulls();
         $data['tenant_id'] = $this->getTenantId();
+
         return $this->createWithRelations($data);
     }
 
@@ -402,6 +412,7 @@ class CustomerRepository extends AbstractTenantRepository
     public function updateFromDTO(Customer $customer, \App\DTOs\Customer\CustomerDTO $dto): bool
     {
         $data = $dto->toArrayWithoutNulls();
+
         return $this->updateWithRelations($customer, $data);
     }
 
@@ -413,27 +424,14 @@ class CustomerRepository extends AbstractTenantRepository
         $baseQuery = $this->model->newQuery();
 
         return [
-            'total_customers'    => (clone $baseQuery)->count(),
-            'active_customers'   => (clone $baseQuery)->where('status', 'active')->count(),
+            'total_customers' => (clone $baseQuery)->count(),
+            'active_customers' => (clone $baseQuery)->where('status', 'active')->count(),
             'inactive_customers' => (clone $baseQuery)->where('status', 'inactive')->count(),
-            'recent_customers'   => (clone $baseQuery)->latest()
+            'recent_customers' => (clone $baseQuery)->latest()
                 ->limit(5)
                 ->with(['commonData', 'contact'])
                 ->get(),
         ];
-    }
-
-    /**
-     * Obtém clientes ativos com estatísticas resumidas.
-     */
-    public function getActiveWithStats(int $limit = 10): Collection
-    {
-        return $this->model->newQuery()
-            ->where('status', 'active')
-            ->withCount(['budgets', 'services'])
-            ->latest()
-            ->limit($limit)
-            ->get();
     }
 
     /**
@@ -447,6 +445,7 @@ class CustomerRepository extends AbstractTenantRepository
 
         if ($customer) {
             $customer->restore();
+
             return $customer;
         }
 
@@ -463,47 +462,47 @@ class CustomerRepository extends AbstractTenantRepository
 
             // 1. Criar CommonData
             $commonData = CommonData::create([
-                'tenant_id'           => $tenantId,
-                'customer_id'         => null, // Será atualizado após criar customer
-                'type'                => $data['type'] ?? 'individual',
-                'first_name'          => $data['first_name'] ?? null,
-                'last_name'           => $data['last_name'] ?? null,
-                'birth_date'          => $data['birth_date'] ?? null,
-                'cpf'                 => $data['cpf'] ?? null,
-                'cnpj'                => $data['cnpj'] ?? null,
-                'company_name'        => $data['company_name'] ?? null,
-                'description'         => $data['description'] ?? null,
+                'tenant_id' => $tenantId,
+                'customer_id' => null, // Será atualizado após criar customer
+                'type' => $data['type'] ?? 'individual',
+                'first_name' => $data['first_name'] ?? null,
+                'last_name' => $data['last_name'] ?? null,
+                'birth_date' => $data['birth_date'] ?? null,
+                'cpf' => $data['cpf'] ?? null,
+                'cnpj' => $data['cnpj'] ?? null,
+                'company_name' => $data['company_name'] ?? null,
+                'description' => $data['description'] ?? null,
                 'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
-                'profession_id'       => $data['profession_id'] ?? null,
+                'profession_id' => $data['profession_id'] ?? null,
             ]);
 
             // 2. Criar Contact
             $contact = Contact::create([
-                'tenant_id'      => $tenantId,
-                'customer_id'    => null, // Será atualizado após criar customer
+                'tenant_id' => $tenantId,
+                'customer_id' => null, // Será atualizado após criar customer
                 'email_personal' => $data['email'] ?? null,
                 'phone_personal' => $data['phone'] ?? null,
                 'email_business' => $data['email_business'] ?? null,
                 'phone_business' => $data['phone_business'] ?? null,
-                'website'        => $data['website'] ?? null,
+                'website' => $data['website'] ?? null,
             ]);
 
             // 3. Criar Address
             $address = Address::create([
-                'tenant_id'      => $tenantId,
-                'customer_id'    => null, // Será atualizado após criar customer
-                'address'        => $data['address'] ?? null,
+                'tenant_id' => $tenantId,
+                'customer_id' => null, // Será atualizado após criar customer
+                'address' => $data['address'] ?? null,
                 'address_number' => $data['address_number'] ?? null,
-                'neighborhood'   => $data['neighborhood'] ?? null,
-                'city'           => $data['city'] ?? null,
-                'state'          => $data['state'] ?? null,
-                'cep'            => $data['cep'] ?? null,
+                'neighborhood' => $data['neighborhood'] ?? null,
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'] ?? null,
+                'cep' => $data['cep'] ?? null,
             ]);
 
             // 4. Criar Customer (tabela principal)
             $customer = Customer::create([
                 'tenant_id' => $tenantId,
-                'status'    => $data['status'] ?? 'active',
+                'status' => $data['status'] ?? 'active',
             ]);
 
             // 5. Atualizar customer_id nas tabelas relacionadas
@@ -512,17 +511,17 @@ class CustomerRepository extends AbstractTenantRepository
             $address->update(['customer_id' => $customer->id]);
 
             // 6. Criar BusinessData se for pessoa jurídica
-            if (($data['type'] ?? 'individual') === 'company' || !empty($data['cnpj'])) {
+            if (($data['type'] ?? 'individual') === 'company' || ! empty($data['cnpj'])) {
                 BusinessData::create([
-                    'tenant_id'              => $tenantId,
-                    'customer_id'            => $customer->id,
-                    'fantasy_name'           => $data['fantasy_name'] ?? null,
-                    'state_registration'     => $data['state_registration'] ?? null,
+                    'tenant_id' => $tenantId,
+                    'customer_id' => $customer->id,
+                    'fantasy_name' => $data['fantasy_name'] ?? null,
+                    'state_registration' => $data['state_registration'] ?? null,
                     'municipal_registration' => $data['municipal_registration'] ?? null,
-                    'founding_date'          => $data['founding_date'] ?? null,
-                    'industry'               => $data['industry'] ?? null,
-                    'company_size'           => $data['company_size'] ?? null,
-                    'notes'                  => $data['business_notes'] ?? null,
+                    'founding_date' => $data['founding_date'] ?? null,
+                    'industry' => $data['industry'] ?? null,
+                    'company_size' => $data['company_size'] ?? null,
+                    'notes' => $data['business_notes'] ?? null,
                 ]);
             }
 
@@ -539,16 +538,16 @@ class CustomerRepository extends AbstractTenantRepository
             // Atualizar CommonData
             if ($customer->commonData) {
                 $customer->commonData->update([
-                    'type'                => $data['type'] ?? $customer->commonData->type,
-                    'first_name'          => $data['first_name'] ?? $customer->commonData->first_name,
-                    'last_name'           => $data['last_name'] ?? $customer->commonData->last_name,
-                    'birth_date'          => $data['birth_date'] ?? $customer->commonData->birth_date,
-                    'cpf'                 => $data['cpf'] ?? $customer->commonData->cpf,
-                    'cnpj'                => $data['cnpj'] ?? $customer->commonData->cnpj,
-                    'company_name'        => $data['company_name'] ?? $customer->commonData->company_name,
-                    'description'         => $data['description'] ?? $customer->commonData->description,
+                    'type' => $data['type'] ?? $customer->commonData->type,
+                    'first_name' => $data['first_name'] ?? $customer->commonData->first_name,
+                    'last_name' => $data['last_name'] ?? $customer->commonData->last_name,
+                    'birth_date' => $data['birth_date'] ?? $customer->commonData->birth_date,
+                    'cpf' => $data['cpf'] ?? $customer->commonData->cpf,
+                    'cnpj' => $data['cnpj'] ?? $customer->commonData->cnpj,
+                    'company_name' => $data['company_name'] ?? $customer->commonData->company_name,
+                    'description' => $data['description'] ?? $customer->commonData->description,
                     'area_of_activity_id' => $data['area_of_activity_id'] ?? $customer->commonData->area_of_activity_id,
-                    'profession_id'       => $data['profession_id'] ?? $customer->commonData->profession_id,
+                    'profession_id' => $data['profession_id'] ?? $customer->commonData->profession_id,
                 ]);
             }
 
@@ -559,45 +558,45 @@ class CustomerRepository extends AbstractTenantRepository
                     'phone_personal' => $data['phone_personal'] ?? ($data['phone'] ?? $customer->contact->phone_personal),
                     'email_business' => $data['email_business'] ?? $customer->contact->email_business,
                     'phone_business' => $data['phone_business'] ?? $customer->contact->phone_business,
-                    'website'        => $data['website'] ?? $customer->contact->website,
+                    'website' => $data['website'] ?? $customer->contact->website,
                 ]);
             }
 
             // Atualizar Address
             if ($customer->address) {
                 $customer->address->update([
-                    'address'        => $data['address'] ?? $customer->address->address,
+                    'address' => $data['address'] ?? $customer->address->address,
                     'address_number' => $data['address_number'] ?? $customer->address->address_number,
-                    'neighborhood'   => $data['neighborhood'] ?? $customer->address->neighborhood,
-                    'city'           => $data['city'] ?? $customer->address->city,
-                    'state'          => $data['state'] ?? $customer->address->state,
-                    'cep'            => $data['cep'] ?? $customer->address->cep,
+                    'neighborhood' => $data['neighborhood'] ?? $customer->address->neighborhood,
+                    'city' => $data['city'] ?? $customer->address->city,
+                    'state' => $data['state'] ?? $customer->address->state,
+                    'cep' => $data['cep'] ?? $customer->address->cep,
                 ]);
             }
 
             // Atualizar ou criar BusinessData
-            if (($data['type'] ?? 'individual') === 'company' || !empty($data['cnpj'])) {
+            if (($data['type'] ?? 'individual') === 'company' || ! empty($data['cnpj'])) {
                 if ($customer->businessData) {
                     $customer->businessData->update([
-                        'fantasy_name'           => $data['fantasy_name'] ?? $customer->businessData->fantasy_name,
-                        'state_registration'     => $data['state_registration'] ?? $customer->businessData->state_registration,
+                        'fantasy_name' => $data['fantasy_name'] ?? $customer->businessData->fantasy_name,
+                        'state_registration' => $data['state_registration'] ?? $customer->businessData->state_registration,
                         'municipal_registration' => $data['municipal_registration'] ?? $customer->businessData->municipal_registration,
-                        'founding_date'          => $data['founding_date'] ?? $customer->businessData->founding_date,
-                        'industry'               => $data['industry'] ?? $customer->businessData->industry,
-                        'company_size'           => $data['company_size'] ?? $customer->businessData->company_size,
-                        'notes'                  => $data['business_notes'] ?? ($data['notes'] ?? $customer->businessData->notes),
+                        'founding_date' => $data['founding_date'] ?? $customer->businessData->founding_date,
+                        'industry' => $data['industry'] ?? $customer->businessData->industry,
+                        'company_size' => $data['company_size'] ?? $customer->businessData->company_size,
+                        'notes' => $data['business_notes'] ?? ($data['notes'] ?? $customer->businessData->notes),
                     ]);
                 } else {
                     BusinessData::create([
-                        'tenant_id'              => $customer->tenant_id,
-                        'customer_id'            => $customer->id,
-                        'fantasy_name'           => $data['fantasy_name'] ?? null,
-                        'state_registration'     => $data['state_registration'] ?? null,
+                        'tenant_id' => $customer->tenant_id,
+                        'customer_id' => $customer->id,
+                        'fantasy_name' => $data['fantasy_name'] ?? null,
+                        'state_registration' => $data['state_registration'] ?? null,
                         'municipal_registration' => $data['municipal_registration'] ?? null,
-                        'founding_date'          => $data['founding_date'] ?? null,
-                        'industry'               => $data['industry'] ?? null,
-                        'company_size'           => $data['company_size'] ?? null,
-                        'notes'                  => $data['business_notes'] ?? ($data['notes'] ?? null),
+                        'founding_date' => $data['founding_date'] ?? null,
+                        'industry' => $data['industry'] ?? null,
+                        'company_size' => $data['company_size'] ?? null,
+                        'notes' => $data['business_notes'] ?? ($data['notes'] ?? null),
                     ]);
                 }
             }
@@ -620,7 +619,7 @@ class CustomerRepository extends AbstractTenantRepository
             ->where('id', $id)
             ->whereNull('deleted_at')
             ->addSelect([
-                'budgets_count'  => function ($query) {
+                'budgets_count' => function ($query) {
                     $query->selectRaw('count(*)')
                         ->from('budgets')
                         ->whereColumn('budgets.customer_id', 'customers.id');
@@ -636,17 +635,17 @@ class CustomerRepository extends AbstractTenantRepository
                         ->from('invoices')
                         ->whereColumn('invoices.customer_id', 'customers.id')
                         ->whereNull('invoices.deleted_at');
-                }
+                },
             ])
             ->first();
 
-        if (!$customer) {
+        if (! $customer) {
             return ['canDelete' => false, 'reason' => 'Customer não encontrado'];
         }
 
-        $budgetsCount   = (int) $customer->budgets_count;
-        $servicesCount  = (int) $customer->services_count;
-        $invoicesCount  = (int) $customer->invoices_count;
+        $budgetsCount = (int) $customer->budgets_count;
+        $servicesCount = (int) $customer->services_count;
+        $invoicesCount = (int) $customer->invoices_count;
         $totalRelations = $budgetsCount + $servicesCount + $invoicesCount;
 
         $reasons = [];
@@ -661,14 +660,14 @@ class CustomerRepository extends AbstractTenantRepository
         }
 
         return [
-            'canDelete'           => $totalRelations === 0,
-            'reason'              => $totalRelations > 0
-                ? 'Cliente não pode ser excluído pois possui: ' . implode(', ', $reasons)
+            'canDelete' => $totalRelations === 0,
+            'reason' => $totalRelations > 0
+                ? 'Cliente não pode ser excluído pois possui: '.implode(', ', $reasons)
                 : null,
-            'budgetsCount'        => $budgetsCount,
-            'servicesCount'       => $servicesCount,
-            'invoicesCount'       => $invoicesCount,
-            'totalRelationsCount' => $totalRelations
+            'budgetsCount' => $budgetsCount,
+            'servicesCount' => $servicesCount,
+            'invoicesCount' => $invoicesCount,
+            'totalRelationsCount' => $totalRelations,
         ];
     }
 
@@ -715,14 +714,15 @@ class CustomerRepository extends AbstractTenantRepository
     public function checkRelationships(int $id): array
     {
         $canDelete = $this->canDelete($id);
+
         return [
-            'hasRelationships' => !$canDelete['canDelete'],
-            'budgets'          => $canDelete['budgetsCount'] ?? 0,
-            'services'         => $canDelete['servicesCount'] ?? 0,
-            'invoices'         => $canDelete['invoicesCount'] ?? 0,
-            'interactions'     => $canDelete['interactionsCount'] ?? 0,
-            'totalRelations'   => $canDelete['totalRelationsCount'] ?? 0,
-            'reason'           => $canDelete['reason'] ?? null
+            'hasRelationships' => ! $canDelete['canDelete'],
+            'budgets' => $canDelete['budgetsCount'] ?? 0,
+            'services' => $canDelete['servicesCount'] ?? 0,
+            'invoices' => $canDelete['invoicesCount'] ?? 0,
+            'interactions' => $canDelete['interactionsCount'] ?? 0,
+            'totalRelations' => $canDelete['totalRelationsCount'] ?? 0,
+            'reason' => $canDelete['reason'] ?? null,
         ];
     }
 
@@ -734,18 +734,18 @@ class CustomerRepository extends AbstractTenantRepository
         return $this->model->newQuery()->withTrashed()
             ->where('id', $id)
             ->with([
-                'commonData'   => function ($q) {
+                'commonData' => function ($q) {
                     $q->withTrashed()->with(['areaOfActivity', 'profession']);
                 },
-                'contact'      => function ($q) {
+                'contact' => function ($q) {
                     $q->withTrashed();
                 },
-                'address'      => function ($q) {
+                'address' => function ($q) {
                     $q->withTrashed();
                 },
                 'businessData' => function ($q) {
                     $q->withTrashed();
-                }
+                },
             ])
             ->first();
     }

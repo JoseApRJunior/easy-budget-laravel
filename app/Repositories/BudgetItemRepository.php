@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Budget\BudgetItemDTO;
 use App\Models\BudgetItem;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
-use App\DTOs\Budget\BudgetItemDTO;
 
 class BudgetItemRepository extends AbstractTenantRepository
 {
@@ -16,7 +16,7 @@ class BudgetItemRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new BudgetItem();
+        return new BudgetItem;
     }
 
     /**
@@ -26,7 +26,7 @@ class BudgetItemRepository extends AbstractTenantRepository
     {
         $data = $dto->toArray();
         $data['budget_id'] = $budgetId;
-        
+
         return $this->create($data);
     }
 

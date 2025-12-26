@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\DTOs\Common\AddressDTO;
-use App\Interfaces\RepositoryInterface;
 use App\Models\Address;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
@@ -20,7 +19,7 @@ class AddressRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Address();
+        return new Address;
     }
 
     /**
@@ -37,23 +36,24 @@ class AddressRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, AddressDTO $dto): bool
     {
         $address = $this->find($id);
-        if (!$address) {
+        if (! $address) {
             return false;
         }
 
-        return $address->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $address->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     /**
      * Cria endereço para cliente (1:1).
      *
-     * @param array<string, mixed> $addressData Dados do endereço
-     * @param int $customerId ID do cliente
+     * @param  array<string, mixed>  $addressData  Dados do endereço
+     * @param  int  $customerId  ID do cliente
      * @return Address Endereço criado
      */
     public function createForCustomer(array $addressData, int $customerId): Model
     {
         $addressData['customer_id'] = $customerId;
+
         return $this->createFromDTO(AddressDTO::fromRequest($addressData));
     }
 
@@ -79,6 +79,7 @@ class AddressRepository extends AbstractTenantRepository
     public function createForProvider(array $addressData, int $providerId): Model
     {
         $addressData['provider_id'] = $providerId;
+
         return $this->createFromDTO(AddressDTO::fromRequest($addressData));
     }
 
@@ -89,19 +90,19 @@ class AddressRepository extends AbstractTenantRepository
     {
         $address = $this->model->newQuery()->where('provider_id', $providerId)->first();
 
-        if (!$address) {
+        if (! $address) {
             return false;
         }
 
         $addressData['provider_id'] = $providerId;
+
         return $this->updateFromDTO($address->id, AddressDTO::fromRequest($addressData));
     }
 
     /**
      * Remove endereço por ID do provider.
      *
-     * @param int $providerId ID do provider
-     * @return bool
+     * @param  int  $providerId  ID do provider
      */
     public function deleteByProviderId(int $providerId): bool
     {
@@ -111,8 +112,7 @@ class AddressRepository extends AbstractTenantRepository
     /**
      * Busca endereço por provider (1:1).
      *
-     * @param int $providerId ID do provider
-     * @return Address|null
+     * @param  int  $providerId  ID do provider
      */
     public function findByProviderId(int $providerId): ?Address
     {

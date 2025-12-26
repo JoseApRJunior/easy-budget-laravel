@@ -34,7 +34,7 @@ readonly class BudgetDTO extends AbstractDTO
             total: (float) ($data['total'] ?? 0.0),
             description: $data['description'] ?? null,
             payment_terms: $data['payment_terms'] ?? null,
-            items: array_map(fn($item) => BudgetItemDTO::fromRequest($item), $data['items'] ?? []),
+            items: array_map(fn ($item) => BudgetItemDTO::fromRequest($item), $data['items'] ?? []),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

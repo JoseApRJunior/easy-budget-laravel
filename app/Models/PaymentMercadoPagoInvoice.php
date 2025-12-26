@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Invoice;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentMercadoPagoInvoice extends Model
 {
-    use HasFactory, TenantScoped, SoftDeletes;
+    use HasFactory, SoftDeletes, TenantScoped;
 
     /**
      * Boot the model.
@@ -28,20 +26,28 @@ class PaymentMercadoPagoInvoice extends Model
     /**
      * Status constants.
      */
-    const STATUS_PENDING   = 'pending';
-    const STATUS_APPROVED  = 'approved';
-    const STATUS_REJECTED  = 'rejected';
+    const STATUS_PENDING = 'pending';
+
+    const STATUS_APPROVED = 'approved';
+
+    const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
-    const STATUS_REFUNDED  = 'refunded';
+
+    const STATUS_REFUNDED = 'refunded';
 
     /**
      * Payment method constants.
      */
-    const PAYMENT_METHOD_CREDIT_CARD   = 'credit_card';
-    const PAYMENT_METHOD_DEBIT_CARD    = 'debit_card';
+    const PAYMENT_METHOD_CREDIT_CARD = 'credit_card';
+
+    const PAYMENT_METHOD_DEBIT_CARD = 'debit_card';
+
     const PAYMENT_METHOD_BANK_TRANSFER = 'bank_transfer';
-    const PAYMENT_METHOD_TICKET        = 'ticket';
-    const PAYMENT_METHOD_PIX           = 'pix';
+
+    const PAYMENT_METHOD_TICKET = 'ticket';
+
+    const PAYMENT_METHOD_PIX = 'pix';
 
     /**
      * The table associated with the model.
@@ -78,15 +84,15 @@ class PaymentMercadoPagoInvoice extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'payment_id'         => 'string',
-        'tenant_id'          => 'integer',
-        'invoice_id'         => 'integer',
-        'status'             => 'string',
-        'payment_method'     => 'string',
+        'payment_id' => 'string',
+        'tenant_id' => 'integer',
+        'invoice_id' => 'integer',
+        'status' => 'string',
+        'payment_method' => 'string',
         'transaction_amount' => 'decimal:2',
-        'transaction_date'   => 'datetime',
-        'created_at'         => 'immutable_datetime',
-        'updated_at'         => 'datetime',
+        'transaction_date' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -95,13 +101,13 @@ class PaymentMercadoPagoInvoice extends Model
     public static function businessRules(): array
     {
         return [
-            'payment_id'         => 'required|string|max:255',
-            'tenant_id'          => 'required|integer|exists:tenants,id',
-            'invoice_id'         => 'required|integer|exists:invoices,id',
-            'status'             => 'required|string|in:pending,approved,rejected,cancelled,refunded',
-            'payment_method'     => 'required|string|in:credit_card,debit_card,bank_transfer,ticket,pix',
+            'payment_id' => 'required|string|max:255',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'invoice_id' => 'required|integer|exists:invoices,id',
+            'status' => 'required|string|in:pending,approved,rejected,cancelled,refunded',
+            'payment_method' => 'required|string|in:credit_card,debit_card,bank_transfer,ticket,pix',
             'transaction_amount' => 'required|numeric|min:0|max:999999.99',
-            'transaction_date'   => 'nullable|datetime',
+            'transaction_date' => 'nullable|datetime',
         ];
     }
 
@@ -110,7 +116,7 @@ class PaymentMercadoPagoInvoice extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -118,23 +124,23 @@ class PaymentMercadoPagoInvoice extends Model
      */
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo( Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     /**
      * Scope to filter by status.
      */
-    public function scopeByStatus( $query, string $status )
+    public function scopeByStatus($query, string $status)
     {
-        return $query->where( 'status', $status );
+        return $query->where('status', $status);
     }
 
     /**
      * Scope to filter by payment method.
      */
-    public function scopeByPaymentMethod( $query, string $paymentMethod )
+    public function scopeByPaymentMethod($query, string $paymentMethod)
     {
-        return $query->where( 'payment_method', $paymentMethod );
+        return $query->where('payment_method', $paymentMethod);
     }
 
     /**
@@ -176,5 +182,4 @@ class PaymentMercadoPagoInvoice extends Model
     {
         return $this->status === self::STATUS_REFUNDED;
     }
-
 }

@@ -17,7 +17,7 @@ class ScheduleRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Schedule();
+        return new Schedule;
     }
 
     /**
@@ -123,9 +123,9 @@ class ScheduleRepository extends AbstractTenantRepository
     public function getStats(): array
     {
         return [
-            'total'     => $this->model->count(),
-            'upcoming'  => $this->model->where('status', '!=', 'cancelled')->where('start_date_time', '>=', now())->count(),
-            'today'     => $this->model->whereDate('start_date_time', now()->toDateString())->count(),
+            'total' => $this->model->count(),
+            'upcoming' => $this->model->where('status', '!=', 'cancelled')->where('start_date_time', '>=', now())->count(),
+            'today' => $this->model->whereDate('start_date_time', now()->toDateString())->count(),
             'by_status' => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
         ];
     }
@@ -150,8 +150,8 @@ class ScheduleRepository extends AbstractTenantRepository
     protected function applyAllScheduleFilters(Builder $query, array $filters): void
     {
         // Filtro de busca
-        if (!empty($filters['location'])) {
-            $query->where('location', 'like', '%' . $filters['location'] . '%');
+        if (! empty($filters['location'])) {
+            $query->where('location', 'like', '%'.$filters['location'].'%');
         }
 
         // Filtros básicos

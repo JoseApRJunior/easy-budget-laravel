@@ -42,15 +42,15 @@ readonly class ReportScheduleDTO extends AbstractDTO
     {
         return [
             'report_definition_id' => $this->report_definition_id,
-            'user_id'              => $this->user_id,
-            'frequency'            => $this->frequency,
-            'cron_expression'      => $this->cron_expression,
-            'parameters'           => $this->parameters,
-            'recipients'           => $this->recipients,
-            'is_active'            => $this->is_active,
-            'last_run_at'          => $this->last_run_at?->toDateTimeString(),
-            'next_run_at'          => $this->next_run_at?->toDateTimeString(),
-            'tenant_id'            => $this->tenant_id,
+            'user_id' => $this->user_id,
+            'frequency' => $this->frequency,
+            'cron_expression' => $this->cron_expression,
+            'parameters' => $this->parameters,
+            'recipients' => $this->recipients,
+            'is_active' => $this->is_active,
+            'last_run_at' => $this->last_run_at?->toDateTimeString(),
+            'next_run_at' => $this->next_run_at?->toDateTimeString(),
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

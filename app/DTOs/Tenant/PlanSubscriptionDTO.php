@@ -47,19 +47,19 @@ readonly class PlanSubscriptionDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'provider_id'        => $this->provider_id,
-            'plan_id'            => $this->plan_id,
-            'status'             => $this->status,
+            'provider_id' => $this->provider_id,
+            'plan_id' => $this->plan_id,
+            'status' => $this->status,
             'transaction_amount' => $this->transaction_amount,
-            'start_date'         => $this->start_date->toDateTimeString(),
-            'end_date'           => $this->end_date?->toDateTimeString(),
-            'transaction_date'   => $this->transaction_date?->toDateTimeString(),
-            'payment_method'     => $this->payment_method,
-            'payment_id'         => $this->payment_id,
-            'public_hash'        => $this->public_hash,
-            'last_payment_date'  => $this->last_payment_date?->toDateTimeString(),
-            'next_payment_date'  => $this->next_payment_date?->toDateTimeString(),
-            'tenant_id'          => $this->tenant_id,
+            'start_date' => $this->start_date->toDateTimeString(),
+            'end_date' => $this->end_date?->toDateTimeString(),
+            'transaction_date' => $this->transaction_date?->toDateTimeString(),
+            'payment_method' => $this->payment_method,
+            'payment_id' => $this->payment_id,
+            'public_hash' => $this->public_hash,
+            'last_payment_date' => $this->last_payment_date?->toDateTimeString(),
+            'next_payment_date' => $this->next_payment_date?->toDateTimeString(),
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

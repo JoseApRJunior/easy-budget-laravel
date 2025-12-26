@@ -6,12 +6,12 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentMercadoPagoPlan extends Model
 {
-    use HasFactory, TenantScoped, SoftDeletes;
+    use HasFactory, SoftDeletes, TenantScoped;
 
     /**
      * Boot the model.
@@ -25,20 +25,28 @@ class PaymentMercadoPagoPlan extends Model
     /**
      * Status constants.
      */
-    const STATUS_PENDING   = 'pending';
-    const STATUS_APPROVED  = 'approved';
-    const STATUS_REJECTED  = 'rejected';
+    const STATUS_PENDING = 'pending';
+
+    const STATUS_APPROVED = 'approved';
+
+    const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
-    const STATUS_REFUNDED  = 'refunded';
+
+    const STATUS_REFUNDED = 'refunded';
 
     /**
      * Payment method constants.
      */
-    const PAYMENT_METHOD_CREDIT_CARD   = 'credit_card';
-    const PAYMENT_METHOD_DEBIT_CARD    = 'debit_card';
+    const PAYMENT_METHOD_CREDIT_CARD = 'credit_card';
+
+    const PAYMENT_METHOD_DEBIT_CARD = 'debit_card';
+
     const PAYMENT_METHOD_BANK_TRANSFER = 'bank_transfer';
-    const PAYMENT_METHOD_TICKET        = 'ticket';
-    const PAYMENT_METHOD_PIX           = 'pix';
+
+    const PAYMENT_METHOD_TICKET = 'ticket';
+
+    const PAYMENT_METHOD_PIX = 'pix';
 
     /**
      * The table associated with the model.
@@ -76,16 +84,16 @@ class PaymentMercadoPagoPlan extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'payment_id'           => 'string',
-        'provider_id'          => 'integer',
-        'tenant_id'            => 'integer',
+        'payment_id' => 'string',
+        'provider_id' => 'integer',
+        'tenant_id' => 'integer',
         'plan_subscription_id' => 'integer',
-        'status'               => 'string',
-        'payment_method'       => 'string',
-        'transaction_amount'   => 'decimal:2',
-        'transaction_date'     => 'datetime',
-        'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'datetime',
+        'status' => 'string',
+        'payment_method' => 'string',
+        'transaction_amount' => 'decimal:2',
+        'transaction_date' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -103,7 +111,7 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -111,7 +119,7 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo( Provider::class);
+        return $this->belongsTo(Provider::class);
     }
 
     /**
@@ -119,23 +127,23 @@ class PaymentMercadoPagoPlan extends Model
      */
     public function planSubscription(): BelongsTo
     {
-        return $this->belongsTo( PlanSubscription::class);
+        return $this->belongsTo(PlanSubscription::class);
     }
 
     /**
      * Scope to filter by status.
      */
-    public function scopeByStatus( $query, string $status )
+    public function scopeByStatus($query, string $status)
     {
-        return $query->where( 'status', $status );
+        return $query->where('status', $status);
     }
 
     /**
      * Scope to filter by payment method.
      */
-    public function scopeByPaymentMethod( $query, string $paymentMethod )
+    public function scopeByPaymentMethod($query, string $paymentMethod)
     {
-        return $query->where( 'payment_method', $paymentMethod );
+        return $query->where('payment_method', $paymentMethod);
     }
 
     /**
@@ -177,5 +185,4 @@ class PaymentMercadoPagoPlan extends Model
     {
         return $this->status === self::STATUS_REFUNDED;
     }
-
 }

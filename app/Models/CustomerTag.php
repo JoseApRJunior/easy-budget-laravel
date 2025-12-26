@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Customer;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,14 +48,14 @@ class CustomerTag extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'   => 'integer',
-        'name'        => 'string',
-        'color'       => 'string',
+        'tenant_id' => 'integer',
+        'name' => 'string',
+        'color' => 'string',
         'description' => 'string',
-        'is_active'   => 'boolean',
-        'sort_order'  => 'integer',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -66,12 +64,12 @@ class CustomerTag extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'   => 'required|integer|exists:tenants,id',
-            'name'        => 'required|string|max:100|unique:customer_tags,name',
-            'color'       => 'required|string|size:7|regex:/^#[0-9A-Fa-f]{6}$/',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'name' => 'required|string|max:100|unique:customer_tags,name',
+            'color' => 'required|string|size:7|regex:/^#[0-9A-Fa-f]{6}$/',
             'description' => 'nullable|string|max:500',
-            'is_active'   => 'boolean',
-            'sort_order'  => 'integer|min:0',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer|min:0',
         ];
     }
 
@@ -80,7 +78,7 @@ class CustomerTag extends Model
      */
     public function tenant()
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -88,29 +86,29 @@ class CustomerTag extends Model
      */
     public function customers(): BelongsToMany
     {
-        return $this->belongsToMany( Customer::class, 'customer_tag_assignments' );
+        return $this->belongsToMany(Customer::class, 'customer_tag_assignments');
     }
 
     /**
      * Scope para buscar apenas tags ativas.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
 
     /**
      * Scope para ordenar por sort_order e name.
      */
-    public function scopeOrdered( $query )
+    public function scopeOrdered($query)
     {
-        return $query->orderBy( 'sort_order' )->orderBy( 'name' );
+        return $query->orderBy('sort_order')->orderBy('name');
     }
 
     /**
      * Get the tag's color attribute with default fallback.
      */
-    public function getColorAttribute( ?string $value ): string
+    public function getColorAttribute(?string $value): string
     {
         return $value ?? '#6B7280';
     }
@@ -130,5 +128,4 @@ class CustomerTag extends Model
     {
         return $this->customers()->count();
     }
-
 }

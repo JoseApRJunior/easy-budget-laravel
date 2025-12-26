@@ -24,7 +24,6 @@ use App\Observers\ServiceObserver;
 use App\Observers\TenantObserver;
 use App\Observers\UserObserver;
 use App\Policies\SchedulePolicy;
-use App\Repositories\AuditLogRepository;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Services\AlertService;
 use App\Services\Application\Auth\SocialAuthenticationService;
@@ -34,7 +33,6 @@ use App\Services\NotificationService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,84 +40,82 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Binding para autenticação social - Google OAuth
-        $this->app->bind( OAuthClientInterface::class, GoogleOAuthClient::class);
-        $this->app->bind( SocialAuthenticationInterface::class, SocialAuthenticationService::class);
+        $this->app->bind(OAuthClientInterface::class, GoogleOAuthClient::class);
+        $this->app->bind(SocialAuthenticationInterface::class, SocialAuthenticationService::class);
 
         // Binding contextual para SocialAuthenticationService usar UserRegistrationService
-        $this->app->when( SocialAuthenticationService::class)
-            ->needs( UserRegistrationService::class)
-            ->give( function ( $app ) {
-                return $app->make( UserRegistrationService::class);
-            } );
+        $this->app->when(SocialAuthenticationService::class)
+            ->needs(UserRegistrationService::class)
+            ->give(function ($app) {
+                return $app->make(UserRegistrationService::class);
+            });
 
         // Binding padrão para BaseRepositoryInterface (fallback)
-        $this->app->bind( BaseRepositoryInterface::class, function ( $app ) {
+        $this->app->bind(BaseRepositoryInterface::class, function ($app) {
             // Retorna uma implementação básica que pode ser usada como fallback
             // Serviços específicos devem usar suas próprias implementações de repositório
             return new class implements BaseRepositoryInterface
             {
-                public function find( int $id ): ?\Illuminate\Database\Eloquent\Model
+                public function find(int $id): ?\Illuminate\Database\Eloquent\Model
                 {
-                    throw new \RuntimeException( 'BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.' );
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
 
                 public function getAll(): \Illuminate\Database\Eloquent\Collection
                 {
-                    throw new \RuntimeException( 'BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.' );
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
 
-                public function create( array $data ): \Illuminate\Database\Eloquent\Model
+                public function create(array $data): \Illuminate\Database\Eloquent\Model
                 {
-                    throw new \RuntimeException( 'BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.' );
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
 
-                public function update( int $id, array $data ): ?\Illuminate\Database\Eloquent\Model
+                public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
                 {
-                    throw new \RuntimeException( 'BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.' );
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
 
-                public function delete( int $id ): bool
+                public function delete(int $id): bool
                 {
-                    throw new \RuntimeException( 'BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.' );
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
-
             };
-        } );
+        });
 
         // Bindings para serviços de alertas e notificações
-        $this->app->singleton( AlertService::class, function ( $app ) {
-            return new AlertService( $app->make( NotificationService::class) );
-        } );
+        $this->app->singleton(AlertService::class, function ($app) {
+            return new AlertService($app->make(NotificationService::class));
+        });
 
-        $this->app->singleton( NotificationService::class);
+        $this->app->singleton(NotificationService::class);
     }
 
     public function boot()
     {
         // Register model observers for automatic audit logging
-        User::observe( UserObserver::class);
-        Provider::observe( ProviderObserver::class);
-        Customer::observe( CustomerObserver::class);
-        Budget::observe( BudgetObserver::class);
-        Invoice::observe( InvoiceObserver::class);
-        Product::observe( ProductObserver::class);
-        Service::observe( ServiceObserver::class);
-        Tenant::observe( TenantObserver::class);
-        Category::observe( CategoryObserver::class);
+        User::observe(UserObserver::class);
+        Provider::observe(ProviderObserver::class);
+        Customer::observe(CustomerObserver::class);
+        Budget::observe(BudgetObserver::class);
+        Invoice::observe(InvoiceObserver::class);
+        Product::observe(ProductObserver::class);
+        Service::observe(ServiceObserver::class);
+        Tenant::observe(TenantObserver::class);
+        Category::observe(CategoryObserver::class);
 
         // Register policies
-        $this->app->make( 'Illuminate\Contracts\Auth\Access\Gate' )->policy( Schedule::class, SchedulePolicy::class);
+        $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
 
-        Blade::if( 'role', fn( $role ) => auth()->check() && auth()->user()->hasRole( $role ) );
-        Blade::if( 'anyrole', fn( $roles ) => auth()->check() && auth()->user()->hasAnyRole( (array) $roles ) );
+        Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
+        Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
 
         Paginator::useBootstrapFive();
 
         // Aumentar limite de memória para evitar erros em requisições pesadas
-        ini_set( 'memory_limit', '256M' );
+        ini_set('memory_limit', '256M');
 
         // Otimizar respostas JSON removendo o wrap 'data' desnecessário
         JsonResource::withoutWrapping();
     }
-
 }

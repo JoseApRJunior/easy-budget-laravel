@@ -31,10 +31,10 @@ readonly class PdfDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'path'         => $this->path,
-            'type'         => $this->type,
-            'data'         => $this->data,
-            'metadata'     => $this->metadata,
+            'path' => $this->path,
+            'type' => $this->type,
+            'data' => $this->data,
+            'metadata' => $this->metadata,
             'generated_at' => $this->generated_at?->toDateTimeString(),
         ];
     }

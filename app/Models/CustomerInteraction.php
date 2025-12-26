@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Customer;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,23 +48,23 @@ class CustomerInteraction extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'customer_id'      => 'integer',
-        'user_id'          => 'integer',
-        'type'             => 'string',
-        'title'            => 'string',
-        'description'      => 'string',
-        'direction'        => 'string',
+        'customer_id' => 'integer',
+        'user_id' => 'integer',
+        'type' => 'string',
+        'title' => 'string',
+        'description' => 'string',
+        'direction' => 'string',
         'interaction_date' => 'datetime',
         'duration_minutes' => 'integer',
-        'outcome'          => 'string',
-        'next_action'      => 'string',
+        'outcome' => 'string',
+        'next_action' => 'string',
         'next_action_date' => 'datetime',
-        'attachments'      => 'array',
-        'metadata'         => 'array',
-        'notify_customer'  => 'boolean',
-        'is_active'        => 'boolean',
-        'created_at'       => 'immutable_datetime',
-        'updated_at'       => 'datetime',
+        'attachments' => 'array',
+        'metadata' => 'array',
+        'notify_customer' => 'boolean',
+        'is_active' => 'boolean',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -74,21 +73,21 @@ class CustomerInteraction extends Model
     public static function businessRules(): array
     {
         return [
-            'customer_id'      => 'required|integer|exists:customers,id',
-            'user_id'          => 'required|integer|exists:users,id',
-            'type'             => 'required|string|in:call,email,meeting,visit,proposal,note,task',
-            'title'            => 'required|string|max:255',
-            'description'      => 'nullable|string|max:2000',
-            'direction'        => 'required|string|in:inbound,outbound',
+            'customer_id' => 'required|integer|exists:customers,id',
+            'user_id' => 'required|integer|exists:users,id',
+            'type' => 'required|string|in:call,email,meeting,visit,proposal,note,task',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'direction' => 'required|string|in:inbound,outbound',
             'interaction_date' => 'required|date',
             'duration_minutes' => 'nullable|integer|min:1|max:1440',
-            'outcome'          => 'nullable|string|in:completed,pending,cancelled,rescheduled',
-            'next_action'      => 'nullable|string|max:255',
+            'outcome' => 'nullable|string|in:completed,pending,cancelled,rescheduled',
+            'next_action' => 'nullable|string|max:255',
             'next_action_date' => 'nullable|date|after:interaction_date',
-            'attachments'      => 'nullable|array',
-            'metadata'         => 'nullable|array',
-            'notify_customer'  => 'boolean',
-            'is_active'        => 'boolean',
+            'attachments' => 'nullable|array',
+            'metadata' => 'nullable|array',
+            'notify_customer' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -97,7 +96,7 @@ class CustomerInteraction extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo( Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -105,52 +104,52 @@ class CustomerInteraction extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
      * Scope para buscar apenas interações ativas.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
 
     /**
      * Scope para buscar interações por tipo.
      */
-    public function scopeOfType( $query, string $type )
+    public function scopeOfType($query, string $type)
     {
-        return $query->where( 'type', $type );
+        return $query->where('type', $type);
     }
 
     /**
      * Scope para buscar interações por direção.
      */
-    public function scopeOfDirection( $query, string $direction )
+    public function scopeOfDirection($query, string $direction)
     {
-        return $query->where( 'direction', $direction );
+        return $query->where('direction', $direction);
     }
 
     /**
      * Scope para buscar interações por período.
      */
-    public function scopeInDateRange( $query, $startDate, $endDate )
+    public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween( 'interaction_date', [ $startDate, $endDate ] );
+        return $query->whereBetween('interaction_date', [$startDate, $endDate]);
     }
 
     /**
      * Scope para buscar próximas ações pendentes.
      */
-    public function scopePendingActions( $query )
+    public function scopePendingActions($query)
     {
-        return $query->whereNotNull( 'next_action' )
-            ->whereNotNull( 'next_action_date' )
-            ->where( 'next_action_date', '>=', now() )
-            ->where( function ( $q ) {
-                $q->whereNull( 'outcome' )->orWhere( 'outcome', '!=', 'completed' );
-            } );
+        return $query->whereNotNull('next_action')
+            ->whereNotNull('next_action_date')
+            ->where('next_action_date', '>=', now())
+            ->where(function ($q) {
+                $q->whereNull('outcome')->orWhere('outcome', '!=', 'completed');
+            });
     }
 
     /**
@@ -158,15 +157,15 @@ class CustomerInteraction extends Model
      */
     public function getTypeLabelAttribute(): string
     {
-        return match ( $this->type ) {
-            'call'     => 'Ligação',
-            'email'    => 'Email',
-            'meeting'  => 'Reunião',
-            'visit'    => 'Visita',
+        return match ($this->type) {
+            'call' => 'Ligação',
+            'email' => 'Email',
+            'meeting' => 'Reunião',
+            'visit' => 'Visita',
             'proposal' => 'Proposta',
-            'note'     => 'Nota',
-            'task'     => 'Tarefa',
-            default    => ucfirst( $this->type ),
+            'note' => 'Nota',
+            'task' => 'Tarefa',
+            default => ucfirst($this->type),
         };
     }
 
@@ -175,10 +174,10 @@ class CustomerInteraction extends Model
      */
     public function getDirectionLabelAttribute(): string
     {
-        return match ( $this->direction ) {
-            'inbound'  => 'Entrada',
+        return match ($this->direction) {
+            'inbound' => 'Entrada',
             'outbound' => 'Saída',
-            default    => ucfirst( $this->direction ),
+            default => ucfirst($this->direction),
         };
     }
 
@@ -187,12 +186,12 @@ class CustomerInteraction extends Model
      */
     public function getOutcomeLabelAttribute(): string
     {
-        return match ( $this->outcome ) {
-            'completed'   => 'Concluída',
-            'pending'     => 'Pendente',
-            'cancelled'   => 'Cancelada',
+        return match ($this->outcome) {
+            'completed' => 'Concluída',
+            'pending' => 'Pendente',
+            'cancelled' => 'Cancelada',
             'rescheduled' => 'Reagendada',
-            default       => ucfirst( $this->outcome ?? 'Não definida' ),
+            default => ucfirst($this->outcome ?? 'Não definida'),
         };
     }
 
@@ -201,18 +200,18 @@ class CustomerInteraction extends Model
      */
     public function getFormattedDurationAttribute(): string
     {
-        if ( !$this->duration_minutes ) {
+        if (! $this->duration_minutes) {
             return '';
         }
 
-        $hours   = intdiv( $this->duration_minutes, 60 );
+        $hours = intdiv($this->duration_minutes, 60);
         $minutes = $this->duration_minutes % 60;
 
-        if ( $hours > 0 ) {
-            return sprintf( '%dh %dmin', $hours, $minutes );
+        if ($hours > 0) {
+            return sprintf('%dh %dmin', $hours, $minutes);
         }
 
-        return sprintf( '%dmin', $minutes );
+        return sprintf('%dmin', $minutes);
     }
 
     /**
@@ -222,7 +221,7 @@ class CustomerInteraction extends Model
     {
         return $this->next_action_date &&
             $this->next_action_date->isPast() &&
-            ( !$this->outcome || $this->outcome !== 'completed' );
+            (! $this->outcome || $this->outcome !== 'completed');
     }
 
     /**
@@ -230,7 +229,7 @@ class CustomerInteraction extends Model
      */
     public function hasAttachments(): bool
     {
-        return !empty( $this->attachments );
+        return ! empty($this->attachments);
     }
 
     /**
@@ -238,7 +237,7 @@ class CustomerInteraction extends Model
      */
     public function getAttachmentCountAttribute(): int
     {
-        return is_array( $this->attachments ) ? count( $this->attachments ) : 0;
+        return is_array($this->attachments) ? count($this->attachments) : 0;
     }
 
     /**
@@ -246,7 +245,7 @@ class CustomerInteraction extends Model
      */
     public function markAsCompleted(): void
     {
-        $this->update( [ 'outcome' => 'completed' ] );
+        $this->update(['outcome' => 'completed']);
     }
 
     /**
@@ -254,19 +253,19 @@ class CustomerInteraction extends Model
      */
     public function markAsCancelled(): void
     {
-        $this->update( [ 'outcome' => 'cancelled' ] );
+        $this->update(['outcome' => 'cancelled']);
     }
 
     /**
      * Reschedule the next action.
      */
-    public function rescheduleNextAction( string $nextAction, $nextActionDate ): void
+    public function rescheduleNextAction(string $nextAction, $nextActionDate): void
     {
-        $this->update( [
-            'next_action'      => $nextAction,
+        $this->update([
+            'next_action' => $nextAction,
             'next_action_date' => $nextActionDate,
-            'outcome'          => 'rescheduled',
-        ] );
+            'outcome' => 'rescheduled',
+        ]);
     }
 
     /**
@@ -274,17 +273,17 @@ class CustomerInteraction extends Model
      */
     public function getPriorityLevelAttribute(): string
     {
-        if ( !$this->next_action_date ) {
+        if (! $this->next_action_date) {
             return 'normal';
         }
 
-        $daysUntilDue = now()->diffInDays( $this->next_action_date, false );
+        $daysUntilDue = now()->diffInDays($this->next_action_date, false);
 
-        return match ( true ) {
-            $daysUntilDue < 0  => 'overdue',
+        return match (true) {
+            $daysUntilDue < 0 => 'overdue',
             $daysUntilDue <= 1 => 'urgent',
             $daysUntilDue <= 3 => 'high',
-            default            => 'normal',
+            default => 'normal',
         };
     }
 
@@ -293,11 +292,11 @@ class CustomerInteraction extends Model
      */
     public function getPriorityColorAttribute(): string
     {
-        return match ( $this->priority_level ) {
+        return match ($this->priority_level) {
             'overdue' => 'red',
-            'urgent'  => 'orange',
-            'high'    => 'yellow',
-            default   => 'green',
+            'urgent' => 'orange',
+            'high' => 'yellow',
+            default => 'green',
         };
     }
 
@@ -307,7 +306,7 @@ class CustomerInteraction extends Model
     public function requiresFollowUp(): bool
     {
         return $this->next_action &&
-            ( !$this->outcome || !in_array( $this->outcome, [ 'completed', 'cancelled' ] ) );
+            (! $this->outcome || ! in_array($this->outcome, ['completed', 'cancelled']));
     }
 
     /**
@@ -315,21 +314,20 @@ class CustomerInteraction extends Model
      */
     public function getTimeUntilNextActionAttribute(): ?string
     {
-        if ( !$this->next_action_date ) {
+        if (! $this->next_action_date) {
             return null;
         }
 
-        $diff = now()->diff( $this->next_action_date );
+        $diff = now()->diff($this->next_action_date);
 
-        if ( $diff->invert ) {
-            return 'Vencida há ' . $diff->format( '%d dias' );
+        if ($diff->invert) {
+            return 'Vencida há '.$diff->format('%d dias');
         }
 
-        if ( $diff->days === 0 ) {
+        if ($diff->days === 0) {
             return 'Hoje';
         }
 
-        return 'Em ' . $diff->format( '%d dias' );
+        return 'Em '.$diff->format('%d dias');
     }
-
 }

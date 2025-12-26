@@ -16,7 +16,7 @@ class AreaOfActivityRepository extends AbstractGlobalRepository
 
     protected function makeModel(): Model
     {
-        return new AreaOfActivity();
+        return new AreaOfActivity;
     }
 
     public function getActive(): Collection

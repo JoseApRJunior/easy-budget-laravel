@@ -44,18 +44,18 @@ readonly class EmailVariableDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'             => $this->name,
-            'slug'             => $this->slug,
-            'description'      => $this->description,
-            'category'         => $this->category,
-            'data_type'        => $this->data_type,
-            'default_value'    => $this->default_value,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'description' => $this->description,
+            'category' => $this->category,
+            'data_type' => $this->data_type,
+            'default_value' => $this->default_value,
             'validation_rules' => $this->validation_rules,
-            'is_system'        => $this->is_system,
-            'is_active'        => $this->is_active,
-            'sort_order'       => $this->sort_order,
-            'metadata'         => $this->metadata,
-            'tenant_id'        => $this->tenant_id,
+            'is_system' => $this->is_system,
+            'is_active' => $this->is_active,
+            'sort_order' => $this->sort_order,
+            'metadata' => $this->metadata,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

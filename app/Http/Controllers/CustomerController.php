@@ -7,16 +7,11 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Requests\CustomerUpdateRequest;
-use App\Models\AreaOfActivity;
-use App\Models\Profession;
-use App\Models\User;
 use App\Services\Domain\CustomerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Controller de Clientes
@@ -37,11 +32,11 @@ class CustomerController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Customer::class);
 
-        $filters        = $request->only(['search', 'status', 'type', 'area_of_activity_id', 'deleted', 'cep']);
-        $perPage        = (int) ($filters['per_page'] ?? 10);
+        $filters = $request->only(['search', 'status', 'type', 'area_of_activity_id', 'deleted', 'cep']);
+        $perPage = (int) ($filters['per_page'] ?? 10);
         $allowedPerPage = [10, 20, 50];
 
-        if (!in_array($perPage, $allowedPerPage, true)) {
+        if (! in_array($perPage, $allowedPerPage, true)) {
             $perPage = 10;
         }
         $filters['per_page'] = $perPage;
@@ -54,13 +49,13 @@ class CustomerController extends Controller
             $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
 
             return $this->view('pages.customer.index', $result, 'customers', [
-                'filters'           => $filters,
+                'filters' => $filters,
                 'areas_of_activity' => $areasOfActivity,
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao carregar clientes', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
             abort(500, 'Erro ao carregar clientes');
         }
@@ -79,8 +74,8 @@ class CustomerController extends Controller
 
         return view('pages.customer.create', [
             'areas_of_activity' => $areasOfActivity,
-            'professions'       => $professions,
-            'customer'          => null, // Removido new \App\Models\Customer
+            'professions' => $professions,
+            'customer' => null, // Removido new \App\Models\Customer
         ]);
     }
 
@@ -102,9 +97,9 @@ class CustomerController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('Erro inesperado ao criar cliente', [
-                'user_id'   => auth()->id(),
+                'user_id' => auth()->id(),
                 'tenant_id' => auth()->user()?->tenant_id,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -121,7 +116,7 @@ class CustomerController extends Controller
     {
         $result = $this->customerService->findCustomer((int) $id);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             abort(404, $result->getMessage());
         }
 
@@ -140,7 +135,7 @@ class CustomerController extends Controller
     {
         $result = $this->customerService->findCustomer((int) $id);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             abort(404, $result->getMessage());
         }
 
@@ -152,9 +147,9 @@ class CustomerController extends Controller
         $professions = $this->customerService->getProfessions()->getData();
 
         return view('pages.customer.edit', [
-            'customer'          => $customer,
+            'customer' => $customer,
             'areas_of_activity' => $areasOfActivity,
-            'professions'       => $professions,
+            'professions' => $professions,
         ]);
     }
 
@@ -177,9 +172,9 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro inesperado ao atualizar cliente', [
                 'customer_id' => $customer->id,
-                'user_id'     => auth()->id(),
-                'tenant_id'   => auth()->user()?->tenant_id,
-                'error'       => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()?->tenant_id,
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -207,9 +202,9 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro inesperado ao excluir cliente', [
                 'customer_id' => $customer->id,
-                'user_id'     => auth()->id(),
-                'tenant_id'   => auth()->user()?->tenant_id,
-                'error'       => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()?->tenant_id,
+                'error' => $e->getMessage(),
             ]);
 
             return $this->redirectError('provider.customers.index', 'Erro interno ao excluir cliente.');
@@ -241,9 +236,9 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro inesperado ao alterar status do cliente', [
                 'customer_id' => $customer->id,
-                'user_id'     => auth()->id(),
-                'tenant_id'   => auth()->user()?->tenant_id,
-                'error'       => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()?->tenant_id,
+                'error' => $e->getMessage(),
             ]);
 
             return $this->redirectError('provider.customers.index', 'Erro interno ao alterar status. Tente novamente.');
@@ -271,9 +266,9 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro inesperado ao restaurar cliente', [
                 'customer_id' => $id,
-                'user_id'     => auth()->id(),
-                'tenant_id'   => auth()->user()?->tenant_id,
-                'error'       => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'tenant_id' => auth()->user()?->tenant_id,
+                'error' => $e->getMessage(),
             ]);
 
             return $this->redirectError('provider.customers.index', 'Erro interno ao restaurar cliente. Tente novamente.');
@@ -289,7 +284,7 @@ class CustomerController extends Controller
 
         $cep = $request->get('cep');
 
-        if (!$cep) {
+        if (! $cep) {
             return redirect()->route('provider.customers.index')
                 ->with('error', 'CEP é obrigatório para busca por proximidade.');
         }
@@ -310,7 +305,7 @@ class CustomerController extends Controller
 
         $result = $this->customerService->getFilteredCustomers($filters);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return response()->json(['error' => $result->getMessage()], 400);
         }
 
@@ -319,21 +314,21 @@ class CustomerController extends Controller
 
         $data = collect($customers->items())->map(function ($customer) {
             $commonData = $customer->commonData;
-            $contact    = $customer->contact;
+            $contact = $customer->contact;
 
             return [
-                'id'             => $customer->id,
-                'customer_name'  => $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''))) : 'Nome não informado',
-                'cpf'            => $commonData->cpf ?? '',
-                'cnpj'           => $commonData->cnpj ?? '',
-                'email'          => $contact->email_personal ?? '',
+                'id' => $customer->id,
+                'customer_name' => $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '').' '.($commonData->last_name ?? ''))) : 'Nome não informado',
+                'cpf' => $commonData->cpf ?? '',
+                'cnpj' => $commonData->cnpj ?? '',
+                'email' => $contact->email_personal ?? '',
                 'email_business' => $contact->email_business ?? '',
-                'phone'          => $contact->phone_personal ?? '',
+                'phone' => $contact->phone_personal ?? '',
                 'phone_business' => $contact->phone_business ?? '',
-                'status'         => $customer->status,
-                'status_label'   => $customer->status_label ?? ucfirst((string) $customer->status),
-                'created_at'     => $customer->created_at?->toISOString(),
-                'deleted_at'     => $customer->deleted_at?->toISOString(),
+                'status' => $customer->status,
+                'status_label' => $customer->status_label ?? ucfirst((string) $customer->status),
+                'created_at' => $customer->created_at?->toISOString(),
+                'deleted_at' => $customer->deleted_at?->toISOString(),
             ];
         });
 
@@ -351,7 +346,7 @@ class CustomerController extends Controller
 
         $result = $this->customerService->searchForAutocomplete($query);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return response()->json([
                 'error' => $result->getMessage(),
             ], 400);
@@ -373,7 +368,7 @@ class CustomerController extends Controller
 
         $result = $this->customerService->exportCustomers($filters);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return response()->json([
                 'error' => $result->getMessage(),
             ], 400);
@@ -393,7 +388,7 @@ class CustomerController extends Controller
 
         $result = $this->customerService->getDashboardData();
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return view('pages.customer.dashboard', [
                 'stats' => [],
                 'error' => $result->getMessage(),

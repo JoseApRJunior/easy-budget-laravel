@@ -33,11 +33,11 @@ readonly class CustomerTagDTO extends AbstractDTO
     {
         return [
             'customer_id' => $this->customer_id,
-            'name'        => $this->name,
-            'slug'        => $this->slug,
-            'color'       => $this->color,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'color' => $this->color,
             'description' => $this->description,
-            'tenant_id'   => $this->tenant_id,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

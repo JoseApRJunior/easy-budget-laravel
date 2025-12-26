@@ -19,7 +19,7 @@ class PlanSubscriptionRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new PlanSubscription();
+        return new PlanSubscription;
     }
 
     /**
@@ -36,11 +36,11 @@ class PlanSubscriptionRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, PlanSubscriptionDTO $dto): bool
     {
         $subscription = $this->find($id);
-        if (!$subscription) {
+        if (! $subscription) {
             return false;
         }
 
-        return $subscription->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $subscription->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     /**

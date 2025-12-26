@@ -2,13 +2,12 @@
 
 namespace App\Repositories;
 
+use App\DTOs\Inventory\ProductInventoryDTO;
 use App\Models\ProductInventory;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-
-use App\DTOs\Inventory\ProductInventoryDTO;
 
 class InventoryRepository extends AbstractTenantRepository
 {
@@ -17,7 +16,7 @@ class InventoryRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new ProductInventory();
+        return new ProductInventory;
     }
 
     /**
@@ -44,8 +43,8 @@ class InventoryRepository extends AbstractTenantRepository
     public function initialize(int $productId): Model
     {
         return $this->create([
-            'product_id'   => $productId,
-            'quantity'     => 0,
+            'product_id' => $productId,
+            'quantity' => 0,
             'min_quantity' => 0,
             'max_quantity' => null,
         ]);
@@ -88,15 +87,15 @@ class InventoryRepository extends AbstractTenantRepository
      *
      * Implementação específica para inventory com filtros avançados.
      *
-     * @param array<string, mixed> $filters Filtros específicos:
-     *   - search: termo de busca em nome/SKU do produto
-     *   - low_stock: true para filtrar itens com estoque baixo
-     *   - high_stock: true para filtrar itens com estoque alto
-     *   - per_page: número de itens por página
-     *   - deleted: 'only' para mostrar apenas itens deletados
-     * @param int $perPage Número padrão de itens por página (15)
-     * @param array<string> $with Relacionamentos para eager loading (padrão: ['product'])
-     * @param array<string, string>|null $orderBy Ordenação personalizada
+     * @param  array<string, mixed>  $filters  Filtros específicos:
+     *                                         - search: termo de busca em nome/SKU do produto
+     *                                         - low_stock: true para filtrar itens com estoque baixo
+     *                                         - high_stock: true para filtrar itens com estoque alto
+     *                                         - per_page: número de itens por página
+     *                                         - deleted: 'only' para mostrar apenas itens deletados
+     * @param  int  $perPage  Número padrão de itens por página (15)
+     * @param  array<string>  $with  Relacionamentos para eager loading (padrão: ['product'])
+     * @param  array<string, string>|null  $orderBy  Ordenação personalizada
      * @return LengthAwarePaginator Resultado paginado
      */
     public function getPaginated(
@@ -108,7 +107,7 @@ class InventoryRepository extends AbstractTenantRepository
         $query = $this->model->newQuery();
 
         // Eager loading paramétrico
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -119,7 +118,7 @@ class InventoryRepository extends AbstractTenantRepository
         $this->applySoftDeleteFilter($query, $filters);
 
         // Filtros específicos de inventory
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->whereHas('product', function ($q) use ($filters) {
                 $q->where('name', 'like', "%{$filters['search']}%")
                     ->orWhere('sku', 'like', "%{$filters['search']}%");
@@ -142,7 +141,7 @@ class InventoryRepository extends AbstractTenantRepository
             $query->whereColumn('quantity', '>', 'min_quantity');
         }
 
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->whereHas('product', function ($q) use ($filters) {
                 $q->where('category_id', $filters['category']);
             });
@@ -156,8 +155,6 @@ class InventoryRepository extends AbstractTenantRepository
 
         return $query->paginate($effectivePerPage);
     }
-
-
 
     public function updateMinQuantity(int $productId, int $minQuantity): bool
     {
@@ -202,16 +199,16 @@ class InventoryRepository extends AbstractTenantRepository
 
     public function getStatistics(): array
     {
-        $total      = $this->model->count();
-        $lowStock   = $this->getLowStockCount();
+        $total = $this->model->count();
+        $lowStock = $this->getLowStockCount();
         $totalValue = $this->model
             ->join('products', 'product_inventory.product_id', '=', 'products.id')
             ->selectRaw('SUM(product_inventory.quantity * products.price) as total')
             ->value('total') ?? 0;
 
         return [
-            'total_items'           => $total,
-            'low_stock_items'       => $lowStock,
+            'total_items' => $total,
+            'low_stock_items' => $lowStock,
             'total_inventory_value' => $totalValue,
         ];
     }

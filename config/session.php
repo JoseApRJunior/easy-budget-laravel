@@ -20,7 +20,7 @@ return [
     |
     */
 
-    'driver'             => env( 'SESSION_DRIVER', 'file' ),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,9 +34,9 @@ return [
     |
     */
 
-    'lifetime'           => env( 'SESSION_LIFETIME', 30 ),
+    'lifetime' => env('SESSION_LIFETIME', 30),
 
-    'expire_on_close'    => env( 'SESSION_EXPIRE_ON_CLOSE', true ),
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -49,7 +49,7 @@ return [
     |
     */
 
-    'encrypt'            => env( 'SESSION_ENCRYPT', false ),
+    'encrypt' => env('SESSION_ENCRYPT', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -62,7 +62,7 @@ return [
     |
     */
 
-    'files'              => storage_path( 'framework/sessions' ),
+    'files' => storage_path('framework/sessions'),
 
     /*
     |--------------------------------------------------------------------------
@@ -75,7 +75,7 @@ return [
     |
     */
 
-    'connection'         => env( 'SESSION_CONNECTION' ),
+    'connection' => env('SESSION_CONNECTION'),
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +88,7 @@ return [
     |
     */
 
-    'table'              => env( 'SESSION_TABLE', 'sessions' ),
+    'table' => env('SESSION_TABLE', 'sessions'),
 
     /*
     |--------------------------------------------------------------------------
@@ -103,7 +103,7 @@ return [
     |
     */
 
-    'store'              => env( 'SESSION_STORE' ),
+    'store' => env('SESSION_STORE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -116,7 +116,7 @@ return [
     |
     */
 
-    'lottery'            => [ 2, 100 ],
+    'lottery' => [2, 100],
 
     /*
     |--------------------------------------------------------------------------
@@ -129,9 +129,9 @@ return [
     |
     */
 
-    'cookie'             => env(
+    'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug( env( 'APP_NAME', 'laravel' ) ) . '-session-' . md5( env( 'APP_KEY' ) )
+        Str::slug(env('APP_NAME', 'laravel')).'-session-'.md5(env('APP_KEY'))
     ),
 
     /*
@@ -139,28 +139,28 @@ return [
     | Session Cookie Domain
     |--------------------------------------------------------------------------
     */
-    'domain'             => env( 'SESSION_DOMAIN' ),
+    'domain' => env('SESSION_DOMAIN'),
 
     /*
     |--------------------------------------------------------------------------
     | HTTPS Only Cookies
     |--------------------------------------------------------------------------
     */
-    'secure'             => env( 'SESSION_SECURE_COOKIE', false ),
+    'secure' => env('SESSION_SECURE_COOKIE', false),
 
     /*
     |--------------------------------------------------------------------------
     | HTTP Access Only
     |--------------------------------------------------------------------------
     */
-    'http_only'          => env( 'SESSION_HTTP_ONLY', true ),
+    'http_only' => env('SESSION_HTTP_ONLY', true),
 
     /*
     |--------------------------------------------------------------------------
     | Same-Site Cookies
     |--------------------------------------------------------------------------
     */
-    'same_site'          => env( 'SESSION_SAME_SITE', 'lax' ),
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*
     |--------------------------------------------------------------------------
@@ -173,7 +173,7 @@ return [
     |
     */
 
-    'path'               => env( 'SESSION_PATH', '/' ),
+    'path' => env('SESSION_PATH', '/'),
 
     /*
     |--------------------------------------------------------------------------
@@ -186,7 +186,7 @@ return [
     |
     */
 
-    'domain'             => env( 'SESSION_DOMAIN' ),
+    'domain' => env('SESSION_DOMAIN'),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +199,7 @@ return [
     |
     */
 
-    'secure'             => env( 'SESSION_SECURE_COOKIE' ),
+    'secure' => env('SESSION_SECURE_COOKIE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -212,7 +212,7 @@ return [
     |
     */
 
-    'http_only'          => env( 'SESSION_HTTP_ONLY', true ),
+    'http_only' => env('SESSION_HTTP_ONLY', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -229,7 +229,7 @@ return [
     |
     */
 
-    'same_site'          => env( 'SESSION_SAME_SITE', 'lax' ),
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*
     |--------------------------------------------------------------------------
@@ -242,7 +242,7 @@ return [
     |
     */
 
-    'partitioned'        => env( 'SESSION_PARTITIONED_COOKIE', false ),
+    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -255,6 +255,6 @@ return [
     |
     */
 
-    'isolate_by_browser' => env( 'SESSION_ISOLATE_BY_BROWSER', false ),
+    'isolate_by_browser' => env('SESSION_ISOLATE_BY_BROWSER', false),
 
 ];

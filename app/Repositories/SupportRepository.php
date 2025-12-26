@@ -6,7 +6,6 @@ namespace App\Repositories;
 
 use App\Models\Support;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -22,7 +21,7 @@ class SupportRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Support();
+        return new Support;
     }
 
     /**

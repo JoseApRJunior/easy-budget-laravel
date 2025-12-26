@@ -36,7 +36,7 @@ class CustomerManagementController extends Controller
         $sortOrder = $request->get('sort_order', 'asc');
         $perPage = $request->get('per_page', 25);
 
-        $query = Customer::with(['tenant', 'city', 'state'])
+        $query = Customer::with(['tenant', 'address'])
             ->withCount(['budgets', 'services', 'invoices']);
 
         if ($search) {
@@ -162,8 +162,7 @@ class CustomerManagementController extends Controller
 
         $customer->load([
             'tenant',
-            'city',
-            'state',
+            'address',
             'budgets',
             'services',
             'invoices',
@@ -183,7 +182,7 @@ class CustomerManagementController extends Controller
     {
         $this->authorize('manage-customers');
 
-        $customer->load(['tenant', 'city', 'state']);
+        $customer->load(['tenant', 'address']);
 
         $tenants = Tenant::where('is_active', true)
             ->orderBy('name')
@@ -360,7 +359,7 @@ class CustomerManagementController extends Controller
         $status = $request->get('status');
         $tenant = $request->get('tenant');
 
-        $query = Customer::with(['tenant', 'city', 'state'])
+        $query = Customer::with(['tenant', 'address'])
             ->withCount(['budgets', 'services', 'invoices']);
 
         if ($search) {

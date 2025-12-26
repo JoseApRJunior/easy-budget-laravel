@@ -6,19 +6,14 @@ namespace App\Services\Domain;
 
 use App\DTOs\Customer\CustomerDTO;
 use App\Enums\OperationStatus;
-use App\Models\AreaOfActivity;
-use App\Models\CommonData;
 use App\Models\Customer;
-use App\Models\Profession;
 use App\Repositories\AreaOfActivityRepository;
-use App\Repositories\ProfessionRepository;
 use App\Repositories\CustomerRepository;
+use App\Repositories\ProfessionRepository;
 use App\Services\Application\AuditLogService;
 use App\Services\Application\CustomerInteractionService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Serviço de Clientes - Lógica de negócio para gestão de clientes
@@ -28,11 +23,15 @@ use Illuminate\Support\Facades\Log;
  */
 class CustomerService extends AbstractBaseService
 {
-    private CustomerRepository         $customerRepository;
+    private CustomerRepository $customerRepository;
+
     private CustomerInteractionService $interactionService;
-    private AuditLogService            $auditLogService;
-    private AreaOfActivityRepository   $areaOfActivityRepository;
-    private ProfessionRepository       $professionRepository;
+
+    private AuditLogService $auditLogService;
+
+    private AreaOfActivityRepository $areaOfActivityRepository;
+
+    private ProfessionRepository $professionRepository;
 
     public function __construct(
         CustomerRepository $customerRepository,
@@ -56,7 +55,7 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             $validation = $this->validateForCreate($dto);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
@@ -64,7 +63,7 @@ class CustomerService extends AbstractBaseService
 
             $this->auditLogService->logCreated($customer, [
                 'entity' => 'customer',
-                'type'   => $dto->type,
+                'type' => $dto->type,
             ]);
 
             return $this->success($customer, 'Cliente criado com sucesso');
@@ -79,12 +78,12 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $dto) {
             $customer = $this->customerRepository->findWithCompleteData($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
             $validation = $this->validateForUpdate($customer, $dto);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
@@ -94,7 +93,7 @@ class CustomerService extends AbstractBaseService
 
             $this->auditLogService->logUpdated($customer, $oldData, $customer->toArray(), [
                 'entity' => 'customer',
-                'type'   => $dto->type,
+                'type' => $dto->type,
             ]);
 
             return $this->success($customer, 'Cliente atualizado com sucesso');
@@ -109,7 +108,7 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $customer = $this->customerRepository->findById($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
@@ -125,6 +124,7 @@ class CustomerService extends AbstractBaseService
             ]);
 
             $message = $newStatus === 'active' ? 'Cliente ativado com sucesso' : 'Cliente desativado com sucesso';
+
             return $this->success($customer, $message);
         }, 'Erro ao alterar status do cliente.');
     }
@@ -137,12 +137,12 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $customer = $this->customerRepository->findById($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
             $validation = $this->validateCanDelete($id);
-            if (!$validation->isSuccess()) {
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
@@ -164,7 +164,7 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $customer = $this->customerRepository->restore($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado ou não está excluído');
             }
 
@@ -221,6 +221,7 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $areas = $this->areaOfActivityRepository->getActive();
+
             return $this->success($areas);
         }, 'Erro ao carregar áreas de atuação.');
     }
@@ -232,6 +233,7 @@ class CustomerService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $professions = $this->professionRepository->getActive();
+
             return $this->success($professions);
         }, 'Erro ao carregar profissões.');
     }
@@ -244,7 +246,7 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $customer = $this->customerRepository->findWithCompleteData($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
@@ -272,11 +274,12 @@ class CustomerService extends AbstractBaseService
         return $this->safeExecute(function () use ($customerId, $data) {
             $customer = $this->customerRepository->findById($customerId);
 
-            if (!$customer) {
+            if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
             $interaction = $this->interactionService->createInteraction($customer, $data, $this->authUser());
+
             return $this->success($interaction, 'Interação criada com sucesso');
         }, 'Erro ao criar interação.');
     }
@@ -291,11 +294,11 @@ class CustomerService extends AbstractBaseService
 
             $formatted = $customers->map(function ($customer) {
                 $commonData = $customer->commonData;
-                $name = $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''))) : 'Sem nome';
+                $name = $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '').' '.($commonData->last_name ?? ''))) : 'Sem nome';
 
                 return [
-                    'id'    => $customer->id,
-                    'text'  => $name . ($commonData->cpf ? " ({$commonData->cpf})" : ($commonData->cnpj ? " ({$commonData->cnpj})" : "")),
+                    'id' => $customer->id,
+                    'text' => $name.($commonData->cpf ? " ({$commonData->cpf})" : ($commonData->cnpj ? " ({$commonData->cnpj})" : '')),
                     'value' => $customer->id,
                     'label' => $name,
                 ];
@@ -323,11 +326,11 @@ class CustomerService extends AbstractBaseService
                 return [
                     'ID' => $customer->id,
                     'Tipo' => $commonData->type === 'individual' ? 'PF' : 'PJ',
-                    'Nome/Razão Social' => $commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name),
+                    'Nome/Razão Social' => $commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name),
                     'CPF/CNPJ' => $commonData->cpf ?: $commonData->cnpj,
                     'Email' => $contact->email_personal ?: $contact->email_business,
                     'Telefone' => $contact->phone_personal ?: $contact->phone_business,
-                    'Cidade/UF' => ($address->city ?? '') . '/' . ($address->state ?? ''),
+                    'Cidade/UF' => ($address->city ?? '').'/'.($address->state ?? ''),
                     'Status' => $customer->status === 'active' ? 'Ativo' : 'Inativo',
                     'Data Cadastro' => $customer->created_at->format('d/m/Y'),
                 ];
@@ -342,21 +345,21 @@ class CustomerService extends AbstractBaseService
     private function validateForCreate(CustomerDTO $dto): ServiceResult
     {
         // Validação de CPF/CNPJ único por tenant
-        if (!empty($dto->cpf)) {
-            if (!$this->customerRepository->isCpfUnique($dto->cpf)) {
+        if (! empty($dto->cpf)) {
+            if (! $this->customerRepository->isCpfUnique($dto->cpf)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'CPF já cadastrado para este tenant.');
             }
         }
 
-        if (!empty($dto->cnpj)) {
-            if (!$this->customerRepository->isCnpjUnique($dto->cnpj)) {
+        if (! empty($dto->cnpj)) {
+            if (! $this->customerRepository->isCnpjUnique($dto->cnpj)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'CNPJ já cadastrado para este tenant.');
             }
         }
 
         // Validação de Email único por tenant
-        if (!empty($dto->email)) {
-            if (!$this->customerRepository->isEmailUnique($dto->email)) {
+        if (! empty($dto->email)) {
+            if (! $this->customerRepository->isEmailUnique($dto->email)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Email já cadastrado para este tenant.');
             }
         }
@@ -367,21 +370,21 @@ class CustomerService extends AbstractBaseService
     private function validateForUpdate(Customer $customer, CustomerDTO $dto): ServiceResult
     {
         // Validação de CPF/CNPJ único por tenant (exceto o próprio cliente)
-        if (!empty($dto->cpf)) {
-            if (!$this->customerRepository->isCpfUnique($dto->cpf, $customer->id)) {
+        if (! empty($dto->cpf)) {
+            if (! $this->customerRepository->isCpfUnique($dto->cpf, $customer->id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'CPF já cadastrado para outro cliente neste tenant.');
             }
         }
 
-        if (!empty($dto->cnpj)) {
-            if (!$this->customerRepository->isCnpjUnique($dto->cnpj, $customer->id)) {
+        if (! empty($dto->cnpj)) {
+            if (! $this->customerRepository->isCnpjUnique($dto->cnpj, $customer->id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'CNPJ já cadastrado para outro cliente neste tenant.');
             }
         }
 
         // Validação de Email único por tenant (exceto o próprio cliente)
-        if (!empty($dto->email)) {
-            if (!$this->customerRepository->isEmailUnique($dto->email, $customer->id)) {
+        if (! empty($dto->email)) {
+            if (! $this->customerRepository->isEmailUnique($dto->email, $customer->id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Email já cadastrado para outro cliente neste tenant.');
             }
         }

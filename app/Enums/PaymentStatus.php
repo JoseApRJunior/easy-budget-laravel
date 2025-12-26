@@ -155,13 +155,75 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     /**
      * Retorna opções formatadas para formulários.
      */
-    public static function getOptions(): array
+    public static function getOptions(bool $includeFinished = true): array
     {
         $options = [];
         foreach (self::cases() as $status) {
+            if (! $includeFinished && $status->isFinished()) {
+                continue;
+            }
             $options[$status->value] = $status->getDescription();
         }
+
         return $options;
+    }
+
+    /**
+     * Retorna status ordenados.
+     */
+    public static function getOrdered(bool $includeFinished = true): array
+    {
+        $ordered = [
+            self::PENDING,
+            self::PROCESSING,
+            self::COMPLETED,
+            self::FAILED,
+            self::REFUNDED,
+        ];
+
+        if (! $includeFinished) {
+            return array_filter($ordered, fn ($status) => ! $status->isFinished());
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * Retorna metadados completos.
+     */
+    public function getMetadata(): array
+    {
+        return [
+            'description' => $this->getDescription(),
+            'color' => $this->getColor(),
+            'icon' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+        ];
+    }
+
+    /**
+     * Calcula métricas de status.
+     */
+    public static function calculateMetrics(array $statuses): array
+    {
+        $total = count($statuses);
+        if ($total === 0) {
+            return [];
+        }
+
+        $counts = array_count_values(array_map(fn ($s) => $s->value, $statuses));
+        $metrics = [];
+
+        foreach (self::cases() as $case) {
+            $count = $counts[$case->value] ?? 0;
+            $metrics[$case->value] = [
+                'count' => $count,
+                'percentage' => ($count / $total) * 100,
+            ];
+        }
+
+        return $metrics;
     }
 
     /**
@@ -174,6 +236,7 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
                 return $case;
             }
         }
+
         return null;
     }
 }

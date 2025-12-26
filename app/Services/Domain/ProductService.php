@@ -7,12 +7,11 @@ namespace App\Services\Domain;
 use App\DTOs\Product\ProductDTO;
 use App\Enums\OperationStatus;
 use App\Models\Product;
-use App\Repositories\ProductRepository;
 use App\Repositories\ProductInventoryRepository;
+use App\Repositories\ProductRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -49,6 +48,7 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $stats = $this->repository->getDashboardStats();
+
             return $this->success($stats, 'Estatísticas de produtos obtidas com sucesso');
         }, 'Erro ao obter estatísticas de produtos.');
     }
@@ -72,7 +72,7 @@ class ProductService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku, $with, $withTrashed) {
             $product = $this->repository->findBySku($sku, $with, $withTrashed);
 
-            if (!$product) {
+            if (! $product) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
                     "Produto com SKU {$sku} não encontrado",
@@ -119,7 +119,7 @@ class ProductService extends AbstractBaseService
             $product = DB::transaction(function () use ($sku, $dto, $removeImage) {
                 $product = $this->repository->findBySku($sku);
 
-                if (!$product) {
+                if (! $product) {
                     throw new Exception("Produto com SKU {$sku} não encontrado");
                 }
 
@@ -141,6 +141,7 @@ class ProductService extends AbstractBaseService
 
                 // 2. Atualizar
                 $this->repository->update($product->id, $data);
+
                 return $product->fresh();
             });
 
@@ -154,21 +155,22 @@ class ProductService extends AbstractBaseService
             $product = DB::transaction(function () use ($sku) {
                 $product = $this->repository->findBySku($sku);
 
-                if (!$product) {
+                if (! $product) {
                     throw new Exception("Produto com SKU {$sku} não encontrado");
                 }
 
-                if (!$this->repository->canBeDeactivatedOrDeleted($product->id)) {
+                if (! $this->repository->canBeDeactivatedOrDeleted($product->id)) {
                     throw new Exception('Produto não pode ser desativado/ativado pois está em uso em serviços.');
                 }
 
-                $newStatus = !$product->active;
+                $newStatus = ! $product->active;
                 $this->repository->updateStatus($product->id, $newStatus);
 
                 return $product->fresh();
             });
 
             $message = $product->active ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
+
             return $this->success($product, $message);
         }, 'Erro ao alterar status do produto.');
     }
@@ -179,11 +181,11 @@ class ProductService extends AbstractBaseService
             DB::transaction(function () use ($sku) {
                 $product = $this->repository->findBySku($sku);
 
-                if (!$product) {
+                if (! $product) {
                     throw new Exception("Produto com SKU {$sku} não encontrado");
                 }
 
-                if (!$this->repository->canBeDeactivatedOrDeleted($product->id)) {
+                if (! $this->repository->canBeDeactivatedOrDeleted($product->id)) {
                     throw new Exception('Produto não pode ser excluído pois está em uso em serviços.');
                 }
 
@@ -216,11 +218,12 @@ class ProductService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku) {
             $product = $this->repository->findBySku($sku, [], true);
 
-            if (!$product || !$product->trashed()) {
+            if (! $product || ! $product->trashed()) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Produto não encontrado ou não está excluído');
             }
 
             $this->repository->restore($product->id);
+
             return $this->success($product, 'Produto restaurado com sucesso');
         }, 'Erro ao restaurar produto.');
     }
@@ -242,7 +245,6 @@ class ProductService extends AbstractBaseService
         }, 'Erro ao restaurar produtos.');
     }
 
-
     public function getFilteredProducts(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
@@ -253,6 +255,7 @@ class ProductService extends AbstractBaseService
             );
 
             Log::info('Produtos carregados', ['total' => $paginator->total()]);
+
             return $paginator;
         }, 'Erro ao carregar produtos.');
     }
@@ -261,33 +264,41 @@ class ProductService extends AbstractBaseService
 
     private function uploadProductImage($imageFile): ?string
     {
-        if (!$imageFile) return null;
+        if (! $imageFile) {
+            return null;
+        }
 
         $tenantId = $this->tenantId();
-        $path     = 'products/' . ($tenantId ?? 'unknown');
-        $filename = Str::random(40) . '.' . $imageFile->getClientOriginalExtension();
+        $path = 'products/'.($tenantId ?? 'unknown');
+        $filename = Str::random(40).'.'.$imageFile->getClientOriginalExtension();
 
-        if (!Storage::disk('public')->exists($path)) {
+        if (! Storage::disk('public')->exists($path)) {
             Storage::disk('public')->makeDirectory($path);
         }
 
         $imageFile->storePubliclyAs($path, $filename, 'public');
-        return $path . '/' . $filename;
+
+        return $path.'/'.$filename;
     }
 
     private function resolveRelativeStoragePath(?string $image): ?string
     {
-        if (empty($image)) return null;
+        if (empty($image)) {
+            return null;
+        }
         $trimmed = ltrim($image, '/');
         if (Str::startsWith($trimmed, 'storage/')) {
             return Str::after($trimmed, 'storage/');
         }
+
         return $trimmed;
     }
 
     private function deletePhysicalImage(?string $image): void
     {
-        if (!$image) return;
+        if (! $image) {
+            return;
+        }
 
         $relative = $this->resolveRelativeStoragePath($image);
         if ($relative && Storage::disk('public')->exists($relative)) {

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\DTOs\Provider\ProviderDTO;
 use App\Models\Provider;
-use App\Models\User;
 use App\Repositories\ProviderRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use App\DTOs\Provider\ProviderDTO;
 
 /**
  * Service de domínio para operações CRUD do Provider.
@@ -62,10 +61,10 @@ class ProviderService extends AbstractBaseService
                 'commonData',
                 'contact',
                 'address',
-                'businessData'
+                'businessData',
             ]);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
@@ -80,6 +79,7 @@ class ProviderService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             $provider = $this->providerRepository->createFromDTO($dto);
+
             return ServiceResult::success($provider, 'Provider criado com sucesso.');
         }, 'Erro ao criar provider.');
     }
@@ -92,7 +92,7 @@ class ProviderService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $dto) {
             $provider = $this->providerRepository->updateFromDTO($id, $dto);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Provider não encontrado para atualização.');
             }
 
@@ -107,6 +107,7 @@ class ProviderService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $stats = $this->providerRepository->getDashboardStats();
+
             return ServiceResult::success($stats, 'Dados do dashboard obtidos com sucesso.');
         }, 'Erro ao obter dados do dashboard do provider.');
     }

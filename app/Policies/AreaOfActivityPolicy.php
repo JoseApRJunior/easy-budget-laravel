@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\AreaOfActivity;
 use App\Models\User;
-use App\Models\Activity;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ActivityPolicy
+class AreaOfActivityPolicy
 {
     use HandlesAuthorization;
 
@@ -21,7 +21,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can view the activity.
      */
-    public function view(User $user, Activity $activity): bool
+    public function view(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities');
     }
@@ -37,7 +37,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can update the activity.
      */
-    public function update(User $user, Activity $activity): bool
+    public function update(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities');
     }
@@ -45,7 +45,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can delete the activity.
      */
-    public function delete(User $user, Activity $activity): bool
+    public function delete(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities');
     }
@@ -53,7 +53,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can restore the activity.
      */
-    public function restore(User $user, Activity $activity): bool
+    public function restore(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities');
     }
@@ -61,7 +61,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can permanently delete the activity.
      */
-    public function forceDelete(User $user, Activity $activity): bool
+    public function forceDelete(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities');
     }
@@ -85,7 +85,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can manage activity pricing.
      */
-    public function managePricing(User $user, Activity $activity): bool
+    public function managePricing(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities') && $user->hasPermission('manage-pricing');
     }
@@ -93,7 +93,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can assign activities to categories.
      */
-    public function assignToCategory(User $user, Activity $activity): bool
+    public function assignToCategory(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities') && $user->hasPermission('manage-categories');
     }
@@ -101,7 +101,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can manage activity products/services.
      */
-    public function manageProducts(User $user, Activity $activity): bool
+    public function manageProducts(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities') && $user->hasPermission('manage-products');
     }
@@ -109,7 +109,7 @@ class ActivityPolicy
     /**
      * Determine whether the user can assign activities to tenants.
      */
-    public function assignToTenant(User $user, Activity $activity): bool
+    public function assignToTenant(User $user, AreaOfActivity $activity): bool
     {
         return $user->hasPermission('manage-activities') && $user->hasPermission('manage-tenants');
     }

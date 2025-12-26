@@ -39,15 +39,15 @@ readonly class WebhookRequestDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'request_id'      => $this->request_id,
-            'type'            => $this->type,
-            'payload'         => $this->payload,
-            'processed'       => $this->processed,
-            'response'        => $this->response,
-            'error_message'   => $this->error_message,
-            'attempts'        => $this->attempts,
+            'request_id' => $this->request_id,
+            'type' => $this->type,
+            'payload' => $this->payload,
+            'processed' => $this->processed,
+            'response' => $this->response,
+            'error_message' => $this->error_message,
+            'attempts' => $this->attempts,
             'last_attempt_at' => $this->last_attempt_at?->toDateTimeString(),
-            'processed_at'    => $this->processed_at?->toDateTimeString(),
+            'processed_at' => $this->processed_at?->toDateTimeString(),
         ];
     }
 }

@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
@@ -41,10 +42,10 @@ class WebhookRequest extends Model
 
     /** @var array<string, string> */
     protected $casts = [
-        'payload'         => 'array',
-        'response'        => 'array',
-        'processed'       => 'boolean',
+        'payload' => 'array',
+        'response' => 'array',
+        'processed' => 'boolean',
         'last_attempt_at' => 'datetime',
-        'processed_at'    => 'datetime',
+        'processed_at' => 'datetime',
     ];
 }

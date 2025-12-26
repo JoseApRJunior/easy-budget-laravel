@@ -31,7 +31,7 @@ class TenantService extends AbstractBaseService
         return $this->safeExecute(function () use ($tenantId) {
             $tenant = $this->tenantRepository->find($tenantId);
 
-            if (!$tenant) {
+            if (! $tenant) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 
@@ -56,7 +56,7 @@ class TenantService extends AbstractBaseService
         return $this->safeExecute(function () use ($tenantId) {
             $tenant = $this->tenantRepository->find($tenantId);
 
-            if (!$tenant) {
+            if (! $tenant) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 
@@ -83,7 +83,7 @@ class TenantService extends AbstractBaseService
         return $this->safeExecute(function () use ($tenantId) {
             $tenant = $this->tenantRepository->find($tenantId);
 
-            if (!$tenant) {
+            if (! $tenant) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 

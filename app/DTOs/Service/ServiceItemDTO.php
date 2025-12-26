@@ -30,8 +30,8 @@ readonly class ServiceItemDTO extends AbstractDTO
         return [
             'product_id' => $this->product_id,
             'unit_value' => $this->unit_value,
-            'quantity'   => $this->quantity,
-            'tenant_id'  => $this->tenant_id,
+            'quantity' => $this->quantity,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

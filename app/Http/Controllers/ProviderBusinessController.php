@@ -10,7 +10,6 @@ use App\Http\Requests\ProviderBusinessUpdateRequest;
 use App\Models\Provider;
 use App\Services\Application\ProviderManagementService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
@@ -33,7 +32,7 @@ class ProviderBusinessController extends Controller
     {
         $result = $this->providerManagementService->getProviderForUpdate();
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect('/provider')
                 ->with('error', $result->getMessage());
         }
@@ -41,9 +40,9 @@ class ProviderBusinessController extends Controller
         $data = $result->getData();
 
         return view('pages.provider.business.edit', [
-            'provider'          => $data['provider'],
+            'provider' => $data['provider'],
             'areas_of_activity' => $data['areas_of_activity'],
-            'professions'       => $data['professions'],
+            'professions' => $data['professions'],
         ]);
     }
 

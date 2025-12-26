@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Core\Contracts;
@@ -12,6 +13,8 @@ use App\Support\ServiceResult;
 interface BatchServiceInterface
 {
     public function updateMany(array $ids, array $data): ServiceResult;
+
     public function deleteMany(array $ids): ServiceResult;
+
     public function deleteByCriteria(array $criteria): ServiceResult;
 }

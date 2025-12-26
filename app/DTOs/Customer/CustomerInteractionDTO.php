@@ -51,21 +51,21 @@ readonly class CustomerInteractionDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'customer_id'      => $this->customer_id,
-            'user_id'          => $this->user_id,
-            'type'             => $this->type,
-            'title'            => $this->title,
-            'direction'        => $this->direction,
+            'customer_id' => $this->customer_id,
+            'user_id' => $this->user_id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'direction' => $this->direction,
             'interaction_date' => $this->interaction_date->toDateTimeString(),
-            'description'      => $this->description,
+            'description' => $this->description,
             'duration_minutes' => $this->duration_minutes,
-            'outcome'          => $this->outcome,
-            'next_action'      => $this->next_action,
+            'outcome' => $this->outcome,
+            'next_action' => $this->next_action,
             'next_action_date' => $this->next_action_date?->toDateTimeString(),
-            'attachments'      => $this->attachments,
-            'metadata'         => $this->metadata,
-            'notify_customer'  => $this->notify_customer,
-            'is_active'        => $this->is_active,
+            'attachments' => $this->attachments,
+            'metadata' => $this->metadata,
+            'notify_customer' => $this->notify_customer,
+            'is_active' => $this->is_active,
         ];
     }
 }

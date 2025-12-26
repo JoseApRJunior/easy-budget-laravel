@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\DTOs\Schedule;
 
 use App\DTOs\AbstractDTO;
-use Carbon\Carbon;
 
 readonly class ScheduleDTO extends AbstractDTO
 {

@@ -25,9 +25,6 @@ readonly class ProductDTO extends AbstractDTO
 
     /**
      * Cria uma instância de ProductDTO a partir de um array de dados validados.
-     *
-     * @param array $data
-     * @return self
      */
     public static function fromRequest(array $data): self
     {

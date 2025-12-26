@@ -44,17 +44,17 @@ readonly class PaymentDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'invoice_id'             => $this->invoice_id,
-            'customer_id'            => $this->customer_id,
-            'status'                 => $this->status->value,
-            'method'                 => $this->method,
-            'amount'                 => $this->amount,
+            'invoice_id' => $this->invoice_id,
+            'customer_id' => $this->customer_id,
+            'status' => $this->status->value,
+            'method' => $this->method,
+            'amount' => $this->amount,
             'gateway_transaction_id' => $this->gateway_transaction_id,
-            'gateway_response'       => $this->gateway_response,
-            'processed_at'           => $this->processed_at?->toDateTimeString(),
-            'confirmed_at'           => $this->confirmed_at?->toDateTimeString(),
-            'notes'                  => $this->notes,
-            'tenant_id'              => $this->tenant_id,
+            'gateway_response' => $this->gateway_response,
+            'processed_at' => $this->processed_at?->toDateTimeString(),
+            'confirmed_at' => $this->confirmed_at?->toDateTimeString(),
+            'notes' => $this->notes,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

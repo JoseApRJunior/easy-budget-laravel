@@ -2,7 +2,7 @@
 
 return [
 
-    'directories'    => [
+    'directories' => [
 
         /*
          * Here you can specify which directories need to be cleanup. All files older than

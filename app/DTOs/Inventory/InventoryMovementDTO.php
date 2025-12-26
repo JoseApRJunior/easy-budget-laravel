@@ -38,15 +38,15 @@ readonly class InventoryMovementDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'product_id'        => $this->product_id,
-            'type'              => $this->type,
-            'quantity'          => $this->quantity,
+            'product_id' => $this->product_id,
+            'type' => $this->type,
+            'quantity' => $this->quantity,
             'previous_quantity' => $this->previous_quantity,
-            'new_quantity'      => $this->new_quantity,
-            'reason'            => $this->reason,
-            'reference_id'      => $this->reference_id,
-            'reference_type'    => $this->reference_type,
-            'tenant_id'         => $this->tenant_id,
+            'new_quantity' => $this->new_quantity,
+            'reason' => $this->reason,
+            'reference_id' => $this->reference_id,
+            'reference_type' => $this->reference_type,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

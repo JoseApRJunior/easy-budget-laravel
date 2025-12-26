@@ -43,17 +43,17 @@ readonly class BudgetNotificationDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'budget_id'     => $this->budget_id,
-            'type'          => $this->type,
-            'channel'       => $this->channel,
-            'recipient'     => $this->recipient,
-            'subject'       => $this->subject,
-            'content'       => $this->content,
-            'status'        => $this->status,
-            'sent_at'       => $this->sent_at?->toDateTimeString(),
+            'budget_id' => $this->budget_id,
+            'type' => $this->type,
+            'channel' => $this->channel,
+            'recipient' => $this->recipient,
+            'subject' => $this->subject,
+            'content' => $this->content,
+            'status' => $this->status,
+            'sent_at' => $this->sent_at?->toDateTimeString(),
             'error_message' => $this->error_message,
-            'metadata'      => $this->metadata,
-            'tenant_id'     => $this->tenant_id,
+            'metadata' => $this->metadata,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

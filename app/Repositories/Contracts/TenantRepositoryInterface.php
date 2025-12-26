@@ -21,18 +21,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * - Implementa Global Scope para filtrar dados automaticamente
  * - Garante isolamento completo de dados entre tenants
  * - Ideal para entidades específicas de cada empresa (clientes, produtos, etc.)
- *
- * @package App\Repositories\Contracts
  */
 interface TenantRepositoryInterface extends BaseRepositoryInterface
 {
     /**
      * Busca registros com filtros avançados específicos do tenant.
      *
-     * @param array<string, mixed> $criteria Critérios de filtro.
-     * @param array<string, string>|null $orderBy Ordenação ['campo' => 'asc|desc'].
-     * @param int|null $limit Limite de registros.
-     * @param int|null $offset Offset para paginação.
+     * @param  array<string, mixed>  $criteria  Critérios de filtro.
+     * @param  array<string, string>|null  $orderBy  Ordenação ['campo' => 'asc|desc'].
+     * @param  int|null  $limit  Limite de registros.
+     * @param  int|null  $offset  Offset para paginação.
      * @return Collection<Model> Registros filtrados do tenant atual.
      *
      * @example
@@ -50,17 +48,16 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Retorna registros paginados com filtros avançados.
      *
-     * @param array<string, mixed> $filters Filtros a aplicar (ex: ['search' => 'termo', 'active' => true, 'per_page' => 20])
-     * @param int $perPage Número padrão de itens por página (10)
-     * @param array<string> $with Relacionamentos para eager loading (ex: ['category', 'inventory'])
-     * @param array<string, string>|null $orderBy Ordenação personalizada (ex: ['name' => 'asc', 'created_at' => 'desc'])
+     * @param  array<string, mixed>  $filters  Filtros a aplicar (ex: ['search' => 'termo', 'active' => true, 'per_page' => 20])
+     * @param  int  $perPage  Número padrão de itens por página (10)
+     * @param  array<string>  $with  Relacionamentos para eager loading (ex: ['category', 'inventory'])
+     * @param  array<string, string>|null  $orderBy  Ordenação personalizada (ex: ['name' => 'asc', 'created_at' => 'desc'])
      * @return LengthAwarePaginator Resultado paginado
      *
      * @example Uso básico:
      * ```php
      * $results = $repository->getPaginated();
      * ```
-     *
      * @example Com filtros:
      * ```php
      * $results = $repository->getPaginated([
@@ -69,12 +66,10 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      *     'per_page' => 20
      * ]);
      * ```
-     *
      * @example Com eager loading:
      * ```php
      * $results = $repository->getPaginated([], 15, ['category', 'inventory']);
      * ```
-     *
      * @example Com ordenação customizada:
      * ```php
      * $results = $repository->getPaginated([], 15, [], ['created_at' => 'desc', 'name' => 'asc']);
@@ -90,7 +85,7 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Conta registros do tenant atual com filtros opcionais.
      *
-     * @param array<string, mixed> $filters Filtros para contagem.
+     * @param  array<string, mixed>  $filters  Filtros para contagem.
      * @return int Total de registros encontrados.
      *
      * @example
@@ -101,8 +96,8 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca registros por slug único dentro do tenant atual.
      *
-     * @param string $slug Slug único do registro.
-     * @param bool $withTrashed Se deve incluir registros deletados (soft delete).
+     * @param  string  $slug  Slug único do registro.
+     * @param  bool  $withTrashed  Se deve incluir registros deletados (soft delete).
      * @return Model|null Registro encontrado ou null.
      *
      * @example
@@ -113,8 +108,8 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca registros por código único dentro do tenant atual.
      *
-     * @param string $code Código único do registro.
-     * @param bool $withTrashed Se deve incluir registros deletados (soft delete).
+     * @param  string  $code  Código único do registro.
+     * @param  bool  $withTrashed  Se deve incluir registros deletados (soft delete).
      * @return Model|null Registro encontrado ou null.
      *
      * @example
@@ -125,9 +120,9 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Verifica se um valor de campo único já existe dentro do tenant atual.
      *
-     * @param string $field Campo a verificar unicidade.
-     * @param mixed $value Valor a ser verificado.
-     * @param int|null $excludeId ID a ser excluído da verificação (para updates).
+     * @param  string  $field  Campo a verificar unicidade.
+     * @param  mixed  $value  Valor a ser verificado.
+     * @param  int|null  $excludeId  ID a ser excluído da verificação (para updates).
      * @return bool True se o valor já existe.
      *
      * @example
@@ -138,18 +133,17 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
      *
-     * @param string $field Campo para busca.
-     * @param mixed $value Valor do campo.
-     * @param array $with Relacionamentos para carregar.
-     * @param bool $withTrashed Se deve incluir registros deletados.
-     * @return Model|null
+     * @param  string  $field  Campo para busca.
+     * @param  mixed  $value  Valor do campo.
+     * @param  array  $with  Relacionamentos para carregar.
+     * @param  bool  $withTrashed  Se deve incluir registros deletados.
      */
-    public function findOneBy( string $field, mixed $value, array $with = [], bool $withTrashed = false ): ?Model;
+    public function findOneBy(string $field, mixed $value, array $with = [], bool $withTrashed = false): ?Model;
 
     /**
      * Busca registros por múltiplos IDs dentro do tenant atual.
      *
-     * @param array<int> $ids Lista de IDs a buscar.
+     * @param  array<int>  $ids  Lista de IDs a buscar.
      * @return Collection<Model> Registros encontrados.
      *
      * @example
@@ -160,7 +154,7 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Remove múltiplos registros por IDs dentro do tenant atual.
      *
-     * @param array<int> $ids Lista de IDs a remover.
+     * @param  array<int>  $ids  Lista de IDs a remover.
      * @return int Número de registros removidos.
      *
      * @example
@@ -171,10 +165,10 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca registros por nome/descrição com pesquisa parcial.
      *
-     * @param string $search Termo de busca.
-     * @param array<string, mixed> $filters Filtros adicionais.
-     * @param array<string, string>|null $orderBy Ordenação.
-     * @param int|null $limit Limite de resultados.
+     * @param  string  $search  Termo de busca.
+     * @param  array<string, mixed>  $filters  Filtros adicionais.
+     * @param  array<string, string>|null  $orderBy  Ordenação.
+     * @param  int|null  $limit  Limite de resultados.
      * @return Collection<Model> Registros encontrados.
      *
      * @example
@@ -190,9 +184,9 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca registros ativos (não deletados) do tenant atual.
      *
-     * @param array<string, mixed> $filters Filtros adicionais.
-     * @param array<string, string>|null $orderBy Ordenação.
-     * @param int|null $limit Limite de resultados.
+     * @param  array<string, mixed>  $filters  Filtros adicionais.
+     * @param  array<string, string>|null  $orderBy  Ordenação.
+     * @param  int|null  $limit  Limite de resultados.
      * @return Collection<Model> Registros ativos encontrados.
      *
      * @example
@@ -207,9 +201,9 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca registros deletados (soft delete) do tenant atual.
      *
-     * @param array<string, mixed> $filters Filtros adicionais.
-     * @param array<string, string>|null $orderBy Ordenação.
-     * @param int|null $limit Limite de resultados.
+     * @param  array<string, mixed>  $filters  Filtros adicionais.
+     * @param  array<string, string>|null  $orderBy  Ordenação.
+     * @param  int|null  $limit  Limite de resultados.
      * @return Collection<Model> Registros deletados encontrados.
      *
      * @example
@@ -224,7 +218,7 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Restaura registros deletados (soft delete) por IDs.
      *
-     * @param array<int> $ids Lista de IDs a restaurar.
+     * @param  array<int>  $ids  Lista de IDs a restaurar.
      * @return int Número de registros restaurados.
      *
      * @example

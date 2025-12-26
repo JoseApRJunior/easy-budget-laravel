@@ -23,7 +23,7 @@ class ProviderRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Provider();
+        return new Provider;
     }
 
     /**
@@ -44,9 +44,6 @@ class ProviderRepository extends AbstractTenantRepository
 
     /**
      * Busca provedor por user_id dentro do tenant atual.
-     *
-     * @param int $userId
-     * @return Provider|null
      */
     public function findByUserId(int $userId): ?Provider
     {
@@ -55,10 +52,6 @@ class ProviderRepository extends AbstractTenantRepository
 
     /**
      * Busca provedor por slug dentro do tenant atual.
-     *
-     * @param string $slug
-     * @param bool $withTrashed
-     * @return Provider|null
      */
     public function findBySlug(string $slug, bool $withTrashed = false): ?Provider
     {
@@ -87,7 +80,7 @@ class ProviderRepository extends AbstractTenantRepository
      */
     public function isEmailAvailable(string $email, int $excludeUserId): bool
     {
-        return !User::query()
+        return ! User::query()
             ->where('email', $email)
             ->where('id', '!=', $excludeUserId)
             ->exists();
@@ -120,9 +113,9 @@ class ProviderRepository extends AbstractTenantRepository
     {
         return [
             'total_customers' => \App\Models\Customer::query()->count(),
-            'total_budgets'   => \App\Models\Budget::query()->count(),
-            'total_invoices'  => \App\Models\Invoice::query()->count(),
-            'total_services'  => \App\Models\Service::query()->count(),
+            'total_budgets' => \App\Models\Budget::query()->count(),
+            'total_invoices' => \App\Models\Invoice::query()->count(),
+            'total_services' => \App\Models\Service::query()->count(),
         ];
     }
 
@@ -137,7 +130,7 @@ class ProviderRepository extends AbstractTenantRepository
             ->with(['tenant', 'user', 'commonData', 'address', 'planSubscriptions.plan'])
             ->withCount(['customers', 'budgets', 'services', 'invoices']);
 
-        if (isset($filters['search']) && !empty($filters['search'])) {
+        if (isset($filters['search']) && ! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 // Busca no usuário associado
@@ -169,11 +162,11 @@ class ProviderRepository extends AbstractTenantRepository
             });
         }
 
-        if (isset($filters['tenant_id']) && !empty($filters['tenant_id'])) {
+        if (isset($filters['tenant_id']) && ! empty($filters['tenant_id'])) {
             $query->where('tenant_id', $filters['tenant_id']);
         }
 
-        if (isset($filters['plan_id']) && !empty($filters['plan_id'])) {
+        if (isset($filters['plan_id']) && ! empty($filters['plan_id'])) {
             $query->where('plan_id', $filters['plan_id']);
         }
 
@@ -264,7 +257,7 @@ class ProviderRepository extends AbstractTenantRepository
                 'name' => trim($name),
                 'email' => $email,
                 'phone' => $phone,
-                'document' => $document
+                'document' => $document,
             ];
         })->toArray();
     }

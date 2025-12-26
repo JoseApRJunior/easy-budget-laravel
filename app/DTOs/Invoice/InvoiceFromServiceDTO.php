@@ -41,14 +41,14 @@ readonly class InvoiceFromServiceDTO extends AbstractDTO
     {
         return [
             'service_code' => $this->service_code,
-            'issue_date'   => $this->issue_date?->toDateString(),
-            'due_date'     => $this->due_date?->toDateString(),
-            'notes'        => $this->notes,
-            'items'        => $this->items,
+            'issue_date' => $this->issue_date?->toDateString(),
+            'due_date' => $this->due_date?->toDateString(),
+            'notes' => $this->notes,
+            'items' => $this->items,
             'is_automatic' => $this->is_automatic,
-            'status'       => $this->status?->value,
-            'discount'     => $this->discount,
-            'tenant_id'    => $this->tenant_id,
+            'status' => $this->status?->value,
+            'discount' => $this->discount,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

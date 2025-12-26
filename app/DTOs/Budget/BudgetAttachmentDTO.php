@@ -38,15 +38,15 @@ readonly class BudgetAttachmentDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'budget_id'         => $this->budget_id,
-            'filename'          => $this->filename,
+            'budget_id' => $this->budget_id,
+            'filename' => $this->filename,
             'original_filename' => $this->original_filename,
-            'mime_type'         => $this->mime_type,
-            'size'              => $this->size,
-            'path'              => $this->path,
-            'description'       => $this->description,
-            'is_public'         => $this->is_public,
-            'tenant_id'         => $this->tenant_id,
+            'mime_type' => $this->mime_type,
+            'size' => $this->size,
+            'path' => $this->path,
+            'description' => $this->description,
+            'is_public' => $this->is_public,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

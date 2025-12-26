@@ -5,19 +5,16 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Enums\OperationStatus;
-use App\Enums\TokenType;
 use App\Events\EmailVerificationRequested;
 use App\Models\User;
 use App\Models\UserConfirmationToken;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
-use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
  * Serviço para gerenciamento de verificação de e-mail.
@@ -41,9 +38,11 @@ use Illuminate\Support\Str;
  */
 class EmailVerificationService extends AbstractBaseService
 {
-    protected UserConfirmationTokenService    $userConfirmationTokenService;
+    protected UserConfirmationTokenService $userConfirmationTokenService;
+
     protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
-    protected UserRepository                  $userRepository;
+
+    protected UserRepository $userRepository;
 
     public function __construct(
         UserConfirmationTokenService $userConfirmationTokenService,
@@ -51,15 +50,15 @@ class EmailVerificationService extends AbstractBaseService
         UserRepository $userRepository,
     ) {
         parent::__construct($userConfirmationTokenRepository);
-        $this->userConfirmationTokenService    = $userConfirmationTokenService;
+        $this->userConfirmationTokenService = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
-        $this->userRepository                  = $userRepository;
+        $this->userRepository = $userRepository;
     }
 
     /**
      * Cria token de confirmação para verificação de e-mail.
      *
-     * @param User $user Usuário que receberá o token de verificação
+     * @param  User  $user  Usuário que receberá o token de verificação
      * @return ServiceResult Resultado da operação
      */
     public function createConfirmationToken(User $user): ServiceResult
@@ -67,19 +66,19 @@ class EmailVerificationService extends AbstractBaseService
         return $this->safeExecute(function () use ($user) {
             Log::info('Iniciando criação de token de verificação', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
+                'email' => $user->email,
             ]);
 
             // Usar método de conveniência para criar token de verificação de e-mail
             $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken($user);
 
-            if (!$tokenResult->isSuccess()) {
+            if (! $tokenResult->isSuccess()) {
                 return $tokenResult;
             }
 
             // Extrair token do resultado para disparar evento
             $tokenData = $tokenResult->getData();
-            $token     = $tokenData['token'];
+            $token = $tokenData['token'];
 
             // Disparar evento para envio de e-mail de verificação
             Event::dispatch(new EmailVerificationRequested(
@@ -99,20 +98,20 @@ class EmailVerificationService extends AbstractBaseService
      * que apenas um token ativo exista por usuário e que tokens antigos
      * sejam removidos automaticamente.
      *
-     * @param User $user Usuário que receberá o novo e-mail de verificação
+     * @param  User  $user  Usuário que receberá o novo e-mail de verificação
      * @return ServiceResult Resultado da operação
      */
-    public function resendConfirmationEmail( User $user ): ServiceResult
+    public function resendConfirmationEmail(User $user): ServiceResult
     {
         try {
             // Verificar se usuário já está verificado
-            if ( $user->hasVerifiedEmail() ) {
-                Log::info( 'Tentativa de reenvio de e-mail para usuário já verificado', [
-                    'user_id'           => $user->id,
-                    'tenant_id'         => $user->tenant_id,
-                    'email'             => $user->email,
+            if ($user->hasVerifiedEmail()) {
+                Log::info('Tentativa de reenvio de e-mail para usuário já verificado', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'email' => $user->email,
                     'email_verified_at' => $user->email_verified_at,
-                ] );
+                ]);
 
                 return ServiceResult::error(
                     OperationStatus::CONFLICT,
@@ -121,12 +120,12 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // Verificar se usuário está ativo
-            if ( !$user->is_active ) {
-                Log::warning( 'Tentativa de reenvio de e-mail para usuário inativo', [
-                    'user_id'   => $user->id,
+            if (! $user->is_active) {
+                Log::warning('Tentativa de reenvio de e-mail para usuário inativo', [
+                    'user_id' => $user->id,
                     'tenant_id' => $user->tenant_id,
-                    'email'     => $user->email,
-                ] );
+                    'email' => $user->email,
+                ]);
 
                 return ServiceResult::error(
                     OperationStatus::CONFLICT,
@@ -134,36 +133,37 @@ class EmailVerificationService extends AbstractBaseService
                 );
             }
 
-            Log::info( 'Reenviando e-mail de verificação', [
-                'user_id'   => $user->id,
+            Log::info('Reenviando e-mail de verificação', [
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-            ] );
+                'email' => $user->email,
+            ]);
 
             // Criar token de verificação usando o novo serviço
-            Log::info( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
-            $tokenResult = $this->createConfirmationToken( $user );
+            Log::info('Criando token de verificação de e-mail...', ['user_id' => $user->id]);
+            $tokenResult = $this->createConfirmationToken($user);
 
-            if ( !$tokenResult->isSuccess() ) {
-                Log::warning( 'Falha ao criar token de verificação', [
+            if (! $tokenResult->isSuccess()) {
+                Log::warning('Falha ao criar token de verificação', [
                     'user_id' => $user->id,
-                    'error'   => $tokenResult->getMessage(),
-                ] );
+                    'error' => $tokenResult->getMessage(),
+                ]);
+
                 return $tokenResult;
             }
 
-            Log::info( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+            Log::info('Token de verificação criado com sucesso', ['user_id' => $user->id]);
 
             return $tokenResult;
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao reenviar e-mail de verificação', [
-                'user_id'   => $user->id,
+        } catch (Exception $e) {
+            Log::error('Erro ao reenviar e-mail de verificação', [
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -177,15 +177,15 @@ class EmailVerificationService extends AbstractBaseService
     /**
      * Busca token de confirmação válido para um usuário.
      *
-     * @param string $token Token de confirmação
+     * @param  string  $token  Token de confirmação
      * @return ServiceResult Resultado da operação
      */
-    public function findValidToken( string $token ): ServiceResult
+    public function findValidToken(string $token): ServiceResult
     {
         try {
-            $confirmationToken = $this->userConfirmationTokenRepository->findByToken( $token );
+            $confirmationToken = $this->userConfirmationTokenRepository->findByToken($token);
 
-            if ( !$confirmationToken ) {
+            if (! $confirmationToken) {
                 return ServiceResult::error(
                     OperationStatus::NOT_FOUND,
                     'Token de verificação não encontrado.',
@@ -193,15 +193,15 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // Verificar se token não expirou
-            if ( $confirmationToken->expires_at->isPast() ) {
+            if ($confirmationToken->expires_at->isPast()) {
                 // Remover token expirado
-                $this->userConfirmationTokenRepository->delete( $confirmationToken->id );
+                $this->userConfirmationTokenRepository->delete($confirmationToken->id);
 
-                Log::info( 'Token expirado removido automaticamente', [
-                    'token_id'   => $confirmationToken->id,
-                    'user_id'    => $confirmationToken->user_id,
+                Log::info('Token expirado removido automaticamente', [
+                    'token_id' => $confirmationToken->id,
+                    'user_id' => $confirmationToken->user_id,
                     'expires_at' => $confirmationToken->expires_at,
-                ] );
+                ]);
 
                 return ServiceResult::error(
                     OperationStatus::CONFLICT,
@@ -210,25 +210,25 @@ class EmailVerificationService extends AbstractBaseService
             }
 
             // Buscar usuário associado ao token
-            $user = $this->userRepository->find( $confirmationToken->user_id );
-            if ( !$user ) {
+            $user = $this->userRepository->find($confirmationToken->user_id);
+            if (! $user) {
                 return ServiceResult::error(
                     OperationStatus::NOT_FOUND,
                     'Usuário associado ao token não encontrado.',
                 );
             }
 
-            return ServiceResult::success( [
+            return ServiceResult::success([
                 'token' => $confirmationToken,
-                'user'  => $user,
-            ], 'Token válido encontrado.' );
+                'user' => $user,
+            ], 'Token válido encontrado.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao buscar token de verificação', [
-                'token' => substr( $token, 0, 10 ) . '...', // Log parcial por segurança
+        } catch (Exception $e) {
+            Log::error('Erro ao buscar token de verificação', [
+                'token' => substr($token, 0, 10).'...', // Log parcial por segurança
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-            ] );
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -242,19 +242,19 @@ class EmailVerificationService extends AbstractBaseService
     /**
      * Remove token após uso bem-sucedido.
      *
-     * @param UserConfirmationToken $token Token a ser removido
+     * @param  UserConfirmationToken  $token  Token a ser removido
      * @return ServiceResult Resultado da operação
      */
-    public function removeToken( UserConfirmationToken $token ): ServiceResult
+    public function removeToken(UserConfirmationToken $token): ServiceResult
     {
         try {
-            $deleted = $this->userConfirmationTokenRepository->delete( $token->id );
+            $deleted = $this->userConfirmationTokenRepository->delete($token->id);
 
-            if ( !$deleted ) {
-                Log::warning( 'Falha ao remover token após uso', [
+            if (! $deleted) {
+                Log::warning('Falha ao remover token após uso', [
                     'token_id' => $token->id,
-                    'user_id'  => $token->user_id,
-                ] );
+                    'user_id' => $token->user_id,
+                ]);
 
                 return ServiceResult::error(
                     OperationStatus::ERROR,
@@ -262,22 +262,22 @@ class EmailVerificationService extends AbstractBaseService
                 );
             }
 
-            Log::info( 'Token removido após uso bem-sucedido', [
+            Log::info('Token removido após uso bem-sucedido', [
                 'token_id' => $token->id,
-                'user_id'  => $token->user_id,
-            ] );
+                'user_id' => $token->user_id,
+            ]);
 
             return ServiceResult::success(
                 null,
                 'Token removido com sucesso.',
             );
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao remover token', [
+        } catch (Exception $e) {
+            Log::error('Erro ao remover token', [
                 'token_id' => $token->id,
-                'user_id'  => $token->user_id,
-                'error'    => $e->getMessage(),
-            ] );
+                'user_id' => $token->user_id,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -300,19 +300,19 @@ class EmailVerificationService extends AbstractBaseService
         try {
             $deletedCount = $this->userConfirmationTokenRepository->deleteExpired();
 
-            Log::info( 'Limpeza de tokens expirados executada', [
+            Log::info('Limpeza de tokens expirados executada', [
                 'tokens_removed' => $deletedCount,
-            ] );
+            ]);
 
-            return ServiceResult::success( [
+            return ServiceResult::success([
                 'tokens_removed' => $deletedCount,
-            ], "Limpeza executada. {$deletedCount} tokens expirados removidos." );
+            ], "Limpeza executada. {$deletedCount} tokens expirados removidos.");
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro na limpeza de tokens expirados', [
+        } catch (Exception $e) {
+            Log::error('Erro na limpeza de tokens expirados', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-            ] );
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
@@ -339,5 +339,4 @@ class EmailVerificationService extends AbstractBaseService
             'updated_at',
         ];
     }
-
 }

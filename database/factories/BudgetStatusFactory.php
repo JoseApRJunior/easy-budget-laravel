@@ -13,14 +13,14 @@ class BudgetStatusFactory extends Factory
 
     public function definition(): array
     {
-        return [ 
-            'name'        => $this->faker->word,
-            'slug'        => $this->faker->unique()->slug,
+        return [
+            'name' => $this->faker->word,
+            'slug' => $this->faker->unique()->slug,
             'description' => $this->faker->sentence,
-            'color'       => $this->faker->hexColor,
-            'icon'        => $this->faker->word . '-icon',
-            'order_index' => $this->faker->numberBetween( 1, 10 ),
-            'is_active'   => $this->faker->boolean,
+            'color' => $this->faker->hexColor,
+            'icon' => $this->faker->word.'-icon',
+            'order_index' => $this->faker->numberBetween(1, 10),
+            'is_active' => $this->faker->boolean,
         ];
     }
 
@@ -32,15 +32,14 @@ class BudgetStatusFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state( fn( array $attributes ) => [ 
-            'name'        => 'Pendente',
-            'slug'        => 'pending',
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Pendente',
+            'slug' => 'pending',
             'description' => 'Status inicial do orçamento',
-            'color'       => '#FFA500',
-            'icon'        => 'pending-icon',
+            'color' => '#FFA500',
+            'icon' => 'pending-icon',
             'order_index' => 1,
-            'is_active'   => true,
-        ] );
+            'is_active' => true,
+        ]);
     }
-
 }

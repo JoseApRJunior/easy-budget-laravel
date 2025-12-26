@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Services\Application\AuditLogService;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
-use App\Services\Application\AuditLogService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -530,7 +530,7 @@ class SettingsApiController extends Controller
                 'message' => 'Teste de integração realizado com sucesso',
                 'data' => [
                     'status' => 'connected',
-                    'response_time' => rand(100, 500) . 'ms',
+                    'response_time' => rand(100, 500).'ms',
                     'last_sync' => now(),
                 ],
             ]);

@@ -6,8 +6,6 @@ namespace App\Repositories;
 
 use App\Models\Permission;
 use Exception;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -26,22 +24,23 @@ class PermissionRepository extends AbstractGlobalRepository
     /**
      * Busca permissão por nome
      *
-     * @param string $name Nome da permissão
+     * @param  string  $name  Nome da permissão
      * @return Permission|null Permissão encontrada ou null
      */
-    public function findByName( string $name ): ?Permission
+    public function findByName(string $name): ?Permission
     {
         try {
-            $permission = Permission::where( 'name', $name )->first();
+            $permission = Permission::where('name', $name)->first();
 
-            $this->logOperation( 'findByName', [
-                'name'  => $name,
-                'found' => $permission !== null
-            ] );
+            $this->logOperation('findByName', [
+                'name' => $name,
+                'found' => $permission !== null,
+            ]);
 
             return $permission;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findByName', $e, [ 'name' => $name ] );
+        } catch (Throwable $e) {
+            $this->logError('findByName', $e, ['name' => $name]);
+
             return null;
         }
     }
@@ -54,15 +53,16 @@ class PermissionRepository extends AbstractGlobalRepository
     public function findAllOrdered(): array
     {
         try {
-            $permissions = Permission::orderBy( 'name' )->get()->toArray();
+            $permissions = Permission::orderBy('name')->get()->toArray();
 
-            $this->logOperation( 'findAllOrdered', [
-                'permissions_count' => count( $permissions )
-            ] );
+            $this->logOperation('findAllOrdered', [
+                'permissions_count' => count($permissions),
+            ]);
 
             return $permissions;
-        } catch ( Throwable $e ) {
-            $this->logError( 'findAllOrdered', $e );
+        } catch (Throwable $e) {
+            $this->logError('findAllOrdered', $e);
+
             return [];
         }
     }
@@ -70,24 +70,25 @@ class PermissionRepository extends AbstractGlobalRepository
     /**
      * Cria uma nova permissão
      *
-     * @param array $data Dados da permissão
+     * @param  array  $data  Dados da permissão
      * @return Permission|false Permissão criada ou false em caso de erro
      */
-    public function createPermission( array $data ): Permission|false
+    public function createPermission(array $data): Permission|false
     {
         try {
-            $permission = new Permission( $data );
+            $permission = new Permission($data);
             $permission->save();
 
-            $this->logOperation( 'createPermission', [
-                'data'          => $data,
+            $this->logOperation('createPermission', [
+                'data' => $data,
                 'permission_id' => $permission->id,
-                'success'       => true
-            ] );
+                'success' => true,
+            ]);
 
             return $permission;
-        } catch ( Throwable $e ) {
-            $this->logError( 'createPermission', $e, [ 'data' => $data ] );
+        } catch (Throwable $e) {
+            $this->logError('createPermission', $e, ['data' => $data]);
+
             return false;
         }
     }
@@ -95,31 +96,33 @@ class PermissionRepository extends AbstractGlobalRepository
     /**
      * Atualiza uma permissão existente
      *
-     * @param int $id ID da permissão
-     * @param array $data Dados para atualização
+     * @param  int  $id  ID da permissão
+     * @param  array  $data  Dados para atualização
      * @return Permission|false Permissão atualizada ou false em caso de erro
      */
-    public function updatePermission( int $id, array $data ): Permission|false
+    public function updatePermission(int $id, array $data): Permission|false
     {
         try {
-            $permission = Permission::find( $id );
+            $permission = Permission::find($id);
 
-            if ( !$permission ) {
-                $this->logError( 'updatePermission', new Exception( 'Permission not found' ), [ 'id' => $id ] );
+            if (! $permission) {
+                $this->logError('updatePermission', new Exception('Permission not found'), ['id' => $id]);
+
                 return false;
             }
 
-            $permission->fill( $data );
+            $permission->fill($data);
             $permission->save();
 
-            $this->logOperation( 'updatePermission', [
-                'id'      => $id,
-                'success' => true
-            ] );
+            $this->logOperation('updatePermission', [
+                'id' => $id,
+                'success' => true,
+            ]);
 
             return $permission;
-        } catch ( Throwable $e ) {
-            $this->logError( 'updatePermission', $e, [ 'id' => $id, 'data' => $data ] );
+        } catch (Throwable $e) {
+            $this->logError('updatePermission', $e, ['id' => $id, 'data' => $data]);
+
             return false;
         }
     }
@@ -127,24 +130,25 @@ class PermissionRepository extends AbstractGlobalRepository
     /**
      * Remove uma permissão
      *
-     * @param int $id ID da permissão
+     * @param  int  $id  ID da permissão
      * @return bool True se removido com sucesso
      */
-    public function deletePermission( int $id ): bool
+    public function deletePermission(int $id): bool
     {
         try {
-            $deleted = Permission::destroy( $id );
+            $deleted = Permission::destroy($id);
 
             $success = $deleted > 0;
 
-            $this->logOperation( 'deletePermission', [
-                'id'      => $id,
-                'success' => $success
-            ] );
+            $this->logOperation('deletePermission', [
+                'id' => $id,
+                'success' => $success,
+            ]);
 
             return $success;
-        } catch ( Throwable $e ) {
-            $this->logError( 'deletePermission', $e, [ 'id' => $id ] );
+        } catch (Throwable $e) {
+            $this->logError('deletePermission', $e, ['id' => $id]);
+
             return false;
         }
     }
@@ -152,26 +156,26 @@ class PermissionRepository extends AbstractGlobalRepository
     /**
      * Verifica se uma permissão possui roles associadas
      *
-     * @param int $permissionId ID da permissão
+     * @param  int  $permissionId  ID da permissão
      * @return bool True se possui roles associadas
      */
-    public function hasAssociatedRoles( int $permissionId ): bool
+    public function hasAssociatedRoles(int $permissionId): bool
     {
         try {
-            $hasRoles = Permission::find( $permissionId )
+            $hasRoles = Permission::find($permissionId)
                 ->roles()
                 ->exists();
 
-            $this->logOperation( 'hasAssociatedRoles', [
+            $this->logOperation('hasAssociatedRoles', [
                 'permission_id' => $permissionId,
-                'has_roles'     => $hasRoles
-            ] );
+                'has_roles' => $hasRoles,
+            ]);
 
             return $hasRoles;
-        } catch ( Throwable $e ) {
-            $this->logError( 'hasAssociatedRoles', $e, [ 'permission_id' => $permissionId ] );
+        } catch (Throwable $e) {
+            $this->logError('hasAssociatedRoles', $e, ['permission_id' => $permissionId]);
+
             return false;
         }
     }
-
 }

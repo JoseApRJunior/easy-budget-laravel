@@ -8,4 +8,3 @@ class CategoryCreated
 {
     public function __construct(public int $categoryId) {}
 }
-

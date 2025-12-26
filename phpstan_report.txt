@@ -1,1 +1,0 @@
-Note: Using configuration file C:\laragon\www\easy-budget-laravel\phpstan.neon.

@@ -5,18 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ServiceStatus;
-use App\Models\Budget;
-use App\Models\Category;
-use App\Models\ServiceItem;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
-use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use TenantScoped, HasFactory;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -63,7 +58,7 @@ class Service extends Model
      */
     protected $attributes = [
         'discount' => 0.0,
-        'total'    => 0.0,
+        'total' => 0.0,
     ];
 
     /**
@@ -72,22 +67,22 @@ class Service extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'                  => 'integer',
-        'budget_id'                  => 'integer',
-        'category_id'                => 'integer',
-        'status'                     => ServiceStatus::class,
+        'tenant_id' => 'integer',
+        'budget_id' => 'integer',
+        'category_id' => 'integer',
+        'status' => ServiceStatus::class,
         'user_confirmation_token_id' => 'integer',
-        'code'                       => 'string',
-        'description'                => 'string',
-        'discount'                   => 'decimal:2',
-        'total'                      => 'decimal:2',
-        'due_date'                   => 'date',
-        'reason'                     => 'string',
-        'pdf_verification_hash'      => 'string',
-        'public_token'               => 'string',
-        'public_expires_at'          => 'datetime',
-        'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'datetime',
+        'code' => 'string',
+        'description' => 'string',
+        'discount' => 'decimal:2',
+        'total' => 'decimal:2',
+        'due_date' => 'date',
+        'reason' => 'string',
+        'pdf_verification_hash' => 'string',
+        'public_token' => 'string',
+        'public_expires_at' => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -96,20 +91,20 @@ class Service extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'                  => 'required|integer|exists:tenants,id',
-            'budget_id'                  => 'required|integer|exists:budgets,id',
-            'category_id'                => 'required|integer|exists:categories,id',
-            'status'                     => 'required|string|in:' . implode( ',', array_column( ServiceStatus::cases(), 'value' ) ),
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'budget_id' => 'required|integer|exists:budgets,id',
+            'category_id' => 'required|integer|exists:categories,id',
+            'status' => 'required|string|in:'.implode(',', array_column(ServiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
-            'code'                       => 'required|string|max:50|unique:services,code',
-            'description'                => 'nullable|string',
-            'discount'                   => 'required|numeric|min:0|max:999999.99',
-            'total'                      => 'required|numeric|min:0|max:999999.99',
-            'due_date'                   => 'nullable|date',
-            'reason'                     => 'nullable|string|max:500',
-            'pdf_verification_hash'      => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
-            'public_token'               => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
-            'public_expires_at'          => 'nullable|date',
+            'code' => 'required|string|max:50|unique:services,code',
+            'description' => 'nullable|string',
+            'discount' => 'required|numeric|min:0|max:999999.99',
+            'total' => 'required|numeric|min:0|max:999999.99',
+            'due_date' => 'nullable|date',
+            'reason' => 'nullable|string|max:500',
+            'pdf_verification_hash' => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
+            'public_token' => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
+            'public_expires_at' => 'nullable|date',
         ];
     }
 
@@ -118,7 +113,7 @@ class Service extends Model
      */
     public function tenant()
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -126,7 +121,7 @@ class Service extends Model
      */
     public function budget()
     {
-        return $this->belongsTo( Budget::class);
+        return $this->belongsTo(Budget::class);
     }
 
     /**
@@ -134,7 +129,7 @@ class Service extends Model
      */
     public function customer()
     {
-        return $this->belongsTo( Customer::class, 'customer_id' );
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     /**
@@ -142,7 +137,7 @@ class Service extends Model
      */
     public function category()
     {
-        return $this->belongsTo( Category::class);
+        return $this->belongsTo(Category::class);
     }
 
     /**
@@ -150,7 +145,7 @@ class Service extends Model
      */
     public function userConfirmationToken()
     {
-        return $this->belongsTo( UserConfirmationToken::class);
+        return $this->belongsTo(UserConfirmationToken::class);
     }
 
     /**
@@ -198,7 +193,7 @@ class Service extends Model
      */
     public function serviceItems()
     {
-        return $this->hasMany( ServiceItem::class);
+        return $this->hasMany(ServiceItem::class);
     }
 
     /**
@@ -206,7 +201,7 @@ class Service extends Model
      */
     public function invoices()
     {
-        return $this->hasMany( Invoice::class);
+        return $this->hasMany(Invoice::class);
     }
 
     /**
@@ -214,7 +209,7 @@ class Service extends Model
      */
     public function schedules()
     {
-        return $this->hasMany( Schedule::class);
+        return $this->hasMany(Schedule::class);
     }
 
     public function canBeEdited(): bool
@@ -222,6 +217,7 @@ class Service extends Model
         $status = $this->status instanceof \App\Enums\ServiceStatus
             ? $this->status
             : \App\Enums\ServiceStatus::fromString((string) $this->status);
+
         return $status?->canEdit() ?? false;
     }
 
@@ -233,9 +229,8 @@ class Service extends Model
     /**
      * Accessor para tratar valores zero-date no updated_at.
      */
-    public function getUpdatedAtAttribute( $value )
+    public function getUpdatedAtAttribute($value)
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : \DateTime::createFromFormat( 'Y-m-d H:i:s', $value );
+        return ($value === '0000-00-00 00:00:00' || empty($value)) ? null : \DateTime::createFromFormat('Y-m-d H:i:s', $value);
     }
-
 }

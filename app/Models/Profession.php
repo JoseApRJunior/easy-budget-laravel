@@ -27,9 +27,9 @@ class Profession extends Model
     ];
 
     protected $casts = [
-        'slug'       => 'string',
-        'name'       => 'string',
-        'is_active'  => 'boolean',
+        'slug' => 'string',
+        'name' => 'string',
+        'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -38,7 +38,7 @@ class Profession extends Model
      * Define as chaves únicas da tabela.
      */
     protected array $uniqueKeys = [
-        'slug' => [ 'slug' ],
+        'slug' => ['slug'],
     ];
 
     /**
@@ -47,21 +47,21 @@ class Profession extends Model
     public static function businessRules(): array
     {
         return [
-            'slug'      => [
+            'slug' => [
                 'required',
                 'string',
                 'max:50',
                 'unique:professions,slug',
-                'regex:/^[a-z0-9-]+$/'
+                'regex:/^[a-z0-9-]+$/',
             ],
-            'name'      => [
+            'name' => [
                 'required',
                 'string',
-                'max:100'
+                'max:100',
             ],
             'is_active' => [
-                'boolean'
-            ]
+                'boolean',
+            ],
         ];
     }
 
@@ -70,15 +70,14 @@ class Profession extends Model
      */
     public function commonData()
     {
-        return $this->hasMany( CommonData::class, 'profession_id' );
+        return $this->hasMany(CommonData::class, 'profession_id');
     }
 
     /**
      * Scope para buscar apenas profissões ativas.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
-
 }

@@ -6,7 +6,4 @@ namespace App\Services\Infrastructure;
 
 use App\Services\Core\Abstracts\AbstractBaseService;
 
-class NotificationService extends AbstractBaseService
-{
-
-}
+class NotificationService extends AbstractBaseService {}

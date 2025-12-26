@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\ServiceItem;
 use App\DTOs\Service\ServiceItemDTO;
+use App\Models\ServiceItem;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +16,7 @@ class ServiceItemRepository extends AbstractTenantRepository
 
     protected function makeModel(): Model
     {
-        return new ServiceItem();
+        return new ServiceItem;
     }
 
     /**
@@ -46,7 +46,7 @@ class ServiceItemRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, ServiceItemDTO $dto): bool
     {
         $item = $this->find($id);
-        if (!$item) {
+        if (! $item) {
             return false;
         }
 

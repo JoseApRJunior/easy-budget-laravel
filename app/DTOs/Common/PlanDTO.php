@@ -36,14 +36,14 @@ readonly class PlanDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'        => $this->name,
-            'slug'        => $this->slug,
-            'price'       => $this->price,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'price' => $this->price,
             'max_budgets' => $this->max_budgets,
             'max_clients' => $this->max_clients,
             'description' => $this->description,
-            'status'      => $this->status,
-            'features'    => $this->features,
+            'status' => $this->status,
+            'features' => $this->features,
         ];
     }
 }

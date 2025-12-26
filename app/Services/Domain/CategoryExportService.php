@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Support\ServiceResult;
-use App\Enums\OperationStatus;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CategoryExportService
@@ -22,7 +19,7 @@ class CategoryExportService
      */
     public function exportToExcel(Collection $categories, string $format = 'xlsx'): StreamedResponse
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         $headers = ['Categoria', 'Subcategoria', 'Situação', 'Subcategorias Ativas', 'Data Criação', 'Data Atualização'];
@@ -30,11 +27,11 @@ class CategoryExportService
 
         $row = 2;
         foreach ($categories as $category) {
-            $createdAt       = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
-            $updatedAt       = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
-            $categoryName    = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
+            $createdAt = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
+            $updatedAt = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
+            $categoryName = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
             $subcategoryName = $category->parent_id ? $category->name : '—';
-            $childrenCount   = $category->children()->where('is_active', true)->count();
+            $childrenCount = $category->children()->where('is_active', true)->count();
 
             // Determina a situação: Deletado > Inativo > Ativo
             // DEBUG: Log para verificar o valor de deleted_at
@@ -46,7 +43,7 @@ class CategoryExportService
                 'is_active' => $category->is_active,
             ]);
 
-            $situacao = !is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
+            $situacao = ! is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
 
             $dataRow = [
                 $categoryName,
@@ -57,7 +54,7 @@ class CategoryExportService
                 $updatedAt,
             ];
 
-            $sheet->fromArray([$dataRow], null, 'A' . $row);
+            $sheet->fromArray([$dataRow], null, 'A'.$row);
             $row++;
         }
 
@@ -67,7 +64,7 @@ class CategoryExportService
         }
 
         // Centralizar colunas "Situação" (C) e "Subcategorias Ativas" (D)
-        $sheet->getStyle('C1:D' . ($row - 1))
+        $sheet->getStyle('C1:D'.($row - 1))
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
@@ -112,19 +109,19 @@ class CategoryExportService
     {
         $rows = '';
         foreach ($categories as $category) {
-            $createdAt       = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
-            $updatedAt       = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
-            $categoryName    = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
+            $createdAt = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
+            $updatedAt = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
+            $categoryName = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
             $subcategoryName = $category->parent_id ? $category->name : '—';
-            $childrenCount   = $category->children()->where('is_active', true)->count();
+            $childrenCount = $category->children()->where('is_active', true)->count();
 
             // Determina a situação: Deletado > Inativo > Ativo
-            $situacao = !is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
+            $situacao = ! is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo');
 
-            $rows .= "<tr>
-                <td>" . e($categoryName) . "</td>
-                <td>" . e($subcategoryName) . "</td>
-                <td style='text-align:center'>" . $situacao . "</td>
+            $rows .= '<tr>
+                <td>'.e($categoryName).'</td>
+                <td>'.e($subcategoryName)."</td>
+                <td style='text-align:center'>".$situacao."</td>
                 <td style='text-align:center'>{$childrenCount}</td>
                 <td>{$createdAt}</td>
                 <td>{$updatedAt}</td>

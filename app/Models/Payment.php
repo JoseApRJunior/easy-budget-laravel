@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Payment extends Model
 {
-    use HasFactory, TenantScoped, SoftDeletes;
+    use HasFactory, SoftDeletes, TenantScoped;
 
     /**
      * Boot the model.
@@ -85,10 +85,15 @@ class Payment extends Model
      * Payment methods constants.
      */
     public const METHOD_PIX = 'pix';
+
     public const METHOD_BOLETO = 'boleto';
+
     public const METHOD_CREDIT_CARD = 'credit_card';
+
     public const METHOD_DEBIT_CARD = 'debit_card';
+
     public const METHOD_CASH = 'cash';
+
     public const METHOD_BANK_TRANSFER = 'bank_transfer';
 
     /**

@@ -41,7 +41,7 @@ class InvoiceService extends AbstractBaseService
         return $this->safeExecute(function () use ($code, $with) {
             $invoice = $this->repository->findByCode($code, $with);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return ServiceResult::error("Fatura com código {$code} não encontrada");
             }
 
@@ -51,8 +51,9 @@ class InvoiceService extends AbstractBaseService
 
     public function getFilteredInvoices(array $filters = [], array $with = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters, $with) {
+        return $this->safeExecute(function () use ($filters) {
             $invoices = $this->repository->getFiltered($filters, ['due_date' => 'desc'], 15);
+
             return ServiceResult::success($invoices);
         }, 'Erro ao filtrar faturas');
     }
@@ -61,6 +62,7 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $stats = $this->repository->getDashboardStats();
+
             return ServiceResult::success($stats);
         }, 'Erro ao obter estatísticas do dashboard');
     }
@@ -70,7 +72,7 @@ class InvoiceService extends AbstractBaseService
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
                 $service = $this->serviceRepository->findById($dto->service_id);
-                if (!$service) {
+                if (! $service) {
                     return ServiceResult::error('Serviço não encontrado');
                 }
 
@@ -80,7 +82,7 @@ class InvoiceService extends AbstractBaseService
 
                 $invoice = $this->repository->createFromDTO($dto);
 
-                if (!empty($dto->items)) {
+                if (! empty($dto->items)) {
                     $this->createInvoiceItems($invoice->id, $dto->items);
                 }
 
@@ -94,7 +96,7 @@ class InvoiceService extends AbstractBaseService
         return $this->safeExecute(function () use ($code) {
             $invoice = $this->repository->findByCode($code);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return ServiceResult::error('Fatura não encontrada');
             }
 
@@ -105,6 +107,7 @@ class InvoiceService extends AbstractBaseService
 
             return DB::transaction(function () use ($invoice, $code) {
                 $this->itemRepository->deleteByInvoiceId($invoice->id);
+
                 return $this->repository->deleteByCode($code)
                     ? ServiceResult::success(null, 'Fatura excluída com sucesso')
                     : ServiceResult::error('Falha ao excluir fatura');
@@ -117,11 +120,12 @@ class InvoiceService extends AbstractBaseService
         return $this->safeExecute(function () use ($code, $status) {
             $success = $this->repository->updateStatusByCode($code, $status);
 
-            if (!$success) {
+            if (! $success) {
                 return ServiceResult::error('Fatura não encontrada ou falha ao atualizar status');
             }
 
             $invoice = $this->repository->findByCode($code);
+
             return ServiceResult::success($invoice, 'Status da fatura atualizado com sucesso');
         }, 'Erro ao atualizar status da fatura');
     }
@@ -132,7 +136,7 @@ class InvoiceService extends AbstractBaseService
             return DB::transaction(function () use ($code, $dto) {
                 $invoice = $this->repository->findByCode($code);
 
-                if (!$invoice) {
+                if (! $invoice) {
                     return ServiceResult::error('Fatura não encontrada');
                 }
 
@@ -154,13 +158,13 @@ class InvoiceService extends AbstractBaseService
             return DB::transaction(function () use ($budgetCode, $dto) {
                 $budget = $this->budgetRepository->findByCode($budgetCode, ['services.serviceItems', 'customer']);
 
-                if (!$budget) {
+                if (! $budget) {
                     return ServiceResult::error('Orçamento não encontrado');
                 }
 
                 $service = $this->serviceRepository->findById($dto->service_id);
 
-                if (!$service || $service->budget_id !== $budget->id) {
+                if (! $service || $service->budget_id !== $budget->id) {
                     return ServiceResult::error('Serviço inválido para o orçamento');
                 }
 
@@ -169,17 +173,17 @@ class InvoiceService extends AbstractBaseService
                     return ServiceResult::error('Selecione ao menos um item');
                 }
 
-                $subtotal      = 0.0;
+                $subtotal = 0.0;
                 $preparedItems = [];
                 foreach ($selectedItems as $item) {
                     $serviceItem = $this->serviceItemRepository->findByIdAndServiceId($item['service_item_id'] ?? 0, $service->id);
-                    if (!$serviceItem) {
+                    if (! $serviceItem) {
                         return ServiceResult::error('Item de serviço inválido');
                     }
-                    $quantity         = (float) ($item['quantity'] ?? $serviceItem->quantity);
-                    $unit             = (float) ($item['unit_value'] ?? $serviceItem->unit_value);
-                    $subtotal        += $quantity * $unit;
-                    $preparedItems[]  = new InvoiceItemDTO(
+                    $quantity = (float) ($item['quantity'] ?? $serviceItem->quantity);
+                    $unit = (float) ($item['unit_value'] ?? $serviceItem->unit_value);
+                    $subtotal += $quantity * $unit;
+                    $preparedItems[] = new InvoiceItemDTO(
                         product_id: (int) $serviceItem->product_id,
                         quantity: (int) $quantity,
                         unit_price: (float) $unit,
@@ -188,8 +192,8 @@ class InvoiceService extends AbstractBaseService
                 }
 
                 $alreadyBilled = $this->repository->sumTotalByBudgetId($budget->id, ['pending', 'approved', 'in_process', 'authorized']);
-                $budgetTotal   = (float) ($budget->total ?? 0);
-                $remaining     = max(0.0, $budgetTotal - $alreadyBilled);
+                $budgetTotal = (float) ($budget->total ?? 0);
+                $remaining = max(0.0, $budgetTotal - $alreadyBilled);
 
                 if ($subtotal > $remaining) {
                     return ServiceResult::error('Total selecionado excede o saldo disponível do orçamento');
@@ -231,7 +235,7 @@ class InvoiceService extends AbstractBaseService
             $invoice = $invoiceResult->getData();
 
             $publicUrl = null;
-            if (!empty($invoice->public_hash)) {
+            if (! empty($invoice->public_hash)) {
                 $publicUrl = route('invoices.public.show', ['hash' => $invoice->public_hash]);
             }
 
@@ -242,25 +246,25 @@ class InvoiceService extends AbstractBaseService
             }
 
             $html = view('pages.invoice.pdf_professional', [
-                'invoice'   => $invoice,
+                'invoice' => $invoice,
                 'publicUrl' => $publicUrl,
                 'qrDataUri' => $qrDataUri,
             ])->render();
 
             $mpdf = new \Mpdf\Mpdf([
-                'mode'          => 'utf-8',
-                'format'        => 'A4',
-                'margin_left'   => 15,
-                'margin_right'  => 15,
-                'margin_top'    => 16,
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 15,
+                'margin_right' => 15,
+                'margin_top' => 16,
                 'margin_bottom' => 16,
             ]);
             $mpdf->WriteHTML($html);
             $content = $mpdf->Output('', 'S');
 
-            $dir      = 'invoices';
-            $filename = 'invoice_' . $invoice->code . '.pdf';
-            $path     = $dir . '/' . $filename;
+            $dir = 'invoices';
+            $filename = 'invoice_'.$invoice->code.'.pdf';
+            $path = $dir.'/'.$filename;
             Storage::put($path, $content);
 
             return ServiceResult::success($path, 'PDF da fatura gerado com sucesso');
@@ -272,18 +276,18 @@ class InvoiceService extends AbstractBaseService
         return $this->safeExecute(function () use ($serviceCode) {
             $service = $this->serviceRepository->findByCode($serviceCode, ['serviceItems.product', 'customer']);
 
-            if (!$service) {
+            if (! $service) {
                 return ServiceResult::error('Serviço não encontrado');
             }
 
             $subtotal = $service->serviceItems->sum('total');
 
             return ServiceResult::success([
-                'service_id'  => $service->id,
+                'service_id' => $service->id,
                 'customer_id' => $service->customer_id,
-                'subtotal'    => $subtotal,
-                'total'       => $subtotal, // Assume no discount initially
-                'items'       => $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
+                'subtotal' => $subtotal,
+                'total' => $subtotal, // Assume no discount initially
+                'items' => $service->serviceItems->map(fn ($item) => new InvoiceItemDTO(
                     product_id: $item->product_id,
                     quantity: $item->quantity,
                     unit_price: $item->unit_value,
@@ -304,13 +308,13 @@ class InvoiceService extends AbstractBaseService
             return DB::transaction(function () use ($dto) {
                 $service = $this->serviceRepository->findByCode($dto->service_code, ['serviceItems.product']);
 
-                if (!$service) {
+                if (! $service) {
                     return ServiceResult::error('Serviço não encontrado');
                 }
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
 
-                $items = $dto->items ?? $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
+                $items = $dto->items ?? $service->serviceItems->map(fn ($item) => new InvoiceItemDTO(
                     product_id: (int) $item->product_id,
                     quantity: (int) $item->quantity,
                     unit_price: (float) $item->unit_value,
@@ -321,6 +325,7 @@ class InvoiceService extends AbstractBaseService
                     if ($item instanceof InvoiceItemDTO) {
                         return $carry + $item->total;
                     }
+
                     return $carry + ($item['total'] ?? ($item['quantity'] * ($item['unit_price'] ?? $item['unit_value'])));
                 }, 0.0);
                 $discount = (float) ($dto->discount ?? 0.0);
@@ -352,8 +357,8 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($query, $limit) {
             $invoices = $this->repository->search($query, $limit)
-                ->map(fn($i) => [
-                    'id'   => $i->id,
+                ->map(fn ($i) => [
+                    'id' => $i->id,
                     'text' => "{$i->code} - {$i->customer->name}",
                 ]);
 
@@ -363,7 +368,7 @@ class InvoiceService extends AbstractBaseService
 
     public function exportInvoices(array $filters, string $format = 'xlsx'): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters, $format) {
+        return $this->safeExecute(function () {
             // Placeholder for export logic. In a real app, this would use Excel/CSV library.
             // For now, we return a mock result or implement if a library is available.
             return ServiceResult::error('Exportação não implementada nesta versão');
@@ -377,7 +382,7 @@ class InvoiceService extends AbstractBaseService
 
             $product = $this->productRepository->findById($itemDTO->product_id);
 
-            if (!$product || !$product->active) {
+            if (! $product || ! $product->active) {
                 throw new Exception("Produto ID {$itemDTO->product_id} não encontrado ou inativo");
             }
 

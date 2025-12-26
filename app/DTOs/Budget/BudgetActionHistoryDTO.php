@@ -35,13 +35,13 @@ readonly class BudgetActionHistoryDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'budget_id'   => $this->budget_id,
-            'user_id'     => $this->user_id,
-            'action'      => $this->action,
+            'budget_id' => $this->budget_id,
+            'user_id' => $this->user_id,
+            'action' => $this->action,
             'description' => $this->description,
-            'changes'     => $this->changes,
-            'created_at'  => $this->created_at?->toDateTimeString(),
-            'tenant_id'   => $this->tenant_id,
+            'changes' => $this->changes,
+            'created_at' => $this->created_at?->toDateTimeString(),
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

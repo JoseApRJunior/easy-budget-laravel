@@ -28,15 +28,15 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService
         try {
             $subscription = \App\Models\PlanSubscription::with(['plan'])
                 ->find($planSubscriptionId);
-            
-            if (!$subscription || !$subscription->plan) {
+
+            if (! $subscription || ! $subscription->plan) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Assinatura do plano não encontrada');
             }
 
             // Para pagamento de Planos, o dinheiro vai para a PLATAFORMA (Easy Budget).
             // Usamos o Token da Plataforma definido no .env/config
             $accessToken = config('services.mercadopago.access_token');
-            
+
             if (empty($accessToken)) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Configuração de pagamento da plataforma ausente (Token MP).');
             }
@@ -45,16 +45,16 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService
             $preferenceData = [
                 'items' => [
                     [
-                        'title'       => 'Assinatura do plano ' . $subscription->plan->name,
-                        'quantity'    => 1,
+                        'title' => 'Assinatura do plano '.$subscription->plan->name,
+                        'quantity' => 1,
                         'currency_id' => 'BRL',
-                        'unit_price'  => (float)$subscription->plan->price,
+                        'unit_price' => (float) $subscription->plan->price,
                     ],
                 ],
-                'external_reference' => 'plan:slug:' . $subscription->plan->slug . ':plan_subscription_id:' . $subscription->id . ':tenant:' . $subscription->tenant_id,
+                'external_reference' => 'plan:slug:'.$subscription->plan->slug.':plan_subscription_id:'.$subscription->id.':tenant:'.$subscription->tenant_id,
                 'payer' => [
                     // Opcional: Adicionar dados do payer se disponíveis no user do tenant
-                     'email' => auth()->user()->email ?? 'provider@example.com',
+                    'email' => auth()->user()->email ?? 'provider@example.com',
                 ],
                 'notification_url' => route('webhooks.mercadopago.plans'),
                 'back_urls' => [
@@ -67,24 +67,25 @@ class PaymentMercadoPagoPlanService extends BaseNoTenantService
 
             $result = $this->mercadoPagoService->createPreference($accessToken, $preferenceData);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
                 return $result;
             }
 
             $data = $result->getData();
             $initPoint = $data['init_point'] ?? null;
 
-            if (!$initPoint) {
+            if (! $initPoint) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Falha ao obter link de pagamento do Mercado Pago.');
             }
 
             return ServiceResult::success([
-                'init_point'    => $initPoint,
+                'init_point' => $initPoint,
                 'preference_id' => $data['id'] ?? null,
             ], 'Preferência de pagamento criada');
 
         } catch (Exception $e) {
             Log::error('create_mp_plan_preference_error', ['plan_subscription_id' => $planSubscriptionId, 'error' => $e->getMessage()]);
+
             return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar preferência de pagamento', null, $e);
         }
     }

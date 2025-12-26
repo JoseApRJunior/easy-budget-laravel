@@ -44,18 +44,18 @@ readonly class AlertSettingDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'alert_type'                => $this->alert_type,
-            'metric_name'               => $this->metric_name,
-            'severity'                  => $this->severity,
-            'threshold_value'           => $this->threshold_value,
+            'alert_type' => $this->alert_type,
+            'metric_name' => $this->metric_name,
+            'severity' => $this->severity,
+            'threshold_value' => $this->threshold_value,
             'evaluation_window_minutes' => $this->evaluation_window_minutes,
-            'cooldown_minutes'          => $this->cooldown_minutes,
-            'is_active'                 => $this->is_active,
-            'notification_channels'     => $this->notification_channels,
-            'notification_emails'       => $this->notification_emails,
-            'slack_webhook_url'         => $this->slack_webhook_url,
-            'custom_message'            => $this->custom_message,
-            'tenant_id'                 => $this->tenant_id,
+            'cooldown_minutes' => $this->cooldown_minutes,
+            'is_active' => $this->is_active,
+            'notification_channels' => $this->notification_channels,
+            'notification_emails' => $this->notification_emails,
+            'slack_webhook_url' => $this->slack_webhook_url,
+            'custom_message' => $this->custom_message,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

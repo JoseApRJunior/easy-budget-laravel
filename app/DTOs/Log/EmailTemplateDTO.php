@@ -44,18 +44,18 @@ readonly class EmailTemplateDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'         => $this->name,
-            'slug'         => $this->slug,
-            'category'     => $this->category,
-            'subject'      => $this->subject,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'category' => $this->category,
+            'subject' => $this->subject,
             'html_content' => $this->html_content,
             'text_content' => $this->text_content,
-            'variables'    => $this->variables,
-            'is_active'    => $this->is_active,
-            'is_system'    => $this->is_system,
-            'sort_order'   => $this->sort_order,
-            'metadata'     => $this->metadata,
-            'tenant_id'    => $this->tenant_id,
+            'variables' => $this->variables,
+            'is_active' => $this->is_active,
+            'is_system' => $this->is_system,
+            'sort_order' => $this->sort_order,
+            'metadata' => $this->metadata,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

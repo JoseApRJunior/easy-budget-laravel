@@ -17,8 +17,6 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\Infrastructure\EmailRateLimitService;
-use App\Services\Infrastructure\EmailSenderService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -53,8 +51,8 @@ class MailerService
      */
     private array $defaultConfig = [
         'from_address' => null,
-        'from_name'    => null,
-        'reply_to'     => null,
+        'from_name' => null,
+        'reply_to' => null,
     ];
 
     /**
@@ -75,7 +73,7 @@ class MailerService
         EmailRateLimitService $rateLimitService,
     ) {
         $this->emailSenderService = $emailSenderService;
-        $this->rateLimitService   = $rateLimitService;
+        $this->rateLimitService = $rateLimitService;
         $this->initializeDefaultConfig();
     }
 
@@ -85,21 +83,21 @@ class MailerService
     private function initializeDefaultConfig(): void
     {
         $this->defaultConfig = [
-            'from_address' => config( 'mail.from.address' ),
-            'from_name'    => config( 'mail.from.name' ),
-            'reply_to'     => config( 'mail.from.address' ),
+            'from_address' => config('mail.from.address'),
+            'from_name' => config('mail.from.name'),
+            'reply_to' => config('mail.from.address'),
         ];
     }
 
     /**
      * Envia e-mail usando dados fornecidos (compatibilidade com API legacy).
      *
-     * @param string $to Destinatário do e-mail
-     * @param string $subject Assunto do e-mail
-     * @param string $body Conteúdo do e-mail (HTML)
-     * @param array|null $attachment Anexo opcional ['content' => string, 'fileName' => string]
-     * @param string|null $fromAddress Endereço do remetente
-     * @param string|null $fromName Nome do remetente
+     * @param  string  $to  Destinatário do e-mail
+     * @param  string  $subject  Assunto do e-mail
+     * @param  string  $body  Conteúdo do e-mail (HTML)
+     * @param  array|null  $attachment  Anexo opcional ['content' => string, 'fileName' => string]
+     * @param  string|null  $fromAddress  Endereço do remetente
+     * @param  string|null  $fromName  Nome do remetente
      * @return ServiceResult Resultado da operação
      */
     public function send(
@@ -112,38 +110,38 @@ class MailerService
     ): ServiceResult {
         try {
             // Validação dos dados
-            $validation = $this->validateEmailData( $to, $subject, $body );
-            if ( !$validation->isSuccess() ) {
+            $validation = $this->validateEmailData($to, $subject, $body);
+            if (! $validation->isSuccess()) {
                 return $validation;
             }
 
             // Preparar dados do e-mail
             $emailData = [
-                'to'           => $to,
-                'subject'      => $subject,
-                'body'         => $body,
-                'attachment'   => $attachment,
-                'from_address' => $fromAddress ?? $this->defaultConfig[ 'from_address' ],
-                'from_name'    => $fromName ?? $this->defaultConfig[ 'from_name' ],
+                'to' => $to,
+                'subject' => $subject,
+                'body' => $body,
+                'attachment' => $attachment,
+                'from_address' => $fromAddress ?? $this->defaultConfig['from_address'],
+                'from_name' => $fromName ?? $this->defaultConfig['from_name'],
             ];
 
             // Enviar e-mail usando queue para processamento assíncrono
-            $sent = $this->sendEmailAsync( $emailData );
+            $sent = $this->sendEmailAsync($emailData);
 
-            if ( $sent ) {
-                Log::info( 'E-mail enfileirado com sucesso para processamento assíncrono', [
-                    'to'      => $to,
+            if ($sent) {
+                Log::info('E-mail enfileirado com sucesso para processamento assíncrono', [
+                    'to' => $to,
                     'subject' => $subject,
-                    'from'    => $emailData[ 'from_address' ],
-                    'queue'   => 'emails'
-                ] );
+                    'from' => $emailData['from_address'],
+                    'queue' => 'emails',
+                ]);
 
-                return ServiceResult::success( [
-                    'to'        => $to,
-                    'subject'   => $subject,
+                return ServiceResult::success([
+                    'to' => $to,
+                    'subject' => $subject,
                     'queued_at' => now()->toDateTimeString(),
-                    'queue'     => 'emails'
-                ], 'E-mail enfileirado com sucesso para processamento assíncrono.' );
+                    'queue' => 'emails',
+                ], 'E-mail enfileirado com sucesso para processamento assíncrono.');
             }
 
             return ServiceResult::error(
@@ -151,17 +149,17 @@ class MailerService
                 'Falha ao enfileirar e-mail: erro desconhecido.',
             );
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail', [
-                'to'      => $to,
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar e-mail', [
+                'to' => $to,
                 'subject' => $subject,
-                'error'   => $e->getMessage(),
-                'trace'   => $e->getTraceAsString()
-            ] );
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Falha ao enfileirar e-mail: ' . $e->getMessage()
+                'Falha ao enfileirar e-mail: '.$e->getMessage()
             );
         }
     }
@@ -169,10 +167,10 @@ class MailerService
     /**
      * Envia e-mail de confirmação de conta (método específico).
      *
-     * @param string $email E-mail do usuário
-     * @param string $firstName Nome do usuário
-     * @param string $confirmationToken Token de confirmação
-     * @param array $additionalData Dados adicionais para o template
+     * @param  string  $email  E-mail do usuário
+     * @param  string  $firstName  Nome do usuário
+     * @param  string  $confirmationToken  Token de confirmação
+     * @param  array  $additionalData  Dados adicionais para o template
      * @return ServiceResult Resultado da operação
      */
     public function sendAccountConfirmation(
@@ -182,14 +180,14 @@ class MailerService
         array $additionalData = [],
     ): ServiceResult {
         try {
-            $confirmationLink = \config( 'app.url' ) . '/confirm-account?token=' . $confirmationToken;
-            $subject          = 'Confirmação de conta - Easy Budget';
+            $confirmationLink = \config('app.url').'/confirm-account?token='.$confirmationToken;
+            $subject = 'Confirmação de conta - Easy Budget';
 
-            $templateData = array_merge( [
-                'first_name'        => $firstName,
+            $templateData = array_merge([
+                'first_name' => $firstName,
                 'confirmation_link' => $confirmationLink,
-                'app_name'          => config( 'app.name', 'Easy Budget' ),
-            ], $additionalData );
+                'app_name' => config('app.name', 'Easy Budget'),
+            ], $additionalData);
 
             $sent = $this->sendTemplatedEmail(
                 $email,
@@ -199,18 +197,18 @@ class MailerService
             );
 
             return $sent
-                ? ServiceResult::success( true, 'E-mail de confirmação enviado com sucesso.' )
-                : ServiceResult::error( OperationStatus::ERROR, 'Falha ao enviar e-mail de confirmação.' );
+                ? ServiceResult::success(true, 'E-mail de confirmação enviado com sucesso.')
+                : ServiceResult::error(OperationStatus::ERROR, 'Falha ao enviar e-mail de confirmação.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar confirmação de conta', [
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar confirmação de conta', [
                 'email' => $email,
-                'error' => $e->getMessage()
-            ] );
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar confirmação: ' . $e->getMessage()
+                'Erro ao enviar confirmação: '.$e->getMessage()
             );
         }
     }
@@ -218,9 +216,9 @@ class MailerService
     /**
      * Envia e-mail de redefinição de senha.
      *
-     * @param string $email E-mail do usuário
-     * @param string $firstName Nome do usuário
-     * @param string $resetToken Token de redefinição
+     * @param  string  $email  E-mail do usuário
+     * @param  string  $firstName  Nome do usuário
+     * @param  string  $resetToken  Token de redefinição
      * @return ServiceResult Resultado da operação
      */
     public function sendPasswordReset(
@@ -229,13 +227,13 @@ class MailerService
         string $resetToken,
     ): ServiceResult {
         try {
-            $resetLink = route( 'password.reset', [ 'token' => $resetToken ], true );
-            $subject   = 'Redefinição de senha - Easy Budget';
+            $resetLink = route('password.reset', ['token' => $resetToken], true);
+            $subject = 'Redefinição de senha - Easy Budget';
 
             $templateData = [
                 'first_name' => $firstName,
                 'reset_link' => $resetLink,
-                'app_name'   => config( 'app.name', 'Easy Budget' ),
+                'app_name' => config('app.name', 'Easy Budget'),
             ];
 
             $sent = $this->sendTemplatedEmail(
@@ -246,18 +244,18 @@ class MailerService
             );
 
             return $sent
-                ? ServiceResult::success( true, 'E-mail de redefinição enviado com sucesso.' )
-                : ServiceResult::error( OperationStatus::ERROR, 'Falha ao enviar e-mail de redefinição.' );
+                ? ServiceResult::success(true, 'E-mail de redefinição enviado com sucesso.')
+                : ServiceResult::error(OperationStatus::ERROR, 'Falha ao enviar e-mail de redefinição.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar redefinição de senha', [
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar redefinição de senha', [
                 'email' => $email,
-                'error' => $e->getMessage()
-            ] );
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar redefinição: ' . $e->getMessage()
+                'Erro ao enviar redefinição: '.$e->getMessage()
             );
         }
     }
@@ -265,11 +263,11 @@ class MailerService
     /**
      * Envia notificação genérica usando template.
      *
-     * @param string $to Destinatário
-     * @param string $subject Assunto
-     * @param string $template Template do e-mail
-     * @param array $templateData Dados para o template
-     * @param array|null $attachment Anexo opcional
+     * @param  string  $to  Destinatário
+     * @param  string  $subject  Assunto
+     * @param  string  $template  Template do e-mail
+     * @param  array  $templateData  Dados para o template
+     * @param  array|null  $attachment  Anexo opcional
      * @return ServiceResult Resultado da operação
      */
     public function sendNotification(
@@ -289,19 +287,19 @@ class MailerService
             );
 
             return $sent
-                ? ServiceResult::success( true, 'Notificação enviada com sucesso.' )
-                : ServiceResult::error( OperationStatus::ERROR, 'Falha ao enviar notificação.' );
+                ? ServiceResult::success(true, 'Notificação enviada com sucesso.')
+                : ServiceResult::error(OperationStatus::ERROR, 'Falha ao enviar notificação.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar notificação', [
-                'to'       => $to,
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar notificação', [
+                'to' => $to,
                 'template' => $template,
-                'error'    => $e->getMessage()
-            ] );
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar notificação: ' . $e->getMessage()
+                'Erro ao enviar notificação: '.$e->getMessage()
             );
         }
     }
@@ -309,12 +307,13 @@ class MailerService
     /**
      * Envia e-mail usando template (método interno).
      *
-     * @param string $to Destinatário
-     * @param string $subject Assunto
-     * @param string $template Template do e-mail
-     * @param array $templateData Dados para o template
-     * @param array|null $attachment Anexo opcional
+     * @param  string  $to  Destinatário
+     * @param  string  $subject  Assunto
+     * @param  string  $template  Template do e-mail
+     * @param  array  $templateData  Dados para o template
+     * @param  array|null  $attachment  Anexo opcional
      * @return bool Sucesso do envio
+     *
      * @throws Exception
      */
     private function sendTemplatedEmail(
@@ -326,53 +325,54 @@ class MailerService
     ): bool {
         try {
             // Criar mailable instance
-            $mailable = new class ($template, $templateData, $attachment) extends Mailable
+            $mailable = new class($template, $templateData, $attachment) extends Mailable
             {
                 private string $template;
-                private array  $templateData;
+
+                private array $templateData;
+
                 private ?array $attachment;
 
-                public function __construct( string $template, array $templateData, ?array $attachment )
+                public function __construct(string $template, array $templateData, ?array $attachment)
                 {
-                    $this->template     = $template;
+                    $this->template = $template;
                     $this->templateData = $templateData;
                     $this->attachment = $attachment;
                 }
 
                 public function build()
                 {
-                    $mail = $this->subject( $this->templateData[ 'subject' ] ?? 'Notificação' )
-                        ->view( $this->template, $this->templateData );
+                    $mail = $this->subject($this->templateData['subject'] ?? 'Notificação')
+                        ->view($this->template, $this->templateData);
 
-                    if ( $this->attachment && isset( $this->attachment[ 'content' ] ) ) {
+                    if ($this->attachment && isset($this->attachment['content'])) {
                         $mail->attachData(
-                            $this->attachment[ 'content' ],
-                            $this->attachment[ 'fileName' ] ?? 'attachment.pdf',
+                            $this->attachment['content'],
+                            $this->attachment['fileName'] ?? 'attachment.pdf',
                             [
-                                'mime' => $this->attachment[ 'mime' ] ?? 'application/pdf'
+                                'mime' => $this->attachment['mime'] ?? 'application/pdf',
                             ],
                         );
                     }
 
                     return $mail;
                 }
-
             };
 
             // Configurar destinatário
-            $mailable->to( $to );
+            $mailable->to($to);
 
             // Enviar
-            Mail::send( $mailable );
+            Mail::send($mailable);
 
             return true;
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro no envio de e-mail template', [
-                'to'       => $to,
+        } catch (Exception $e) {
+            Log::error('Erro no envio de e-mail template', [
+                'to' => $to,
                 'template' => $template,
-                'error'    => $e->getMessage()
-            ] );
+                'error' => $e->getMessage(),
+            ]);
             throw $e;
         }
     }
@@ -380,57 +380,57 @@ class MailerService
     /**
      * Envia e-mail simples (HTML ou texto) de forma assíncrona.
      *
-     * @param array $emailData Dados do e-mail
+     * @param  array  $emailData  Dados do e-mail
      * @return bool Sucesso do envio
+     *
      * @throws \Exception
      */
-    private function sendEmailAsync( array $emailData ): bool
+    private function sendEmailAsync(array $emailData): bool
     {
         try {
             // Criar mailable instance para processamento assíncrono
-            $mailable = new class ($emailData) extends Mailable implements ShouldQueue
+            $mailable = new class($emailData) extends Mailable implements ShouldQueue
             {
                 use Queueable, SerializesModels;
 
                 private array $emailData;
 
-                public function __construct( array $emailData )
+                public function __construct(array $emailData)
                 {
                     $this->emailData = $emailData;
                 }
 
                 public function build()
                 {
-                    $mail = $this->to( $this->emailData[ 'to' ] )
-                        ->subject( $this->emailData[ 'subject' ] )
-                        ->html( $this->emailData[ 'body' ] );
+                    $mail = $this->to($this->emailData['to'])
+                        ->subject($this->emailData['subject'])
+                        ->html($this->emailData['body']);
 
                     // Anexo se fornecido
-                    if ( $this->emailData[ 'attachment' ] && isset( $this->emailData[ 'attachment' ][ 'content' ] ) ) {
+                    if ($this->emailData['attachment'] && isset($this->emailData['attachment']['content'])) {
                         $mail->attachData(
-                            $this->emailData[ 'attachment' ][ 'content' ],
-                            $this->emailData[ 'attachment' ][ 'fileName' ] ?? 'attachment.pdf',
+                            $this->emailData['attachment']['content'],
+                            $this->emailData['attachment']['fileName'] ?? 'attachment.pdf',
                             [
-                                'mime' => $this->emailData[ 'attachment' ][ 'mime' ] ?? 'application/pdf'
+                                'mime' => $this->emailData['attachment']['mime'] ?? 'application/pdf',
                             ],
                         );
                     }
 
                     return $mail;
                 }
-
             };
 
             // Enfileirar para processamento assíncrono
-            Mail::to( $emailData[ 'to' ] )->queue( $mailable );
+            Mail::to($emailData['to'])->queue($mailable);
 
             return true;
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail', [
-                'to'    => $emailData[ 'to' ],
-                'error' => $e->getMessage()
-            ] );
+        } catch (\Exception $e) {
+            Log::error('Erro ao enfileirar e-mail', [
+                'to' => $emailData['to'],
+                'error' => $e->getMessage(),
+            ]);
             throw $e;
         }
     }
@@ -438,37 +438,38 @@ class MailerService
     /**
      * Envia e-mail simples (HTML ou texto) - método legado mantido para compatibilidade.
      *
-     * @param array $emailData Dados do e-mail
+     * @param  array  $emailData  Dados do e-mail
      * @return bool Sucesso do envio
+     *
      * @throws \Exception
      */
-    private function sendEmail( array $emailData ): bool
+    private function sendEmail(array $emailData): bool
     {
         try {
-            Mail::send( [], [], function ( $message ) use ( $emailData ) {
-                $message->to( $emailData[ 'to' ] )
-                    ->subject( $emailData[ 'subject' ] )
-                    ->html( $emailData[ 'body' ] );
+            Mail::send([], [], function ($message) use ($emailData) {
+                $message->to($emailData['to'])
+                    ->subject($emailData['subject'])
+                    ->html($emailData['body']);
 
                 // Anexo se fornecido
-                if ( $emailData[ 'attachment' ] && isset( $emailData[ 'attachment' ][ 'content' ] ) ) {
+                if ($emailData['attachment'] && isset($emailData['attachment']['content'])) {
                     $message->attachData(
-                        $emailData[ 'attachment' ][ 'content' ],
-                        $emailData[ 'attachment' ][ 'fileName' ] ?? 'attachment.pdf',
+                        $emailData['attachment']['content'],
+                        $emailData['attachment']['fileName'] ?? 'attachment.pdf',
                         [
-                            'mime' => $emailData[ 'attachment' ][ 'mime' ] ?? 'application/pdf'
+                            'mime' => $emailData['attachment']['mime'] ?? 'application/pdf',
                         ],
                     );
                 }
-            } );
+            });
 
             return true;
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro no envio de e-mail', [
-                'to'    => $emailData[ 'to' ],
-                'error' => $e->getMessage()
-            ] );
+        } catch (\Exception $e) {
+            Log::error('Erro no envio de e-mail', [
+                'to' => $emailData['to'],
+                'error' => $e->getMessage(),
+            ]);
             throw $e;
         }
     }
@@ -476,64 +477,64 @@ class MailerService
     /**
      * Valida dados do e-mail.
      *
-     * @param string $to E-mail do destinatário
-     * @param string $subject Assunto
-     * @param string $body Conteúdo
+     * @param  string  $to  E-mail do destinatário
+     * @param  string  $subject  Assunto
+     * @param  string  $body  Conteúdo
      * @return ServiceResult Resultado da validação
      */
-    private function validateEmailData( string $to, string $subject, string $body ): ServiceResult
+    private function validateEmailData(string $to, string $subject, string $body): ServiceResult
     {
         $errors = [];
 
         // Validar e-mail do destinatário
-        if ( empty( $to ) ) {
+        if (empty($to)) {
             $errors[] = 'Destinatário é obrigatório.';
-        } elseif ( !filter_var( $to, FILTER_VALIDATE_EMAIL ) ) {
+        } elseif (! filter_var($to, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'E-mail do destinatário inválido.';
         }
 
         // Validar assunto
-        if ( empty( $subject ) ) {
+        if (empty($subject)) {
             $errors[] = 'Assunto é obrigatório.';
         }
 
         // Validar corpo
-        if ( empty( $body ) ) {
+        if (empty($body)) {
             $errors[] = 'Corpo do e-mail é obrigatório.';
         }
 
-        if ( !empty( $errors ) ) {
+        if (! empty($errors)) {
             return ServiceResult::error(
                 OperationStatus::INVALID_DATA,
-                'Dados inválidos: ' . implode( ', ', $errors )
+                'Dados inválidos: '.implode(', ', $errors)
             );
         }
 
-        return ServiceResult::success( null, 'Dados válidos.' );
+        return ServiceResult::success(null, 'Dados válidos.');
     }
 
     /**
      * Envia e-mail de teste para verificar configuração.
      *
-     * @param string $testEmail E-mail de teste
+     * @param  string  $testEmail  E-mail de teste
      * @return ServiceResult Resultado do teste
      */
-    public function sendTestEmail( string $testEmail ): ServiceResult
+    public function sendTestEmail(string $testEmail): ServiceResult
     {
         try {
             $subject = 'Teste de configuração - Easy Budget';
-            $body    = '<h1>Teste de E-mail</h1><p>Este é um e-mail de teste do sistema Easy Budget.</p>';
+            $body = '<h1>Teste de E-mail</h1><p>Este é um e-mail de teste do sistema Easy Budget.</p>';
 
-            $sent = $this->send( $testEmail, $subject, $body );
+            $sent = $this->send($testEmail, $subject, $body);
 
             return $sent->isSuccess()
-                ? ServiceResult::success( true, 'E-mail de teste enviado com sucesso.' )
+                ? ServiceResult::success(true, 'E-mail de teste enviado com sucesso.')
                 : $sent;
 
-        } catch ( Exception $e ) {
+        } catch (Exception $e) {
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar e-mail de teste: ' . $e->getMessage()
+                'Erro ao enviar e-mail de teste: '.$e->getMessage()
             );
         }
     }
@@ -541,46 +542,46 @@ class MailerService
     /**
      * Envia e-mail de boas-vindas usando a Mailable Class WelcomeUserMail.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param  string $confirmationLink URL de verificação
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $confirmationLink  URL de verificação
      * @return ServiceResult Resultado da operação
      */
     public function sendWelcomeEmail(
         User $user,
-        ?Tenant $tenant = null,
+        ?Tenant $tenant,
         string $confirmationLink,
     ): ServiceResult {
         try {
-            $mailable = new WelcomeUserMail( $user, $tenant, $confirmationLink );
+            $mailable = new WelcomeUserMail($user, $tenant, $confirmationLink);
 
             // Define o destinatário e usa queue para processamento assíncrono
-            Mail::to( $user->email )->queue( $mailable );
+            Mail::to($user->email)->queue($mailable);
 
-            Log::info( 'E-mail de boas-vindas enfileirado com sucesso', [
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'tenant_id' => $tenant?->id,
-                'queue'     => 'emails'
-            ] );
-
-            return ServiceResult::success( [
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'queued_at' => now()->toDateTimeString(),
-                'queue'     => 'emails'
-            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail de boas-vindas', [
+            Log::info('E-mail de boas-vindas enfileirado com sucesso', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
-                'error'   => $e->getMessage()
-            ] );
+                'email' => $user->email,
+                'tenant_id' => $tenant?->id,
+                'queue' => 'emails',
+            ]);
+
+            return ServiceResult::success([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'queued_at' => now()->toDateTimeString(),
+                'queue' => 'emails',
+            ], 'E-mail de boas-vindas enfileirado com sucesso para processamento assíncrono.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar e-mail de boas-vindas', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de boas-vindas: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de boas-vindas: '.$e->getMessage()
             );
         }
     }
@@ -588,11 +589,11 @@ class MailerService
     /**
      * Envia notificação de fatura usando a Mailable Class InvoiceNotification.
      *
-     * @param Invoice $invoice Fatura a ser notificada
-     * @param Customer $customer Cliente da fatura
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $publicLink Link público da fatura (opcional)
+     * @param  Invoice  $invoice  Fatura a ser notificada
+     * @param  Customer  $customer  Cliente da fatura
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $publicLink  Link público da fatura (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendInvoiceNotification(
@@ -612,34 +613,34 @@ class MailerService
             );
 
             // Usa queue para processamento assíncrono
-            Mail::queue( $mailable );
+            Mail::queue($mailable);
 
-            Log::info( 'Notificação de fatura enfileirada com sucesso', [
-                'invoice_id'   => $invoice->id,
+            Log::info('Notificação de fatura enfileirada com sucesso', [
+                'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->code,
-                'customer_id'  => $customer->id,
-                'tenant_id'    => $tenant?->id,
-                'queue'        => 'emails'
-            ] );
-
-            return ServiceResult::success( [
-                'invoice_id'   => $invoice->id,
-                'invoice_code' => $invoice->code,
-                'customer_id'  => $customer->id,
-                'queued_at'    => now()->toDateTimeString(),
-                'queue'        => 'emails'
-            ], 'Notificação de fatura enfileirada com sucesso para processamento assíncrono.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar notificação de fatura', [
-                'invoice_id'  => $invoice->id,
                 'customer_id' => $customer->id,
-                'error'       => $e->getMessage()
-            ] );
+                'tenant_id' => $tenant?->id,
+                'queue' => 'emails',
+            ]);
+
+            return ServiceResult::success([
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'customer_id' => $customer->id,
+                'queued_at' => now()->toDateTimeString(),
+                'queue' => 'emails',
+            ], 'Notificação de fatura enfileirada com sucesso para processamento assíncrono.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar notificação de fatura', [
+                'invoice_id' => $invoice->id,
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar notificação de fatura: ' . $e->getMessage()
+                'Erro ao enfileirar notificação de fatura: '.$e->getMessage()
             );
         }
     }
@@ -647,12 +648,12 @@ class MailerService
     /**
      * Envia notificação de atualização de status usando a Mailable Class StatusUpdate.
      *
-     * @param Model $entity Entidade que teve o status atualizado
-     * @param string $status Novo status
-     * @param string $statusName Nome do status para exibição
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $entityUrl URL da entidade (opcional)
+     * @param  Model  $entity  Entidade que teve o status atualizado
+     * @param  string  $status  Novo status
+     * @param  string  $statusName  Nome do status para exibição
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $entityUrl  URL da entidade (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendStatusUpdateNotification(
@@ -673,34 +674,34 @@ class MailerService
                 $entityUrl,
             );
 
-            Mail::send( $mailable );
+            Mail::send($mailable);
 
-            Log::info( 'Notificação de atualização de status enviada com sucesso', [
-                'entity_type' => class_basename( $entity ),
-                'entity_id'   => $entity->id,
-                'old_status'  => $entity->getOriginal( 'status' ) ?? 'unknown',
-                'new_status'  => $status,
-                'tenant_id'   => $tenant?->id
-            ] );
+            Log::info('Notificação de atualização de status enviada com sucesso', [
+                'entity_type' => class_basename($entity),
+                'entity_id' => $entity->id,
+                'old_status' => $entity->getOriginal('status') ?? 'unknown',
+                'new_status' => $status,
+                'tenant_id' => $tenant?->id,
+            ]);
 
-            return ServiceResult::success( [
-                'entity_type' => class_basename( $entity ),
-                'entity_id'   => $entity->id,
-                'new_status'  => $status,
-                'sent_at'     => now()->toDateTimeString(),
-            ], 'Notificação de atualização de status enviada com sucesso.' );
+            return ServiceResult::success([
+                'entity_type' => class_basename($entity),
+                'entity_id' => $entity->id,
+                'new_status' => $status,
+                'sent_at' => now()->toDateTimeString(),
+            ], 'Notificação de atualização de status enviada com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar notificação de atualização de status', [
-                'entity_type' => class_basename( $entity ),
-                'entity_id'   => $entity->id,
-                'new_status'  => $status,
-                'error'       => $e->getMessage()
-            ] );
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar notificação de atualização de status', [
+                'entity_type' => class_basename($entity),
+                'entity_id' => $entity->id,
+                'new_status' => $status,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar notificação de atualização de status: ' . $e->getMessage()
+                'Erro ao enviar notificação de atualização de status: '.$e->getMessage()
             );
         }
     }
@@ -708,9 +709,9 @@ class MailerService
     /**
      * Envia e-mail de redefinição de senha usando a Mailable Class PasswordResetNotification.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param string $token Token de redefinição de senha
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  string  $token  Token de redefinição de senha
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendPasswordResetNotification(
@@ -724,30 +725,30 @@ class MailerService
                 $token,
             );
 
-            Mail::to( $user->email )->send( $mailable );
+            Mail::to($user->email)->send($mailable);
 
-            Log::info( 'E-mail de redefinição de senha enviado com sucesso', [
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'tenant_id' => $tenant?->id
-            ] );
-
-            return ServiceResult::success( [
+            Log::info('E-mail de redefinição de senha enviado com sucesso', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
+                'email' => $user->email,
+                'tenant_id' => $tenant?->id,
+            ]);
+
+            return ServiceResult::success([
+                'user_id' => $user->id,
+                'email' => $user->email,
                 'sent_at' => now()->toDateTimeString(),
-            ], 'E-mail de redefinição de senha enviado com sucesso.' );
+            ], 'E-mail de redefinição de senha enviado com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar e-mail de redefinição de senha', [
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar e-mail de redefinição de senha', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
-                'error'   => $e->getMessage()
-            ] );
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar e-mail de redefinição de senha: ' . $e->getMessage()
+                'Erro ao enviar e-mail de redefinição de senha: '.$e->getMessage()
             );
         }
     }
@@ -755,60 +756,60 @@ class MailerService
     /**
      * Envia e-mail de verificação de conta usando dados estruturados.
      *
-     * @param array $emailData Dados estruturados do e-mail de verificação
+     * @param  array  $emailData  Dados estruturados do e-mail de verificação
      * @return ServiceResult Resultado da operação
      */
-    public function sendEmailVerification( array $emailData ): ServiceResult
+    public function sendEmailVerification(array $emailData): ServiceResult
     {
         try {
             // Validar dados obrigatórios
-            if ( empty( $emailData[ 'user' ] ) || empty( $emailData[ 'verificationToken' ] ) ) {
+            if (empty($emailData['user']) || empty($emailData['verificationToken'])) {
                 return ServiceResult::error(
                     OperationStatus::INVALID_DATA,
                     'Dados obrigatórios ausentes para e-mail de verificação.',
                 );
             }
 
-            $user              = $emailData[ 'user' ];
-            $verificationToken = $emailData[ 'verificationToken' ];
-            $tenant            = $emailData[ 'tenant' ] ?? null;
+            $user = $emailData['user'];
+            $verificationToken = $emailData['verificationToken'];
+            $tenant = $emailData['tenant'] ?? null;
 
             // Criar URL de verificação
-            $confirmationLink = $emailData[ 'confirmationLink' ] ?? route( 'verification.verify', [
-                'id'   => $user->id,
-                'hash' => sha1( $verificationToken )
-            ] );
+            $confirmationLink = $emailData['confirmationLink'] ?? route('verification.verify', [
+                'id' => $user->id,
+                'hash' => sha1($verificationToken),
+            ]);
 
             // Preparar dados para o template
             $templateData = [
-                'user'              => $user,
+                'user' => $user,
                 'verificationToken' => $verificationToken,
-                'confirmationLink'  => $confirmationLink,
-                'expiresAt'         => $emailData[ 'expiresAt' ] ?? now()->addMinutes( 30 ),
-                'tenant'            => $tenant,
-                'app_name'          => config( 'app.name', 'Easy Budget' ),
+                'confirmationLink' => $confirmationLink,
+                'expiresAt' => $emailData['expiresAt'] ?? now()->addMinutes(30),
+                'tenant' => $tenant,
+                'app_name' => config('app.name', 'Easy Budget'),
             ];
 
             // Usar template específico para verificação de e-mail
             $sent = $this->sendTemplatedEmail(
                 $user->email,
-                'Confirmação de E-mail - ' . config( 'app.name', 'Easy Budget' ),
+                'Confirmação de E-mail - '.config('app.name', 'Easy Budget'),
                 'emails.users.verification',
                 $templateData,
             );
 
-            if ( $sent ) {
-                Log::info( 'E-mail de verificação enviado com sucesso via template', [
-                    'user_id'   => $user->id,
-                    'email'     => $user->email,
-                    'tenant_id' => $tenant?->id,
-                ] );
-
-                return ServiceResult::success( [
+            if ($sent) {
+                Log::info('E-mail de verificação enviado com sucesso via template', [
                     'user_id' => $user->id,
-                    'email'   => $user->email,
+                    'email' => $user->email,
+                    'tenant_id' => $tenant?->id,
+                ]);
+
+                return ServiceResult::success([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
                     'sent_at' => now()->toDateTimeString(),
-                ], 'E-mail de verificação enviado com sucesso.' );
+                ], 'E-mail de verificação enviado com sucesso.');
             }
 
             return ServiceResult::error(
@@ -816,16 +817,16 @@ class MailerService
                 'Falha ao enviar e-mail de verificação.',
             );
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar e-mail de verificação', [
-                'user_id' => $emailData[ 'user' ]->id ?? null,
-                'email'   => $emailData[ 'user' ]->email ?? null,
-                'error'   => $e->getMessage(),
-            ] );
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar e-mail de verificação', [
+                'user_id' => $emailData['user']->id ?? null,
+                'email' => $emailData['user']->email ?? null,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar e-mail de verificação: ' . $e->getMessage()
+                'Erro ao enviar e-mail de verificação: '.$e->getMessage()
             );
         }
     }
@@ -833,10 +834,10 @@ class MailerService
     /**
      * Envia resposta de suporte usando a Mailable Class SupportResponse.
      *
-     * @param array $ticket Dados do ticket de suporte
-     * @param string $response Resposta do suporte
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
+     * @param  array  $ticket  Dados do ticket de suporte
+     * @param  string  $response  Resposta do suporte
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
      * @return ServiceResult Resultado da operação
      */
     public function sendSupportResponse(
@@ -853,30 +854,30 @@ class MailerService
                 $company,
             );
 
-            Mail::send( $mailable );
+            Mail::send($mailable);
 
-            Log::info( 'Resposta de suporte enviada com sucesso', [
-                'ticket_id'      => $ticket[ 'id' ] ?? null,
-                'ticket_subject' => $ticket[ 'subject' ] ?? 'Sem assunto',
-                'tenant_id'      => $tenant?->id
-            ] );
+            Log::info('Resposta de suporte enviada com sucesso', [
+                'ticket_id' => $ticket['id'] ?? null,
+                'ticket_subject' => $ticket['subject'] ?? 'Sem assunto',
+                'tenant_id' => $tenant?->id,
+            ]);
 
-            return ServiceResult::success( [
-                'ticket_id'      => $ticket[ 'id' ] ?? null,
-                'ticket_subject' => $ticket[ 'subject' ] ?? 'Sem assunto',
-                'sent_at'        => now()->toDateTimeString(),
-            ], 'Resposta de suporte enviada com sucesso.' );
+            return ServiceResult::success([
+                'ticket_id' => $ticket['id'] ?? null,
+                'ticket_subject' => $ticket['subject'] ?? 'Sem assunto',
+                'sent_at' => now()->toDateTimeString(),
+            ], 'Resposta de suporte enviada com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enviar resposta de suporte', [
-                'ticket_id'      => $ticket[ 'id' ] ?? null,
-                'ticket_subject' => $ticket[ 'subject' ] ?? 'Sem assunto',
-                'error'          => $e->getMessage()
-            ] );
+        } catch (Exception $e) {
+            Log::error('Erro ao enviar resposta de suporte', [
+                'ticket_id' => $ticket['id'] ?? null,
+                'ticket_subject' => $ticket['subject'] ?? 'Sem assunto',
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enviar resposta de suporte: ' . $e->getMessage()
+                'Erro ao enviar resposta de suporte: '.$e->getMessage()
             );
         }
     }
@@ -896,31 +897,31 @@ class MailerService
     {
         $cacheKey = 'mailer_service_config';
 
-        return \Illuminate\Support\Facades\Cache::remember( $cacheKey, 1800, function () {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 1800, function () {
             return [
-                'default_from_address'  => $this->defaultConfig[ 'from_address' ],
-                'default_from_name'     => $this->defaultConfig[ 'from_name' ],
-                'mail_driver'           => config( 'mail.default' ),
-                'smtp_host'             => config( 'mail.mailers.smtp.host' ),
-                'smtp_port'             => config( 'mail.mailers.smtp.port' ),
-                'smtp_encryption'       => config( 'mail.mailers.smtp.encryption' ),
-                'queue_connection'      => config( 'queue.default' ),
-                'performance_metrics'   => [
-                    'memory_usage'    => memory_get_usage( true ),
-                    'processing_time' => microtime( true ),
-                    'cache_enabled'   => true,
-                    'async_enabled'   => true,
+                'default_from_address' => $this->defaultConfig['from_address'],
+                'default_from_name' => $this->defaultConfig['from_name'],
+                'mail_driver' => config('mail.default'),
+                'smtp_host' => config('mail.mailers.smtp.host'),
+                'smtp_port' => config('mail.mailers.smtp.port'),
+                'smtp_encryption' => config('mail.mailers.smtp.encryption'),
+                'queue_connection' => config('queue.default'),
+                'performance_metrics' => [
+                    'memory_usage' => memory_get_usage(true),
+                    'processing_time' => microtime(true),
+                    'cache_enabled' => true,
+                    'async_enabled' => true,
                 ],
                 'optimization_features' => [
-                    'cache_config'     => true,
+                    'cache_config' => true,
                     'async_processing' => true,
-                    'retry_strategy'   => true,
-                    'circuit_breaker'  => true,
+                    'retry_strategy' => true,
+                    'circuit_breaker' => true,
                     'performance_logs' => true,
                 ],
-                'generated_at'          => now()->toDateTimeString(),
+                'generated_at' => now()->toDateTimeString(),
             ];
-        } );
+        });
     }
 
     /**
@@ -931,51 +932,51 @@ class MailerService
     public function getEmailQueueStats(): array
     {
         try {
-            $jobsTable   = config( 'queue.connections.database.table', 'jobs' );
-            $failedTable = config( 'queue.failed.table', 'failed_jobs' );
+            $jobsTable = config('queue.connections.database.table', 'jobs');
+            $failedTable = config('queue.failed.table', 'failed_jobs');
 
             // Estatísticas da fila de emails
-            $queuedEmails = DB::table( $jobsTable )
-                ->where( 'queue', 'emails' )
-                ->where( 'reserved_at', null )
+            $queuedEmails = DB::table($jobsTable)
+                ->where('queue', 'emails')
+                ->where('reserved_at', null)
                 ->count();
 
-            $processingEmails = DB::table( $jobsTable )
-                ->where( 'queue', 'emails' )
-                ->whereNotNull( 'reserved_at' )
+            $processingEmails = DB::table($jobsTable)
+                ->where('queue', 'emails')
+                ->whereNotNull('reserved_at')
                 ->count();
 
-            $failedEmails = DB::table( $failedTable )
-                ->where( 'queue', 'emails' )
+            $failedEmails = DB::table($failedTable)
+                ->where('queue', 'emails')
                 ->count();
 
-            $recentJobs = DB::table( $jobsTable )
-                ->where( 'queue', 'emails' )
-                ->where( 'created_at', '>=', now()->subHour() )
-                ->selectRaw( 'COUNT(*) as total, AVG(TIMESTAMPDIFF(SECOND, created_at, COALESCE(reserved_at, NOW()))) as avg_wait_time' )
+            $recentJobs = DB::table($jobsTable)
+                ->where('queue', 'emails')
+                ->where('created_at', '>=', now()->subHour())
+                ->selectRaw('COUNT(*) as total, AVG(TIMESTAMPDIFF(SECOND, created_at, COALESCE(reserved_at, NOW()))) as avg_wait_time')
                 ->first();
 
             $stats = [
-                'queued_emails'         => $queuedEmails,
-                'processing_emails'     => $processingEmails,
-                'failed_emails'         => $failedEmails,
-                'total_jobs_last_hour'  => $recentJobs->total ?? 0,
-                'avg_wait_time_seconds' => round( $recentJobs->avg_wait_time ?? 0, 2 ),
-                'queue_status'          => $this->getQueueStatus( $queuedEmails, $processingEmails, $failedEmails ),
-                'timestamp'             => now()->toDateTimeString(),
+                'queued_emails' => $queuedEmails,
+                'processing_emails' => $processingEmails,
+                'failed_emails' => $failedEmails,
+                'total_jobs_last_hour' => $recentJobs->total ?? 0,
+                'avg_wait_time_seconds' => round($recentJobs->avg_wait_time ?? 0, 2),
+                'queue_status' => $this->getQueueStatus($queuedEmails, $processingEmails, $failedEmails),
+                'timestamp' => now()->toDateTimeString(),
             ];
 
-            Log::info( 'Estatísticas da fila de emails obtidas', $stats );
+            Log::info('Estatísticas da fila de emails obtidas', $stats);
 
             return $stats;
 
-        } catch ( \Exception $e ) {
-            Log::error( 'Erro ao obter estatísticas da fila de emails', [
-                'error' => $e->getMessage()
-            ] );
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter estatísticas da fila de emails', [
+                'error' => $e->getMessage(),
+            ]);
 
             return [
-                'error'     => 'Erro ao obter estatísticas: ' . $e->getMessage(),
+                'error' => 'Erro ao obter estatísticas: '.$e->getMessage(),
                 'timestamp' => now()->toDateTimeString(),
             ];
         }
@@ -984,17 +985,17 @@ class MailerService
     /**
      * Determina o status da fila baseado nas métricas.
      */
-    private function getQueueStatus( int $queued, int $processing, int $failed ): string
+    private function getQueueStatus(int $queued, int $processing, int $failed): string
     {
-        if ( $failed > 10 ) {
+        if ($failed > 10) {
             return 'critical';
         }
 
-        if ( $failed > 5 || $queued > 100 ) {
+        if ($failed > 5 || $queued > 100) {
             return 'warning';
         }
 
-        if ( $processing > 0 || $queued > 0 ) {
+        if ($processing > 0 || $queued > 0) {
             return 'active';
         }
 
@@ -1004,29 +1005,29 @@ class MailerService
     /**
      * Monitora e loga métricas de performance de envio de emails.
      */
-    private function logEmailMetrics( string $operation, array $context = [] ): void
+    private function logEmailMetrics(string $operation, array $context = []): void
     {
         $metrics = [
-            'operation'      => $operation,
-            'timestamp'      => now()->toDateTimeString(),
-            'memory_usage'   => memory_get_usage( true ),
-            'execution_time' => microtime( true ),
-            'queue'          => 'emails',
+            'operation' => $operation,
+            'timestamp' => now()->toDateTimeString(),
+            'memory_usage' => memory_get_usage(true),
+            'execution_time' => microtime(true),
+            'queue' => 'emails',
         ];
 
-        $logData = array_merge( $metrics, $context );
+        $logData = array_merge($metrics, $context);
 
-        Log::info( 'Métrica de email registrada', $logData );
+        Log::info('Métrica de email registrada', $logData);
     }
 
     /**
      * Implementa estratégia de retry inteligente para emails.
      *
-     * @param \Throwable $e Exceção ocorrida
-     * @param array $context Contexto do email
+     * @param  \Throwable  $e  Exceção ocorrida
+     * @param  array  $context  Contexto do email
      * @return bool Se deve tentar novamente
      */
-    private function shouldRetryEmail( \Throwable $e, array $context ): bool
+    private function shouldRetryEmail(\Throwable $e, array $context): bool
     {
         $retryableErrors = [
             'Connection timeout',
@@ -1036,15 +1037,15 @@ class MailerService
             'Rate limit exceeded',
         ];
 
-        $errorMessage = strtolower( $e->getMessage() );
+        $errorMessage = strtolower($e->getMessage());
 
-        foreach ( $retryableErrors as $retryableError ) {
-            if ( str_contains( $errorMessage, strtolower( $retryableError ) ) ) {
-                Log::warning( 'Erro retryável de email detectado', [
-                    'error'           => $e->getMessage(),
-                    'context'         => $context,
-                    'retryable_error' => $retryableError
-                ] );
+        foreach ($retryableErrors as $retryableError) {
+            if (str_contains($errorMessage, strtolower($retryableError))) {
+                Log::warning('Erro retryável de email detectado', [
+                    'error' => $e->getMessage(),
+                    'context' => $context,
+                    'retryable_error' => $retryableError,
+                ]);
 
                 return true;
             }
@@ -1062,28 +1063,28 @@ class MailerService
      * - Jitter para evitar thundering herd
      * - Logs detalhados para análise
      *
-     * @param int $attempt Número da tentativa
+     * @param  int  $attempt  Número da tentativa
      * @return int Delay em segundos
      */
-    private function calculateRetryDelay( int $attempt ): int
+    private function calculateRetryDelay(int $attempt): int
     {
         // Estratégia de backoff exponencial: 30s, 60s, 120s, 240s, 480s
-        $delays = [ 30, 60, 120, 240, 480 ];
+        $delays = [30, 60, 120, 240, 480];
 
-        $baseDelay = $delays[ $attempt - 1 ] ?? 480; // Máximo 8 minutos
+        $baseDelay = $delays[$attempt - 1] ?? 480; // Máximo 8 minutos
 
         // Adicionar jitter (±10%) para evitar thundering herd
-        $jitter      = (int) ( $baseDelay * 0.1 );
-        $actualDelay = $baseDelay + rand( -$jitter, $jitter );
+        $jitter = (int) ($baseDelay * 0.1);
+        $actualDelay = $baseDelay + rand(-$jitter, $jitter);
 
-        Log::info( 'Calculando delay para retry de e-mail', [
-            'attempt'      => $attempt,
-            'base_delay'   => $baseDelay,
-            'jitter'       => $jitter,
+        Log::info('Calculando delay para retry de e-mail', [
+            'attempt' => $attempt,
+            'base_delay' => $baseDelay,
+            'jitter' => $jitter,
             'actual_delay' => $actualDelay,
-        ] );
+        ]);
 
-        return max( 30, (int) $actualDelay ); // Mínimo 30 segundos
+        return max(30, (int) $actualDelay); // Mínimo 30 segundos
     }
 
     /**
@@ -1102,285 +1103,263 @@ class MailerService
     {
         $cacheKey = 'mailer_performance_metrics';
 
-        return \Illuminate\Support\Facades\Cache::remember( $cacheKey, 300, function () {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () {
             return [
-                'system_performance'       => [
-                    'memory_usage_mb'    => round( memory_get_usage( true ) / 1024 / 1024, 2 ),
-                    'memory_peak_mb'     => round( memory_get_peak_usage( true ) / 1024 / 1024, 2 ),
-                    'cpu_usage_percent'  => $this->getCpuUsage(),
-                    'processing_time_ms' => microtime( true ) * 1000,
+                'system_performance' => [
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
+                    'memory_peak_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
+                    'cpu_usage_percent' => $this->getCpuUsage(),
+                    'processing_time_ms' => microtime(true) * 1000,
                 ],
-                'queue_performance'        => [
-                    'queue_size'        => $this->getQueueSize(),
-                    'failed_jobs'       => $this->getFailedJobsCount(),
-                    'processing_rate'   => $this->getProcessingRate(),
+                'queue_performance' => [
+                    'queue_size' => $this->getQueueSize(),
+                    'failed_jobs' => $this->getFailedJobsCount(),
+                    'processing_rate' => $this->getProcessingRate(),
                     'average_wait_time' => $this->getAverageWaitTime(),
                 ],
-                'email_performance'        => [
-                    'sent_today'        => $this->getEmailsSentToday(),
-                    'success_rate'      => $this->getSuccessRate(),
+                'email_performance' => [
+                    'sent_today' => $this->getEmailsSentToday(),
+                    'success_rate' => $this->getSuccessRate(),
                     'average_send_time' => $this->getAverageSendTime(),
-                    'bounce_rate'       => $this->getBounceRate(),
+                    'bounce_rate' => $this->getBounceRate(),
                 ],
                 'optimization_suggestions' => [
-                    'cache_optimization'  => $this->suggestCacheOptimization(),
-                    'queue_optimization'  => $this->suggestQueueOptimization(),
+                    'cache_optimization' => $this->suggestCacheOptimization(),
+                    'queue_optimization' => $this->suggestQueueOptimization(),
                     'memory_optimization' => $this->suggestMemoryOptimization(),
                 ],
-                'generated_at'             => now()->toDateTimeString(),
+                'generated_at' => now()->toDateTimeString(),
             ];
-        } );
+        });
     }
 
     /**
      * Obtém uso de CPU (simulado para Windows).
-     *
-     * @return float
      */
     private function getCpuUsage(): float
     {
         // Em produção, seria obtido através de ferramentas como sys_getloadavg()
-        return rand( 5, 25 ) / 100; // Simulado: 5% a 25%
+        return rand(5, 25) / 100; // Simulado: 5% a 25%
     }
 
     /**
      * Obtém tamanho atual da fila de e-mails.
-     *
-     * @return int
      */
     private function getQueueSize(): int
     {
         try {
-            return \Illuminate\Support\Facades\DB::table( 'jobs' )
-                ->where( 'queue', 'emails' )
-                ->whereNull( 'reserved_at' )
+            return \Illuminate\Support\Facades\DB::table('jobs')
+                ->where('queue', 'emails')
+                ->whereNull('reserved_at')
                 ->count();
-        } catch ( Exception $e ) {
+        } catch (Exception $e) {
             return 0;
         }
     }
 
     /**
      * Obtém contagem de jobs com falha.
-     *
-     * @return int
      */
     private function getFailedJobsCount(): int
     {
         try {
-            return \Illuminate\Support\Facades\DB::table( 'failed_jobs' )
-                ->where( 'queue', 'emails' )
+            return \Illuminate\Support\Facades\DB::table('failed_jobs')
+                ->where('queue', 'emails')
                 ->count();
-        } catch ( Exception $e ) {
+        } catch (Exception $e) {
             return 0;
         }
     }
 
     /**
      * Obtém taxa de processamento da fila.
-     *
-     * @return float
      */
     private function getProcessingRate(): float
     {
         try {
-            $recentJobs = \Illuminate\Support\Facades\DB::table( 'jobs' )
-                ->where( 'queue', 'emails' )
-                ->where( 'created_at', '>=', now()->subHour() )
+            $recentJobs = \Illuminate\Support\Facades\DB::table('jobs')
+                ->where('queue', 'emails')
+                ->where('created_at', '>=', now()->subHour())
                 ->count();
 
-            return round( $recentJobs / 60, 2 ); // Jobs por minuto
-        } catch ( Exception $e ) {
+            return round($recentJobs / 60, 2); // Jobs por minuto
+        } catch (Exception $e) {
             return 0.0;
         }
     }
 
     /**
      * Obtém tempo médio de espera na fila.
-     *
-     * @return float
      */
     private function getAverageWaitTime(): float
     {
         try {
-            $result = \Illuminate\Support\Facades\DB::table( 'jobs' )
-                ->where( 'queue', 'emails' )
-                ->where( 'created_at', '>=', now()->subHour() )
-                ->selectRaw( 'AVG(TIMESTAMPDIFF(SECOND, created_at, COALESCE(reserved_at, NOW()))) as avg_wait' )
+            $result = \Illuminate\Support\Facades\DB::table('jobs')
+                ->where('queue', 'emails')
+                ->where('created_at', '>=', now()->subHour())
+                ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, COALESCE(reserved_at, NOW()))) as avg_wait')
                 ->first();
 
-            return round( $result->avg_wait ?? 0, 2 );
-        } catch ( Exception $e ) {
+            return round($result->avg_wait ?? 0, 2);
+        } catch (Exception $e) {
             return 0.0;
         }
     }
 
     /**
      * Obtém quantidade de e-mails enviados hoje.
-     *
-     * @return int
      */
     private function getEmailsSentToday(): int
     {
         try {
-            return \Illuminate\Support\Facades\DB::table( 'jobs' )
-                ->where( 'queue', 'emails' )
-                ->whereDate( 'created_at', today() )
+            return \Illuminate\Support\Facades\DB::table('jobs')
+                ->where('queue', 'emails')
+                ->whereDate('created_at', today())
                 ->count();
-        } catch ( Exception $e ) {
+        } catch (Exception $e) {
             return 0;
         }
     }
 
     /**
      * Obtém taxa de sucesso de envio.
-     *
-     * @return float
      */
     private function getSuccessRate(): float
     {
         try {
-            $total  = $this->getEmailsSentToday();
+            $total = $this->getEmailsSentToday();
             $failed = $this->getFailedJobsCount();
 
-            if ( $total === 0 ) return 100.0;
+            if ($total === 0) {
+                return 100.0;
+            }
 
-            return round( ( ( $total - $failed ) / $total ) * 100, 2 );
-        } catch ( Exception $e ) {
+            return round((($total - $failed) / $total) * 100, 2);
+        } catch (Exception $e) {
             return 100.0;
         }
     }
 
     /**
      * Obtém tempo médio de envio.
-     *
-     * @return float
      */
     private function getAverageSendTime(): float
     {
         // Em produção, seria calculado baseado em métricas reais
-        return rand( 150, 500 ) / 100; // Simulado: 1.5ms a 5ms
+        return rand(150, 500) / 100; // Simulado: 1.5ms a 5ms
     }
 
     /**
      * Obtém taxa de bounce (simulada).
-     *
-     * @return float
      */
     private function getBounceRate(): float
     {
-        return rand( 1, 5 ) / 100; // Simulado: 1% a 5%
+        return rand(1, 5) / 100; // Simulado: 1% a 5%
     }
 
     /**
      * Sugere otimizações de cache.
-     *
-     * @return array
      */
     private function suggestCacheOptimization(): array
     {
-        $memoryUsage = memory_get_usage( true ) / 1024 / 1024;
+        $memoryUsage = memory_get_usage(true) / 1024 / 1024;
 
-        if ( $memoryUsage > 100 ) {
+        if ($memoryUsage > 100) {
             return [
                 'suggestion' => 'Alto uso de memória detectado',
-                'action'     => 'Considere aumentar TTL do cache ou otimizar queries',
-                'priority'   => 'high',
+                'action' => 'Considere aumentar TTL do cache ou otimizar queries',
+                'priority' => 'high',
             ];
         }
 
         return [
             'suggestion' => 'Cache funcionando bem',
-            'action'     => 'Manter configurações atuais',
-            'priority'   => 'low',
+            'action' => 'Manter configurações atuais',
+            'priority' => 'low',
         ];
     }
 
     /**
      * Sugere otimizações de fila.
-     *
-     * @return array
      */
     private function suggestQueueOptimization(): array
     {
         $queueSize = $this->getQueueSize();
 
-        if ( $queueSize > 50 ) {
+        if ($queueSize > 50) {
             return [
                 'suggestion' => 'Fila de e-mails muito grande',
-                'action'     => 'Considere aumentar número de workers ou otimizar processamento',
-                'priority'   => 'high',
+                'action' => 'Considere aumentar número de workers ou otimizar processamento',
+                'priority' => 'high',
             ];
         }
 
         return [
             'suggestion' => 'Fila funcionando normalmente',
-            'action'     => 'Manter configurações atuais',
-            'priority'   => 'low',
+            'action' => 'Manter configurações atuais',
+            'priority' => 'low',
         ];
     }
 
     /**
      * Sugere otimizações de memória.
-     *
-     * @return array
      */
     private function suggestMemoryOptimization(): array
     {
-        $memoryUsage = memory_get_usage( true ) / 1024 / 1024;
+        $memoryUsage = memory_get_usage(true) / 1024 / 1024;
 
-        if ( $memoryUsage > 128 ) {
+        if ($memoryUsage > 128) {
             return [
                 'suggestion' => 'Alto consumo de memória',
-                'action'     => 'Considere otimizar templates ou aumentar memória disponível',
-                'priority'   => 'medium',
+                'action' => 'Considere otimizar templates ou aumentar memória disponível',
+                'priority' => 'medium',
             ];
         }
 
         return [
             'suggestion' => 'Uso de memória normal',
-            'action'     => 'Manter configurações atuais',
-            'priority'   => 'low',
+            'action' => 'Manter configurações atuais',
+            'priority' => 'low',
         ];
     }
 
     /**
      * Trata falhas críticas no envio de emails.
      *
-     * @param \Throwable $e Exceção ocorrida
-     * @param array $context Contexto do email
+     * @param  \Throwable  $e  Exceção ocorrida
+     * @param  array  $context  Contexto do email
      */
-    private function handleEmailFailure( \Throwable $e, array $context ): void
+    private function handleEmailFailure(\Throwable $e, array $context): void
     {
-        Log::error( 'Falha crítica no envio de email', [
-            'error'        => $e->getMessage(),
-            'context'      => $context,
-            'trace'        => $e->getTraceAsString(),
-            'should_retry' => $this->shouldRetryEmail( $e, $context ),
-            'retry_delay'  => $this->calculateRetryDelay( $context[ 'attempts' ] ?? 1 )
-        ] );
+        Log::error('Falha crítica no envio de email', [
+            'error' => $e->getMessage(),
+            'context' => $context,
+            'trace' => $e->getTraceAsString(),
+            'should_retry' => $this->shouldRetryEmail($e, $context),
+            'retry_delay' => $this->calculateRetryDelay($context['attempts'] ?? 1),
+        ]);
 
         // Se for erro retryável e ainda há tentativas, agenda retry
-        if ( $this->shouldRetryEmail( $e, $context ) ) {
-            $this->scheduleEmailRetry( $context );
+        if ($this->shouldRetryEmail($e, $context)) {
+            $this->scheduleEmailRetry($context);
         } else {
             // Erro permanente - notifica administrador
-            $this->notifyAdminOfPermanentFailure( $e, $context );
+            $this->notifyAdminOfPermanentFailure($e, $context);
         }
     }
 
     /**
      * Agenda retry de email com delay calculado.
      */
-    private function scheduleEmailRetry( array $context ): void
+    private function scheduleEmailRetry(array $context): void
     {
-        $delay = $this->calculateRetryDelay( $context[ 'attempts' ] ?? 1 );
+        $delay = $this->calculateRetryDelay($context['attempts'] ?? 1);
 
-        Log::info( 'Agendando retry de email', [
-            'context'       => $context,
+        Log::info('Agendando retry de email', [
+            'context' => $context,
             'delay_seconds' => $delay,
-            'next_retry_at' => now()->addSeconds( $delay )->toDateTimeString()
-        ] );
+            'next_retry_at' => now()->addSeconds($delay)->toDateTimeString(),
+        ]);
 
         // Aqui seria implementado o retry com delay
         // Por simplicidade, apenas loga a intenção
@@ -1390,13 +1369,13 @@ class MailerService
     /**
      * Notifica administrador sobre falha permanente de email.
      */
-    private function notifyAdminOfPermanentFailure( \Throwable $e, array $context ): void
+    private function notifyAdminOfPermanentFailure(\Throwable $e, array $context): void
     {
-        Log::critical( 'Falha permanente de email - notificação para administrador necessária', [
-            'error'                       => $e->getMessage(),
-            'context'                     => $context,
-            'admin_notification_required' => true
-        ] );
+        Log::critical('Falha permanente de email - notificação para administrador necessária', [
+            'error' => $e->getMessage(),
+            'context' => $context,
+            'admin_notification_required' => true,
+        ]);
 
         // Em produção, seria enviado e-mail ou notification para admin
         // Por ora, apenas registra no log
@@ -1405,14 +1384,14 @@ class MailerService
     /**
      * Envia e-mail de verificação usando a Mailable Class EmailVerificationMail.
      *
-     * @param User $user Usuário que receberá o e-mail
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param string $confirmationLink URL de verificação
+     * @param  User  $user  Usuário que receberá o e-mail
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  string  $confirmationLink  URL de verificação
      * @return ServiceResult Resultado da operação
      */
     public function sendEmailVerificationMail(
         User $user,
-        ?Tenant $tenant = null,
+        ?Tenant $tenant,
         string $confirmationLink,
     ): ServiceResult {
 
@@ -1422,32 +1401,32 @@ class MailerService
             );
 
             // Define o destinatário e usa queue para processamento assíncrono
-            Mail::to( $user->email )->queue( $mailable );
+            Mail::to($user->email)->queue($mailable);
 
-            Log::info( 'E-mail de verificação enfileirado com sucesso', [
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'tenant_id' => $tenant?->id,
-                'queue'     => 'emails'
-            ] );
-
-            return ServiceResult::success( [
-                'user_id'   => $user->id,
-                'email'     => $user->email,
-                'queued_at' => now()->toDateTimeString(),
-                'queue'     => 'emails'
-            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar e-mail de verificação', [
+            Log::info('E-mail de verificação enfileirado com sucesso', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
-                'error'   => $e->getMessage()
-            ] );
+                'email' => $user->email,
+                'tenant_id' => $tenant?->id,
+                'queue' => 'emails',
+            ]);
+
+            return ServiceResult::success([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'queued_at' => now()->toDateTimeString(),
+                'queue' => 'emails',
+            ], 'E-mail de verificação enfileirado com sucesso para processamento assíncrono.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar e-mail de verificação', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar e-mail de verificação: ' . $e->getMessage()
+                'Erro ao enfileirar e-mail de verificação: '.$e->getMessage()
             );
         }
     }
@@ -1455,14 +1434,14 @@ class MailerService
     /**
      * Envia notificação de orçamento usando a Mailable Class BudgetNotificationMail.
      *
-     * @param Budget $budget Orçamento relacionado
-     * @param Customer $customer Cliente do orçamento
-     * @param string $notificationType Tipo de notificação
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $publicUrl URL pública do orçamento (opcional)
-     * @param string|null $customMessage Mensagem personalizada (opcional)
-     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param  Budget  $budget  Orçamento relacionado
+     * @param  Customer  $customer  Cliente do orçamento
+     * @param  string  $notificationType  Tipo de notificação
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $publicUrl  URL pública do orçamento (opcional)
+     * @param  string|null  $customMessage  Mensagem personalizada (opcional)
+     * @param  string  $locale  Locale para internacionalização (opcional, padrão: pt-BR)
      * @return ServiceResult Resultado da operação
      */
     public function sendBudgetNotificationMail(
@@ -1488,40 +1467,40 @@ class MailerService
             );
 
             // Usa queue para processamento assíncrono
-            Mail::to( $customer->contact?->email ?? $customer->contact?->email_business )->queue( $mailable );
+            Mail::to($customer->contact?->email ?? $customer->contact?->email_business)->queue($mailable);
 
-            Log::info( 'Notificação de orçamento enfileirada com sucesso', [
-                'budget_id'         => $budget->id,
-                'budget_code'       => $budget->code,
-                'customer_id'       => $customer->id,
+            Log::info('Notificação de orçamento enfileirada com sucesso', [
+                'budget_id' => $budget->id,
+                'budget_code' => $budget->code,
+                'customer_id' => $customer->id,
                 'notification_type' => $notificationType,
-                'tenant_id'         => $tenant?->id,
-                'locale'            => $locale,
-                'queue'             => 'emails'
-            ] );
+                'tenant_id' => $tenant?->id,
+                'locale' => $locale,
+                'queue' => 'emails',
+            ]);
 
-            return ServiceResult::success( [
-                'budget_id'         => $budget->id,
-                'budget_code'       => $budget->code,
-                'customer_id'       => $customer->id,
+            return ServiceResult::success([
+                'budget_id' => $budget->id,
+                'budget_code' => $budget->code,
+                'customer_id' => $customer->id,
                 'notification_type' => $notificationType,
-                'queued_at'         => now()->toDateTimeString(),
-                'queue'             => 'emails',
-                'locale'            => $locale,
-            ], 'Notificação de orçamento enfileirada com sucesso para processamento assíncrono.' );
+                'queued_at' => now()->toDateTimeString(),
+                'queue' => 'emails',
+                'locale' => $locale,
+            ], 'Notificação de orçamento enfileirada com sucesso para processamento assíncrono.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar notificação de orçamento', [
-                'budget_id'         => $budget->id,
-                'customer_id'       => $customer->id,
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar notificação de orçamento', [
+                'budget_id' => $budget->id,
+                'customer_id' => $customer->id,
                 'notification_type' => $notificationType,
-                'error'             => $e->getMessage(),
-                'locale'            => $locale,
-            ] );
+                'error' => $e->getMessage(),
+                'locale' => $locale,
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar notificação de orçamento: ' . $e->getMessage()
+                'Erro ao enfileirar notificação de orçamento: '.$e->getMessage()
             );
         }
     }
@@ -1529,13 +1508,13 @@ class MailerService
     /**
      * Envia notificação melhorada de fatura usando a Mailable Class InvoiceNotification atualizada.
      *
-     * @param Invoice $invoice Fatura a ser notificada
-     * @param Customer $customer Cliente da fatura
-     * @param Tenant|null $tenant Tenant do usuário (opcional)
-     * @param array|null $company Dados da empresa (opcional)
-     * @param string|null $publicLink Link público para visualização (opcional)
-     * @param string|null $customMessage Mensagem personalizada (opcional)
-     * @param string $locale Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param  Invoice  $invoice  Fatura a ser notificada
+     * @param  Customer  $customer  Cliente da fatura
+     * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
+     * @param  array|null  $company  Dados da empresa (opcional)
+     * @param  string|null  $publicLink  Link público para visualização (opcional)
+     * @param  string|null  $customMessage  Mensagem personalizada (opcional)
+     * @param  string  $locale  Locale para internacionalização (opcional, padrão: pt-BR)
      * @return ServiceResult Resultado da operação
      */
     public function sendEnhancedInvoiceNotification(
@@ -1559,39 +1538,38 @@ class MailerService
             );
 
             // Usa queue para processamento assíncrono
-            Mail::to( $customer->commonData?->email ?? $customer->contact?->email ?? 'cliente@exemplo.com' )->queue( $mailable );
+            Mail::to($customer->commonData?->email ?? $customer->contact?->email ?? 'cliente@exemplo.com')->queue($mailable);
 
-            Log::info( 'Notificação aprimorada de fatura enfileirada com sucesso', [
-                'invoice_id'   => $invoice->id,
+            Log::info('Notificação aprimorada de fatura enfileirada com sucesso', [
+                'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->code,
-                'customer_id'  => $customer->id,
-                'tenant_id'    => $tenant?->id,
-                'locale'       => $locale,
-                'queue'        => 'emails'
-            ] );
-
-            return ServiceResult::success( [
-                'invoice_id'   => $invoice->id,
-                'invoice_code' => $invoice->code,
-                'customer_id'  => $customer->id,
-                'queued_at'    => now()->toDateTimeString(),
-                'queue'        => 'emails',
-                'locale'       => $locale,
-            ], 'Notificação aprimorada de fatura enfileirada com sucesso para processamento assíncrono.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao enfileirar notificação aprimorada de fatura', [
-                'invoice_id'  => $invoice->id,
                 'customer_id' => $customer->id,
-                'error'       => $e->getMessage(),
-                'locale'      => $locale,
-            ] );
+                'tenant_id' => $tenant?->id,
+                'locale' => $locale,
+                'queue' => 'emails',
+            ]);
+
+            return ServiceResult::success([
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'customer_id' => $customer->id,
+                'queued_at' => now()->toDateTimeString(),
+                'queue' => 'emails',
+                'locale' => $locale,
+            ], 'Notificação aprimorada de fatura enfileirada com sucesso para processamento assíncrono.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao enfileirar notificação aprimorada de fatura', [
+                'invoice_id' => $invoice->id,
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+                'locale' => $locale,
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao enfileirar notificação aprimorada de fatura: ' . $e->getMessage()
+                'Erro ao enfileirar notificação aprimorada de fatura: '.$e->getMessage()
             );
         }
     }
-
 }

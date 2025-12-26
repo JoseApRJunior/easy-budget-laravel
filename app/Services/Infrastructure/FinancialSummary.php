@@ -32,12 +32,12 @@ class FinancialSummary
     /**
      * Status de orçamentos considerados como receita (faturamento).
      */
-    private const REVENUE_STATUSES = [ BudgetStatus::APPROVED->value, BudgetStatus::COMPLETED->value ];
+    private const REVENUE_STATUSES = [BudgetStatus::APPROVED->value, BudgetStatus::COMPLETED->value];
 
     /**
      * Status de orçamentos pendentes para análise.
      */
-    private const PENDING_STATUSES = [ BudgetStatus::DRAFT->value, BudgetStatus::PENDING->value ];
+    private const PENDING_STATUSES = [BudgetStatus::DRAFT->value, BudgetStatus::PENDING->value];
 
     /**
      * Status de orçamentos para projeção futura.
@@ -45,59 +45,59 @@ class FinancialSummary
     private const PROJECTION_STATUSES = [
         BudgetStatus::DRAFT->value,
         BudgetStatus::PENDING->value,
-        BudgetStatus::APPROVED->value
+        BudgetStatus::APPROVED->value,
     ];
 
     /**
      * Obtém o resumo financeiro mensal por tenant.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return ServiceResult Resumo financeiro mensal
      */
-    public function getMonthlySummary( int $tenantId ): ServiceResult
+    public function getMonthlySummary(int $tenantId): ServiceResult
     {
         try {
-            $currentMonth = Carbon::now()->format( 'Y-m' );
+            $currentMonth = Carbon::now()->format('Y-m');
 
             // Faturamento Mensal (Orçamentos em Andamento e Concluídos)
-            $monthlyRevenue = $this->calculateMonthlyRevenue( $tenantId, $currentMonth );
+            $monthlyRevenue = $this->calculateMonthlyRevenue($tenantId, $currentMonth);
 
             // Orçamentos Pendentes
-            $pendingBudgets = $this->calculatePendingBudgets( $tenantId );
+            $pendingBudgets = $this->calculatePendingBudgets($tenantId);
 
             // Pagamentos Atrasados
-            $overduePayments = $this->calculateOverduePayments( $tenantId );
+            $overduePayments = $this->calculateOverduePayments($tenantId);
 
             // Projeção para o próximo mês
-            $nextMonthProjection = $this->calculateNextMonthProjection( $tenantId, $currentMonth );
+            $nextMonthProjection = $this->calculateNextMonthProjection($tenantId, $currentMonth);
 
             // Análise de tendências (nova funcionalidade)
-            $trends = $this->calculateTrends( $tenantId );
+            $trends = $this->calculateTrends($tenantId);
 
             $summary = [
-                'monthly_revenue'       => $monthlyRevenue,
-                'pending_budgets'       => $pendingBudgets,
-                'overdue_payments'      => $overduePayments,
+                'monthly_revenue' => $monthlyRevenue,
+                'pending_budgets' => $pendingBudgets,
+                'overdue_payments' => $overduePayments,
                 'next_month_projection' => $nextMonthProjection,
-                'trends'                => $trends,
-                'generated_at'          => Carbon::now()->toISOString(),
-                'period'                => $currentMonth,
+                'trends' => $trends,
+                'generated_at' => Carbon::now()->toISOString(),
+                'period' => $currentMonth,
             ];
 
             return ServiceResult::success(
                 $summary,
                 'Resumo financeiro obtido com sucesso.',
             );
-        } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter resumo financeiro', [
+        } catch (Exception $e) {
+            Log::error('FinancialSummary: Erro ao obter resumo financeiro', [
                 'tenant_id' => $tenantId,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao obter resumo financeiro: ' . $e->getMessage()
+                'Erro ao obter resumo financeiro: '.$e->getMessage()
             );
         }
     }
@@ -108,65 +108,65 @@ class FinancialSummary
      * Método específico para relatórios administrativos globais.
      * Implementa tenant isolation através de agrupamento por tenant.
      *
-     * @param array $filters Filtros opcionais (period, status, etc.)
+     * @param  array  $filters  Filtros opcionais (period, status, etc.)
      * @return ServiceResult Resumo consolidado
      */
-    public function getConsolidatedSummary( array $filters = [] ): ServiceResult
+    public function getConsolidatedSummary(array $filters = []): ServiceResult
     {
         try {
-            $period       = $filters[ 'period' ] ?? Carbon::now()->format( 'Y-m' );
-            $statusFilter = $filters[ 'status' ] ?? null;
+            $period = $filters['period'] ?? Carbon::now()->format('Y-m');
+            $statusFilter = $filters['status'] ?? null;
 
             $consolidatedData = Budget::query()
-                ->select( [
+                ->select([
                     'tenant_id',
-                    DB::raw( 'COUNT(*) as total_budgets' ),
-                    DB::raw( 'SUM(total) as total_value' ),
-                    DB::raw( 'AVG(total) as average_value' ),
-                    DB::raw( 'COUNT(CASE WHEN due_date < CURDATE() THEN 1 END) as overdue_count' ),
-                    DB::raw( 'SUM(CASE WHEN due_date < CURDATE() THEN total ELSE 0 END) as overdue_value' ),
-                ] )
-                ->when( $period, function ( $query, $period ) {
-                    return $query->whereRaw( 'DATE_FORMAT(created_at, "%Y-%m") = ?', [ $period ] );
-                } )
-                ->when( $statusFilter, function ( $query, $statusFilter ) {
-                    return $query->where( 'status', $statusFilter );
-                } )
-                ->groupBy( 'tenant_id' )
-                ->orderBy( 'total_value', 'desc' )
+                    DB::raw('COUNT(*) as total_budgets'),
+                    DB::raw('SUM(total) as total_value'),
+                    DB::raw('AVG(total) as average_value'),
+                    DB::raw('COUNT(CASE WHEN due_date < CURDATE() THEN 1 END) as overdue_count'),
+                    DB::raw('SUM(CASE WHEN due_date < CURDATE() THEN total ELSE 0 END) as overdue_value'),
+                ])
+                ->when($period, function ($query, $period) {
+                    return $query->whereRaw('DATE_FORMAT(created_at, "%Y-%m") = ?', [$period]);
+                })
+                ->when($statusFilter, function ($query, $statusFilter) {
+                    return $query->where('status', $statusFilter);
+                })
+                ->groupBy('tenant_id')
+                ->orderBy('total_value', 'desc')
                 ->get();
 
             $summary = [
                 'consolidated' => $consolidatedData,
-                'totals'       => [
-                    'total_budgets' => $consolidatedData->sum( 'total_budgets' ),
-                    'total_value'   => $consolidatedData->sum( 'total_value' ),
-                    'average_value' => $consolidatedData->avg( 'average_value' ),
-                    'overdue_count' => $consolidatedData->sum( 'overdue_count' ),
-                    'overdue_value' => $consolidatedData->sum( 'overdue_value' ),
+                'totals' => [
+                    'total_budgets' => $consolidatedData->sum('total_budgets'),
+                    'total_value' => $consolidatedData->sum('total_value'),
+                    'average_value' => $consolidatedData->avg('average_value'),
+                    'overdue_count' => $consolidatedData->sum('overdue_count'),
+                    'overdue_value' => $consolidatedData->sum('overdue_value'),
                 ],
                 'generated_at' => Carbon::now()->toISOString(),
-                'period'       => $period,
+                'period' => $period,
             ];
 
-            Log::info( 'FinancialSummary: Resumo consolidado gerado', [
-                'period'        => $period,
+            Log::info('FinancialSummary: Resumo consolidado gerado', [
+                'period' => $period,
                 'tenants_count' => $consolidatedData->count(),
-            ] );
+            ]);
 
             return ServiceResult::success(
                 $summary,
                 'Resumo financeiro consolidado obtido com sucesso.',
             );
-        } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter resumo consolidado', [
+        } catch (Exception $e) {
+            Log::error('FinancialSummary: Erro ao obter resumo consolidado', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-            ] );
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao obter resumo consolidado: ' . $e->getMessage()
+                'Erro ao obter resumo consolidado: '.$e->getMessage()
             );
         }
     }
@@ -177,72 +177,72 @@ class FinancialSummary
      * Implementa análise de tendências e padrões de receita.
      * Compatibilidade com API legacy mantida através de estrutura de dados similar.
      *
-     * @param int $tenantId ID do tenant
-     * @param string $period Período para análise (Y-m)
-     * @param int $months Número de meses para análise (padrão: 6)
+     * @param  int  $tenantId  ID do tenant
+     * @param  string  $period  Período para análise (Y-m)
+     * @param  int  $months  Número de meses para análise (padrão: 6)
      * @return ServiceResult Análise de performance
      */
-    public function getPerformanceAnalysis( int $tenantId, string $period, int $months = 6 ): ServiceResult
+    public function getPerformanceAnalysis(int $tenantId, string $period, int $months = 6): ServiceResult
     {
         try {
-            $startDate = Carbon::now()->parse( $period . '-01' )->subMonths( $months - 1 );
-            $endDate   = Carbon::now()->parse( $period . '-01' )->endOfMonth();
+            $startDate = Carbon::now()->parse($period.'-01')->subMonths($months - 1);
+            $endDate = Carbon::now()->parse($period.'-01')->endOfMonth();
 
             $performanceData = Budget::query()
-                ->select( [
-                    DB::raw( 'DATE_FORMAT(created_at, "%Y-%m") as period' ),
-                    DB::raw( 'COUNT(*) as total_budgets' ),
-                    DB::raw( 'SUM(total) as total_revenue' ),
-                    DB::raw( 'AVG(total) as average_budget' ),
-                    DB::raw( 'COUNT(CASE WHEN status IN ("' . implode( '","', self::REVENUE_STATUSES ) . '") THEN 1 END) as completed_budgets' ),
-                ] )
-                ->where( 'tenant_id', $tenantId )
-                ->whereBetween( 'created_at', [ $startDate, $endDate ] )
-                ->groupBy( 'period' )
-                ->orderBy( 'period' )
+                ->select([
+                    DB::raw('DATE_FORMAT(created_at, "%Y-%m") as period'),
+                    DB::raw('COUNT(*) as total_budgets'),
+                    DB::raw('SUM(total) as total_revenue'),
+                    DB::raw('AVG(total) as average_budget'),
+                    DB::raw('COUNT(CASE WHEN status IN ("'.implode('","', self::REVENUE_STATUSES).'") THEN 1 END) as completed_budgets'),
+                ])
+                ->where('tenant_id', $tenantId)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('period')
+                ->orderBy('period')
                 ->get();
 
             // Calcular tendências
-            $trends = $this->calculatePerformanceTrends( $performanceData );
+            $trends = $this->calculatePerformanceTrends($performanceData);
 
             $analysis = [
                 'performance_data' => $performanceData,
-                'trends'           => $trends,
-                'summary'          => [
-                    'total_periods'           => $performanceData->count(),
-                    'total_revenue'           => $performanceData->sum( 'total_revenue' ),
-                    'average_monthly_revenue' => $performanceData->avg( 'total_revenue' ),
-                    'best_month'              => $performanceData->sortByDesc( 'total_revenue' )->first(),
-                    'growth_rate'             => $trends[ 'growth_rate' ] ?? 0,
+                'trends' => $trends,
+                'summary' => [
+                    'total_periods' => $performanceData->count(),
+                    'total_revenue' => $performanceData->sum('total_revenue'),
+                    'average_monthly_revenue' => $performanceData->avg('total_revenue'),
+                    'best_month' => $performanceData->sortByDesc('total_revenue')->first(),
+                    'growth_rate' => $trends['growth_rate'] ?? 0,
                 ],
-                'generated_at'     => Carbon::now()->toISOString(),
-                'analysis_period'  => [
-                    'start'  => $startDate->format( 'Y-m' ),
-                    'end'    => $endDate->format( 'Y-m' ),
+                'generated_at' => Carbon::now()->toISOString(),
+                'analysis_period' => [
+                    'start' => $startDate->format('Y-m'),
+                    'end' => $endDate->format('Y-m'),
                     'months' => $months,
                 ],
             ];
 
-            Log::info( 'FinancialSummary: Análise de performance gerada', [
+            Log::info('FinancialSummary: Análise de performance gerada', [
                 'tenant_id' => $tenantId,
-                'period'    => $period,
-                'months'    => $months,
-            ] );
+                'period' => $period,
+                'months' => $months,
+            ]);
 
             return ServiceResult::success(
                 $analysis,
                 'Análise de performance financeira obtida com sucesso.',
             );
-        } catch ( Exception $e ) {
-            Log::error( 'FinancialSummary: Erro ao obter análise de performance', [
+        } catch (Exception $e) {
+            Log::error('FinancialSummary: Erro ao obter análise de performance', [
                 'tenant_id' => $tenantId,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return ServiceResult::error(
                 OperationStatus::ERROR,
-                'Erro ao obter análise de performance: ' . $e->getMessage()
+                'Erro ao obter análise de performance: '.$e->getMessage()
             );
         }
     }
@@ -253,18 +253,18 @@ class FinancialSummary
      * Mantém a mesma interface do FinancialSummary legacy para
      * garantir compatibilidade com código existente.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return array<string, mixed> Dados no formato legacy
      */
-    public function getLegacyMonthlySummary( int $tenantId ): array
+    public function getLegacyMonthlySummary(int $tenantId): array
     {
-        $result = $this->getMonthlySummary( $tenantId );
+        $result = $this->getMonthlySummary($tenantId);
 
-        if ( !$result->isSuccess() ) {
+        if (! $result->isSuccess()) {
             return [
-                'monthly_revenue'       => 0,
-                'pending_budgets'       => [ 'total' => 0, 'count' => 0 ],
-                'overdue_payments'      => [ 'total' => 0, 'count' => 0 ],
+                'monthly_revenue' => 0,
+                'pending_budgets' => ['total' => 0, 'count' => 0],
+                'overdue_payments' => ['total' => 0, 'count' => 0],
                 'next_month_projection' => 0,
             ];
         }
@@ -272,27 +272,27 @@ class FinancialSummary
         $data = $result->getData();
 
         return [
-            'monthly_revenue'       => $data[ 'monthly_revenue' ],
-            'pending_budgets'       => $data[ 'pending_budgets' ],
-            'overdue_payments'      => $data[ 'overdue_payments' ],
-            'next_month_projection' => $data[ 'next_month_projection' ],
+            'monthly_revenue' => $data['monthly_revenue'],
+            'pending_budgets' => $data['pending_budgets'],
+            'overdue_payments' => $data['overdue_payments'],
+            'next_month_projection' => $data['next_month_projection'],
         ];
     }
 
     /**
      * Calcula receita mensal por tenant.
      *
-     * @param int $tenantId ID do tenant
-     * @param string $period Período (Y-m)
+     * @param  int  $tenantId  ID do tenant
+     * @param  string  $period  Período (Y-m)
      * @return float Receita mensal
      */
-    private function calculateMonthlyRevenue( int $tenantId, string $period ): float
+    private function calculateMonthlyRevenue(int $tenantId, string $period): float
     {
         $revenue = Budget::query()
-            ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'status', self::REVENUE_STATUSES )
-            ->whereRaw( 'DATE_FORMAT(budgets.updated_at, "%Y-%m") = ?', [ $period ] )
-            ->sum( 'total' );
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', self::REVENUE_STATUSES)
+            ->whereRaw('DATE_FORMAT(budgets.updated_at, "%Y-%m") = ?', [$period])
+            ->sum('total');
 
         // Garantir que sempre retorne um float
         return (float) $revenue;
@@ -301,60 +301,60 @@ class FinancialSummary
     /**
      * Calcula orçamentos pendentes por tenant.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return array{total: float, count: int}
      */
-    private function calculatePendingBudgets( int $tenantId ): array
+    private function calculatePendingBudgets(int $tenantId): array
     {
         $result = Budget::query()
-            ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'status', self::PENDING_STATUSES )
-            ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', self::PENDING_STATUSES)
+            ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as count')
             ->first();
 
         return [
-            'total' => (float) ( $result->total ?? 0 ),
-            'count' => (int) ( $result->count ?? 0 ),
+            'total' => (float) ($result->total ?? 0),
+            'count' => (int) ($result->count ?? 0),
         ];
     }
 
     /**
      * Calcula pagamentos atrasados por tenant.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return array{total: float, count: int}
      */
-    private function calculateOverduePayments( int $tenantId ): array
+    private function calculateOverduePayments(int $tenantId): array
     {
         $result = Budget::query()
-            ->where( 'tenant_id', $tenantId )
-            ->where( 'status', 'PENDING' )
-            ->where( 'due_date', '<', Carbon::now() )
-            ->selectRaw( 'COALESCE(SUM(total), 0) as total, COUNT(*) as count' )
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'PENDING')
+            ->where('due_date', '<', Carbon::now())
+            ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as count')
             ->first();
 
         return [
-            'total' => (float) ( $result->total ?? 0 ),
-            'count' => (int) ( $result->count ?? 0 ),
+            'total' => (float) ($result->total ?? 0),
+            'count' => (int) ($result->count ?? 0),
         ];
     }
 
     /**
      * Calcula projeção para o próximo mês.
      *
-     * @param int $tenantId ID do tenant
-     * @param string $currentPeriod Período atual (Y-m)
+     * @param  int  $tenantId  ID do tenant
+     * @param  string  $currentPeriod  Período atual (Y-m)
      * @return float Projeção para próximo mês
      */
-    private function calculateNextMonthProjection( int $tenantId, string $currentPeriod ): float
+    private function calculateNextMonthProjection(int $tenantId, string $currentPeriod): float
     {
-        $nextMonth = Carbon::now()->parse( $currentPeriod . '-01' )->addMonth()->format( 'Y-m' );
+        $nextMonth = Carbon::now()->parse($currentPeriod.'-01')->addMonth()->format('Y-m');
 
         $projection = Budget::query()
-            ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'status', self::PROJECTION_STATUSES )
-            ->whereRaw( 'DATE_FORMAT(due_date, "%Y-%m") = ?', [ $nextMonth ] )
-            ->sum( 'total' );
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', self::PROJECTION_STATUSES)
+            ->whereRaw('DATE_FORMAT(due_date, "%Y-%m") = ?', [$nextMonth])
+            ->sum('total');
 
         // Garantir que sempre retorne um float
         return (float) $projection;
@@ -363,33 +363,33 @@ class FinancialSummary
     /**
      * Calcula tendências de performance financeira.
      *
-     * @param int $tenantId ID do tenant
+     * @param  int  $tenantId  ID do tenant
      * @return array Tendências calculadas
      */
-    private function calculateTrends( int $tenantId ): array
+    private function calculateTrends(int $tenantId): array
     {
         $last3Months = Budget::query()
-            ->select( [
-                DB::raw( 'DATE_FORMAT(budgets.created_at, "%Y-%m") as period' ),
-                DB::raw( 'SUM(total) as revenue' ),
-            ] )
-            ->where( 'tenant_id', $tenantId )
-            ->whereIn( 'status', self::REVENUE_STATUSES )
-            ->where( 'budgets.created_at', '>=', Carbon::now()->subMonths( 3 ) )
-            ->groupBy( 'period' )
-            ->orderBy( 'period' )
+            ->select([
+                DB::raw('DATE_FORMAT(budgets.created_at, "%Y-%m") as period'),
+                DB::raw('SUM(total) as revenue'),
+            ])
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', self::REVENUE_STATUSES)
+            ->where('budgets.created_at', '>=', Carbon::now()->subMonths(3))
+            ->groupBy('period')
+            ->orderBy('period')
             ->get();
 
-        if ( $last3Months->count() < 2 ) {
-            return [ 'trend' => 'insufficient_data' ];
+        if ($last3Months->count() < 2) {
+            return ['trend' => 'insufficient_data'];
         }
 
-        $revenues   = $last3Months->pluck( 'revenue' )->toArray();
-        $growthRate = $this->calculateGrowthRate( $revenues );
+        $revenues = $last3Months->pluck('revenue')->toArray();
+        $growthRate = $this->calculateGrowthRate($revenues);
 
         return [
-            'trend'            => $growthRate > 0 ? 'growing' : ( $growthRate < 0 ? 'declining' : 'stable' ),
-            'growth_rate'      => round( $growthRate, 2 ),
+            'trend' => $growthRate > 0 ? 'growing' : ($growthRate < 0 ? 'declining' : 'stable'),
+            'growth_rate' => round($growthRate, 2),
             'periods_analyzed' => $last3Months->count(),
         ];
     }
@@ -397,21 +397,21 @@ class FinancialSummary
     /**
      * Calcula tendências de performance a partir de dados históricos.
      *
-     * @param \Illuminate\Support\Collection $performanceData Dados de performance
+     * @param  \Illuminate\Support\Collection  $performanceData  Dados de performance
      * @return array Tendências calculadas
      */
-    private function calculatePerformanceTrends( $performanceData ): array
+    private function calculatePerformanceTrends($performanceData): array
     {
-        if ( $performanceData->count() < 2 ) {
-            return [ 'trend' => 'insufficient_data' ];
+        if ($performanceData->count() < 2) {
+            return ['trend' => 'insufficient_data'];
         }
 
-        $revenues   = $performanceData->pluck( 'total_revenue' )->toArray();
-        $growthRate = $this->calculateGrowthRate( $revenues );
+        $revenues = $performanceData->pluck('total_revenue')->toArray();
+        $growthRate = $this->calculateGrowthRate($revenues);
 
         return [
-            'trend'            => $growthRate > 0 ? 'growing' : ( $growthRate < 0 ? 'declining' : 'stable' ),
-            'growth_rate'      => round( $growthRate, 2 ),
+            'trend' => $growthRate > 0 ? 'growing' : ($growthRate < 0 ? 'declining' : 'stable'),
+            'growth_rate' => round($growthRate, 2),
             'periods_analyzed' => $performanceData->count(),
         ];
     }
@@ -419,23 +419,22 @@ class FinancialSummary
     /**
      * Calcula taxa de crescimento entre períodos.
      *
-     * @param array $values Array de valores para calcular crescimento
+     * @param  array  $values  Array de valores para calcular crescimento
      * @return float Taxa de crescimento em percentual
      */
-    private function calculateGrowthRate( array $values ): float
+    private function calculateGrowthRate(array $values): float
     {
-        if ( count( $values ) < 2 ) {
+        if (count($values) < 2) {
             return 0;
         }
 
-        $firstValue = (float) $values[ 0 ];
-        $lastValue  = (float) end( $values );
+        $firstValue = (float) $values[0];
+        $lastValue = (float) end($values);
 
-        if ( $firstValue == 0 ) {
+        if ($firstValue == 0) {
             return $lastValue > 0 ? 100 : 0;
         }
 
-        return ( ( $lastValue - $firstValue ) / $firstValue ) * 100;
+        return (($lastValue - $firstValue) / $firstValue) * 100;
     }
-
 }

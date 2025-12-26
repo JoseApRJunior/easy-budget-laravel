@@ -29,24 +29,23 @@ class ValidationServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Registra validador de CPF usando ValidationHelper::isValidCpf()
-        Validator::extend( 'cpf', function ( $attribute, $value, $parameters, $validator ) {
-            return \App\Helpers\ValidationHelper::isValidCpf( $value );
-        }, 'O CPF informado é inválido.' );
+        Validator::extend('cpf', function ($attribute, $value, $parameters, $validator) {
+            return \App\Helpers\ValidationHelper::isValidCpf($value);
+        }, 'O CPF informado é inválido.');
 
         // Registra validador de CNPJ usando ValidationHelper::isValidCnpj()
-        Validator::extend( 'cnpj', function ( $attribute, $value, $parameters, $validator ) {
-            return \App\Helpers\ValidationHelper::isValidCnpj( $value );
-        }, 'O CNPJ informado é inválido.' );
+        Validator::extend('cnpj', function ($attribute, $value, $parameters, $validator) {
+            return \App\Helpers\ValidationHelper::isValidCnpj($value);
+        }, 'O CNPJ informado é inválido.');
 
         // Registra validador de telefone brasileiro
-        Validator::extend( 'phone_br', function ( $attribute, $value, $parameters, $validator ) {
-            return \App\Helpers\ValidationHelper::isValidPhone( $value );
-        }, 'O telefone informado é inválido.' );
+        Validator::extend('phone_br', function ($attribute, $value, $parameters, $validator) {
+            return \App\Helpers\ValidationHelper::isValidPhone($value);
+        }, 'O telefone informado é inválido.');
 
         // Registra validador de CEP brasileiro
-        Validator::extend( 'cep_br', function ( $attribute, $value, $parameters, $validator ) {
-            return \App\Helpers\ValidationHelper::isValidCep( $value );
-        }, 'O CEP informado é inválido.' );
+        Validator::extend('cep_br', function ($attribute, $value, $parameters, $validator) {
+            return \App\Helpers\ValidationHelper::isValidCep($value);
+        }, 'O CEP informado é inválido.');
     }
-
 }

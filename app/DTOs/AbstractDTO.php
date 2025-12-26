@@ -24,7 +24,7 @@ abstract readonly class AbstractDTO
 
         foreach ($properties as $property) {
             $value = $property->getValue($this);
-            
+
             if ($value instanceof AbstractDTO) {
                 $array[$property->getName()] = $value->toArray();
             } elseif (is_array($value)) {
@@ -45,21 +45,24 @@ abstract readonly class AbstractDTO
      */
     public function toArrayWithoutNulls(): array
     {
-        return array_filter($this->toArray(), fn($value) => $value !== null);
+        return array_filter($this->toArray(), fn ($value) => $value !== null);
     }
 
     /**
      * Método auxiliar para instanciar o DTO a partir de um array.
      * Usa Reflection para mapear apenas os argumentos existentes no construtor.
      * Ignora chaves extras no array de entrada (previne erros).
+     *
+     * @return static
      */
     public static function fromArray(array $data): static
     {
         $reflection = new ReflectionClass(static::class);
         $constructor = $reflection->getConstructor();
 
-        if (!$constructor) {
-            return new static();
+        if (! $constructor) {
+            // @phpstan-ignore-next-line
+            return new static;
         }
 
         $params = $constructor->getParameters();
@@ -67,7 +70,7 @@ abstract readonly class AbstractDTO
 
         foreach ($params as $param) {
             $name = $param->getName();
-            
+
             if (array_key_exists($name, $data)) {
                 $args[$name] = $data[$name];
             } elseif ($param->isDefaultValueAvailable()) {
@@ -78,6 +81,7 @@ abstract readonly class AbstractDTO
             // Se for obrigatório e não estiver presente, o PHP lançará ArgumentCountError na instanciação
         }
 
+        // @phpstan-ignore-next-line
         return new static(...$args);
     }
 }

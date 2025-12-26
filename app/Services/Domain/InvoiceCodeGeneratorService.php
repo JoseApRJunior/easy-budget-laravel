@@ -12,9 +12,6 @@ class InvoiceCodeGeneratorService
     /**
      * Gera um código de fatura único baseado no código do serviço.
      * Utiliza lock de banco de dados para evitar condições de corrida.
-     *
-     * @param string $serviceCode
-     * @return string
      */
     public function generate(string $serviceCode): string
     {
@@ -31,7 +28,7 @@ class InvoiceCodeGeneratorService
                 $sequential = (int) $matches[1] + 1;
             }
 
-            return "{$serviceCode}-INV" . str_pad((string) $sequential, 3, '0', STR_PAD_LEFT);
+            return "{$serviceCode}-INV".str_pad((string) $sequential, 3, '0', STR_PAD_LEFT);
         });
     }
 }

@@ -28,9 +28,9 @@ readonly class PaymentConfirmDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'transaction_id'   => $this->transaction_id,
+            'transaction_id' => $this->transaction_id,
             'gateway_response' => $this->gateway_response,
-            'notes'            => $this->notes,
+            'notes' => $this->notes,
         ];
     }
 }

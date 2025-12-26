@@ -37,6 +37,7 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->productService->getDashboardData();
+
         return $this->view('pages.product.dashboard', $result, 'stats');
     }
 
@@ -52,11 +53,11 @@ class ProductController extends Controller
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 15);
-            $result  = $this->productService->getFilteredProducts($filters, ['category'], $perPage);
+            $result = $this->productService->getFilteredProducts($filters, ['category'], $perPage);
         }
 
         return $this->view('pages.product.index', $result, 'products', [
-            'filters'    => $filters,
+            'filters' => $filters,
             'categories' => $this->categoryService->getActive()->getData(),
         ]);
     }
@@ -95,6 +96,7 @@ class ProductController extends Controller
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao criar produto', [
                 'error' => $e->getMessage(),
             ]);
+
             return $this->redirectError('provider.products.create', 'Erro interno ao criar produto.');
         }
     }
@@ -162,9 +164,10 @@ class ProductController extends Controller
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao atualizar produto', [
-                'sku'   => $sku,
+                'sku' => $sku,
                 'error' => $e->getMessage(),
             ]);
+
             return $this->redirectError('provider.products.edit', 'Erro interno ao atualizar produto.', ['sku' => $sku]);
         }
     }
@@ -180,6 +183,7 @@ class ProductController extends Controller
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $result->getMessage()], 404);
                 }
+
                 return $this->redirectError('provider.products.index', $result->getMessage());
             }
 
@@ -203,7 +207,7 @@ class ProductController extends Controller
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao alterar status do produto', [
-                'sku'   => $sku,
+                'sku' => $sku,
                 'error' => $e->getMessage(),
             ]);
 
@@ -241,9 +245,10 @@ class ProductController extends Controller
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao excluir produto', [
-                'sku'   => $sku,
+                'sku' => $sku,
                 'error' => $e->getMessage(),
             ]);
+
             return $this->redirectError('provider.products.index', 'Erro interno ao excluir produto.');
         }
     }
@@ -273,9 +278,10 @@ class ProductController extends Controller
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao restaurar produto', [
-                'sku'   => $sku,
+                'sku' => $sku,
                 'error' => $e->getMessage(),
             ]);
+
             return $this->redirectError('provider.products.index', 'Erro interno ao restaurar produto.');
         }
     }
@@ -291,12 +297,14 @@ class ProductController extends Controller
     public function active(Request $request): View
     {
         $request->merge(['active' => '1']);
+
         return $this->index($request);
     }
 
     public function deleted(Request $request): View
     {
         $request->merge(['deleted' => 'only']);
+
         return $this->index($request);
     }
 
@@ -315,7 +323,7 @@ class ProductController extends Controller
             return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        return $this->redirectSuccess('provider.products.index', "Restaurados produtos com sucesso.");
+        return $this->redirectSuccess('provider.products.index', 'Restaurados produtos com sucesso.');
     }
 
     /**
@@ -325,7 +333,7 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Product::class);
         $filters = $request->only(['search', 'active', 'category_id', 'min_price', 'max_price']);
-        $result  = $this->productService->getFilteredProducts($filters, ['category']);
+        $result = $this->productService->getFilteredProducts($filters, ['category']);
 
         return $this->jsonResponse($result);
     }

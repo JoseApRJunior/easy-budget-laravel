@@ -51,21 +51,21 @@ readonly class BudgetTemplateDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'               => $this->name,
-            'slug'               => $this->slug,
-            'category'           => $this->category,
-            'template_data'      => $this->template_data,
-            'default_items'      => $this->default_items,
-            'user_id'            => $this->user_id,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'category' => $this->category,
+            'template_data' => $this->template_data,
+            'default_items' => $this->default_items,
+            'user_id' => $this->user_id,
             'parent_template_id' => $this->parent_template_id,
-            'description'        => $this->description,
-            'variables'          => $this->variables,
-            'estimated_hours'    => $this->estimated_hours,
-            'is_public'          => $this->is_public,
-            'is_active'          => $this->is_active,
-            'usage_count'        => $this->usage_count,
-            'last_used_at'       => $this->last_used_at?->toDateTimeString(),
-            'tenant_id'          => $this->tenant_id,
+            'description' => $this->description,
+            'variables' => $this->variables,
+            'estimated_hours' => $this->estimated_hours,
+            'is_public' => $this->is_public,
+            'is_active' => $this->is_active,
+            'usage_count' => $this->usage_count,
+            'last_used_at' => $this->last_used_at?->toDateTimeString(),
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

@@ -29,14 +29,14 @@ class ServiceObserver
             'service_code' => $service->code,
             'status' => $service->status->value,
             'is_dirty' => $service->isDirty('status'),
-            'original_status' => $service->getOriginal('status')
+            'original_status' => $service->getOriginal('status'),
         ]);
-        
+
         // Verificar se o status mudou para \"completed\"
         if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
             Log::info('Service status changed to completed, generating automatic invoice', [
                 'service_id' => $service->id,
-                'service_code' => $service->code
+                'service_code' => $service->code,
             ]);
             $this->generateAutomaticInvoice($service);
         }
@@ -51,15 +51,16 @@ class ServiceObserver
             Log::info('Iniciando geração automática de fatura para serviço', [
                 'service_id' => $service->id,
                 'service_code' => $service->code,
-                'tenant_id' => $service->tenant_id
+                'tenant_id' => $service->tenant_id,
             ]);
 
             // Verificar se já existe uma fatura para este serviço
             if ($this->invoiceService->checkExistingInvoiceForService($service->id)) {
                 Log::info('Fatura já existe para este serviço, ignorando geração automática', [
                     'service_id' => $service->id,
-                    'service_code' => $service->code
+                    'service_code' => $service->code,
                 ]);
+
                 return;
             }
 
@@ -80,13 +81,13 @@ class ServiceObserver
                     'service_id' => $service->id,
                     'service_code' => $service->code,
                     'invoice_id' => $invoice->id,
-                    'invoice_code' => $invoice->code
+                    'invoice_code' => $invoice->code,
                 ]);
             } else {
                 Log::error('Erro ao gerar fatura automática', [
                     'service_id' => $service->id,
                     'service_code' => $service->code,
-                    'error' => $result->getMessage()
+                    'error' => $result->getMessage(),
                 ]);
             }
 
@@ -95,7 +96,7 @@ class ServiceObserver
                 'service_id' => $service->id,
                 'service_code' => $service->code,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

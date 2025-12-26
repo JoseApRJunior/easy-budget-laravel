@@ -4,26 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Address;
-use App\Models\AuditLog;
-use App\Models\Budget;
-use App\Models\CommonData;
-use App\Models\Contact;
-use App\Models\Customer;
-use App\Models\InventoryMovement;
-use App\Models\Invoice;
-use App\Models\MiddlewareMetricHistory;
-use App\Models\MonitoringAlertHistory;
-use App\Models\PlanSubscription;
-use App\Models\Product;
-use App\Models\ProductInventory;
-use App\Models\Provider;
-use App\Models\Report;
-use App\Models\Schedule;
-use App\Models\Service;
-use App\Models\ServiceItem;
-use App\Models\User;
-use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,7 +23,7 @@ class Tenant extends Model
     ];
 
     protected $casts = [
-        'is_active'  => 'boolean',
+        'is_active' => 'boolean',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -68,7 +48,7 @@ class Tenant extends Model
      */
     public function users(): HasMany
     {
-        return $this->hasMany( User::class);
+        return $this->hasMany(User::class);
     }
 
     /**
@@ -76,7 +56,7 @@ class Tenant extends Model
      */
     public function categories(): HasMany
     {
-        return $this->hasMany( Category::class);
+        return $this->hasMany(Category::class);
     }
 
     /**
@@ -84,7 +64,7 @@ class Tenant extends Model
      */
     public function provider(): HasOne
     {
-        return $this->hasOne( Provider::class);
+        return $this->hasOne(Provider::class);
     }
 
     /**
@@ -92,7 +72,7 @@ class Tenant extends Model
      */
     public function budgets(): HasMany
     {
-        return $this->hasMany( Budget::class);
+        return $this->hasMany(Budget::class);
     }
 
     /**
@@ -100,7 +80,7 @@ class Tenant extends Model
      */
     public function services(): HasMany
     {
-        return $this->hasMany( Service::class);
+        return $this->hasMany(Service::class);
     }
 
     /**
@@ -108,7 +88,7 @@ class Tenant extends Model
      */
     public function invoices(): HasMany
     {
-        return $this->hasMany( Invoice::class);
+        return $this->hasMany(Invoice::class);
     }
 
     /**
@@ -116,7 +96,7 @@ class Tenant extends Model
      */
     public function activities(): HasMany
     {
-        return $this->hasMany( AuditLog::class);
+        return $this->hasMany(AuditLog::class);
     }
 
     /**
@@ -124,7 +104,7 @@ class Tenant extends Model
      */
     public function middlewareMetricHistories(): HasMany
     {
-        return $this->hasMany( MiddlewareMetricHistory::class);
+        return $this->hasMany(MiddlewareMetricHistory::class);
     }
 
     /**
@@ -132,7 +112,7 @@ class Tenant extends Model
      */
     public function monitoringAlertHistories(): HasMany
     {
-        return $this->hasMany( MonitoringAlertHistory::class);
+        return $this->hasMany(MonitoringAlertHistory::class);
     }
 
     /**
@@ -140,7 +120,7 @@ class Tenant extends Model
      */
     public function planSubscriptions(): HasMany
     {
-        return $this->hasMany( PlanSubscription::class);
+        return $this->hasMany(PlanSubscription::class);
     }
 
     /**
@@ -148,7 +128,7 @@ class Tenant extends Model
      */
     public function commonData(): HasMany
     {
-        return $this->hasMany( CommonData::class);
+        return $this->hasMany(CommonData::class);
     }
 
     /**
@@ -156,7 +136,7 @@ class Tenant extends Model
      */
     public function products(): HasMany
     {
-        return $this->hasMany( Product::class);
+        return $this->hasMany(Product::class);
     }
 
     /**
@@ -164,7 +144,7 @@ class Tenant extends Model
      */
     public function reports(): HasMany
     {
-        return $this->hasMany( Report::class);
+        return $this->hasMany(Report::class);
     }
 
     /**
@@ -172,7 +152,7 @@ class Tenant extends Model
      */
     public function addresses(): HasMany
     {
-        return $this->hasMany( Address::class);
+        return $this->hasMany(Address::class);
     }
 
     /**
@@ -180,7 +160,7 @@ class Tenant extends Model
      */
     public function contacts(): HasMany
     {
-        return $this->hasMany( Contact::class);
+        return $this->hasMany(Contact::class);
     }
 
     /**
@@ -188,7 +168,7 @@ class Tenant extends Model
      */
     public function customers(): HasMany
     {
-        return $this->hasMany( Customer::class);
+        return $this->hasMany(Customer::class);
     }
 
     /**
@@ -196,7 +176,7 @@ class Tenant extends Model
      */
     public function inventoryMovements(): HasMany
     {
-        return $this->hasMany( InventoryMovement::class);
+        return $this->hasMany(InventoryMovement::class);
     }
 
     /**
@@ -204,7 +184,7 @@ class Tenant extends Model
      */
     public function productInventories(): HasMany
     {
-        return $this->hasMany( ProductInventory::class);
+        return $this->hasMany(ProductInventory::class);
     }
 
     /**
@@ -212,7 +192,7 @@ class Tenant extends Model
      */
     public function serviceItems(): HasMany
     {
-        return $this->hasMany( ServiceItem::class);
+        return $this->hasMany(ServiceItem::class);
     }
 
     /**
@@ -220,7 +200,7 @@ class Tenant extends Model
      */
     public function schedules(): HasMany
     {
-        return $this->hasMany( Schedule::class);
+        return $this->hasMany(Schedule::class);
     }
 
     /**
@@ -228,20 +208,18 @@ class Tenant extends Model
      */
     public function userConfirmationTokens(): HasMany
     {
-        return $this->hasMany( UserConfirmationToken::class);
+        return $this->hasMany(UserConfirmationToken::class);
     }
 
     /**
      * Obtém o tenant atual baseado no contexto de autenticação.
-     *
-     * @return self|null
      */
     public static function current(): ?self
     {
-        if ( Auth::check() ) {
+        if (Auth::check()) {
             return Auth::user()->tenant ?? null;
         }
+
         return null;
     }
-
 }

@@ -38,15 +38,15 @@ readonly class UserSettingsDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'user_id'               => $this->user_id,
-            'theme'                 => $this->theme,
-            'language'              => $this->language,
+            'user_id' => $this->user_id,
+            'theme' => $this->theme,
+            'language' => $this->language,
             'notifications_enabled' => $this->notifications_enabled,
-            'timezone'              => $this->timezone,
-            'date_format'           => $this->date_format,
-            'dashboard_config'      => $this->dashboard_config,
-            'preferences'           => $this->preferences,
-            'tenant_id'             => $this->tenant_id,
+            'timezone' => $this->timezone,
+            'date_format' => $this->date_format,
+            'dashboard_config' => $this->dashboard_config,
+            'preferences' => $this->preferences,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

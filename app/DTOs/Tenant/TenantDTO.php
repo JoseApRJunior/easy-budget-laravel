@@ -24,7 +24,7 @@ readonly class TenantDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'      => $this->name,
+            'name' => $this->name,
             'is_active' => $this->is_active,
         ];
     }

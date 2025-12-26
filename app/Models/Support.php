@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Support extends Model
 {
@@ -69,7 +70,7 @@ class Support extends Model
         'email',
         'subject',
         'message',
-        'status',// criar const dos status
+        'status', // criar const dos status
         'tenant_id',
     ];
 
@@ -79,9 +80,9 @@ class Support extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'code'       => 'string',
-        'tenant_id'  => 'integer',
-        'status'     => 'string',
+        'code' => 'string',
+        'tenant_id' => 'integer',
+        'status' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -93,12 +94,12 @@ class Support extends Model
     {
         return [
             'first_name' => 'nullable|string|max:255',
-            'last_name'  => 'nullable|string|max:255',
-            'email'      => 'required|email|max:255',
-            'subject'    => 'required|string|max:255',
-            'message'    => 'required|string',
-            'status'     => 'required|string|in:' . implode( ',', self::ALL_STATUSES ),
-            'tenant_id'  => 'required|integer|exists:tenants,id',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'status' => 'required|string|in:'.implode(',', self::ALL_STATUSES),
+            'tenant_id' => 'required|integer|exists:tenants,id',
         ];
     }
 
@@ -107,13 +108,11 @@ class Support extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
      * Verifica se o chamado está aberto
-     *
-     * @return bool
      */
     public function isAberto(): bool
     {
@@ -122,8 +121,6 @@ class Support extends Model
 
     /**
      * Verifica se o chamado está resolvido
-     *
-     * @return bool
      */
     public function isResolvido(): bool
     {
@@ -132,8 +129,6 @@ class Support extends Model
 
     /**
      * Verifica se o chamado está fechado
-     *
-     * @return bool
      */
     public function isFechado(): bool
     {
@@ -142,8 +137,6 @@ class Support extends Model
 
     /**
      * Verifica se o chamado está em andamento
-     *
-     * @return bool
      */
     public function isEmAndamento(): bool
     {
@@ -152,8 +145,6 @@ class Support extends Model
 
     /**
      * Retorna a descrição do status atual
-     *
-     * @return string
      */
     public function getStatusDescription(): string
     {
@@ -168,5 +159,4 @@ class Support extends Model
             default => 'Status desconhecido',
         };
     }
-
 }

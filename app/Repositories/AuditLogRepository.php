@@ -27,7 +27,7 @@ class AuditLogRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new AuditLog();
+        return new AuditLog;
     }
 
     /**
@@ -59,12 +59,12 @@ class AuditLogRepository extends AbstractTenantRepository
         $baseQuery = $this->model->where('created_at', '>=', $startDate);
 
         return [
-            'total_logs'       => (clone $baseQuery)->count(),
+            'total_logs' => (clone $baseQuery)->count(),
             'logs_by_severity' => (clone $baseQuery)->selectRaw('severity, COUNT(*) as count')
                 ->groupBy('severity')
                 ->pluck('count', 'severity')
                 ->toArray(),
-            'logs_by_action'   => (clone $baseQuery)->selectRaw('action, COUNT(*) as count')
+            'logs_by_action' => (clone $baseQuery)->selectRaw('action, COUNT(*) as count')
                 ->groupBy('action')
                 ->orderByDesc('count')
                 ->limit(10)

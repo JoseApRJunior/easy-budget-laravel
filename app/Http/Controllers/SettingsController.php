@@ -6,10 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\ProviderCredential;
+use App\Services\Application\AuditLogService;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
-use App\Services\Application\AuditLogService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -129,7 +129,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Configurações gerais atualizadas com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações gerais: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar configurações gerais: '.$e->getMessage());
         }
     }
 
@@ -155,7 +155,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Perfil atualizado com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar perfil: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar perfil: '.$e->getMessage());
         }
     }
 
@@ -180,7 +180,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Configurações de segurança atualizadas com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de segurança: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar configurações de segurança: '.$e->getMessage());
         }
     }
 
@@ -203,7 +203,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Configurações de notificação atualizadas com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de notificação: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar configurações de notificação: '.$e->getMessage());
         }
     }
 
@@ -223,7 +223,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Configurações de integração atualizadas com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de integração: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar configurações de integração: '.$e->getMessage());
         }
     }
 
@@ -246,7 +246,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Configurações de personalização atualizadas com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de personalização: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar configurações de personalização: '.$e->getMessage());
         }
     }
 
@@ -264,7 +264,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Avatar atualizado com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar avatar: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar avatar: '.$e->getMessage());
         }
     }
 
@@ -278,7 +278,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Avatar removido com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao remover avatar: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao remover avatar: '.$e->getMessage());
         }
     }
 
@@ -296,7 +296,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Logo da empresa atualizado com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar logo: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao atualizar logo: '.$e->getMessage());
         }
     }
 
@@ -318,7 +318,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Backup criado com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao criar backup: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao criar backup: '.$e->getMessage());
         }
     }
 
@@ -360,7 +360,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Backup restaurado com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao restaurar backup: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao restaurar backup: '.$e->getMessage());
         }
     }
 
@@ -378,7 +378,7 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Backup removido com sucesso!');
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao remover backup: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao remover backup: '.$e->getMessage());
         }
     }
 
@@ -400,7 +400,7 @@ class SettingsController extends Controller
 
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Erro ao restaurar configurações padrão: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao restaurar configurações padrão: '.$e->getMessage());
         }
     }
 

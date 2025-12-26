@@ -26,7 +26,7 @@ readonly class RoleDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'        => $this->name,
+            'name' => $this->name,
             'description' => $this->description,
         ];
     }

@@ -40,7 +40,7 @@ readonly class InvoiceUpdateDTO extends AbstractDTO
             transaction_amount: isset($data['transaction_amount']) ? (float) $data['transaction_amount'] : null,
             transaction_date: isset($data['transaction_date']) ? Carbon::parse($data['transaction_date']) : null,
             notes: $data['notes'] ?? null,
-            items: isset($data['items']) ? array_map(fn($item) => InvoiceItemDTO::fromRequest($item), $data['items']) : null,
+            items: isset($data['items']) ? array_map(fn ($item) => InvoiceItemDTO::fromRequest($item), $data['items']) : null,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
@@ -49,18 +49,42 @@ readonly class InvoiceUpdateDTO extends AbstractDTO
     {
         $data = [];
 
-        if ($this->customer_id !== null) $data['customer_id'] = $this->customer_id;
-        if ($this->status !== null) $data['status'] = $this->status->value;
-        if ($this->subtotal !== null) $data['subtotal'] = $this->subtotal;
-        if ($this->total !== null) $data['total'] = $this->total;
-        if ($this->due_date !== null) $data['due_date'] = $this->due_date->toDateString();
-        if ($this->discount !== null) $data['discount'] = $this->discount;
-        if ($this->payment_method !== null) $data['payment_method'] = $this->payment_method;
-        if ($this->payment_id !== null) $data['payment_id'] = $this->payment_id;
-        if ($this->transaction_amount !== null) $data['transaction_amount'] = $this->transaction_amount;
-        if ($this->transaction_date !== null) $data['transaction_date'] = $this->transaction_date->toDateTimeString();
-        if ($this->notes !== null) $data['notes'] = $this->notes;
-        if ($this->tenant_id !== null) $data['tenant_id'] = $this->tenant_id;
+        if ($this->customer_id !== null) {
+            $data['customer_id'] = $this->customer_id;
+        }
+        if ($this->status !== null) {
+            $data['status'] = $this->status->value;
+        }
+        if ($this->subtotal !== null) {
+            $data['subtotal'] = $this->subtotal;
+        }
+        if ($this->total !== null) {
+            $data['total'] = $this->total;
+        }
+        if ($this->due_date !== null) {
+            $data['due_date'] = $this->due_date->toDateString();
+        }
+        if ($this->discount !== null) {
+            $data['discount'] = $this->discount;
+        }
+        if ($this->payment_method !== null) {
+            $data['payment_method'] = $this->payment_method;
+        }
+        if ($this->payment_id !== null) {
+            $data['payment_id'] = $this->payment_id;
+        }
+        if ($this->transaction_amount !== null) {
+            $data['transaction_amount'] = $this->transaction_amount;
+        }
+        if ($this->transaction_date !== null) {
+            $data['transaction_date'] = $this->transaction_date->toDateTimeString();
+        }
+        if ($this->notes !== null) {
+            $data['notes'] = $this->notes;
+        }
+        if ($this->tenant_id !== null) {
+            $data['tenant_id'] = $this->tenant_id;
+        }
 
         return $data;
     }

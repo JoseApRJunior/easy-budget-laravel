@@ -34,6 +34,7 @@ class CategoryController extends Controller
     public function dashboard(): View
     {
         $this->authorize('viewAny', \App\Models\Category::class);
+
         return $this->view('pages.category.dashboard', $this->categoryService->getDashboardData(), 'stats');
     }
 
@@ -51,7 +52,7 @@ class CategoryController extends Controller
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 10);
-            $result  = $this->categoryService->getFilteredCategories($filters, $perPage);
+            $result = $this->categoryService->getFilteredCategories($filters, $perPage);
         }
 
         return $this->view('pages.category.index', $result, 'categories', [
@@ -91,7 +92,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug($slug, [
             'parent',
-            'children' => fn($q) => $q->where('is_active', true),
+            'children' => fn ($q) => $q->where('is_active', true),
         ]);
 
         if ($result->isError()) {
@@ -123,7 +124,7 @@ class CategoryController extends Controller
         $parentResult = $this->categoryService->getParentCategories();
 
         $parents = $parentResult->isSuccess()
-            ? $parentResult->getData()->filter(fn($p) => $p->id !== $category->id)
+            ? $parentResult->getData()->filter(fn ($p) => $p->id !== $category->id)
             : collect();
 
         return view('pages.category.edit', compact('category', 'parents'));
@@ -228,12 +229,14 @@ class CategoryController extends Controller
     public function active(Request $request): View
     {
         $request->merge(['active' => '1']);
+
         return $this->index($request);
     }
 
     public function deleted(Request $request): View
     {
         $request->merge(['deleted' => 'only']);
+
         return $this->index($request);
     }
 
@@ -252,7 +255,7 @@ class CategoryController extends Controller
             return $this->redirectError('provider.categories.index', $result->getMessage());
         }
 
-        return $this->redirectSuccess('provider.categories.index', "Restauradas categorias com sucesso.");
+        return $this->redirectSuccess('provider.categories.index', 'Restauradas categorias com sucesso.');
     }
 
     public function export(Request $request): StreamedResponse|RedirectResponse

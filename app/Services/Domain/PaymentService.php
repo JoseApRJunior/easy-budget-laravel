@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\DTOs\Payment\PaymentConfirmDTO;
+use App\DTOs\Payment\PaymentDTO;
 use App\Enums\InvoiceStatus;
-use App\Enums\OperationStatus;
 use App\Enums\PaymentStatus;
-use App\Models\Invoice;
 use App\Models\Payment;
-use App\Repositories\PaymentRepository;
 use App\Repositories\InvoiceRepository;
+use App\Repositories\PaymentRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use App\DTOs\Payment\PaymentDTO;
-use App\DTOs\Payment\PaymentConfirmDTO;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -42,6 +39,7 @@ class PaymentService extends AbstractBaseService
         return $this->safeExecute(function () use ($filters) {
             $perPage = $filters['per_page'] ?? 15;
             $payments = $this->repository->getFilteredPaginated($filters, (int) $perPage);
+
             return ServiceResult::success($payments, 'Pagamentos filtrados com sucesso');
         });
     }
@@ -55,12 +53,12 @@ class PaymentService extends AbstractBaseService
             return DB::transaction(function () use ($dto) {
                 // Buscar fatura usando o repositório
                 $invoice = $this->invoiceRepository->find($dto->invoice_id);
-                if (!$invoice) {
+                if (! $invoice) {
                     return ServiceResult::error('Fatura não encontrada');
                 }
 
                 // Verificar se fatura pode receber pagamento
-                if (!$invoice->status->isPending()) {
+                if (! $invoice->status->isPending()) {
                     return ServiceResult::error('Fatura não está disponível para pagamento');
                 }
 
@@ -93,33 +91,33 @@ class PaymentService extends AbstractBaseService
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
                 $payment = $this->repository->find($dto->payment_id);
-                if (!$payment) {
+                if (! $payment) {
                     return ServiceResult::error('Pagamento não encontrado');
                 }
 
                 // Atualizar status do pagamento
                 $payment->update([
-                    'status'                 => PaymentStatus::COMPLETED,
-                    'confirmed_at'           => now(),
+                    'status' => PaymentStatus::COMPLETED,
+                    'confirmed_at' => now(),
                     'gateway_transaction_id' => $dto->transaction_id,
-                    'gateway_response'       => $dto->gateway_response,
-                    'notes'                  => $dto->notes ?? $payment->notes,
+                    'gateway_response' => $dto->gateway_response,
+                    'notes' => $dto->notes ?? $payment->notes,
                 ]);
 
                 // Atualizar status da fatura
                 $invoice = $payment->invoice;
                 $invoice->update([
-                    'status'             => InvoiceStatus::PAID,
+                    'status' => InvoiceStatus::PAID,
                     'transaction_amount' => $payment->amount,
-                    'transaction_date'   => now(),
-                    'payment_method'     => $payment->method,
-                    'payment_id'         => $payment->id,
+                    'transaction_date' => now(),
+                    'payment_method' => $payment->method,
+                    'payment_id' => $payment->id,
                 ]);
 
                 Log::info('Pagamento confirmado', [
                     'payment_id' => $payment->id,
                     'invoice_id' => $invoice->id,
-                    'amount'     => $payment->amount,
+                    'amount' => $payment->amount,
                 ]);
 
                 return ServiceResult::success($payment->fresh(), 'Pagamento confirmado com sucesso');
@@ -134,10 +132,10 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($payment) {
             $payment->update([
-                'status'           => PaymentStatus::PROCESSING,
-                'processed_at'     => now(),
+                'status' => PaymentStatus::PROCESSING,
+                'processed_at' => now(),
                 'gateway_response' => [
-                    'method'  => 'pix',
+                    'method' => 'pix',
                     'qr_code' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
                     'pix_key' => config('payment.pix_key', 'pix@empresa.com'),
                 ],
@@ -154,11 +152,11 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($payment) {
             $payment->update([
-                'status'           => PaymentStatus::PROCESSING,
-                'processed_at'     => now(),
+                'status' => PaymentStatus::PROCESSING,
+                'processed_at' => now(),
                 'gateway_response' => [
-                    'method'   => 'boleto',
-                    'barcode'  => '12345678901234567890123456789012345678901234',
+                    'method' => 'boleto',
+                    'barcode' => '12345678901234567890123456789012345678901234',
                     'due_date' => $payment->invoice->due_date->format('Y-m-d'),
                 ],
             ]);
@@ -174,19 +172,19 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($payment, $data) {
             $payment->update([
-                'status'           => PaymentStatus::PROCESSING,
-                'processed_at'     => now(),
+                'status' => PaymentStatus::PROCESSING,
+                'processed_at' => now(),
                 'gateway_response' => [
-                    'method'           => 'credit_card',
+                    'method' => 'credit_card',
                     'card_last_digits' => $data['card_last_digits'] ?? '****',
-                    'installments'     => $data['installments'] ?? 1,
+                    'installments' => $data['installments'] ?? 1,
                 ],
             ]);
 
             // Simular aprovação imediata para cartão
             $confirmDTO = new PaymentConfirmDTO(
                 payment_id: $payment->id,
-                transaction_id: 'CC_' . uniqid(),
+                transaction_id: 'CC_'.uniqid(),
                 gateway_response: ['status' => 'approved']
             );
 
@@ -203,7 +201,7 @@ class PaymentService extends AbstractBaseService
             // Pagamento em dinheiro é confirmado imediatamente
             $confirmDTO = new PaymentConfirmDTO(
                 payment_id: $payment->id,
-                transaction_id: 'CASH_' . uniqid(),
+                transaction_id: 'CASH_'.uniqid(),
                 gateway_response: ['method' => 'cash']
             );
 
@@ -218,13 +216,13 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($webhookData) {
             $transactionId = $webhookData['transaction_id'] ?? null;
-            if (!$transactionId) {
+            if (! $transactionId) {
                 return ServiceResult::error('Transaction ID não fornecido');
             }
 
             // Buscar pagamento pelo transaction_id usando o repositório
             $payment = $this->repository->findOneBy(['gateway_transaction_id' => $transactionId]);
-            if (!$payment) {
+            if (! $payment) {
                 return ServiceResult::error('Pagamento não encontrado');
             }
 
@@ -248,12 +246,12 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($paymentId, $data) {
             $payment = $this->repository->find($paymentId);
-            if (!$payment) {
+            if (! $payment) {
                 return ServiceResult::error('Pagamento não encontrado');
             }
 
             $payment->update([
-                'status'           => PaymentStatus::FAILED,
+                'status' => PaymentStatus::FAILED,
                 'gateway_response' => $data,
             ]);
 
@@ -268,6 +266,7 @@ class PaymentService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $stats = $this->repository->getStats();
+
             return ServiceResult::success($stats);
         }, 'Erro ao obter estatísticas de pagamentos.');
     }

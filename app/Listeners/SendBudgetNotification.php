@@ -8,8 +8,8 @@ use App\Events\BudgetStatusChanged;
 use App\Mail\BudgetNotificationMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Listener para envio de notificações por email quando o status do orçamento muda.
@@ -26,18 +26,19 @@ class SendBudgetNotification implements ShouldQueue
         try {
             $budget = $event->budget;
             $customer = $budget->customer;
-            
+
             // Verificar se o cliente tem email
-            if (!$customer->contact || !$customer->contact->email_personal) {
+            if (! $customer->contact || ! $customer->contact->email_personal) {
                 Log::info('Cliente sem email para notificação', [
                     'budget_id' => $budget->id,
-                    'customer_id' => $customer->id
+                    'customer_id' => $customer->id,
                 ]);
+
                 return;
             }
 
             // Determinar tipo de notificação baseado no novo status
-            $notificationType = match($event->newStatus) {
+            $notificationType = match ($event->newStatus) {
                 'approved' => 'approved',
                 'rejected' => 'rejected',
                 'sent' => 'sent',
@@ -75,13 +76,13 @@ class SendBudgetNotification implements ShouldQueue
             Log::info('Notificação de orçamento enviada', [
                 'budget_id' => $budget->id,
                 'customer_email' => $customer->contact->email_personal,
-                'notification_type' => $notificationType
+                'notification_type' => $notificationType,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Erro ao enviar notificação de orçamento', [
                 'budget_id' => $event->budget->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

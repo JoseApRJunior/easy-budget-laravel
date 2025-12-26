@@ -2,16 +2,13 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Tenant;
-use App\Models\Provider;
-use App\Models\Invoice;
 use App\Models\Budget;
-use App\Models\Service;
-use App\Models\Product;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\PlanSubscription;
 use App\Models\Plan;
+use App\Models\PlanSubscription;
+use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,7 +33,8 @@ class FinancialControlService
                 'avg_revenue_per_provider' => $activeProviders > 0 ? $totalRevenue / $activeProviders : 0,
             ];
         } catch (\Exception $e) {
-            Log::error('Error getting financial overview: ' . $e->getMessage());
+            Log::error('Error getting financial overview: '.$e->getMessage());
+
             return $this->getDefaultFinancialData();
         }
     }
@@ -44,9 +42,9 @@ class FinancialControlService
     public function getProviderFinancialDetails(int $tenantId): array
     {
         try {
-            $tenant = Tenant::with(['provider', 'planSubscription.plan'])->find($tenantId);
-            
-            if (!$tenant) {
+            $tenant = Tenant::with(['provider', 'planSubscriptions.plan'])->find($tenantId);
+
+            if (! $tenant) {
                 return $this->getDefaultProviderFinancialData();
             }
 
@@ -82,7 +80,8 @@ class FinancialControlService
                 'alerts' => $this->getFinancialAlerts($tenant),
             ];
         } catch (\Exception $e) {
-            Log::error('Error getting provider financial details for tenant ' . $tenantId . ': ' . $e->getMessage());
+            Log::error('Error getting provider financial details for tenant '.$tenantId.': '.$e->getMessage());
+
             return $this->getDefaultProviderFinancialData();
         }
     }
@@ -103,7 +102,8 @@ class FinancialControlService
                 'financial_trends' => $this->getFinancialTrends($startDate, $endDate, $tenantId),
             ];
         } catch (\Exception $e) {
-            Log::error('Error getting financial reports: ' . $e->getMessage());
+            Log::error('Error getting financial reports: '.$e->getMessage());
+
             return $this->getDefaultReportsData();
         }
     }
@@ -112,12 +112,12 @@ class FinancialControlService
     {
         try {
             $alerts = [];
-            $tenants = Tenant::with(['planSubscription.plan'])->get();
+            $tenants = Tenant::with(['planSubscriptions.plan'])->get();
 
             foreach ($tenants as $tenant) {
                 $currentSpending = $this->calculateProviderCosts($tenant->id);
                 $budgetLimit = $this->getProviderBudgetLimit($tenant);
-                
+
                 if ($budgetLimit > 0 && $currentSpending > ($budgetLimit * 0.8)) {
                     $alerts[] = [
                         'type' => 'budget_warning',
@@ -127,14 +127,15 @@ class FinancialControlService
                         'current_spending' => $currentSpending,
                         'budget_limit' => $budgetLimit,
                         'percentage_used' => ($currentSpending / $budgetLimit) * 100,
-                        'message' => "Provider {$tenant->name} has used " . round(($currentSpending / $budgetLimit) * 100) . "% of their budget",
+                        'message' => "Provider {$tenant->name} has used ".round(($currentSpending / $budgetLimit) * 100).'% of their budget',
                     ];
                 }
             }
 
             return $alerts;
         } catch (\Exception $e) {
-            Log::error('Error getting budget alerts: ' . $e->getMessage());
+            Log::error('Error getting budget alerts: '.$e->getMessage());
+
             return [];
         }
     }
@@ -210,15 +211,17 @@ class FinancialControlService
     {
         $subscriptionCost = $this->getProviderSubscriptionCost(Tenant::find($tenantId));
         $paymentProcessingFees = $this->calculatePaymentProcessingFees($tenantId);
-        
+
         return $subscriptionCost + $paymentProcessingFees;
     }
 
     private function getProviderSubscriptionCost(Tenant $tenant): float
     {
-        if ($tenant->planSubscription && $tenant->planSubscription->plan) {
-            return $tenant->planSubscription->plan->price ?? 0;
+        $subscription = $tenant->planSubscriptions->first();
+        if ($subscription && $subscription->plan) {
+            return $subscription->plan->price ?? 0;
         }
+
         return 0;
     }
 
@@ -267,7 +270,7 @@ class FinancialControlService
     private function getFinancialAlerts(Tenant $tenant): array
     {
         $alerts = [];
-        
+
         // Check for overdue invoices
         $overdueInvoices = Invoice::where('tenant_id', $tenant->id)
             ->where('status', 'pending')
@@ -298,8 +301,9 @@ class FinancialControlService
     private function getProviderBudgetLimit(Tenant $tenant): float
     {
         // Implement budget limit logic based on plan or custom settings
-        return $tenant->planSubscription && $tenant->planSubscription->plan 
-            ? $tenant->planSubscription->plan->max_monthly_spend ?? 1000 
+        $subscription = $tenant->planSubscriptions->first();
+        return $subscription && $subscription->plan
+            ? $subscription->plan->max_monthly_spend ?? 1000
             : 1000;
     }
 
@@ -313,9 +317,9 @@ class FinancialControlService
         }
 
         return $query->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(amount) as total')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('SUM(amount) as total')
+        )
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -381,10 +385,10 @@ class FinancialControlService
         }
 
         return $query->select(
-                'payment_method',
-                DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(amount) as total')
-            )
+            'payment_method',
+            DB::raw('COUNT(*) as count'),
+            DB::raw('SUM(amount) as total')
+        )
             ->groupBy('payment_method')
             ->get()
             ->toArray();
@@ -400,10 +404,10 @@ class FinancialControlService
         }
 
         return $query->select(
-                'tenant_id',
-                DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(total_amount) as total')
-            )
+            'tenant_id',
+            DB::raw('COUNT(*) as count'),
+            DB::raw('SUM(total_amount) as total')
+        )
             ->groupBy('tenant_id')
             ->get()
             ->toArray();

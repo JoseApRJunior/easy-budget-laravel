@@ -8,21 +8,19 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Provider;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Application\Admin\AdminProviderService;
 use App\Services\Shared\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProviderManagementController extends Controller
 {
     protected CacheService $cacheService;
+
     protected AdminProviderService $adminProviderService;
 
     public function __construct(CacheService $cacheService, AdminProviderService $adminProviderService)
@@ -48,7 +46,7 @@ class ProviderManagementController extends Controller
 
         $result = $this->adminProviderService->getProvidersPaginated($filters, $perPage);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->back()->with('error', $result->getMessage());
         }
 
@@ -63,7 +61,7 @@ class ProviderManagementController extends Controller
             'sortBy' => $filters['sort_by'],
             'sortOrder' => $filters['sort_order'],
             'tenants' => $data['tenants'],
-            'statistics' => $data['statistics']
+            'statistics' => $data['statistics'],
         ]);
     }
 
@@ -88,7 +86,7 @@ class ProviderManagementController extends Controller
         $dto = ProviderDTO::fromRequest($validated);
         $result = $this->adminProviderService->storeProvider($dto);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->back()->withInput()->with('error', $result->getMessage());
         }
 
@@ -101,7 +99,7 @@ class ProviderManagementController extends Controller
 
         $result = $this->adminProviderService->getProviderDetails($provider->id);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->back()->with('error', $result->getMessage());
         }
 
@@ -110,7 +108,7 @@ class ProviderManagementController extends Controller
         return view('admin.providers.show', [
             'provider' => $data['provider'],
             'statistics' => $data['statistics'],
-            'recentInteractions' => $data['recentInteractions']
+            'recentInteractions' => $data['recentInteractions'],
         ]);
     }
 
@@ -120,7 +118,7 @@ class ProviderManagementController extends Controller
 
         $result = $this->adminProviderService->getProviderDetails($provider->id);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->route('admin.providers.index')->with('error', $result->getMessage());
         }
 
@@ -141,7 +139,7 @@ class ProviderManagementController extends Controller
         $dto = ProviderDTO::fromRequest($validated);
         $result = $this->adminProviderService->updateProvider($provider->id, $dto);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return redirect()->back()->withInput()->with('error', $result->getMessage());
         }
 
@@ -186,7 +184,7 @@ class ProviderManagementController extends Controller
 
         $providers = $this->adminProviderService->getExportData($filters);
 
-        return Excel::download(new ProvidersExport($providers), 'providers_' . date('Y-m-d_H-i-s') . '.xlsx');
+        return Excel::download(new ProvidersExport($providers), 'providers_'.date('Y-m-d_H-i-s').'.xlsx');
     }
 
     public function getProvidersByTenant(Request $request): JsonResponse

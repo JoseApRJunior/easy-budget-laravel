@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\User\UserDTO;
-use App\Entities\UserEntity;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -33,7 +32,7 @@ class UserService extends AbstractBaseService
      */
     protected function makeModel(): Model
     {
-        return new User();
+        return new User;
     }
 
     /**
@@ -44,7 +43,7 @@ class UserService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $with) {
             $user = $this->repository->find($id, $with);
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Usuário não encontrado');
             }
 
@@ -60,7 +59,7 @@ class UserService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $user = $this->repository->find($id);
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Usuário não encontrado');
             }
 
@@ -76,7 +75,7 @@ class UserService extends AbstractBaseService
         return $this->safeExecute(function () use ($email) {
             $user = $this->repository->findByEmail($email);
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Usuário não encontrado');
             }
 
@@ -92,7 +91,7 @@ class UserService extends AbstractBaseService
         return $this->safeExecute(function () use ($data) {
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error(OperationStatus::UNAUTHORIZED, 'Usuário não autenticado');
             }
 
@@ -100,7 +99,7 @@ class UserService extends AbstractBaseService
             $dtoData = array_merge([
                 'name' => $user->name,
                 'email' => $user->email,
-                'is_active' => (bool)$user->is_active,
+                'is_active' => (bool) $user->is_active,
                 'tenant_id' => $user->tenant_id,
             ], $data);
 
@@ -117,9 +116,9 @@ class UserService extends AbstractBaseService
 
                 $settingsService = app(\App\Services\Domain\SettingsService::class);
                 $settingsService->updateUserSettings([
-                    'social_facebook'  => $data['social_facebook'] ?? null,
-                    'social_twitter'   => $data['social_twitter'] ?? null,
-                    'social_linkedin'  => $data['social_linkedin'] ?? null,
+                    'social_facebook' => $data['social_facebook'] ?? null,
+                    'social_twitter' => $data['social_twitter'] ?? null,
+                    'social_linkedin' => $data['social_linkedin'] ?? null,
                     'social_instagram' => $data['social_instagram'] ?? null,
                 ], $user);
             }
@@ -136,7 +135,7 @@ class UserService extends AbstractBaseService
         return $this->safeExecute(function () use ($tenantId) {
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return $this->error(OperationStatus::UNAUTHORIZED, 'Usuário não autenticado');
             }
 
@@ -148,14 +147,13 @@ class UserService extends AbstractBaseService
             // Carregar relacionamentos necessários usando repository
             $userWithRelations = $this->repository->find($user->id, ['provider.commonData', 'provider.contact', 'settings']);
 
-            $settingsService  = app(\App\Services\Domain\SettingsService::class);
+            $settingsService = app(\App\Services\Domain\SettingsService::class);
             $completeSettings = $settingsService->getCompleteUserSettings($user);
 
             return $this->success([
-                'user'     => $userWithRelations ?? $user,
+                'user' => $userWithRelations ?? $user,
                 'settings' => $completeSettings,
             ], 'Dados do perfil obtidos com sucesso');
         }, 'Erro ao obter dados do perfil');
     }
-
 }

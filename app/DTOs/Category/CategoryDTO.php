@@ -6,7 +6,6 @@ namespace App\DTOs\Category;
 
 use App\DTOs\AbstractDTO;
 
-
 /**
  * DTO para transferência de dados de Categoria.
  * Garante tipagem e integridade dos dados entre Controller e Service.
@@ -23,9 +22,6 @@ readonly class CategoryDTO extends AbstractDTO
     /**
      * Cria uma instância de CategoryDTO a partir de um array de dados validados.
      * Geralmente usado no Controller após $request->validated().
-     *
-     * @param array $data
-     * @return self
      */
     public static function fromRequest(array $data): self
     {

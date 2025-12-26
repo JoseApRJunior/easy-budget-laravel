@@ -99,7 +99,6 @@ class StatusHelper
                 BudgetStatus::PENDING => 25,
                 BudgetStatus::APPROVED => 50,
                 BudgetStatus::REJECTED => 0,
-                BudgetStatus::EXPIRED => 0,
                 BudgetStatus::CANCELLED => 0,
                 BudgetStatus::COMPLETED => 100,
             };
@@ -120,7 +119,6 @@ class StatusHelper
                 BudgetStatus::PENDING => 'primary',
                 BudgetStatus::APPROVED => 'success',
                 BudgetStatus::REJECTED => 'danger',
-                BudgetStatus::EXPIRED => 'warning',
                 BudgetStatus::CANCELLED => 'dark',
                 BudgetStatus::COMPLETED => 'info',
             };
@@ -163,7 +161,6 @@ class StatusHelper
                 BudgetStatus::PENDING => true,
                 BudgetStatus::APPROVED => false,
                 BudgetStatus::REJECTED => false,
-                BudgetStatus::EXPIRED => false,
                 BudgetStatus::CANCELLED => false,
                 BudgetStatus::COMPLETED => false,
             };

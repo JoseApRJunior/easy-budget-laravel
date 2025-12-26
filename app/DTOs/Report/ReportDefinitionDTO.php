@@ -42,17 +42,17 @@ readonly class ReportDefinitionDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'               => $this->name,
-            'slug'               => $this->slug,
-            'data_source'        => $this->data_source,
-            'description'        => $this->description,
-            'parameters_schema'  => $this->parameters_schema,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'data_source' => $this->data_source,
+            'description' => $this->description,
+            'parameters_schema' => $this->parameters_schema,
             'columns_definition' => $this->columns_definition,
-            'chart_type'         => $this->chart_type,
-            'chart_config'       => $this->chart_config,
-            'is_active'          => $this->is_active,
-            'is_system'          => $this->is_system,
-            'tenant_id'          => $this->tenant_id,
+            'chart_type' => $this->chart_type,
+            'chart_config' => $this->chart_config,
+            'is_active' => $this->is_active,
+            'is_system' => $this->is_system,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

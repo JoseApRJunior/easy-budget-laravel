@@ -30,7 +30,7 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
     {
         return $this->model->newQuery()
             ->with(['invoice', 'customer'])
-            ->tap(fn($q) => $this->applyAllPaymentFilters($q, $filters))
+            ->tap(fn ($q) => $this->applyAllPaymentFilters($q, $filters))
             ->latest()
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
@@ -44,11 +44,11 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
         $this->applyBooleanFilter($query, $filters, 'method', 'method');
         $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
     }
@@ -60,22 +60,22 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
     {
         $baseQuery = $this->model->newQuery();
 
-        $total     = (clone $baseQuery)->count();
+        $total = (clone $baseQuery)->count();
         $completed = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::COMPLETED)->count();
-        $pending   = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::PENDING)->count();
-        $failed    = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::FAILED)->count();
+        $pending = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::PENDING)->count();
+        $failed = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::FAILED)->count();
 
         $totalAmount = (float) (clone $baseQuery)
             ->where('status', \App\Enums\PaymentStatus::COMPLETED)
             ->sum('amount');
 
         return [
-            'total_payments'     => $total,
+            'total_payments' => $total,
             'completed_payments' => $completed,
-            'pending_payments'   => $pending,
-            'failed_payments'    => $failed,
-            'total_amount'       => $totalAmount,
-            'success_rate'       => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+            'pending_payments' => $pending,
+            'failed_payments' => $failed,
+            'total_amount' => $totalAmount,
+            'success_rate' => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
         ];
     }
 

@@ -41,16 +41,16 @@ readonly class BudgetVersionDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'budget_id'           => $this->budget_id,
-            'user_id'             => $this->user_id,
-            'version_number'      => $this->version_number,
-            'budget_data'         => $this->budget_data,
-            'items_data'          => $this->items_data,
-            'version_total'       => $this->version_total,
-            'version_date'        => $this->version_date->toDateTimeString(),
+            'budget_id' => $this->budget_id,
+            'user_id' => $this->user_id,
+            'version_number' => $this->version_number,
+            'budget_data' => $this->budget_data,
+            'items_data' => $this->items_data,
+            'version_total' => $this->version_total,
+            'version_date' => $this->version_date->toDateTimeString(),
             'changes_description' => $this->changes_description,
-            'is_current'          => $this->is_current,
-            'tenant_id'           => $this->tenant_id,
+            'is_current' => $this->is_current,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

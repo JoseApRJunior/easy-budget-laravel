@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\UserConfirmationToken;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserConfirmationTokenFactory extends Factory
 {
@@ -13,10 +12,10 @@ class UserConfirmationTokenFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'    => \App\Models\User::factory(),
-            'tenant_id'  => \App\Models\Tenant::factory(),
-            'token'      => $this->generateBase64UrlToken(), // Gera token no formato base64url
-            'expires_at' => now()->addMinutes( 30 ),
+            'user_id' => \App\Models\User::factory(),
+            'tenant_id' => \App\Models\Tenant::factory(),
+            'token' => $this->generateBase64UrlToken(), // Gera token no formato base64url
+            'expires_at' => now()->addMinutes(30),
         ];
     }
 
@@ -26,16 +25,16 @@ class UserConfirmationTokenFactory extends Factory
     private function generateBase64UrlToken(): string
     {
         // Gera 32 bytes aleatórios (256 bits de entropia)
-        $randomBytes = random_bytes( 32 );
+        $randomBytes = random_bytes(32);
 
         // Converte para base64 e depois para base64url
-        $base64 = base64_encode( $randomBytes );
+        $base64 = base64_encode($randomBytes);
 
         // Substitui caracteres específicos para formato base64url
-        $base64url = strtr( $base64, '+/', '-_' );
+        $base64url = strtr($base64, '+/', '-_');
 
         // Remove padding se necessário para ficar exatamente 43 caracteres
-        return rtrim( $base64url, '=' );
+        return rtrim($base64url, '=');
     }
 
     /**
@@ -43,9 +42,9 @@ class UserConfirmationTokenFactory extends Factory
      */
     public function expired(): static
     {
-        return $this->state( fn( array $attributes ) => [
-            'expires_at' => now()->subMinutes( 5 ),
-        ] );
+        return $this->state(fn (array $attributes) => [
+            'expires_at' => now()->subMinutes(5),
+        ]);
     }
 
     /**
@@ -53,9 +52,8 @@ class UserConfirmationTokenFactory extends Factory
      */
     public function notExpired(): static
     {
-        return $this->state( fn( array $attributes ) => [
-            'expires_at' => now()->addMinutes( 30 ),
-        ] );
+        return $this->state(fn (array $attributes) => [
+            'expires_at' => now()->addMinutes(30),
+        ]);
     }
-
 }

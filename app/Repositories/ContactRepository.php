@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\DTOs\Common\ContactDTO;
-use App\Interfaces\RepositoryInterface;
 use App\Models\Contact;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
@@ -20,7 +19,7 @@ class ContactRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Contact();
+        return new Contact;
     }
 
     /**
@@ -37,23 +36,24 @@ class ContactRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, ContactDTO $dto): bool
     {
         $contact = $this->find($id);
-        if (!$contact) {
+        if (! $contact) {
             return false;
         }
 
-        return $contact->update(array_filter($dto->toArray(), fn($value) => $value !== null));
+        return $contact->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
     }
 
     /**
      * Cria contato para cliente dentro do tenant atual.
      *
-     * @param array<string, mixed> $data Dados do contato
-     * @param int $customerId ID do cliente
+     * @param  array<string, mixed>  $data  Dados do contato
+     * @param  int  $customerId  ID do cliente
      * @return Contact Contato criado
      */
     public function createForCustomer(array $data, int $customerId): Contact
     {
         $data['customer_id'] = $customerId;
+
         return $this->createFromDTO(ContactDTO::fromRequest($data));
     }
 
@@ -79,6 +79,7 @@ class ContactRepository extends AbstractTenantRepository
     public function createForProvider(array $data, int $providerId): Contact
     {
         $data['provider_id'] = $providerId;
+
         return $this->createFromDTO(ContactDTO::fromRequest($data));
     }
 
@@ -89,11 +90,12 @@ class ContactRepository extends AbstractTenantRepository
     {
         $contact = $this->model->newQuery()->where('provider_id', $providerId)->first();
 
-        if (!$contact) {
+        if (! $contact) {
             return false;
         }
 
         $data['provider_id'] = $providerId;
+
         return $this->updateFromDTO($contact->id, ContactDTO::fromRequest($data));
     }
 
@@ -108,8 +110,7 @@ class ContactRepository extends AbstractTenantRepository
     /**
      * Busca contato por provider (1:1).
      *
-     * @param int $providerId ID do provider
-     * @return Contact|null
+     * @param  int  $providerId  ID do provider
      */
     public function findByProviderId(int $providerId): ?Contact
     {

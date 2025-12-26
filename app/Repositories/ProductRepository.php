@@ -24,7 +24,7 @@ class ProductRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Product();
+        return new Product;
     }
 
     /**
@@ -46,14 +46,14 @@ class ProductRepository extends AbstractTenantRepository
             ->orderBy('sku', 'desc')
             ->first();
 
-        if (!$lastProduct) {
+        if (! $lastProduct) {
             return 'PROD000001';
         }
 
         $lastNumber = (int) filter_var($lastProduct->sku, FILTER_SANITIZE_NUMBER_INT);
         $nextNumber = $lastNumber + 1;
 
-        return 'PROD' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+        return 'PROD'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -76,6 +76,7 @@ class ProductRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, \App\DTOs\Product\ProductDTO $dto): bool
     {
         $data = $dto->toDatabaseArray();
+
         return $this->update($id, $data);
     }
 
@@ -87,11 +88,11 @@ class ProductRepository extends AbstractTenantRepository
         $baseQuery = $this->model->newQuery();
 
         return [
-            'total_products'    => (clone $baseQuery)->count(),
-            'active_products'   => (clone $baseQuery)->where('active', true)->count(),
+            'total_products' => (clone $baseQuery)->count(),
+            'active_products' => (clone $baseQuery)->where('active', true)->count(),
             'inactive_products' => (clone $baseQuery)->where('active', false)->count(),
-            'low_stock_count'   => $this->getLowStockByTenant()->count(),
-            'recent_products'   => $this->getRecentByTenant(5),
+            'low_stock_count' => $this->getLowStockByTenant()->count(),
+            'recent_products' => $this->getRecentByTenant(5),
         ];
     }
 
@@ -104,6 +105,7 @@ class ProductRepository extends AbstractTenantRepository
         if ($product) {
             return (bool) $product->restore();
         }
+
         return false;
     }
 
@@ -154,9 +156,9 @@ class ProductRepository extends AbstractTenantRepository
 
         return $this->model->newQuery()
             ->with($with)
-            ->tap(fn($q) => $this->applyAllProductFilters($q, $filters))
-            ->when(!$orderBy, fn($q) => $q->orderBy('name'))
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->tap(fn ($q) => $this->applyAllProductFilters($q, $filters))
+            ->when(! $orderBy, fn ($q) => $q->orderBy('name'))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 
@@ -167,7 +169,7 @@ class ProductRepository extends AbstractTenantRepository
      */
     public function canBeDeactivatedOrDeleted(int $productId): bool
     {
-        return !$this->model->newQuery()
+        return ! $this->model->newQuery()
             ->where('id', $productId)
             ->whereHas('serviceItems')
             ->exists();
@@ -197,7 +199,7 @@ class ProductRepository extends AbstractTenantRepository
         $this->applySoftDeleteFilter($query, $filters);
 
         // Filtro de Categoria
-        $query->when(!empty($filters['category_id']), function ($q) use ($filters) {
+        $query->when(! empty($filters['category_id']), function ($q) use ($filters) {
             $q->where('category_id', $filters['category_id']);
         });
 

@@ -43,10 +43,10 @@ class CategoryService extends AbstractBaseService
     {
         $base = Str::slug($name);
         $slug = $base;
-        $i    = 1;
+        $i = 1;
 
         while ($this->repository->existsBySlug($slug, $excludeId)) {
-            $slug = $base . '-' . $i;
+            $slug = $base.'-'.$i;
             $i++;
         }
 
@@ -73,7 +73,7 @@ class CategoryService extends AbstractBaseService
     public function getFilteredCategories(array $filters = [], int $perPage = 10): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $perPage) {
-            if (!$this->tenantId()) {
+            if (! $this->tenantId()) {
                 return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
             }
 
@@ -84,6 +84,7 @@ class CategoryService extends AbstractBaseService
             );
 
             Log::info('Categorias carregadas', ['total' => $paginator->total()]);
+
             return $paginator;
         }, 'Erro ao carregar categorias.');
     }
@@ -106,24 +107,24 @@ class CategoryService extends AbstractBaseService
         }
 
         // Search/Name/Slug filters
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $normalized['search'] = (string) $filters['search'];
         }
 
-        if (!empty($filters['name'])) {
-            $normalized['name'] = ['operator' => 'like', 'value' => '%' . $filters['name'] . '%'];
+        if (! empty($filters['name'])) {
+            $normalized['name'] = ['operator' => 'like', 'value' => '%'.$filters['name'].'%'];
         }
 
-        if (!empty($filters['slug'])) {
-            $normalized['slug'] = ['operator' => 'like', 'value' => '%' . $filters['slug'] . '%'];
+        if (! empty($filters['slug'])) {
+            $normalized['slug'] = ['operator' => 'like', 'value' => '%'.$filters['slug'].'%'];
         }
 
         // Soft delete filter
         if (array_key_exists('deleted', $filters)) {
             $normalized['deleted'] = match ($filters['deleted']) {
-                'only', '1'    => 'only',
+                'only', '1' => 'only',
                 'current', '0' => 'current',
-                default        => '',
+                default => '',
             };
         }
 
@@ -137,6 +138,7 @@ class CategoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $parents = $this->repository->listParents();
+
             return $this->success($parents, 'Categorias pai carregadas com sucesso.');
         }, 'Erro ao carregar categorias pai.');
     }
@@ -153,11 +155,11 @@ class CategoryService extends AbstractBaseService
                 $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId());
             }
 
-            if (!Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId())) {
+            if (! Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId())) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
-            if (!empty($data['parent_id'])) {
+            if (! empty($data['parent_id'])) {
                 $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->getTenantId());
                 if ($parentResult->isError()) {
                     return $parentResult;
@@ -168,7 +170,7 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            return DB::transaction(fn() => $this->repository->createFromDTO($dto));
+            return DB::transaction(fn () => $this->repository->createFromDTO($dto));
         }, 'Erro ao criar categoria.');
     }
 
@@ -190,11 +192,11 @@ class CategoryService extends AbstractBaseService
                 $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId(), $id);
             }
 
-            if (!Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId(), $id)) {
+            if (! Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId(), $id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
-            if (!empty($data['parent_id'])) {
+            if (! empty($data['parent_id'])) {
                 if ($data['parent_id'] == $id) {
                     return $this->error(OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma');
                 }
@@ -209,7 +211,7 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            return DB::transaction(fn() => $this->repository->updateFromDTO($id, $dto));
+            return DB::transaction(fn () => $this->repository->updateFromDTO($id, $dto));
         }, 'Erro ao atualizar categoria.');
     }
 
@@ -220,7 +222,9 @@ class CategoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($id) {
             $ownerResult = $this->findAndVerifyOwnership($id);
-            if ($ownerResult->isError()) return $ownerResult;
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
 
             $category = $ownerResult->getData();
 
@@ -242,8 +246,7 @@ class CategoryService extends AbstractBaseService
         ?int $limit = null,
     ): ServiceResult {
         return $this->safeExecute(
-            fn() =>
-            $this->repository->search($search, $filters, $orderBy, $limit),
+            fn () => $this->repository->search($search, $filters, $orderBy, $limit),
             'Erro ao buscar categorias.'
         );
     }
@@ -257,8 +260,7 @@ class CategoryService extends AbstractBaseService
         ?int $limit = null,
     ): ServiceResult {
         return $this->safeExecute(
-            fn() =>
-            $this->repository->getActive($filters, $orderBy, $limit),
+            fn () => $this->repository->getActive($filters, $orderBy, $limit),
             'Erro ao buscar categorias ativas.'
         );
     }
@@ -272,8 +274,7 @@ class CategoryService extends AbstractBaseService
         ?int $limit = null,
     ): ServiceResult {
         return $this->safeExecute(
-            fn() =>
-            $this->repository->getDeleted($filters, $orderBy, $limit),
+            fn () => $this->repository->getDeleted($filters, $orderBy, $limit),
             'Erro ao buscar categorias deletadas.'
         );
     }
@@ -283,7 +284,7 @@ class CategoryService extends AbstractBaseService
      */
     public function restoreCategories(array $ids): ServiceResult
     {
-        return $this->safeExecute(fn() => $this->repository->restoreMany($ids), 'Erro ao restaurar categorias.');
+        return $this->safeExecute(fn () => $this->repository->restoreMany($ids), 'Erro ao restaurar categorias.');
     }
 
     /**
@@ -294,7 +295,7 @@ class CategoryService extends AbstractBaseService
         return $this->safeExecute(function () use ($slug) {
             $success = $this->repository->restoreBySlug($slug);
 
-            if (!$success) {
+            if (! $success) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
             }
 
@@ -310,11 +311,11 @@ class CategoryService extends AbstractBaseService
         return $this->safeExecute(function () use ($slug, $with) {
             $entity = $this->repository->findBySlug($slug);
 
-            if (!$entity) {
+            if (! $entity) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada');
             }
 
-            if (!empty($with)) {
+            if (! empty($with)) {
                 $entity->load($with);
             }
 
@@ -329,10 +330,12 @@ class CategoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($slug) {
             $ownerResult = $this->findBySlug($slug);
-            if ($ownerResult->isError()) return $ownerResult;
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
 
             $category = $ownerResult->getData();
-            $newStatus = !$category->is_active;
+            $newStatus = ! $category->is_active;
 
             $updateResult = $this->updateCategory($category->id, new CategoryDTO(
                 name: $category->name,
@@ -341,9 +344,12 @@ class CategoryService extends AbstractBaseService
                 is_active: $newStatus
             ));
 
-            if ($updateResult->isError()) return $updateResult;
+            if ($updateResult->isError()) {
+                return $updateResult;
+            }
 
             $message = $newStatus ? 'Categoria ativada com sucesso' : 'Categoria desativada com sucesso';
+
             return $this->success($updateResult->getData(), $message);
         }, 'Erro ao alterar status da categoria.');
     }
@@ -353,7 +359,7 @@ class CategoryService extends AbstractBaseService
      */
     public function listAll(): ServiceResult
     {
-        return $this->safeExecute(fn() => $this->repository->findOrderedByName('asc'), 'Erro ao listar categorias.');
+        return $this->safeExecute(fn () => $this->repository->findOrderedByName('asc'), 'Erro ao listar categorias.');
     }
 
     /**
@@ -362,17 +368,17 @@ class CategoryService extends AbstractBaseService
     public function getDashboardData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $total            = $this->repository->countByTenant();
-            $active           = $this->repository->countActiveByTenant();
-            $deleted          = $this->repository->countDeletedByTenant();
+            $total = $this->repository->countByTenant();
+            $active = $this->repository->countActiveByTenant();
+            $deleted = $this->repository->countDeletedByTenant();
             $recentCategories = $this->repository->getRecentByTenant(5);
 
             $stats = [
-                'total_categories'    => $total,
-                'active_categories'   => $active,
+                'total_categories' => $total,
+                'active_categories' => $active,
                 'inactive_categories' => max(0, $total - $active),
-                'deleted_categories'  => $deleted,
-                'recent_categories'   => $recentCategories,
+                'deleted_categories' => $deleted,
+                'recent_categories' => $recentCategories,
             ];
 
             return $this->success($stats, 'Estatísticas obtidas com sucesso');
@@ -384,16 +390,19 @@ class CategoryService extends AbstractBaseService
     private function ensureTenantId(): int
     {
         $id = $this->tenantId();
-        if (!$id) {
+        if (! $id) {
             throw new Exception('Tenant não identificado');
         }
+
         return $id;
     }
 
     private function findAndVerifyOwnership(int $id): ServiceResult
     {
         $result = $this->findById($id);
-        if ($result->isError()) return $result;
+        if ($result->isError()) {
+            return $result;
+        }
 
         $category = $result->getData();
         if ($category->tenant_id !== $this->tenantId()) {
@@ -406,9 +415,10 @@ class CategoryService extends AbstractBaseService
     private function validateAndGetParent(int $parentId, int $tenantId): ServiceResult
     {
         $parent = Category::find($parentId);
-        if (!$parent || $parent->tenant_id !== $tenantId) {
+        if (! $parent || $parent->tenant_id !== $tenantId) {
             return $this->error(OperationStatus::INVALID_DATA, 'Categoria pai inválida');
         }
+
         return $this->success($parent);
     }
 }

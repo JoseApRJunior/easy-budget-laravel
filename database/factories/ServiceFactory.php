@@ -17,21 +17,20 @@ class ServiceFactory extends Factory
 
     public function definition(): array
     {
-        $tenant   = Tenant::factory()->create();
-        $budget   = Budget::factory()->create( [ 'tenant_id' => $tenant->id ] );
+        $tenant = Tenant::factory()->create();
+        $budget = Budget::factory()->create(['tenant_id' => $tenant->id]);
         $category = Category::factory()->create();
 
         return [
-            'tenant_id'   => $tenant->id,
-            'budget_id'   => $budget->id,
+            'tenant_id' => $tenant->id,
+            'budget_id' => $budget->id,
             'category_id' => $category->id,
-            'code'        => $this->faker->unique()->numerify( 'SRV-####' ),
+            'code' => $this->faker->unique()->numerify('SRV-####'),
             'description' => $this->faker->sentence,
-            'status'      => ServiceStatus::SCHEDULED->value,
-            'discount'    => 0.0,
-            'total'       => $this->faker->randomFloat( 2, 100, 1000 ),
-            'due_date'    => $this->faker->dateTimeBetween( '+1 week', '+1 month' ),
+            'status' => ServiceStatus::SCHEDULED->value,
+            'discount' => 0.0,
+            'total' => $this->faker->randomFloat(2, 100, 1000),
+            'due_date' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
         ];
     }
-
 }

@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
-use App\Support\ServiceResult;
-use App\Enums\OperationStatus;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductExportService
@@ -21,7 +18,7 @@ class ProductExportService
      */
     public function exportToExcel(Collection $products, string $format = 'xlsx'): StreamedResponse
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         $headers = ['Produto', 'SKU', 'Categoria', 'Preço', 'Estoque', 'Situação', 'Data Criação'];
@@ -30,12 +27,12 @@ class ProductExportService
         $row = 2;
         foreach ($products as $product) {
             $createdAt = $product->created_at ? $product->created_at->format('d/m/Y H:i:s') : '';
-            $price     = 'R$ ' . number_format((float) $product->price, 2, ',', '.');
-            $stock     = $product->total_stock; // Accessor do Model
-            $category  = $product->category ? $product->category->name : '-';
+            $price = 'R$ '.number_format((float) $product->price, 2, ',', '.');
+            $stock = $product->total_stock; // Accessor do Model
+            $category = $product->category ? $product->category->name : '-';
 
             // Determina a situação: Deletado > Inativo > Ativo
-            $situacao = !is_null($product->deleted_at) ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo');
+            $situacao = ! is_null($product->deleted_at) ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo');
 
             $dataRow = [
                 $product->name,
@@ -47,7 +44,7 @@ class ProductExportService
                 $createdAt,
             ];
 
-            $sheet->fromArray([$dataRow], null, 'A' . $row);
+            $sheet->fromArray([$dataRow], null, 'A'.$row);
             $row++;
         }
 
@@ -57,12 +54,12 @@ class ProductExportService
         }
 
         // Centralizar colunas "Situação" (F)
-        $sheet->getStyle('F1:F' . ($row - 1))
+        $sheet->getStyle('F1:F'.($row - 1))
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Alinhar Preço (D) e Estoque (E) à direita
-        $sheet->getStyle('D1:E' . ($row - 1))
+        $sheet->getStyle('D1:E'.($row - 1))
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
@@ -108,17 +105,17 @@ class ProductExportService
         $rows = '';
         foreach ($products as $product) {
             $createdAt = $product->created_at ? $product->created_at->format('d/m/Y H:i:s') : '';
-            $price     = 'R$ ' . number_format((float) $product->price, 2, ',', '.');
-            $stock     = intval($product->total_stock); // Mostra inteiro no PDF para economizar espaço
-            $category  = $product->category ? $product->category->name : '-';
+            $price = 'R$ '.number_format((float) $product->price, 2, ',', '.');
+            $stock = intval($product->total_stock); // Mostra inteiro no PDF para economizar espaço
+            $category = $product->category ? $product->category->name : '-';
 
             // Determina a situação: Deletado > Inativo > Ativo
-            $situacao = !is_null($product->deleted_at) ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo');
+            $situacao = ! is_null($product->deleted_at) ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo');
 
-            $rows .= "<tr>
-                <td>" . e($product->name) . "</td>
-                <td>" . e($product->sku ?? '-') . "</td>
-                <td>" . e($category) . "</td>
+            $rows .= '<tr>
+                <td>'.e($product->name).'</td>
+                <td>'.e($product->sku ?? '-').'</td>
+                <td>'.e($category)."</td>
                 <td style='text-align:right'>{$price}</td>
                 <td style='text-align:right'>{$stock}</td>
                 <td style='text-align:center'>{$situacao}</td>

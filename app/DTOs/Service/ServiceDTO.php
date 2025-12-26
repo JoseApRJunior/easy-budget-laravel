@@ -36,7 +36,7 @@ readonly class ServiceDTO extends AbstractDTO
             total: (float) ($data['total'] ?? 0.0),
             due_date: isset($data['due_date']) ? Carbon::parse($data['due_date']) : null,
             reason: $data['reason'] ?? null,
-            items: array_map(fn($item) => ServiceItemDTO::fromRequest($item), $data['items'] ?? []),
+            items: array_map(fn ($item) => ServiceItemDTO::fromRequest($item), $data['items'] ?? []),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
@@ -44,16 +44,16 @@ readonly class ServiceDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'budget_id'   => $this->budget_id,
+            'budget_id' => $this->budget_id,
             'category_id' => $this->category_id,
-            'status'      => $this->status->value,
-            'code'        => $this->code,
+            'status' => $this->status->value,
+            'code' => $this->code,
             'description' => $this->description,
-            'discount'    => $this->discount,
-            'total'       => $this->total,
-            'due_date'    => $this->due_date?->toDateString(),
-            'reason'      => $this->reason,
-            'tenant_id'   => $this->tenant_id,
+            'discount' => $this->discount,
+            'total' => $this->total,
+            'due_date' => $this->due_date?->toDateString(),
+            'reason' => $this->reason,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

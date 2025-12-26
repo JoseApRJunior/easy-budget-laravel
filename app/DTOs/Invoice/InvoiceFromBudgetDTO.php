@@ -35,11 +35,11 @@ readonly class InvoiceFromBudgetDTO extends AbstractDTO
     {
         return [
             'service_id' => $this->service_id,
-            'items'      => $this->items,
-            'due_date'   => $this->due_date?->toDateString(),
-            'discount'   => $this->discount,
-            'status'     => $this->status?->value,
-            'tenant_id'  => $this->tenant_id,
+            'items' => $this->items,
+            'due_date' => $this->due_date?->toDateString(),
+            'discount' => $this->discount,
+            'status' => $this->status?->value,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

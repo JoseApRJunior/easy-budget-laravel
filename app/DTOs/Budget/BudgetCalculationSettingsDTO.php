@@ -38,15 +38,15 @@ readonly class BudgetCalculationSettingsDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'calculate_tax'          => $this->calculate_tax,
+            'calculate_tax' => $this->calculate_tax,
             'default_tax_percentage' => $this->default_tax_percentage,
-            'calculate_discount'     => $this->calculate_discount,
-            'item_level_discount'    => $this->item_level_discount,
-            'rounding_method'        => $this->rounding_method,
-            'rounding_precision'     => $this->rounding_precision,
-            'currency_symbol'        => $this->currency_symbol,
-            'currency_code'          => $this->currency_code,
-            'tenant_id'              => $this->tenant_id,
+            'calculate_discount' => $this->calculate_discount,
+            'item_level_discount' => $this->item_level_discount,
+            'rounding_method' => $this->rounding_method,
+            'rounding_precision' => $this->rounding_precision,
+            'currency_symbol' => $this->currency_symbol,
+            'currency_code' => $this->currency_code,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

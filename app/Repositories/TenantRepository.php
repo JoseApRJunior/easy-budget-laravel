@@ -22,7 +22,7 @@ class TenantRepository extends AbstractGlobalRepository
      */
     protected function makeModel(): Model
     {
-        return new Tenant();
+        return new Tenant;
     }
 
     /**
@@ -46,23 +46,23 @@ class TenantRepository extends AbstractGlobalRepository
     /**
      * Busca um tenant pelo nome.
      *
-     * @param string $name Nome do tenant
+     * @param  string  $name  Nome do tenant
      * @return Tenant|null Tenant encontrado ou null
      */
-    public function findByName( string $name ): ?Tenant
+    public function findByName(string $name): ?Tenant
     {
-        return $this->model->newQuery()->where( 'name', $name )->first();
+        return $this->model->newQuery()->where('name', $name)->first();
     }
 
     /**
      * Verifica se existe um tenant com o nome especificado.
      *
-     * @param string $name Nome do tenant
+     * @param  string  $name  Nome do tenant
      * @return bool True se existe
      */
-    public function existsByName( string $name ): bool
+    public function existsByName(string $name): bool
     {
-        return $this->model->newQuery()->where( 'name', $name )->exists();
+        return $this->model->newQuery()->where('name', $name)->exists();
     }
 
     /**
@@ -72,7 +72,6 @@ class TenantRepository extends AbstractGlobalRepository
      */
     public function findActive()
     {
-        return $this->model->newQuery()->where( 'is_active', true )->get();
+        return $this->model->newQuery()->where('is_active', true)->get();
     }
-
 }

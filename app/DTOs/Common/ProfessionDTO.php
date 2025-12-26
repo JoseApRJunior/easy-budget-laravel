@@ -26,8 +26,8 @@ readonly class ProfessionDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'slug'      => $this->slug,
-            'name'      => $this->name,
+            'slug' => $this->slug,
+            'name' => $this->name,
             'is_active' => $this->is_active,
         ];
     }

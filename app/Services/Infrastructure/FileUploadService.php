@@ -18,38 +18,38 @@ class FileUploadService
     /**
      * Faz upload de logo do provider.
      */
-    public function uploadProviderLogo( UploadedFile $file, ?string $currentLogo = null ): string
+    public function uploadProviderLogo(UploadedFile $file, ?string $currentLogo = null): string
     {
         // Delete old logo if exists
-        if ( $currentLogo && Storage::disk( 'public' )->exists( $currentLogo ) ) {
-            Storage::disk( 'public' )->delete( $currentLogo );
+        if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
+            Storage::disk('public')->delete($currentLogo);
         }
 
         // Store new logo
-        return $file->store( 'providers/logos', 'public' );
+        return $file->store('providers/logos', 'public');
     }
 
     /**
      * Faz upload de arquivo genérico.
      */
-    public function uploadFile( UploadedFile $file, string $directory, ?string $currentFile = null ): string
+    public function uploadFile(UploadedFile $file, string $directory, ?string $currentFile = null): string
     {
         // Delete old file if exists
-        if ( $currentFile && Storage::disk( 'public' )->exists( $currentFile ) ) {
-            Storage::disk( 'public' )->delete( $currentFile );
+        if ($currentFile && Storage::disk('public')->exists($currentFile)) {
+            Storage::disk('public')->delete($currentFile);
         }
 
         // Store new file
-        return $file->store( $directory, 'public' );
+        return $file->store($directory, 'public');
     }
 
     /**
      * Remove arquivo do storage.
      */
-    public function deleteFile( string $filePath ): bool
+    public function deleteFile(string $filePath): bool
     {
-        if ( Storage::disk( 'public' )->exists( $filePath ) ) {
-            return Storage::disk( 'public' )->delete( $filePath );
+        if (Storage::disk('public')->exists($filePath)) {
+            return Storage::disk('public')->delete($filePath);
         }
 
         return false;
@@ -58,25 +58,24 @@ class FileUploadService
     /**
      * Verifica se arquivo existe.
      */
-    public function fileExists( string $filePath ): bool
+    public function fileExists(string $filePath): bool
     {
-        return Storage::disk( 'public' )->exists( $filePath );
+        return Storage::disk('public')->exists($filePath);
     }
 
     /**
      * Valida tipo de arquivo.
      */
-    public function validateFileType( UploadedFile $file, array $allowedTypes ): bool
+    public function validateFileType(UploadedFile $file, array $allowedTypes): bool
     {
-        return in_array( $file->getMimeType(), $allowedTypes );
+        return in_array($file->getMimeType(), $allowedTypes);
     }
 
     /**
      * Valida tamanho do arquivo.
      */
-    public function validateFileSize( UploadedFile $file, int $maxSizeInKB ): bool
+    public function validateFileSize(UploadedFile $file, int $maxSizeInKB): bool
     {
-        return $file->getSize() <= ( $maxSizeInKB * 1024 );
+        return $file->getSize() <= ($maxSizeInKB * 1024);
     }
-
 }

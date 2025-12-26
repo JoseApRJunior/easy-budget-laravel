@@ -12,19 +12,19 @@ return [
     |
     */
 
-    'add'     => 'Adicionar',
-    'new'     => 'Novo',
-    'save'    => 'Salvar',
-    'edit'    => 'Editar',
-    'update'  => 'Atualizar',
-    'delete'  => 'Excluir',
-    'cancel'  => 'Cancelar',
-    'view'    => 'Visualizar',
-    'back'    => 'Voltar',
-    'close'   => 'Fechar',
-    'send'    => 'Enviar',
+    'add' => 'Adicionar',
+    'new' => 'Novo',
+    'save' => 'Salvar',
+    'edit' => 'Editar',
+    'update' => 'Atualizar',
+    'delete' => 'Excluir',
+    'cancel' => 'Cancelar',
+    'view' => 'Visualizar',
+    'back' => 'Voltar',
+    'close' => 'Fechar',
+    'send' => 'Enviar',
     'confirm' => 'Confirmar',
-    'search'  => 'Buscar',
+    'search' => 'Buscar',
     'actions' => 'Ações',
 
     // Adicione outras traduções de ações aqui conforme necessário

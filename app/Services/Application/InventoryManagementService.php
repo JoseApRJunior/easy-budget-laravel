@@ -11,7 +11,6 @@ use App\Repositories\ProductRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Domain\InventoryService;
 use App\Support\ServiceResult;
-use Illuminate\Support\Facades\DB;
 
 class InventoryManagementService extends AbstractBaseService
 {
@@ -33,7 +32,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
 
-            if (!$product) {
+            if (! $product) {
                 return ServiceResult::error(404, 'Produto não encontrado.');
             }
 
@@ -53,7 +52,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
 
-            if (!$product) {
+            if (! $product) {
                 return ServiceResult::error(404, 'Produto não encontrado.');
             }
 
@@ -73,7 +72,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
 
-            if (!$product) {
+            if (! $product) {
                 return ServiceResult::error(404, 'Produto não encontrado.');
             }
 
@@ -140,14 +139,14 @@ class InventoryManagementService extends AbstractBaseService
                 ->count();
 
             return ServiceResult::success([
-                'totalProducts'       => $totalProducts,
-                'lowStockProducts'    => $stats['low_stock_items'],
-                'highStockProducts'   => $highStockCount,
-                'outOfStockProducts'  => $outOfStockCount,
+                'totalProducts' => $totalProducts,
+                'lowStockProducts' => $stats['low_stock_items'],
+                'highStockProducts' => $highStockCount,
+                'outOfStockProducts' => $outOfStockCount,
                 'totalInventoryValue' => $stats['total_inventory_value'],
-                'highStockItems'      => $highStockItems,
-                'lowStockItems'       => $lowStockItems,
-                'recentMovements'     => $recentMovements,
+                'highStockItems' => $highStockItems,
+                'lowStockItems' => $lowStockItems,
+                'recentMovements' => $recentMovements,
             ]);
         }, 'Erro ao carregar dashboard de inventário.');
     }
@@ -182,7 +181,7 @@ class InventoryManagementService extends AbstractBaseService
             );
 
             return ServiceResult::success([
-                'categories'  => $categories,
+                'categories' => $categories,
                 'inventories' => $inventories,
             ]);
         }, 'Erro ao carregar lista de inventário.');
@@ -209,9 +208,9 @@ class InventoryManagementService extends AbstractBaseService
             );
 
             return ServiceResult::success([
-                'products'  => $products,
+                'products' => $products,
                 'movements' => $movements,
-                'summary'   => $summary,
+                'summary' => $summary,
             ]);
         }, 'Erro ao carregar movimentações de inventário.');
     }
@@ -235,7 +234,7 @@ class InventoryManagementService extends AbstractBaseService
             // We need to enrich the paginated results with turnover data
             // This is better done in the repository, but for a quick refactor:
             $items = $stockTurnover->getCollection()->map(function ($product) use ($filters) {
-                $inventory = $this->inventoryRepository->findByProduct((int)$product->id);
+                $inventory = $this->inventoryRepository->findByProduct((int) $product->id);
 
                 $stats = $this->movementRepository->getStatisticsByPeriod(
                     $filters['start_date'] ?? null,
@@ -250,13 +249,13 @@ class InventoryManagementService extends AbstractBaseService
             // TODO: Move the complex turnover query to ProductRepository or a specialized reporter.
 
             return ServiceResult::success([
-                'filters'       => $filters,
-                'categories'    => $categories,
+                'filters' => $filters,
+                'categories' => $categories,
                 'stockTurnover' => $stockTurnover,
-                'reportData'    => [
-                    'total_products'   => $stockTurnover->total(),
-                    'total_entries'    => 0, // Placeholder
-                    'total_exits'      => 0, // Placeholder
+                'reportData' => [
+                    'total_products' => $stockTurnover->total(),
+                    'total_entries' => 0, // Placeholder
+                    'total_exits' => 0, // Placeholder
                     'average_turnover' => 0, // Placeholder
                 ],
             ]);
@@ -284,7 +283,7 @@ class InventoryManagementService extends AbstractBaseService
             );
 
             return ServiceResult::success([
-                'lowStockProducts'  => $lowStockProducts,
+                'lowStockProducts' => $lowStockProducts,
                 'highStockProducts' => $highStockProducts,
             ]);
         }, 'Erro ao carregar alertas de inventário.');
@@ -298,7 +297,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($sku) {
             $product = $this->productRepository->findBySku($sku, ['inventory']);
 
-            if (!$product) {
+            if (! $product) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Produto não encontrado.');
             }
 

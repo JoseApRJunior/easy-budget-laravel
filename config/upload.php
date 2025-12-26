@@ -17,18 +17,18 @@ return [
         */
         'max_width' => env('UPLOAD_IMAGE_MAX_WIDTH', 1920),
         'max_height' => env('UPLOAD_IMAGE_MAX_HEIGHT', 1080),
-        
+
         /*
         | Image quality for compression (1-100)
         */
         'quality' => env('UPLOAD_IMAGE_QUALITY', 85),
-        
+
         /*
         | Thumbnail configuration
         */
         'thumbnail_width' => env('UPLOAD_THUMBNAIL_WIDTH', 300),
         'thumbnail_height' => env('UPLOAD_THUMBNAIL_HEIGHT', 300),
-        
+
         /*
         | Watermark configuration
         */
@@ -36,17 +36,17 @@ return [
         'watermark_path' => env('UPLOAD_WATERMARK_PATH', public_path('assets/images/watermark.png')),
         'watermark_position' => env('UPLOAD_WATERMARK_POSITION', 'bottom-right'),
         'watermark_opacity' => env('UPLOAD_WATERMARK_OPACITY', 0.5),
-        
+
         /*
         | Allowed image extensions
         */
         'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
-        
+
         /*
         | Maximum file size in KB
         */
         'max_size' => env('UPLOAD_IMAGE_MAX_SIZE', 10240), // 10MB
-        
+
         /*
         | Generate multiple sizes
         */
@@ -64,12 +64,12 @@ return [
                 'height' => 1200,
             ],
         ],
-        
+
         /*
         | Storage disk for images
         */
         'disk' => env('UPLOAD_IMAGE_DISK', 'public'),
-        
+
         /*
         | Default directory structure
         */
@@ -81,17 +81,17 @@ return [
         | Allowed document extensions
         */
         'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv'],
-        
+
         /*
         | Maximum file size in KB
         */
         'max_size' => env('UPLOAD_DOCUMENT_MAX_SIZE', 51200), // 50MB
-        
+
         /*
         | Storage disk for documents
         */
         'disk' => env('UPLOAD_DOCUMENT_DISK', 'local'),
-        
+
         /*
         | Default directory structure
         */
@@ -103,22 +103,22 @@ return [
         | Temporary file lifetime in hours
         */
         'temp_file_lifetime' => env('UPLOAD_TEMP_FILE_LIFETIME', 24),
-        
+
         /*
         | Cleanup temporary files older than X hours
         */
         'cleanup_hours' => env('UPLOAD_CLEANUP_HOURS', 24),
-        
+
         /*
         | Maximum number of files per upload batch
         */
         'max_files_per_batch' => env('UPLOAD_MAX_FILES_PER_BATCH', 10),
-        
+
         /*
         | Sanitize filenames
         */
         'sanitize_filenames' => env('UPLOAD_SANITIZE_FILENAMES', true),
-        
+
         /*
         | Generate unique filenames
         */
@@ -130,17 +130,17 @@ return [
         | Scan uploaded files for malware
         */
         'scan_for_malware' => env('UPLOAD_SCAN_FOR_MALWARE', false),
-        
+
         /*
         | Check MIME type against file extension
         */
         'validate_mime_type' => env('UPLOAD_VALIDATE_MIME_TYPE', true),
-        
+
         /*
         | Maximum filename length
         */
         'max_filename_length' => env('UPLOAD_MAX_FILENAME_LENGTH', 255),
-        
+
         /*
         | Disallowed characters in filenames
         */
@@ -159,7 +159,7 @@ return [
             'quality' => 90,
             'generate_thumbnail' => true,
         ],
-        
+
         'product' => [
             'max_width' => 1200,
             'max_height' => 1200,
@@ -169,14 +169,14 @@ return [
             'generate_thumbnail' => true,
             'generate_sizes' => true,
         ],
-        
+
         'banner' => [
             'max_width' => 1920,
             'max_height' => 600,
             'quality' => 80,
             'generate_thumbnail' => false,
         ],
-        
+
         'document_scan' => [
             'max_width' => 1200,
             'max_height' => 1600,

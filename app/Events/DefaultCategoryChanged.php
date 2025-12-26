@@ -8,4 +8,3 @@ class DefaultCategoryChanged
 {
     public function __construct(public int $categoryId, public int $tenantId) {}
 }
-

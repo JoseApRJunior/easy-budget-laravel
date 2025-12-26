@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\BusinessData;
 use App\DTOs\Common\BusinessDataDTO;
+use App\Models\BusinessData;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -26,7 +25,7 @@ class BusinessDataRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new BusinessData();
+        return new BusinessData;
     }
 
     /**
@@ -43,7 +42,7 @@ class BusinessDataRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, BusinessDataDTO $dto): bool
     {
         $businessData = $this->find($id);
-        if (!$businessData) {
+        if (! $businessData) {
             return false;
         }
 

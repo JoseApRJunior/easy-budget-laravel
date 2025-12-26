@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Invoice\InvoiceItemDTO;
 use App\Models\InvoiceItem;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
-use App\DTOs\Invoice\InvoiceItemDTO;
 
 class InvoiceItemRepository extends AbstractTenantRepository
 {
@@ -19,7 +19,7 @@ class InvoiceItemRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new InvoiceItem();
+        return new InvoiceItem;
     }
 
     /**
@@ -29,7 +29,7 @@ class InvoiceItemRepository extends AbstractTenantRepository
     {
         $data = $dto->toArray();
         $data['invoice_id'] = $invoiceId;
-        
+
         return $this->create($data);
     }
 

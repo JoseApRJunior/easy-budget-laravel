@@ -22,12 +22,14 @@ trait HasSafeExecution
     {
         try {
             $data = $callback();
+
             return $data instanceof ServiceResult ? $data : ServiceResult::success($data);
         } catch (QueryException $e) {
             Log::error($errorMessage, [
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return ServiceResult::error(
                 OperationStatus::CONFLICT,
                 'Erro de integridade de dados ou conflito no banco.',
@@ -37,8 +39,9 @@ trait HasSafeExecution
         } catch (Exception $e) {
             Log::error($errorMessage, [
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return ServiceResult::error(
                 OperationStatus::ERROR,
                 $errorMessage,

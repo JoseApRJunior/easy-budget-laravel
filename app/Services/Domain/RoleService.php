@@ -6,7 +6,4 @@ namespace App\Services\Domain;
 
 use App\Services\Core\Abstracts\AbstractBaseService;
 
-class RoleService extends AbstractBaseService
-{
-
-}
+class RoleService extends AbstractBaseService {}

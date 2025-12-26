@@ -8,4 +8,3 @@ class CategoryDeleted
 {
     public function __construct(public int $categoryId) {}
 }
-

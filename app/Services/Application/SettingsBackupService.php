@@ -7,7 +7,6 @@ namespace App\Services\Application;
 use App\Models\SystemSettings;
 use App\Models\User;
 use App\Models\UserSettings;
-use App\Services\Application\AuditLogService;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,27 +23,27 @@ class SettingsBackupService
         try {
             // Obtém configurações atuais do usuário
             $userSettings = $user->settings ?? UserSettings::create([
-                'user_id'   => $user->id,
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
             ]);
 
             $backupData = [
-                'user_id'     => $user->id,
-                'tenant_id'   => $user->tenant_id,
-                'settings'    => $userSettings->toArray(),
-                'created_at'  => now(),
-                'version'     => '2.0',
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'settings' => $userSettings->toArray(),
+                'created_at' => now(),
+                'version' => '2.0',
                 'backup_type' => 'user_settings',
-                'metadata'    => [
+                'metadata' => [
                     'laravel_version' => app()->version(),
-                    'php_version'     => PHP_VERSION,
-                    'backup_reason'   => $reason,
-                    'backup_by'       => auth()->id(),
-                ]
+                    'php_version' => PHP_VERSION,
+                    'backup_reason' => $reason,
+                    'backup_by' => auth()->id(),
+                ],
             ];
 
             $filename = $this->generateBackupFilename($user, 'user_settings');
-            $path     = "backups/settings/{$user->tenant_id}/{$filename}";
+            $path = "backups/settings/{$user->tenant_id}/{$filename}";
 
             // Salva backup no storage
             Storage::put($path, json_encode($backupData, JSON_PRETTY_PRINT));
@@ -52,18 +51,18 @@ class SettingsBackupService
             // Registra auditoria
             app(AuditLogService::class)->logBackupCreated($filename, (int) Storage::size($path), [
                 'backup_type' => 'user_settings',
-                'reason'      => $reason,
+                'reason' => $reason,
             ]);
 
             return [
-                'success'    => true,
-                'filename'   => $filename,
-                'path'       => $path,
-                'size'       => Storage::size($path),
+                'success' => true,
+                'filename' => $filename,
+                'path' => $path,
+                'size' => Storage::size($path),
                 'created_at' => now(),
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao criar backup das configurações: ' . $e->getMessage());
+            throw new Exception('Erro ao criar backup das configurações: '.$e->getMessage());
         }
     }
 
@@ -76,26 +75,26 @@ class SettingsBackupService
             // Obtém configurações atuais do sistema
             $systemSettings = SystemSettings::where('tenant_id', $tenantId)->first();
 
-            if (!$systemSettings) {
+            if (! $systemSettings) {
                 throw new Exception('Configurações do sistema não encontradas');
             }
 
             $backupData = [
-                'tenant_id'   => $tenantId,
-                'settings'    => $systemSettings->toArray(),
-                'created_at'  => now(),
-                'version'     => '2.0',
+                'tenant_id' => $tenantId,
+                'settings' => $systemSettings->toArray(),
+                'created_at' => now(),
+                'version' => '2.0',
                 'backup_type' => 'system_settings',
-                'metadata'    => [
+                'metadata' => [
                     'laravel_version' => app()->version(),
-                    'php_version'     => PHP_VERSION,
-                    'backup_reason'   => $reason,
-                    'backup_by'       => auth()->id(),
-                ]
+                    'php_version' => PHP_VERSION,
+                    'backup_reason' => $reason,
+                    'backup_by' => auth()->id(),
+                ],
             ];
 
             $filename = $this->generateBackupFilename(null, 'system_settings', $tenantId);
-            $path     = "backups/settings/{$tenantId}/{$filename}";
+            $path = "backups/settings/{$tenantId}/{$filename}";
 
             // Salva backup no storage
             Storage::put($path, json_encode($backupData, JSON_PRETTY_PRINT));
@@ -103,18 +102,18 @@ class SettingsBackupService
             // Registra auditoria
             app(AuditLogService::class)->logBackupCreated($filename, (int) Storage::size($path), [
                 'backup_type' => 'system_settings',
-                'reason'      => $reason,
+                'reason' => $reason,
             ]);
 
             return [
-                'success'    => true,
-                'filename'   => $filename,
-                'path'       => $path,
-                'size'       => Storage::size($path),
+                'success' => true,
+                'filename' => $filename,
+                'path' => $path,
+                'size' => Storage::size($path),
                 'created_at' => now(),
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao criar backup das configurações do sistema: ' . $e->getMessage());
+            throw new Exception('Erro ao criar backup das configurações do sistema: '.$e->getMessage());
         }
     }
 
@@ -126,15 +125,15 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$user->tenant_id}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 throw new Exception('Arquivo de backup não encontrado');
             }
 
             $backupContent = Storage::get($path);
-            $backupData    = json_decode($backupContent, true);
+            $backupData = json_decode($backupContent, true);
 
             // Valida backup
-            if (!$backupData || $backupData['user_id'] !== $user->id) {
+            if (! $backupData || $backupData['user_id'] !== $user->id) {
                 throw new Exception('Backup inválido ou não pertence ao usuário');
             }
 
@@ -147,7 +146,7 @@ class SettingsBackupService
 
             // Restaura configurações
             $userSettings = $user->settings ?? UserSettings::create([
-                'user_id'   => $user->id,
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
             ]);
 
@@ -162,13 +161,13 @@ class SettingsBackupService
             ]);
 
             return [
-                'success'        => true,
-                'message'        => 'Configurações restauradas com sucesso',
+                'success' => true,
+                'message' => 'Configurações restauradas com sucesso',
                 'backup_version' => $backupData['version'],
-                'backup_date'    => $backupData['created_at'],
+                'backup_date' => $backupData['created_at'],
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao restaurar backup: ' . $e->getMessage());
+            throw new Exception('Erro ao restaurar backup: '.$e->getMessage());
         }
     }
 
@@ -180,15 +179,15 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$tenantId}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 throw new Exception('Arquivo de backup não encontrado');
             }
 
             $backupContent = Storage::get($path);
-            $backupData    = json_decode($backupContent, true);
+            $backupData = json_decode($backupContent, true);
 
             // Valida backup
-            if (!$backupData || $backupData['tenant_id'] !== $tenantId) {
+            if (! $backupData || $backupData['tenant_id'] !== $tenantId) {
                 throw new Exception('Backup inválido ou não pertence ao tenant');
             }
 
@@ -202,7 +201,7 @@ class SettingsBackupService
             // Restaura configurações
             $systemSettings = SystemSettings::where('tenant_id', $tenantId)->first();
 
-            if (!$systemSettings) {
+            if (! $systemSettings) {
                 throw new Exception('Configurações do sistema não encontradas');
             }
 
@@ -217,13 +216,13 @@ class SettingsBackupService
             ]);
 
             return [
-                'success'        => true,
-                'message'        => 'Configurações do sistema restauradas com sucesso',
+                'success' => true,
+                'message' => 'Configurações do sistema restauradas com sucesso',
                 'backup_version' => $backupData['version'],
-                'backup_date'    => $backupData['created_at'],
+                'backup_date' => $backupData['created_at'],
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao restaurar backup do sistema: ' . $e->getMessage());
+            throw new Exception('Erro ao restaurar backup do sistema: '.$e->getMessage());
         }
     }
 
@@ -235,11 +234,11 @@ class SettingsBackupService
         try {
             $directory = "backups/settings/{$tenantId}";
 
-            if (!Storage::exists($directory)) {
+            if (! Storage::exists($directory)) {
                 return [];
             }
 
-            $files   = Storage::files($directory);
+            $files = Storage::files($directory);
             $backups = [];
 
             foreach ($files as $file) {
@@ -254,20 +253,20 @@ class SettingsBackupService
                 }
 
                 $content = Storage::get($file);
-                $data    = json_decode($content, true);
+                $data = json_decode($content, true);
 
-                if (!$data) {
+                if (! $data) {
                     continue;
                 }
 
                 $backups[] = [
-                    'filename'    => $filename,
-                    'path'        => $file,
-                    'size'        => Storage::size($file),
-                    'created_at'  => $data['created_at'] ?? Storage::lastModified($file),
-                    'version'     => $data['version'] ?? '1.0',
+                    'filename' => $filename,
+                    'path' => $file,
+                    'size' => Storage::size($file),
+                    'created_at' => $data['created_at'] ?? Storage::lastModified($file),
+                    'version' => $data['version'] ?? '1.0',
                     'backup_type' => $data['backup_type'] ?? 'unknown',
-                    'metadata'    => $data['metadata'] ?? [],
+                    'metadata' => $data['metadata'] ?? [],
                 ];
             }
 
@@ -278,7 +277,7 @@ class SettingsBackupService
 
             return $backups;
         } catch (Exception $e) {
-            throw new Exception('Erro ao listar backups: ' . $e->getMessage());
+            throw new Exception('Erro ao listar backups: '.$e->getMessage());
         }
     }
 
@@ -290,7 +289,7 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$tenantId}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 throw new Exception('Arquivo de backup não encontrado');
             }
 
@@ -305,7 +304,7 @@ class SettingsBackupService
 
             return $deleted;
         } catch (Exception $e) {
-            throw new Exception('Erro ao remover backup: ' . $e->getMessage());
+            throw new Exception('Erro ao remover backup: '.$e->getMessage());
         }
     }
 
@@ -315,8 +314,8 @@ class SettingsBackupService
     public function cleanupOldBackups(int $tenantId, int $daysToKeep = 30): int
     {
         try {
-            $backups      = $this->listBackups($tenantId);
-            $cutoffDate   = now()->subDays($daysToKeep);
+            $backups = $this->listBackups($tenantId);
+            $cutoffDate = now()->subDays($daysToKeep);
             $deletedCount = 0;
 
             foreach ($backups as $backup) {
@@ -330,7 +329,7 @@ class SettingsBackupService
 
             return $deletedCount;
         } catch (Exception $e) {
-            throw new Exception('Erro ao limpar backups antigos: ' . $e->getMessage());
+            throw new Exception('Erro ao limpar backups antigos: '.$e->getMessage());
         }
     }
 
@@ -342,25 +341,25 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$tenantId}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 return null;
             }
 
             $content = Storage::get($path);
-            $data    = json_decode($content, true);
+            $data = json_decode($content, true);
 
-            if (!$data) {
+            if (! $data) {
                 return null;
             }
 
             return [
-                'filename'       => $filename,
-                'path'           => $path,
-                'size'           => Storage::size($path),
-                'created_at'     => $data['created_at'],
-                'version'        => $data['version'],
-                'backup_type'    => $data['backup_type'],
-                'metadata'       => $data['metadata'],
+                'filename' => $filename,
+                'path' => $path,
+                'size' => Storage::size($path),
+                'created_at' => $data['created_at'],
+                'version' => $data['version'],
+                'backup_type' => $data['backup_type'],
+                'metadata' => $data['metadata'],
                 'settings_count' => count($data['settings'] ?? []),
             ];
         } catch (Exception $e) {
@@ -376,7 +375,7 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$tenantId}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 return [
                     'valid' => false,
                     'error' => 'Arquivo não encontrado',
@@ -384,9 +383,9 @@ class SettingsBackupService
             }
 
             $content = Storage::get($path);
-            $data    = json_decode($content, true);
+            $data = json_decode($content, true);
 
-            if (!$data) {
+            if (! $data) {
                 return [
                     'valid' => false,
                     'error' => 'Arquivo JSON inválido',
@@ -397,7 +396,7 @@ class SettingsBackupService
             $requiredFields = ['created_at', 'version', 'backup_type', 'settings'];
 
             foreach ($requiredFields as $field) {
-                if (!isset($data[$field])) {
+                if (! isset($data[$field])) {
                     return [
                         'valid' => false,
                         'error' => "Campo obrigatório ausente: {$field}",
@@ -414,16 +413,16 @@ class SettingsBackupService
             }
 
             return [
-                'valid'          => true,
-                'version'        => $data['version'],
-                'backup_type'    => $data['backup_type'],
-                'created_at'     => $data['created_at'],
+                'valid' => true,
+                'version' => $data['version'],
+                'backup_type' => $data['backup_type'],
+                'created_at' => $data['created_at'],
                 'settings_count' => count($data['settings']),
             ];
         } catch (Exception $e) {
             return [
                 'valid' => false,
-                'error' => 'Erro ao validar backup: ' . $e->getMessage(),
+                'error' => 'Erro ao validar backup: '.$e->getMessage(),
             ];
         }
     }
@@ -437,46 +436,46 @@ class SettingsBackupService
             $tenantId = $user->tenant_id;
 
             // Cria backups individuais
-            $userBackup   = $this->createUserSettingsBackup($user, $reason);
+            $userBackup = $this->createUserSettingsBackup($user, $reason);
             $systemBackup = $this->createSystemSettingsBackup($tenantId, $reason);
 
             // Cria backup consolidado
             $fullBackupData = [
-                'tenant_id'   => $tenantId,
-                'user_id'     => $user->id,
-                'created_at'  => now(),
-                'version'     => '2.0',
+                'tenant_id' => $tenantId,
+                'user_id' => $user->id,
+                'created_at' => now(),
+                'version' => '2.0',
                 'backup_type' => 'full_backup',
-                'backups'     => [
-                    'user_settings'   => $userBackup['filename'],
+                'backups' => [
+                    'user_settings' => $userBackup['filename'],
                     'system_settings' => $systemBackup['filename'],
                 ],
-                'metadata'    => [
+                'metadata' => [
                     'laravel_version' => app()->version(),
-                    'php_version'     => PHP_VERSION,
-                    'backup_reason'   => $reason,
-                    'backup_by'       => auth()->id(),
-                ]
+                    'php_version' => PHP_VERSION,
+                    'backup_reason' => $reason,
+                    'backup_by' => auth()->id(),
+                ],
             ];
 
             $filename = $this->generateBackupFilename($user, 'full_backup');
-            $path     = "backups/settings/{$tenantId}/{$filename}";
+            $path = "backups/settings/{$tenantId}/{$filename}";
 
             Storage::put($path, json_encode($fullBackupData, JSON_PRETTY_PRINT));
 
             return [
-                'success'    => true,
-                'filename'   => $filename,
-                'path'       => $path,
-                'size'       => Storage::size($path),
+                'success' => true,
+                'filename' => $filename,
+                'path' => $path,
+                'size' => Storage::size($path),
                 'created_at' => now(),
-                'backups'    => [
-                    'user_settings'   => $userBackup,
+                'backups' => [
+                    'user_settings' => $userBackup,
                     'system_settings' => $systemBackup,
                 ],
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao criar backup completo: ' . $e->getMessage());
+            throw new Exception('Erro ao criar backup completo: '.$e->getMessage());
         }
     }
 
@@ -488,12 +487,12 @@ class SettingsBackupService
         try {
             $path = "backups/settings/{$user->tenant_id}/{$filename}";
 
-            if (!Storage::exists($path)) {
+            if (! Storage::exists($path)) {
                 throw new Exception('Arquivo de backup completo não encontrado');
             }
 
             $backupContent = Storage::get($path);
-            $backupData    = json_decode($backupContent, true);
+            $backupData = json_decode($backupContent, true);
 
             if ($backupData['backup_type'] !== 'full_backup') {
                 throw new Exception('Tipo de backup inválido');
@@ -522,7 +521,7 @@ class SettingsBackupService
                 'results' => $results,
             ];
         } catch (Exception $e) {
-            throw new Exception('Erro ao restaurar backup completo: ' . $e->getMessage());
+            throw new Exception('Erro ao restaurar backup completo: '.$e->getMessage());
         }
     }
 
@@ -532,7 +531,7 @@ class SettingsBackupService
     private function generateBackupFilename(?User $user, string $type, ?int $tenantId = null): string
     {
         $timestamp = now()->format('Y_m_d_H_i_s');
-        $random    = substr(md5(uniqid()), 0, 8);
+        $random = substr(md5(uniqid()), 0, 8);
 
         if ($user) {
             return "backup_{$type}_{$user->id}_{$timestamp}_{$random}.json";
@@ -571,8 +570,8 @@ class SettingsBackupService
 
             $stats = [
                 'total_backups' => count($backups),
-                'total_size'    => 0,
-                'by_type'       => [],
+                'total_size' => 0,
+                'by_type' => [],
                 'oldest_backup' => null,
                 'newest_backup' => null,
             ];
@@ -581,7 +580,7 @@ class SettingsBackupService
                 $stats['total_size'] += $backup['size'];
 
                 $type = $backup['backup_type'];
-                if (!isset($stats['by_type'][$type])) {
+                if (! isset($stats['by_type'][$type])) {
                     $stats['by_type'][$type] = 0;
                 }
                 $stats['by_type'][$type]++;
@@ -589,11 +588,11 @@ class SettingsBackupService
                 // Verifica data mais antiga e mais recente
                 $backupDate = strtotime($backup['created_at']);
 
-                if (!$stats['oldest_backup'] || $backupDate < strtotime($stats['oldest_backup'])) {
+                if (! $stats['oldest_backup'] || $backupDate < strtotime($stats['oldest_backup'])) {
                     $stats['oldest_backup'] = $backup['created_at'];
                 }
 
-                if (!$stats['newest_backup'] || $backupDate > strtotime($stats['newest_backup'])) {
+                if (! $stats['newest_backup'] || $backupDate > strtotime($stats['newest_backup'])) {
                     $stats['newest_backup'] = $backup['created_at'];
                 }
             }
@@ -602,8 +601,8 @@ class SettingsBackupService
         } catch (Exception $e) {
             return [
                 'total_backups' => 0,
-                'total_size'    => 0,
-                'by_type'       => [],
+                'total_size' => 0,
+                'by_type' => [],
                 'oldest_backup' => null,
                 'newest_backup' => null,
             ];

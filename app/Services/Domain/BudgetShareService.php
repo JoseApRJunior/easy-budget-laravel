@@ -32,7 +32,7 @@ class BudgetShareService extends AbstractBaseService
         return $this->safeExecute(function () use ($token) {
             $share = $this->budgetShareRepository->findByToken($token);
 
-            if (!$share) {
+            if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
             }
 
@@ -45,7 +45,7 @@ class BudgetShareService extends AbstractBaseService
             $this->budgetShareRepository->update($share->id, [
                 'status' => 'rejected',
                 'is_active' => false,
-                'rejected_at' => now()
+                'rejected_at' => now(),
             ]);
 
             return $this->success($share, 'Compartilhamento rejeitado com sucesso.');
@@ -60,14 +60,14 @@ class BudgetShareService extends AbstractBaseService
         return $this->safeExecute(function () use ($data) {
             // Validações de negócio
             $validation = $this->validateShareData($data);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->error(OperationStatus::VALIDATION_ERROR, $validation['message']);
             }
 
             // Verifica se o orçamento existe (tenant isolation via global scope)
             $budget = $this->budgetRepository->find($data['budget_id']);
 
-            if (!$budget) {
+            if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
@@ -97,26 +97,27 @@ class BudgetShareService extends AbstractBaseService
         return $this->safeExecute(function () use ($token) {
             $share = $this->budgetShareRepository->findByToken($token);
 
-            if (!$share || !$share->is_active) {
+            if (! $share || ! $share->is_active) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Token de compartilhamento inválido ou inativo.');
             }
 
             // Verifica expiração
             if ($share->expires_at && now()->gt($share->expires_at)) {
                 $this->budgetShareRepository->update($share->id, ['is_active' => false, 'status' => 'expired']);
+
                 return $this->error(OperationStatus::EXPIRED, 'Token de compartilhamento expirado.');
             }
 
             // Incrementa contador de acesso
             $this->budgetShareRepository->update($share->id, [
                 'access_count' => $share->access_count + 1,
-                'last_accessed_at' => now()
+                'last_accessed_at' => now(),
             ]);
 
             // Carrega o orçamento com relacionamentos necessários
             $budget = $this->budgetRepository->find($share->budget_id, ['customer', 'items', 'user']);
 
-            if (!$budget) {
+            if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
@@ -136,7 +137,7 @@ class BudgetShareService extends AbstractBaseService
         return $this->safeExecute(function () use ($shareId) {
             $share = $this->budgetShareRepository->find($shareId);
 
-            if (!$share) {
+            if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
             }
 
@@ -151,11 +152,11 @@ class BudgetShareService extends AbstractBaseService
      */
     public function getSharesByBudget(int $budgetId, array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($budgetId, $filters) {
+        return $this->safeExecute(function () use ($budgetId) {
             // Verifica se o orçamento existe
             $budget = $this->budgetRepository->find($budgetId);
 
-            if (!$budget) {
+            if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
@@ -176,7 +177,7 @@ class BudgetShareService extends AbstractBaseService
         return $this->safeExecute(function () use ($shareId, $newExpiry) {
             $share = $this->budgetShareRepository->find($shareId);
 
-            if (!$share) {
+            if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
             }
 
@@ -185,7 +186,7 @@ class BudgetShareService extends AbstractBaseService
                 'access_count' => 0,
                 'last_accessed_at' => null,
                 'is_active' => true,
-                'status' => 'active'
+                'status' => 'active',
             ];
 
             if ($newExpiry) {
@@ -211,11 +212,11 @@ class BudgetShareService extends AbstractBaseService
             }
         }
 
-        if (!filter_var($data['recipient_email'], FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($data['recipient_email'], FILTER_VALIDATE_EMAIL)) {
             return ['valid' => false, 'message' => 'Email inválido.'];
         }
 
-        if (isset($data['expires_at']) && !strtotime($data['expires_at'])) {
+        if (isset($data['expires_at']) && ! strtotime($data['expires_at'])) {
             return ['valid' => false, 'message' => 'Data de expiração inválida.'];
         }
 
@@ -241,7 +242,7 @@ class BudgetShareService extends AbstractBaseService
     private function sendShareNotification(BudgetShare $share, Budget $budget): void
     {
         try {
-            $shareUrl = config('app.url') . "/budgets/shared/{$share->share_token}";
+            $shareUrl = config('app.url')."/budgets/shared/{$share->share_token}";
 
             $emailData = [
                 'recipient_name' => $share->recipient_name,
@@ -323,12 +324,12 @@ class BudgetShareService extends AbstractBaseService
                 'expired_shares' => $expiredShares,
                 'recent_shares' => $recentShares,
                 'most_shared_budgets' => $mostSharedBudgets,
-                'access_count' => $totalAccesses
+                'access_count' => $totalAccesses,
             ];
 
             return $this->success($stats);
         } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage());
+            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: '.$e->getMessage());
         }
     }
 }

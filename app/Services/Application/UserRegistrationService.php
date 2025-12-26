@@ -5,20 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\DTOs\Provider\ProviderRegistrationDTO;
-use App\Enums\OperationStatus;
 use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\User;
-use App\Models\UserConfirmationToken;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
-use App\Services\Application\EmailVerificationService;
-use App\Services\Application\ProviderManagementService;
-use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -49,12 +43,17 @@ use Illuminate\Support\Facades\Log;
  */
 class UserRegistrationService extends AbstractBaseService
 {
-    protected UserConfirmationTokenService    $userConfirmationTokenService;
+    protected UserConfirmationTokenService $userConfirmationTokenService;
+
     protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
-    protected UserRepository                  $userRepository;
-    protected ProviderManagementService       $providerManagementService;
-    protected EmailVerificationService        $emailVerificationService;
-    protected TenantRepository                $tenantRepository;
+
+    protected UserRepository $userRepository;
+
+    protected ProviderManagementService $providerManagementService;
+
+    protected EmailVerificationService $emailVerificationService;
+
+    protected TenantRepository $tenantRepository;
 
     public function __construct(
         UserRepository $userRepository,
@@ -65,19 +64,19 @@ class UserRegistrationService extends AbstractBaseService
         TenantRepository $tenantRepository,
     ) {
         parent::__construct($userRepository);
-        $this->userRepository                  = $userRepository;
-        $this->userConfirmationTokenService    = $userConfirmationTokenService;
+        $this->userRepository = $userRepository;
+        $this->userConfirmationTokenService = $userConfirmationTokenService;
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
-        $this->providerManagementService       = $providerManagementService;
-        $this->emailVerificationService        = $emailVerificationService;
-        $this->tenantRepository                = $tenantRepository;
+        $this->providerManagementService = $providerManagementService;
+        $this->emailVerificationService = $emailVerificationService;
+        $this->tenantRepository = $tenantRepository;
     }
 
     /**
      * Registra um novo usuário no sistema com lógica completa.
      *
-     * @param ProviderRegistrationDTO $dto DTO com dados do usuário
-     * @param bool $isSocialRegistration Se é um registro via rede social (default: false)
+     * @param  ProviderRegistrationDTO  $dto  DTO com dados do usuário
+     * @param  bool  $isSocialRegistration  Se é um registro via rede social (default: false)
      * @return ServiceResult Resultado da operação
      */
     public function registerUser(ProviderRegistrationDTO $dto, bool $isSocialRegistration = false): ServiceResult
@@ -90,8 +89,9 @@ class UserRegistrationService extends AbstractBaseService
 
             $registrationResult = $this->providerManagementService->createProviderFromRegistration($dto);
 
-            if (!$registrationResult->isSuccess()) {
+            if (! $registrationResult->isSuccess()) {
                 DB::rollBack();
+
                 return $registrationResult;
             }
 
@@ -100,9 +100,9 @@ class UserRegistrationService extends AbstractBaseService
             DB::commit();
 
             // Processar token de verificação e evento apenas para registros normais
-            if (!$isSocialRegistration) {
+            if (! $isSocialRegistration) {
                 $tokenResult = $this->processEmailVerification($results['user']);
-                $token       = $tokenResult ? $tokenResult->getData()['token'] : null;
+                $token = $tokenResult ? $tokenResult->getData()['token'] : null;
 
                 Event::dispatch(new UserRegistered(
                     $results['user'],
@@ -115,21 +115,21 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             $this->logStep('Registro concluído com sucesso', [
-                'user_id'         => $results['user']->id,
-                'email'           => $results['user']->email,
-                'tenant_id'       => $results['tenant']->id,
-                'plan_id'         => $results['plan']->id,
-                'provider_id'     => $results['provider']->id,
+                'user_id' => $results['user']->id,
+                'email' => $results['user']->email,
+                'tenant_id' => $results['tenant']->id,
+                'plan_id' => $results['plan']->id,
+                'provider_id' => $results['provider']->id,
                 'subscription_id' => $results['subscription']->id,
             ]);
 
             return $this->success([
-                'user'         => $results['user'],
-                'tenant'       => $results['tenant'],
-                'provider'     => $results['provider'],
-                'plan'         => $results['plan'],
+                'user' => $results['user'],
+                'tenant' => $results['tenant'],
+                'provider' => $results['provider'],
+                'plan' => $results['plan'],
                 'subscription' => $results['subscription'],
-                'message'      => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
+                'message' => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.',
             ], 'Usuário registrado com sucesso.');
         }, 'Erro no registro de usuário.');
     }
@@ -137,8 +137,8 @@ class UserRegistrationService extends AbstractBaseService
     /**
      * Registra um log para um passo específico.
      *
-     * @param string $message Mensagem do log
-     * @param array $context Contexto adicional
+     * @param  string  $message  Mensagem do log
+     * @param  array  $context  Contexto adicional
      */
     private function logStep(string $message, array $context = []): void
     {
@@ -148,7 +148,7 @@ class UserRegistrationService extends AbstractBaseService
     /**
      * Processa a criação do token de verificação de e-mail.
      *
-     * @param User $user Usuário
+     * @param  User  $user  Usuário
      * @return ServiceResult|null Resultado do processamento
      */
     private function processEmailVerification(User $user): ?ServiceResult
@@ -156,22 +156,24 @@ class UserRegistrationService extends AbstractBaseService
         $this->logStep('Criando token de verificação de e-mail...', ['user_id' => $user->id]);
         $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken($user);
 
-        if (!$tokenResult->isSuccess()) {
+        if (! $tokenResult->isSuccess()) {
             $this->logStep('Falha ao criar token de verificação, mas usuário foi registrado', [
                 'user_id' => $user->id,
-                'error'   => $tokenResult->getMessage(),
+                'error' => $tokenResult->getMessage(),
             ]);
+
             return null;
         }
 
         $this->logStep('Token de verificação criado com sucesso', ['user_id' => $user->id]);
+
         return $tokenResult;
     }
 
     /**
      * Solicita redefinição de senha para um usuário.
      *
-     * @param string $email E-mail do usuário
+     * @param  string  $email  E-mail do usuário
      * @return ServiceResult Resultado da operação
      */
     public function requestPasswordReset(string $email): ServiceResult
@@ -179,7 +181,7 @@ class UserRegistrationService extends AbstractBaseService
         return $this->safeExecute(function () use ($email) {
             // Buscar usuário por e-mail
             $user = $this->userRepository->findByEmail($email);
-            if (!$user) {
+            if (! $user) {
                 // Não revelar se o e-mail existe ou não por segurança
                 return $this->success(
                     null,
@@ -188,14 +190,14 @@ class UserRegistrationService extends AbstractBaseService
             }
 
             // Criar token de redefinição em formato base64url
-            $token     = generateSecureTokenUrl();
+            $token = generateSecureTokenUrl();
             $expiresAt = now()->addMinutes((int) config('auth.passwords.users.expire', 60));
 
             $this->userConfirmationTokenRepository->create([
-                'user_id'    => $user->id,
-                'token'      => $token,
+                'user_id' => $user->id,
+                'token' => $token,
                 'expires_at' => $expiresAt,
-                'type'       => 'password_reset',
+                'type' => 'password_reset',
             ]);
 
             // Buscar tenant do usuário
@@ -209,7 +211,7 @@ class UserRegistrationService extends AbstractBaseService
 
             Log::info('Solicitação de redefinição de senha processada com eventos', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
+                'email' => $user->email,
             ]);
 
             return $this->success(

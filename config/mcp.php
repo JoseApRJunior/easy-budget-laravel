@@ -4,25 +4,25 @@ return [
 
     'servers' => [
 
-        'memory'              => [
+        'memory' => [
             'command' => 'npx',
-            'args'    => [ '-y', '@modelcontextprotocol/server-memory' ],
-            'env'     => [
-                'MEMORY_FILE_PATH' => base_path( 'memory.json' ),
+            'args' => ['-y', '@modelcontextprotocol/server-memory'],
+            'env' => [
+                'MEMORY_FILE_PATH' => base_path('memory.json'),
             ],
         ],
 
-        'context7'            => [
+        'context7' => [
             'command' => 'npx',
-            'args'    => [ '-y', '@upstash/context7-mcp@latest' ],
-            'env'     => [
+            'args' => ['-y', '@upstash/context7-mcp@latest'],
+            'env' => [
                 'DEFAULT_MINIMUM_TOKENS' => '10000',
             ],
         ],
 
         'sequential-thinking' => [
             'command' => 'uvx',
-            'args'    => [
+            'args' => [
                 '--from',
                 'git+https://github.com/arben-adm/mcp-sequential-thinking',
                 '--with',
@@ -31,29 +31,29 @@ return [
             ],
         ],
 
-        'phpocalypse'         => [
+        'phpocalypse' => [
             'command' => 'npx',
-            'args'    => [
+            'args' => [
                 'tsx',
-                base_path( 'tools/PHPocalypse-MCP/src/index.ts' ),
+                base_path('tools/PHPocalypse-MCP/src/index.ts'),
                 '--config',
-                base_path( 'phpocalypse-mcp.yaml' ),
+                base_path('phpocalypse-mcp.yaml'),
             ],
         ],
 
-        'filesystem'          => [
+        'filesystem' => [
             'command' => 'npx',
-            'args'    => [ '-y', '@modelcontextprotocol/server-filesystem' ],
-            'env'     => [
+            'args' => ['-y', '@modelcontextprotocol/server-filesystem'],
+            'env' => [
                 'ALLOWED_DIRECTORY' => base_path(),
             ],
         ],
 
-        'testsprite'          => [
+        'testsprite' => [
             'command' => 'npx',
-            'args'    => [ '@testsprite/testsprite-mcp@latest' ],
-            'env'     => [
-                'API_KEY' => env( 'TESTSPRITE_API_KEY' ),
+            'args' => ['@testsprite/testsprite-mcp@latest'],
+            'env' => [
+                'API_KEY' => env('TESTSPRITE_API_KEY'),
             ],
         ],
 

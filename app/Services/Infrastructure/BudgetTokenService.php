@@ -23,18 +23,18 @@ class BudgetTokenService
      *
      * Creates a secure random token and sets an expiration date.
      *
-     * @param Budget $budget The budget to generate token for
+     * @param  Budget  $budget  The budget to generate token for
      * @return string The generated token
      */
-    public function generateToken( Budget $budget ): string
+    public function generateToken(Budget $budget): string
     {
-        $token     = $this->generateUniqueToken();
-        $expiresAt = Carbon::now()->addDays( self::TOKEN_EXPIRY_DAYS );
+        $token = $this->generateUniqueToken();
+        $expiresAt = Carbon::now()->addDays(self::TOKEN_EXPIRY_DAYS);
 
-        $budget->update( [
-            'public_token'      => $token,
-            'public_expires_at' => $expiresAt
-        ] );
+        $budget->update([
+            'public_token' => $token,
+            'public_expires_at' => $expiresAt,
+        ]);
 
         return $token;
     }
@@ -44,22 +44,22 @@ class BudgetTokenService
      *
      * Checks if the token exists and hasn't expired.
      *
-     * @param string $token The token to validate
+     * @param  string  $token  The token to validate
      * @return array Validation result with 'valid', 'condition', and optionally 'budget'
      */
-    public function validateToken( string $token ): array
+    public function validateToken(string $token): array
     {
-        $budget = Budget::where( 'public_token', $token )->first();
+        $budget = Budget::where('public_token', $token)->first();
 
-        if ( !$budget ) {
-            return [ 'valid' => false, 'condition' => 'invalid' ];
+        if (! $budget) {
+            return ['valid' => false, 'condition' => 'invalid'];
         }
 
-        if ( Carbon::now()->gt( $budget->public_expires_at ) ) {
-            return [ 'valid' => false, 'condition' => 'expired', 'budget' => $budget ];
+        if (Carbon::now()->gt($budget->public_expires_at)) {
+            return ['valid' => false, 'condition' => 'expired', 'budget' => $budget];
         }
 
-        return [ 'valid' => true, 'condition' => 'valid', 'budget' => $budget ];
+        return ['valid' => true, 'condition' => 'valid', 'budget' => $budget];
     }
 
     /**
@@ -67,12 +67,12 @@ class BudgetTokenService
      *
      * Generates a new token, effectively replacing the old one.
      *
-     * @param Budget $budget The budget to regenerate token for
+     * @param  Budget  $budget  The budget to regenerate token for
      * @return string The new generated token
      */
-    public function regenerateToken( Budget $budget ): string
+    public function regenerateToken(Budget $budget): string
     {
-        return $this->generateToken( $budget );
+        return $this->generateToken($budget);
     }
 
     /**
@@ -83,10 +83,9 @@ class BudgetTokenService
     private function generateUniqueToken(): string
     {
         do {
-            $token = Str::random( 43 );
-        } while ( Budget::where( 'public_token', $token )->exists() );
+            $token = Str::random(43);
+        } while (Budget::where('public_token', $token)->exists());
 
         return $token;
     }
-
 }

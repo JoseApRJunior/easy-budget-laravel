@@ -10,22 +10,19 @@ use App\DTOs\Invoice\InvoiceFromServiceDTO;
 use App\DTOs\Invoice\InvoiceUpdateDTO;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Http\Requests\InvoiceStoreFromBudgetRequest;
 use App\Http\Requests\InvoiceStoreRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
-use App\Http\Requests\InvoiceStoreFromBudgetRequest;
 use App\Models\Budget;
 use App\Models\Invoice;
-use App\Repositories\BudgetRepository;
 use App\Repositories\ProductRepository;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CustomerService;
 use App\Services\Domain\InvoiceService;
-use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InvoiceController extends Controller
@@ -55,10 +52,10 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.index', [
-            'invoices'      => $invoices,
-            'filters'       => $filters,
+            'invoices' => $invoices,
+            'filters' => $filters,
             'statusOptions' => InvoiceStatus::cases(),
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
         ]);
     }
 
@@ -87,10 +84,10 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.create', [
-            'service'       => null,
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
-            'services'      => [],
-            'products'      => $products,
+            'service' => null,
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'services' => [],
+            'products' => $products,
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -158,9 +155,9 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.edit', [
-            'invoice'       => $invoice,
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
-            'services'      => [],
+            'invoice' => $invoice,
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'services' => [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -222,7 +219,7 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, InvoiceStatus::cases()))],
+            'status' => ['required', 'string', 'in:'.implode(',', array_map(fn ($case) => $case->value, InvoiceStatus::cases()))],
         ]);
 
         $statusResult = $this->invoiceService->updateStatusByCode($code, $request->input('status'));
@@ -255,8 +252,8 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.create-from-budget', [
-            'budget'        => $budget,
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'budget' => $budget,
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -278,9 +275,9 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.create-partial-from-service', [
-            'invoiceData'   => $invoiceData,
-            'serviceCode'   => $serviceCode,
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'invoiceData' => $invoiceData,
+            'serviceCode' => $serviceCode,
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -309,9 +306,9 @@ class InvoiceController extends Controller
         $customersResult = $this->customerService->listCustomers([]);
 
         return view('pages.invoice.create-from-service', [
-            'invoiceData'   => $invoiceData,
-            'serviceCode'   => $serviceCode,
-            'customers'     => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'invoiceData' => $invoiceData,
+            'serviceCode' => $serviceCode,
+            'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
             'statusOptions' => InvoiceStatus::cases(),
         ]);
     }
@@ -323,12 +320,12 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
         $request->validate([
-            'issue_date'         => 'required|date',
-            'due_date'           => 'required|date|after_or_equal:issue_date',
-            'notes'              => 'nullable|string|max:1000',
-            'items'              => 'nullable|array',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
-            'items.*.quantity'   => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit_value' => 'required|numeric|min:0.01',
         ]);
 
@@ -359,8 +356,8 @@ class InvoiceController extends Controller
         $this->authorize('create', Invoice::class);
         $request->validate([
             'service_code' => 'required|string|exists:services,code',
-            'issue_date'   => 'required|date',
-            'due_date'     => 'required|date|after_or_equal:issue_date',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
         ]);
 
         $dto = InvoiceFromServiceDTO::fromRequest($request->all());
@@ -412,7 +409,7 @@ class InvoiceController extends Controller
 
         $result = $this->invoiceService->searchInvoices($query, $limit);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return response()->json([
                 'success' => false,
                 'message' => $result->getMessage(),
@@ -421,7 +418,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $result->getData(),
+            'data' => $result->getData(),
         ]);
     }
 
@@ -431,12 +428,12 @@ class InvoiceController extends Controller
     public function export(Request $request): BinaryFileResponse|JsonResponse
     {
         $this->authorize('viewAny', Invoice::class);
-        $format  = $request->get('format', 'xlsx');
+        $format = $request->get('format', 'xlsx');
         $filters = $request->only(['status', 'customer_id', 'date_from', 'date_to']);
 
         $result = $this->invoiceService->exportInvoices($filters, $format);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             return response()->json([
                 'success' => false,
                 'message' => $result->getMessage(),
@@ -456,7 +453,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('viewAny', Invoice::class);
         $filters = $request->only(['status', 'customer_id', 'service_id', 'date_from', 'date_to', 'due_date_from', 'due_date_to', 'min_amount', 'max_amount', 'search', 'sort_by', 'sort_direction']);
-        $result  = $this->invoiceService->getFilteredInvoices($filters, ['customer:id,name', 'service:id,code,description', 'invoiceStatus']);
+        $result = $this->invoiceService->getFilteredInvoices($filters, ['customer:id,name', 'service:id,code,description', 'invoiceStatus']);
 
         return $result->isSuccess()
             ? response()->json(['success' => true, 'data' => $result->getData()])

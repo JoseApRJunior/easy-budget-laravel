@@ -96,10 +96,11 @@ readonly class CustomerDTO extends AbstractDTO
     private static function mapType(?string $external): string
     {
         $value = strtolower((string) $external);
+
         return match ($value) {
             'persona_fisica', 'pf', 'individual' => CommonData::TYPE_INDIVIDUAL,
-            'persona_juridica', 'pj', 'company'  => CommonData::TYPE_COMPANY,
-            default                              => CommonData::TYPE_INDIVIDUAL,
+            'persona_juridica', 'pj', 'company' => CommonData::TYPE_COMPANY,
+            default => CommonData::TYPE_INDIVIDUAL,
         };
     }
 }

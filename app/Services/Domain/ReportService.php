@@ -8,15 +8,11 @@ use App\DTOs\Report\ReportDTO;
 use App\Repositories\ReportRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ReportService extends AbstractBaseService
 {
-    /**
-     * @param ReportRepository $repository
-     */
     public function __construct(ReportRepository $repository)
     {
         parent::__construct($repository);
@@ -24,9 +20,6 @@ class ReportService extends AbstractBaseService
 
     /**
      * Gera um novo relatório.
-     *
-     * @param ReportDTO $dto
-     * @return ServiceResult
      */
     public function generateReport(ReportDTO $dto): ServiceResult
     {
@@ -34,11 +27,11 @@ class ReportService extends AbstractBaseService
             return DB::transaction(function () use ($dto) {
                 // Prepara os dados finais mesclando o DTO com valores padrão e contextuais
                 $finalData = array_merge($dto->toArray(), [
-                    'status'      => $dto->status ?? 'processing',
+                    'status' => $dto->status ?? 'processing',
                     'description' => $dto->description ?? $this->generateDescription($dto->filters ?? []),
-                    'file_name'   => $dto->file_name ?? $this->generateFileName($dto->type, $dto->format),
-                    'tenant_id'   => $dto->tenant_id ?? $this->getEffectiveTenantId(),
-                    'user_id'     => $dto->user_id ?? (int) auth()->id(),
+                    'file_name' => $dto->file_name ?? $this->generateFileName($dto->type, $dto->format),
+                    'tenant_id' => $dto->tenant_id ?? $this->getEffectiveTenantId(),
+                    'user_id' => $dto->user_id ?? (int) auth()->id(),
                 ]);
 
                 // Cria um novo DTO com os dados completos
@@ -60,31 +53,25 @@ class ReportService extends AbstractBaseService
 
     /**
      * Obtém relatórios filtrados com paginação.
-     *
-     * @param array $filters
-     * @param array $with
-     * @return ServiceResult
      */
     public function getFilteredReports(array $filters = [], array $with = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with) {
             $reports = $this->repository->getPaginated($filters, 15, $with);
+
             return $this->success($reports, 'Relatórios filtrados com sucesso.');
         }, 'Erro ao filtrar relatórios.');
     }
 
     /**
      * Prepara o download de um relatório.
-     *
-     * @param string $hash
-     * @return ServiceResult
      */
     public function downloadReport(string $hash): ServiceResult
     {
         return $this->safeExecute(function () use ($hash) {
             $report = $this->repository->findByHash($hash, ['user']);
 
-            if (!$report) {
+            if (! $report) {
                 return $this->error('Relatório não encontrado.');
             }
 
@@ -92,36 +79,32 @@ class ReportService extends AbstractBaseService
                 return $this->error('Relatório ainda não está pronto.');
             }
 
-            if (!$report->file_path || !Storage::disk('reports')->exists($report->file_path)) {
+            if (! $report->file_path || ! Storage::disk('reports')->exists($report->file_path)) {
                 return $this->error('Arquivo do relatório não encontrado.');
             }
 
             return $this->success([
                 'file_path' => $report->file_path,
                 'file_name' => $report->file_name,
-                'mime_type' => $this->getMimeType($report->format)
+                'mime_type' => $this->getMimeType($report->format),
             ], 'Relatório pronto para download.');
         }, 'Erro ao preparar download.');
     }
 
     /**
      * Obtém estatísticas de relatórios.
-     *
-     * @return ServiceResult
      */
     public function getReportStats(): ServiceResult
     {
         return $this->safeExecute(function () {
             $stats = $this->repository->getStats();
+
             return $this->success($stats, 'Estatísticas de relatórios obtidas com sucesso.');
         }, 'Erro ao calcular estatísticas.');
     }
 
     /**
      * Obtém relatórios recentes formatados para a view.
-     *
-     * @param int $limit
-     * @return ServiceResult
      */
     public function getRecentReports(int $limit = 10): ServiceResult
     {
@@ -130,14 +113,14 @@ class ReportService extends AbstractBaseService
 
             $formattedReports = $reports->map(function ($report) {
                 return (object) [
-                    'id'           => $report->id,
-                    'type'         => $report->getTypeLabel(),
-                    'description'  => $report->description ?: 'Sem descrição',
-                    'date'         => $report->generated_at ?: $report->created_at,
-                    'status'       => $report->getStatusLabel(),
+                    'id' => $report->id,
+                    'type' => $report->getTypeLabel(),
+                    'description' => $report->description ?: 'Sem descrição',
+                    'date' => $report->generated_at ?: $report->created_at,
+                    'status' => $report->getStatusLabel(),
                     'status_color' => $this->getStatusColor($report->status),
-                    'size'         => $report->getFileSizeFormatted(),
-                    'view_url'     => $report->getDownloadUrl(),
+                    'size' => $report->getFileSizeFormatted(),
+                    'view_url' => $report->getDownloadUrl(),
                     'download_url' => $report->getDownloadUrl(),
                 ];
             });
@@ -152,12 +135,12 @@ class ReportService extends AbstractBaseService
     private function getStatusColor(string $status): string
     {
         return match ($status) {
-            'completed'  => 'success',
+            'completed' => 'success',
             'processing' => 'warning',
-            'pending'    => 'secondary',
-            'failed'     => 'danger',
-            'expired'    => 'dark',
-            default      => 'secondary'
+            'pending' => 'secondary',
+            'failed' => 'danger',
+            'expired' => 'dark',
+            default => 'secondary'
         };
     }
 
@@ -167,9 +150,16 @@ class ReportService extends AbstractBaseService
     private function generateDescription(array $filters): string
     {
         $parts = [];
-        if (!empty($filters['start_date'])) $parts[] = 'De: ' . $filters['start_date'];
-        if (!empty($filters['end_date'])) $parts[] = 'Até: ' . $filters['end_date'];
-        if (!empty($filters['customer_name'])) $parts[] = 'Cliente: ' . $filters['customer_name'];
+        if (! empty($filters['start_date'])) {
+            $parts[] = 'De: '.$filters['start_date'];
+        }
+        if (! empty($filters['end_date'])) {
+            $parts[] = 'Até: '.$filters['end_date'];
+        }
+        if (! empty($filters['customer_name'])) {
+            $parts[] = 'Cliente: '.$filters['customer_name'];
+        }
+
         return implode(' | ', $parts) ?: 'Relatório geral';
     }
 
@@ -179,6 +169,7 @@ class ReportService extends AbstractBaseService
     private function generateFileName(string $type, string $format): string
     {
         $timestamp = now()->format('Ymd_His');
+
         return "relatorio_{$type}_{$timestamp}.{$format}";
     }
 
@@ -188,9 +179,9 @@ class ReportService extends AbstractBaseService
     private function getMimeType(string $format): string
     {
         return match ($format) {
-            'pdf'   => 'application/pdf',
+            'pdf' => 'application/pdf',
             'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'csv'   => 'text/csv',
+            'csv' => 'text/csv',
             default => 'application/octet-stream'
         };
     }

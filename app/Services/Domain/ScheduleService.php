@@ -7,7 +7,6 @@ namespace App\Services\Domain;
 use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Enums\OperationStatus;
-use App\Models\Schedule;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServiceRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -15,8 +14,6 @@ use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
 use App\Support\ServiceResult;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ScheduleService extends AbstractBaseService
 {
@@ -38,7 +35,7 @@ class ScheduleService extends AbstractBaseService
             // Verifica se o serviço existe (o escopo de tenant já é aplicado pelo ServiceRepository)
             $service = $this->serviceRepository->find($dto->service_id);
 
-            if (!$service) {
+            if (! $service) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Serviço não encontrado.');
             }
 
@@ -49,6 +46,7 @@ class ScheduleService extends AbstractBaseService
 
             // Cria o agendamento
             $schedule = $this->scheduleRepository->createFromDTO($dto);
+
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
     }
@@ -62,7 +60,7 @@ class ScheduleService extends AbstractBaseService
             // Verifica se o agendamento existe
             $schedule = $this->scheduleRepository->find($scheduleId);
 
-            if (!$schedule) {
+            if (! $schedule) {
                 return $this->error('Agendamento não encontrado.');
             }
 
@@ -77,6 +75,7 @@ class ScheduleService extends AbstractBaseService
             }
 
             $updated = $this->scheduleRepository->updateFromDTO($scheduleId, $dto);
+
             return $this->success($updated, 'Agendamento atualizado com sucesso.');
         }, 'Erro ao atualizar agendamento.');
     }
@@ -84,12 +83,12 @@ class ScheduleService extends AbstractBaseService
     /**
      * Cancela agendamento
      */
-    public function cancelSchedule(int $scheduleId, string $reason = null): ServiceResult
+    public function cancelSchedule(int $scheduleId, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId, $reason) {
             $schedule = $this->scheduleRepository->find($scheduleId);
 
-            if (!$schedule) {
+            if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
@@ -99,12 +98,12 @@ class ScheduleService extends AbstractBaseService
             }
 
             $success = $this->scheduleRepository->update($scheduleId, [
-                'status'              => 'cancelled',
+                'status' => 'cancelled',
                 'cancellation_reason' => $reason,
-                'cancelled_at'        => now(),
+                'cancelled_at' => now(),
             ]);
 
-            if (!$success) {
+            if (! $success) {
                 return $this->error('Falha ao cancelar agendamento.');
             }
 
@@ -120,20 +119,28 @@ class ScheduleService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $status) {
             $schedule = $this->scheduleRepository->find($id);
 
-            if (!$schedule) {
+            if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
             $data = ['status' => $status];
 
-            if ($status === 'confirmed') $data['confirmed_at'] = now();
-            if ($status === 'completed') $data['completed_at'] = now();
-            if ($status === 'no_show') $data['no_show_at'] = now();
-            if ($status === 'cancelled') $data['cancelled_at'] = now();
+            if ($status === 'confirmed') {
+                $data['confirmed_at'] = now();
+            }
+            if ($status === 'completed') {
+                $data['completed_at'] = now();
+            }
+            if ($status === 'no_show') {
+                $data['no_show_at'] = now();
+            }
+            if ($status === 'cancelled') {
+                $data['cancelled_at'] = now();
+            }
 
             $success = $this->scheduleRepository->update($id, $data);
 
-            if (!$success) {
+            if (! $success) {
                 return $this->error('Falha ao atualizar status do agendamento.');
             }
 
@@ -185,6 +192,7 @@ class ScheduleService extends AbstractBaseService
         return $this->safeExecute(function () {
             // Lógica de geração de slots (exemplo simplificado)
             $slots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+
             return $this->success($slots);
         }, 'Erro ao obter slots disponíveis.');
     }
@@ -197,7 +205,7 @@ class ScheduleService extends AbstractBaseService
         return $this->safeExecute(function () use ($scheduleId) {
             $schedule = $this->scheduleRepository->find($scheduleId);
 
-            if (!$schedule) {
+            if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
@@ -206,11 +214,11 @@ class ScheduleService extends AbstractBaseService
             }
 
             $success = $this->scheduleRepository->update($scheduleId, [
-                'status'       => 'confirmed',
+                'status' => 'confirmed',
                 'confirmed_at' => now(),
             ]);
 
-            if (!$success) {
+            if (! $success) {
                 return $this->error('Falha ao confirmar agendamento.');
             }
 
@@ -244,27 +252,27 @@ class ScheduleService extends AbstractBaseService
             $recentUpcoming = $this->scheduleRepository->getRecentUpcoming();
 
             $statusColors = [
-                'pending'   => '#F59E0B',
+                'pending' => '#F59E0B',
                 'confirmed' => '#3B82F6',
                 'completed' => '#10B981',
                 'cancelled' => '#EF4444',
-                'no_show'   => '#6B7280',
+                'no_show' => '#6B7280',
             ];
 
             $statusBreakdown = [];
             foreach ($statsData['by_status'] as $status => $count) {
                 $statusBreakdown[$status] = [
                     'count' => $count,
-                    'color' => $statusColors[$status] ?? '#CBD5E1'
+                    'color' => $statusColors[$status] ?? '#CBD5E1',
                 ];
             }
 
             return $this->success([
-                'total_schedules'     => $statsData['total'],
-                'upcoming_schedules'  => $statsData['upcoming'],
-                'today_schedules'     => $statsData['today'],
-                'status_breakdown'    => $statusBreakdown,
-                'recent_upcoming'     => $recentUpcoming,
+                'total_schedules' => $statsData['total'],
+                'upcoming_schedules' => $statsData['upcoming'],
+                'today_schedules' => $statsData['today'],
+                'status_breakdown' => $statusBreakdown,
+                'recent_upcoming' => $recentUpcoming,
             ], 'Estatísticas carregadas com sucesso.');
         }, 'Erro ao carregar estatísticas do dashboard.');
     }
@@ -277,7 +285,7 @@ class ScheduleService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $schedule = $this->scheduleRepository->find($id);
 
-            if (!$schedule) {
+            if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 

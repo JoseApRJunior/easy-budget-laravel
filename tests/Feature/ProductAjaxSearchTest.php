@@ -14,6 +14,7 @@ class ProductAjaxSearchTest extends TestCase
     use RefreshDatabase;
 
     protected $tenant;
+
     protected $user;
 
     protected function setUp(): void
@@ -50,7 +51,7 @@ class ProductAjaxSearchTest extends TestCase
         $this->assertTrue($json['success']);
 
         $items = $json['data']['data'] ?? [];
-        $names = array_map(fn($i) => $i['name'], $items);
+        $names = array_map(fn ($i) => $i['name'], $items);
         $this->assertContains('Caro', $names);
         $this->assertNotContains('Barato', $names);
     }
@@ -78,9 +79,8 @@ class ProductAjaxSearchTest extends TestCase
         $this->assertTrue($json['success']);
 
         $items = $json['data']['data'] ?? [];
-        $names = array_map(fn($i) => $i['name'], $items);
+        $names = array_map(fn ($i) => $i['name'], $items);
         $this->assertContains('Barato', $names);
         $this->assertNotContains('Caro', $names);
     }
 }
-

@@ -88,7 +88,7 @@ class BudgetController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar orçamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao criar orçamento: '.$e->getMessage());
         }
     }
 
@@ -159,7 +159,7 @@ class BudgetController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao atualizar orçamento: '.$e->getMessage());
         }
     }
 

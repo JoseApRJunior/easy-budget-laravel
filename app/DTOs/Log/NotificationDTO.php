@@ -33,11 +33,11 @@ readonly class NotificationDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'type'      => $this->type,
-            'email'     => $this->email,
-            'message'   => $this->message,
-            'subject'   => $this->subject,
-            'sent_at'   => $this->sent_at?->toDateTimeString(),
+            'type' => $this->type,
+            'email' => $this->email,
+            'message' => $this->message,
+            'subject' => $this->subject,
+            'sent_at' => $this->sent_at?->toDateTimeString(),
             'tenant_id' => $this->tenant_id,
         ];
     }

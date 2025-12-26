@@ -28,4 +28,3 @@ class CategoryCacheService
         Cache::tags(['categories'])->flush();
     }
 }
-

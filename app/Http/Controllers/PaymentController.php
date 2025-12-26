@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Payment\PaymentDTO;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\Domain\PaymentService;
-use App\DTOs\Payment\PaymentDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,7 +52,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
-            'method' => 'required|in:' . implode(',', array_keys(Payment::getPaymentMethods())),
+            'method' => 'required|in:'.implode(',', array_keys(Payment::getPaymentMethods())),
             'amount' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -76,7 +76,7 @@ class PaymentController extends Controller
         return $request->expectsJson()
             ? response()->json(['success' => true, 'data' => $payment])
             : redirect()->route('provider.invoices.show', $payment->invoice->code)
-            ->with('success', 'Pagamento processado com sucesso!');
+                ->with('success', 'Pagamento processado com sucesso!');
     }
 
     /**

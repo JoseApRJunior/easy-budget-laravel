@@ -21,6 +21,14 @@ class ServiceRepository extends AbstractTenantRepository
 {
     use RepositoryFiltersTrait;
 
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
+    {
+        return new Service;
+    }
+
     public function __construct(Service $model)
     {
         parent::__construct($model);
@@ -33,8 +41,8 @@ class ServiceRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->whereIn('status', $statuses)
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
-            ->when($limit, fn($q) => $q->limit($limit))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn ($q) => $q->limit($limit))
             ->get();
     }
 
@@ -45,7 +53,7 @@ class ServiceRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->where('provider_id', $providerId)
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->get();
     }
 
@@ -96,7 +104,7 @@ class ServiceRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->where('code', $code)
-            ->when(!empty($with), fn($q) => $q->with($with))
+            ->when(! empty($with), fn ($q) => $q->with($with))
             ->first();
     }
 
@@ -107,7 +115,7 @@ class ServiceRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->where('status', 'active')
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->get();
     }
 
@@ -117,10 +125,10 @@ class ServiceRepository extends AbstractTenantRepository
     public function getFiltered(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
     {
         return $this->model->newQuery()
-            ->tap(fn($q) => $this->applyAllServiceFilters($q, $filters))
+            ->tap(fn ($q) => $this->applyAllServiceFilters($q, $filters))
             ->with(['category', 'budget.customer', 'serviceStatus'])
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy), fn($q) => $q->latest())
-            ->when($limit, fn($q) => $q->limit($limit))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
+            ->when($limit, fn ($q) => $q->limit($limit))
             ->get();
     }
 

@@ -9,7 +9,6 @@ use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Repositório para gerenciamento de categorias com arquitetura refinada.
@@ -24,7 +23,7 @@ class CategoryRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Category();
+        return new Category;
     }
 
     /**
@@ -52,9 +51,9 @@ class CategoryRepository extends AbstractTenantRepository
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('parent_id')
-                    ->orWhereHas('parent', fn($pq) => $pq->withoutTrashed());
+                    ->orWhereHas('parent', fn ($pq) => $pq->withoutTrashed());
             })
-            ->tap(fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->tap(fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->get();
     }
 
@@ -181,11 +180,11 @@ class CategoryRepository extends AbstractTenantRepository
         return $this->model->newQuery()
             ->with($with)
             ->withCount(['children', 'services', 'products'])
-            ->tap(fn($q) => $this->applyAllCategoryFilters($q, $filters))
-            ->when(!$orderBy, function ($q) {
+            ->tap(fn ($q) => $this->applyAllCategoryFilters($q, $filters))
+            ->when(! $orderBy, function ($q) {
                 $q->orderByRaw('COALESCE((SELECT name FROM categories AS p WHERE p.id = categories.parent_id LIMIT 1), name), parent_id IS NULL DESC, name');
             })
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 

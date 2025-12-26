@@ -6,14 +6,12 @@ namespace App\Services\Domain;
 
 use App\DTOs\Support\SupportDTO;
 use App\DTOs\Support\SupportUpdateDTO;
-use App\Enums\OperationStatus;
 use App\Models\Support;
 use App\Repositories\SupportRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Serviço para gerenciamento de tickets de suporte.
@@ -26,7 +24,7 @@ class SupportService extends AbstractBaseService
     /**
      * Construtor do serviço de suporte.
      *
-     * @param SupportRepository $supportRepository Repositório para operações de suporte
+     * @param  SupportRepository  $supportRepository  Repositório para operações de suporte
      */
     public function __construct(SupportRepository $supportRepository)
     {
@@ -58,13 +56,13 @@ class SupportService extends AbstractBaseService
      */
     protected function makeModel(): \Illuminate\Database\Eloquent\Model
     {
-        return new Support();
+        return new Support;
     }
 
     /**
      * Cria um novo ticket de suporte, salva no banco e dispara evento.
      *
-     * @param SupportDTO $dto Dados do ticket de suporte
+     * @param  SupportDTO  $dto  Dados do ticket de suporte
      * @return ServiceResult Resultado da operação
      */
     public function createSupportTicket(SupportDTO $dto): ServiceResult
@@ -73,12 +71,12 @@ class SupportService extends AbstractBaseService
             return DB::transaction(function () use ($dto) {
                 // Prepara dados adicionais se necessário
                 $data = $dto->toArrayWithoutNulls();
-                
-                if (!isset($data['tenant_id'])) {
+
+                if (! isset($data['tenant_id'])) {
                     $data['tenant_id'] = $this->getEffectiveTenantId();
                 }
 
-                if (!isset($data['status'])) {
+                if (! isset($data['status'])) {
                     $data['status'] = Support::STATUS_ABERTO;
                 }
 
@@ -106,8 +104,8 @@ class SupportService extends AbstractBaseService
     /**
      * Atualiza um ticket de suporte.
      *
-     * @param int $id ID do ticket
-     * @param SupportUpdateDTO $dto Dados de atualização
+     * @param  int  $id  ID do ticket
+     * @param  SupportUpdateDTO  $dto  Dados de atualização
      * @return ServiceResult Resultado da operação
      */
     public function updateSupportTicket(int $id, SupportUpdateDTO $dto): ServiceResult
@@ -115,7 +113,7 @@ class SupportService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $dto) {
             $support = $this->repository->updateFromDTO($id, $dto);
 
-            if (!$support) {
+            if (! $support) {
                 return $this->error('Ticket de suporte não encontrado.');
             }
 
@@ -128,7 +126,7 @@ class SupportService extends AbstractBaseService
      */
     private function generateProtocolCode(Support $support): string
     {
-        $year  = $support->created_at?->format('Y') ?? date('Y');
+        $year = $support->created_at?->format('Y') ?? date('Y');
         $month = $support->created_at?->format('m') ?? date('m');
 
         // Usa o ID como sequencial base, zero‑pad de 4 dígitos
@@ -143,6 +141,7 @@ class SupportService extends AbstractBaseService
     private function getEffectiveTenantId(): int
     {
         $userTenantId = $this->tenantId();
+
         return $userTenantId ?: 1; // ID do tenant público
     }
 
@@ -153,6 +152,7 @@ class SupportService extends AbstractBaseService
     {
         try {
             $userTenant = $this->authUser()?->tenant;
+
             return $userTenant ?: \App\Models\Tenant::find(1);
         } catch (Exception $e) {
             return \App\Models\Tenant::find(1);

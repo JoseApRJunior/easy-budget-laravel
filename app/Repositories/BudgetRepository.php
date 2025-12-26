@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class BudgetRepository extends AbstractTenantRepository
 {
@@ -22,42 +21,42 @@ class BudgetRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Budget();
+        return new Budget;
     }
 
     /**
      * Lista budgets por status dentro do tenant atual.
      *
-     * @param array<string> $statuses Lista de status
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
+     * @param  array<string>  $statuses  Lista de status
+     * @param  array<string, string>|null  $orderBy  Ordenação
+     * @param  int|null  $limit  Limite de registros
      * @return \Illuminate\Database\Eloquent\Collection<int, Budget> Budgets encontrados
      */
     public function listByStatuses(array $statuses, ?array $orderBy = null, ?int $limit = null): Collection
     {
         return $this->model->newQuery()
             ->whereIn('status', $statuses)
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
-            ->when($limit, fn($q) => $q->limit($limit))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn ($q) => $q->limit($limit))
             ->get();
     }
 
     /**
      * Conta budgets por status dentro do tenant atual.
      *
-     * @param string $status Status dos budgets
-     * @param array $filters Filtros adicionais
+     * @param  string  $status  Status dos budgets
+     * @param  array  $filters  Filtros adicionais
      * @return int Número de budgets
      */
     public function countByStatus(string $status, array $filters = []): int
     {
         $query = $this->model->newQuery()->where('status', $status);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -67,34 +66,34 @@ class BudgetRepository extends AbstractTenantRepository
     /**
      * Lista budgets por cliente dentro do tenant atual.
      *
-     * @param int $customerId ID do cliente
-     * @param array<string, string>|null $orderBy Ordenação
+     * @param  int  $customerId  ID do cliente
+     * @param  array<string, string>|null  $orderBy  Ordenação
      * @return \Illuminate\Database\Eloquent\Collection<int, Budget> Budgets do cliente
      */
     public function listByCustomerId(int $customerId, ?array $orderBy = null): \Illuminate\Database\Eloquent\Collection
     {
         return $this->model->newQuery()
             ->where('customer_id', $customerId)
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
             ->get();
     }
 
     /**
      * Lista budgets com filtros (compatibilidade com service).
      *
-     * @param array<string, mixed> $filters Filtros a aplicar
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
-     * @param int|null $offset Offset para paginação
+     * @param  array<string, mixed>  $filters  Filtros a aplicar
+     * @param  array<string, string>|null  $orderBy  Ordenação
+     * @param  int|null  $limit  Limite de registros
+     * @param  int|null  $offset  Offset para paginação
      * @return \Illuminate\Database\Eloquent\Collection<int, Budget> Budgets filtrados
      */
     public function listByFilters(array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null): \Illuminate\Database\Eloquent\Collection
     {
         return $this->model->newQuery()
-            ->tap(fn($q) => $this->applyFilters($q, $filters))
-            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
-            ->when($limit, fn($q) => $q->limit($limit))
-            ->when($offset, fn($q) => $q->offset($offset))
+            ->tap(fn ($q) => $this->applyFilters($q, $filters))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn ($q) => $q->limit($limit))
+            ->when($offset, fn ($q) => $q->offset($offset))
             ->get();
     }
 
@@ -129,7 +128,7 @@ class BudgetRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery()->where('code', $code);
 
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -144,11 +143,11 @@ class BudgetRepository extends AbstractTenantRepository
         $baseQuery = $this->model->newQuery();
 
         return [
-            'total_count'    => (clone $baseQuery)->count(),
-            'pending_count'  => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
+            'total_count' => (clone $baseQuery)->count(),
+            'pending_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
             'approved_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->count(),
             'rejected_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::REJECTED->value)->count(),
-            'total_value'    => (float) (clone $baseQuery)->sum('total'),
+            'total_value' => (float) (clone $baseQuery)->sum('total'),
             'approved_value' => (float) (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->sum('total'),
             'recent_budgets' => $this->getRecentBudgets(5),
         ];
@@ -177,7 +176,7 @@ class BudgetRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->with(['customer.commonData'])
-            ->tap(fn($q) => $this->applyAllBudgetFilters($q, $filters))
+            ->tap(fn ($q) => $this->applyAllBudgetFilters($q, $filters))
             ->latest()
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
@@ -188,9 +187,9 @@ class BudgetRepository extends AbstractTenantRepository
     protected function applyAllBudgetFilters(Builder $query, array $filters): void
     {
         $this->applySearchFilter($query, $filters, ['code']);
-        
+
         // Busca por nome do cliente
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->orWhereHas('customer.commonData', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -199,12 +198,12 @@ class BudgetRepository extends AbstractTenantRepository
             });
         }
 
-        $query->when(!empty($filters['status']), fn($q) => $q->where('status', $filters['status']));
-        $query->when(!empty($filters['customer_id']), fn($q) => $q->where('customer_id', $filters['customer_id']));
-        
+        $query->when(! empty($filters['status']), fn ($q) => $q->where('status', $filters['status']));
+        $query->when(! empty($filters['customer_id']), fn ($q) => $q->where('customer_id', $filters['customer_id']));
+
         // Filtros de data
-        $query->when(!empty($filters['date_from']), fn($q) => $q->where('created_at', '>=', $filters['date_from']));
-        $query->when(!empty($filters['date_to']), fn($q) => $q->where('created_at', '<=', $filters['date_to']));
+        $query->when(! empty($filters['date_from']), fn ($q) => $q->where('created_at', '>=', $filters['date_from']));
+        $query->when(! empty($filters['date_to']), fn ($q) => $q->where('created_at', '<=', $filters['date_to']));
     }
 
     /**

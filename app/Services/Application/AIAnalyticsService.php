@@ -2,13 +2,12 @@
 
 namespace App\Services\Application;
 
-use App\Models\User;
-use App\Models\Budget;
-use App\Models\Invoice;
 use App\Enums\InvoiceStatus;
+use App\Models\Budget;
 use App\Models\Customer;
-use App\Models\Service;
+use App\Models\Invoice;
 use App\Models\Schedule;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,7 +35,7 @@ class AIAnalyticsService
             'performance' => $this->getPerformanceMetrics(),
             'customer_insights' => $this->getCustomerInsights(),
             'financial_health' => $this->getFinancialHealth(),
-            'operational_efficiency' => $this->getOperationalEfficiency()
+            'operational_efficiency' => $this->getOperationalEfficiency(),
         ];
     }
 
@@ -67,19 +66,19 @@ class AIAnalyticsService
             'current_month' => [
                 'revenue' => $currentRevenue,
                 'budgets' => $currentBudgets,
-                'active_customers' => $currentCustomers
+                'active_customers' => $currentCustomers,
             ],
             'last_month' => [
                 'revenue' => $lastRevenue,
                 'budgets' => $lastBudgets,
-                'active_customers' => $lastCustomers
+                'active_customers' => $lastCustomers,
             ],
             'growth_rates' => [
                 'revenue' => round($revenueGrowth, 2),
                 'budgets' => round($budgetGrowth, 2),
-                'customers' => round($customerGrowth, 2)
+                'customers' => round($customerGrowth, 2),
             ],
-            'health_score' => $this->calculateBusinessHealthScore($currentRevenue, $currentBudgets, $currentCustomers)
+            'health_score' => $this->calculateBusinessHealthScore($currentRevenue, $currentBudgets, $currentCustomers),
         ];
     }
 
@@ -90,11 +89,12 @@ class AIAnalyticsService
     {
         $last6Months = collect(range(0, 5))->map(function ($i) {
             $date = Carbon::now()->subMonths($i);
+
             return [
                 'month' => $date->format('M/Y'),
                 'revenue' => $this->getMonthlyRevenue($date),
                 'budgets' => $this->getMonthlyBudgets($date),
-                'customers' => $this->getNewCustomers($date)
+                'customers' => $this->getNewCustomers($date),
             ];
         })->reverse()->values();
 
@@ -108,9 +108,9 @@ class AIAnalyticsService
             'trends' => [
                 'revenue' => $revenueTrend,
                 'budgets' => $budgetTrend,
-                'customers' => $customerTrend
+                'customers' => $customerTrend,
             ],
-            'seasonality' => $this->detectSeasonality($last6Months)
+            'seasonality' => $this->detectSeasonality($last6Months),
         ];
     }
 
@@ -126,7 +126,7 @@ class AIAnalyticsService
             'next_month_budgets' => $this->predictNextMonthBudgets($historicalData),
             'churn_risk' => $this->predictChurnRisk(),
             'best_selling_services' => $this->predictBestSellers(),
-            'optimal_pricing' => $this->suggestOptimalPricing()
+            'optimal_pricing' => $this->suggestOptimalPricing(),
         ];
     }
 
@@ -143,16 +143,16 @@ class AIAnalyticsService
         $lpStart = microtime(true);
         $lowPerformance = $this->getLowPerformanceServices();
         $lpEnd = microtime(true);
-        Log::info('getLowPerformanceServices took: ' . round(($lpEnd - $lpStart) * 1000, 2) . 'ms');
+        Log::info('getLowPerformanceServices took: '.round(($lpEnd - $lpStart) * 1000, 2).'ms');
 
-        if (!empty($lowPerformance)) {
+        if (! empty($lowPerformance)) {
             $suggestions[] = [
                 'type' => 'service_improvement',
                 'priority' => 'high',
                 'title' => 'Melhore seus serviços de baixo desempenho',
-                'description' => 'Os seguintes serviços têm baixa procura: ' . implode(', ', $lowPerformance),
+                'description' => 'Os seguintes serviços têm baixa procura: '.implode(', ', $lowPerformance),
                 'action' => 'Considere revisar preços, melhorar descrições ou oferecer pacotes promocionais',
-                'impact' => '+15% em vendas'
+                'impact' => '+15% em vendas',
             ];
         }
 
@@ -160,7 +160,7 @@ class AIAnalyticsService
         $paStart = microtime(true);
         $pricingAnalysis = $this->analyzePricing();
         $paEnd = microtime(true);
-        Log::info('analyzePricing took: ' . round(($paEnd - $paStart) * 1000, 2) . 'ms');
+        Log::info('analyzePricing took: '.round(($paEnd - $paStart) * 1000, 2).'ms');
 
         if ($pricingAnalysis['underpriced']) {
             $suggestions[] = [
@@ -169,7 +169,7 @@ class AIAnalyticsService
                 'title' => 'Oportunidade de aumentar preços',
                 'description' => 'Serviços abaixo do patamar de preço recomendado',
                 'action' => 'Ajuste preços em 5-10% nos serviços abaixo do patamar',
-                'impact' => '+20% em margem de lucro'
+                'impact' => '+20% em margem de lucro',
             ];
         }
 
@@ -177,16 +177,16 @@ class AIAnalyticsService
         $saStart = microtime(true);
         $scheduleAnalysis = $this->analyzeScheduleEfficiency();
         $saEnd = microtime(true);
-        Log::info('analyzeScheduleEfficiency took: ' . round(($saEnd - $saStart) * 1000, 2) . 'ms');
+        Log::info('analyzeScheduleEfficiency took: '.round(($saEnd - $saStart) * 1000, 2).'ms');
 
         if ($scheduleAnalysis['has_gaps']) {
             $suggestions[] = [
                 'type' => 'schedule_optimization',
                 'priority' => 'medium',
                 'title' => 'Otimizar agenda de atendimento',
-                'description' => 'Você tem ' . $scheduleAnalysis['empty_slots'] . ' horários vazios esta semana',
+                'description' => 'Você tem '.$scheduleAnalysis['empty_slots'].' horários vazios esta semana',
                 'action' => 'Ofereça descontos para horários específicos ou crie campanhas',
-                'impact' => '+25% em ocupação'
+                'impact' => '+25% em ocupação',
             ];
         }
 
@@ -194,16 +194,16 @@ class AIAnalyticsService
         $crStart = microtime(true);
         $customerAnalysis = $this->analyzeCustomerRetention();
         $crEnd = microtime(true);
-        Log::info('analyzeCustomerRetention took: ' . round(($crEnd - $crStart) * 1000, 2) . 'ms');
+        Log::info('analyzeCustomerRetention took: '.round(($crEnd - $crStart) * 1000, 2).'ms');
 
         if (($customerAnalysis['churn_rate'] ?? 0) > 20) {
             $suggestions[] = [
                 'type' => 'customer_retention',
                 'priority' => 'high',
                 'title' => 'Melhore a retenção de clientes',
-                'description' => 'Sua taxa de churn está em ' . $customerAnalysis['churn_rate'] . '%',
+                'description' => 'Sua taxa de churn está em '.$customerAnalysis['churn_rate'].'%',
                 'action' => 'Implemente programa de fidelidade e follow-up pós-serviço',
-                'impact' => '-30% em churn rate'
+                'impact' => '-30% em churn rate',
             ];
         }
 
@@ -211,7 +211,7 @@ class AIAnalyticsService
         $fhStart = microtime(true);
         $financialAnalysis = $this->analyzeFinancialHealth();
         $fhEnd = microtime(true);
-        Log::info('analyzeFinancialHealth took: ' . round(($fhEnd - $fhStart) * 1000, 2) . 'ms');
+        Log::info('analyzeFinancialHealth took: '.round(($fhEnd - $fhStart) * 1000, 2).'ms');
 
         if (($financialAnalysis['cash_flow_risk'] ?? false)) {
             $overdueAmount = $financialAnalysis['overdue_invoices'] ?? 0;
@@ -219,14 +219,14 @@ class AIAnalyticsService
                 'type' => 'financial_management',
                 'priority' => 'critical',
                 'title' => 'Gerencie melhor seu fluxo de caixa',
-                'description' => 'Você tem R$ ' . number_format($overdueAmount, 2, ',', '.') . ' em faturas vencidas',
+                'description' => 'Você tem R$ '.number_format($overdueAmount, 2, ',', '.').' em faturas vencidas',
                 'action' => 'Intensifique cobranças e ofereça desconto para pagamento antecipado',
-                'impact' => '+40% em fluxo de caixa'
+                'impact' => '+40% em fluxo de caixa',
             ];
         }
 
         $totalEndTime = microtime(true);
-        Log::info('getBusinessSuggestions total time: ' . round(($totalEndTime - $totalStartTime) * 1000, 2) . 'ms');
+        Log::info('getBusinessSuggestions total time: '.round(($totalEndTime - $totalStartTime) * 1000, 2).'ms');
 
         if (empty($suggestions)) {
             $suggestions[] = [
@@ -235,7 +235,7 @@ class AIAnalyticsService
                 'title' => 'Sem sugestões automáticas no momento',
                 'description' => 'Cadastre serviços, clientes e orçamentos para ativar recomendações personalizadas',
                 'action' => 'Crie ao menos 3 serviços, 5 clientes e 2 orçamentos este mês',
-                'impact' => 'Melhor organização e dados acionáveis'
+                'impact' => 'Melhor organização e dados acionáveis',
             ];
         }
 
@@ -255,7 +255,7 @@ class AIAnalyticsService
             'customer_lifetime_value' => $this->calculateCustomerLifetimeValue(),
             'service_efficiency' => $this->calculateServiceEfficiency(),
             'response_time' => $this->calculateAverageResponseTime(),
-            'satisfaction_score' => $this->estimateSatisfactionScore()
+            'satisfaction_score' => $this->estimateSatisfactionScore(),
         ];
     }
 
@@ -269,7 +269,7 @@ class AIAnalyticsService
             'behavior' => $this->analyzeCustomerBehavior(),
             'preferences' => $this->analyzeCustomerPreferences(),
             'segmentation' => $this->segmentCustomers(),
-            'retention_analysis' => $this->analyzeCustomerRetention()
+            'retention_analysis' => $this->analyzeCustomerRetention(),
         ];
     }
 
@@ -283,7 +283,7 @@ class AIAnalyticsService
             'profitability' => $this->analyzeProfitability(),
             'financial_stability' => $this->analyzeFinancialStability(),
             'debt_analysis' => $this->analyzeDebt(),
-            'investment_opportunities' => $this->identifyInvestmentOpportunities()
+            'investment_opportunities' => $this->identifyInvestmentOpportunities(),
         ];
     }
 
@@ -297,7 +297,7 @@ class AIAnalyticsService
             'time_management' => $this->analyzeTimeManagement(),
             'cost_efficiency' => $this->analyzeCostEfficiency(),
             'quality_metrics' => $this->analyzeQualityMetrics(),
-            'bottlenecks' => $this->identifyBottlenecks()
+            'bottlenecks' => $this->identifyBottlenecks(),
         ];
     }
 
@@ -339,24 +339,38 @@ class AIAnalyticsService
     {
         $score = 0;
 
-        if ($revenue > 5000) $score += 25;
-        if ($budgets > 10) $score += 25;
-        if ($customers > 20) $score += 25;
-        if ($revenue > 0 && $budgets > 0) $score += 25;
+        if ($revenue > 5000) {
+            $score += 25;
+        }
+        if ($budgets > 10) {
+            $score += 25;
+        }
+        if ($customers > 20) {
+            $score += 25;
+        }
+        if ($revenue > 0 && $budgets > 0) {
+            $score += 25;
+        }
 
         return $score;
     }
 
     private function identifyTrend(array $data): string
     {
-        if (count($data) < 2) return 'stable';
+        if (count($data) < 2) {
+            return 'stable';
+        }
 
         $recent = array_slice($data, -3);
         $average = array_sum($recent) / count($recent);
         $last = end($recent);
 
-        if ($last > $average * 1.1) return 'growing';
-        if ($last < $average * 0.9) return 'declining';
+        if ($last > $average * 1.1) {
+            return 'growing';
+        }
+        if ($last < $average * 0.9) {
+            return 'declining';
+        }
 
         return 'stable';
     }
@@ -367,7 +381,7 @@ class AIAnalyticsService
         return [
             'has_seasonality' => false,
             'peak_months' => [],
-            'low_months' => []
+            'low_months' => [],
         ];
     }
 
@@ -380,9 +394,10 @@ class AIAnalyticsService
                 'month' => $date->format('Y-m'),
                 'revenue' => $this->getMonthlyRevenue($date),
                 'budgets' => $this->getMonthlyBudgets($date),
-                'customers' => $this->getNewCustomers($date)
+                'customers' => $this->getNewCustomers($date),
             ];
         }
+
         return array_reverse($data);
     }
 
@@ -406,7 +421,7 @@ class AIAnalyticsService
             'predicted' => round($predicted, 2),
             'confidence' => 75,
             'method' => 'moving_average_with_trend',
-            'trend' => $trend
+            'trend' => $trend,
         ];
     }
 
@@ -418,7 +433,7 @@ class AIAnalyticsService
         return [
             'predicted' => round($average),
             'confidence' => 70,
-            'method' => 'moving_average'
+            'method' => 'moving_average',
         ];
     }
 
@@ -428,7 +443,7 @@ class AIAnalyticsService
         return [
             'risk_level' => 'low',
             'at_risk_customers' => 0,
-            'reasons' => []
+            'reasons' => [],
         ];
     }
 
@@ -446,7 +461,7 @@ class AIAnalyticsService
             return [
                 'name' => $service->name,
                 'sales' => $service->total_sales,
-                'trend' => $this->identifyServiceTrend($service)
+                'trend' => $this->identifyServiceTrend($service),
             ];
         })->toArray();
     }
@@ -457,7 +472,7 @@ class AIAnalyticsService
         return [
             'services' => [],
             'market_analysis' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
     }
 
@@ -481,6 +496,7 @@ class AIAnalyticsService
             ->count();
         $total = Service::where('tenant_id', $this->tenantId)->count();
         $underpriced = $total > 0 ? ($lowCount / $total) >= 0.3 : false;
+
         return ['underpriced' => $underpriced, 'overpriced' => false];
     }
 
@@ -517,8 +533,8 @@ class AIAnalyticsService
             ->sum('total');
 
         return [
-            'overdue_invoices' => $overdueInvoices ?? 0,
-            'cash_flow_risk' => ($overdueInvoices ?? 0) > 1000
+            'overdue_invoices' => $overdueInvoices,
+            'cash_flow_risk' => $overdueInvoices > 1000,
         ];
     }
 

@@ -15,48 +15,46 @@ use App\DTOs\Tenant\PlanSubscriptionDTO;
 use App\DTOs\User\UserDTO;
 use App\Enums\OperationStatus;
 use App\Models\CommonData;
-use App\Models\PlanSubscription;
 use App\Models\Provider;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Repositories\AddressRepository;
 use App\Repositories\AreaOfActivityRepository;
-use App\Repositories\ProfessionRepository;
+use App\Repositories\AuditLogRepository;
+use App\Repositories\BudgetRepository;
+use App\Repositories\BusinessDataRepository;
 use App\Repositories\CommonDataRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\CustomerRepository;
 use App\Repositories\PlanRepository;
 use App\Repositories\PlanSubscriptionRepository;
+use App\Repositories\ProfessionRepository;
 use App\Repositories\ProviderRepository;
 use App\Repositories\RoleRepository;
+use App\Repositories\ScheduleRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
-use App\Repositories\BudgetRepository;
-use App\Repositories\AuditLogRepository;
-use App\Repositories\ScheduleRepository;
-use App\Repositories\CustomerRepository;
-use App\Repositories\ServiceRepository;
-use App\Repositories\ContactRepository;
-use App\Repositories\AddressRepository;
-use App\Repositories\BusinessDataRepository;
+use App\Services\Core\Traits\HasSafeExecution;
+use App\Services\Core\Traits\HasTenantIsolation;
 use App\Services\Domain\ProviderService;
 use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
-use App\Services\Core\Traits\HasSafeExecution;
-use App\Services\Core\Traits\HasTenantIsolation;
 use Exception;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 // Constants for magic strings to improve maintainability
-const ROLE_PROVIDER              = 'provider';
-const PLAN_SLUG_TRIAL            = 'trial';
+const ROLE_PROVIDER = 'provider';
+const PLAN_SLUG_TRIAL = 'trial';
 const SUBSCRIPTION_STATUS_ACTIVE = 'active';
-const PAYMENT_METHOD_TRIAL       = 'trial';
-const TRIAL_DAYS                 = 7;
+const PAYMENT_METHOD_TRIAL = 'trial';
+const TRIAL_DAYS = 7;
 
 class ProviderManagementService
 {
@@ -101,17 +99,17 @@ class ProviderManagementService
             $activities = $this->auditLogRepository->getRecentActivities($user->id, 10);
 
             // Buscar resumo financeiro
-            $financialResult = $this->financialSummary->getMonthlySummary();
+            $financialResult = $this->financialSummary->getMonthlySummary($user->tenant_id ?? $this->ensureTenantId());
             $financialSummary = $financialResult->isSuccess() ? $financialResult->getData() : [];
 
             // Buscar compromissos do dia
             $events = $this->scheduleRepository->getTodayEvents(5);
 
             return ServiceResult::success([
-                'budgets'           => $budgets,
-                'activities'        => $activities,
+                'budgets' => $budgets,
+                'activities' => $activities,
                 'financial_summary' => $financialSummary,
-                'events'            => $events,
+                'events' => $events,
             ]);
         }, 'Erro ao obter dados do dashboard do provedor.');
     }
@@ -126,14 +124,14 @@ class ProviderManagementService
 
             $provider = $this->providerService->getByUserId($user->id);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
             return ServiceResult::success([
-                'provider'          => $provider,
+                'provider' => $provider,
                 'areas_of_activity' => $this->areaOfActivityRepository->getAll(),
-                'professions'       => $this->professionRepository->getAll(),
+                'professions' => $this->professionRepository->getAll(),
             ]);
         }, 'Erro ao carregar dados para atualização do provedor.');
     }
@@ -151,14 +149,14 @@ class ProviderManagementService
                 'commonData',
                 'contact',
                 'address',
-                'businessData'
+                'businessData',
             ]);
 
-            if (!$provider) {
+            if (! $provider) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
-            return DB::transaction(function () use ($provider, $dto, $user, $tenantId) {
+            return DB::transaction(function () use ($provider, $dto, $user) {
                 // Handle logo upload
                 $logoPath = $user->logo;
                 if ($dto->logo instanceof UploadedFile) {
@@ -168,11 +166,11 @@ class ProviderManagementService
                 // Update User (email and logo only)
                 $this->userRepository->update($user->id, array_filter([
                     'email' => $dto->email,
-                    'logo'  => $logoPath,
-                ], fn($value) => $value !== null));
+                    'logo' => $logoPath,
+                ], fn ($value) => $value !== null));
 
                 // Detectar tipo (PF ou PJ)
-                $type = !empty($dto->cnpj) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+                $type = ! empty($dto->cnpj) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
                 // Atualizar CommonData
                 if ($provider->commonData) {
@@ -187,7 +185,7 @@ class ProviderManagementService
                     $this->contactRepository->updateFromDTO(
                         $provider->contact->id,
                         ContactDTO::fromRequest(array_merge($dto->toArray(), [
-                            'email_personal' => $dto->email_personal ?? $dto->email
+                            'email_personal' => $dto->email_personal ?? $dto->email,
                         ]))
                     );
                 }
@@ -203,7 +201,7 @@ class ProviderManagementService
                 // Atualizar dados empresariais
                 if ($type === CommonData::TYPE_COMPANY) {
                     $businessDataDTO = BusinessDataDTO::fromRequest(array_merge($dto->toArray(), [
-                        'provider_id' => $provider->id
+                        'provider_id' => $provider->id,
                     ]));
 
                     if ($provider->businessData) {
@@ -214,6 +212,7 @@ class ProviderManagementService
                 }
 
                 $provider->refresh();
+
                 return ServiceResult::success($provider, 'Provider atualizado com sucesso');
             });
         }, 'Erro ao atualizar provider.');
@@ -227,8 +226,12 @@ class ProviderManagementService
         return $this->safeExecute(function () use ($newPassword) {
             $user = Auth::user();
             $this->userRepository->updateFromDTO($user->id, new UserDTO(
+                name: $user->name,
+                email: $user->email,
+                tenant_id: $user->tenant_id,
                 password: Hash::make($newPassword)
             ));
+
             return ServiceResult::success(null, 'Senha alterada com sucesso.');
         }, 'Erro ao alterar senha.');
     }
@@ -247,6 +250,7 @@ class ProviderManagementService
     public function isEmailAvailable(string $email, int $excludeUserId, ?int $tenantId = null): bool
     {
         $tenantId = $tenantId ?? $this->ensureTenantId();
+
         return $this->providerService->isEmailAvailable($email, $excludeUserId, $tenantId);
     }
 
@@ -273,9 +277,9 @@ class ProviderManagementService
 
             return ServiceResult::success([
                 'financial_summary' => $financialSummary,
-                'monthly_revenue'   => $monthlyRevenue,
-                'pending_budgets'   => $pendingBudgets,
-                'overdue_payments'  => $overduePayments,
+                'monthly_revenue' => $monthlyRevenue,
+                'pending_budgets' => $pendingBudgets,
+                'overdue_payments' => $overduePayments,
             ]);
         }, 'Erro ao obter relatórios financeiros.');
     }
@@ -293,18 +297,18 @@ class ProviderManagementService
 
             // Estatísticas dos orçamentos
             $budgetStats = [
-                'total_budgets'    => $budgets->count(),
+                'total_budgets' => $budgets->count(),
                 'approved_budgets' => $budgets->where('status', 'approved')->count(),
-                'pending_budgets'  => $budgets->where('status', 'pending')->count(),
+                'pending_budgets' => $budgets->where('status', 'pending')->count(),
                 'rejected_budgets' => $budgets->where('status', 'rejected')->count(),
-                'total_value'      => $budgets->sum('total'),
-                'average_value'    => $budgets->count() > 0 ? $budgets->avg('total') : 0,
+                'total_value' => $budgets->sum('total'),
+                'average_value' => $budgets->count() > 0 ? $budgets->avg('total') : 0,
             ];
 
             return ServiceResult::success([
-                'budgets'      => $budgets,
+                'budgets' => $budgets,
                 'budget_stats' => $budgetStats,
-                'period'       => now()->format('F Y'),
+                'period' => now()->format('F Y'),
             ]);
         }, 'Erro ao obter relatórios de orçamentos.');
     }
@@ -320,18 +324,18 @@ class ProviderManagementService
 
             // Estatísticas dos serviços
             $serviceStats = [
-                'total_services'     => $services->count(),
+                'total_services' => $services->count(),
                 'completed_services' => $services->where('status', 'completed')->count(),
-                'pending_services'   => $services->where('status', 'pending')->count(),
+                'pending_services' => $services->where('status', 'pending')->count(),
                 'cancelled_services' => $services->where('status', 'cancelled')->count(),
-                'total_value'        => $services->sum('total'),
-                'average_value'      => $services->count() > 0 ? $services->avg('total') : 0,
+                'total_value' => $services->sum('total'),
+                'average_value' => $services->count() > 0 ? $services->avg('total') : 0,
             ];
 
             return ServiceResult::success([
-                'services'      => $services,
+                'services' => $services,
                 'service_stats' => $serviceStats,
-                'period'        => now()->format('F Y'),
+                'period' => now()->format('F Y'),
             ]);
         }, 'Erro ao obter relatórios de serviços.');
     }
@@ -347,21 +351,21 @@ class ProviderManagementService
 
             // Estatísticas dos clientes
             $customerStats = [
-                'total_customers'     => $customers->count(),
-                'active_customers'    => $customers->where('status', 'active')->count(),
-                'inactive_customers'  => $customers->where('status', 'inactive')->count(),
+                'total_customers' => $customers->count(),
+                'active_customers' => $customers->where('status', 'active')->count(),
+                'inactive_customers' => $customers->where('status', 'inactive')->count(),
                 'new_customers_month' => $customers->filter(function ($customer) {
                     return $customer->created_at->month === now()->month &&
                         $customer->created_at->year === now()->year;
                 })->count(),
-                'total_budgets'       => $customers->sum(fn($c) => $c->budgets_count ?? $c->budgets->count()),
-                'total_invoices'      => $customers->sum(fn($c) => $c->invoices_count ?? $c->invoices->count()),
+                'total_budgets' => $customers->sum(fn ($c) => $c->budgets_count ?? $c->budgets->count()),
+                'total_invoices' => $customers->sum(fn ($c) => $c->invoices_count ?? $c->invoices->count()),
             ];
 
             return ServiceResult::success([
-                'customers'      => $customers,
+                'customers' => $customers,
                 'customer_stats' => $customerStats,
-                'period'         => now()->format('F Y'),
+                'period' => now()->format('F Y'),
             ]);
         }, 'Erro ao obter relatórios de clientes.');
     }
@@ -377,31 +381,31 @@ class ProviderManagementService
 
                 // Step 1: Create Tenant
                 $tenantResult = $this->createTenant($userData);
-                if (!$tenantResult->isSuccess()) {
+                if (! $tenantResult->isSuccess()) {
                     throw new Exception($tenantResult->getMessage());
                 }
                 $tenant = $tenantResult->getData();
 
                 // Step 2: Create User
                 $userResult = $this->createUser($userData, $tenant);
-                if (!$userResult->isSuccess()) {
+                if (! $userResult->isSuccess()) {
                     throw new Exception($userResult->getMessage());
                 }
                 $user = $userResult->getData();
 
                 // Step 3: Create Provider with all related data
                 $providerResult = $this->createProviderWithRelatedData($userData, $user, $tenant);
-                if (!$providerResult->isSuccess()) {
+                if (! $providerResult->isSuccess()) {
                     throw new Exception($providerResult->getMessage());
                 }
 
                 $providerData = $providerResult->getData();
 
                 return ServiceResult::success([
-                    'user'         => $user,
-                    'tenant'       => $tenant,
-                    'provider'     => $providerData['provider'],
-                    'plan'         => $providerData['plan'],
+                    'user' => $user,
+                    'tenant' => $tenant,
+                    'provider' => $providerData['provider'],
+                    'plan' => $providerData['plan'],
                     'subscription' => $providerData['subscription'],
                 ], 'Registro completo realizado com sucesso.');
             });
@@ -447,13 +451,13 @@ class ProviderManagementService
             // Assign Provider Role
             $providerRole = $this->roleRepository->findByName(ROLE_PROVIDER);
 
-            if (!$providerRole) {
+            if (! $providerRole) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Role provider não encontrado.');
             }
 
             $user->roles()->syncWithoutDetaching([
                 $providerRole->id => [
-                    'tenant_id'  => $tenant->id,
+                    'tenant_id' => $tenant->id,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
@@ -461,12 +465,12 @@ class ProviderManagementService
 
             // Find Trial Plan
             $plan = $this->planRepository->findBySlug(PLAN_SLUG_TRIAL);
-            if (!$plan) {
+            if (! $plan) {
                 // Se não encontrar por slug, busca qualquer plano ativo com preço 0
                 $plan = $this->planRepository->findFreeActive();
             }
 
-            if (!$plan) {
+            if (! $plan) {
                 return ServiceResult::error(OperationStatus::ERROR, 'Plano trial não encontrado.');
             }
 
@@ -480,19 +484,19 @@ class ProviderManagementService
                 end_date: now()->addDays(TRIAL_DAYS),
                 transaction_date: now(),
                 payment_method: PAYMENT_METHOD_TRIAL,
-                payment_id: 'TRIAL_' . uniqid(),
-                public_hash: 'TRIAL_HASH_' . uniqid(),
+                payment_id: 'TRIAL_'.uniqid(),
+                public_hash: 'TRIAL_HASH_'.uniqid(),
                 tenant_id: $tenant->id
             ));
 
             return ServiceResult::success([
-                'provider'     => $provider,
-                'role'         => $providerRole,
-                'plan'         => $plan,
+                'provider' => $provider,
+                'role' => $providerRole,
+                'plan' => $plan,
                 'subscription' => $savedSubscription,
             ]);
         } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar dados vinculados: ' . $e->getMessage());
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar dados vinculados: '.$e->getMessage());
         }
     }
 
@@ -511,7 +515,7 @@ class ProviderManagementService
 
             return ServiceResult::success($tenant);
         } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar tenant: ' . $e->getMessage());
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar tenant: '.$e->getMessage());
         }
     }
 
@@ -522,7 +526,7 @@ class ProviderManagementService
     {
         try {
             $savedUser = $this->userRepository->createFromDTO(new UserDTO(
-                name: $userData['first_name'] . ' ' . $userData['last_name'],
+                name: $userData['first_name'].' '.$userData['last_name'],
                 email: $userData['email'],
                 password: $userData['password'] ?? null,
                 is_active: true,
@@ -531,7 +535,7 @@ class ProviderManagementService
 
             return ServiceResult::success($savedUser);
         } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar usuário: ' . $e->getMessage());
+            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar usuário: '.$e->getMessage());
         }
     }
 
@@ -540,12 +544,12 @@ class ProviderManagementService
      */
     private function generateUniqueTenantName(string $firstName, string $lastName): string
     {
-        $baseName   = Str::slug($firstName . '-' . $lastName);
+        $baseName = Str::slug($firstName.'-'.$lastName);
         $tenantName = $baseName;
-        $counter    = 1;
+        $counter = 1;
 
         while ($this->tenantRepository->findByName($tenantName)) {
-            $tenantName = $baseName . '-' . $counter;
+            $tenantName = $baseName.'-'.$counter;
             $counter++;
         }
 

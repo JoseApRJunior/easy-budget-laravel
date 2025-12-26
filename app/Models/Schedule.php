@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Schedule extends Model
 {
-    use TenantScoped, HasFactory;
+    use HasFactory, TenantScoped;
 
     /**
      * Boot the model.
@@ -53,19 +53,19 @@ class Schedule extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'                  => 'integer',
-        'service_id'                 => 'integer',
+        'tenant_id' => 'integer',
+        'service_id' => 'integer',
         'user_confirmation_token_id' => 'integer',
-        'start_date_time'            => 'immutable_datetime',
-        'end_date_time'              => 'immutable_datetime',
-        'status'                     => 'string',
-        'confirmed_at'               => 'datetime',
-        'completed_at'               => 'datetime',
-        'no_show_at'                 => 'datetime',
-        'cancelled_at'               => 'datetime',
-        'cancellation_reason'        => 'string',
-        'created_at'                 => 'immutable_datetime',
-        'updated_at'                 => 'datetime',
+        'start_date_time' => 'immutable_datetime',
+        'end_date_time' => 'immutable_datetime',
+        'status' => 'string',
+        'confirmed_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'no_show_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'cancellation_reason' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -75,12 +75,12 @@ class Schedule extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'                  => 'required|integer|exists:tenants,id',
-            'service_id'                 => 'required|integer|exists:services,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'service_id' => 'required|integer|exists:services,id',
             'user_confirmation_token_id' => 'required|integer|exists:user_confirmation_tokens,id',
-            'start_date_time'            => 'required|date|after:now|date_format:Y-m-d H:i:s',
-            'end_date_time'              => 'required|date|after:start_date_time|date_format:Y-m-d H:i:s',
-            'location'                   => 'nullable|string|max:500',
+            'start_date_time' => 'required|date|after:now|date_format:Y-m-d H:i:s',
+            'end_date_time' => 'required|date|after:start_date_time|date_format:Y-m-d H:i:s',
+            'location' => 'nullable|string|max:500',
         ];
     }
 
@@ -89,7 +89,7 @@ class Schedule extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -97,7 +97,7 @@ class Schedule extends Model
      */
     public function service(): BelongsTo
     {
-        return $this->belongsTo( Service::class);
+        return $this->belongsTo(Service::class);
     }
 
     /**
@@ -105,7 +105,6 @@ class Schedule extends Model
      */
     public function userConfirmationToken(): BelongsTo
     {
-        return $this->belongsTo( UserConfirmationToken::class);
+        return $this->belongsTo(UserConfirmationToken::class);
     }
-
 }

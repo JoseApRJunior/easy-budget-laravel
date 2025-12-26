@@ -8,10 +8,8 @@ use App\DTOs\Budget\BudgetShareDTO;
 use App\Models\BudgetShare;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class BudgetShareRepository extends AbstractTenantRepository
@@ -23,7 +21,7 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new BudgetShare();
+        return new BudgetShare;
     }
 
     /**
@@ -47,9 +45,9 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Lista compartilhamentos por orçamento.
      *
-     * @param int $budgetId ID do orçamento
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
+     * @param  int  $budgetId  ID do orçamento
+     * @param  array<string, string>|null  $orderBy  Ordenação
+     * @param  int|null  $limit  Limite de registros
      * @return \Illuminate\Database\Eloquent\Collection<int, BudgetShare> Compartilhamentos encontrados
      */
     public function listByBudget(int $budgetId, ?array $orderBy = null, ?int $limit = null): Collection
@@ -61,16 +59,16 @@ class BudgetShareRepository extends AbstractTenantRepository
                     $query->orderBy($column, $direction);
                 }
             })
-            ->when($limit, fn($query) => $query->limit($limit))
+            ->when($limit, fn ($query) => $query->limit($limit))
             ->get();
     }
 
     /**
      * Lista compartilhamentos ativos.
      *
-     * @param array $filters Filtros adicionais
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
+     * @param  array  $filters  Filtros adicionais
+     * @param  array<string, string>|null  $orderBy  Ordenação
+     * @param  int|null  $limit  Limite de registros
      * @return \Illuminate\Database\Eloquent\Collection<int, BudgetShare> Compartilhamentos encontrados
      */
     public function listActive(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
@@ -96,8 +94,7 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Busca compartilhamento por token.
      *
-     * @param string $token Token de compartilhamento
-     * @return BudgetShare|null
+     * @param  string  $token  Token de compartilhamento
      */
     public function findByToken(string $token): ?BudgetShare
     {
@@ -109,9 +106,8 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Busca compartilhamento por email.
      *
-     * @param string $email Email do destinatário
-     * @param int $budgetId ID do orçamento
-     * @return BudgetShare|null
+     * @param  string  $email  Email do destinatário
+     * @param  int  $budgetId  ID do orçamento
      */
     public function findByEmailAndBudget(string $email, int $budgetId): ?BudgetShare
     {
@@ -124,8 +120,8 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Conta compartilhamentos por orçamento.
      *
-     * @param int $budgetId ID do orçamento
-     * @param array $filters Filtros adicionais
+     * @param  int  $budgetId  ID do orçamento
+     * @param  array  $filters  Filtros adicionais
      * @return int Número de compartilhamentos
      */
     public function countByBudget(int $budgetId, array $filters = []): int
@@ -141,9 +137,8 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Verifica se existe compartilhamento ativo.
      *
-     * @param int $budgetId ID do orçamento
-     * @param string $email Email do destinatário
-     * @return bool
+     * @param  int  $budgetId  ID do orçamento
+     * @param  string  $email  Email do destinatário
      */
     public function hasActiveShare(int $budgetId, string $email): bool
     {
@@ -157,8 +152,7 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Revoga todos os compartilhamentos de um orçamento.
      *
-     * @param int $budgetId ID do orçamento
-     * @return bool
+     * @param  int  $budgetId  ID do orçamento
      */
     public function revokeAllByBudget(int $budgetId): bool
     {

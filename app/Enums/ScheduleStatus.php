@@ -109,11 +109,12 @@ enum ScheduleStatus: string implements StatusEnumInterface
     {
         $options = [];
         foreach (self::cases() as $status) {
-            if (!$includeFinished && $status->isFinished()) {
+            if (! $includeFinished && $status->isFinished()) {
                 continue;
             }
             $options[$status->value] = $status->getLabel();
         }
+
         return $options;
     }
 
@@ -156,7 +157,7 @@ enum ScheduleStatus: string implements StatusEnumInterface
         ];
 
         foreach ($statuses as $status) {
-            if (!($status instanceof self)) {
+            if (! ($status instanceof self)) {
                 continue;
             }
 

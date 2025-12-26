@@ -38,15 +38,15 @@ readonly class BudgetItemCategoryDTO extends AbstractDTO
     public function toArray(): array
     {
         return [
-            'name'        => $this->name,
-            'slug'        => $this->slug,
+            'name' => $this->name,
+            'slug' => $this->slug,
             'description' => $this->description,
-            'color'       => $this->color,
-            'icon'        => $this->icon,
-            'is_active'   => $this->is_active,
-            'parent_id'   => $this->parent_id,
-            'order'       => $this->order,
-            'tenant_id'   => $this->tenant_id,
+            'color' => $this->color,
+            'icon' => $this->icon,
+            'is_active' => $this->is_active,
+            'parent_id' => $this->parent_id,
+            'order' => $this->order,
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

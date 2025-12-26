@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ScheduleRequest;
-use App\Models\Schedule;
 use App\Models\User;
 use App\Repositories\ServiceRepository;
 use App\Services\Domain\ScheduleService;
@@ -37,21 +36,21 @@ class ScheduleController extends Controller
     public function index(Request $request): View
     {
         $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
-        $dateTo   = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now()->endOfMonth();
+        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now()->endOfMonth();
 
         $filters = [
-            'status'      => $request->input('status'),
-            'service_id'  => $request->input('service_id'),
-            'location'    => $request->input('location'),
+            'status' => $request->input('status'),
+            'service_id' => $request->input('service_id'),
+            'location' => $request->input('location'),
         ];
 
         $result = $this->scheduleService->getSchedulesByPeriod($dateFrom, $dateTo, $filters);
 
         return view('pages.schedule.index', [
             'schedules' => $this->getServiceData($result, collect()),
-            'filters'   => array_merge($filters, [
+            'filters' => array_merge($filters, [
                 'date_from' => $dateFrom->toDateString(),
-                'date_to'   => $dateTo->toDateString(),
+                'date_to' => $dateTo->toDateString(),
             ]),
         ]);
     }
@@ -61,7 +60,7 @@ class ScheduleController extends Controller
         $result = $this->scheduleService->getDashboardStats();
 
         return view('pages.schedule.dashboard', [
-            'stats' => $this->getServiceData($result, [])
+            'stats' => $this->getServiceData($result, []),
         ]);
     }
 
@@ -76,7 +75,7 @@ class ScheduleController extends Controller
         // Se não for especificado um prestador, usa o usuário logado (se for prestador)
         $targetProviderId = $providerId ?? ($user->isProvider() ? $user->id : null);
 
-        if (!$targetProviderId) {
+        if (! $targetProviderId) {
             abort(404, 'Prestador não encontrado');
         }
 
@@ -85,9 +84,9 @@ class ScheduleController extends Controller
         $result = $this->scheduleService->getAvailabilityCalendar($targetProviderId, $month);
 
         return view('pages.schedule.calendar', [
-            'calendar'   => $this->getServiceData($result, []),
+            'calendar' => $this->getServiceData($result, []),
             'providerId' => $targetProviderId,
-            'month'      => $month,
+            'month' => $month,
         ]);
     }
 
@@ -101,10 +100,10 @@ class ScheduleController extends Controller
         // Buscar o serviço pelo código usando o repositório
         $service = $this->serviceRepository->findByCode($serviceCode, $tenantId, [
             'customer.commonData',
-            'serviceStatus'
+            'serviceStatus',
         ]);
 
-        if (!$service) {
+        if (! $service) {
             abort(404, 'Serviço não encontrado');
         }
 
@@ -113,7 +112,7 @@ class ScheduleController extends Controller
         $this->authorize('view', $service);
 
         return view('pages.schedule.create', [
-            'service'      => $service,
+            'service' => $service,
             'selectedDate' => $request->input('date'),
             'selectedTime' => $request->input('time'),
         ]);
@@ -141,7 +140,7 @@ class ScheduleController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar agendamento: ' . $e->getMessage());
+                ->with('error', 'Erro ao criar agendamento: '.$e->getMessage());
         }
     }
 
@@ -152,7 +151,7 @@ class ScheduleController extends Controller
     {
         $result = $this->scheduleService->getSchedule((int) $id);
 
-        if (!$result->isSuccess()) {
+        if (! $result->isSuccess()) {
             abort(404, 'Agendamento não encontrado');
         }
 
@@ -184,14 +183,14 @@ class ScheduleController extends Controller
         if ($result->isError()) {
             return response()->json([
                 'success' => false,
-                'message' => $result->getMessage()
+                'message' => $result->getMessage(),
             ], 400);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $result->getData(),
-            'message' => 'Status atualizado com sucesso'
+            'data' => $result->getData(),
+            'message' => 'Status atualizado com sucesso',
         ]);
     }
 
@@ -217,8 +216,8 @@ class ScheduleController extends Controller
     {
         $request->validate([
             'provider_id' => 'required|exists:users,id',
-            'date'        => 'required|date|after:today',
-            'duration'    => 'nullable|integer|min:30|max:480', // 30 minutos a 8 horas
+            'date' => 'required|date|after:today',
+            'duration' => 'nullable|integer|min:30|max:480', // 30 minutos a 8 horas
         ]);
 
         $result = $this->scheduleService->checkAvailability(
@@ -230,13 +229,13 @@ class ScheduleController extends Controller
         if ($result->isError()) {
             return response()->json([
                 'success' => false,
-                'message' => $result->getMessage()
+                'message' => $result->getMessage(),
             ], 400);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $result->getData()
+            'data' => $result->getData(),
         ]);
     }
 
@@ -244,8 +243,8 @@ class ScheduleController extends Controller
     {
         $request->validate([
             'provider_id' => 'required|exists:users,id',
-            'date'        => 'required|date',
-            'duration'    => 'nullable|integer|min:30|max:480',
+            'date' => 'required|date',
+            'duration' => 'nullable|integer|min:30|max:480',
         ]);
 
         $result = $this->scheduleService->getAvailableTimeSlots(
@@ -257,13 +256,13 @@ class ScheduleController extends Controller
         if ($result->isError()) {
             return response()->json([
                 'success' => false,
-                'message' => $result->getMessage()
+                'message' => $result->getMessage(),
             ], 400);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $result->getData()
+            'data' => $result->getData(),
         ]);
     }
 }

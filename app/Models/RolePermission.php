@@ -1,10 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Permission;
-use App\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
@@ -40,10 +39,10 @@ class RolePermission extends Pivot
      * @var array<string, string>
      */
     protected $casts = [
-        'role_id'       => 'integer',
+        'role_id' => 'integer',
         'permission_id' => 'integer',
-        'created_at'    => 'immutable_datetime',
-        'updated_at'    => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -59,9 +58,9 @@ class RolePermission extends Pivot
     /**
      * Accessor para tratar valores zero-date no updated_at.
      */
-    public function getUpdatedAtAttribute( $value )
+    public function getUpdatedAtAttribute($value)
     {
-        return ( $value === '0000-00-00 00:00:00' || empty( $value ) ) ? null : new \DateTime( $value );
+        return ($value === '0000-00-00 00:00:00' || empty($value)) ? null : new \DateTime($value);
     }
 
     /**
@@ -69,7 +68,7 @@ class RolePermission extends Pivot
      */
     public function role(): BelongsTo
     {
-        return $this->belongsTo( Role::class);
+        return $this->belongsTo(Role::class);
     }
 
     /**
@@ -77,7 +76,6 @@ class RolePermission extends Pivot
      */
     public function permission(): BelongsTo
     {
-        return $this->belongsTo( Permission::class);
+        return $this->belongsTo(Permission::class);
     }
-
 }
