@@ -29,7 +29,21 @@ Este documento consolida os checklists de refatoração identificados durante as
 ## Status por Módulo (Progresso Atual)
 - [x] **Provider Management**: Refatorado para remover `tenant_id` e usar `BusinessDataDTO`.
 - [x] **Invoices**: Refatorado para usar `InvoiceItemDTO`.
-- [ ] **Customers**: Em progresso (necessário padronizar `CustomerService` e `CustomerRepository`).
-- [ ] **Budgets**: Pendente revisão de DTOs e isolamento.
+- [ ] **Customers**: DTOs criados (`CustomerDTO`, `CustomerInteractionDTO`, `CustomerTagDTO`). Pendente padronizar `CustomerService`.
+- [ ] **Budgets**: DTOs criados (Template, Version, Attachments, Notifications, History). Pendente revisão de uso no Service.
 - [ ] **Plan Subscriptions**: Pendente refatoração para `safeExecute` e métodos DTO.
-- [ ] **Inventory/Products**: Pendente validação de DTOs.
+- [x] **Inventory/Products**: DTOs validados (`InventoryMovementDTO`, `ProductDTO`).
+- [x] **Settings/Payment**: DTOs de Pagamento e Configurações criados.
+- [x] **Reports**: DTOs de Definição, Execução e Agendamento criados.
+- [x] **Notifications/Logs**: DTOs de Email (Log, Template, Variable), Notificação e Monitoramento criados.
+- [x] **Auxiliary**: DTOs de Webhook, PDF e Resource criados.
+
+## DTOs Recém Implementados
+- **Budget**: `BudgetActionHistoryDTO`, `BudgetAttachmentDTO`, `BudgetCalculationSettingsDTO`, `BudgetItemCategoryDTO`, `BudgetNotificationDTO`
+- **Customer**: `CustomerTagDTO`
+- **Payment**: `PaymentMercadoPagoInvoiceDTO`, `PaymentMercadoPagoPlanDTO`
+- **Report**: `ReportDefinitionDTO`, `ReportExecutionDTO`, `ReportScheduleDTO`
+- **User/Provider**: `ProviderCredentialDTO`, `UserSettingsDTO`
+- **Log/Notification**: `EmailLogDTO`, `EmailTemplateDTO`, `EmailVariableDTO`, `NotificationDTO`, `MonitoringAlertHistoryDTO`, `MiddlewareMetricHistoryDTO`
+- **Common/Webhook**: `WebhookRequestDTO`, `PdfDTO`, `ResourceDTO`
+

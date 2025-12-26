@@ -32,6 +32,7 @@ use App\Models\BudgetItem;
 use App\Models\Service;
 use App\Models\ServiceItem;
 use App\Observers\BudgetObserver;
+use App\Observers\BudgetStatusObserver;
 use App\Observers\InventoryObserver;
 use App\Observers\ServiceObserver;
 use Illuminate\Auth\Events\Registered;
@@ -129,7 +130,7 @@ class EventServiceProvider extends ServiceProvider
         // Registrar observers para o modelo Service (geração automática de faturas + controle de estoque)
         Service::observe( [ ServiceObserver::class, $inventoryObserver ] );
 
-        Budget::observe( [ BudgetObserver::class, $inventoryObserver ] );
+        Budget::observe( [ BudgetObserver::class, BudgetStatusObserver::class, $inventoryObserver ] );
         BudgetItem::observe( [ $inventoryObserver ] );
         ServiceItem::observe( [ $inventoryObserver ] );
 
