@@ -8,6 +8,7 @@ use App\Enums\OperationStatus;
 use App\Enums\ServiceStatus;
 use App\Models\Service;
 use App\Repositories\ServiceRepository;
+use App\Repositories\ServiceItemRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Domain\ScheduleService;
 use App\Support\ServiceResult;
@@ -19,13 +20,16 @@ use App\DTOs\Service\ServiceItemDTO;
 class ServiceService extends AbstractBaseService
 {
     protected ScheduleService $scheduleService;
+    protected ServiceItemRepository $itemRepository;
 
     public function __construct(
         ServiceRepository $serviceRepository,
-        ScheduleService $scheduleService
+        ScheduleService $scheduleService,
+        ServiceItemRepository $itemRepository
     ) {
         parent::__construct($serviceRepository);
         $this->scheduleService = $scheduleService;
+        $this->itemRepository = $itemRepository;
     }
 
     /**
@@ -34,31 +38,21 @@ class ServiceService extends AbstractBaseService
     public function getDashboardStats(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
+            $stats = $this->repository->countByStatus();
+            $total = array_sum($stats);
 
-            $total     = Service::where('tenant_id', $tenantId)->count();
-            $approved  = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::APPROVED->value)->count();
-            $pending   = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::PENDING->value)->count();
-            $cancelled = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::CANCELLED->value)->count();
-            $rejected  = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::REJECTED->value)->count();
-            $completed = Service::where('tenant_id', $tenantId)->where('status', ServiceStatus::COMPLETED->value)->count();
+            $recent = $this->repository->getFiltered([], ['created_at' => 'desc'], 10);
 
-            $recent = Service::where('tenant_id', $tenantId)
-                ->latest('created_at')
-                ->limit(10)
-                ->with(['budget.customer.commonData', 'category'])
-                ->get();
-
-            $stats = [
+            $dashboardData = [
                 'total_services'    => $total,
-                'approved_services' => $approved,
-                'pending_services'  => $pending,
-                'rejected_services' => $rejected,
-                'status_breakdown'  => compact('pending', 'approved', 'rejected', 'cancelled', 'completed'),
+                'status_breakdown'  => $stats,
                 'recent_services'   => $recent,
+                'approved_services' => $stats[ServiceStatus::APPROVED->value] ?? 0,
+                'pending_services'  => $stats[ServiceStatus::PENDING->value] ?? 0,
+                'rejected_services' => $stats[ServiceStatus::REJECTED->value] ?? 0,
             ];
 
-            return ServiceResult::success($stats);
+            return ServiceResult::success($dashboardData);
         }, 'Erro ao obter estatísticas do dashboard.');
     }
 
@@ -68,17 +62,7 @@ class ServiceService extends AbstractBaseService
     public function findByCode(string $code, array $with = []): ServiceResult
     {
         return $this->safeExecute(function () use ($code, $with) {
-            $tenantId = $this->ensureTenantId();
-
-            $query = $this->repository->newQuery()
-                ->where('code', $code)
-                ->where('tenant_id', $tenantId);
-
-            if (!empty($with)) {
-                $query->with($with);
-            }
-
-            $service = $query->first();
+            $service = $this->repository->findByCode($code, $with);
 
             if (!$service) {
                 return ServiceResult::error("Serviço com código {$code} não encontrado.");
@@ -94,25 +78,24 @@ class ServiceService extends AbstractBaseService
     public function create(ServiceDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId($dto->tenant_id);
-
-            return DB::transaction(function () use ($dto, $tenantId) {
+            return DB::transaction(function () use ($dto) {
+                // Prepara dados - o código pode vir no DTO ou ser gerado
                 $serviceData = $dto->toArray();
-                $serviceData['tenant_id'] = $tenantId;
-
-                // Gera código se não houver
                 if (empty($serviceData['code'])) {
                     $serviceData['code'] = 'SRV-' . strtoupper(bin2hex(random_bytes(4)));
                 }
 
-                $service = $this->repository->create($serviceData);
+                $service = $this->repository->createFromDTO($dto);
+
+                // Atualiza o código se foi gerado aqui
+                if (empty($dto->code)) {
+                    $service->update(['code' => $serviceData['code']]);
+                }
 
                 if (!empty($dto->items)) {
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $itemData = $itemDto->toArray();
-                        $itemData['tenant_id'] = $tenantId;
-                        $service->items()->create($itemData);
+                        $this->itemRepository->createFromDTO($itemDto, $service->id);
                     }
                 }
 
@@ -127,27 +110,22 @@ class ServiceService extends AbstractBaseService
     public function update($id, ServiceDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $dto) {
-            $tenantId = $this->ensureTenantId($dto->tenant_id);
-
-            return DB::transaction(function () use ($id, $dto, $tenantId) {
+            return DB::transaction(function () use ($id, $dto) {
                 $service = is_numeric($id)
                     ? $this->repository->find((int) $id)
-                    : $this->repository->newQuery()->where('code', $id)->where('tenant_id', $tenantId)->first();
+                    : $this->repository->findByCode((string) $id);
 
                 if (!$service) {
                     return ServiceResult::error('Serviço não encontrado.');
                 }
 
-                $serviceData = $dto->toArray();
-                $this->repository->update($service, $serviceData);
+                $this->repository->updateFromDTO($service->id, $dto);
 
                 if (isset($dto->items)) {
                     $service->items()->delete();
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $itemData = $itemDto->toArray();
-                        $itemData['tenant_id'] = $tenantId;
-                        $service->items()->create($itemData);
+                        $service->items()->create($itemDto->toArray());
                     }
                 }
 
@@ -162,17 +140,13 @@ class ServiceService extends AbstractBaseService
     public function changeStatusByCode(string $code, string $status): ServiceResult
     {
         return $this->safeExecute(function () use ($code, $status) {
-            $tenantId = $this->ensureTenantId();
-            $service = $this->repository->newQuery()
-                ->where('code', $code)
-                ->where('tenant_id', $tenantId)
-                ->first();
+            $service = $this->repository->findByCode($code);
 
             if (!$service) {
                 return ServiceResult::error('Serviço não encontrado.');
             }
 
-            $this->repository->update($service, ['status' => $status]);
+            $this->repository->update($service->id, ['status' => $status]);
 
             return ServiceResult::success($service->fresh(), 'Status do serviço atualizado com sucesso.');
         });
@@ -184,11 +158,7 @@ class ServiceService extends AbstractBaseService
     public function deleteByCode(string $code): ServiceResult
     {
         return $this->safeExecute(function () use ($code) {
-            $tenantId = $this->ensureTenantId();
-            $service = $this->repository->newQuery()
-                ->where('code', $code)
-                ->where('tenant_id', $tenantId)
-                ->first();
+            $service = $this->repository->findByCode($code);
 
             if (!$service) {
                 return ServiceResult::error('Serviço não encontrado.');
@@ -212,7 +182,7 @@ class ServiceService extends AbstractBaseService
                 return ServiceResult::error('Serviço não encontrado.');
             }
 
-            $this->repository->update($service, ['status' => $status]);
+            $this->repository->update($service->id, ['status' => $status]);
 
             return ServiceResult::success($service->fresh(), 'Status do serviço atualizado com sucesso.');
         });

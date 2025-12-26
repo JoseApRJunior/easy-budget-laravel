@@ -6,6 +6,8 @@ namespace App\Repositories;
 
 use App\Models\Service;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,79 +19,66 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ServiceRepository extends AbstractTenantRepository
 {
-    /**
-     * Define o Model a ser utilizado pelo Repositório.
-     */
-    protected function makeModel(): Model
+    use RepositoryFiltersTrait;
+
+    public function __construct(Service $model)
     {
-        return new Service();
+        parent::__construct($model);
     }
 
     /**
      * Lista serviços por status dentro do tenant atual.
-     *
-     * @param array<string> $statuses Lista de status
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
-     * @return Collection<Service> Coleção de serviços
      */
-    public function listByStatuses( array $statuses, ?array $orderBy = null, ?int $limit = null ): Collection
+    public function listByStatuses(array $statuses, ?array $orderBy = null, ?int $limit = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'status' => $statuses ],
-            $orderBy,
-            $limit,
-        );
+        return $this->model->newQuery()
+            ->whereIn('status', $statuses)
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
      * Lista serviços por provider dentro do tenant atual.
-     *
-     * @param int $providerId ID do provider
-     * @param array<string, string>|null $orderBy Ordenação
-     * @return Collection<Service> Coleção de serviços
      */
-    public function listByProviderId( int $providerId, ?array $orderBy = null ): Collection
+    public function listByProviderId(int $providerId, ?array $orderBy = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'provider_id' => $providerId ],
-            $orderBy,
-        );
+        return $this->model->newQuery()
+            ->where('provider_id', $providerId)
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->get();
     }
 
     /**
      * Conta serviços agrupados por status dentro do tenant atual.
-     *
-     * @return array<string, int> Array com status como chave e count como valor
      */
     public function countByStatus(): array
     {
-        return $this->model
-            ->selectRaw( 'status, COUNT(*) as count' )
-            ->groupBy( 'status' )
-            ->pluck( 'count', 'status' )
+        return $this->model->newQuery()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
             ->toArray();
     }
 
     /**
      * Conta serviços ativos dentro do tenant atual.
-     *
-     * @return int Número de serviços ativos
      */
     public function countActive(): int
     {
-        return $this->countByTenant( [ 'status' => 'active' ] );
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->count();
     }
 
     /**
      * Conta serviços por categoria dentro do tenant atual.
-     *
-     * @param int $categoryId ID da categoria
-     * @return int Número de serviços na categoria
      */
-    public function countByCategory( int $categoryId ): int
+    public function countByCategory(int $categoryId): int
     {
-        return $this->countByTenant( [ 'category_id' => $categoryId ] );
+        return $this->model->newQuery()
+            ->where('category_id', $categoryId)
+            ->count();
     }
 
     /**
@@ -97,133 +86,79 @@ class ServiceRepository extends AbstractTenantRepository
      */
     public function updateStatusByBudgetId(int $budgetId, string $status): void
     {
-        $this->model->where('budget_id', $budgetId)->update(['status' => $status]);
+        $this->model->newQuery()->where('budget_id', $budgetId)->update(['status' => $status]);
     }
 
     /**
-     * Busca um serviço por código e tenant com relações opcionais.
+     * Busca um serviço por código com relações opcionais.
      */
-    public function findByCode(string $code, int $tenantId, array $with = []): ?Service
+    public function findByCode(string $code, array $with = []): ?Service
     {
-        $query = $this->model->where('code', $code)->where('tenant_id', $tenantId);
-
-        if (!empty($with)) {
-            $query->with($with);
-        }
-
-        return $query->first();
+        return $this->model->newQuery()
+            ->where('code', $code)
+            ->when(!empty($with), fn($q) => $q->with($with))
+            ->first();
     }
 
     /**
      * Busca serviços ativos dentro do tenant atual.
      */
-     * @param array<string, string>|null $orderBy Ordenação
-     * @return Collection<Service> Serviços ativos
-     */
-    public function findActive( ?array $orderBy = null ): Collection
+    public function findActive(?array $orderBy = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'status' => 'active' ],
-            $orderBy,
-        );
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->get();
     }
 
     /**
      * Busca serviços com filtros avançados, paginação e eager loading.
-     *
-     * @param array<string, mixed> $filters Filtros (status, category_id, date_from, date_to, search)
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
-     * @return Collection<Service> Coleção de serviços filtrados
      */
-    public function getFiltered( array $filters = [], ?array $orderBy = null, ?int $limit = null ): Collection
+    public function getFiltered(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
     {
-        $query = $this->model->newQuery();
-
-        // Aplicar filtros
-        if ( !empty( $filters[ 'status' ] ) ) {
-            $query->where( 'status', $filters[ 'status' ] );
-        }
-
-        if ( !empty( $filters[ 'category_id' ] ) ) {
-            $query->where( 'category_id', $filters[ 'category_id' ] );
-        }
-
-        if ( !empty( $filters[ 'date_from' ] ) ) {
-            $query->whereDate( 'created_at', '>=', $filters[ 'date_from' ] );
-        }
-
-        if ( !empty( $filters[ 'date_to' ] ) ) {
-            $query->whereDate( 'created_at', '<=', $filters[ 'date_to' ] );
-        }
-
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $query->where( function ( $q ) use ( $filters ) {
-                $q->where( 'code', 'like', '%' . $filters[ 'search' ] . '%' )
-                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
-            } );
-        }
-
-        // Eager loading padrão
-        $query->with( [ 'category', 'budget.customer', 'serviceStatus' ] );
-
-        // Ordenação
-        if ( $orderBy ) {
-            foreach ( $orderBy as $field => $direction ) {
-                $query->orderBy( $field, $direction );
-            }
-        } else {
-            $query->orderBy( 'created_at', 'desc' );
-        }
-
-        // Limite
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-
-        return $query->get();
+        return $this->model->newQuery()
+            ->tap(fn($q) => $this->applyAllServiceFilters($q, $filters))
+            ->with(['category', 'budget.customer', 'serviceStatus'])
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy), fn($q) => $q->latest())
+            ->when($limit, fn($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
-     * Busca um serviço por código com eager loading opcional.
-     *
-     * @param string $code Código do serviço
-     * @param array<string> $with Relacionamentos para eager loading
-     * @return Service|null Serviço encontrado ou null
+     * Aplica todos os filtros de serviço.
      */
-    public function findByCode( string $code, array $with = [] ): ?Service
+    protected function applyAllServiceFilters(Builder $query, array $filters): void
     {
-        $query = $this->model->where( 'code', $code );
-
-        if ( !empty( $with ) ) {
-            $query->with( $with );
-        }
-
-        return $query->first();
-    }
-
-    /**
-     * Busca um serviço por código dentro do tenant atual.
-     *
-     * @param string $code Código do serviço
-     * @param array<string> $with Relacionamentos para eager loading
-     * @return Service|null Serviço encontrado ou null
-     */
-    public function findByCodeWithTenant( string $code, array $with = [] ): ?Service
-    {
-        return $this->findByCode( $code, $with );
+        $this->applyBooleanFilter($query, $filters, 'status', 'status');
+        $this->applyBooleanFilter($query, $filters, 'category_id', 'category_id');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
+        $this->applySearchFilter($query, $filters, ['code', 'description']);
     }
 
     /**
      * Busca serviços de um mês específico por tenant.
      */
-    public function getServicesByMonth( int $tenantId, int $month, int $year ): Collection
+    public function getServicesByMonth(int $month, int $year): Collection
     {
-        return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->whereYear( 'created_at', $year )
-            ->whereMonth( 'created_at', $month )
+        return $this->model->newQuery()
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
             ->get();
     }
 
+    /**
+     * Cria um serviço a partir de um DTO.
+     */
+    public function createFromDTO(\App\DTOs\Service\ServiceDTO $dto): Model
+    {
+        return $this->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um serviço a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, \App\DTOs\Service\ServiceDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArray());
+    }
 }

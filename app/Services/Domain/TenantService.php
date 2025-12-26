@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Enums\OperationStatus;
 use App\Models\Tenant;
 use App\Repositories\TenantRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
 
 /**
  * Serviço para gerenciamento de tenants.
@@ -17,29 +17,22 @@ use Exception;
  */
 class TenantService extends AbstractBaseService
 {
-    public function __construct( TenantRepository $repository )
-    {
-        parent::__construct( $repository );
-    }
-
-    /**
-     * Define o Model a ser utilizado pelo Service.
-     */
-    public function getModel(): string
-    {
-        return Tenant::class;
+    public function __construct(
+        private TenantRepository $tenantRepository
+    ) {
+        parent::__construct($tenantRepository);
     }
 
     /**
      * Obtém dados financeiros do tenant
      */
-    public function getFinancialData(int $tenantId): array
+    public function getFinancialData(int $tenantId): ServiceResult
     {
-        try {
-            $tenant = $this->findById($tenantId);
-            
+        return $this->safeExecute(function () use ($tenantId) {
+            $tenant = $this->tenantRepository->find($tenantId);
+
             if (!$tenant) {
-                return ServiceResult::error('Tenant não encontrado');
+                return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 
             // Dados financeiros básicos - pode ser expandido conforme necessário
@@ -51,65 +44,57 @@ class TenantService extends AbstractBaseService
                 'total_users' => $tenant->users()->count(),
             ];
 
-            return ServiceResult::success($financialData);
-        } catch (Exception $e) {
-            return ServiceResult::error('Erro ao obter dados financeiros: ' . $e->getMessage());
-        }
+            return $this->success($financialData);
+        }, 'Erro ao obter dados financeiros');
     }
 
     /**
      * Obtém analytics do tenant
      */
-    public function getAnalytics(int $tenantId): array
+    public function getAnalytics(int $tenantId): ServiceResult
     {
-        try {
-            $tenant = $this->findById($tenantId);
-            
+        return $this->safeExecute(function () use ($tenantId) {
+            $tenant = $this->tenantRepository->find($tenantId);
+
             if (!$tenant) {
-                return ServiceResult::error('Tenant não encontrado');
+                return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 
             // Analytics básicos - pode ser expandido conforme necessário
             $analytics = [
                 'tenant' => $tenant,
                 'total_users' => $tenant->users()->count(),
-                'active_users' => $tenant->users()->where('status', 'active')->count(),
+                'active_users' => $tenant->users()->where('is_active', true)->count(),
                 'total_customers' => $tenant->customers()->count(),
                 'total_budgets' => $tenant->budgets()->count(),
                 'total_services' => $tenant->services()->count(),
                 'total_invoices' => $tenant->invoices()->count(),
             ];
 
-            return ServiceResult::success($analytics);
-        } catch (Exception $e) {
-            return ServiceResult::error('Erro ao obter analytics: ' . $e->getMessage());
-        }
+            return $this->success($analytics);
+        }, 'Erro ao obter analytics');
     }
 
     /**
      * Obtém dados de cobrança do tenant
      */
-    public function getBillingData(int $tenantId): array
+    public function getBillingData(int $tenantId): ServiceResult
     {
-        try {
-            $tenant = $this->findById($tenantId);
-            
+        return $this->safeExecute(function () use ($tenantId) {
+            $tenant = $this->tenantRepository->find($tenantId);
+
             if (!$tenant) {
-                return ServiceResult::error('Tenant não encontrado');
+                return $this->error(OperationStatus::NOT_FOUND, 'Tenant não encontrado');
             }
 
-            // Dados de cobrança básicos - pode ser expandido conforme necessário
+            // Dados de cobrança básicos
             $billingData = [
                 'tenant' => $tenant,
-                'current_plan' => $tenant->planSubscriptions()->where('status', 'active')->first()?->plan,
-                'subscription_history' => $tenant->planSubscriptions()->with('plan')->latest()->get(),
-                'payment_history' => [], // Implementar histórico de pagamentos
-                'next_billing_date' => null, // Implementar próxima data de cobrança
+                'active_subscription' => $tenant->planSubscriptions()->where('status', 'active')->first(),
+                'invoices' => $tenant->invoices()->orderBy('created_at', 'desc')->limit(5)->get(),
             ];
 
-            return ServiceResult::success($billingData);
-        } catch (Exception $e) {
-            return ServiceResult::error('Erro ao obter dados de cobrança: ' . $e->getMessage());
-        }
+            return $this->success($billingData);
+        }, 'Erro ao obter dados de cobrança');
     }
 }

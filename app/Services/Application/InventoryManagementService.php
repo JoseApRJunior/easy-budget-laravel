@@ -31,7 +31,6 @@ class InventoryManagementService extends AbstractBaseService
     public function addStock(string $sku, int $quantity, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
-            $tenantId = $this->ensureTenantId();
             $product = $this->productRepository->findBySku($sku);
 
             if (!$product) {
@@ -40,7 +39,6 @@ class InventoryManagementService extends AbstractBaseService
 
             return $this->inventoryService->addStock(
                 (int) $product->id,
-                $tenantId,
                 $quantity,
                 $reason ?? 'Entrada manual'
             );
@@ -53,7 +51,6 @@ class InventoryManagementService extends AbstractBaseService
     public function removeStock(string $sku, int $quantity, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
-            $tenantId = $this->ensureTenantId();
             $product = $this->productRepository->findBySku($sku);
 
             if (!$product) {
@@ -62,7 +59,6 @@ class InventoryManagementService extends AbstractBaseService
 
             return $this->inventoryService->removeStock(
                 (int) $product->id,
-                $tenantId,
                 $quantity,
                 $reason ?? 'Saída manual'
             );
@@ -75,7 +71,6 @@ class InventoryManagementService extends AbstractBaseService
     public function setStock(string $sku, int $quantity, string $reason): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
-            $tenantId = $this->ensureTenantId();
             $product = $this->productRepository->findBySku($sku);
 
             if (!$product) {
@@ -84,7 +79,6 @@ class InventoryManagementService extends AbstractBaseService
 
             return $this->inventoryService->setStock(
                 (int) $product->id,
-                $tenantId,
                 $quantity,
                 $reason
             );
@@ -97,10 +91,8 @@ class InventoryManagementService extends AbstractBaseService
     public function addStockById(int $productId, int $quantity, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
-            $tenantId = $this->ensureTenantId();
             return $this->inventoryService->addStock(
                 $productId,
-                $tenantId,
                 $quantity,
                 $reason ?? 'Entrada via API'
             );
@@ -113,10 +105,8 @@ class InventoryManagementService extends AbstractBaseService
     public function removeStockById(int $productId, int $quantity, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
-            $tenantId = $this->ensureTenantId();
             return $this->inventoryService->removeStock(
                 $productId,
-                $tenantId,
                 $quantity,
                 $reason ?? 'Saída via API'
             );
@@ -129,12 +119,10 @@ class InventoryManagementService extends AbstractBaseService
     public function getDashboardData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-
-            $stats = $this->inventoryRepository->getStatistics($tenantId);
+            $stats = $this->inventoryRepository->getStatistics();
             $totalProducts = $this->productRepository->countByTenant();
 
-            $lowStockItems = $this->inventoryRepository->getLowStockItems($tenantId, 5);
+            $lowStockItems = $this->inventoryRepository->getLowStockItems(5);
             $highStockItems = $this->inventoryRepository->getPaginated(
                 ['high_stock' => true],
                 5,
@@ -147,7 +135,6 @@ class InventoryManagementService extends AbstractBaseService
             $outOfStockCount = $this->inventoryRepository->countByTenant(['quantity' => 0]);
 
             $highStockCount = $this->inventoryRepository->getQuery()
-                ->where('tenant_id', $tenantId)
                 ->whereNotNull('max_quantity')
                 ->whereColumn('quantity', '>=', 'max_quantity')
                 ->count();
@@ -171,8 +158,6 @@ class InventoryManagementService extends AbstractBaseService
     public function getIndexData(array $filters): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $this->ensureTenantId();
-
             $categories = $this->categoryRepository->getAllByTenant([], ['name' => 'asc']);
 
             // Map controller status filters to repository filters
@@ -209,8 +194,6 @@ class InventoryManagementService extends AbstractBaseService
     public function getMovementsData(array $filters): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $this->ensureTenantId();
-
             $products = $this->productRepository->getAllByTenant([], ['name' => 'asc']);
 
             $movements = $this->movementRepository->getPaginated(
@@ -239,8 +222,6 @@ class InventoryManagementService extends AbstractBaseService
     public function getStockTurnoverData(array $filters): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $tenantId = $this->ensureTenantId();
-
             $categories = $this->categoryRepository->getAllByTenant([], ['name' => 'asc']);
 
             // This is a complex query that might need a dedicated repository method
@@ -253,8 +234,8 @@ class InventoryManagementService extends AbstractBaseService
 
             // We need to enrich the paginated results with turnover data
             // This is better done in the repository, but for a quick refactor:
-            $items = $stockTurnover->getCollection()->map(function ($product) use ($filters, $tenantId) {
-                $inventory = $this->inventoryRepository->findByProduct((int)$product->id, $tenantId);
+            $items = $stockTurnover->getCollection()->map(function ($product) use ($filters) {
+                $inventory = $this->inventoryRepository->findByProduct((int)$product->id);
 
                 $stats = $this->movementRepository->getStatisticsByPeriod(
                     $filters['start_date'] ?? null,
@@ -288,8 +269,6 @@ class InventoryManagementService extends AbstractBaseService
     public function getAlertsData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-
             $lowStockProducts = $this->inventoryRepository->getPaginated(
                 ['low_stock' => true],
                 15,
@@ -317,7 +296,6 @@ class InventoryManagementService extends AbstractBaseService
     public function getProductBySku(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            $this->ensureTenantId();
             $product = $this->productRepository->findBySku($sku, ['inventory']);
 
             if (!$product) {

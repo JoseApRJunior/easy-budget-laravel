@@ -268,12 +268,7 @@ class AuditLogService extends AbstractBaseService
     public function getAuditStats(int $days = 30): ServiceResult
     {
         return $this->safeExecute(function () use ($days) {
-            $user = Auth::user();
-            if (!$user) {
-                return $this->error('Usuário não autenticado.');
-            }
-
-            $stats = $this->repository->getStats($user->tenant_id, $days);
+            $stats = $this->repository->getStats($days);
             return $this->success($stats);
         }, 'Erro ao recuperar estatísticas de auditoria.');
     }

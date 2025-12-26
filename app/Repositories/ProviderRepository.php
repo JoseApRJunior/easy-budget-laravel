@@ -43,14 +43,14 @@ class ProviderRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca provedor por ID de usuário dentro do tenant atual.
+     * Busca provedor por user_id dentro do tenant atual.
      *
      * @param int $userId
      * @return Provider|null
      */
     public function findByUserId(int $userId): ?Provider
     {
-        return $this->model->where('user_id', $userId)->first();
+        return $this->model->newQuery()->where('user_id', $userId)->first();
     }
 
     /**
@@ -62,7 +62,7 @@ class ProviderRepository extends AbstractTenantRepository
      */
     public function findBySlug(string $slug, bool $withTrashed = false): ?Provider
     {
-        $query = $this->model->where('slug', $slug);
+        $query = $this->model->newQuery()->where('slug', $slug);
 
         if ($withTrashed) {
             $query->withTrashed();
@@ -72,12 +72,12 @@ class ProviderRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca Provider por user_id com tenant específico.
+     * Busca Provider por user_id dentro do tenant atual.
      */
-    public function findByUserIdAndTenant(int $userId, int $tenantId): ?Provider
+    public function findByUserIdWithRelations(int $userId): ?Provider
     {
-        return $this->model->where('user_id', $userId)
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
+            ->where('user_id', $userId)
             ->with(['user', 'commonData', 'contact', 'address', 'businessData'])
             ->first();
     }
@@ -85,10 +85,10 @@ class ProviderRepository extends AbstractTenantRepository
     /**
      * Verifica disponibilidade de email.
      */
-    public function isEmailAvailable(string $email, int $excludeUserId, int $tenantId): bool
+    public function isEmailAvailable(string $email, int $excludeUserId): bool
     {
-        return !User::where('email', $email)
-            ->where('tenant_id', $tenantId)
+        return !User::query()
+            ->where('email', $email)
             ->where('id', '!=', $excludeUserId)
             ->exists();
     }
@@ -116,14 +116,13 @@ class ProviderRepository extends AbstractTenantRepository
     /**
      * Obtém estatísticas do dashboard para o provider.
      */
-    public function getDashboardStats(int $tenantId): array
+    public function getDashboardStats(): array
     {
-        // Esta lógica pode ser expandida conforme necessário
         return [
-            'total_customers' => \App\Models\Customer::where('tenant_id', $tenantId)->count(),
-            'total_budgets'   => \App\Models\Budget::where('tenant_id', $tenantId)->count(),
-            'total_invoices'  => \App\Models\Invoice::where('tenant_id', $tenantId)->count(),
-            'total_services'  => \App\Models\Service::where('tenant_id', $tenantId)->count(),
+            'total_customers' => \App\Models\Customer::query()->count(),
+            'total_budgets'   => \App\Models\Budget::query()->count(),
+            'total_invoices'  => \App\Models\Invoice::query()->count(),
+            'total_services'  => \App\Models\Service::query()->count(),
         ];
     }
 
@@ -211,13 +210,11 @@ class ProviderRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca provedores ativos de um tenant com filtro de pesquisa.
+     * Busca provedores ativos do tenant com filtro de pesquisa.
      */
-    public function getByTenantWithSearch(int $tenantId, ?string $search = null): array
+    public function getActiveWithSearch(?string $search = null): array
     {
         $query = $this->model->newQuery()
-            ->withoutGlobalScopes()
-            ->where('tenant_id', $tenantId)
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true);
             })

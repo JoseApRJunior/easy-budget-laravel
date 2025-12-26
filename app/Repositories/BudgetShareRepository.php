@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Budget\BudgetShareDTO;
 use App\Models\BudgetShare;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -14,12 +16,32 @@ use Illuminate\Support\Facades\DB;
 
 class BudgetShareRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
         return new BudgetShare();
+    }
+
+    /**
+     * Cria um novo compartilhamento a partir de um DTO.
+     */
+    public function createFromDTO(BudgetShareDTO $dto): BudgetShare
+    {
+        return $this->model->newQuery()->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um compartilhamento a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, BudgetShareDTO $dto): bool
+    {
+        return $this->model->newQuery()
+            ->where('id', $id)
+            ->update($dto->toArray()) > 0;
     }
 
     /**
@@ -32,11 +54,15 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function listByBudget(int $budgetId, ?array $orderBy = null, ?int $limit = null): Collection
     {
-        return $this->getAllByTenant(
-            ['budget_id' => $budgetId],
-            $orderBy,
-            $limit,
-        );
+        return $this->model->newQuery()
+            ->where('budget_id', $budgetId)
+            ->when($orderBy, function ($query) use ($orderBy) {
+                foreach ($orderBy as $column => $direction) {
+                    $query->orderBy($column, $direction);
+                }
+            })
+            ->when($limit, fn($query) => $query->limit($limit))
+            ->get();
     }
 
     /**
@@ -49,12 +75,22 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function listActive(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
     {
-        $filters['is_active'] = true;
-        return $this->getAllByTenant(
-            $filters,
-            $orderBy,
-            $limit,
-        );
+        $query = $this->model->newQuery()
+            ->where('is_active', true);
+
+        $this->applyFilters($query, $filters);
+
+        if ($orderBy) {
+            foreach ($orderBy as $column => $direction) {
+                $query->orderBy($column, $direction);
+            }
+        }
+
+        if ($limit) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -65,7 +101,7 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function findByToken(string $token): ?BudgetShare
     {
-        return $this->getByTenant()
+        return $this->model->newQuery()
             ->where('share_token', $token)
             ->first();
     }
@@ -79,8 +115,8 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function findByEmailAndBudget(string $email, int $budgetId): ?BudgetShare
     {
-        return $this->getByTenant()
-            ->where('email', $email)
+        return $this->model->newQuery()
+            ->where('recipient_email', $email)
             ->where('budget_id', $budgetId)
             ->first();
     }
@@ -94,8 +130,12 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function countByBudget(int $budgetId, array $filters = []): int
     {
-        $filters['budget_id'] = $budgetId;
-        return $this->countByTenant($filters);
+        $query = $this->model->newQuery()
+            ->where('budget_id', $budgetId);
+
+        $this->applyFilters($query, $filters);
+
+        return $query->count();
     }
 
     /**
@@ -107,9 +147,9 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function hasActiveShare(int $budgetId, string $email): bool
     {
-        return $this->getByTenant()
+        return $this->model->newQuery()
             ->where('budget_id', $budgetId)
-            ->where('email', $email)
+            ->where('recipient_email', $email)
             ->where('is_active', true)
             ->exists();
     }
@@ -123,7 +163,7 @@ class BudgetShareRepository extends AbstractTenantRepository
     public function revokeAllByBudget(int $budgetId): bool
     {
         return DB::transaction(function () use ($budgetId) {
-            return $this->getByTenant()
+            return $this->model->newQuery()
                 ->where('budget_id', $budgetId)
                 ->where('is_active', true)
                 ->update(['is_active' => false]);
@@ -137,7 +177,7 @@ class BudgetShareRepository extends AbstractTenantRepository
      */
     public function cleanupExpiredShares(): int
     {
-        return $this->getByTenant()
+        return $this->model->newQuery()
             ->where('expires_at', '<', now())
             ->where('is_active', true)
             ->update(['is_active' => false]);

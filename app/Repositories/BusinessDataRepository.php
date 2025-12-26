@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\BusinessData;
+use App\DTOs\Common\BusinessDataDTO;
+use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,35 +17,50 @@ use Illuminate\Database\Eloquent\Model;
  * Tabela reutilizável para dados específicos de empresas
  * Pode ser usada tanto para customers quanto para providers
  */
-class BusinessDataRepository
+class BusinessDataRepository extends AbstractTenantRepository
 {
-    public function create( array $data ): BusinessData
+    use RepositoryFiltersTrait;
+
+    /**
+     * Define o Model a ser utilizado pelo Repositório.
+     */
+    protected function makeModel(): Model
     {
-        return BusinessData::create( $data );
+        return new BusinessData();
     }
 
-    public function update( Model $model, array $data ): bool
+    /**
+     * Cria um novo registro de dados empresariais a partir de um DTO.
+     */
+    public function createFromDTO(BusinessDataDTO $dto): BusinessData
     {
-        return $model->update( $data );
+        return $this->model->newQuery()->create($dto->toArrayWithoutNulls());
     }
 
-    public function findByCustomerId( int $customerId, int $tenantId ): ?BusinessData
+    /**
+     * Atualiza um registro de dados empresariais a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, BusinessDataDTO $dto): bool
     {
-        return BusinessData::where( 'customer_id', $customerId )
-            ->where( 'tenant_id', $tenantId )
+        $businessData = $this->find($id);
+        if (!$businessData) {
+            return false;
+        }
+
+        return $businessData->update($dto->toArrayWithoutNulls());
+    }
+
+    public function findByCustomerId(int $customerId): ?BusinessData
+    {
+        return $this->model->newQuery()
+            ->where('customer_id', $customerId)
             ->first();
     }
 
-    public function delete( Model $model ): bool
+    public function findByProviderId(int $providerId): ?BusinessData
     {
-        return $model->delete();
-    }
-
-    public function findByProviderId( int $providerId, int $tenantId ): ?BusinessData
-    {
-        return BusinessData::where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
+        return $this->model->newQuery()
+            ->where('provider_id', $providerId)
             ->first();
     }
-
 }

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Common\PlanDTO;
 use App\Models\Plan;
 use App\Repositories\Abstracts\AbstractGlobalRepository;
-use App\Repositories\Contracts\BaseRepositoryInterface;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Repositório para operações de planos globais
@@ -17,59 +20,35 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class PlanRepository extends AbstractGlobalRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
-    protected function makeModel(): \Illuminate\Database\Eloquent\Model
+    protected function makeModel(): Model
     {
         return new Plan();
     }
 
     /**
-     * {@inheritdoc}
+     * Cria um novo plano a partir de um DTO.
      */
-    public function find( int $id ): ?Plan
+    public function createFromDTO(PlanDTO $dto): Plan
     {
-        return Plan::find( $id );
+        return $this->model->newQuery()->create($dto->toArray());
     }
 
     /**
-     * {@inheritdoc}
+     * Atualiza um plano a partir de um DTO.
      */
-    public function getAll(): Collection
+    public function updateFromDTO(int $id, PlanDTO $dto): bool
     {
-        return Plan::all();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function create( array $data ): Plan
-    {
-        return Plan::create( $data );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function update( int $id, array $data ): ?Plan
-    {
-        $plan = Plan::find( $id );
-
-        if ( !$plan ) {
-            return null;
+        $plan = $this->find($id);
+        if (!$plan) {
+            return false;
         }
 
-        $plan->update( $data );
-        return $plan;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete( int $id ): bool
-    {
-        return Plan::destroy( $id ) > 0;
+        return $plan->update(array_filter($dto->toArray(), fn($value) => $value !== null));
     }
 
     // --------------------------------------------------------------------------
@@ -81,79 +60,78 @@ class PlanRepository extends AbstractGlobalRepository
      */
     public function findFreeActive(): ?Plan
     {
-        return Plan::where( 'status', true )->where( 'price', 0.00 )->first();
+        return $this->model->newQuery()->where('status', true)->where('price', 0.00)->first();
     }
 
     /**
      * Encontra planos ativos
      */
-    public function findActive(): mixed
+    public function findActive(): Collection
     {
-        return Plan::where( 'status', true )->get();
+        return $this->model->newQuery()->where('status', true)->get();
     }
 
     /**
      * Encontra plano por slug
      */
-    public function findBySlug( string $slug ): mixed
+    public function findBySlug(string $slug): ?Plan
     {
-        return Plan::where( 'slug', $slug )->first();
+        return $this->model->newQuery()->where('slug', $slug)->first();
     }
 
     /**
      * Encontra planos ordenados por preço
      */
-    public function findOrderedByPrice( string $direction = 'asc' ): mixed
+    public function findOrderedByPrice(string $direction = 'asc'): Collection
     {
-        return Plan::orderBy( 'price', $direction )->get();
+        return $this->model->newQuery()->orderBy('price', $direction)->get();
     }
 
     /**
      * Valida se nome do plano é único
      */
-    public function validateUniqueName( string $name, ?int $excludeId = null ): bool
+    public function validateUniqueName(string $name, ?int $excludeId = null): bool
     {
-        $query = Plan::where( 'name', $name );
-
-        if ( $excludeId ) {
-            $query = $query->where( 'id', '!=', $excludeId );
-        }
-
-        return $query->count() === 0;
+        return !$this->model->newQuery()
+            ->where('name', $name)
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->exists();
     }
 
     /**
      * Encontra planos que permitem determinado número de orçamentos
      */
-    public function findByAllowedBudgets( int $budgetCount ): mixed
+    public function findByAllowedBudgets(int $budgetCount): Collection
     {
-        if ( $budgetCount < 0 ) {
-            throw new \InvalidArgumentException( 'Budget count must be non-negative' );
+        if ($budgetCount < 0) {
+            throw new \InvalidArgumentException('Budget count must be non-negative');
         }
 
-        return Plan::where( 'max_budgets', '>=', $budgetCount )
-            ->where( 'status', true )
+        return $this->model->newQuery()
+            ->where('max_budgets', '>=', $budgetCount)
+            ->where('status', true)
             ->get();
     }
 
     /**
      * Encontra planos que permitem determinado número de clientes
      */
-    public function findByAllowedClients( int $clientCount ): mixed
+    public function findByAllowedClients(int $clientCount): Collection
     {
-        if ( $clientCount < 0 ) {
-            throw new \InvalidArgumentException( 'Client count must be non-negative' );
+        if ($clientCount < 0) {
+            throw new \InvalidArgumentException('Client count must be non-negative');
         }
 
-        return Plan::where( 'max_clients', '>=', $clientCount )
-            ->where( 'status', true )
+        return $this->model->newQuery()
+            ->where('max_clients', '>=', $clientCount)
+            ->where('status', true)
             ->get();
     }
 
     /**
      * Salva uma assinatura de plano
      */
-    public function saveSubscription( $subscription ): mixed
+    public function saveSubscription($subscription): mixed
     {
         $subscription->save();
         return $subscription;
@@ -162,27 +140,26 @@ class PlanRepository extends AbstractGlobalRepository
     /**
      * Retorna planos paginados com filtros avançados
      */
-    public function getPaginated( array $filters = [], int $perPage = 15 ): mixed
+    public function getPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->with( [] );
+        $query = $this->model->newQuery();
 
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $query->where( function ( $q ) use ( $filters ) {
-                $q->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' )
-                    ->orWhere( 'slug', 'like', '%' . $filters[ 'search' ] . '%' )
-                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
-            } );
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('slug', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+            });
         }
 
-        if ( isset( $filters[ 'status' ] ) && $filters[ 'status' ] !== '' ) {
-            $query->where( 'status', (bool) $filters[ 'status' ] );
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', (bool) $filters['status']);
         }
 
-        // Filtros adicionais para ranges
-        if ( !empty( $filters[ 'min_price' ] ) ) $query->where( 'price', '>=', $filters[ 'min_price' ] );
-        if ( !empty( $filters[ 'max_price' ] ) ) $query->where( 'price', '<=', $filters[ 'max_price' ] );
+        if (!empty($filters['min_price'])) $query->where('price', '>=', $filters['min_price']);
+        if (!empty($filters['max_price'])) $query->where('price', '<=', $filters['max_price']);
 
-        return $query->orderBy( 'price', 'asc' )->paginate( $perPage );
+        return $query->orderBy('price', 'asc')->paginate($perPage);
     }
 
     /**
@@ -190,15 +167,14 @@ class PlanRepository extends AbstractGlobalRepository
      */
     public function countActive(): int
     {
-        return $this->model->where( 'status', true )->count();
+        return $this->model->newQuery()->where('status', true)->count();
     }
 
     /**
      * Verifica se plano pode ser desativado/deletado
      */
-    public function canBeDeactivatedOrDeleted( int $id ): bool
+    public function canBeDeactivatedOrDeleted(int $id): bool
     {
-        return !$this->model->where( 'id', $id )->has( 'planSubscriptions' )->exists();
+        return !$this->model->newQuery()->where('id', $id)->has('planSubscriptions')->exists();
     }
-
 }

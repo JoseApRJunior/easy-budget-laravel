@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Tenant\TenantDTO;
 use App\Models\Tenant;
 use App\Repositories\Abstracts\AbstractGlobalRepository;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,24 @@ class TenantRepository extends AbstractGlobalRepository
     }
 
     /**
+     * Cria um novo tenant a partir de um DTO.
+     */
+    public function createFromDTO(TenantDTO $dto): Tenant
+    {
+        return $this->model->newQuery()->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um tenant a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, TenantDTO $dto): bool
+    {
+        return $this->model->newQuery()
+            ->where('id', $id)
+            ->update($dto->toArray()) > 0;
+    }
+
+    /**
      * Busca um tenant pelo nome.
      *
      * @param string $name Nome do tenant
@@ -32,7 +51,7 @@ class TenantRepository extends AbstractGlobalRepository
      */
     public function findByName( string $name ): ?Tenant
     {
-        return $this->model->where( 'name', $name )->first();
+        return $this->model->newQuery()->where( 'name', $name )->first();
     }
 
     /**
@@ -43,7 +62,7 @@ class TenantRepository extends AbstractGlobalRepository
      */
     public function existsByName( string $name ): bool
     {
-        return $this->model->where( 'name', $name )->exists();
+        return $this->model->newQuery()->where( 'name', $name )->exists();
     }
 
     /**
@@ -53,18 +72,7 @@ class TenantRepository extends AbstractGlobalRepository
      */
     public function findActive()
     {
-        return $this->model->where( 'is_active', true )->get();
-    }
-
-    /**
-     * Cria um novo tenant.
-     *
-     * @param array<string, mixed> $data Dados do tenant
-     * @return Tenant Tenant criado
-     */
-    public function createTenant( array $data ): Tenant
-    {
-        return $this->create( $data );
+        return $this->model->newQuery()->where( 'is_active', true )->get();
     }
 
 }

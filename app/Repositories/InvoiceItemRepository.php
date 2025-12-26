@@ -6,11 +6,14 @@ namespace App\Repositories;
 
 use App\Models\InvoiceItem;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
 use App\DTOs\Invoice\InvoiceItemDTO;
 
 class InvoiceItemRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
@@ -35,6 +38,6 @@ class InvoiceItemRepository extends AbstractTenantRepository
      */
     public function deleteByInvoiceId(int $invoiceId): void
     {
-        $this->model->where('invoice_id', $invoiceId)->delete();
+        $this->model->newQuery()->where('invoice_id', $invoiceId)->delete();
     }
 }

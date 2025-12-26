@@ -83,7 +83,7 @@ class ReportService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($hash) {
             $report = $this->repository->findByHash($hash, ['user']);
-            
+
             if (!$report) {
                 return $this->error('Relatório não encontrado.');
             }
@@ -112,13 +112,7 @@ class ReportService extends AbstractBaseService
     public function getReportStats(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $model = $this->repository->getModel();
-            $stats = [
-                'total_reports'   => $model->count(),
-                'completed_today' => $model->where('status', 'completed')->whereDate('created_at', today())->count(),
-                'by_type'         => $model->selectRaw('type, count(*) as count')->groupBy('type')->pluck('count', 'type')->toArray(),
-                'by_status'       => $model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
-            ];
+            $stats = $this->repository->getStats();
             return $this->success($stats, 'Estatísticas de relatórios obtidas com sucesso.');
         }, 'Erro ao calcular estatísticas.');
     }

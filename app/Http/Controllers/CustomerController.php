@@ -35,7 +35,9 @@ class CustomerController extends Controller
      */
     public function index(Request $request): View
     {
-        $filters        = $request->only(['search', 'status', 'type', 'area_of_activity_id', 'deleted']);
+        $this->authorize('viewAny', \App\Models\Customer::class);
+
+        $filters        = $request->only(['search', 'status', 'type', 'area_of_activity_id', 'deleted', 'cep']);
         $perPage        = (int) ($filters['per_page'] ?? 10);
         $allowedPerPage = [10, 20, 50];
 
@@ -69,6 +71,8 @@ class CustomerController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('create', \App\Models\Customer::class);
+
         // Dados necessários para o formulário
         $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
         $professions = $this->customerService->getProfessions()->getData();
@@ -85,6 +89,8 @@ class CustomerController extends Controller
      */
     public function store(CustomerRequest $request): RedirectResponse
     {
+        $this->authorize('create', \App\Models\Customer::class);
+
         try {
             $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
             $result = $this->customerService->createCustomer($dto);
@@ -119,8 +125,11 @@ class CustomerController extends Controller
             abort(404, $result->getMessage());
         }
 
+        $customer = $result->getData();
+        $this->authorize('view', $customer);
+
         return view('pages.customer.show', [
-            'customer' => $result->getData(),
+            'customer' => $customer,
         ]);
     }
 
@@ -136,6 +145,7 @@ class CustomerController extends Controller
         }
 
         $customer = $result->getData();
+        $this->authorize('update', $customer);
 
         // Dados necessários para o formulário
         $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
@@ -153,6 +163,8 @@ class CustomerController extends Controller
      */
     public function update(CustomerUpdateRequest $request, \App\Models\Customer $customer): RedirectResponse
     {
+        $this->authorize('update', $customer);
+
         try {
             $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
             $result = $this->customerService->updateCustomer((int) $customer->id, $dto);
@@ -182,6 +194,8 @@ class CustomerController extends Controller
      */
     public function destroy(\App\Models\Customer $customer): RedirectResponse
     {
+        $this->authorize('delete', $customer);
+
         try {
             $result = $this->customerService->deleteCustomer((int) $customer->id);
 
@@ -207,6 +221,8 @@ class CustomerController extends Controller
      */
     public function toggleStatus(Request $request, \App\Models\Customer $customer): RedirectResponse|\Illuminate\Http\JsonResponse
     {
+        $this->authorize('toggleStatus', $customer);
+
         try {
             $result = $this->customerService->toggleStatus((int) $customer->id);
 
@@ -240,6 +256,11 @@ class CustomerController extends Controller
     public function restore(string $id): RedirectResponse
     {
         try {
+            $result = $this->customerService->findCustomer((int) $id);
+            if ($result->isSuccess()) {
+                $this->authorize('restore', $result->getData());
+            }
+
             $result = $this->customerService->restoreCustomer((int) $id);
 
             return $this->redirectWithServiceResult(
@@ -262,8 +283,10 @@ class CustomerController extends Controller
     /**
      * Buscar clientes próximos (por CEP).
      */
-    public function findNearby(Request $request): View|\Illuminate\Http\RedirectResponse
+    public function findNearby(Request $request): RedirectResponse
     {
+        $this->authorize('viewAny', \App\Models\Customer::class);
+
         $cep = $request->get('cep');
 
         if (!$cep) {
@@ -271,17 +294,9 @@ class CustomerController extends Controller
                 ->with('error', 'CEP é obrigatório para busca por proximidade.');
         }
 
-        $result = $this->customerService->findNearbyCustomers($cep);
-
-        if (!$result->isSuccess()) {
-            return redirect()->route('provider.customers.index')
-                ->with('error', $result->getMessage());
-        }
-
-        // Por enquanto, redirecionar para a página principal com dados filtrados
-        // TODO: Implementar view de busca por proximidade
-        return redirect()->route('provider.customers.index')
-            ->with('info', 'Busca por proximidade não implementada. Use os filtros da página principal.');
+        // Redirecionar para a página principal com o filtro de CEP
+        return redirect()->route('provider.customers.index', ['cep' => $cep])
+            ->with('info', "Resultados filtrados pelo CEP: {$cep}");
     }
 
     /**
@@ -289,7 +304,9 @@ class CustomerController extends Controller
      */
     public function search(Request $request): \Illuminate\Http\JsonResponse
     {
-        $filters = $request->only(['search', 'type', 'status', 'area_of_activity_id', 'deleted']);
+        $this->authorize('viewAny', \App\Models\Customer::class);
+
+        $filters = $request->only(['search', 'type', 'status', 'area_of_activity_id', 'deleted', 'cep']);
 
         $result = $this->customerService->getFilteredCustomers($filters);
 
@@ -328,6 +345,8 @@ class CustomerController extends Controller
      */
     public function autocomplete(Request $request): \Illuminate\Http\JsonResponse
     {
+        $this->authorize('viewAny', \App\Models\Customer::class);
+
         $query = $request->get('q', '');
 
         $result = $this->customerService->searchForAutocomplete($query);
@@ -348,6 +367,8 @@ class CustomerController extends Controller
      */
     public function export(Request $request): \Illuminate\Http\JsonResponse
     {
+        $this->authorize('export', \App\Models\Customer::class);
+
         $filters = $request->only(['search', 'status', 'type']);
 
         $result = $this->customerService->exportCustomers($filters);
@@ -368,6 +389,8 @@ class CustomerController extends Controller
      */
     public function dashboard(): View
     {
+        $this->authorize('viewAny', \App\Models\Customer::class);
+
         $result = $this->customerService->getDashboardData();
 
         if (!$result->isSuccess()) {

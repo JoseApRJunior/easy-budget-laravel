@@ -24,17 +24,16 @@ class ProviderService extends AbstractBaseService
     public function __construct(
         private ProviderRepository $providerRepository,
     ) {
-        parent::__construct( $providerRepository );
+        parent::__construct($providerRepository);
     }
 
     /**
      * Busca Provider por user_id com relacionamentos.
      */
-    public function getByUserId( int $userId, ?int $tenantId = null ): ?Provider
+    public function getByUserId(int $userId): ?Provider
     {
         try {
-            $tenantId = $tenantId ?? $this->ensureTenantId();
-            return $this->providerRepository->findByUserIdAndTenant( $userId, $tenantId );
+            return $this->providerRepository->findByUserIdWithRelations($userId);
         } catch (\Exception $e) {
             return null;
         }
@@ -43,11 +42,10 @@ class ProviderService extends AbstractBaseService
     /**
      * Verifica se email está disponível (não usado por outro usuário).
      */
-    public function isEmailAvailable( string $email, int $excludeUserId, ?int $tenantId = null ): bool
+    public function isEmailAvailable(string $email, int $excludeUserId): bool
     {
         try {
-            $tenantId = $tenantId ?? $this->ensureTenantId();
-            return $this->providerRepository->isEmailAvailable( $email, $excludeUserId, $tenantId );
+            return $this->providerRepository->isEmailAvailable($email, $excludeUserId);
         } catch (\Exception $e) {
             return false;
         }
@@ -56,14 +54,18 @@ class ProviderService extends AbstractBaseService
     /**
      * Busca Provider com todos os relacionamentos carregados.
      */
-    public function getWithRelations( int $providerId ): ServiceResult
+    public function getWithRelations(int $providerId): ServiceResult
     {
         return $this->safeExecute(function () use ($providerId) {
-            $provider = $this->providerRepository->findWithRelations( $providerId, [
-                'user', 'commonData', 'contact', 'address', 'businessData'
-            ] );
+            $provider = $this->providerRepository->findWithRelations($providerId, [
+                'user',
+                'commonData',
+                'contact',
+                'address',
+                'businessData'
+            ]);
 
-            if ( !$provider ) {
+            if (!$provider) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
@@ -77,7 +79,6 @@ class ProviderService extends AbstractBaseService
     public function createProvider(ProviderDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $this->ensureTenantId();
             $provider = $this->providerRepository->createFromDTO($dto);
             return ServiceResult::success($provider, 'Provider criado com sucesso.');
         }, 'Erro ao criar provider.');
@@ -89,9 +90,8 @@ class ProviderService extends AbstractBaseService
     public function updateProvider(int $id, ProviderDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $dto) {
-            $this->ensureTenantId();
             $provider = $this->providerRepository->updateFromDTO($id, $dto);
-            
+
             if (!$provider) {
                 return ServiceResult::error(\App\Enums\OperationStatus::NOT_FOUND, 'Provider não encontrado para atualização.');
             }
@@ -106,8 +106,7 @@ class ProviderService extends AbstractBaseService
     public function getDashboardData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-            $stats = $this->providerRepository->getDashboardStats($tenantId);
+            $stats = $this->providerRepository->getDashboardStats();
             return ServiceResult::success($stats, 'Dados do dashboard obtidos com sucesso.');
         }, 'Erro ao obter dados do dashboard do provider.');
     }

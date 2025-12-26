@@ -31,68 +31,6 @@ class AuditLogRepository extends AbstractTenantRepository
     }
 
     /**
-     * Construtor do repositório.
-     */
-    public function __construct(AuditLog $auditLog)
-    {
-        $this->model = $auditLog;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function find(int $id): ?Model
-    {
-        return $this->model->find($id);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAll(): Collection
-    {
-        return $this->model->all();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function create(array $data): Model
-    {
-        return $this->model->create($data);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function update(int $id, array $data): ?Model
-    {
-        $model = $this->find($id);
-
-        if (!$model) {
-            return null;
-        }
-
-        $model->update($data);
-
-        return $model->fresh();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete(int $id): bool
-    {
-        $model = $this->find($id);
-
-        if (!$model) {
-            return false;
-        }
-
-        return $model->delete();
-    }
-
-    /**
      * Cria um novo log de auditoria a partir de um DTO.
      */
     public function createFromDTO(\App\DTOs\AuditLog\AuditLogDTO $dto): Model
@@ -107,46 +45,18 @@ class AuditLogRepository extends AbstractTenantRepository
     {
         $query = $this->model->with(['user', 'tenant']);
 
-        if (isset($filters['search']) && $filters['search']) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                    ->orWhere('old_values', 'like', "%{$search}%")
-                    ->orWhere('new_values', 'like', "%{$search}%");
-            });
-        }
-
-        if (isset($filters['user_id']) && $filters['user_id']) {
-            $query->where('user_id', $filters['user_id']);
-        }
-
-        if (isset($filters['action']) && $filters['action']) {
-            $query->where('action', $filters['action']);
-        }
-
-        if (isset($filters['severity']) && $filters['severity']) {
-            $query->where('severity', $filters['severity']);
-        }
-
-        if (isset($filters['date_from']) && $filters['date_from']) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to']) && $filters['date_to']) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
-        }
-
-        return $query->latest()->paginate($perPage);
+        return $this->applyFilters($query, $filters)
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**
      * Obtém estatísticas de auditoria.
      */
-    public function getStats(int $tenantId, int $days = 30): array
+    public function getStats(int $days = 30): array
     {
         $startDate = now()->subDays($days);
-        $baseQuery = $this->model->where('tenant_id', $tenantId)
-            ->where('created_at', '>=', $startDate);
+        $baseQuery = $this->model->where('created_at', '>=', $startDate);
 
         return [
             'total_logs'       => (clone $baseQuery)->count(),
@@ -164,12 +74,11 @@ class AuditLogRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca atividades recentes por tenant e usuário.
+     * Busca atividades recentes por usuário.
      */
-    public function getRecentActivities(int $tenantId, int $userId, int $limit = 10): Collection
+    public function getRecentActivities(int $userId, int $limit = 10): Collection
     {
         return $this->model
-            ->where('tenant_id', $tenantId)
             ->where('user_id', $userId)
             ->latest()
             ->limit($limit)

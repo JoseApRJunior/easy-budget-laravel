@@ -48,8 +48,7 @@ class ProductService extends AbstractBaseService
     public function getDashboardData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-            $stats = $this->repository->getDashboardStats($tenantId);
+            $stats = $this->repository->getDashboardStats();
             return $this->success($stats, 'Estatísticas de produtos obtidas com sucesso');
         }, 'Erro ao obter estatísticas de produtos.');
     }
@@ -68,106 +67,9 @@ class ProductService extends AbstractBaseService
         return $this->success($data);
     }
 
-    /**
-     * Normaliza filtros do request para formato aceito pelo repository.
-     */
-    private function normalizeFilters(array $filters): array
-    {
-        $normalized = [];
-
-        // Status filter
-        if (isset($filters['active']) && $filters['active'] !== '' && $filters['active'] !== null) {
-            $normalized['active'] = (string) $filters['active'] === '1' || $filters['active'] === 1;
-        }
-
-        // Search filters
-        if (!empty($filters['search'])) {
-            $normalized['search'] = (string) $filters['search'];
-        }
-
-        if (!empty($filters['name'])) {
-            $normalized['name'] = ['operator' => 'like', 'value' => '%' . $filters['name'] . '%'];
-        }
-
-        if (!empty($filters['sku'])) {
-            $normalized['sku'] = ['operator' => 'like', 'value' => '%' . $filters['sku'] . '%'];
-        }
-
-        // Price filters (mantidos para funcionalidade específica de produtos)
-        if (isset($filters['min_price']) && $filters['min_price'] !== null) {
-            $normalized['min_price'] = $this->normalizePrice($filters['min_price']);
-        }
-
-        if (isset($filters['max_price']) && $filters['max_price'] !== null) {
-            $normalized['max_price'] = $this->normalizePrice($filters['max_price']);
-        }
-
-        // Category filter (mantido para funcionalidade específica de produtos)
-        if (!empty($filters['category_id'])) {
-            $normalized['category_id'] = $filters['category_id'];
-        }
-
-        // Soft delete filter
-        if (array_key_exists('deleted', $filters)) {
-            $normalized['deleted'] = match ($filters['deleted']) {
-                'only', '1'    => 'only',
-                'current', '0' => 'current',
-                default        => '',
-            };
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * Retorna o total de produtos do tenant autenticado.
-     */
-    public function getTotalCount(): int
-    {
-        return $this->repository->countByTenant();
-    }
-
-    /**
-     * Retorna o total de produtos ativos do tenant autenticado.
-     */
-    public function getActiveCount(): int
-    {
-        return $this->repository->countActiveByTenant();
-    }
-
-    /**
-     * Retorna uma coleção de produtos recentes com relacionamentos opcionais.
-     */
-    public function getRecentProducts(int $limit = 5, array $with = []): Collection
-    {
-        // Obtém produtos recentes do repositório
-        // Nota: O método do repositório já aplica ordenação por created_at desc
-        $products = $this->repository->getRecentByTenant($limit);
-
-        // Carrega relacionamentos se solicitados
-        if (!empty($with)) {
-            $products->load($with);
-        }
-
-        return $products;
-    }
-
-    /**
-     * Retorna produtos ativos.
-     */
-    public function getActive(): ServiceResult
-    {
-        return $this->safeExecute(function () {
-            return $this->repository->getAllByTenant(
-                ['active' => true],
-                ['name' => 'asc'],
-            );
-        }, 'Erro ao buscar produtos ativos.');
-    }
-
     public function findBySku(string $sku, array $with = [], bool $withTrashed = false): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($sku, $with, $withTrashed) {
             $product = $this->repository->findBySku($sku, $with, $withTrashed);
 
             if (!$product) {
@@ -178,14 +80,7 @@ class ProductService extends AbstractBaseService
             }
 
             return $this->success($product, 'Produto encontrado');
-        } catch (Exception $e) {
-            return $this->error(
-                OperationStatus::ERROR,
-                'Erro ao buscar produto',
-                null,
-                $e,
-            );
-        }
+        }, 'Erro ao buscar produto.');
     }
 
     /**
@@ -194,27 +89,19 @@ class ProductService extends AbstractBaseService
     public function createProduct(ProductDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId();
-
-            $product = DB::transaction(function () use ($dto, $tenantId) {
-                $data = $dto->toDatabaseArray();
-                $data['tenant_id'] = $tenantId;
-
-                // 1. SKU Generation if empty
-                if (empty($data['sku'])) {
-                    $data['sku'] = $this->repository->generateUniqueSku((int) $tenantId);
-                }
+            $product = DB::transaction(function () use ($dto) {
+                // 1. Persistência usando DTO
+                $product = $this->repository->createFromDTO($dto);
 
                 // 2. Upload image
-                if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    $data['image'] = $this->uploadProductImage($data['image']);
+                if ($dto->image instanceof \Illuminate\Http\UploadedFile) {
+                    $imagePath = $this->uploadProductImage($dto->image);
+                    $this->repository->update($product->id, ['image' => $imagePath]);
+                    $product->refresh();
                 }
 
-                // 3. Persistência
-                $product = $this->repository->create($data);
-
-                // 4. Inventário Inicial
-                $this->inventoryRepository->initialize($product->id, (int) $tenantId);
+                // 3. Inventário Inicial
+                $this->inventoryRepository->initialize($product->id);
 
                 return $product;
             });
@@ -230,13 +117,12 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $dto, $removeImage) {
             $product = DB::transaction(function () use ($sku, $dto, $removeImage) {
-                $ownerResult = $this->findAndVerifyOwnership($sku);
-                if ($ownerResult->isError()) {
-                    throw new Exception($ownerResult->getMessage());
+                $product = $this->repository->findBySku($sku);
+
+                if (!$product) {
+                    throw new Exception("Produto com SKU {$sku} não encontrado");
                 }
 
-                /** @var Product $product */
-                $product = $ownerResult->getData();
                 $data = $dto->toDatabaseArray();
 
                 // 1. Gerenciar Imagem
@@ -266,12 +152,11 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku) {
             $product = DB::transaction(function () use ($sku) {
-                $ownerResult = $this->findAndVerifyOwnership($sku);
-                if ($ownerResult->isError()) {
-                    throw new Exception($ownerResult->getMessage());
-                }
+                $product = $this->repository->findBySku($sku);
 
-                $product = $ownerResult->getData();
+                if (!$product) {
+                    throw new Exception("Produto com SKU {$sku} não encontrado");
+                }
 
                 if (!$this->repository->canBeDeactivatedOrDeleted($product->id)) {
                     throw new Exception('Produto não pode ser desativado/ativado pois está em uso em serviços.');
@@ -292,12 +177,11 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku) {
             DB::transaction(function () use ($sku) {
-                $ownerResult = $this->findAndVerifyOwnership($sku);
-                if ($ownerResult->isError()) {
-                    throw new Exception($ownerResult->getMessage());
-                }
+                $product = $this->repository->findBySku($sku);
 
-                $product = $ownerResult->getData();
+                if (!$product) {
+                    throw new Exception("Produto com SKU {$sku} não encontrado");
+                }
 
                 if (!$this->repository->canBeDeactivatedOrDeleted($product->id)) {
                     throw new Exception('Produto não pode ser excluído pois está em uso em serviços.');
@@ -316,11 +200,9 @@ class ProductService extends AbstractBaseService
     public function getDeleted(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
-            $tenantId = $this->ensureTenantId();
-
             $filters['deleted'] = 'only';
             $paginator = $this->repository->getPaginated(
-                $this->normalizeFilters($filters),
+                $filters,
                 $perPage,
                 $with,
             );
@@ -364,12 +246,8 @@ class ProductService extends AbstractBaseService
     public function getFilteredProducts(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
-            if (!$this->tenantId()) {
-                return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
-            }
-
             $paginator = $this->repository->getPaginated(
-                $this->normalizeFilters($filters),
+                $filters,
                 $perPage,
                 $with,
             );
@@ -380,28 +258,6 @@ class ProductService extends AbstractBaseService
     }
 
     // --- Auxiliares Privados ---
-
-    private function ensureTenantId(): int
-    {
-        $id = $this->tenantId();
-        if (!$id) {
-            throw new Exception('Tenant não identificado');
-        }
-        return $id;
-    }
-
-    private function findAndVerifyOwnership(string $sku): ServiceResult
-    {
-        $result = $this->findBySku($sku);
-        if ($result->isError()) return $result;
-
-        $product = $result->getData();
-        if ($product->tenant_id !== $this->tenantId()) {
-            return $this->error(OperationStatus::UNAUTHORIZED, 'Produto não pertence ao tenant atual');
-        }
-
-        return $this->success($product);
-    }
 
     private function uploadProductImage($imageFile): ?string
     {
@@ -437,13 +293,5 @@ class ProductService extends AbstractBaseService
         if ($relative && Storage::disk('public')->exists($relative)) {
             Storage::disk('public')->delete($relative);
         }
-    }
-
-    /**
-     * Normaliza preço removendo formatação brasileira (R$ 12,00 -> 12.00).
-     */
-    private function normalizePrice(string $price): float
-    {
-        return \App\Helpers\CurrencyHelper::unformat($price);
     }
 }

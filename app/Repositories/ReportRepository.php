@@ -29,43 +29,7 @@ class ReportRepository extends AbstractTenantRepository
         $query->with($effectiveWith);
 
         // Aplicar filtros específicos do Report
-        if (!empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('file_name', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('description', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('hash', 'like', '%' . $filters['search'] . '%');
-            });
-        }
-
-        if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['format'])) {
-            $query->where('format', $filters['format']);
-        }
-
-        if (!empty($filters['start_date'])) {
-            $query->whereDate('created_at', '>=', $filters['start_date']);
-        }
-
-        if (!empty($filters['end_date'])) {
-            $query->whereDate('created_at', '<=', $filters['end_date']);
-        }
-
-        if (!empty($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
-        }
-
-        // Aplicar filtros avançados do trait
-        $this->applyFilters($query, $filters);
-
-        // Aplicar filtro de soft delete se necessário
-        $this->applySoftDeleteFilter($query, $filters);
+        $this->applyAllReportFilters($query, $filters);
 
         // Aplicar ordenação
         if ($orderBy) {
@@ -78,6 +42,32 @@ class ReportRepository extends AbstractTenantRepository
         $effectivePerPage = $this->getEffectivePerPage($filters, $perPage);
 
         return $query->paginate($effectivePerPage);
+    }
+
+    /**
+     * Aplica todos os filtros de relatório.
+     */
+    protected function applyAllReportFilters($query, array $filters): void
+    {
+        // Filtro de busca (search)
+        $this->applySearchFilter($query, $filters, ['file_name', 'description', 'hash']);
+
+        // Filtros de data (start_date, end_date)
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('created_at', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('created_at', '<=', $filters['end_date']);
+        }
+
+        // Filtros básicos (type, status, format, user_id)
+        // O applyFilters trata automaticamente filtros de igualdade e arrays
+        $basicFilters = array_intersect_key($filters, array_flip(['type', 'status', 'format', 'user_id']));
+        $this->applyFilters($query, $basicFilters);
+
+        // Aplicar filtro de soft delete se necessário
+        $this->applySoftDeleteFilter($query, $filters);
     }
 
     public function findByHash(string $hash, array $with = []): ?Report
@@ -101,6 +91,19 @@ class ReportRepository extends AbstractTenantRepository
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * Obtém estatísticas de relatórios.
+     */
+    public function getStats(): array
+    {
+        return [
+            'total_reports'   => $this->model->count(),
+            'completed_today' => $this->model->where('status', 'completed')->whereDate('created_at', today())->count(),
+            'by_type'         => $this->model->selectRaw('type, count(*) as count')->groupBy('type')->pluck('count', 'type')->toArray(),
+            'by_status'       => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
+        ];
     }
 
     public function createFromDTO(\App\DTOs\Report\ReportDTO $dto): Model

@@ -26,78 +26,15 @@ class SupportRepository extends AbstractTenantRepository
     }
 
     /**
-     * Encontra tickets de suporte por email dentro do tenant atual.
-     *
-     * @param string $email Email do usuário
-     * @return Collection<Support> Coleção de tickets encontrados
+     * Busca tickets de suporte com filtros.
      */
-    public function findByEmail(string $email): Collection
+    public function getFiltered(array $filters = [], int $perPage = 50): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->getAllByTenant(['email' => $email]);
-    }
+        $query = $this->model->newQuery();
 
-    /**
-     * Encontra tickets de suporte por status dentro do tenant atual.
-     *
-     * @param string $status Status do ticket
-     * @return Collection<Support> Coleção de tickets com o status especificado
-     */
-    public function findByStatus(string $status): Collection
-    {
-        return $this->getAllByTenant(['status' => $status]);
-    }
-
-    /**
-     * Encontra tickets de suporte abertos dentro do tenant atual.
-     *
-     * @return Collection<Support> Coleção de tickets abertos
-     */
-    public function findOpen(): Collection
-    {
-        return $this->findByStatus(Support::STATUS_ABERTO);
-    }
-
-    /**
-     * Encontra tickets de suporte resolvidos dentro do tenant atual.
-     *
-     * @return Collection<Support> Coleção de tickets resolvidos
-     */
-    public function findResolved(): Collection
-    {
-        return $this->findByStatus(Support::STATUS_RESOLVIDO);
-    }
-
-    /**
-     * Conta tickets de suporte por status dentro do tenant atual.
-     *
-     * @param string $status Status do ticket
-     * @return int Número de tickets com o status especificado
-     */
-    public function countByStatus(string $status): int
-    {
-        return $this->model->where('status', $status)->count();
-    }
-
-    /**
-     * Busca tickets de suporte por assunto (busca parcial) dentro do tenant atual.
-     *
-     * @param string $subject Assunto ou parte do assunto
-     * @return Collection<Support> Coleção de tickets encontrados
-     */
-    public function searchBySubject(string $subject): Collection
-    {
-        return $this->model->where('subject', 'LIKE', "%{$subject}%")->get();
-    }
-
-    /**
-     * Busca tickets de suporte por conteúdo da mensagem dentro do tenant atual.
-     *
-     * @param string $message Conteúdo ou parte da mensagem
-     * @return Collection<Support> Coleção de tickets encontrados
-     */
-    public function searchByMessage(string $message): Collection
-    {
-        return $this->model->where('message', 'LIKE', "%{$message}%")->get();
+        return $this->applyFilters($query, $filters)
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**
@@ -117,17 +54,13 @@ class SupportRepository extends AbstractTenantRepository
     }
 
     /**
-     * Obtém estatísticas de tickets por status dentro do tenant atual.
-     *
-     * @return array<string, int> Array com contadores por status
+     * Obtém estatísticas de tickets por status.
      */
     public function getStatusStats(): array
     {
-        return [
-            'aberto' => $this->countByStatus(Support::STATUS_ABERTO),
-            'respondido' => $this->countByStatus(Support::STATUS_RESPONDIDO),
-            'resolvido' => $this->countByStatus(Support::STATUS_RESOLVIDO),
-            'fechado' => $this->countByStatus(Support::STATUS_FECHADO),
-        ];
+        return $this->model->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
     }
 }

@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\Budget;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class BudgetRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
@@ -32,11 +35,11 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function listByStatuses(array $statuses, ?array $orderBy = null, ?int $limit = null): Collection
     {
-        return $this->getAllByTenant(
-            ['status' => $statuses],
-            $orderBy,
-            $limit,
-        );
+        return $this->model->newQuery()
+            ->whereIn('status', $statuses)
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
@@ -48,18 +51,17 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function countByStatus(string $status, array $filters = []): int
     {
-        $queryFilters = ['status' => $status];
+        $query = $this->model->newQuery()->where('status', $status);
 
-        // Aplicar filtros de data se fornecidos
         if (!empty($filters['date_from'])) {
-            $queryFilters['created_at_from'] = $filters['date_from'];
+            $query->where('created_at', '>=', $filters['date_from']);
         }
 
         if (!empty($filters['date_to'])) {
-            $queryFilters['created_at_to'] = $filters['date_to'];
+            $query->where('created_at', '<=', $filters['date_to']);
         }
 
-        return $this->countByTenant($queryFilters);
+        return $query->count();
     }
 
     /**
@@ -71,10 +73,10 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function listByCustomerId(int $customerId, ?array $orderBy = null): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->getAllByTenant(
-            ['customer_id' => $customerId],
-            $orderBy,
-        );
+        return $this->model->newQuery()
+            ->where('customer_id', $customerId)
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->get();
     }
 
     /**
@@ -88,7 +90,12 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function listByFilters(array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->getAllByTenant($filters, $orderBy, $limit, $offset);
+        return $this->model->newQuery()
+            ->tap(fn($q) => $this->applyFilters($q, $filters))
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn($q) => $q->limit($limit))
+            ->when($offset, fn($q) => $q->offset($offset))
+            ->get();
     }
 
     /**
@@ -168,29 +175,36 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function getPaginatedBudgets(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->with(['customer.commonData']);
+        return $this->model->newQuery()
+            ->with(['customer.commonData'])
+            ->tap(fn($q) => $this->applyAllBudgetFilters($q, $filters))
+            ->latest()
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
 
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['customer_id'])) {
-            $query->where('customer_id', $filters['customer_id']);
-        }
-
-        if (isset($filters['search'])) {
+    /**
+     * Aplica todos os filtros de orçamento de forma segura.
+     */
+    protected function applyAllBudgetFilters(Builder $query, array $filters): void
+    {
+        $this->applySearchFilter($query, $filters, ['code']);
+        
+        // Busca por nome do cliente
+        if (!empty($filters['search'])) {
             $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                    ->orWhereHas('customer.commonData', function ($q) use ($search) {
-                        $q->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
-                    });
+            $query->orWhereHas('customer.commonData', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%");
             });
         }
 
-        return $query->latest()->paginate($perPage);
+        $query->when(!empty($filters['status']), fn($q) => $q->where('status', $filters['status']));
+        $query->when(!empty($filters['customer_id']), fn($q) => $q->where('customer_id', $filters['customer_id']));
+        
+        // Filtros de data
+        $query->when(!empty($filters['date_from']), fn($q) => $q->where('created_at', '>=', $filters['date_from']));
+        $query->when(!empty($filters['date_to']), fn($q) => $q->where('created_at', '<=', $filters['date_to']));
     }
 
     /**

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+use App\DTOs\Inventory\ProductInventoryDTO;
+
 class InventoryRepository extends AbstractTenantRepository
 {
     /**
@@ -18,21 +20,65 @@ class InventoryRepository extends AbstractTenantRepository
         return new ProductInventory();
     }
 
+    /**
+     * Cria registro de inventário a partir de um DTO.
+     */
+    public function createFromDTO(ProductInventoryDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    /**
+     * Atualiza registro de inventário a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, ProductInventoryDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+
     // ========== MÉTODOS ORIGINAIS ==========
 
-    public function findByProductId( int $productId ): ?ProductInventory
+    /**
+     * Inicializa o inventário para um novo produto.
+     */
+    public function initialize(int $productId): Model
     {
-        return $this->model->where( 'product_id', $productId )->first();
+        return $this->create([
+            'product_id'   => $productId,
+            'quantity'     => 0,
+            'min_quantity' => 0,
+            'max_quantity' => null,
+        ]);
     }
 
-    public function createForProduct( int $productId, array $data ): ProductInventory
+    /**
+     * Busca inventário por produto.
+     */
+    public function findByProduct(int $productId): ?Model
     {
-        return $this->model->create( array_merge( $data, [ 'product_id' => $productId ] ) );
+        return $this->model->newQuery()
+            ->where('product_id', $productId)
+            ->first();
     }
 
-    public function updateStock( int $productId, int $quantity ): bool
+    public function findByProductId(int $productId): ?ProductInventory
     {
-        return $this->model->where( 'product_id', $productId )->update( [ 'quantity' => $quantity ] );
+        return $this->findByProduct($productId);
+    }
+
+    public function createForProduct(int $productId, array $data): ProductInventory
+    {
+        return $this->model->create(array_merge($data, ['product_id' => $productId]));
+    }
+
+    public function updateStock(int $productId, int $quantity): bool
+    {
+        return $this->model->where('product_id', $productId)->update(['quantity' => $quantity]);
+    }
+
+    public function updateQuantity(int $productId, int $quantity): bool
+    {
+        return $this->updateStock($productId, $quantity);
     }
 
     // ========== MÉTODOS ADICIONADOS DE AbstractTenantRepository ==========
@@ -56,140 +102,132 @@ class InventoryRepository extends AbstractTenantRepository
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
-        array $with = [ 'product' ],
+        array $with = ['product'],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
         $query = $this->model->newQuery();
 
         // Eager loading paramétrico
-        if ( !empty( $with ) ) {
-            $query->with( $with );
+        if (!empty($with)) {
+            $query->with($with);
         }
 
         // Aplicar filtros avançados
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
         // Aplicar filtro de soft delete se necessário
-        $this->applySoftDeleteFilter( $query, $filters );
+        $this->applySoftDeleteFilter($query, $filters);
 
         // Filtros específicos de inventory
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $query->whereHas( 'product', function ( $q ) use ( $filters ) {
-                $q->where( 'name', 'like', "%{$filters[ 'search' ]}%" )
-                    ->orWhere( 'sku', 'like', "%{$filters[ 'search' ]}%" );
-            } );
+        if (!empty($filters['search'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('name', 'like', "%{$filters['search']}%")
+                    ->orWhere('sku', 'like', "%{$filters['search']}%");
+            });
         }
 
-        if ( isset( $filters[ 'low_stock' ] ) && $filters[ 'low_stock' ] ) {
-            $query->whereColumn( 'quantity', '<=', 'min_quantity' );
+        if (isset($filters['low_stock']) && $filters['low_stock']) {
+            $query->whereColumn('quantity', '<=', 'min_quantity');
         }
 
-        if ( isset( $filters[ 'high_stock' ] ) && $filters[ 'high_stock' ] ) {
-            $query->whereColumn( 'quantity', '>=', 'max_quantity' );
+        if (isset($filters['high_stock']) && $filters['high_stock']) {
+            $query->whereColumn('quantity', '>=', 'max_quantity');
         }
 
-        if ( isset( $filters[ 'quantity' ] ) ) {
-            $query->where( 'quantity', $filters[ 'quantity' ] );
+        if (isset($filters['quantity'])) {
+            $query->where('quantity', $filters['quantity']);
         }
 
-        if ( isset( $filters[ 'custom_sufficient' ] ) && $filters[ 'custom_sufficient' ] ) {
-            $query->whereColumn( 'quantity', '>', 'min_quantity' );
+        if (isset($filters['custom_sufficient']) && $filters['custom_sufficient']) {
+            $query->whereColumn('quantity', '>', 'min_quantity');
         }
 
-        if ( !empty( $filters[ 'category' ] ) ) {
-            $query->whereHas( 'product', function ( $q ) use ( $filters ) {
-                $q->where( 'category_id', $filters[ 'category' ] );
-            } );
+        if (!empty($filters['category'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('category_id', $filters['category']);
+            });
         }
 
         // Aplicar ordenação
-        $this->applyOrderBy( $query, $orderBy );
+        $this->applyOrderBy($query, $orderBy);
 
         // Per page dinâmico
-        $effectivePerPage = $this->getEffectivePerPage( $filters, $perPage );
+        $effectivePerPage = $this->getEffectivePerPage($filters, $perPage);
 
-        return $query->paginate( $effectivePerPage );
+        return $query->paginate($effectivePerPage);
     }
 
-    public function findByProduct( int $productId, int $tenantId ): ?ProductInventory
+    public function findByProduct(int $productId): ?ProductInventory
     {
         return $this->model
-            ->where( 'product_id', $productId )
-            ->where( 'tenant_id', $tenantId )
+            ->where('product_id', $productId)
             ->first();
     }
 
-    public function updateOrCreate( int $productId, int $tenantId, array $data ): ProductInventory
+    public function updateOrCreate(int $productId, array $data): ProductInventory
     {
         return $this->model->updateOrCreate(
-            [ 'product_id' => $productId, 'tenant_id' => $tenantId ],
+            ['product_id' => $productId],
             $data,
         );
     }
 
-    public function updateQuantity( int $productId, int $tenantId, int $quantity ): bool
+    public function updateQuantity(int $productId, int $quantity): bool
     {
         return $this->model
-            ->where( 'product_id', $productId )
-            ->where( 'tenant_id', $tenantId )
-            ->update( [ 'quantity' => $quantity ] );
+            ->where('product_id', $productId)
+            ->update(['quantity' => $quantity]);
     }
 
-    public function updateMinQuantity( int $productId, int $tenantId, int $minQuantity ): bool
+    public function updateMinQuantity(int $productId, int $minQuantity): bool
     {
         return $this->model
-            ->where( 'product_id', $productId )
-            ->where( 'tenant_id', $tenantId )
-            ->update( [ 'min_quantity' => $minQuantity ] );
+            ->where('product_id', $productId)
+            ->update(['min_quantity' => $minQuantity]);
     }
 
-    public function updateMaxQuantity( int $productId, int $tenantId, int $maxQuantity ): bool
+    public function updateMaxQuantity(int $productId, int $maxQuantity): bool
     {
         return $this->model
-            ->where( 'product_id', $productId )
-            ->where( 'tenant_id', $tenantId )
-            ->update( [ 'max_quantity' => $maxQuantity ] );
+            ->where('product_id', $productId)
+            ->update(['max_quantity' => $maxQuantity]);
     }
 
-    public function getLowStockItems( int $tenantId, int $limit = 10 ): Collection
+    public function getLowStockItems(int $limit = 10): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->whereColumn( 'quantity', '<=', 'min_quantity' )
-            ->with( 'product' )
-            ->limit( $limit )
+            ->whereColumn('quantity', '<=', 'min_quantity')
+            ->with('product')
+            ->limit($limit)
             ->get();
     }
 
-    public function getLowStockCount( int $tenantId ): int
+    public function getLowStockCount(): int
     {
         return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->whereColumn( 'quantity', '<=', 'min_quantity' )
+            ->whereColumn('quantity', '<=', 'min_quantity')
             ->count();
     }
 
-    public function searchInventory( int $tenantId, string $search ): Collection
+    public function searchInventory(string $search): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->whereHas( 'product', function ( $q ) use ( $search ) {
-                $q->where( 'name', 'like', "%{$search}%" )
-                    ->orWhere( 'sku', 'like', "%{$search}%" );
-            } )
-            ->with( 'product' )
+            ->whereHas('product', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            })
+            ->with('product')
             ->get();
     }
 
-    public function getStatistics( int $tenantId ): array
+    public function getStatistics(): array
     {
-        $total      = $this->model->where( 'tenant_id', $tenantId )->count();
-        $lowStock   = $this->getLowStockCount( $tenantId );
+        $total      = $this->model->count();
+        $lowStock   = $this->getLowStockCount();
         $totalValue = $this->model
-            ->where( 'tenant_id', $tenantId )
-            ->join( 'products', 'product_inventory.product_id', '=', 'products.id' )
-            ->selectRaw( 'SUM(product_inventory.quantity * products.price) as total' )
-            ->value( 'total' ) ?? 0;
+            ->join('products', 'product_inventory.product_id', '=', 'products.id')
+            ->selectRaw('SUM(product_inventory.quantity * products.price) as total')
+            ->value('total') ?? 0;
 
         return [
             'total_items'           => $total,
@@ -197,5 +235,4 @@ class InventoryRepository extends AbstractTenantRepository
             'total_inventory_value' => $totalValue,
         ];
     }
-
 }

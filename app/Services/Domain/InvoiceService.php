@@ -68,9 +68,7 @@ class InvoiceService extends AbstractBaseService
     public function createInvoice(InvoiceDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId();
-
-            return DB::transaction(function () use ($dto, $tenantId) {
+            return DB::transaction(function () use ($dto) {
                 $service = $this->serviceRepository->findById($dto->service_id);
                 if (!$service) {
                     return ServiceResult::error('Serviço não encontrado');
@@ -78,13 +76,12 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
                 $dto->code = $invoiceCode;
-                $dto->tenant_id = $tenantId;
                 $dto->public_hash = bin2hex(random_bytes(32));
 
                 $invoice = $this->repository->createFromDTO($dto);
 
                 if (!empty($dto->items)) {
-                    $this->createInvoiceItems($invoice->id, (int) $invoice->tenant_id, $dto->items);
+                    $this->createInvoiceItems($invoice->id, $dto->items);
                 }
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
@@ -143,7 +140,7 @@ class InvoiceService extends AbstractBaseService
 
                 if ($dto->items !== null) {
                     $this->itemRepository->deleteByInvoiceId($invoice->id);
-                    $this->createInvoiceItems($invoice->id, $invoice->tenant_id, $dto->items);
+                    $this->createInvoiceItems($invoice->id, $dto->items);
                 }
 
                 return ServiceResult::success($invoice->fresh(['customer', 'service', 'invoiceItems.product']));
@@ -155,8 +152,7 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($budgetCode, $dto) {
             return DB::transaction(function () use ($budgetCode, $dto) {
-                $tenantId = $this->ensureTenantId();
-                $budget = $this->budgetRepository->findByCode($budgetCode, $tenantId, ['services.serviceItems', 'customer']);
+                $budget = $this->budgetRepository->findByCode($budgetCode, ['services.serviceItems', 'customer']);
 
                 if (!$budget) {
                     return ServiceResult::error('Orçamento não encontrado');
@@ -183,12 +179,12 @@ class InvoiceService extends AbstractBaseService
                     $quantity         = (float) ($item['quantity'] ?? $serviceItem->quantity);
                     $unit             = (float) ($item['unit_value'] ?? $serviceItem->unit_value);
                     $subtotal        += $quantity * $unit;
-                    $preparedItems[]  = [
-                        'product_id' => $serviceItem->product_id,
-                        'quantity'   => $quantity,
-                        'unit_price' => $unit,
-                        'total'      => $quantity * $unit,
-                    ];
+                    $preparedItems[]  = new InvoiceItemDTO(
+                        product_id: (int) $serviceItem->product_id,
+                        quantity: (int) $quantity,
+                        unit_price: (float) $unit,
+                        total: (float) ($quantity * $unit),
+                    );
                 }
 
                 $alreadyBilled = $this->repository->sumTotalByBudgetId($budget->id, ['pending', 'approved', 'in_process', 'authorized']);
@@ -201,20 +197,22 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
 
-                $invoice = $this->repository->create([
-                    'tenant_id'   => $tenantId,
-                    'service_id'  => $service->id,
-                    'customer_id' => $budget->customer_id,
-                    'code'        => $invoiceCode,
-                    'due_date'    => $dto->due_date ?? now()->addDays(7),
-                    'subtotal'    => $subtotal,
-                    'discount'    => $dto->discount,
-                    'total'       => $subtotal - $dto->discount,
-                    'status'      => $dto->status?->value ?? InvoiceStatus::PENDING->value,
-                    'public_hash' => bin2hex(random_bytes(32)),
-                ]);
+                $invoiceDTO = new InvoiceDTO(
+                    service_id: $service->id,
+                    customer_id: $budget->customer_id,
+                    status: $dto->status ?? InvoiceStatus::PENDING,
+                    subtotal: $subtotal,
+                    total: $subtotal - ($dto->discount ?? 0.0),
+                    due_date: $dto->due_date ?? now()->addDays(7),
+                    code: $invoiceCode,
+                    discount: $dto->discount ?? 0.0,
+                    public_hash: bin2hex(random_bytes(32)),
+                    items: $preparedItems
+                );
 
-                $this->createInvoiceItems($invoice->id, (int) $invoice->tenant_id, $preparedItems);
+                $invoice = $this->repository->createFromDTO($invoiceDTO);
+
+                $this->createInvoiceItems($invoice->id, $preparedItems);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
@@ -272,8 +270,7 @@ class InvoiceService extends AbstractBaseService
     public function generateInvoiceDataFromService(string $serviceCode): ServiceResult
     {
         return $this->safeExecute(function () use ($serviceCode) {
-            $tenantId = $this->ensureTenantId();
-            $service = $this->serviceRepository->findByCode($serviceCode, $tenantId, ['serviceItems.product', 'customer']);
+            $service = $this->serviceRepository->findByCode($serviceCode, ['serviceItems.product', 'customer']);
 
             if (!$service) {
                 return ServiceResult::error('Serviço não encontrado');
@@ -286,12 +283,12 @@ class InvoiceService extends AbstractBaseService
                 'customer_id' => $service->customer_id,
                 'subtotal'    => $subtotal,
                 'total'       => $subtotal, // Assume no discount initially
-                'items'       => $service->serviceItems->map(fn($item) => [
-                    'product_id' => $item->product_id,
-                    'quantity'   => $item->quantity,
-                    'unit_value' => $item->unit_value,
-                    'total'      => $item->total,
-                ])->toArray(),
+                'items'       => $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
+                    product_id: $item->product_id,
+                    quantity: $item->quantity,
+                    unit_price: $item->unit_value,
+                    total: $item->total,
+                ))->toArray(),
             ]);
         }, 'Erro ao gerar dados da fatura a partir do serviço');
     }
@@ -305,8 +302,7 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
-                $tenantId = $this->ensureTenantId($dto->tenant_id);
-                $service = $this->serviceRepository->findByCode($dto->service_code, $tenantId, ['serviceItems.product']);
+                $service = $this->serviceRepository->findByCode($dto->service_code, ['serviceItems.product']);
 
                 if (!$service) {
                     return ServiceResult::error('Serviço não encontrado');
@@ -314,32 +310,38 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
 
-                $items = $dto->items ?? $service->serviceItems->map(fn($item) => [
-                    'product_id' => $item->product_id,
-                    'quantity'   => $item->quantity,
-                    'unit_value' => $item->unit_value,
-                    'total'      => $item->total,
-                ])->toArray();
+                $items = $dto->items ?? $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
+                    product_id: (int) $item->product_id,
+                    quantity: (int) $item->quantity,
+                    unit_price: (float) $item->unit_value,
+                    total: (float) $item->total,
+                ))->toArray();
 
-                $subtotal = array_reduce($items, fn($carry, $item) => $carry + ($item['total'] ?? ($item['quantity'] * $item['unit_value'])), 0.0);
+                $subtotal = array_reduce($items, function ($carry, $item) {
+                    if ($item instanceof InvoiceItemDTO) {
+                        return $carry + $item->total;
+                    }
+                    return $carry + ($item['total'] ?? ($item['quantity'] * ($item['unit_price'] ?? $item['unit_value'])));
+                }, 0.0);
                 $discount = (float) ($dto->discount ?? 0.0);
 
-                $invoice = $this->repository->create([
-                    'tenant_id'    => $tenantId,
-                    'service_id'   => $service->id,
-                    'customer_id'  => $service->customer_id,
-                    'code'         => $invoiceCode,
-                    'status'       => $dto->status?->value ?? InvoiceStatus::PENDING->value,
-                    'subtotal'     => $subtotal,
-                    'discount'     => $discount,
-                    'total'        => $subtotal - $discount,
-                    'due_date'     => $dto->due_date ?? now()->addDays(7),
-                    'notes'        => $dto->notes,
-                    'is_automatic' => $dto->is_automatic,
-                    'public_hash'  => bin2hex(random_bytes(32)),
-                ]);
+                $invoiceDTO = new InvoiceDTO(
+                    service_id: $service->id,
+                    customer_id: $service->customer_id,
+                    status: $dto->status ?? InvoiceStatus::PENDING,
+                    subtotal: $subtotal,
+                    total: $subtotal - $discount,
+                    due_date: $dto->due_date ?? now()->addDays(7),
+                    code: $invoiceCode,
+                    discount: $discount,
+                    notes: $dto->notes,
+                    is_automatic: $dto->is_automatic,
+                    items: $items
+                );
 
-                $this->createInvoiceItems($invoice->id, $invoice->tenant_id, $items);
+                $invoice = $this->repository->createFromDTO($invoiceDTO);
+
+                $this->createInvoiceItems($invoice->id, $items);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
@@ -349,8 +351,7 @@ class InvoiceService extends AbstractBaseService
     public function searchInvoices(string $query, int $limit = 10): ServiceResult
     {
         return $this->safeExecute(function () use ($query, $limit) {
-            $tenantId = $this->ensureTenantId();
-            $invoices = $this->repository->search($query, $tenantId, $limit)
+            $invoices = $this->repository->search($query, $limit)
                 ->map(fn($i) => [
                     'id'   => $i->id,
                     'text' => "{$i->code} - {$i->customer->name}",
@@ -369,10 +370,10 @@ class InvoiceService extends AbstractBaseService
         }, 'Erro ao exportar faturas');
     }
 
-    private function createInvoiceItems(int $invoiceId, int $tenantId, array $items): void
+    private function createInvoiceItems(int $invoiceId, array $items): void
     {
         foreach ($items as $item) {
-            $itemDTO = $item instanceof InvoiceItemDTO ? $item : new InvoiceItemDTO($item);
+            $itemDTO = $item instanceof InvoiceItemDTO ? $item : InvoiceItemDTO::fromRequest($item);
 
             $product = $this->productRepository->findById($itemDTO->product_id);
 

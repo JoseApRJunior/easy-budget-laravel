@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\ProductInventory;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ProductInventoryRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -24,10 +27,9 @@ class ProductInventoryRepository extends AbstractTenantRepository
     /**
      * Inicializa o inventário para um novo produto.
      */
-    public function initialize(int $productId, int $tenantId): Model
+    public function initialize(int $productId): Model
     {
         return $this->create([
-            'tenant_id'    => $tenantId,
             'product_id'   => $productId,
             'quantity'     => 0,
             'min_quantity' => 0,

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Profession;
-use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Abstracts\AbstractGlobalRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
-class ProfessionRepository extends AbstractTenantRepository
+class ProfessionRepository extends AbstractGlobalRepository
 {
+    use RepositoryFiltersTrait;
+
     protected function makeModel(): Model
     {
         return new Profession();
@@ -18,6 +21,6 @@ class ProfessionRepository extends AbstractTenantRepository
 
     public function getActive(): Collection
     {
-        return $this->model->where('is_active', true)->orderBy('name')->get();
+        return $this->model->newQuery()->where('is_active', true)->orderBy('name')->get();
     }
 }

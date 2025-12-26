@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\Invoice;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -18,6 +19,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 class InvoiceRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
@@ -76,29 +79,38 @@ class InvoiceRepository extends AbstractTenantRepository
      */
     public function getFiltered(array $filters = [], ?array $orderBy = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->model->newQuery();
+        return $this->model->newQuery()
+            ->tap(fn($q) => $this->applyAllInvoiceFilters($q, $filters))
+            ->when(!$orderBy, fn($q) => $q->latest())
+            ->when($orderBy, fn($q) => $this->applyOrderBy($q, $orderBy))
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
 
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+    /**
+     * Aplica todos os filtros de fatura de forma segura.
+     */
+    protected function applyAllInvoiceFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
+    {
+        $this->applySearchFilter($query, $filters, ['code']);
+        $this->applyBooleanFilter($query, $filters, 'status', 'status');
+        $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('due_date', '>=', $filters['date_from']);
         }
 
-        if (isset($filters['customer_id'])) {
-            $query->where('customer_id', $filters['customer_id']);
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('due_date', '<=', $filters['date_to']);
         }
 
-        if (isset($filters['code'])) {
-            $query->where('code', 'like', '%' . $filters['code'] . '%');
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->orWhereHas('customer.commonData', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%");
+            });
         }
-
-        if ($orderBy) {
-            foreach ($orderBy as $column => $direction) {
-                $query->orderBy($column, $direction);
-            }
-        } else {
-            $query->latest();
-        }
-
-        return $query->paginate($perPage);
     }
 
     /**

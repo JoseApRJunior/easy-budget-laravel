@@ -5,29 +5,34 @@ namespace App\Repositories;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+
+use App\DTOs\Inventory\InventoryMovementDTO;
 
 /**
  * Repositório para gerenciamento de movimentações de inventário
  */
 class InventoryMovementRepository extends AbstractTenantRepository
 {
-    /**
-     * Create a new repository instance.
-     */
-    public function __construct( InventoryMovement $model )
-    {
-        $this->model = $model;
-    }
+    use RepositoryFiltersTrait;
 
     /**
-     * Create a new model instance.
+     * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
         return new InventoryMovement();
+    }
+
+    /**
+     * Cria uma movimentação de inventário a partir de um DTO.
+     */
+    public function createFromDTO(InventoryMovementDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
     }
 
     /**
@@ -46,14 +51,6 @@ class InventoryMovementRepository extends AbstractTenantRepository
     // que é suficiente para as funcionalidades básicas de paginação
 
     // Métodos específicos podem ser adicionados conforme necessário
-
-    /**
-     * Cria uma movimentação de inventário
-     */
-    public function create( array $data ): InventoryMovement
-    {
-        return $this->model->create( $data );
-    }
 
     /**
      * Retorna estatísticas de movimentações por período

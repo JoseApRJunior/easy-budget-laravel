@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\DTOs\Common\AddressDTO;
+use App\DTOs\Common\BusinessDataDTO;
+use App\DTOs\Common\CommonDataDTO;
+use App\DTOs\Common\ContactDTO;
+use App\DTOs\Provider\ProviderDTO;
+use App\DTOs\Provider\ProviderRegistrationDTO;
+use App\DTOs\Provider\ProviderUpdateDTO;
+use App\DTOs\Tenant\PlanSubscriptionDTO;
+use App\DTOs\User\UserDTO;
 use App\Enums\OperationStatus;
 use App\Models\CommonData;
 use App\Models\PlanSubscription;
@@ -32,8 +41,6 @@ use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
-use App\DTOs\Provider\ProviderUpdateDTO;
-use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
 use Exception;
@@ -85,21 +92,20 @@ class ProviderManagementService
     public function getDashboardData(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
             $user = Auth::user();
 
             // Buscar orçamentos recentes
-            $budgets = $this->budgetRepository->getRecentBudgets($tenantId, 10);
+            $budgets = $this->budgetRepository->getRecentBudgets(10);
 
             // Buscar atividades recentes
-            $activities = $this->auditLogRepository->getRecentActivities($tenantId, $user->id, 10);
+            $activities = $this->auditLogRepository->getRecentActivities($user->id, 10);
 
             // Buscar resumo financeiro
-            $financialResult = $this->financialSummary->getMonthlySummary($tenantId);
+            $financialResult = $this->financialSummary->getMonthlySummary();
             $financialSummary = $financialResult->isSuccess() ? $financialResult->getData() : [];
 
             // Buscar compromissos do dia
-            $events = $this->scheduleRepository->getTodayEvents($tenantId, 5);
+            $events = $this->scheduleRepository->getTodayEvents(5);
 
             return ServiceResult::success([
                 'budgets'           => $budgets,
@@ -117,9 +123,8 @@ class ProviderManagementService
     {
         return $this->safeExecute(function () {
             $user = Auth::user();
-            $tenantId = $this->ensureTenantId();
 
-            $provider = $this->providerService->getByUserId($user->id, $tenantId);
+            $provider = $this->providerService->getByUserId($user->id);
 
             if (!$provider) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
@@ -169,70 +174,42 @@ class ProviderManagementService
                 // Detectar tipo (PF ou PJ)
                 $type = !empty($dto->cnpj) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
-                // Limpar máscaras e converter datas
-                $cpf = !empty($dto->cpf) ? preg_replace('/\D/', '', $dto->cpf) : null;
-                $cnpj = !empty($dto->cnpj) ? preg_replace('/\D/', '', $dto->cnpj) : null;
-                $birthDate = !empty($dto->birth_date) ? Carbon::createFromFormat('d/m/Y', $dto->birth_date)->format('Y-m-d') : null;
-
                 // Atualizar CommonData
                 if ($provider->commonData) {
-                    $this->commonDataRepository->update($provider->commonData->id, [
-                        'type'                => $type,
-                        'first_name'          => $dto->first_name,
-                        'last_name'           => $dto->last_name,
-                        'cpf'                 => $cpf,
-                        'birth_date'          => $birthDate,
-                        'company_name'        => $dto->company_name,
-                        'cnpj'                => $cnpj,
-                        'description'         => $dto->description,
-                        'area_of_activity_id' => $dto->area_of_activity_id,
-                        'profession_id'       => $dto->profession_id,
-                    ]);
+                    $this->commonDataRepository->updateFromDTO(
+                        $provider->commonData->id,
+                        CommonDataDTO::fromRequest(array_merge($dto->toArray(), ['type' => $type]))
+                    );
                 }
 
                 // Atualizar Contact
                 if ($provider->contact) {
-                    $this->contactRepository->update($provider->contact->id, [
-                        'email_personal' => $dto->email_personal ?? $dto->email,
-                        'phone_personal' => $dto->phone_personal,
-                        'email_business' => $dto->email_business,
-                        'phone_business' => $dto->phone_business,
-                        'website'        => $dto->website,
-                    ]);
+                    $this->contactRepository->updateFromDTO(
+                        $provider->contact->id,
+                        ContactDTO::fromRequest(array_merge($dto->toArray(), [
+                            'email_personal' => $dto->email_personal ?? $dto->email
+                        ]))
+                    );
                 }
 
                 // Atualizar Address
                 if ($provider->address) {
-                    $this->addressRepository->update($provider->address->id, [
-                        'address'        => $dto->address,
-                        'address_number' => $dto->address_number,
-                        'neighborhood'   => $dto->neighborhood,
-                        'city'           => $dto->city,
-                        'state'          => $dto->state,
-                        'cep'            => $dto->cep,
-                    ]);
+                    $this->addressRepository->updateFromDTO(
+                        $provider->address->id,
+                        AddressDTO::fromRequest($dto->toArray())
+                    );
                 }
 
                 // Atualizar dados empresariais
                 if ($type === CommonData::TYPE_COMPANY) {
-                    $foundingDate = !empty($dto->founding_date) ? Carbon::createFromFormat('d/m/Y', $dto->founding_date)->format('Y-m-d') : null;
-                    $businessData = [
-                        'fantasy_name'           => $dto->fantasy_name,
-                        'state_registration'     => $dto->state_registration,
-                        'municipal_registration' => $dto->municipal_registration,
-                        'founding_date'          => $foundingDate,
-                        'industry'               => $dto->industry,
-                        'company_size'           => $dto->company_size,
-                        'notes'                  => $dto->notes,
-                    ];
+                    $businessDataDTO = BusinessDataDTO::fromRequest(array_merge($dto->toArray(), [
+                        'provider_id' => $provider->id
+                    ]));
 
                     if ($provider->businessData) {
-                        $this->businessDataRepository->update($provider->businessData->id, $businessData);
+                        $this->businessDataRepository->updateFromDTO($provider->businessData->id, $businessDataDTO);
                     } else {
-                        $this->businessDataRepository->create(array_merge($businessData, [
-                            'tenant_id'   => $tenantId,
-                            'provider_id' => $provider->id,
-                        ]));
+                        $this->businessDataRepository->createFromDTO($businessDataDTO);
                     }
                 }
 
@@ -249,9 +226,9 @@ class ProviderManagementService
     {
         return $this->safeExecute(function () use ($newPassword) {
             $user = Auth::user();
-            $this->userRepository->update($user->id, [
-                'password' => Hash::make($newPassword)
-            ]);
+            $this->userRepository->updateFromDTO($user->id, new UserDTO(
+                password: Hash::make($newPassword)
+            ));
             return ServiceResult::success(null, 'Senha alterada com sucesso.');
         }, 'Erro ao alterar senha.');
     }
@@ -259,10 +236,9 @@ class ProviderManagementService
     /**
      * Get provider by user ID.
      */
-    public function getProviderByUserId(int $userId, ?int $tenantId = null): ?Provider
+    public function getProviderByUserId(int $userId): ?Provider
     {
-        $tenantId = $tenantId ?? $this->ensureTenantId();
-        return $this->providerService->getByUserId($userId, $tenantId);
+        return $this->providerService->getByUserId($userId);
     }
 
     /**
@@ -339,10 +315,8 @@ class ProviderManagementService
     public function getServiceReports(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-
             // Buscar serviços do mês atual
-            $services = $this->serviceRepository->getServicesByMonth($tenantId, now()->month, now()->year);
+            $services = $this->serviceRepository->getServicesByMonth(now()->month, now()->year);
 
             // Estatísticas dos serviços
             $serviceStats = [
@@ -368,10 +342,8 @@ class ProviderManagementService
     public function getCustomerReports(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
-
             // Buscar clientes ativos
-            $customers = $this->customerRepository->getActiveWithStats($tenantId, 50);
+            $customers = $this->customerRepository->getActiveWithStats(50);
 
             // Estatísticas dos clientes
             $customerStats = [
@@ -443,34 +415,34 @@ class ProviderManagementService
     {
         try {
             // Criar Provider primeiro
-            $provider = $this->providerRepository->create([
-                'tenant_id'      => $tenant->id,
-                'user_id'        => $user->id,
-                'terms_accepted' => $userData['terms_accepted'],
-            ]);
+            $provider = $this->providerRepository->createFromDTO(new ProviderDTO(
+                user_id: $user->id,
+                terms_accepted: $userData['terms_accepted'],
+                tenant_id: $tenant->id
+            ));
 
             // Criar CommonData vinculado ao Provider
-            $this->commonDataRepository->create([
-                'tenant_id'   => $tenant->id,
-                'provider_id' => $provider->id,
-                'type'        => CommonData::TYPE_INDIVIDUAL,
-                'first_name'  => $userData['first_name'],
-                'last_name'   => $userData['last_name'],
-            ]);
+            $this->commonDataRepository->createFromDTO(new CommonDataDTO(
+                type: CommonData::TYPE_INDIVIDUAL,
+                first_name: $userData['first_name'],
+                last_name: $userData['last_name'],
+                provider_id: $provider->id,
+                tenant_id: $tenant->id
+            ));
 
             // Criar Contact vinculado ao Provider
-            $this->contactRepository->create([
-                'tenant_id'      => $tenant->id,
-                'provider_id'    => $provider->id,
-                'email_personal' => $userData['email_personal'] ?? $userData['email'],
-                'phone_personal' => $userData['phone_personal'] ?? $userData['phone'] ?? null,
-            ]);
+            $this->contactRepository->createFromDTO(new ContactDTO(
+                email_personal: $userData['email_personal'] ?? $userData['email'],
+                phone_personal: $userData['phone_personal'] ?? $userData['phone'] ?? null,
+                provider_id: $provider->id,
+                tenant_id: $tenant->id
+            ));
 
             // Criar Address vinculado ao Provider
-            $this->addressRepository->create([
-                'tenant_id'   => $tenant->id,
-                'provider_id' => $provider->id,
-            ]);
+            $this->addressRepository->createFromDTO(new AddressDTO(
+                provider_id: $provider->id,
+                tenant_id: $tenant->id
+            ));
 
             // Assign Provider Role
             $providerRole = $this->roleRepository->findByName(ROLE_PROVIDER);
@@ -499,19 +471,19 @@ class ProviderManagementService
             }
 
             // Create Plan Subscription
-            $savedSubscription = $this->planSubscriptionRepository->create([
-                'tenant_id'          => $tenant->id,
-                'plan_id'            => $plan->id,
-                'provider_id'        => $provider->id,
-                'status'             => SUBSCRIPTION_STATUS_ACTIVE,
-                'transaction_amount' => $plan->price ?? 0.00,
-                'start_date'         => now(),
-                'end_date'           => now()->addDays(TRIAL_DAYS),
-                'transaction_date'   => now(),
-                'payment_method'     => PAYMENT_METHOD_TRIAL,
-                'payment_id'         => 'TRIAL_' . uniqid(),
-                'public_hash'        => 'TRIAL_HASH_' . uniqid(),
-            ]);
+            $savedSubscription = $this->planSubscriptionRepository->createFromDTO(new PlanSubscriptionDTO(
+                provider_id: $provider->id,
+                plan_id: $plan->id,
+                status: SUBSCRIPTION_STATUS_ACTIVE,
+                transaction_amount: (float) ($plan->price ?? 0.00),
+                start_date: now(),
+                end_date: now()->addDays(TRIAL_DAYS),
+                transaction_date: now(),
+                payment_method: PAYMENT_METHOD_TRIAL,
+                payment_id: 'TRIAL_' . uniqid(),
+                public_hash: 'TRIAL_HASH_' . uniqid(),
+                tenant_id: $tenant->id
+            ));
 
             return ServiceResult::success([
                 'provider'     => $provider,
@@ -532,10 +504,10 @@ class ProviderManagementService
         try {
             $tenantName = $this->generateUniqueTenantName($userData['first_name'], $userData['last_name']);
 
-            $tenant = $this->tenantRepository->create([
-                'name'      => $tenantName,
-                'is_active' => true,
-            ]);
+            $tenant = $this->tenantRepository->createFromDTO(new \App\DTOs\Tenant\TenantDTO(
+                name: $tenantName,
+                is_active: true
+            ));
 
             return ServiceResult::success($tenant);
         } catch (Exception $e) {
@@ -549,12 +521,13 @@ class ProviderManagementService
     private function createUser(array $userData, Tenant $tenant): ServiceResult
     {
         try {
-            $savedUser = $this->userRepository->create([
-                'tenant_id' => $tenant->id,
-                'email'     => $userData['email'],
-                'password'  => $userData['password'] ?? null,
-                'is_active' => true,
-            ]);
+            $savedUser = $this->userRepository->createFromDTO(new UserDTO(
+                name: $userData['first_name'] . ' ' . $userData['last_name'],
+                email: $userData['email'],
+                password: $userData['password'] ?? null,
+                is_active: true,
+                tenant_id: $tenant->id
+            ));
 
             return ServiceResult::success($savedUser);
         } catch (Exception $e) {

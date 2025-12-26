@@ -35,14 +35,11 @@ class ScheduleService extends AbstractBaseService
     public function createSchedule(ScheduleDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId();
-            $data = $dto->toArray();
-
-            // Verifica se o serviço existe e pertence ao tenant
-            $service = $this->serviceRepository->findByIdAndTenant($dto->service_id, $tenantId);
+            // Verifica se o serviço existe (o escopo de tenant já é aplicado pelo ServiceRepository)
+            $service = $this->serviceRepository->find($dto->service_id);
 
             if (!$service) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Serviço não encontrado ou não pertence ao tenant atual.');
+                return $this->error(OperationStatus::NOT_FOUND, 'Serviço não encontrado.');
             }
 
             // Verifica conflitos de horário
@@ -50,10 +47,9 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::CONFLICT, 'Conflito de horário detectado.');
             }
 
-            $data['tenant_id'] = $tenantId;
-
             // Cria o agendamento
-            return $this->scheduleRepository->createFromDTO($dto);
+            $schedule = $this->scheduleRepository->createFromDTO($dto);
+            return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
     }
 
@@ -63,10 +59,8 @@ class ScheduleService extends AbstractBaseService
     public function updateSchedule(int $scheduleId, ScheduleUpdateDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId, $dto) {
-            $tenantId = $this->ensureTenantId();
-
-            // Verifica se o agendamento existe e pertence ao tenant
-            $schedule = $this->scheduleRepository->findByIdAndTenant($scheduleId, $tenantId);
+            // Verifica se o agendamento existe
+            $schedule = $this->scheduleRepository->find($scheduleId);
 
             if (!$schedule) {
                 return $this->error('Agendamento não encontrado.');
@@ -82,7 +76,8 @@ class ScheduleService extends AbstractBaseService
                 }
             }
 
-            return $this->scheduleRepository->updateFromDTO($scheduleId, $dto);
+            $updated = $this->scheduleRepository->updateFromDTO($scheduleId, $dto);
+            return $this->success($updated, 'Agendamento atualizado com sucesso.');
         }, 'Erro ao atualizar agendamento.');
     }
 
@@ -92,8 +87,7 @@ class ScheduleService extends AbstractBaseService
     public function cancelSchedule(int $scheduleId, string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId, $reason) {
-            $tenantId = $this->ensureTenantId();
-            $schedule = $this->scheduleRepository->findByIdAndTenant($scheduleId, $tenantId);
+            $schedule = $this->scheduleRepository->find($scheduleId);
 
             if (!$schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
@@ -124,8 +118,7 @@ class ScheduleService extends AbstractBaseService
     public function updateScheduleStatus(int $id, string $status, ?int $userId = null): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $status) {
-            $tenantId = $this->ensureTenantId();
-            $schedule = $this->scheduleRepository->findByIdAndTenant($id, $tenantId);
+            $schedule = $this->scheduleRepository->find($id);
 
             if (!$schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
@@ -153,7 +146,7 @@ class ScheduleService extends AbstractBaseService
      */
     public function getAvailabilityCalendar(int $providerId, string $month): ServiceResult
     {
-        return $this->safeExecute(function () use ($providerId, $month) {
+        return $this->safeExecute(function () use ($month) {
             $startOfMonth = Carbon::parse($month)->startOfMonth();
             $endOfMonth = Carbon::parse($month)->endOfMonth();
 
@@ -178,7 +171,7 @@ class ScheduleService extends AbstractBaseService
      */
     public function checkAvailability(int $providerId, string $date, int $durationMinutes = 60): ServiceResult
     {
-        return $this->safeExecute(function () use ($providerId, $date, $durationMinutes) {
+        return $this->safeExecute(function () {
             // Lógica de verificação de disponibilidade (exemplo simplificado)
             return $this->success(['available' => true]);
         }, 'Erro ao verificar disponibilidade.');
@@ -189,7 +182,7 @@ class ScheduleService extends AbstractBaseService
      */
     public function getAvailableTimeSlots(int $providerId, string $date, int $durationMinutes = 60): ServiceResult
     {
-        return $this->safeExecute(function () use ($providerId, $date, $durationMinutes) {
+        return $this->safeExecute(function () {
             // Lógica de geração de slots (exemplo simplificado)
             $slots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
             return $this->success($slots);
@@ -202,8 +195,7 @@ class ScheduleService extends AbstractBaseService
     public function confirmSchedule(int $scheduleId): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId) {
-            $tenantId = $this->ensureTenantId();
-            $schedule = $this->scheduleRepository->findByIdAndTenant($scheduleId, $tenantId);
+            $schedule = $this->scheduleRepository->find($scheduleId);
 
             if (!$schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
@@ -232,7 +224,6 @@ class ScheduleService extends AbstractBaseService
     public function getSchedulesByPeriod(Carbon $startDate, Carbon $endDate, array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($startDate, $endDate, $filters) {
-            $this->ensureTenantId();
             $schedules = $this->scheduleRepository->getByDateRangeWithRelations(
                 $startDate->toDateTimeString(),
                 $endDate->toDateTimeString(),
@@ -249,34 +240,29 @@ class ScheduleService extends AbstractBaseService
     public function getDashboardStats(): ServiceResult
     {
         return $this->safeExecute(function () {
-            $tenantId = $this->ensureTenantId();
+            $statsData = $this->scheduleRepository->getStats();
+            $recentUpcoming = $this->scheduleRepository->getRecentUpcoming();
 
-            $total     = $this->scheduleRepository->getTotalCount($tenantId);
-            $pending   = $this->scheduleRepository->getCountByStatus($tenantId, 'pending');
-            $confirmed = $this->scheduleRepository->getCountByStatus($tenantId, 'confirmed');
-            $completed = $this->scheduleRepository->getCountByStatus($tenantId, 'completed');
-            $cancelled = $this->scheduleRepository->getCountByStatus($tenantId, 'cancelled');
-            $noShow    = $this->scheduleRepository->getCountByStatus($tenantId, 'no_show');
-
-            $upcomingCount  = $this->scheduleRepository->getUpcomingCount($tenantId);
-            $recentUpcoming = $this->scheduleRepository->getRecentUpcoming($tenantId);
-
-            $statusBreakdown = [
-                'pending'   => ['count' => $pending, 'color' => '#F59E0B'],
-                'confirmed' => ['count' => $confirmed, 'color' => '#3B82F6'],
-                'completed' => ['count' => $completed, 'color' => '#10B981'],
-                'cancelled' => ['count' => $cancelled, 'color' => '#EF4444'],
-                'no_show'   => ['count' => $noShow, 'color' => '#6B7280'],
+            $statusColors = [
+                'pending'   => '#F59E0B',
+                'confirmed' => '#3B82F6',
+                'completed' => '#10B981',
+                'cancelled' => '#EF4444',
+                'no_show'   => '#6B7280',
             ];
 
+            $statusBreakdown = [];
+            foreach ($statsData['by_status'] as $status => $count) {
+                $statusBreakdown[$status] = [
+                    'count' => $count,
+                    'color' => $statusColors[$status] ?? '#CBD5E1'
+                ];
+            }
+
             return $this->success([
-                'total_schedules'     => $total,
-                'pending_schedules'   => $pending,
-                'confirmed_schedules' => $confirmed,
-                'completed_schedules' => $completed,
-                'cancelled_schedules' => $cancelled,
-                'no_show_schedules'   => $noShow,
-                'upcoming_schedules'  => $upcomingCount,
+                'total_schedules'     => $statsData['total'],
+                'upcoming_schedules'  => $statsData['upcoming'],
+                'today_schedules'     => $statsData['today'],
                 'status_breakdown'    => $statusBreakdown,
                 'recent_upcoming'     => $recentUpcoming,
             ], 'Estatísticas carregadas com sucesso.');
@@ -289,8 +275,7 @@ class ScheduleService extends AbstractBaseService
     public function getSchedule(int $id): ServiceResult
     {
         return $this->safeExecute(function () use ($id) {
-            $tenantId = $this->ensureTenantId();
-            $schedule = $this->scheduleRepository->findByIdAndTenant($id, $tenantId);
+            $schedule = $this->scheduleRepository->find($id);
 
             if (!$schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');

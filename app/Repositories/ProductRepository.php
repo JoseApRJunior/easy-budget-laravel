@@ -38,10 +38,9 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Gera SKU único para o tenant.
      */
-    public function generateUniqueSku(int $tenantId): string
+    public function generateUniqueSku(): string
     {
         $lastProduct = $this->model->newQuery()
-            ->where('tenant_id', $tenantId)
             ->where('sku', 'LIKE', 'PROD%')
             ->withTrashed()
             ->orderBy('sku', 'desc')
@@ -65,7 +64,7 @@ class ProductRepository extends AbstractTenantRepository
         $data = $dto->toDatabaseArray();
 
         if (empty($data['sku'])) {
-            $data['sku'] = $this->generateUniqueSku((int) $data['tenant_id']);
+            $data['sku'] = $this->generateUniqueSku();
         }
 
         return $this->create($data);
@@ -83,9 +82,9 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Obtém estatísticas do dashboard para produtos.
      */
-    public function getDashboardStats(int $tenantId): array
+    public function getDashboardStats(): array
     {
-        $baseQuery = $this->model->newQuery()->where('tenant_id', $tenantId);
+        $baseQuery = $this->model->newQuery();
 
         return [
             'total_products'    => (clone $baseQuery)->count(),

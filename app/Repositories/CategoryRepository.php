@@ -140,6 +140,34 @@ class CategoryRepository extends AbstractTenantRepository
     }
 
     /**
+     * Lista apenas categorias pai (sem parent_id) que estão ativas.
+     */
+    public function listParents(): Collection
+    {
+        return $this->model->newQuery()
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    /**
+     * Cria uma nova categoria a partir de um DTO.
+     */
+    public function createFromDTO(\App\DTOs\Category\CategoryDTO $dto): Model
+    {
+        return $this->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza uma categoria a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, \App\DTOs\Category\CategoryDTO $dto): bool
+    {
+        return $this->update($id, $dto->toArray());
+    }
+
+    /**
      * {@inheritdoc}
      *
      * Implementação específica para categorias com suporte a hierarquia e filtros avançados.

@@ -49,67 +49,65 @@ class BudgetCodeGeneratorService
      * Usa database locks para garantir concorrência segura e evitar duplicatas.
      * Padrão: ORC-2025-11-0001 (ORC-ANO-MES-SEQUENCIAL)
      *
-     * @param int $tenantId ID do tenant
      * @param string|null $prefix Prefixo customizado (padrão: ORC)
      * @return ServiceResult<string> Resultado da operação com código gerado
      */
-    public function generateUniqueCode( int $tenantId, ?string $prefix = null ): ServiceResult
+    public function generateUniqueCode(?string $prefix = null): ServiceResult
     {
         $prefix      = $prefix ?? self::CODE_PREFIX;
+        $tenantId    = auth()->user()->tenant_id ?? 0;
         $maxAttempts = 5;
 
-        for ( $attempt = 1; $attempt <= $maxAttempts; $attempt++ ) {
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
-                $code = DB::connection()->transaction( function () use ($tenantId, $prefix) {
+                $code = DB::connection()->transaction(function () use ($tenantId, $prefix) {
                     // Adquire lock exclusivo para evitar race conditions
-                    $this->acquireLock( $tenantId, $prefix );
+                    $this->acquireLock($tenantId, $prefix);
 
                     // Gera o próximo código
-                    $code = $this->generateNextCode( $tenantId, $prefix );
+                    $code = $this->generateNextCode($prefix);
 
                     // Verifica se o código já existe
-                    if ( $this->codeExists( $code, $tenantId ) ) {
-                        throw new \Exception( "Código já existe: {$code}" );
+                    if ($this->codeExists($code)) {
+                        throw new \Exception("Código já existe: {$code}");
                     }
 
                     return $code;
-                } );
+                });
 
-                return ServiceResult::success( $code, 'Código único gerado com sucesso' );
-
-            } catch ( \Exception $e ) {
-                if ( $attempt === $maxAttempts ) {
+                return ServiceResult::success($code, 'Código único gerado com sucesso');
+            } catch (\Exception $e) {
+                if ($attempt === $maxAttempts) {
                     return ServiceResult::error(
                         "Falha ao gerar código único após {$maxAttempts} tentativas: " . $e->getMessage()
                     );
                 }
 
                 // Aguarda um tempo aleatório antes da próxima tentativa
-                usleep( rand( 100000, 500000 ) ); // 0.1-0.5 segundos
+                usleep(rand(100000, 500000)); // 0.1-0.5 segundos
             }
         }
 
-        return ServiceResult::error( 'Falha crítica na geração de código único' );
+        return ServiceResult::error('Falha crítica na geração de código único');
     }
 
     /**
      * Gera código sequencial baseado na data atual.
      *
-     * @param int $tenantId ID do tenant
      * @param string $prefix Prefixo do código
      * @return string Código sequencial
      */
-    private function generateNextCode( int $tenantId, string $prefix ): string
+    private function generateNextCode(string $prefix): string
     {
-        $year  = date( 'Y' );
-        $month = date( 'm' );
+        $year  = date('Y');
+        $month = date('m');
 
         // Busca último código do mês atual
-        $lastBudget = $this->budgetRepository->getLastBudgetByMonth( $year, $month );
+        $lastBudget = $this->budgetRepository->getLastBudgetByMonth($year, $month);
 
         $sequential = 1;
-        if ( $lastBudget ) {
-            $sequential = $this->extractSequentialNumber( $lastBudget->code ) + 1;
+        if ($lastBudget) {
+            $sequential = $this->extractSequentialNumber($lastBudget->code) + 1;
         }
 
         return sprintf(
@@ -127,12 +125,12 @@ class BudgetCodeGeneratorService
      * @param string $code Código completo (ex: ORC-2025-11-0001)
      * @return int Número sequencial
      */
-    private function extractSequentialNumber( string $code ): int
+    private function extractSequentialNumber(string $code): int
     {
-        $parts = explode( '-', $code );
+        $parts = explode('-', $code);
 
-        if ( count( $parts ) >= 4 ) {
-            return (int) $parts[ 3 ];
+        if (count($parts) >= 4) {
+            return (int) $parts[3];
         }
 
         return 1;
@@ -142,12 +140,11 @@ class BudgetCodeGeneratorService
      * Verifica se um código já existe no tenant.
      *
      * @param string $code Código a verificar
-     * @param int $tenantId ID do tenant
      * @return bool True se existir
      */
-    private function codeExists( string $code, int $tenantId ): bool
+    private function codeExists(string $code): bool
     {
-        $existing = $this->budgetRepository->findByCode( $code, $tenantId );
+        $existing = $this->budgetRepository->findByCode($code);
         return $existing !== null;
     }
 
@@ -158,18 +155,18 @@ class BudgetCodeGeneratorService
      * @param string $prefix Prefixo
      * @throws \Exception Se não conseguir adquirir lock
      */
-    private function acquireLock( int $tenantId, string $prefix ): void
+    private function acquireLock(int $tenantId, string $prefix): void
     {
         $lockKey = "budget_code_gen:{$tenantId}:{$prefix}";
 
         // Tenta adquirir lock com timeout
         $acquired = DB::statement(
             "SELECT GET_LOCK(?, ?)",
-            [ $lockKey, self::LOCK_TIMEOUT ],
+            [$lockKey, self::LOCK_TIMEOUT],
         );
 
-        if ( !$acquired ) {
-            throw new \Exception( "Não foi possível adquirir lock para geração de código" );
+        if (!$acquired) {
+            throw new \Exception("Não foi possível adquirir lock para geração de código");
         }
     }
 
@@ -179,10 +176,10 @@ class BudgetCodeGeneratorService
      * @param int $tenantId ID do tenant
      * @param string $prefix Prefixo
      */
-    private function releaseLock( int $tenantId, string $prefix ): void
+    private function releaseLock(int $tenantId, string $prefix): void
     {
         $lockKey = "budget_code_gen:{$tenantId}:{$prefix}";
-        DB::statement( "SELECT RELEASE_LOCK(?)", [ $lockKey ] );
+        DB::statement("SELECT RELEASE_LOCK(?)", [$lockKey]);
     }
 
     /**
@@ -191,7 +188,7 @@ class BudgetCodeGeneratorService
      * @param string $code Código a validar
      * @return bool True se válido
      */
-    public function validateCodeFormat( string $code ): bool
+    public function validateCodeFormat(string $code): bool
     {
         // Padrão: ORC-YYYY-MM-XXXX ou código customizado com letras e números
         $pattern = '/^[A-Z]{3}-[0-9]{4}-[0-9]{2}-[0-9]{4}$/';
@@ -199,7 +196,7 @@ class BudgetCodeGeneratorService
         // Também aceita códigos customizados
         $customPattern = '/^[A-Z]{2,5}-[A-Z0-9-]+$/';
 
-        return preg_match( $pattern, $code ) || preg_match( $customPattern, $code );
+        return preg_match($pattern, $code) || preg_match($customPattern, $code);
     }
 
     /**
@@ -208,26 +205,26 @@ class BudgetCodeGeneratorService
      * @param string $code Código completo
      * @return array|null Informações do código ou null se inválido
      */
-    public function parseCode( string $code ): ?array
+    public function parseCode(string $code): ?array
     {
-        if ( !$this->validateCodeFormat( $code ) ) {
+        if (!$this->validateCodeFormat($code)) {
             return null;
         }
 
-        $parts = explode( '-', $code );
+        $parts = explode('-', $code);
 
-        if ( count( $parts ) >= 4 ) {
+        if (count($parts) >= 4) {
             return [
-                'prefix'     => $parts[ 0 ],
-                'year'       => (int) $parts[ 1 ],
-                'month'      => (int) $parts[ 2 ],
-                'sequential' => (int) $parts[ 3 ],
+                'prefix'     => $parts[0],
+                'year'       => (int) $parts[1],
+                'month'      => (int) $parts[2],
+                'sequential' => (int) $parts[3],
                 'full_code'  => $code
             ];
         }
 
         return [
-            'prefix'        => $parts[ 0 ] ?? '',
+            'prefix'        => $parts[0] ?? '',
             'custom_format' => true,
             'full_code'     => $code
         ];
@@ -236,37 +233,34 @@ class BudgetCodeGeneratorService
     /**
      * Gera código com prefixo customizado.
      *
-     * @param int $tenantId ID do tenant
      * @param string $customPrefix Prefixo customizado (2-5 caracteres)
      * @return ServiceResult<string> Resultado da operação com código gerado
      */
-    public function generateWithCustomPrefix( int $tenantId, string $customPrefix ): ServiceResult
+    public function generateWithCustomPrefix(string $customPrefix): ServiceResult
     {
-        if ( strlen( $customPrefix ) < 2 || strlen( $customPrefix ) > 5 ) {
-            return ServiceResult::error( 'Prefixo deve ter entre 2 e 5 caracteres' );
+        if (strlen($customPrefix) < 2 || strlen($customPrefix) > 5) {
+            return ServiceResult::error('Prefixo deve ter entre 2 e 5 caracteres');
         }
 
-        if ( !preg_match( '/^[A-Z0-9]+$/', $customPrefix ) ) {
-            return ServiceResult::error( 'Prefixo deve conter apenas letras e números' );
+        if (!preg_match('/^[A-Z0-9]+$/', $customPrefix)) {
+            return ServiceResult::error('Prefixo deve conter apenas letras e números');
         }
 
-        return $this->generateUniqueCode( $tenantId, strtoupper( $customPrefix ) );
+        return $this->generateUniqueCode(strtoupper($customPrefix));
     }
 
     /**
      * Gera código aleatório para orçamento (uso interno/testes).
      *
-     * @param int $tenantId ID do tenant
      * @return ServiceResult<string> Resultado da operação com código gerado
      */
-    public function generateRandomCode( int $tenantId ): ServiceResult
+    public function generateRandomCode(): ServiceResult
     {
         do {
-            $randomSuffix = strtoupper( Str::random( 6 ) );
-            $code         = sprintf( '%s-%s', self::CODE_PREFIX, $randomSuffix );
-        } while ( $this->codeExists( $code, $tenantId ) );
+            $randomSuffix = strtoupper(Str::random(6));
+            $code         = sprintf('%s-%s', self::CODE_PREFIX, $randomSuffix);
+        } while ($this->codeExists($code));
 
-        return ServiceResult::success( $code, 'Código aleatório gerado com sucesso' );
+        return ServiceResult::success($code, 'Código aleatório gerado com sucesso');
     }
-
 }

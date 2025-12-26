@@ -7,38 +7,42 @@ namespace App\Repositories;
 use App\Models\Payment;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use App\Repositories\Traits\RepositoryFiltersTrait;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Repositório de Pagamentos.
  */
 class PaymentRepository extends AbstractTenantRepository implements PaymentRepositoryInterface
 {
+    use RepositoryFiltersTrait;
+
     public function __construct(Payment $model)
     {
         parent::__construct($model);
     }
 
     /**
-     * Busca pagamentos filtrados por tenant.
+     * Busca pagamentos filtrados com paginação.
      */
-    public function getFilteredPayments(int $tenantId, array $filters = []): Collection
+    public function getFilteredPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()
-            ->where('tenant_id', $tenantId)
-            ->with(['invoice', 'customer']);
+        return $this->model->newQuery()
+            ->with(['invoice', 'customer'])
+            ->tap(fn($q) => $this->applyAllPaymentFilters($q, $filters))
+            ->latest()
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
 
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['method'])) {
-            $query->where('method', $filters['method']);
-        }
-
-        if (!empty($filters['customer_id'])) {
-            $query->where('customer_id', $filters['customer_id']);
-        }
+    /**
+     * Aplica todos os filtros de pagamento.
+     */
+    protected function applyAllPaymentFilters(Builder $query, array $filters): void
+    {
+        $this->applyBooleanFilter($query, $filters, 'status', 'status');
+        $this->applyBooleanFilter($query, $filters, 'method', 'method');
+        $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
 
         if (!empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
@@ -47,7 +51,47 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
         if (!empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
+    }
 
-        return $query->latest()->get();
+    /**
+     * Obtém estatísticas de pagamentos.
+     */
+    public function getStats(): array
+    {
+        $baseQuery = $this->model->newQuery();
+
+        $total     = (clone $baseQuery)->count();
+        $completed = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::COMPLETED)->count();
+        $pending   = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::PENDING)->count();
+        $failed    = (clone $baseQuery)->where('status', \App\Enums\PaymentStatus::FAILED)->count();
+
+        $totalAmount = (float) (clone $baseQuery)
+            ->where('status', \App\Enums\PaymentStatus::COMPLETED)
+            ->sum('amount');
+
+        return [
+            'total_payments'     => $total,
+            'completed_payments' => $completed,
+            'pending_payments'   => $pending,
+            'failed_payments'    => $failed,
+            'total_amount'       => $totalAmount,
+            'success_rate'       => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+        ];
+    }
+
+    /**
+     * Cria um pagamento a partir de um DTO.
+     */
+    public function createFromDTO(\App\DTOs\Payment\PaymentDTO $dto): \App\Models\Payment
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    /**
+     * Atualiza um pagamento a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, \App\DTOs\Payment\PaymentDTO $dto): ?\App\Models\Payment
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 }

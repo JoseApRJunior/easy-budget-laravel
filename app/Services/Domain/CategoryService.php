@@ -135,26 +135,10 @@ class CategoryService extends AbstractBaseService
      */
     public function getParentCategories(): ServiceResult
     {
-        try {
-            $tenantId = $this->tenantId();
-
-            if (!$tenantId) {
-                return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
-            }
-
-            $parents = Category::query()
-                ->withoutGlobalScope(\App\Models\Traits\TenantScope::class)
-                ->where('tenant_id', $tenantId)
-                ->whereNull('parent_id')
-                ->whereNull('deleted_at')
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name']);
-
+        return $this->safeExecute(function () {
+            $parents = $this->repository->listParents();
             return $this->success($parents, 'Categorias pai carregadas com sucesso.');
-        } catch (Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao carregar categorias pai: ' . $e->getMessage(), null, $e);
-        }
+        }, 'Erro ao carregar categorias pai.');
     }
 
     /**
@@ -163,27 +147,28 @@ class CategoryService extends AbstractBaseService
     public function createCategory(CategoryDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId();
             $data = $dto->toArray();
 
             if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, $tenantId);
+                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId());
             }
 
-            if (!Category::validateUniqueSlug($data['slug'], $tenantId)) {
+            if (!Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId())) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
             if (!empty($data['parent_id'])) {
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
-                if ($parentResult->isError()) return $parentResult;
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->getTenantId());
+                if ($parentResult->isError()) {
+                    return $parentResult;
+                }
 
-                if ((new Category(['tenant_id' => $tenantId, 'parent_id' => $data['parent_id']]))->wouldCreateCircularReference((int) $data['parent_id'])) {
+                if ((new Category(['parent_id' => $data['parent_id']]))->wouldCreateCircularReference((int) $data['parent_id'])) {
                     return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar referência circular');
                 }
             }
 
-            return DB::transaction(fn() => $this->repository->create(array_merge($data, ['tenant_id' => $tenantId])));
+            return DB::transaction(fn() => $this->repository->createFromDTO($dto));
         }, 'Erro ao criar categoria.');
     }
 
@@ -194,17 +179,18 @@ class CategoryService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($id, $dto) {
             $ownerResult = $this->findAndVerifyOwnership($id);
-            if ($ownerResult->isError()) return $ownerResult;
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
 
             $category = $ownerResult->getData();
-            $tenantId = $this->tenantId();
             $data = $dto->toArray();
 
             if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, $tenantId, $id);
+                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId(), $id);
             }
 
-            if (!Category::validateUniqueSlug($data['slug'], $tenantId, $id)) {
+            if (!Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId(), $id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
@@ -213,15 +199,17 @@ class CategoryService extends AbstractBaseService
                     return $this->error(OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma');
                 }
 
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
-                if ($parentResult->isError()) return $parentResult;
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->getTenantId());
+                if ($parentResult->isError()) {
+                    return $parentResult;
+                }
 
                 if ($category->wouldCreateCircularReference((int) $data['parent_id'])) {
                     return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar referência circular');
                 }
             }
 
-            return $this->update($id, $data);
+            return DB::transaction(fn() => $this->repository->updateFromDTO($id, $dto));
         }, 'Erro ao atualizar categoria.');
     }
 

@@ -94,6 +94,13 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="cep">CEP (Proximidade)</label>
+                                        <input type="text" class="form-control" id="cep" name="cep"
+                                            value="{{ $filters['cep'] ?? '' }}" placeholder="00000-000">
+                                    </div>
+                                </div>
                                 <div class="col-12">
                                     <div class="d-flex gap-2 flex-nowrap">
                                         <button type="submit" id="btnFilterCustomers" class="btn btn-primary"

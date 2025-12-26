@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Log;
  */
 class CustomerRepository extends AbstractTenantRepository
 {
+    use \App\Repositories\Traits\RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
@@ -41,52 +43,47 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function listActive(?array $orderBy = null, ?int $limit = null): Collection
     {
-        return $this->getAllByTenant(
-            ['status' => 'active'],
-            $orderBy,
-            $limit,
-        );
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->when($orderBy, function ($q) use ($orderBy) {
+                foreach ($orderBy as $field => $dir) {
+                    $q->orderBy($field, $dir);
+                }
+            })
+            ->when($limit, fn($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
      * Conta clientes dentro do tenant atual com filtros opcionais.
-     *
-     * @param array<string, mixed> $filters
-     * @return int
      */
     public function countByFilters(array $filters = []): int
     {
-        return $this->countByTenant($filters);
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $filters);
+        return $query->count();
     }
 
     /**
      * Verifica existência por critérios dentro do tenant atual.
-     *
-     * @param array<string, mixed> $criteria
-     * @return bool
      */
     public function existsByCriteria(array $criteria): bool
     {
-        return $this->findByMultipleCriteria($criteria)->isNotEmpty();
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $criteria);
+        return $query->exists();
     }
 
     /**
      * Remove múltiplos clientes por IDs dentro do tenant atual.
-     *
-     * @param array<int> $ids
-     * @return int Número de registros removidos
      */
     public function deleteManyByIds(array $ids): int
     {
-        return $this->deleteManyByTenant($ids);
+        return $this->model->newQuery()->whereIn('id', $ids)->delete();
     }
 
     /**
      * Atualiza múltiplos registros por critérios dentro do tenant atual.
-     *
-     * @param array<string, mixed> $criteria
-     * @param array<string, mixed> $updates
-     * @return int Número de registros atualizados
      */
     public function updateManyByCriteria(array $criteria, array $updates): int
     {
@@ -97,12 +94,6 @@ class CustomerRepository extends AbstractTenantRepository
 
     /**
      * Busca clientes por múltiplos critérios dentro do tenant atual.
-     *
-     * @param array<string, mixed> $criteria
-     * @param array<string, string>|null $orderBy
-     * @param int|null $limit
-     * @param int|null $offset
-     * @return Collection<Customer>
      */
     public function findByCriteria(
         array $criteria,
@@ -110,27 +101,23 @@ class CustomerRepository extends AbstractTenantRepository
         ?int $limit = null,
         ?int $offset = null,
     ): Collection {
-        return $this->getAllByTenant($criteria, $orderBy, $limit, $offset);
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $criteria);
+        $this->applyOrderBy($query, $orderBy ?: ['created_at' => 'desc']);
+
+        if ($limit) $query->limit($limit);
+        if ($offset) $query->offset($offset);
+
+        return $query->get();
     }
 
-    public function findByIdAndTenantId(int $id, int $tenantId): ?Customer
+    public function findByIdAndTenantId(int $id): ?Customer
     {
-        $query = $this->model->newQuery();
-        $this->applyFilters($query, [
-            'id'        => $id,
-            'tenant_id' => $tenantId,
-        ]);
-        return $query->first();
+        return $this->findById($id);
     }
 
     /**
      * Lista clientes por filtros (compatibilidade com service).
-     *
-     * @param array<string, mixed> $filters
-     * @param array<string, string>|null $orderBy
-     * @param int|null $limit
-     * @param int|null $offset
-     * @return Collection<Customer>
      */
     public function listByFilters(
         array $filters = [],
@@ -138,7 +125,7 @@ class CustomerRepository extends AbstractTenantRepository
         ?int $limit = null,
         ?int $offset = null,
     ): Collection {
-        return $this->getAllByTenant($filters, $orderBy, $limit, $offset);
+        return $this->findByCriteria($filters, $orderBy, $limit, $offset);
     }
 
     // ========================================
@@ -148,9 +135,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se email é único no tenant (exclui customer atual se especificado)
      */
-    public function isEmailUnique(string $email, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isEmailUnique(string $email, ?int $excludeCustomerId = null): bool
     {
-        $query = Contact::where('tenant_id', $tenantId)
+        $query = Contact::newQuery()
             ->where(function ($q) use ($email) {
                 $q->where('email_personal', $email)
                     ->orWhere('email_business', $email);
@@ -166,16 +153,14 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se CPF é único no tenant (exclui customer atual se especificado)
      */
-    public function isCpfUnique(string $cpf, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isCpfUnique(string $cpf, ?int $excludeCustomerId = null): bool
     {
-        if (strlen($cpf) !== 11) return false; // CPF deve ter 11 dígitos
+        if (strlen($cpf) !== 11) return false;
 
-        $query = CommonData::query()
-            ->where('tenant_id', $tenantId)
+        $query = CommonData::newQuery()
             ->where('cpf', $cpf)
             ->whereNotNull('cpf');
 
-        // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
         if ($excludeCustomerId) {
             $query->whereDoesntHave('customer', function ($q) use ($excludeCustomerId) {
                 $q->where('id', $excludeCustomerId);
@@ -188,16 +173,14 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se CNPJ é único no tenant (exclui customer atual se especificado)
      */
-    public function isCnpjUnique(string $cnpj, int $tenantId, ?int $excludeCustomerId = null): bool
+    public function isCnpjUnique(string $cnpj, ?int $excludeCustomerId = null): bool
     {
-        if (strlen($cnpj) !== 14) return false; // CNPJ deve ter 14 dígitos
+        if (strlen($cnpj) !== 14) return false;
 
-        $query = CommonData::query()
-            ->where('tenant_id', $tenantId)
+        $query = CommonData::newQuery()
             ->where('cnpj', $cnpj)
             ->whereNotNull('cnpj');
 
-        // Corrigido: Filtrar customers que utilizam este common_data, exceto o customer especificado
         if ($excludeCustomerId) {
             $query->whereDoesntHave('customer', function ($q) use ($excludeCustomerId) {
                 $q->where('id', $excludeCustomerId);
@@ -255,23 +238,22 @@ class CustomerRepository extends AbstractTenantRepository
     ): LengthAwarePaginator {
         $query = $this->model->newQuery();
 
-        // Eager loading paramétrico
         if (!empty($with)) {
             $query->with($with);
         }
 
-        // Aplicar filtros avançados do trait
+        // Aplicar filtros básicos do trait
         $this->applyFilters($query, $filters);
 
         // Aplicar filtro de soft delete
         $this->applySoftDeleteFilter($query, $filters);
 
-        // Filtro por status
+        // Filtro por status (se não foi tratado pelo applyFilters)
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        // Busca avançada em relações
+        // Busca avançada em relações (customizado para Customer)
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
@@ -310,25 +292,27 @@ class CustomerRepository extends AbstractTenantRepository
             });
         }
 
-        // Ordenação
-        $defaultOrderBy = $orderBy ?: ['created_at' => 'desc'];
-        $this->applyOrderBy($query, $defaultOrderBy);
+        // Filtro por CEP
+        if (!empty($filters['cep'])) {
+            $cepPrefix = substr(preg_replace('/[^0-9]/', '', $filters['cep']), 0, 5);
+            $query->whereHas('address', function ($q) use ($cepPrefix) {
+                $q->where('cep', 'like', $cepPrefix . '%');
+            });
+        }
 
-        // Per page
-        $effectivePerPage = $this->getEffectivePerPage($filters, $perPage);
+        $this->applyOrderBy($query, $orderBy ?: ['created_at' => 'desc']);
 
-        return $query->paginate($effectivePerPage);
+        return $query->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 
     /**
      * Busca clientes próximos por CEP (prefixo de 5 dígitos).
      */
-    public function findNearbyByCep(string $cep, int $tenantId): Collection
+    public function findNearbyByCep(string $cep): Collection
     {
         $cepPrefix = substr(preg_replace('/[^0-9]/', '', $cep), 0, 5);
 
         return $this->model->newQuery()
-            ->where('tenant_id', $tenantId)
             ->whereHas('address', function ($query) use ($cepPrefix) {
                 $query->where('cep', 'like', $cepPrefix . '%');
             })
@@ -339,10 +323,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca simplificada para autocompletar
      */
-    public function findBySearch(string $search, int $tenantId, int $limit = 10): Collection
+    public function findBySearch(string $search, int $limit = 10): Collection
     {
         return $this->model->newQuery()
-            ->where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->where(function ($q) use ($search) {
                 $q->whereHas('commonData', function ($cq) use ($search) {
@@ -364,11 +347,10 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca customer com dados completos relacionados
      */
-    public function findWithCompleteData(int $id, int $tenantId): ?Customer
+    public function findWithCompleteData(int $id): ?Customer
     {
         return $this->model->newQuery()
             ->where('id', $id)
-            ->where('tenant_id', $tenantId)
             ->with([
                 'commonData' => function ($q) {
                     $q->with(['areaOfActivity', 'profession']);
@@ -384,11 +366,10 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se o cliente possui orçamentos cadastrados.
      */
-    public function hasBudgets(int $customerId, int $tenantId): bool
+    public function hasBudgets(int $customerId): bool
     {
         return $this->model->newQuery()
             ->where('id', $customerId)
-            ->where('tenant_id', $tenantId)
             ->whereHas('budgets')
             ->exists();
     }
@@ -427,9 +408,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Obtém estatísticas para o dashboard de clientes.
      */
-    public function getDashboardStats(int $tenantId): array
+    public function getDashboardStats(): array
     {
-        $baseQuery = $this->model->where('tenant_id', $tenantId);
+        $baseQuery = $this->model->newQuery();
 
         return [
             'total_customers'    => (clone $baseQuery)->count(),
@@ -443,13 +424,25 @@ class CustomerRepository extends AbstractTenantRepository
     }
 
     /**
+     * Obtém clientes ativos com estatísticas resumidas.
+     */
+    public function getActiveWithStats(int $limit = 10): Collection
+    {
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->withCount(['budgets', 'services'])
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Restaura um cliente deletado.
      */
-    public function restore(int $id, int $tenantId): ?Customer
+    public function restore(int $id): ?Customer
     {
         $customer = $this->model->onlyTrashed()
             ->where('id', $id)
-            ->where('tenant_id', $tenantId)
             ->first();
 
         if ($customer) {
@@ -621,31 +614,27 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica se customer pode ser deletado (verifica relacionamentos)
      */
-    public function canDelete(int $id, int $tenantId): array
+    public function canDelete(int $id): array
     {
-        $customer = Customer::select('customers.*')
-            ->where('customers.id', $id)
-            ->where('customers.tenant_id', $tenantId)
-            ->where('customers.deleted_at', null)
+        $customer = $this->model->newQuery()
+            ->where('id', $id)
+            ->whereNull('deleted_at')
             ->addSelect([
-                'budgets_count'  => function ($query) use ($tenantId) {
+                'budgets_count'  => function ($query) {
                     $query->selectRaw('count(*)')
                         ->from('budgets')
-                        ->whereColumn('budgets.customer_id', 'customers.id')
-                        ->where('budgets.tenant_id', $tenantId);
+                        ->whereColumn('budgets.customer_id', 'customers.id');
                 },
-                'services_count' => function ($query) use ($tenantId) {
+                'services_count' => function ($query) {
                     $query->selectRaw('count(*)')
                         ->from('services')
                         ->join('budgets', 'services.budget_id', '=', 'budgets.id')
-                        ->whereColumn('budgets.customer_id', 'customers.id')
-                        ->where('budgets.tenant_id', $tenantId);
+                        ->whereColumn('budgets.customer_id', 'customers.id');
                 },
-                'invoices_count' => function ($query) use ($tenantId) {
+                'invoices_count' => function ($query) {
                     $query->selectRaw('count(*)')
                         ->from('invoices')
                         ->whereColumn('invoices.customer_id', 'customers.id')
-                        ->where('invoices.tenant_id', $tenantId)
                         ->whereNull('invoices.deleted_at');
                 }
             ])
@@ -686,9 +675,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca por email (qualquer campo de email)
      */
-    public function findByEmail(string $email, int $tenantId): ?Customer
+    public function findByEmail(string $email): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->whereHas('contact', function ($q) use ($email) {
                 $q->where('email_personal', $email)
                     ->orWhere('email_business', $email);
@@ -699,9 +688,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca por CPF
      */
-    public function findByCpf(string $cpf, int $tenantId): ?Customer
+    public function findByCpf(string $cpf): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->whereHas('commonData', function ($q) use ($cpf) {
                 $q->where('cpf', $cpf);
             })
@@ -711,9 +700,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca por CNPJ
      */
-    public function findByCnpj(string $cnpj, int $tenantId): ?Customer
+    public function findByCnpj(string $cnpj): ?Customer
     {
-        return Customer::where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->whereHas('commonData', function ($q) use ($cnpj) {
                 $q->where('cnpj', $cnpj);
             })
@@ -723,9 +712,9 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Verifica relacionamentos (método aliases para canDelete)
      */
-    public function checkRelationships(int $id, int $tenantId): array
+    public function checkRelationships(int $id): array
     {
-        $canDelete = $this->canDelete($id, $tenantId);
+        $canDelete = $this->canDelete($id);
         return [
             'hasRelationships' => !$canDelete['canDelete'],
             'budgets'          => $canDelete['budgetsCount'] ?? 0,
@@ -740,11 +729,10 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Busca customer com registros trashed
      */
-    public function findWithTrashed(int $id, int $tenantId): ?Customer
+    public function findWithTrashed(int $id): ?Customer
     {
-        return Customer::withTrashed()
+        return $this->model->newQuery()->withTrashed()
             ->where('id', $id)
-            ->where('tenant_id', $tenantId)
             ->with([
                 'commonData'   => function ($q) {
                     $q->withTrashed()->with(['areaOfActivity', 'profession']);
@@ -762,66 +750,15 @@ class CustomerRepository extends AbstractTenantRepository
             ->first();
     }
 
-    /**
-     * Conta total de customers por tenant
-     */
-    public function countByTenantId(int $tenantId): int
-    {
-        return Customer::where('tenant_id', $tenantId)->count();
-    }
-
-    /**
-     * Conta customers por status no tenant
-     */
-    public function countByStatus(string $status, int $tenantId): int
-    {
-        return Customer::where('tenant_id', $tenantId)
-            ->where('status', $status)
-            ->count();
-    }
-
-    /**
-     * Busca customers recentes por tenant
-     */
-    public function getRecentByTenantId(int $tenantId, int $limit = 10): Collection
-    {
-        return Customer::where('tenant_id', $tenantId)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Busca para autocomplete
-     */
-    public function searchForAutocomplete(string $query, int $tenantId): Collection
-    {
-        return Customer::where('tenant_id', $tenantId)
-            ->whereHas('commonData', function ($q) use ($query) {
-                $q->where('first_name', 'like', '%' . $query . '%')
-                    ->orWhere('last_name', 'like', '%' . $query . '%')
-                    ->orWhere('company_name', 'like', '%' . $query . '%')
-                    ->orWhere('cpf', 'like', '%' . $query . '%')
-                    ->orWhere('cnpj', 'like', '%' . $query . '%');
-            })
-            ->orWhereHas('contact', function ($q) use ($query) {
-                $q->where('email_personal', 'like', '%' . $query . '%')
-                    ->orWhere('email_business', 'like', '%' . $query . '%')
-                    ->orWhere('phone_personal', 'like', '%' . $query . '%')
-                    ->orWhere('phone_business', 'like', '%' . $query . '%');
-            })
-            ->with('commonData.contact')
-            ->limit(20)
-            ->get();
-    }
+    // Métodos removidos por redundância com AbstractTenantRepository
+    // countByTenantId, countByStatus, getRecentByTenantId, searchForAutocomplete
 
     /**
      * Busca clientes ativos com estatísticas (counts de orçamentos e faturas).
      */
-    public function getActiveWithStats(int $tenantId, int $limit = 50): Collection
+    public function getActiveWithStats(int $limit = 50): Collection
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
+        return $this->model->newQuery()
             ->where('status', 'active')
             ->withCount(['budgets', 'invoices'])
             ->latest()

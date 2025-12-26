@@ -36,9 +36,9 @@ class BudgetService extends AbstractBaseService
     }
 
     /**
-     * Retorna lista paginada de orçamentos para um provider específico.
+     * Retorna lista paginada de orçamentos.
      */
-    public function getBudgetsForProvider(int $userId, array $filters = []): ServiceResult
+    public function getBudgetsForProvider(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
             $perPage = (int) ($filters['per_page'] ?? 10);
@@ -86,25 +86,30 @@ class BudgetService extends AbstractBaseService
     public function create(BudgetDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $tenantId = $this->ensureTenantId($dto->tenant_id);
-
-            return DB::transaction(function () use ($dto, $tenantId) {
+            return DB::transaction(function () use ($dto) {
                 // Gera o código usando o serviço especializado
-                $codeResult = $this->codeGeneratorService->generateUniqueCode($tenantId);
+                $codeResult = $this->codeGeneratorService->generateUniqueCode();
                 if ($codeResult->isError()) {
                     throw new \Exception($codeResult->getMessage());
                 }
 
                 $code = $dto->code ?? $codeResult->getData();
 
-                // Prepara dados para criação
-                $budgetData = array_merge($dto->toArray(), [
-                    'code'      => $code,
-                    'tenant_id' => $tenantId,
-                ]);
+                // Cria um novo DTO com o código gerado
+                $finalDto = new BudgetDTO(
+                    customer_id: $dto->customer_id,
+                    status: $dto->status,
+                    code: $code,
+                    due_date: $dto->due_date,
+                    discount: $dto->discount,
+                    total: $dto->total,
+                    description: $dto->description,
+                    payment_terms: $dto->payment_terms,
+                    items: $dto->items
+                );
 
                 // Cria o orçamento usando o repositório
-                $budget = $this->repository->create($budgetData);
+                $budget = $this->repository->createFromDTO($finalDto);
 
                 // Cria os itens usando o repositório de itens
                 if (!empty($dto->items)) {
@@ -134,8 +139,8 @@ class BudgetService extends AbstractBaseService
                     return ServiceResult::error('Orçamento não encontrado.');
                 }
 
-                // Atualiza o orçamento principal
-                $this->repository->update($budget->id, $dto->toArray());
+                // Atualiza o orçamento principal usando DTO
+                $this->repository->updateFromDTO($budget->id, $dto);
 
                 // Atualiza os itens: remove antigos e insere novos (estratégia simples)
                 if (isset($dto->items)) {
@@ -180,7 +185,7 @@ class BudgetService extends AbstractBaseService
             return DB::transaction(function () use ($budget, $status, $comment) {
                 $oldStatus = $budget->status->value;
 
-                $updated = $this->repository->update($budget, [
+                $updated = $this->repository->update($budget->id, [
                     'status'            => $status,
                     'status_comment'    => $comment,
                     'status_updated_at' => now(),

@@ -27,7 +27,6 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         return $this->model
             ->where('service_id', $serviceId)
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->latest()
             ->first();
     }
@@ -39,7 +38,6 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         return $this->model
             ->where('service_id', $serviceId)
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->latest()
             ->paginate($perPage);
     }
@@ -50,7 +48,6 @@ class ScheduleRepository extends AbstractTenantRepository
     public function getUpcomingSchedules(int $limit = 10): Collection
     {
         return $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->where('start_date_time', '>', now())
             ->with(['service', 'service.customer'])
             ->orderBy('start_date_time', 'asc')
@@ -64,7 +61,6 @@ class ScheduleRepository extends AbstractTenantRepository
     public function getByDateRange(string $startDate, string $endDate): Collection
     {
         return $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->whereBetween('start_date_time', [$startDate, $endDate])
             ->with(['service', 'service.customer'])
             ->orderBy('start_date_time', 'asc')
@@ -77,21 +73,10 @@ class ScheduleRepository extends AbstractTenantRepository
     public function getByDateRangeWithRelations(string $startDate, string $endDate, array $filters = []): Collection
     {
         $query = $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->whereBetween('start_date_time', [$startDate, $endDate])
             ->with(['service', 'service.customer', 'confirmationToken']);
 
-        if (isset($filters['service_id'])) {
-            $query->where('service_id', $filters['service_id']);
-        }
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['location'])) {
-            $query->where('location', 'like', '%' . $filters['location'] . '%');
-        }
+        $this->applyAllScheduleFilters($query, $filters);
 
         return $query->orderBy('start_date_time', 'asc')->get();
     }
@@ -102,7 +87,6 @@ class ScheduleRepository extends AbstractTenantRepository
     public function hasConflict(string $startTime, string $endTime, ?int $serviceId = null, ?int $excludeScheduleId = null): bool
     {
         $query = $this->model
-            ->where('tenant_id', $this->getCurrentTenantId())
             ->where('status', '!=', 'cancelled')
             ->where(function ($q) use ($startTime, $endTime) {
                 $q->where('start_date_time', '<', $endTime)
@@ -121,23 +105,11 @@ class ScheduleRepository extends AbstractTenantRepository
     }
 
     /**
-     * Busca um agendamento por ID e Tenant.
+     * Busca eventos de hoje.
      */
-    public function findByIdAndTenant(int $id, int $tenantId): ?Schedule
+    public function getTodayEvents(int $limit = 5): Collection
     {
         return $this->model
-            ->where('id', $id)
-            ->where('tenant_id', $tenantId)
-            ->first();
-    }
-
-    /**
-     * Busca eventos de hoje por tenant.
-     */
-    public function getTodayEvents(int $tenantId, int $limit = 5): Collection
-    {
-        return $this->model
-            ->where('tenant_id', $tenantId)
             ->whereDate('start_date_time', now()->toDateString())
             ->with(['service', 'service.customer'])
             ->orderBy('start_date_time', 'asc')
@@ -146,41 +118,48 @@ class ScheduleRepository extends AbstractTenantRepository
     }
 
     /**
-     * Get count by status.
+     * Obtém estatísticas de agendamentos.
      */
-    public function getCountByStatus(int $tenantId, string $status): int
+    public function getStats(): array
     {
-        return $this->model
-            ->where('tenant_id', $tenantId)
-            ->where('status', $status)
-            ->count();
-    }
-
-    /**
-     * Get count of upcoming schedules.
-     */
-    public function getUpcomingCount(int $tenantId): int
-    {
-        return $this->model
-            ->where('tenant_id', $tenantId)
-            ->where('status', '!=', 'cancelled')
-            ->where('start_date_time', '>=', now())
-            ->count();
+        return [
+            'total'     => $this->model->count(),
+            'upcoming'  => $this->model->where('status', '!=', 'cancelled')->where('start_date_time', '>=', now())->count(),
+            'today'     => $this->model->whereDate('start_date_time', now()->toDateString())->count(),
+            'by_status' => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
+        ];
     }
 
     /**
      * Get recent upcoming schedules with relations.
      */
-    public function getRecentUpcoming(int $tenantId, int $limit = 10): Collection
+    public function getRecentUpcoming(int $limit = 10): Collection
     {
         return $this->model
-            ->where('tenant_id', $tenantId)
             ->where('status', '!=', 'cancelled')
             ->where('start_date_time', '>=', now()->subDays(1))
             ->orderBy('start_date_time')
             ->limit($limit)
             ->with(['service.customer', 'service'])
             ->get();
+    }
+
+    /**
+     * Aplica todos os filtros de agendamento.
+     */
+    protected function applyAllScheduleFilters(Builder $query, array $filters): void
+    {
+        // Filtro de busca
+        if (!empty($filters['location'])) {
+            $query->where('location', 'like', '%' . $filters['location'] . '%');
+        }
+
+        // Filtros básicos
+        $basicFilters = array_intersect_key($filters, array_flip(['service_id', 'status']));
+        $this->applyFilters($query, $basicFilters);
+
+        // Filtro de soft delete
+        $this->applySoftDeleteFilter($query, $filters);
     }
 
     public function createFromDTO(\App\DTOs\Schedule\ScheduleDTO $dto): Model
@@ -191,13 +170,5 @@ class ScheduleRepository extends AbstractTenantRepository
     public function updateFromDTO(int $id, \App\DTOs\Schedule\ScheduleUpdateDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
-    }
-
-    /**
-     * Get total count for tenant.
-     */
-    public function getTotalCount(int $tenantId): int
-    {
-        return $this->model->where('tenant_id', $tenantId)->count();
     }
 }
