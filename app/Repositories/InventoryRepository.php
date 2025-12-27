@@ -239,10 +239,47 @@ class InventoryRepository extends AbstractTenantRepository
             ->get();
     }
 
+    public function getHighStockItems(int $limit = 10): Collection
+    {
+        return $this->model
+            ->whereNotNull('max_quantity')
+            ->whereColumn('quantity', '>=', 'max_quantity')
+            ->with('product')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getOutOfStockItems(int $limit = 10): Collection
+    {
+        return $this->model
+            ->where('quantity', '<=', 0)
+            ->with('product')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getHighStockCount(): int
+    {
+        return $this->model
+            ->whereNotNull('max_quantity')
+            ->whereColumn('quantity', '>=', 'max_quantity')
+            ->count();
+    }
+
+    public function getOutOfStockCount(): int
+    {
+        return $this->model
+            ->where('quantity', '<=', 0)
+            ->count();
+    }
+
     public function getStatistics(): array
     {
         $total = $this->model->count();
         $lowStock = $this->getLowStockCount();
+        $highStock = $this->getHighStockCount();
+        $outOfStock = $this->getOutOfStockCount();
+
         $totalValue = $this->model
             ->join('products', 'product_inventory.product_id', '=', 'products.id')
             ->selectRaw('SUM(product_inventory.quantity * products.price) as total')
@@ -250,7 +287,9 @@ class InventoryRepository extends AbstractTenantRepository
 
         return [
             'total_items' => $total,
-            'low_stock_items' => $lowStock,
+            'low_stock_items_count' => $lowStock,
+            'high_stock_items_count' => $highStock,
+            'out_of_stock_items_count' => $outOfStock,
             'total_inventory_value' => $totalValue,
         ];
     }
