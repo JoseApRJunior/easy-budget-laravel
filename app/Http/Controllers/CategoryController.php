@@ -91,20 +91,18 @@ class CategoryController extends Controller
      */
     public function show(string $slug): View|RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug, [
-            'parent',
-            'children' => fn ($q) => $q->withTrashed(), // Incluído withTrashed para ver as filhas excluídas
-        ]);
+        $result = $this->categoryService->findBySlug(
+            $slug,
+            ['parent' => fn ($q) => $q->withTrashed()],
+            true, // withTrashed (para a própria categoria)
+            ['children', 'services', 'products'] // loadCounts
+        );
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
         }
 
-        $category = $result->getData();
-        $this->authorize('view', $category);
-
-        $category->loadCount(['children', 'services', 'products']);
-        $category->load(['parent' => fn ($q) => $q->withTrashed()]);
+        $this->authorize('view', $result->getData());
 
         return $this->view('pages.category.show', $result, 'category');
     }
@@ -114,7 +112,13 @@ class CategoryController extends Controller
      */
     public function edit(string $slug): View|RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
+        $result = $this->categoryService->findBySlug(
+            $slug,
+            ['parent' => fn ($q) => $q->withTrashed()],
+            false, // withTrashed (não editamos deletados via edit normal)
+            ['children', 'services', 'products']
+        );
+
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
         }
@@ -122,26 +126,16 @@ class CategoryController extends Controller
         $category = $result->getData();
         $this->authorize('update', $category);
 
-        $category->load(['parent' => function ($query) {
-            $query->withTrashed();
-        }]);
-        $category->loadCount(['children', 'services', 'products']);
         $parentResult = $this->categoryService->getParentCategories();
 
         $parents = $parentResult->isSuccess()
             ? $parentResult->getData()->filter(fn ($p) => $p->id !== $category->id)
             : collect();
 
-        // Se a categoria tem um pai e ele está inativo, precisamos garantir que ele esteja na lista
-        if ($category->parent_id) {
-            $currentParent = $parents->firstWhere('id', $category->parent_id);
-            if (! $currentParent) {
-                // O pai atual não está na lista (provavelmente está inativo)
-                // Vamos carregar o pai especificamente
-                $actualParent = \App\Models\Category::find($category->parent_id);
-                if ($actualParent) {
-                    $parents->push($actualParent);
-                }
+        // Se a categoria tem um pai e ele está inativo, garantimos que ele esteja na lista
+        if ($category->parent_id && ! $parents->contains('id', $category->parent_id)) {
+            if ($category->parent) {
+                $parents->push($category->parent);
             }
         }
 

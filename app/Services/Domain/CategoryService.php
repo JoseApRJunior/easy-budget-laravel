@@ -364,11 +364,11 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
-     * Busca categoria por slug dentro do tenant.
+     * Busca categoria por slug dentro do tenant com relacionamentos e contagens.
      */
-    public function findBySlug(string $slug, array $with = [], bool $withTrashed = true): ServiceResult
+    public function findBySlug(string $slug, array $with = [], bool $withTrashed = true, array $loadCounts = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($slug, $with, $withTrashed) {
+        return $this->safeExecute(function () use ($slug, $with, $withTrashed, $loadCounts) {
             $entity = $this->repository->findBySlug($slug, $withTrashed);
 
             if (! $entity) {
@@ -377,6 +377,10 @@ class CategoryService extends AbstractBaseService
 
             if (! empty($with)) {
                 $entity->load($with);
+            }
+
+            if (! empty($loadCounts)) {
+                $entity->loadCount($loadCounts);
             }
 
             return $entity;
