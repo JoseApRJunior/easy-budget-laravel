@@ -11,7 +11,7 @@ class ProductUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return \auth()->check();
     }
 
     /**
@@ -29,7 +29,7 @@ class ProductUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $tenantId = tenant()?->id ?? auth()->user()->tenant_id ?? null;
+        $tenantId = \tenant()?->id ?? \auth()->user()->tenant_id ?? null;
         $productId = $this->route('product')?->id ?? null;
         if (! $productId) {
             $sku = $this->route('sku') ?? $this->input('sku');

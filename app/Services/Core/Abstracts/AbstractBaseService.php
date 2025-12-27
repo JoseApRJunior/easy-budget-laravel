@@ -10,6 +10,8 @@ use App\Repositories\Contracts\BaseRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Services\Core\Contracts\CrudServiceInterface;
 use App\Support\ServiceResult;
+use App\Services\Core\Traits\HasFilterNormalization;
+use App\Services\Core\Traits\HasSafeExecution;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 abstract class AbstractBaseService implements CrudServiceInterface
 {
+    use HasFilterNormalization;
+
     protected BaseRepositoryInterface $repository;
 
     public function __construct(BaseRepositoryInterface $repository)

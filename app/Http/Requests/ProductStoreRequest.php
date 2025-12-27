@@ -37,7 +37,7 @@ class ProductStoreRequest extends FormRequest
                 'string',
                 'max:50',
                 Rule::unique('products')->where(function ($query) {
-                    return $query->where('tenant_id', auth()->user()->tenant_id);
+                    return $query->where('tenant_id', \auth()->user()->tenant_id);
                 }),
             ],
             'price' => 'required|numeric|min:0',

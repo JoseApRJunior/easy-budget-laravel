@@ -77,8 +77,14 @@ class CategoryService extends AbstractBaseService
                 return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
             }
 
+            // Normalização padronizada via Trait
+            $normalizedFilters = $this->normalizeFilters($filters, [
+                'aliases' => ['active' => 'is_active'],
+                'likes' => ['name', 'slug'],
+            ]);
+
             $paginator = $this->repository->getPaginated(
-                $this->normalizeFilters($filters),
+                $normalizedFilters,
                 $perPage,
                 ['parent'],
             );
@@ -87,48 +93,6 @@ class CategoryService extends AbstractBaseService
 
             return $paginator;
         }, 'Erro ao carregar categorias.');
-    }
-
-    /**
-     * Normaliza filtros do request para formato aceito pelo repository.
-     */
-    private function normalizeFilters(array $filters): array
-    {
-
-        $normalized = [];
-
-        if (array_key_exists('all', $filters) && $filters['all'] !== null) {
-            $normalized['all'] = (bool) $filters['all'];
-        }
-
-        // Status filter
-        if (isset($filters['active']) && $filters['active'] !== '' && $filters['active'] !== null) {
-            $normalized['is_active'] = (string) $filters['active'] === '1' || $filters['active'] === 1;
-        }
-
-        // Search/Name/Slug filters
-        if (! empty($filters['search'])) {
-            $normalized['search'] = (string) $filters['search'];
-        }
-
-        if (! empty($filters['name'])) {
-            $normalized['name'] = ['operator' => 'like', 'value' => '%'.$filters['name'].'%'];
-        }
-
-        if (! empty($filters['slug'])) {
-            $normalized['slug'] = ['operator' => 'like', 'value' => '%'.$filters['slug'].'%'];
-        }
-
-        // Soft delete filter
-        if (array_key_exists('deleted', $filters)) {
-            $normalized['deleted'] = match ($filters['deleted']) {
-                'only', '1' => 'only',
-                'current', '0' => 'current',
-                default => '',
-            };
-        }
-
-        return $normalized;
     }
 
     /**
@@ -250,7 +214,7 @@ class CategoryService extends AbstractBaseService
         ?int $limit = null,
     ): ServiceResult {
         return $this->safeExecute(
-            fn () => $this->repository->search($search, $filters, $orderBy, $limit),
+            fn () => $this->repository->search($search, $this->normalizeFilters($filters), $orderBy, $limit),
             'Erro ao buscar categorias.'
         );
     }
@@ -264,7 +228,7 @@ class CategoryService extends AbstractBaseService
         ?int $limit = null,
     ): ServiceResult {
         return $this->safeExecute(
-            fn () => $this->repository->getActive($filters, $orderBy, $limit),
+            fn () => $this->repository->getActive($this->normalizeFilters($filters), $orderBy, $limit),
             'Erro ao buscar categorias ativas.'
         );
     }
@@ -277,10 +241,11 @@ class CategoryService extends AbstractBaseService
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute(
-            fn () => $this->repository->getDeleted($filters, $orderBy, $limit),
-            'Erro ao buscar categorias deletadas.'
-        );
+        return $this->safeExecute(function () use ($filters, $orderBy, $limit) {
+            $filters['deleted'] = 'only';
+
+            return $this->repository->getDeleted($this->normalizeFilters($filters), $orderBy, $limit);
+        }, 'Erro ao buscar categorias deletadas.');
     }
 
     /**

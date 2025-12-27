@@ -126,10 +126,10 @@ trait RepositoryFiltersTrait
         $deletedFilter = $filters['deleted'] ?? 'current';
 
         return match ($deletedFilter) {
-            'only' => $query->onlyTrashed(),  // Apenas deletados
-            'current' => $query,              // Apenas ativos (padrão do Eloquent)
-            'all' => $query->withTrashed(),   // Todos
-            default => $query,                // Fallback: apenas ativos
+            'only' => $query->onlyTrashed(), // Apenas deletados
+            'current' => $query,             // Apenas ativos (padrão do Eloquent)
+            'all' => $query->withTrashed(),        // Todos
+            default => $query,                     // Fallback: apenas ativos
         };
     }
 
@@ -197,10 +197,16 @@ trait RepositoryFiltersTrait
      */
     public function applyBooleanFilter(Builder $query, array $filters, string $filterName, string $fieldName): Builder
     {
-        return $query->when(
-            array_key_exists($filterName, $filters),
-            fn ($q) => $q->where($fieldName, $filters[$filterName])
-        );
+        $value = $filters[$filterName] ?? null;
+
+        if ($value === null || $value === '' || $value === 'all') {
+            return $query;
+        }
+
+        // Converte para booleano de forma robusta
+        $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+
+        return $query->where($fieldName, $boolValue);
     }
 
     /**

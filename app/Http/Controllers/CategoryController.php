@@ -8,12 +8,12 @@ use App\DTOs\Category\CategoryDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CategoryStoreRequest;
 use App\Http\Requests\CategoryUpdateRequest;
+use App\Models\Category;
 use App\Services\Domain\CategoryExportService;
 use App\Services\Domain\CategoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Controller para gerenciamento de categorias com arquitetura refinada.
@@ -43,13 +43,13 @@ class CategoryController extends Controller
      */
     public function index(Request $request): View
     {
-        $this->authorize('viewAny', \App\Models\Category::class);
+        $this->authorize('viewAny', Category::class);
         $filters = $request->only(['search', 'active', 'per_page', 'deleted', 'all']);
 
         // Se nenhum parâmetro foi passado na URL, definimos filtros padrão
         if (empty($request->query())) {
-            $filters['active'] = 'all';
-            $filters['deleted'] = 'all';
+            $filters['active'] = '1';
+            $filters['deleted'] = '1';
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 10);
@@ -66,7 +66,7 @@ class CategoryController extends Controller
      */
     public function create(): View|RedirectResponse
     {
-        $this->authorize('create', \App\Models\Category::class);
+        $this->authorize('create', Category::class);
         $result = $this->categoryService->getParentCategories();
 
         return $this->view('pages.category.create', $result, 'parents', [
@@ -79,7 +79,7 @@ class CategoryController extends Controller
      */
     public function store(CategoryStoreRequest $request): RedirectResponse
     {
-        $this->authorize('create', \App\Models\Category::class);
+        $this->authorize('create', Category::class);
         $dto = CategoryDTO::fromRequest($request->validated());
         $result = $this->categoryService->createCategory($dto);
 
@@ -93,7 +93,7 @@ class CategoryController extends Controller
     {
         $result = $this->categoryService->findBySlug($slug, [
             'parent',
-            'children' => fn ($q) => $q->where('is_active', true),
+            'children' => fn ($q) => $q->withTrashed(), // Incluído withTrashed para ver as filhas excluídas
         ]);
 
         if ($result->isError()) {
@@ -269,7 +269,7 @@ class CategoryController extends Controller
         return $this->redirectSuccess('provider.categories.index', 'Restauradas categorias com sucesso.');
     }
 
-    public function export(Request $request): StreamedResponse|RedirectResponse
+    public function export(Request $request)
     {
         $this->authorize('viewAny', \App\Models\Category::class);
         $format = $request->get('format', 'xlsx');

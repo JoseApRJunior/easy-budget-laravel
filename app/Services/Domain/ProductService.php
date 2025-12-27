@@ -208,8 +208,10 @@ class ProductService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
             $filters['deleted'] = 'only';
+            $normalizedFilters = $this->normalizeFilters($filters);
+
             $paginator = $this->repository->getPaginated(
-                $filters,
+                $normalizedFilters,
                 $perPage,
                 $with,
             );
@@ -253,8 +255,11 @@ class ProductService extends AbstractBaseService
     public function getFilteredProducts(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
     {
         return $this->safeExecute(function () use ($filters, $with, $perPage) {
+            // Normalização padronizada via Trait
+            $normalizedFilters = $this->normalizeFilters($filters);
+
             $paginator = $this->repository->getPaginated(
-                $filters,
+                $normalizedFilters,
                 $perPage,
                 $with,
             );

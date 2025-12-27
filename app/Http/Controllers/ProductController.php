@@ -8,6 +8,7 @@ use App\DTOs\Product\ProductDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Models\Product;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductExportService;
 use App\Services\Domain\ProductService;
@@ -46,12 +47,12 @@ class ProductController extends Controller
      */
     public function index(Request $request): View
     {
-        $this->authorize('viewAny', \App\Models\Product::class);
+        $this->authorize('viewAny', Product::class);
         $filters = $request->only(['search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price']);
 
         if (empty($request->query())) {
-            $filters['active'] = 'all';
-            $filters['deleted'] = 'all';
+            $filters['active'] = '1';
+            $filters['deleted'] = '1';
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 15);
@@ -71,7 +72,7 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        $this->authorize('create', \App\Models\Product::class);
+        $this->authorize('create', Product::class);
         $result = $this->categoryService->getActive();
 
         return $this->view('pages.product.create', $result, 'categories', [
@@ -84,7 +85,7 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request): RedirectResponse
     {
-        $this->authorize('create', \App\Models\Product::class);
+        $this->authorize('create', Product::class);
         try {
             $dto = ProductDTO::fromRequest($request->validated());
             $result = $this->productService->createProduct($dto);
@@ -315,7 +316,7 @@ class ProductController extends Controller
 
     public function restoreMultiple(Request $request): RedirectResponse
     {
-        $this->authorize('update', \App\Models\Product::class);
+        $this->authorize('update', Product::class);
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {

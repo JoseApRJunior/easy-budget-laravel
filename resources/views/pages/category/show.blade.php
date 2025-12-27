@@ -32,8 +32,20 @@
                     </div>
                 </div>
 
+                <div class="col-md-2">
+                    <div class="d-flex flex-column">
+                        <label class="text-muted small mb-1">Status</label>
+                        <div>
+                            <span
+                                class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
+                                {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 @if ($category->parent)
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Categoria Pai</label>
                         <h5 class="mb-0">
@@ -47,7 +59,7 @@
                 @endif
 
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Criado em</label>
                         <h5 class="mb-0">{{ $category->created_at?->format('d/m/Y H:i') }}</h5>
@@ -89,8 +101,8 @@
                                     </td>
                                     <td class="text-center">
                                         <span
-                                            class="modern-badge {{ $child->is_active ? 'badge-active' : 'badge-inactive' }}">
-                                            {{ $child->is_active ? 'Ativo' : 'Inativo' }}
+                                            class="modern-badge {{ $child->deleted_at ? 'badge-deleted' : ($child->is_active ? 'badge-active' : 'badge-inactive') }}">
+                                            {{ $child->deleted_at ? 'Deletado' : ($child->is_active ? 'Ativo' : 'Inativo') }}
                                         </span>
                                     </td>
                                     <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
@@ -119,8 +131,8 @@
                                     <div class="fw-semibold mb-2">{{ $child->name }}</div>
                                     <div class="d-flex gap-2 flex-wrap">
                                         <span
-                                            class="modern-badge {{ $child->is_active ? 'badge-active' : 'badge-inactive' }}">
-                                            {{ $child->is_active ? 'Ativo' : 'Inativo' }}
+                                            class="modern-badge {{ $child->deleted_at ? 'badge-deleted' : ($child->is_active ? 'badge-active' : 'badge-inactive') }}">
+                                            {{ $child->deleted_at ? 'Deletado' : ($child->is_active ? 'Ativo' : 'Inativo') }}
                                         </span>
                                     </div>
                                 </div>
