@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\DTOs\Product\ProductDTO;
+use App\DTOs\Product\ProductFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
@@ -48,15 +49,14 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Product::class);
-        $filters = $request->only(['search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price']);
 
         if (empty($request->query())) {
-            $filters['active'] = '1';
-            $filters['deleted'] = '1';
+            $filters = ['active' => '1', 'deleted' => '1'];
             $result = $this->emptyResult();
         } else {
-            $perPage = (int) ($filters['per_page'] ?? 15);
-            $result = $this->productService->getFilteredProducts($filters, ['category'], $perPage);
+            $filterDto = ProductFilterDTO::fromRequest($request->all());
+            $result = $this->productService->getFilteredProducts($filterDto, ['category']);
+            $filters = $filterDto->toFilterArray();
         }
 
         return $this->view('pages.product.index', $result, 'products', [
@@ -86,43 +86,40 @@ class ProductController extends Controller
     public function store(ProductStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Product::class);
-        try {
-            $dto = ProductDTO::fromRequest($request->validated());
-            $result = $this->productService->createProduct($dto);
 
-            return $this->redirectWithServiceResult(
-                'provider.products.create',
-                $result,
-                'Produto criado com sucesso! Você pode cadastrar outro produto agora.'
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro inesperado ao criar produto', [
-                'error' => $e->getMessage(),
-            ]);
+        $dto = ProductDTO::fromRequest($request->validated());
+        $result = $this->productService->createProduct($dto);
 
-            return $this->redirectError('provider.products.create', 'Erro interno ao criar produto.');
-        }
+        return $this->redirectWithServiceResult(
+            'provider.products.create',
+            $result,
+            'Produto criado com sucesso! Você pode cadastrar outro produto agora.'
+        );
     }
 
     /**
-     * Detalhes de um produto por SKU.
+     * Exibe os detalhes de um produto.
      */
     public function show(string $sku): View|RedirectResponse
     {
-        $result = $this->productService->findBySku($sku, ['category', 'inventory']);
+        $result = $this->productService->findBySku(
+            $sku,
+            ['category'],
+            true, // withTrashed
+            ['orders'] // exemplo de loadCount
+        );
 
         if ($result->isError()) {
             return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        $product = $result->getData();
-        $this->authorize('view', $product);
+        $this->authorize('view', $result->getData());
 
         return $this->view('pages.product.show', $result, 'product');
     }
 
     /**
-     * Formulário de edição de produto por SKU.
+     * Formulário de edição de produto.
      */
     public function edit(string $sku): View|RedirectResponse
     {
@@ -135,47 +132,40 @@ class ProductController extends Controller
         $product = $result->getData();
         $this->authorize('update', $product);
 
-        $categories = $this->categoryService->getActive()->getData();
-
-        return view('pages.product.edit', compact('product', 'categories'));
+        return $this->view('pages.product.edit', $result, 'product', [
+            'categories' => $this->categoryService->getActive()->getData(),
+        ]);
     }
 
     /**
-     * Atualiza um produto por SKU.
+     * Atualiza um produto.
      */
-    public function update(string $sku, ProductUpdateRequest $request): RedirectResponse
+    public function update(ProductUpdateRequest $request, string $sku): RedirectResponse
     {
-        try {
-            $result = $this->productService->findBySku($sku);
-            if ($result->isError()) {
-                return $this->redirectError('provider.products.index', $result->getMessage());
-            }
-
-            $product = $result->getData();
-            $this->authorize('update', $product);
-
-            $dto = ProductDTO::fromRequest($request->validated());
-            $removeImage = (bool) $request->input('remove_image', false);
-
-            $updateResult = $this->productService->updateProductBySku($sku, $dto, $removeImage);
-
-            // Se a atualização for bem-sucedida, usamos o novo SKU para o redirecionamento
-            $redirectSku = $updateResult->isSuccess() ? $updateResult->getData()->sku : $sku;
-
-            return $this->redirectWithServiceResult(
-                'provider.products.show',
-                $updateResult,
-                'Produto atualizado com sucesso!',
-                ['sku' => $redirectSku]
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro inesperado ao atualizar produto', [
-                'sku' => $sku,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.products.edit', 'Erro interno ao atualizar produto.', ['sku' => $sku]);
+        $result = $this->productService->findBySku($sku);
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', 'Produto não encontrado');
         }
+
+        $product = $result->getData();
+        $this->authorize('update', $product);
+
+        $dto = ProductDTO::fromRequest($request->validated());
+        $updateResult = $this->productService->updateProductBySku(
+            $sku,
+            $dto,
+            (bool) $request->boolean('remove_image')
+        );
+
+        // Se o SKU mudou, usamos o novo SKU para o redirecionamento
+        $redirectSku = $updateResult->isSuccess() ? $updateResult->getData()->sku : $sku;
+
+        return $this->redirectWithServiceResult(
+            'provider.products.show',
+            $updateResult,
+            'Produto atualizado com sucesso.',
+            ['sku' => $redirectSku]
+        );
     }
 
     /**

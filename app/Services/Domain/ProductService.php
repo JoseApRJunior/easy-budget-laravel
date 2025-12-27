@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\Product\ProductDTO;
+use App\DTOs\Product\ProductFilterDTO;
 use App\Enums\OperationStatus;
 use App\Models\Product;
 use App\Repositories\ProductInventoryRepository;
@@ -67,16 +68,24 @@ class ProductService extends AbstractBaseService
         return $this->success($data);
     }
 
-    public function findBySku(string $sku, array $with = [], bool $withTrashed = false): ServiceResult
+    public function findBySku(string $sku, array $with = [], bool $withTrashed = false, array $loadCounts = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($sku, $with, $withTrashed) {
-            $product = $this->repository->findBySku($sku, $with, $withTrashed);
+        return $this->safeExecute(function () use ($sku, $with, $withTrashed, $loadCounts) {
+            $product = $this->repository->findBySku($sku, $withTrashed);
 
             if (! $product) {
                 return $this->error(
                     OperationStatus::NOT_FOUND,
                     "Produto com SKU {$sku} não encontrado",
                 );
+            }
+
+            if (! empty($with)) {
+                $product->load($with);
+            }
+
+            if (! empty($loadCounts)) {
+                $product->loadCount($loadCounts);
             }
 
             return $this->success($product, 'Produto encontrado');
@@ -252,15 +261,18 @@ class ProductService extends AbstractBaseService
         }, 'Erro ao restaurar produtos.');
     }
 
-    public function getFilteredProducts(array $filters = [], array $with = [], int $perPage = 15): ServiceResult
+    /**
+     * Retorna produtos filtrados e paginados via DTO.
+     */
+    public function getFilteredProducts(ProductFilterDTO $filterDto, array $with = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters, $with, $perPage) {
+        return $this->safeExecute(function () use ($filterDto, $with) {
             // Normalização padronizada via Trait
-            $normalizedFilters = $this->normalizeFilters($filters);
+            $normalizedFilters = $this->normalizeFilters($filterDto->toFilterArray());
 
             $paginator = $this->repository->getPaginated(
                 $normalizedFilters,
-                $perPage,
+                $filterDto->per_page,
                 $with,
             );
 

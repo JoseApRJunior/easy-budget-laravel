@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\MonitoringMiddleware;
+use App\Http\Middleware\OptimizeAuthUser;
+use App\Http\Middleware\ProviderMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,12 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'tenancy' => \Stancl\Tenancy\Middleware\InitializeTenancyByPath::class,
-            'tenancy.prevent' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
-            'provider' => \App\Http\Middleware\ProviderMiddleware::class,
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'monitoring' => \App\Http\Middleware\MonitoringMiddleware::class,
-            'optimize.auth' => \App\Http\Middleware\OptimizeAuthUser::class,
+            'tenancy' => InitializeTenancyByPath::class,
+            'tenancy.prevent' => PreventAccessFromCentralDomains::class,
+            'provider' => ProviderMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'monitoring' => MonitoringMiddleware::class,
+            'optimize.auth' => OptimizeAuthUser::class,
         ]);
 
         // Adicionar middleware de otimização ao grupo web
@@ -42,8 +48,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Explicitly resolve the 'view' instance to ensure the ViewServiceProvider is booted.
-        // This helps prevent "A facade root has not been set" errors when rendering error views
-        // very early in the application lifecycle.
-        app('view');
+        // Only attempt to resolve the 'view' instance if the container has it bound.
+        // This prevents fatal "Target class [view] does not exist" errors when
+        // an exception occurs very early in the application lifecycle.
+        if (app()->bound('view')) {
+            app('view');
+        }
     })->create();
