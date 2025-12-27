@@ -171,55 +171,40 @@ class CustomVerifyEmailController extends Controller
             );
         }
 
-        try {
-            // 4. Marcar e-mail como verificado usando método Laravel
-            $user->markEmailAsVerified();
+        // 4. Marcar e-mail como verificado usando método Laravel
+        $user->markEmailAsVerified();
 
-            // 5. Disparar evento Verified do Laravel
-            Event::dispatch(new Verified($user));
+        // 5. Disparar evento Verified do Laravel
+        Event::dispatch(new Verified($user));
 
-            // 6. Remover token usado após confirmação
-            $this->userConfirmationTokenRepository->delete($confirmationToken->id);
+        // 6. Remover token usado após confirmação
+        $this->userConfirmationTokenRepository->delete($confirmationToken->id);
 
-            // 7. Ativar usuário se necessário (is_active = true)
-            if (! $user->is_active) {
-                $user->update(['is_active' => true]);
+        // 7. Ativar usuário se necessário (is_active = true)
+        if (! $user->is_active) {
+            $user->update(['is_active' => true]);
 
-                $this->logSecurityEvent('USUARIO_ATIVADO', $user->id, $user->tenant_id, [
-                    'via' => 'email_verification',
-                    'ip' => $request->ip(),
-                ]);
-            }
-
-            // 8. Logging de segurança/auditoria
-            $this->logSecurityEvent('EMAIL_VERIFICADO', $user->id, $user->tenant_id, [
+            $this->logSecurityEvent('USUARIO_ATIVADO', $user->id, $user->tenant_id, [
+                'via' => 'email_verification',
                 'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'token_id' => $confirmationToken->id,
             ]);
-
-            // 9. Fazer login automático do usuário após verificação bem-sucedida
-            Auth::login($user);
-
-            // 10. Redirecionar para dashboard com sessão completa
-            return $this->redirectSuccess(
-                'provider.dashboard',
-                'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
-            );
-
-        } catch (\Exception $e) {
-            // Tratamento de erros inesperados
-            $this->logSecurityEvent('ERRO_VERIFICACAO', $user->id, $user->tenant_id, [
-                'error' => $e->getMessage(),
-                'ip' => $request->ip(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->redirectError(
-                'provider.dashboard',
-                'Erro interno durante a verificação. Tente novamente ou entre em contato com o suporte.',
-            );
         }
+
+        // 8. Logging de segurança/auditoria
+        $this->logSecurityEvent('EMAIL_VERIFICADO', $user->id, $user->tenant_id, [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'token_id' => $confirmationToken->id,
+        ]);
+
+        // 9. Fazer login automático do usuário após verificação bem-sucedida
+        Auth::login($user);
+
+        // 10. Redirecionar para dashboard com sessão completa
+        return $this->redirectSuccess(
+            'provider.dashboard',
+            'E-mail verificado com sucesso! Bem-vindo ao Easy Budget.',
+        );
     }
 
     /**

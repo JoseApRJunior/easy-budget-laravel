@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Actions\Provider\RegisterProviderAction;
 use App\DTOs\Common\AddressDTO;
 use App\DTOs\Common\BusinessDataDTO;
 use App\DTOs\Common\CommonDataDTO;
@@ -83,6 +84,7 @@ class ProviderManagementService
         private ProfessionRepository $professionRepository,
         private PlanSubscriptionRepository $planSubscriptionRepository,
         private \App\Repositories\InventoryRepository $inventoryRepository,
+        private RegisterProviderAction $registerProviderAction,
     ) {}
 
     /**
@@ -379,188 +381,14 @@ class ProviderManagementService
     }
 
     /**
-     * Create complete registration from user data.
+     * Create complete registration from user data using Action.
      */
     public function createProviderFromRegistration(ProviderRegistrationDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            return DB::transaction(function () use ($dto) {
-                $userData = $dto->toArray();
-
-                // Step 1: Create Tenant
-                $tenantResult = $this->createTenant($userData);
-                if (! $tenantResult->isSuccess()) {
-                    throw new Exception($tenantResult->getMessage());
-                }
-                $tenant = $tenantResult->getData();
-
-                // Step 2: Create User
-                $userResult = $this->createUser($userData, $tenant);
-                if (! $userResult->isSuccess()) {
-                    throw new Exception($userResult->getMessage());
-                }
-                $user = $userResult->getData();
-
-                // Step 3: Create Provider with all related data
-                $providerResult = $this->createProviderWithRelatedData($userData, $user, $tenant);
-                if (! $providerResult->isSuccess()) {
-                    throw new Exception($providerResult->getMessage());
-                }
-
-                $providerData = $providerResult->getData();
-
-                return ServiceResult::success([
-                    'user' => $user,
-                    'tenant' => $tenant,
-                    'provider' => $providerData['provider'],
-                    'plan' => $providerData['plan'],
-                    'subscription' => $providerData['subscription'],
-                ], 'Registro completo realizado com sucesso.');
-            });
+            $data = $this->registerProviderAction->execute($dto);
+            
+            return ServiceResult::success($data, 'Registro completo realizado com sucesso.');
         }, 'Erro ao criar registro do provedor.');
-    }
-
-    /**
-     * Create provider with all related data.
-     */
-    private function createProviderWithRelatedData(array $userData, User $user, Tenant $tenant): ServiceResult
-    {
-        try {
-            // Criar Provider primeiro
-            $provider = $this->providerRepository->createFromDTO(new ProviderDTO(
-                user_id: $user->id,
-                terms_accepted: $userData['terms_accepted'],
-                tenant_id: $tenant->id
-            ));
-
-            // Criar CommonData vinculado ao Provider
-            $this->commonDataRepository->createFromDTO(new CommonDataDTO(
-                type: CommonData::TYPE_INDIVIDUAL,
-                first_name: $userData['first_name'],
-                last_name: $userData['last_name'],
-                provider_id: $provider->id,
-                tenant_id: $tenant->id
-            ));
-
-            // Criar Contact vinculado ao Provider
-            $this->contactRepository->createFromDTO(new ContactDTO(
-                email_personal: $userData['email_personal'] ?? $userData['email'],
-                phone_personal: $userData['phone_personal'] ?? $userData['phone'] ?? null,
-                provider_id: $provider->id,
-                tenant_id: $tenant->id
-            ));
-
-            // Criar Address vinculado ao Provider
-            $this->addressRepository->createFromDTO(new AddressDTO(
-                provider_id: $provider->id,
-                tenant_id: $tenant->id
-            ));
-
-            // Assign Provider Role
-            $providerRole = $this->roleRepository->findByName(ROLE_PROVIDER);
-
-            if (! $providerRole) {
-                return ServiceResult::error(OperationStatus::ERROR, 'Role provider não encontrado.');
-            }
-
-            $user->roles()->syncWithoutDetaching([
-                $providerRole->id => [
-                    'tenant_id' => $tenant->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
-
-            // Find Trial Plan
-            $plan = $this->planRepository->findBySlug(PLAN_SLUG_TRIAL);
-            if (! $plan) {
-                // Se não encontrar por slug, busca qualquer plano ativo com preço 0
-                $plan = $this->planRepository->findFreeActive();
-            }
-
-            if (! $plan) {
-                return ServiceResult::error(OperationStatus::ERROR, 'Plano trial não encontrado.');
-            }
-
-            // Create Plan Subscription
-            $savedSubscription = $this->planSubscriptionRepository->createFromDTO(new PlanSubscriptionDTO(
-                provider_id: $provider->id,
-                plan_id: $plan->id,
-                status: SUBSCRIPTION_STATUS_ACTIVE,
-                transaction_amount: (float) ($plan->price ?? 0.00),
-                start_date: now(),
-                end_date: now()->addDays(TRIAL_DAYS),
-                transaction_date: now(),
-                payment_method: PAYMENT_METHOD_TRIAL,
-                payment_id: 'TRIAL_'.uniqid(),
-                public_hash: 'TRIAL_HASH_'.uniqid(),
-                tenant_id: $tenant->id
-            ));
-
-            return ServiceResult::success([
-                'provider' => $provider,
-                'role' => $providerRole,
-                'plan' => $plan,
-                'subscription' => $savedSubscription,
-            ]);
-        } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar dados vinculados: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Cria um tenant único para o usuário.
-     */
-    private function createTenant(array $userData): ServiceResult
-    {
-        try {
-            $tenantName = $this->generateUniqueTenantName($userData['first_name'], $userData['last_name']);
-
-            $tenant = $this->tenantRepository->createFromDTO(new \App\DTOs\Tenant\TenantDTO(
-                name: $tenantName,
-                is_active: true
-            ));
-
-            return ServiceResult::success($tenant);
-        } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar tenant: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Cria um usuário no sistema.
-     */
-    private function createUser(array $userData, Tenant $tenant): ServiceResult
-    {
-        try {
-            $savedUser = $this->userRepository->createFromDTO(new UserDTO(
-                name: $userData['first_name'].' '.$userData['last_name'],
-                email: $userData['email'],
-                password: $userData['password'] ?? null,
-                is_active: true,
-                tenant_id: $tenant->id
-            ));
-
-            return ServiceResult::success($savedUser);
-        } catch (Exception $e) {
-            return ServiceResult::error(OperationStatus::ERROR, 'Erro ao criar usuário: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Gera um nome único para o tenant.
-     */
-    private function generateUniqueTenantName(string $firstName, string $lastName): string
-    {
-        $baseName = Str::slug($firstName.'-'.$lastName);
-        $tenantName = $baseName;
-        $counter = 1;
-
-        while ($this->tenantRepository->findByName($tenantName)) {
-            $tenantName = $baseName.'-'.$counter;
-            $counter++;
-        }
-
-        return $tenantName;
     }
 }

@@ -25,17 +25,10 @@ use Illuminate\View\View;
  */
 class EmailVerificationController extends Controller
 {
-    protected EmailVerificationService $emailVerificationService;
-
-    protected UserRepository $userRepository;
-
     public function __construct(
-        EmailVerificationService $emailVerificationService,
-        UserRepository $userRepository,
-    ) {
-        $this->emailVerificationService = $emailVerificationService;
-        $this->userRepository = $userRepository;
-    }
+        protected EmailVerificationService $emailVerificationService,
+        protected UserRepository $userRepository,
+    ) {}
 
     /**
      * Solicita novo e-mail de verificação.
@@ -60,16 +53,9 @@ class EmailVerificationController extends Controller
 
         $result = $this->emailVerificationService->resendConfirmationEmail($user);
 
-        if ($result->isSuccess()) {
-            return $this->redirectSuccess(
-                'verification.prompt',
-                'E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.',
-            );
-        }
-
-        return $this->redirectError(
+        return $this->redirectSuccess(
             'verification.prompt',
-            $result->getMessage(),
+            'E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.',
         );
     }
 

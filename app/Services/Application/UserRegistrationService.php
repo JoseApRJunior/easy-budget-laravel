@@ -56,20 +56,15 @@ class UserRegistrationService extends AbstractBaseService
     protected TenantRepository $tenantRepository;
 
     public function __construct(
-        UserRepository $userRepository,
-        UserConfirmationTokenService $userConfirmationTokenService,
-        UserConfirmationTokenRepository $userConfirmationTokenRepository,
-        ProviderManagementService $providerManagementService,
-        EmailVerificationService $emailVerificationService,
-        TenantRepository $tenantRepository,
+        private UserRepository $userRepository,
+        private UserConfirmationTokenService $userConfirmationTokenService,
+        private UserConfirmationTokenRepository $userConfirmationTokenRepository,
+        private ProviderManagementService $providerManagementService,
+        private EmailVerificationService $emailVerificationService,
+        private TenantRepository $tenantRepository,
+        private RegisterProviderAction $registerProviderAction,
     ) {
         parent::__construct($userRepository);
-        $this->userRepository = $userRepository;
-        $this->userConfirmationTokenService = $userConfirmationTokenService;
-        $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
-        $this->providerManagementService = $providerManagementService;
-        $this->emailVerificationService = $emailVerificationService;
-        $this->tenantRepository = $tenantRepository;
     }
 
     /**
@@ -82,22 +77,10 @@ class UserRegistrationService extends AbstractBaseService
     public function registerUser(ProviderRegistrationDTO $dto, bool $isSocialRegistration = false): ServiceResult
     {
         return $this->safeExecute(function () use ($dto, $isSocialRegistration) {
-            DB::beginTransaction();
+            // Delegar toda a lógica de criação para RegisterProviderAction
+            $this->logStep('Executando RegisterProviderAction');
 
-            // Delegar toda a lógica de criação para ProviderManagementService
-            $this->logStep('Delegando criação completa para ProviderManagementService');
-
-            $registrationResult = $this->providerManagementService->createProviderFromRegistration($dto);
-
-            if (! $registrationResult->isSuccess()) {
-                DB::rollBack();
-
-                return $registrationResult;
-            }
-
-            $results = $registrationResult->getData();
-
-            DB::commit();
+            $results = $this->registerProviderAction->execute($dto);
 
             // Processar token de verificação e evento apenas para registros normais
             if (! $isSocialRegistration) {

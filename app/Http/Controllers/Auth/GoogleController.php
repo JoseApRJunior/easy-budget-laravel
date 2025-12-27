@@ -60,67 +60,47 @@ class GoogleController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        try {
-            // Verifica se há erro no callback (usuário cancelou)
-            if ($request->has('error')) {
-                Log::info('Usuário cancelou autenticação Google OAuth', [
-                    'error' => $request->get('error'),
-                    'error_description' => $request->get('error_description'),
-                    'ip' => $request->ip(),
-                ]);
-
-                return redirect()->route('home')->with('error', 'Autenticação cancelada pelo usuário.');
-            }
-
-            // Verifica se o cliente OAuth está configurado
-            if (! $this->oauthClient->isConfigured()) {
-                Log::error('Callback do Google OAuth recebido sem configuração', [
-                    'ip' => $request->ip(),
-                ]);
-
-                return redirect()->route('home')->with('error', 'Serviço de autenticação não configurado.');
-            }
-
-            // Processa dados do usuário do Google
-            $googleUserData = $this->oauthClient->handleProviderCallback($request);
-
-            // Autentica ou cria usuário através do serviço de autenticação social
-            $authResult = $this->socialAuthService->authenticateWithSocialProvider('google', $googleUserData);
-
-            if (! $authResult->isSuccess()) {
-                Log::error('Falha na autenticação social Google', [
-                    'error' => $authResult->getMessage(),
-                    'ip' => $request->ip(),
-                ]);
-
-                return redirect()->route('home')->with('error', $authResult->getMessage());
-            }
-
-            // Loga o usuário
-            Auth::login($authResult->getData());
-
-            // Garante sessão limpa para evitar conflitos
-            $this->ensureCleanSession($request);
-
-            Log::info('Usuário autenticado com sucesso via Google OAuth', [
-                'user_id' => $authResult->getData()->id,
-                'email' => $authResult->getData()->email,
+        // Verifica se há erro no callback (usuário cancelou)
+        if ($request->has('error')) {
+            Log::info('Usuário cancelou autenticação Google OAuth', [
+                'error' => $request->get('error'),
+                'error_description' => $request->get('error_description'),
                 'ip' => $request->ip(),
             ]);
 
-            // Redireciona para o dashboard
-            return redirect()->route('provider.dashboard')->with('success', $authResult->getMessage());
-
-        } catch (\Exception $e) {
-            Log::error('Erro no callback do Google OAuth', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'ip' => $request->ip(),
-            ]);
-
-            return redirect()->route('home')->with('error', 'Erro interno durante a autenticação. Tente novamente.');
+            return redirect()->route('home')->with('error', 'Autenticação cancelada pelo usuário.');
         }
+
+        // Verifica se o cliente OAuth está configurado
+        if (! $this->oauthClient->isConfigured()) {
+            Log::error('Callback do Google OAuth recebido sem configuração', [
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->route('home')->with('error', 'Serviço de autenticação não configurado.');
+        }
+
+        // Processa dados do usuário do Google
+        $googleUserData = $this->oauthClient->handleProviderCallback($request);
+
+        // Autentica ou cria usuário através do serviço de autenticação social
+        $authResult = $this->socialAuthService->authenticateWithSocialProvider('google', $googleUserData);
+
+        if (! $authResult->isSuccess()) {
+            Log::error('Falha na autenticação social Google', [
+                'error' => $authResult->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->route('home')->with('error', $authResult->getMessage());
+        }
+
+        // Loga o usuário
+        Auth::login($authResult->getData());
+
+        // Redireciona para o dashboard
+        return redirect()->intended(route('provider.dashboard'))
+            ->with('success', 'Bem-vindo! Login realizado com sucesso via Google.');
     }
 
     /**

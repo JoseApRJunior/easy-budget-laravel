@@ -490,9 +490,9 @@ class AIAnalyticsService
     private function analyzePricing(): array
     {
         // Implementar análise de preços vs mercado
-        $avgPrice = Service::where('tenant_id', $this->tenantId)->avg('base_price') ?? 0;
+        $avgPrice = Service::where('tenant_id', $this->tenantId)->avg('total') ?? 0;
         $lowCount = Service::where('tenant_id', $this->tenantId)
-            ->where('base_price', '<', ($avgPrice * 0.7))
+            ->where('total', '<', ($avgPrice * 0.7))
             ->count();
         $total = Service::where('tenant_id', $this->tenantId)->count();
         $underpriced = $total > 0 ? ($lowCount / $total) >= 0.3 : false;

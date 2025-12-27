@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Abstracts\Controller;
@@ -10,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 class VerifyEmailController extends Controller
 {
     /**
-     * Mark the authenticated user's email address as verified.
+     * Marcar o endereço de e-mail do usuário autenticado como verificado.
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {

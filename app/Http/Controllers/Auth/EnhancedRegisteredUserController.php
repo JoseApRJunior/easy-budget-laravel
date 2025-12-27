@@ -14,6 +14,10 @@ use Illuminate\View\View;
 
 class EnhancedRegisteredUserController extends Controller
 {
+    public function __construct(
+        private UserRegistrationService $registrationService
+    ) {}
+
     /**
      * Exibir a tela de registro aprimorada.
      */
@@ -39,14 +43,7 @@ class EnhancedRegisteredUserController extends Controller
         $dto = ProviderRegistrationDTO::fromRequest($userData);
 
         // Delegar para o service
-        $registrationService = app(UserRegistrationService::class);
-        $result = $registrationService->registerUser($dto);
-
-        if (! $result->isSuccess()) {
-            return back()
-                ->withInput()
-                ->withErrors(['registration' => $result->getMessage()]);
-        }
+        $result = $this->registrationService->registerUser($dto);
 
         // Registro realizado com sucesso
         $data = $result->getData();
