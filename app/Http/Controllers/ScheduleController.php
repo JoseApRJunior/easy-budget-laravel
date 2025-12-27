@@ -123,25 +123,19 @@ class ScheduleController extends Controller
      */
     public function store(ScheduleRequest $request): RedirectResponse
     {
-        try {
-            $dto = \App\DTOs\Schedule\ScheduleDTO::fromRequest($request->validated());
-            $result = $this->scheduleService->createSchedule($dto);
+        $dto = \App\DTOs\Schedule\ScheduleDTO::fromRequest($request->validated());
+        $result = $this->scheduleService->createSchedule($dto);
 
-            if ($result->isSuccess()) {
-                return $this->redirectSuccess(
-                    'schedules.index',
-                    'Agendamento criado com sucesso!',
-                );
-            }
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $this->getServiceErrorMessage($result, 'Erro ao criar agendamento'));
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erro ao criar agendamento: '.$e->getMessage());
+        if ($result->isSuccess()) {
+            return $this->redirectSuccess(
+                'schedules.index',
+                'Agendamento criado com sucesso!',
+            );
         }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao criar agendamento'));
     }
 
     /**

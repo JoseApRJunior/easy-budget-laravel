@@ -91,9 +91,44 @@ abstract class AbstractExportService
     }
 
     /**
-     * Gera o HTML básico para o PDF.
+     * Gera o HTML para o PDF usando um template Blade se disponível,
+     * caso contrário usa o fallback programático.
      */
     protected function generateHtmlForPdf(Collection $items): string
+    {
+        $viewName = $this->getPdfViewName();
+
+        if ($viewName && view()->exists($viewName)) {
+            return view($viewName, array_merge($this->getPdfData($items), [
+                'items' => $items,
+                'title' => $this->getExportTitle(),
+                'headers' => $this->getHeaders(),
+            ]))->render();
+        }
+
+        return $this->generateFallbackHtml($items);
+    }
+
+    /**
+     * Retorna o nome da view Blade para o PDF (opcional).
+     */
+    protected function getPdfViewName(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Retorna dados adicionais para a view do PDF.
+     */
+    protected function getPdfData(Collection $items): array
+    {
+        return [];
+    }
+
+    /**
+     * Gera o HTML básico para o PDF (fallback).
+     */
+    protected function generateFallbackHtml(Collection $items): string
     {
         $headers = $this->getHeaders();
         $title = $this->getExportTitle();
@@ -120,6 +155,51 @@ abstract class AbstractExportService
         $html .= '</tbody></table>';
 
         return $html;
+    }
+
+    /**
+     * Retorna os dados da empresa (tenant/provider) para o cabeçalho do PDF.
+     */
+    protected function getCompanyData(): array
+    {
+        $user = auth()->user();
+        $provider = $user->provider;
+        $commonData = $provider?->commonData;
+        $address = $provider?->address;
+
+        // Determina o nome baseado estritamente em CommonData ou User
+        $name = 'Minha Empresa';
+        if ($commonData) {
+            // Prioridade: company_name -> first_name + last_name
+            if (! empty($commonData->company_name)) {
+                $name = $commonData->company_name;
+            } elseif (! empty($commonData->first_name)) {
+                $name = $commonData->first_name.($commonData->last_name ? ' '.$commonData->last_name : '');
+            } else {
+                $name = $user->name;
+            }
+        } else {
+            $name = $user->name;
+        }
+
+        // Formata o endereço a partir da model Address
+        $fullAddress = 'Endereço não informado';
+        if ($address) {
+            $fullAddress = "{$address->address}, {$address->address_number}";
+            if ($address->neighborhood) {
+                $fullAddress .= " - {$address->neighborhood}";
+            }
+            if ($address->city) {
+                $fullAddress .= " - {$address->city}/{$address->state}";
+            }
+        }
+
+        return [
+            'name' => $name,
+            'address' => $fullAddress,
+            'cnpj' => $commonData?->cnpj ?? $commonData?->cpf ?? '00.000.000/0000-00',
+            'logo_url' => $user->tenant->logo_url ? public_path('storage/'.$user->tenant->logo_url) : null,
+        ];
     }
 
     /**

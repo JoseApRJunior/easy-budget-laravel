@@ -35,10 +35,15 @@ class ProductController extends Controller
     /**
      * Dashboard de Produtos.
      */
-    public function dashboard(): View
+    public function dashboard(): View|RedirectResponse
     {
-        $this->authorize('viewAny', \App\Models\Product::class);
+        $this->authorize('viewAny', Product::class);
+
         $result = $this->productService->getDashboardData();
+
+        if ($result->isError()) {
+            return $this->redirectError('dashboard', 'Erro ao carregar dashboard de produtos: '.$result->getMessage());
+        }
 
         return $this->view('pages.product.dashboard', $result, 'stats');
     }
@@ -46,7 +51,7 @@ class ProductController extends Controller
     /**
      * Lista de produtos com filtros avançados.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $this->authorize('viewAny', Product::class);
 
@@ -57,6 +62,10 @@ class ProductController extends Controller
             $filterDto = ProductFilterDTO::fromRequest($request->all());
             $result = $this->productService->getFilteredProducts($filterDto, ['category']);
             $filters = $filterDto->toDisplayArray();
+        }
+
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.dashboard', 'Não foi possível carregar a lista de produtos: '.$result->getMessage());
         }
 
         return $this->view('pages.product.index', $result, 'products', [
@@ -70,16 +79,21 @@ class ProductController extends Controller
      *
      * Rota: products.create
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $this->authorize('create', Product::class);
+
         $result = $this->categoryService->getActive();
-        $nextSku = $this->productService->generateNextSku()->getData();
+        $nextSkuResult = $this->productService->generateNextSku();
+
+        if ($result->isError() || $nextSkuResult->isError()) {
+            return $this->redirectError('provider.products.index', 'Erro ao preparar formulário de criação.');
+        }
 
         return $this->view('pages.product.create', $result, 'categories', [
             'defaults' => [
                 'is_active' => true,
-                'sku' => $nextSku,
+                'sku' => $nextSkuResult->getData(),
             ],
         ]);
     }
@@ -176,198 +190,84 @@ class ProductController extends Controller
      */
     public function toggleStatus(string $sku, Request $request): RedirectResponse|JsonResponse
     {
-        try {
-            $result = $this->productService->findBySku($sku);
-            if ($result->isError()) {
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => $result->getMessage()], 404);
-                }
-
-                return $this->redirectError('provider.products.index', $result->getMessage());
-            }
-
-            $product = $result->getData();
-            $this->authorize('update', $product);
-
-            $toggleResult = $this->productService->toggleProductStatus($sku);
-
+        $result = $this->productService->findBySku($sku);
+        if ($result->isError()) {
             if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => $toggleResult->isSuccess(),
-                    'message' => $toggleResult->getMessage(),
-                ], $toggleResult->isSuccess() ? 200 : 400);
+                return response()->json(['success' => false, 'message' => $result->getMessage()], 404);
             }
 
-            return $this->redirectWithServiceResult(
-                'provider.products.show',
-                $toggleResult,
-                $toggleResult->getMessage(),
-                ['sku' => $sku]
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro inesperado ao alterar status do produto', [
-                'sku' => $sku,
-                'error' => $e->getMessage(),
-            ]);
-
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Erro interno ao alterar status.',
-                ], 500);
-            }
-
-            return $this->redirectError('provider.products.index', 'Erro interno ao alterar status.');
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
+
+        $product = $result->getData();
+        $this->authorize('update', $product);
+
+        $updateResult = $this->productService->updateStatus($product, ! $product->is_active);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => $updateResult->isSuccess(),
+                'message' => $updateResult->getMessage(),
+                'new_status' => $updateResult->isSuccess() ? $updateResult->getData()->is_active : null,
+            ]);
+        }
+
+        return $this->redirectWithServiceResult(
+            'provider.products.index',
+            $updateResult,
+            'Status do produto atualizado.'
+        );
     }
 
     /**
-     * Exclui um produto por SKU.
+     * Remove um produto (Soft Delete).
      */
     public function destroy(string $sku): RedirectResponse
     {
-        try {
-            $result = $this->productService->findBySku($sku);
-            if ($result->isError()) {
-                return $this->redirectError('provider.products.index', $result->getMessage());
-            }
-
-            $product = $result->getData();
-            $this->authorize('delete', $product);
-
-            $deleteResult = $this->productService->deleteProductBySku($sku);
-
-            return $this->redirectWithServiceResult(
-                'provider.products.index',
-                $deleteResult,
-                'Produto excluído com sucesso.'
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro inesperado ao excluir produto', [
-                'sku' => $sku,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.products.index', 'Erro interno ao excluir produto.');
+        $result = $this->productService->findBySku($sku);
+        if ($result->isError()) {
+            return $this->redirectError('provider.products.index', $result->getMessage());
         }
+
+        $this->authorize('delete', $result->getData());
+
+        $deleteResult = $this->productService->deleteProductBySku($sku);
+
+        return $this->redirectWithServiceResult(
+            'provider.products.index',
+            $deleteResult,
+            'Produto removido com sucesso.'
+        );
     }
 
     /**
-     * Restaura um produto deletado.
+     * Restaura um produto removido.
      */
     public function restore(string $sku): RedirectResponse
     {
-        try {
-            $result = $this->productService->findBySku($sku, [], true);
+        $result = $this->productService->restoreProductBySku($sku);
 
-            if ($result->isError()) {
-                return $this->redirectError('provider.products.index', 'Produto não encontrado para restauração.');
-            }
-
-            $product = $result->getData();
-            $this->authorize('update', $product);
-
-            $restoreResult = $this->productService->restoreProductBySku($sku);
-
-            return $this->redirectWithServiceResult(
-                'provider.products.show',
-                $restoreResult,
-                'Produto restaurado com sucesso!',
-                ['sku' => $sku]
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro inesperado ao restaurar produto', [
-                'sku' => $sku,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.products.index', 'Erro interno ao restaurar produto.');
-        }
+        return $this->redirectWithServiceResult(
+            'provider.products.index',
+            $result,
+            'Produto restaurado com sucesso.'
+        );
     }
 
     /**
-     * Métodos de conveniência que delegam ao index com filtros pré-definidos.
-     */
-    public function search(Request $request): View
-    {
-        return $this->index($request);
-    }
-
-    public function active(Request $request): View
-    {
-        $request->merge(['active' => '1']);
-
-        return $this->index($request);
-    }
-
-    public function deleted(Request $request): View
-    {
-        $request->merge(['deleted' => 'only']);
-
-        return $this->index($request);
-    }
-
-    public function restoreMultiple(Request $request): RedirectResponse
-    {
-        $this->authorize('update', Product::class);
-        $ids = $request->input('ids', []);
-
-        if (empty($ids)) {
-            return $this->redirectError('provider.products.index', 'Nenhum produto selecionado para restauração.');
-        }
-
-        $result = $this->productService->restoreProducts($ids);
-
-        if ($result->isError()) {
-            return $this->redirectError('provider.products.index', $result->getMessage());
-        }
-
-        return $this->redirectSuccess('provider.products.index', 'Restaurados produtos com sucesso.');
-    }
-
-    /**
-     * AJAX endpoint para buscar produtos com filtros.
-     */
-    public function ajaxSearch(Request $request): JsonResponse
-    {
-        $this->authorize('viewAny', \App\Models\Product::class);
-        $filterDto = ProductFilterDTO::fromRequest($request->all());
-        $result = $this->productService->getFilteredProducts($filterDto, ['category']);
-
-        return $this->jsonResponse($result);
-    }
-
-    /**
-     * Exporta os produtos para Excel ou PDF.
-     *
-     * Rota: products.export (GET)
+     * Exporta produtos para PDF.
      */
     public function export(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Product::class);
-        $format = $request->get('format', 'xlsx');
+        $this->authorize('viewAny', Product::class);
 
-        // Usa o DTO para capturar os filtros diretamente da request
-        $data = $request->all();
-        $data['all'] = true; // Força trazer todos os registros para a exportação
+        $filterDto = ProductFilterDTO::fromRequest($request->all());
+        $productsResult = $this->productService->getFilteredProducts($filterDto, ['category'], false);
 
-        $filterDto = ProductFilterDTO::fromRequest($data);
-
-        $result = $this->productService->getFilteredProducts($filterDto, ['category']);
-
-        if ($result->isError()) {
-            return $this->redirectError('provider.products.index', $result->getMessage());
+        if ($productsResult->isError()) {
+            return $this->redirectError('provider.products.index', 'Erro ao buscar produtos para exportação.');
         }
 
-        $products = $result->getData();
-
-        // Se o resultado for um paginador (LengthAwarePaginator), extraímos a coleção subjacente
-        if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator) {
-            $products = $products->getCollection();
-        }
-
-        return $format === 'pdf'
-            ? $this->productExportService->exportToPdf($products)
-            : $this->productExportService->exportToExcel($products, $format);
+        return $this->productExportService->exportToPdf($productsResult->getData());
     }
 }

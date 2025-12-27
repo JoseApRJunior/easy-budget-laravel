@@ -51,25 +51,12 @@ class QueueManagementController extends Controller
      */
     public function stats(): JsonResponse
     {
-        try {
-            $stats = $this->queueService->getAdvancedQueueStats();
+        $stats = $this->queueService->getAdvancedQueueStats();
 
-            return response()->json([
-                'success' => true,
-                'data' => $stats,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao obter estatísticas das filas', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao obter estatísticas',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
     }
 
     /**
@@ -77,32 +64,19 @@ class QueueManagementController extends Controller
      */
     public function health(): JsonResponse
     {
-        try {
-            $health = $this->queueService->getHealthStatus();
+        $health = $this->queueService->getHealthStatus();
 
-            $statusCode = match ($health['status']) {
-                'critical' => 503,
-                'warning' => 200,
-                'healthy' => 200,
-                default => 200,
-            };
+        $statusCode = match ($health['status']) {
+            'critical' => 503,
+            'warning' => 200,
+            'healthy' => 200,
+            default => 200,
+        };
 
-            return response()->json([
-                'success' => true,
-                'data' => $health,
-            ], $statusCode);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao obter status de saúde das filas', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao obter status de saúde',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $health,
+        ], $statusCode);
     }
 
     /**
@@ -110,34 +84,21 @@ class QueueManagementController extends Controller
      */
     public function cleanup(Request $request): JsonResponse
     {
-        try {
-            $daysOld = $request->get('days', 7);
-            $result = $this->queueService->cleanupOldJobs((int) $daysOld);
+        $daysOld = $request->get('days', 7);
+        $result = $this->queueService->cleanupOldJobs((int) $daysOld);
 
-            if ($result->isSuccess()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $result->getMessage(),
-                    'data' => $result->getData(),
-                ]);
-            }
-
+        if ($result->isSuccess()) {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => $result->getMessage(),
-            ], 400);
-
-        } catch (\Exception $e) {
-            Log::error('Erro na limpeza de jobs', [
-                'error' => $e->getMessage(),
+                'data' => $result->getData(),
             ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro na limpeza de jobs',
-                'error' => $e->getMessage(),
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result->getMessage(),
+        ], 400);
     }
 
     /**
@@ -145,34 +106,21 @@ class QueueManagementController extends Controller
      */
     public function retry(Request $request): JsonResponse
     {
-        try {
-            $queue = $request->get('queue');
-            $result = $this->queueService->retryFailedJobs($queue);
+        $queue = $request->get('queue');
+        $result = $this->queueService->retryFailedJobs($queue);
 
-            if ($result->isSuccess()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $result->getMessage(),
-                    'data' => $result->getData(),
-                ]);
-            }
-
+        if ($result->isSuccess()) {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => $result->getMessage(),
-            ], 400);
-
-        } catch (\Exception $e) {
-            Log::error('Erro no retry de jobs', [
-                'error' => $e->getMessage(),
+                'data' => $result->getData(),
             ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro no retry de jobs',
-                'error' => $e->getMessage(),
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result->getMessage(),
+        ], 400);
     }
 
     /**
@@ -180,40 +128,27 @@ class QueueManagementController extends Controller
      */
     public function work(Request $request): JsonResponse
     {
-        try {
-            $queue = $request->get('queue', 'emails');
-            $timeout = $request->get('timeout', 60);
-            $maxJobs = $request->get('max_jobs', 1000);
+        $queue = $request->get('queue', 'emails');
+        $timeout = $request->get('timeout', 60);
+        $maxJobs = $request->get('max_jobs', 1000);
 
-            // Em produção, isso seria executado em background
-            // Por ora, apenas loga a intenção
-            Log::info('Worker de filas solicitado', [
+        // Em produção, isso seria executado em background
+        // Por ora, apenas loga a intenção
+        Log::info('Worker de filas solicitado', [
+            'queue' => $queue,
+            'timeout' => $timeout,
+            'max_jobs' => $maxJobs,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Worker iniciado (simulado)',
+            'data' => [
                 'queue' => $queue,
                 'timeout' => $timeout,
                 'max_jobs' => $maxJobs,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Worker iniciado (simulado)',
-                'data' => [
-                    'queue' => $queue,
-                    'timeout' => $timeout,
-                    'max_jobs' => $maxJobs,
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao iniciar worker', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao iniciar worker',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+            ],
+        ]);
     }
 
     /**
@@ -221,26 +156,13 @@ class QueueManagementController extends Controller
      */
     public function stop(): JsonResponse
     {
-        try {
-            // Em produção, isso seria implementado com sinais ou supervisor
-            Log::info('Parada de workers solicitada');
+        // Em produção, isso seria implementado com sinais ou supervisor
+        Log::info('Parada de workers solicitada');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Workers parados (simulado)',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao parar workers', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao parar workers',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Workers parados (simulado)',
+        ]);
     }
 
     /**
@@ -248,37 +170,24 @@ class QueueManagementController extends Controller
      */
     public function testEmail(Request $request): JsonResponse
     {
-        try {
-            $email = $request->get('email', 'test@example.com');
+        $email = $request->get('email', 'test@example.com');
 
-            // Usar o SendEmailJob diretamente
-            $emailData = [
-                'to' => $email,
-                'subject' => 'Teste de Fila - Easy Budget',
-                'body' => '<h1>Teste de E-mail via Fila</h1><p>Este é um e-mail de teste do sistema de filas.</p>',
-            ];
+        // Usar o SendEmailJob diretamente
+        $emailData = [
+            'to' => $email,
+            'subject' => 'Teste de Fila - Easy Budget',
+            'body' => '<h1>Teste de E-mail via Fila</h1><p>Este é um e-mail de teste do sistema de filas.</p>',
+        ];
 
-            dispatch(new \App\Jobs\SendEmailJob($emailData));
+        dispatch(new \App\Jobs\SendEmailJob($emailData));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'E-mail de teste enfileirado com sucesso',
-                'data' => [
-                    'recipient' => $email,
-                    'queued_at' => now()->toDateTimeString(),
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro no teste de e-mail', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro no teste de e-mail',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'E-mail de teste enfileirado com sucesso',
+            'data' => [
+                'recipient' => $email,
+                'queued_at' => now()->toDateTimeString(),
+            ],
+        ]);
     }
 }

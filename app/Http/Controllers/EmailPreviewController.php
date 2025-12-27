@@ -333,26 +333,16 @@ class EmailPreviewController extends Controller
      */
     private function renderEmailHtml(string $emailType, array $data): string
     {
-
-        try {
-            return match ($emailType) {
-                'welcome' => $this->renderMailableContent($emailType, $data),
-                'verification' => $this->renderMailableContent($emailType, $data),
-                'password_reset' => $this->renderMailableContent($emailType, $data),
-                'budget_notification' => $this->renderMailableContent($emailType, $data),
-                'invoice_notification' => $this->renderMailableContent($emailType, $data),
-                'status_update' => $this->renderMailableContent($emailType, $data),
-                'support_response' => $this->renderMailableContent($emailType, $data),
-                default => '<p>Tipo de e-mail não encontrado</p>',
-            };
-        } catch (Exception $e) {
-            Log::error('Erro ao renderizar HTML do e-mail', [
-                'email_type' => $emailType,
-                'error' => $e->getMessage(),
-            ]);
-
-            return '<p>Erro ao renderizar e-mail: '.$e->getMessage().'</p>';
-        }
+        return match ($emailType) {
+            'welcome' => $this->renderMailableContent($emailType, $data),
+            'verification' => $this->renderMailableContent($emailType, $data),
+            'password_reset' => $this->renderMailableContent($emailType, $data),
+            'budget_notification' => $this->renderMailableContent($emailType, $data),
+            'invoice_notification' => $this->renderMailableContent($emailType, $data),
+            'status_update' => $this->renderMailableContent($emailType, $data),
+            'support_response' => $this->renderMailableContent($emailType, $data),
+            default => '<p>Tipo de e-mail não encontrado</p>',
+        };
     }
 
     /**
@@ -360,39 +350,28 @@ class EmailPreviewController extends Controller
      */
     private function renderMailableContent(string $emailType, array $data): string
     {
-        try {
-            // Obter a classe mailable baseada no tipo
-            $mailableClass = $this->getMailableClass($emailType);
+        // Obter a classe mailable baseada no tipo
+        $mailableClass = $this->getMailableClass($emailType);
 
-            if (! $mailableClass) {
-                return '<p>Classe mailable não encontrada</p>';
-            }
+        if (! $mailableClass) {
+            return '<p>Classe mailable não encontrada</p>';
+        }
 
-            // Criar instância da mailable com dados de exemplo
-            $mailable = $this->createMailableInstance($mailableClass, $data);
+        // Criar instância da mailable com dados de exemplo
+        $mailable = $this->createMailableInstance($mailableClass, $data);
 
-            // Verificar se a mailable usa markdown ou view
-            $content = $mailable->content();
+        // Verificar se a mailable usa markdown ou view
+        $content = $mailable->content();
 
-            if (isset($content->markdown)) {
+        if (isset($content->markdown)) {
 
-                // Usa markdown - renderizar usando sistema de markdown
-                return $this->renderMarkdownEmail($content->markdown, $content->with);
-            } elseif (isset($content->view)) {
-                // Usa view - renderizar usando sistema de view
-                return view($content->view, $content->with)->render();
-            } else {
-                return '<p>Tipo de conteúdo não suportado na mailable</p>';
-            }
-
-        } catch (Exception $e) {
-            Log::error('Erro ao renderizar conteúdo da mailable', [
-                'email_type' => $emailType,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return '<p>Erro ao renderizar e-mail: '.$e->getMessage().'</p>';
+            // Usa markdown - renderizar usando sistema de markdown
+            return $this->renderMarkdownEmail($content->markdown, $content->with);
+        } elseif (isset($content->view)) {
+            // Usa view - renderizar usando sistema de view
+            return view($content->view, $content->with)->render();
+        } else {
+            return '<p>Tipo de conteúdo não suportado na mailable</p>';
         }
     }
 

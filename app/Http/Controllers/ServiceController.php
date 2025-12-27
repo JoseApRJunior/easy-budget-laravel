@@ -67,27 +67,21 @@ class ServiceController extends Controller
     public function create(?string $budgetCode = null): View
     {
         $this->authorize('create', Service::class);
-        try {
-            $budget = null;
+        $budget = null;
 
-            if ($budgetCode) {
-                $budgetResult = $this->budgetService->findByCode($budgetCode);
-                if ($budgetResult->isSuccess()) {
-                    $budget = $budgetResult->getData();
-                    $this->authorize('view', $budget);
-                }
+        if ($budgetCode) {
+            $budgetResult = $this->budgetService->findByCode($budgetCode);
+            if ($budgetResult->isSuccess()) {
+                $budget = $budgetResult->getData();
+                $this->authorize('view', $budget);
             }
-
-            return view('pages.service.create', [
-                'budget' => $budget,
-                'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
-                'products' => $this->productService->list()->getData(),
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro ao abrir formulário de criação de serviço', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->with('error', 'Erro ao abrir formulário de criação de serviço');
         }
+
+        return view('pages.service.create', [
+            'budget' => $budget,
+            'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
+            'products' => $this->productService->list()->getData(),
+        ]);
     }
 
     /**
@@ -96,21 +90,15 @@ class ServiceController extends Controller
     public function store(ServiceStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Service::class);
-        try {
-            $dto = ServiceDTO::fromRequest($request->validated());
-            $result = $this->serviceService->create($dto);
+        $dto = ServiceDTO::fromRequest($request->validated());
+        $result = $this->serviceService->create($dto);
 
-            if ($result->isError()) {
-                return redirect()->back()->withInput()->with('error', $result->getMessage());
-            }
-
-            return redirect()->route('provider.services.show', $result->getData()->code)
-                ->with('success', 'Serviço criado com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro ao criar serviço', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->withInput()->with('error', 'Erro ao criar serviço');
+        if ($result->isError()) {
+            return redirect()->back()->withInput()->with('error', $result->getMessage());
         }
+
+        return redirect()->route('provider.services.show', $result->getData()->code)
+            ->with('success', 'Serviço criado com sucesso!');
     }
 
     /**
@@ -156,29 +144,23 @@ class ServiceController extends Controller
      */
     public function update(ServiceUpdateRequest $request, string $code): RedirectResponse
     {
-        try {
-            $result = $this->serviceService->findByCode($code);
-            if ($result->isError()) {
-                return redirect()->back()->with('error', $result->getMessage());
-            }
-
-            $service = $result->getData();
-            $this->authorize('update', $service);
-
-            $dto = ServiceDTO::fromRequest($request->validated());
-            $updateResult = $this->serviceService->update($code, $dto);
-
-            if ($updateResult->isError()) {
-                return redirect()->back()->withInput()->with('error', $updateResult->getMessage());
-            }
-
-            return redirect()->route('provider.services.show', $updateResult->getData()->code)
-                ->with('success', 'Serviço atualizado com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro ao atualizar serviço', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->withInput()->with('error', 'Erro ao atualizar serviço');
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
         }
+
+        $service = $result->getData();
+        $this->authorize('update', $service);
+
+        $dto = ServiceDTO::fromRequest($request->validated());
+        $updateResult = $this->serviceService->update($code, $dto);
+
+        if ($updateResult->isError()) {
+            return redirect()->back()->withInput()->with('error', $updateResult->getMessage());
+        }
+
+        return redirect()->route('provider.services.show', $updateResult->getData()->code)
+            ->with('success', 'Serviço atualizado com sucesso');
     }
 
     /**
@@ -186,27 +168,21 @@ class ServiceController extends Controller
      */
     public function toggleStatus(Request $request, string $code): RedirectResponse
     {
-        try {
-            $result = $this->serviceService->findByCode($code);
-            if ($result->isError()) {
-                return redirect()->back()->with('error', $result->getMessage());
-            }
-
-            $service = $result->getData();
-            $this->authorize('update', $service);
-
-            $statusResult = $this->serviceService->changeStatusByCode($code, (string) $request->input('status'));
-
-            if ($statusResult->isError()) {
-                return redirect()->back()->with('error', $statusResult->getMessage());
-            }
-
-            return redirect()->back()->with('success', 'Status atualizado com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro ao atualizar status do serviço', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->with('error', 'Erro ao atualizar status do serviço');
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
         }
+
+        $service = $result->getData();
+        $this->authorize('update', $service);
+
+        $statusResult = $this->serviceService->changeStatusByCode($code, (string) $request->input('status'));
+
+        if ($statusResult->isError()) {
+            return redirect()->back()->with('error', $statusResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Status do serviço atualizado com sucesso');
     }
 
     /**
@@ -214,26 +190,21 @@ class ServiceController extends Controller
      */
     public function destroy(string $code): RedirectResponse
     {
-        try {
-            $result = $this->serviceService->findByCode($code);
-            if ($result->isError()) {
-                return redirect()->back()->with('error', $result->getMessage());
-            }
-
-            $service = $result->getData();
-            $this->authorize('delete', $service);
-
-            $deleteResult = $this->serviceService->deleteByCode($code);
-
-            if ($deleteResult->isError()) {
-                return redirect()->back()->with('error', $deleteResult->getMessage());
-            }
-
-            return redirect()->route('provider.services.dashboard')->with('success', 'Serviço excluído com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro ao excluir serviço', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->with('error', 'Erro ao excluir serviço');
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
         }
+
+        $service = $result->getData();
+        $this->authorize('delete', $service);
+
+        $deleteResult = $this->serviceService->deleteByCode($code);
+
+        if ($deleteResult->isError()) {
+            return redirect()->back()->with('error', $deleteResult->getMessage());
+        }
+
+        return redirect()->route('provider.services.index')
+            ->with('success', 'Serviço excluído com sucesso');
     }
 }

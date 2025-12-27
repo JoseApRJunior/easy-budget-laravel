@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Actions\Product\CreateProductAction;
+use App\Actions\Product\DeleteProductAction;
+use App\Actions\Product\RestoreProductAction;
+use App\Actions\Product\ToggleProductStatusAction;
+use App\Actions\Product\UpdateProductAction;
 use App\DTOs\Product\ProductDTO;
 use App\DTOs\Product\ProductFilterDTO;
 use App\Enums\OperationStatus;
@@ -32,7 +37,12 @@ class ProductService extends AbstractBaseService
 {
     public function __construct(
         ProductRepository $repository,
-        private ProductInventoryRepository $inventoryRepository
+        private ProductInventoryRepository $inventoryRepository,
+        private CreateProductAction $createAction,
+        private UpdateProductAction $updateAction,
+        private ToggleProductStatusAction $toggleStatusAction,
+        private DeleteProductAction $deleteAction,
+        private RestoreProductAction $restoreAction,
     ) {
         parent::__construct($repository);
     }
@@ -98,22 +108,21 @@ class ProductService extends AbstractBaseService
     public function createProduct(ProductDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
-            $product = DB::transaction(function () use ($dto) {
-                // 1. Persistência usando DTO
-                $product = $this->repository->createFromDTO($dto);
+            // Delega a criação atômica para a Action
+            $product = $this->createAction->execute($dto);
 
-                // 2. Upload image
-                if ($dto->image instanceof \Illuminate\Http\UploadedFile) {
+            // Gerenciamento de arquivo (Responsabilidade do Service)
+            if ($dto->image instanceof \Illuminate\Http\UploadedFile) {
+                try {
                     $imagePath = $this->uploadProductImage($dto->image);
                     $this->repository->update($product->id, ['image' => $imagePath]);
                     $product->refresh();
+                } catch (Exception $e) {
+                    Log::error('Erro ao fazer upload de imagem do produto: '.$e->getMessage());
+                    // Não falha a criação do produto se apenas o upload falhar, 
+                    // mas poderíamos lançar exceção se fosse crítico.
                 }
-
-                // 3. Inventário Inicial
-                $this->inventoryRepository->initialize($product->id);
-
-                return $product;
-            });
+            }
 
             return $this->success($product, 'Produto criado com sucesso');
         }, 'Erro ao criar produto.');
@@ -125,89 +134,70 @@ class ProductService extends AbstractBaseService
     public function updateProductBySku(string $sku, ProductDTO $dto, ?bool $removeImage = false): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $dto, $removeImage) {
-            $product = DB::transaction(function () use ($sku, $dto, $removeImage) {
-                $product = $this->repository->findBySku($sku);
+            $product = $this->repository->findBySku($sku);
 
-                if (! $product) {
-                    throw new Exception("Produto com SKU {$sku} não encontrado");
-                }
+            if (! $product) {
+                return $this->error(OperationStatus::NOT_FOUND, "Produto com SKU {$sku} não encontrado");
+            }
 
-                $data = $dto->toDatabaseArray();
-
-                // 1. Gerenciar Imagem
-                if ($removeImage && $product->image) {
+            // 1. Gerenciar Imagem (Lógica de arquivo no Service)
+            $imageData = [];
+            if ($removeImage && $product->image) {
+                $this->deletePhysicalImage($product->image);
+                $imageData['image'] = null;
+            } elseif ($dto->image instanceof \Illuminate\Http\UploadedFile) {
+                if ($product->image) {
                     $this->deletePhysicalImage($product->image);
-                    $data['image'] = null;
-                } elseif (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    if ($product->image) {
-                        $this->deletePhysicalImage($product->image);
-                    }
-                    $data['image'] = $this->uploadProductImage($data['image']);
-                } else {
-                    // Mantém a imagem atual se nada foi enviado
-                    unset($data['image']);
                 }
+                $imageData['image'] = $this->uploadProductImage($dto->image);
+            }
 
-                // 2. Atualizar usando o repositório (que filtra nulos)
-                $this->repository->updateFromDTO($product->id, $dto);
+            // 2. Executar atualização via Action
+            $updatedProduct = $this->updateAction->execute($product, $dto);
 
-                // Caso haja campos extras em $data (como a imagem processada) que não estão no DTO
-                if (isset($data['image'])) {
-                    $this->repository->update($product->id, ['image' => $data['image']]);
-                }
+            // 3. Se houver nova imagem, atualiza o registro
+            if (array_key_exists('image', $imageData)) {
+                $this->repository->update($updatedProduct->id, ['image' => $imageData['image']]);
+                $updatedProduct->refresh();
+            }
 
-                return $product->fresh();
-            });
-
-            return $this->success($product, 'Produto atualizado com sucesso');
+            return $this->success($updatedProduct, 'Produto atualizado com sucesso');
         }, 'Erro ao atualizar produto.');
     }
 
     public function toggleProductStatus(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            $product = DB::transaction(function () use ($sku) {
-                $product = $this->repository->findBySku($sku);
+            $product = $this->repository->findBySku($sku);
 
-                if (! $product) {
-                    throw new Exception("Produto com SKU {$sku} não encontrado");
-                }
+            if (! $product) {
+                return $this->error(OperationStatus::NOT_FOUND, "Produto com SKU {$sku} não encontrado");
+            }
 
-                if (! $this->repository->canBeDeactivatedOrDeleted($product->id)) {
-                    throw new Exception('Produto não pode ser desativado/ativado pois está em uso em serviços.');
-                }
+            $updatedProduct = $this->toggleStatusAction->execute($product);
 
-                $newStatus = ! $product->active;
-                $this->repository->updateStatus($product->id, $newStatus);
+            $message = $updatedProduct->active ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
 
-                return $product->fresh();
-            });
-
-            $message = $product->active ? 'Produto ativado com sucesso' : 'Produto desativado com sucesso';
-
-            return $this->success($product, $message);
+            return $this->success($updatedProduct, $message);
         }, 'Erro ao alterar status do produto.');
     }
 
     public function deleteProductBySku(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            DB::transaction(function () use ($sku) {
-                $product = $this->repository->findBySku($sku);
+            $product = $this->repository->findBySku($sku);
 
-                if (! $product) {
-                    throw new Exception("Produto com SKU {$sku} não encontrado");
-                }
+            if (! $product) {
+                return $this->error(OperationStatus::NOT_FOUND, "Produto com SKU {$sku} não encontrado");
+            }
 
-                if (! $this->repository->canBeDeactivatedOrDeleted($product->id)) {
-                    throw new Exception('Produto não pode ser excluído pois está em uso em serviços.');
-                }
-
-                // Deletar imagem física se existir
+            // 1. Gerenciar arquivos (Service)
+            if ($product->image) {
                 $this->deletePhysicalImage($product->image);
+            }
 
-                $this->repository->delete($product->id);
-            });
+            // 2. Executar exclusão (Action)
+            $this->deleteAction->execute($product);
 
             return $this->success(null, 'Produto excluído com sucesso');
         }, 'Erro ao excluir produto.');
@@ -238,7 +228,7 @@ class ProductService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Produto não encontrado ou não está excluído');
             }
 
-            $this->repository->restore($product->id);
+            $this->restoreAction->execute($product);
 
             return $this->success($product, 'Produto restaurado com sucesso');
         }, 'Erro ao restaurar produto.');
@@ -252,7 +242,8 @@ class ProductService extends AbstractBaseService
         return $this->safeExecute(function () use ($ids) {
             $count = 0;
             foreach ($ids as $id) {
-                if ($this->repository->restore((int) $id)) {
+                $product = $this->repository->findById((int) $id, [], true);
+                if ($product && $product->trashed() && $this->restoreAction->execute($product)) {
                     $count++;
                 }
             }
@@ -262,23 +253,32 @@ class ProductService extends AbstractBaseService
     }
 
     /**
-     * Retorna produtos filtrados e paginados via DTO.
+     * Retorna produtos filtrados e paginados opcionalmente via DTO.
      */
-    public function getFilteredProducts(ProductFilterDTO $filterDto, array $with = []): ServiceResult
+    public function getFilteredProducts(ProductFilterDTO $filterDto, array $with = [], bool $paginate = true): ServiceResult
     {
-        return $this->safeExecute(function () use ($filterDto, $with) {
+        return $this->safeExecute(function () use ($filterDto, $with, $paginate) {
             // Normalização padronizada via Trait
             $normalizedFilters = $this->normalizeFilters($filterDto->toFilterArray());
 
-            $paginator = $this->repository->getPaginated(
-                $normalizedFilters,
-                $filterDto->per_page,
-                $with,
-            );
+            if ($paginate) {
+                $result = $this->repository->getPaginated(
+                    $normalizedFilters,
+                    $filterDto->per_page,
+                    $with,
+                );
+                Log::info('Produtos carregados (paginado)', ['total' => $result->total()]);
+            } else {
+                $result = $this->repository->getAllByTenant(
+                    $normalizedFilters,
+                );
+                if (!empty($with)) {
+                    $result->load($with);
+                }
+                Log::info('Produtos carregados (coleção)', ['total' => $result->count()]);
+            }
 
-            Log::info('Produtos carregados', ['total' => $paginator->total()]);
-
-            return $paginator;
+            return $result;
         }, 'Erro ao carregar produtos.');
     }
 

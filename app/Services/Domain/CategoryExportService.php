@@ -60,6 +60,26 @@ class CategoryExportService extends AbstractExportService
         return parent::exportToPdf($categories, $fileName, $orientation);
     }
 
+    protected function getPdfViewName(): ?string
+    {
+        return 'pages.report.category.pdf_category';
+    }
+
+    protected function getPdfData(Collection $items): array
+    {
+        return [
+            'company' => $this->getCompanyData(),
+            'categories' => $items->map(function ($category) {
+                return [
+                    'parent_name' => $category->parent_id && $category->parent ? $category->parent->name : $category->name,
+                    'name' => $category->parent_id ? $category->name : '—',
+                    'status' => ! is_null($category->deleted_at) ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo'),
+                    'created_at' => $category->created_at ? $category->created_at->format('d/m/Y H:i') : '-',
+                ];
+            })->toArray(),
+        ];
+    }
+
     /**
      * Sobrescreve para aplicar centralização específica.
      */

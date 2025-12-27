@@ -163,7 +163,7 @@ class ProviderManagementService
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
-            return DB::transaction(function () use ($provider, $dto, $user) {
+            return DB::transaction(function () use ($provider, $dto, $user, $tenantId) {
                 // Handle logo upload
                 $logoPath = $user->logo;
                 if ($dto->logo instanceof UploadedFile) {
@@ -177,7 +177,7 @@ class ProviderManagementService
                 ], fn ($value) => $value !== null));
 
                 // Detectar tipo (PF ou PJ)
-                $type = ! empty($dto->cnpj) ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
+                $type = $dto->person_type === 'pj' ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
 
                 // Atualizar CommonData
                 if ($provider->commonData) {
@@ -209,6 +209,7 @@ class ProviderManagementService
                 if ($type === CommonData::TYPE_COMPANY) {
                     $businessDataDTO = BusinessDataDTO::fromRequest(array_merge($dto->toArray(), [
                         'provider_id' => $provider->id,
+                        'tenant_id' => $tenantId,
                     ]));
 
                     if ($provider->businessData) {

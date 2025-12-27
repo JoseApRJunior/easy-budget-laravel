@@ -32,17 +32,23 @@ class CategoryController extends Controller
     /**
      * Dashboard de categorias com estatísticas.
      */
-    public function dashboard(): View
+    public function dashboard(): View|RedirectResponse
     {
-        $this->authorize('viewAny', \App\Models\Category::class);
+        $this->authorize('viewAny', Category::class);
 
-        return $this->view('pages.category.dashboard', $this->categoryService->getDashboardData(), 'stats');
+        $result = $this->categoryService->getDashboardData();
+
+        if ($result->isError()) {
+            return $this->redirectError('dashboard', 'Erro ao carregar dashboard de categorias: '.$result->getMessage());
+        }
+
+        return $this->view('pages.category.dashboard', $result, 'stats');
     }
 
     /**
      * Lista categorias com filtros e paginação.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $this->authorize('viewAny', Category::class);
 
@@ -56,6 +62,10 @@ class CategoryController extends Controller
             $filters = $filterDto->toFilterArray();
         }
 
+        if ($result->isError()) {
+            return $this->redirectError('dashboard', 'Não foi possível carregar as categorias: '.$result->getMessage());
+        }
+
         return $this->view('pages.category.index', $result, 'categories', [
             'filters' => $filters,
         ]);
@@ -67,7 +77,12 @@ class CategoryController extends Controller
     public function create(): View|RedirectResponse
     {
         $this->authorize('create', Category::class);
+
         $result = $this->categoryService->getParentCategories();
+
+        if ($result->isError()) {
+            return $this->redirectError('provider.categories.index', 'Erro ao carregar categorias pai.');
+        }
 
         return $this->view('pages.category.create', $result, 'parents', [
             'defaults' => ['is_active' => true],
@@ -75,28 +90,28 @@ class CategoryController extends Controller
     }
 
     /**
-     * Persiste nova categoria.
+     * Salva nova categoria.
      */
     public function store(CategoryStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Category::class);
+
         $dto = CategoryDTO::fromRequest($request->validated());
         $result = $this->categoryService->createCategory($dto);
 
-        return $this->redirectBackWithServiceResult($result, 'Categoria criada com sucesso!');
+        return $this->redirectWithServiceResult(
+            'provider.categories.index',
+            $result,
+            'Categoria criada com sucesso!'
+        );
     }
 
     /**
-     * Mostra detalhes da categoria por slug.
+     * Exibe detalhes da categoria.
      */
-    public function show(string $slug): View|RedirectResponse
+    public function show(int $id): View|RedirectResponse
     {
-        $result = $this->categoryService->findBySlug(
-            $slug,
-            ['parent' => fn ($q) => $q->withTrashed()],
-            true, // withTrashed (para a própria categoria)
-            ['children', 'services', 'products'] // loadCounts
-        );
+        $result = $this->categoryService->getCategoryById($id);
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
@@ -110,14 +125,9 @@ class CategoryController extends Controller
     /**
      * Form para editar categoria.
      */
-    public function edit(string $slug): View|RedirectResponse
+    public function edit(int $id): View|RedirectResponse
     {
-        $result = $this->categoryService->findBySlug(
-            $slug,
-            ['parent' => fn ($q) => $q->withTrashed()],
-            false, // withTrashed (não editamos deletados via edit normal)
-            ['children', 'services', 'products']
-        );
+        $result = $this->categoryService->getCategoryById($id);
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
@@ -126,189 +136,106 @@ class CategoryController extends Controller
         $category = $result->getData();
         $this->authorize('update', $category);
 
-        $parentResult = $this->categoryService->getParentCategories();
-
-        $parents = $parentResult->isSuccess()
-            ? $parentResult->getData()->filter(fn ($p) => $p->id !== $category->id)
-            : collect();
-
-        // Se a categoria tem um pai e ele está inativo, garantimos que ele esteja na lista
-        if ($category->parent_id && ! $parents->contains('id', $category->parent_id)) {
-            if ($category->parent) {
-                $parents->push($category->parent);
-            }
-        }
+        $parentsResult = $this->categoryService->getParentCategories($id);
 
         return $this->view('pages.category.edit', $result, 'category', [
-            'parents' => $parents->sortBy('name'),
+            'parents' => $parentsResult->getData(),
         ]);
     }
 
     /**
      * Atualiza categoria.
      */
-    public function update(CategoryUpdateRequest $request, string $slug): RedirectResponse
+    public function update(CategoryUpdateRequest $request, int $id): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
+        $categoryResult = $this->categoryService->getCategoryById($id);
+        if ($categoryResult->isError()) {
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $category = $result->getData();
-        $this->authorize('update', $category);
+        $this->authorize('update', $categoryResult->getData());
 
         $dto = CategoryDTO::fromRequest($request->validated());
-        $updateResult = $this->categoryService->updateCategory($category->id, $dto);
-
-        // Se a atualização for bem-sucedida, usamos o novo slug para o redirecionamento
-        $redirectSlug = $updateResult->isSuccess() ? $updateResult->getData()->slug : $slug;
+        $result = $this->categoryService->updateCategory($id, $dto);
 
         return $this->redirectWithServiceResult(
-            'provider.categories.show',
-            $updateResult,
-            'Categoria atualizada com sucesso.',
-            ['slug' => $redirectSlug]
+            'provider.categories.index',
+            $result,
+            'Categoria atualizada com sucesso!'
         );
     }
 
     /**
-     * Exclui categoria.
+     * Remove categoria (Soft Delete).
      */
-    public function destroy(string $slug): RedirectResponse
+    public function destroy(int $id): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
+        $categoryResult = $this->categoryService->getCategoryById($id);
+        if ($categoryResult->isError()) {
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $category = $result->getData();
-        $this->authorize('delete', $category);
+        $this->authorize('delete', $categoryResult->getData());
 
-        $deleteResult = $this->categoryService->deleteCategory($category->id);
+        $result = $this->categoryService->deleteCategory($id);
 
-        if ($deleteResult->isError()) {
-            return $this->redirectError('provider.categories.index', $deleteResult->getMessage() ?: 'Erro ao excluir categoria.');
-        }
-
-        return $this->redirectSuccess('provider.categories.index', 'Categoria excluída com sucesso.');
+        return $this->redirectWithServiceResult(
+            'provider.categories.index',
+            $result,
+            'Categoria removida com sucesso!'
+        );
     }
 
     /**
-     * Alterna status ativo/inativo da categoria.
+     * Restaura categoria removida.
      */
-    public function toggleStatus(string $slug): RedirectResponse
+    public function restore(int $id): RedirectResponse
     {
-        $result = $this->categoryService->findBySlug($slug);
-        if ($result->isError()) {
+        $result = $this->categoryService->restoreCategory($id);
+
+        return $this->redirectWithServiceResult(
+            'provider.categories.index',
+            $result,
+            'Categoria restaurada com sucesso!'
+        );
+    }
+
+    /**
+     * Ativa/Desativa categoria.
+     */
+    public function toggleStatus(int $id): RedirectResponse
+    {
+        $categoryResult = $this->categoryService->getCategoryById($id);
+        if ($categoryResult->isError()) {
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $category = $result->getData();
+        $category = $categoryResult->getData();
         $this->authorize('update', $category);
 
-        $toggleResult = $this->categoryService->toggleCategoryStatus($slug);
+        $result = $this->categoryService->updateStatus($id, ! $category->is_active);
 
-        if ($toggleResult->isError()) {
-            return $this->redirectError('provider.categories.index', $toggleResult->getMessage());
-        }
-
-        return $this->redirectSuccess('provider.categories.show', $toggleResult->getMessage(), ['slug' => $slug]);
+        return $this->redirectWithServiceResult(
+            'provider.categories.index',
+            $result,
+            'Status da categoria atualizado!'
+        );
     }
 
     /**
-     * Restaura categoria deletada (soft delete).
+     * Exporta categorias para PDF.
      */
-    public function restore(string $slug): RedirectResponse
-    {
-        $result = $this->categoryService->findBySlug($slug, [], true);
-        if ($result->isError()) {
-            return $this->redirectError('provider.categories.index', 'Categoria não encontrada para restauração.');
-        }
-
-        $category = $result->getData();
-        $this->authorize('update', $category);
-
-        $restoreResult = $this->categoryService->restoreCategoriesBySlug($slug);
-
-        if ($restoreResult->isError()) {
-            return $this->redirectError('provider.categories.index', $restoreResult->getMessage());
-        }
-
-        return $this->redirectSuccess('provider.categories.show', 'Categoria restaurada com sucesso!', ['slug' => $slug]);
-    }
-
-    /**
-     * Busca categorias por nome/descrição com pesquisa parcial.
-     */
-    /**
-     * Métodos de conveniência que delegam ao index com filtros pré-definidos.
-     */
-    public function search(Request $request): View
-    {
-        return $this->index($request);
-    }
-
-    public function active(Request $request): View
-    {
-        $request->merge(['active' => '1']);
-
-        return $this->index($request);
-    }
-
-    public function deleted(Request $request): View
-    {
-        $request->merge(['deleted' => 'only']);
-
-        return $this->index($request);
-    }
-
-    public function restoreMultiple(Request $request): RedirectResponse
-    {
-        $this->authorize('update', \App\Models\Category::class);
-        $ids = $request->input('ids', []);
-
-        if (empty($ids)) {
-            return $this->redirectError('provider.categories.index', 'Nenhuma categoria selecionada para restauração.');
-        }
-
-        $result = $this->categoryService->restoreCategories($ids);
-
-        if ($result->isError()) {
-            return $this->redirectError('provider.categories.index', $result->getMessage());
-        }
-
-        return $this->redirectSuccess('provider.categories.index', 'Restauradas categorias com sucesso.');
-    }
-
     public function export(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Category::class);
-        $format = $request->get('format', 'xlsx');
+        $this->authorize('viewAny', Category::class);
 
-        // Usa o DTO para capturar e validar os filtros, definindo um limite alto para exportação
-        $filterDto = CategoryFilterDTO::fromRequest(array_merge($request->all(), ['per_page' => 1000]));
-        $result = $this->categoryService->getFilteredCategories($filterDto);
+        $filterDto = CategoryFilterDTO::fromRequest($request->all());
+        $result = $this->categoryService->getFilteredCategories($filterDto, false);
 
         if ($result->isError()) {
-            return $this->redirectError('provider.categories.index', $result->getMessage());
+            return $this->redirectError('provider.categories.index', 'Erro ao buscar categorias para exportação.');
         }
 
-        // Extrai a collection do paginator preservando todos os atributos
-        $paginatorOrCollection = $result->getData();
-
-        if (method_exists($paginatorOrCollection, 'items')) {
-            // É um LengthAwarePaginator - pega os items diretamente
-            $categories = collect($paginatorOrCollection->items());
-        } elseif (method_exists($paginatorOrCollection, 'getCollection')) {
-            // É um Paginator - usa getCollection
-            $categories = $paginatorOrCollection->getCollection();
-        } else {
-            // Já é uma Collection
-            $categories = $paginatorOrCollection;
-        }
-
-        return $format === 'pdf'
-            ? $this->exportService->exportToPdf($categories)
-            : $this->exportService->exportToExcel($categories, $format);
+        return $this->exportService->exportToPdf($result->getData());
     }
 }

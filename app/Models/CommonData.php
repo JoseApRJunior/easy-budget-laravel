@@ -86,7 +86,7 @@ class CommonData extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'type' => 'required|in:individual,company',
             'description' => 'nullable|string|max:65535',
-            'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
+            'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id' => 'nullable|integer|exists:professions,id',
         ];
 

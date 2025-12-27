@@ -31,7 +31,11 @@ readonly class CommonDataDTO extends AbstractDTO
             type: $data['type'] ?? 'individual',
             first_name: $data['first_name'] ?? null,
             last_name: $data['last_name'] ?? null,
-            birth_date: isset($data['birth_date']) ? Carbon::parse($data['birth_date']) : null,
+            birth_date: isset($data['birth_date'])
+                ? (str_contains($data['birth_date'], '/')
+                    ? Carbon::createFromFormat('d/m/Y', $data['birth_date'])
+                    : Carbon::parse($data['birth_date']))
+                : null,
             cpf: isset($data['cpf']) ? preg_replace('/[^0-9]/', '', (string) $data['cpf']) : null,
             company_name: $data['company_name'] ?? null,
             cnpj: isset($data['cnpj']) ? preg_replace('/[^0-9]/', '', (string) $data['cnpj']) : null,

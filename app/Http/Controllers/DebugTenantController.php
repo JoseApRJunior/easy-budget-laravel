@@ -33,88 +33,67 @@ class DebugTenantController extends Controller
         }
 
         // Testar ServiceService diretamente
-        try {
-            $serviceService = app(ServiceService::class);
-            $result = $serviceService->findByCode('ORC-20251112-0003-S003');
+        $serviceService = app(ServiceService::class);
+        $result = $serviceService->findByCode('ORC-20251112-0003-S003');
 
-            $debug['service_service_test'] = [
-                'success' => $result->isSuccess(),
-                'message' => $result->getMessage(),
-                'has_data' => $result->hasData(),
-                'status' => $result->getStatus()->value ?? null,
-            ];
+        $debug['service_service_test'] = [
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'has_data' => $result->hasData(),
+            'status' => $result->getStatus()->value ?? null,
+        ];
 
-            if ($result->isSuccess() && $result->hasData()) {
-                $service = $result->getData();
-                $debug['service_service_test']['service'] = [
-                    'id' => $service->id,
-                    'code' => $service->code,
-                    'tenant_id' => $service->tenant_id,
-                    'status' => $service->status->value ?? null,
-                ];
-            }
-
-        } catch (\Exception $e) {
-            $debug['service_service_test'] = [
-                'error' => true,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+        if ($result->isSuccess() && $result->hasData()) {
+            $service = $result->getData();
+            $debug['service_service_test']['service'] = [
+                'id' => $service->id,
+                'code' => $service->code,
+                'tenant_id' => $service->tenant_id,
+                'status' => $service->status->value ?? null,
             ];
         }
 
         // Buscar o serviço diretamente com query
-        try {
-            $service = Service::withoutGlobalScopes()->where('code', 'ORC-20251112-0003-S003')->first();
+        $service = Service::withoutGlobalScopes()->where('code', 'ORC-20251112-0003-S003')->first();
 
-            if ($service) {
-                $debug['direct_query'] = [
-                    'found' => true,
-                    'id' => $service->id,
-                    'tenant_id' => $service->tenant_id,
-                    'code' => $service->code,
-                    'status' => $service->status->value ?? null,
-                    'description' => $service->description ?? null,
-                ];
-
-                // Verificar tenant do serviço
-                if ($service->tenant) {
-                    $debug['direct_query']['service_tenant'] = [
-                        'id' => $service->tenant->id,
-                        'name' => $service->tenant->name,
-                        'cnpj' => $service->tenant->cnpj,
-                    ];
-                }
-
-                // Verificar correspondência de tenants
-                if (Auth::check()) {
-                    $user = Auth::user();
-                    $debug['direct_query']['tenant_match'] = $user->tenant_id === $service->tenant_id;
-                    $debug['direct_query']['user_tenant_id'] = $user->tenant_id ?? null;
-                    $debug['direct_query']['service_tenant_id'] = $service->tenant_id;
-                }
-            } else {
-                $debug['direct_query'] = ['found' => false];
-            }
-        } catch (\Exception $e) {
+        if ($service) {
             $debug['direct_query'] = [
-                'error' => true,
-                'message' => $e->getMessage(),
+                'found' => true,
+                'id' => $service->id,
+                'tenant_id' => $service->tenant_id,
+                'code' => $service->code,
+                'status' => $service->status->value ?? null,
+                'description' => $service->description ?? null,
             ];
+
+            // Verificar tenant do serviço
+            if ($service->tenant) {
+                $debug['direct_query']['service_tenant'] = [
+                    'id' => $service->tenant->id,
+                    'name' => $service->tenant->name,
+                    'cnpj' => $service->tenant->cnpj,
+                ];
+            }
+
+            // Verificar correspondência de tenants
+            if (Auth::check()) {
+                $user = Auth::user();
+                $debug['direct_query']['tenant_match'] = $user->tenant_id === $service->tenant_id;
+                $debug['direct_query']['user_tenant_id'] = $user->tenant_id ?? null;
+                $debug['direct_query']['service_tenant_id'] = $service->tenant_id;
+            }
+        } else {
+            $debug['direct_query'] = ['found' => false];
         }
 
         // Verificar todos os tenants disponíveis
-        try {
-            $debug['all_tenants'] = \App\Models\Tenant::all()->map(function ($tenant) {
-                return [
-                    'id' => $tenant->id,
-                    'name' => $tenant->name,
-                    'cnpj' => $tenant->cnpj,
-                ];
-            });
-        } catch (\Exception $e) {
-            $debug['all_tenants'] = ['error' => $e->getMessage()];
-        }
+        $debug['all_tenants'] = \App\Models\Tenant::all()->map(function ($tenant) {
+            return [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'cnpj' => $tenant->cnpj,
+            ];
+        });
 
         return response()->json([
             'debug' => $debug,

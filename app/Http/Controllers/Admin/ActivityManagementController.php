@@ -306,115 +306,74 @@ class ActivityManagementController extends Controller
             ], 422);
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $activityName = $activity->name;
-            $activity->delete();
+        $activityName = $activity->name;
+        $activity->delete();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Activity deleted', [
-                'activity_name' => $activityName,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity deleted', [
+            'activity_name' => $activityName,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Atividade excluída com sucesso!',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting activity', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao excluir atividade. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Atividade excluída com sucesso!',
+        ]);
     }
 
     public function toggleStatus(AreaOfActivity $activity): JsonResponse
     {
         $this->authorize('manage-activities');
 
-        try {
-            $activity->is_active = ! $activity->is_active;
-            $activity->save();
+        $activity->is_active = ! $activity->is_active;
+        $activity->save();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            Log::info('Activity status toggled', [
-                'activity_id' => $activity->id,
-                'name' => $activity->name,
-                'new_status' => $activity->is_active ? 'active' : 'inactive',
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity status toggled', [
+            'activity_id' => $activity->id,
+            'name' => $activity->name,
+            'new_status' => $activity->is_active ? 'active' : 'inactive',
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Status alterado com sucesso!',
-                'is_active' => $activity->is_active,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error toggling activity status', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Status alterado com sucesso!',
+            'is_active' => $activity->is_active,
+        ]);
     }
 
     public function duplicate(AreaOfActivity $activity): RedirectResponse
     {
         $this->authorize('manage-activities');
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $newActivity = $activity->replicate();
-            $newActivity->name = $activity->name.' (Cópia)';
-            $newActivity->code = $this->generateUniqueCode($newActivity->name);
-            $newActivity->slug = $this->generateUniqueSlug($newActivity->name);
-            $newActivity->is_active = false;
-            $newActivity->save();
+        $newActivity = $activity->replicate();
+        $newActivity->name = $activity->name.' (Cópia)';
+        $newActivity->code = $this->generateUniqueCode($newActivity->name);
+        $newActivity->slug = $this->generateUniqueSlug($newActivity->name);
+        $newActivity->is_active = false;
+        $newActivity->save();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Activity duplicated', [
-                'original_activity_id' => $activity->id,
-                'new_activity_id' => $newActivity->id,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity duplicated', [
+            'original_activity_id' => $activity->id,
+            'new_activity_id' => $newActivity->id,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.activities.edit', $newActivity)
-                ->with('success', 'Atividade duplicada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error duplicating activity', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->with('error', 'Erro ao duplicar atividade. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.activities.edit', $newActivity)
+            ->with('success', 'Atividade duplicada com sucesso!');
     }
 
     public function export(Request $request)

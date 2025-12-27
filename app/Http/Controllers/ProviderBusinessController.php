@@ -51,8 +51,8 @@ class ProviderBusinessController extends Controller
      */
     public function update(ProviderUpdateRequest $request): RedirectResponse
     {
-        // Criar DTO a partir do request
-        $dto = ProviderUpdateDTO::fromRequest($request);
+        // Criar DTO a partir do request validado
+        $dto = ProviderUpdateDTO::fromRequest($request->validated());
 
         // Usar o serviço para atualizar os dados empresariais
         $result = $this->providerManagementService->updateProvider($dto);

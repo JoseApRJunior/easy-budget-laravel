@@ -192,11 +192,11 @@ class CustomerService extends AbstractBaseService
     }
 
     /**
-     * Obtém clientes filtrados com paginação.
+     * Obtém clientes filtrados com paginação opcional.
      */
-    public function getFilteredCustomers(array $filters): ServiceResult
+    public function getFilteredCustomers(array $filters, bool $paginate = true): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters) {
+        return $this->safeExecute(function () use ($filters, $paginate) {
             $perPage = (int) ($filters['per_page'] ?? 15);
 
             // Preparar filtros para o repository
@@ -208,7 +208,11 @@ class CustomerService extends AbstractBaseService
                 unset($filters['deleted']);
             }
 
-            $customers = $this->customerRepository->getPaginated($filters, $perPage);
+            if ($paginate) {
+                $customers = $this->customerRepository->getPaginated($filters, $perPage);
+            } else {
+                $customers = $this->customerRepository->getFiltered($filters);
+            }
 
             return $this->success($customers, 'Clientes obtidos com sucesso');
         }, 'Erro ao obter clientes filtrados.');
@@ -314,7 +318,7 @@ class CustomerService extends AbstractBaseService
     public function exportCustomers(array $filters): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $customers = $this->customerRepository->listByFilters($filters, ['created_at' => 'desc']);
+            $customers = $this->customerRepository->getFiltered($filters);
 
             // Aqui você poderia integrar com um Excel export service
             // Por enquanto, apenas retornamos os dados formatados

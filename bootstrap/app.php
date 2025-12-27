@@ -42,11 +42,34 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
     })
-    ->withExceptions(function (): void {
-        // Only attempt to resolve the 'view' instance if the container has it bound.
-        // This prevents fatal "Target class [view] does not exist" errors when
-        // an exception occurs very early in the application lifecycle.
-        if (app()->bound('view')) {
-            app('view');
-        }
+    ->withExceptions(function (\Illuminate\Foundation\Configuration\Exceptions $exceptions) {
+        // Renderização global de exceções para uma experiência de usuário limpa
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            // Se for uma requisição que espera JSON (API), o Laravel já trata bem,
+            // mas podemos customizar se necessário.
+
+            // Para requisições Web, se não for uma exceção de validação ou autorização (que o Laravel já trata)
+            if (!$request->expectsJson() &&
+                !$e instanceof \Illuminate\Validation\ValidationException &&
+                !$e instanceof \Illuminate\Auth\Access\AuthorizationException &&
+                !$e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+
+                // Logamos o erro detalhadamente uma única vez aqui
+                \Illuminate\Support\Facades\Log::error('Exceção Global:', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'url' => $request->fullUrl(),
+                    'user_id' => auth()->id(),
+                ]);
+
+                // Redirecionamos o usuário de volta com uma mensagem amigável
+                return back()->withInput()->with('error', 'Ops! Ocorreu um erro inesperado. Nossa equipe já foi notificada.');
+            }
+        });
+
+        // Configuração de reporte (opcional)
+        $exceptions->report(function (\Throwable $e) {
+            // Aqui você poderia integrar com Sentry, Flare, etc.
+        });
     })->create();

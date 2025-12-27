@@ -106,31 +106,27 @@ class SettingsController extends Controller
      */
     public function updateGeneral(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'company_name' => 'required|string|max:255',
-                'contact_email' => 'required|email:rfc,dns|max:255',
-                'phone' => 'nullable|string|max:20',
-                'website' => 'nullable|url|max:255',
-                'currency' => 'required|in:BRL,USD,EUR',
-                'timezone' => 'required|timezone',
-                'language' => 'required|in:pt-BR,en-US,es-ES',
-                'address_street' => 'nullable|string|max:255',
-                'address_number' => 'nullable|string|max:20',
-                'address_complement' => 'nullable|string|max:100',
-                'address_neighborhood' => 'nullable|string|max:100',
-                'address_city' => 'nullable|string|max:100',
-                'address_state' => 'nullable|string|max:50',
-                'address_zip_code' => 'nullable|string|max:10',
-                'address_country' => 'nullable|string|max:50',
-            ]);
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'contact_email' => 'required|email:rfc,dns|max:255',
+            'phone' => 'nullable|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'currency' => 'required|in:BRL,USD,EUR',
+            'timezone' => 'required|timezone',
+            'language' => 'required|in:pt-BR,en-US,es-ES',
+            'address_street' => 'nullable|string|max:255',
+            'address_number' => 'nullable|string|max:20',
+            'address_complement' => 'nullable|string|max:100',
+            'address_neighborhood' => 'nullable|string|max:100',
+            'address_city' => 'nullable|string|max:100',
+            'address_state' => 'nullable|string|max:50',
+            'address_zip_code' => 'nullable|string|max:10',
+            'address_country' => 'nullable|string|max:50',
+        ]);
 
-            $this->settingsService->updateGeneralSettings($validated);
+        $this->settingsService->updateGeneralSettings($validated);
 
-            return back()->with('success', 'Configurações gerais atualizadas com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações gerais: '.$e->getMessage());
-        }
+        return back()->with('success', 'Configurações gerais atualizadas com sucesso!');
     }
 
     /**
@@ -138,25 +134,21 @@ class SettingsController extends Controller
      */
     public function updateProfile(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'full_name' => 'nullable|string|max:255',
-                'bio' => 'nullable|string|max:1000',
-                'phone' => 'nullable|string|max:20',
-                'birth_date' => 'nullable|date|before:today',
-                'social_facebook' => 'nullable|url|max:255',
-                'social_twitter' => 'nullable|url|max:255',
-                'social_linkedin' => 'nullable|url|max:255',
-                'social_instagram' => 'nullable|url|max:255',
-                'extra_links' => 'nullable|string|max:1000',
-            ]);
+        $validated = $request->validate([
+            'full_name' => 'nullable|string|max:255',
+            'bio' => 'nullable|string|max:1000',
+            'phone' => 'nullable|string|max:20',
+            'birth_date' => 'nullable|date|before:today',
+            'social_facebook' => 'nullable|url|max:255',
+            'social_twitter' => 'nullable|url|max:255',
+            'social_linkedin' => 'nullable|url|max:255',
+            'social_instagram' => 'nullable|url|max:255',
+            'extra_links' => 'nullable|string|max:1000',
+        ]);
 
-            $this->settingsService->updateProfileSettings($validated);
+        $this->settingsService->updateProfileSettings($validated);
 
-            return back()->with('success', 'Perfil atualizado com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar perfil: '.$e->getMessage());
-        }
+        return back()->with('success', 'Perfil atualizado com sucesso!');
     }
 
     /**
@@ -164,24 +156,20 @@ class SettingsController extends Controller
      */
     public function updateSecurity(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'current_password' => 'required_with:new_password|string',
-                'new_password' => 'nullable|string|min:8|max:255|confirmed',
-                'email_notifications' => 'boolean',
-                'transaction_notifications' => 'boolean',
-                'weekly_reports' => 'boolean',
-                'security_alerts' => 'boolean',
-                'newsletter_subscription' => 'boolean',
-                'push_notifications' => 'boolean',
-            ]);
+        $validated = $request->validate([
+            'current_password' => 'required_with:new_password|string',
+            'new_password' => 'nullable|string|min:8|max:255|confirmed',
+            'email_notifications' => 'boolean',
+            'transaction_notifications' => 'boolean',
+            'weekly_reports' => 'boolean',
+            'security_alerts' => 'boolean',
+            'newsletter_subscription' => 'boolean',
+            'push_notifications' => 'boolean',
+        ]);
 
-            $this->settingsService->updateSecuritySettings($validated);
+        $this->settingsService->updateSecuritySettings($validated);
 
-            return back()->with('success', 'Configurações de segurança atualizadas com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de segurança: '.$e->getMessage());
-        }
+        return back()->with('success', 'Configurações de segurança atualizadas com sucesso!');
     }
 
     /**
@@ -189,22 +177,18 @@ class SettingsController extends Controller
      */
     public function updateNotifications(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'email_notifications' => 'boolean',
-                'transaction_notifications' => 'boolean',
-                'weekly_reports' => 'boolean',
-                'security_alerts' => 'boolean',
-                'newsletter_subscription' => 'boolean',
-                'push_notifications' => 'boolean',
-            ]);
+        $validated = $request->validate([
+            'email_notifications' => 'boolean',
+            'transaction_notifications' => 'boolean',
+            'weekly_reports' => 'boolean',
+            'security_alerts' => 'boolean',
+            'newsletter_subscription' => 'boolean',
+            'push_notifications' => 'boolean',
+        ]);
 
-            $this->settingsService->updateNotificationSettings($validated);
+        $this->settingsService->updateNotificationSettings($validated);
 
-            return back()->with('success', 'Configurações de notificação atualizadas com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de notificação: '.$e->getMessage());
-        }
+        return back()->with('success', 'Configurações de notificação atualizadas com sucesso!');
     }
 
     /**
@@ -212,19 +196,15 @@ class SettingsController extends Controller
      */
     public function updateIntegrations(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'api_keys' => 'nullable|array',
-                'webhook_urls' => 'nullable|array',
-                'integration_settings' => 'nullable|array',
-            ]);
+        $validated = $request->validate([
+            'api_keys' => 'nullable|array',
+            'webhook_urls' => 'nullable|array',
+            'integration_settings' => 'nullable|array',
+        ]);
 
-            $this->settingsService->updateIntegrationSettings($validated);
+        $this->settingsService->updateIntegrationSettings($validated);
 
-            return back()->with('success', 'Configurações de integração atualizadas com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de integração: '.$e->getMessage());
-        }
+        return back()->with('success', 'Configurações de integração atualizadas com sucesso!');
     }
 
     /**
@@ -232,22 +212,18 @@ class SettingsController extends Controller
      */
     public function updateCustomization(Request $request): RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'theme' => 'required|in:light,dark,auto',
-                'primary_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
-                'layout_density' => 'required|in:compact,normal,spacious',
-                'sidebar_position' => 'required|in:left,right',
-                'animations_enabled' => 'boolean',
-                'sound_enabled' => 'boolean',
-            ]);
+        $validated = $request->validate([
+            'theme' => 'required|in:light,dark,auto',
+            'primary_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'layout_density' => 'required|in:compact,normal,spacious',
+            'sidebar_position' => 'required|in:left,right',
+            'animations_enabled' => 'boolean',
+            'sound_enabled' => 'boolean',
+        ]);
 
-            $this->settingsService->updateCustomizationSettings($validated);
+        $this->settingsService->updateCustomizationSettings($validated);
 
-            return back()->with('success', 'Configurações de personalização atualizadas com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configurações de personalização: '.$e->getMessage());
-        }
+        return back()->with('success', 'Configurações de personalização atualizadas com sucesso!');
     }
 
     /**
@@ -255,17 +231,13 @@ class SettingsController extends Controller
      */
     public function updateAvatar(Request $request): RedirectResponse
     {
-        try {
-            $request->validate([
-                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            ]);
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
 
-            $this->settingsService->updateAvatar($request->file('avatar'));
+        $this->settingsService->updateAvatar($request->file('avatar'));
 
-            return back()->with('success', 'Avatar atualizado com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar avatar: '.$e->getMessage());
-        }
+        return back()->with('success', 'Avatar atualizado com sucesso!');
     }
 
     /**
@@ -273,13 +245,9 @@ class SettingsController extends Controller
      */
     public function removeAvatar(Request $request): RedirectResponse
     {
-        try {
-            $this->settingsService->removeAvatar();
+        $this->settingsService->removeAvatar();
 
-            return back()->with('success', 'Avatar removido com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao remover avatar: '.$e->getMessage());
-        }
+        return back()->with('success', 'Avatar removido com sucesso!');
     }
 
     /**
@@ -287,17 +255,13 @@ class SettingsController extends Controller
      */
     public function updateCompanyLogo(Request $request): RedirectResponse
     {
-        try {
-            $request->validate([
-                'logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp,svg+xml|max:2048',
-            ]);
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp,svg+xml|max:2048',
+        ]);
 
-            $this->settingsService->updateCompanyLogo($request->file('logo'));
+        $this->settingsService->updateCompanyLogo($request->file('logo'));
 
-            return back()->with('success', 'Logo da empresa atualizado com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao atualizar logo: '.$e->getMessage());
-        }
+        return back()->with('success', 'Logo da empresa atualizado com sucesso!');
     }
 
     /**
@@ -305,21 +269,17 @@ class SettingsController extends Controller
      */
     public function createBackup(Request $request): RedirectResponse
     {
-        try {
-            $type = $request->get('type', 'full');
+        $type = $request->get('type', 'full');
 
-            if ($type === 'full') {
-                $result = $this->backupService->createFullBackup(auth()->user(), 'manual');
-            } elseif ($type === 'user') {
-                $result = $this->backupService->createUserSettingsBackup(auth()->user(), 'manual');
-            } else {
-                $result = $this->backupService->createSystemSettingsBackup(auth()->user()->tenant_id, 'manual');
-            }
-
-            return back()->with('success', 'Backup criado com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao criar backup: '.$e->getMessage());
+        if ($type === 'full') {
+            $result = $this->backupService->createFullBackup(auth()->user(), 'manual');
+        } elseif ($type === 'user') {
+            $result = $this->backupService->createUserSettingsBackup(auth()->user(), 'manual');
+        } else {
+            $result = $this->backupService->createSystemSettingsBackup(auth()->user()->tenant_id, 'manual');
         }
+
+        return back()->with('success', 'Backup criado com sucesso!');
     }
 
     /**
@@ -342,26 +302,22 @@ class SettingsController extends Controller
      */
     public function restoreBackup(Request $request): RedirectResponse
     {
-        try {
-            $request->validate([
-                'filename' => 'required|string',
-                'type' => 'required|in:user,system,full',
-            ]);
+        $request->validate([
+            'filename' => 'required|string',
+            'type' => 'required|in:user,system,full',
+        ]);
 
-            $user = auth()->user();
+        $user = auth()->user();
 
-            if ($request->type === 'full') {
-                $this->backupService->restoreFullBackup($user, $request->filename);
-            } elseif ($request->type === 'user') {
-                $this->backupService->restoreUserSettingsBackup($user, $request->filename);
-            } else {
-                $this->backupService->restoreSystemSettingsBackup($user->tenant_id, $request->filename);
-            }
-
-            return back()->with('success', 'Backup restaurado com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao restaurar backup: '.$e->getMessage());
+        if ($request->type === 'full') {
+            $this->backupService->restoreFullBackup($user, $request->filename);
+        } elseif ($request->type === 'user') {
+            $this->backupService->restoreUserSettingsBackup($user, $request->filename);
+        } else {
+            $this->backupService->restoreSystemSettingsBackup($user->tenant_id, $request->filename);
         }
+
+        return back()->with('success', 'Backup restaurado com sucesso!');
     }
 
     /**
@@ -369,17 +325,13 @@ class SettingsController extends Controller
      */
     public function deleteBackup(Request $request): RedirectResponse
     {
-        try {
-            $request->validate([
-                'filename' => 'required|string',
-            ]);
+        $request->validate([
+            'filename' => 'required|string',
+        ]);
 
-            $this->backupService->deleteBackup(auth()->user()->tenant_id, $request->filename);
+        $this->backupService->deleteBackup(auth()->user()->tenant_id, $request->filename);
 
-            return back()->with('success', 'Backup removido com sucesso!');
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao remover backup: '.$e->getMessage());
-        }
+        return back()->with('success', 'Backup removido com sucesso!');
     }
 
     /**
@@ -387,112 +339,68 @@ class SettingsController extends Controller
      */
     public function restoreDefaults(Request $request): RedirectResponse
     {
-        try {
-            $type = $request->get('type', 'user');
+        $type = $request->get('type', 'user');
 
-            if ($type === 'user') {
-                $this->settingsService->restoreUserDefaultSettings();
-                $message = 'Configurações padrão do usuário restauradas com sucesso!';
-            } else {
-                $this->settingsService->restoreSystemDefaultSettings();
-                $message = 'Configurações padrão do sistema restauradas com sucesso!';
-            }
-
-            return back()->with('success', $message);
-        } catch (Exception $e) {
-            return back()->with('error', 'Erro ao restaurar configurações padrão: '.$e->getMessage());
+        if ($type === 'user') {
+            $this->settingsService->restoreUserDefaultSettings();
+            $message = 'Configurações padrão do usuário restauradas com sucesso!';
+        } else {
+            $this->settingsService->restoreSystemDefaultSettings();
+            $message = 'Configurações padrão do sistema restauradas com sucesso!';
         }
+
+        return back()->with('success', $message);
     }
 
     /**
-     * Exibe logs de auditoria
-     */
-    public function audit(Request $request): View
-    {
-        $filters = $request->only([
-            'action',
-            'user_id',
-            'severity',
-            'category',
-            'model_type',
-            'start_date',
-            'end_date',
-            'security_only',
-            'data_modifications_only',
-            'sort_by',
-            'sort_direction',
-        ]);
-
-        $perPage = $request->get('per_page', 50);
-        $result = $this->auditLogService->getFilteredLogs($filters, $perPage);
-        $logs = $result->getData();
-
-        return view('settings.audit', [
-            'logs' => $logs,
-            'filters' => $filters,
-        ]);
-    }
-
-    /**
-     * Obtém sessões ativas do usuário
+     * Obtém sessões ativas (mock para demonstração)
      */
     private function getActiveSessions(): array
     {
-        // Implementação básica - em produção, usar sessão de banco ou Redis
         return [
             [
-                'id' => session()->getId(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'last_activity' => now(),
+                'id' => 1,
+                'device' => 'Windows PC - Chrome',
+                'ip' => '192.168.1.1',
                 'is_current' => true,
+                'last_activity' => now()->toDateTimeString(),
+            ],
+            [
+                'id' => 2,
+                'device' => 'iPhone 13 - Safari',
+                'ip' => '177.45.12.3',
+                'is_current' => false,
+                'last_activity' => now()->subHours(2)->toDateTimeString(),
             ],
         ];
     }
 
     /**
-     * Obtém integrações disponíveis
+     * Obtém integrações ativas (mock para demonstração)
      */
     private function getIntegrations(): array
     {
-        $tenant = auth()->user()->tenant ?? null;
-
-        if (! $tenant) {
-            return [
-                'mercadopago' => [
-                    'name' => 'Mercado Pago',
-                    'status' => 'disconnected',
-                    'last_sync' => null,
-                ],
-            ];
-        }
-
-        // Busca credenciais do Mercado Pago para o tenant atual
-        $mercadoPagoCredential = ProviderCredential::where('tenant_id', $tenant->id)
-            ->where('payment_gateway', 'mercadopago')
-            ->first();
-
-        $mercadoPagoStatus = 'disconnected';
-        $lastSync = null;
-
-        if ($mercadoPagoCredential) {
-            $mercadoPagoStatus = 'connected';
-            $lastSync = $mercadoPagoCredential->updated_at;
-
-            // Verifica se o token está expirado (considerando 6 horas de margem)
-            if ($mercadoPagoCredential->expires_in) {
-                $expirationTime = $mercadoPagoCredential->updated_at->addSeconds($mercadoPagoCredential->expires_in - 21600); // 6 horas de margem
-                if (now()->greaterThan($expirationTime)) {
-                    $mercadoPagoStatus = 'expired';
-                }
-            }
-        }
-
         return [
-            'mercadopago' => [
-                'name' => 'Mercado Pago',
-                'status' => $mercadoPagoStatus,
-                'last_sync' => $lastSync,
+            [
+                'id' => 'google',
+                'name' => 'Google Calendar',
+                'status' => 'connected',
+                'icon' => 'google',
+                'last_sync' => now()->subDays(1)->toDateTimeString(),
+            ],
+            [
+                'id' => 'whatsapp',
+                'name' => 'WhatsApp Business',
+                'status' => 'disconnected',
+                'icon' => 'whatsapp',
+                'last_sync' => null,
+            ],
+            [
+                'id' => 'stripe',
+                'name' => 'Stripe Payments',
+                'status' => 'connected',
+                'icon' => 'credit-card',
+                'last_sync' => now()->subHours(5)->toDateTimeString(),
             ],
         ];
     }

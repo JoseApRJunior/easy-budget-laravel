@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Actions\Category\CreateCategoryAction;
+use App\Actions\Category\UpdateCategoryAction;
 use App\DTOs\Category\CategoryDTO;
 use App\DTOs\Category\CategoryFilterDTO;
 use App\Enums\OperationStatus;
@@ -26,31 +28,17 @@ use Illuminate\Support\Str;
  */
 class CategoryService extends AbstractBaseService
 {
-    public function __construct(CategoryRepository $repository)
-    {
+    public function __construct(
+        CategoryRepository $repository,
+        private CreateCategoryAction $createAction,
+        private UpdateCategoryAction $updateAction,
+    ) {
         parent::__construct($repository);
     }
 
     protected function getSupportedFilters(): array
     {
         return ['id', 'name', 'slug', 'is_active', 'parent_id', 'created_at', 'updated_at'];
-    }
-
-    /**
-     * Gera slug único para o tenant.
-     */
-    private function generateUniqueSlug(string $name, int $tenantId, ?int $excludeId = null): string
-    {
-        $base = Str::slug($name);
-        $slug = $base;
-        $i = 1;
-
-        while ($this->repository->existsBySlug($slug, $excludeId)) {
-            $slug = $base.'-'.$i;
-            $i++;
-        }
-
-        return $slug;
     }
 
     /**
@@ -68,11 +56,11 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
-     * Lista categorias do tenant com filtros e paginação via DTO.
+     * Lista categorias do tenant com filtros e paginação opcional.
      */
-    public function getFilteredCategories(CategoryFilterDTO $filterDto): ServiceResult
+    public function getFilteredCategories(CategoryFilterDTO $filterDto, bool $paginate = true): ServiceResult
     {
-        return $this->safeExecute(function () use ($filterDto) {
+        return $this->safeExecute(function () use ($filterDto, $paginate) {
             if (! $this->tenantId()) {
                 return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
             }
@@ -83,15 +71,29 @@ class CategoryService extends AbstractBaseService
                 'likes' => ['name', 'slug'],
             ]);
 
-            $paginator = $this->repository->getPaginated(
-                $normalizedFilters,
-                $filterDto->per_page,
-                ['parent' => fn ($q) => $q->withTrashed()],
-            );
+            $with = ['parent' => fn ($q) => $q->withTrashed()];
 
-            Log::info('Categorias carregadas', ['total' => $paginator->total()]);
+            if ($paginate) {
+                $result = $this->repository->getPaginated(
+                    $normalizedFilters,
+                    $filterDto->per_page,
+                    $with,
+                );
+                Log::info('Categorias carregadas (paginado)', ['total' => $result->total()]);
+            } else {
+                $result = $this->repository->getAllByTenant(
+                    $normalizedFilters,
+                    null, // order by can be added if needed
+                );
+                // getAllByTenant doesn't load relations by default in AbstractTenantRepository
+                // but we can load them if needed.
+                if (!empty($with)) {
+                    $result->load($with);
+                }
+                Log::info('Categorias carregadas (coleção)', ['total' => $result->count()]);
+            }
 
-            return $paginator;
+            return $result;
         }, 'Erro ao carregar categorias.');
     }
 
@@ -113,19 +115,16 @@ class CategoryService extends AbstractBaseService
     public function createCategory(CategoryDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($dto) {
+            $tenantId = (int) $this->tenantId();
             $data = $dto->toArray();
 
-            if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->tenantId());
-                $dto = CategoryDTO::fromArray($data);
-            }
-
-            if (! Category::validateUniqueSlug($data['slug'], (int) $this->tenantId())) {
+            // Validações de negócio pré-action
+            if (! empty($data['slug']) && ! Category::validateUniqueSlug($data['slug'], $tenantId)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
             if (! empty($data['parent_id'])) {
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->tenantId());
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
                 if ($parentResult->isError()) {
                     return $parentResult;
                 }
@@ -140,7 +139,10 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            return DB::transaction(fn () => $this->repository->createFromDTO($dto));
+            // Delega a criação para a Action
+            $category = $this->createAction->execute($dto, $tenantId);
+
+            return $this->success($category, 'Categoria criada com sucesso.');
         }, 'Erro ao criar categoria.');
     }
 
@@ -150,6 +152,7 @@ class CategoryService extends AbstractBaseService
     public function updateCategory(int $id, CategoryDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $dto) {
+            $tenantId = (int) $this->tenantId();
             $ownerResult = $this->findAndVerifyOwnership($id);
             if ($ownerResult->isError()) {
                 return $ownerResult;
@@ -158,12 +161,8 @@ class CategoryService extends AbstractBaseService
             $category = $ownerResult->getData();
             $data = $dto->toArray();
 
-            if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->tenantId(), $id);
-                $dto = CategoryDTO::fromArray($data);
-            }
-
-            if (! Category::validateUniqueSlug($data['slug'], (int) $this->tenantId(), $id)) {
+            // Validações de negócio pré-action
+            if (! empty($data['slug']) && ! Category::validateUniqueSlug($data['slug'], $tenantId, $id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
@@ -172,7 +171,7 @@ class CategoryService extends AbstractBaseService
                     return $this->error(OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma');
                 }
 
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->tenantId());
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
                 if ($parentResult->isError()) {
                     return $parentResult;
                 }
@@ -182,37 +181,26 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            // Regras de negócio para ativação/desativação se o status estiver mudando
+            // Regras de negócio para ativação/desativação
             if (isset($data['is_active'])) {
                 $newStatus = (bool) $data['is_active'];
                 $oldStatus = (bool) $category->is_active;
 
-                if ($newStatus !== $oldStatus) {
-                    if ($newStatus === true) {
-                        // Ao ativar, se for filho, o pai deve estar ativo
-                        $parentId = $data['parent_id'] ?? $category->parent_id;
-                        if ($parentId) {
-                            $parent = Category::find($parentId);
-                            if ($parent && ! $parent->is_active) {
-                                return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria porque a categoria pai '{$parent->name}' está inativa.");
-                            }
+                if ($newStatus !== $oldStatus && $newStatus === true) {
+                    $parentId = $data['parent_id'] ?? $category->parent_id;
+                    if ($parentId) {
+                        $parent = Category::find($parentId);
+                        if ($parent && ! $parent->is_active) {
+                            return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria porque a categoria pai '{$parent->name}' está inativa.");
                         }
                     }
                 }
             }
 
-            $updated = DB::transaction(function () use ($id, $dto, $category, $data) {
-                // Se estiver desativando um pai, desativa todos os filhos em cascata
-                if (isset($data['is_active']) && $data['is_active'] === false && $category->is_active === true) {
-                    Category::where('parent_id', $category->id)
-                        ->where('tenant_id', $this->tenantId())
-                        ->update(['is_active' => false]);
-                }
+            // Delega a atualização para a Action
+            $updatedCategory = $this->updateAction->execute($category, $dto, $tenantId);
 
-                return $this->repository->updateFromDTO($id, $dto);
-            });
-
-            return $updated ?: $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada para atualização.');
+            return $this->success($updatedCategory, 'Categoria atualizada com sucesso.');
         }, 'Erro ao atualizar categoria.');
     }
 

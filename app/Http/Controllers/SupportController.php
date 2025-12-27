@@ -43,26 +43,20 @@ class SupportController extends Controller
      */
     public function store(SupportContactRequest $request)
     {
-        try {
-            // Obtém dados validados e sanitizados do FormRequest
-            $validatedData = $request->getValidatedData();
+        // Obtém dados validados e sanitizados do FormRequest
+        $validatedData = $request->getValidatedData();
 
-            // Cria o DTO
-            $dto = SupportDTO::fromRequest($validatedData);
+        // Cria o DTO
+        $dto = SupportDTO::fromRequest($validatedData);
 
-            // Cria o ticket de suporte usando o SupportService
-            $result = $this->supportService->createSupportTicket($dto);
+        // Cria o ticket de suporte usando o SupportService
+        $result = $this->supportService->createSupportTicket($dto);
 
-            if (! $result->isSuccess()) {
-                return $this->redirectError('support', $result->getMessage())
-                    ->withInput();
-            }
-
-            return $this->redirectSuccess('support', 'Ticket de suporte criado com sucesso! Em breve entraremos em contato.');
-
-        } catch (Exception $e) {
-            return $this->redirectError('support', 'Erro ao processar ticket: '.$e->getMessage())
+        if (! $result->isSuccess()) {
+            return $this->redirectError('support', $result->getMessage())
                 ->withInput();
         }
+
+        return $this->redirectSuccess('support', 'Ticket de suporte criado com sucesso! Em breve entraremos em contato.');
     }
 }

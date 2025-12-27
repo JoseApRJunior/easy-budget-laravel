@@ -486,6 +486,8 @@
                     new VanillaMask('phone_personal', 'phone');
                     new VanillaMask('phone_business', 'phone');
                     new VanillaMask('cep', 'cep');
+                    new VanillaMask('birth_date', 'date');
+                    new VanillaMask('founding_date', 'date');
 
                     // Inicializar máscara baseada no tipo de pessoa atual
                     const type = document.getElementById('person_type').value;

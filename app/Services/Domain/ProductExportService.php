@@ -25,10 +25,10 @@ class ProductExportService extends AbstractExportService
     {
         $createdAt = $product->created_at ? $product->created_at->format('d/m/Y H:i:s') : '';
         $price = 'R$ '.number_format((float) $product->price, 2, ',', '.');
-        
+
         // Garante que o estoque seja exibido como número, inclusive se for 0
         $stock = (string) ($product->total_stock ?? 0);
-        
+
         $category = $product->category ? $product->category->name : '-';
 
         // Determina a situação: Deletado > Inativo > Ativo
@@ -53,6 +53,26 @@ class ProductExportService extends AbstractExportService
     public function exportToPdf(Collection $products, string $fileName = 'products', string $orientation = 'A4-L'): StreamedResponse
     {
         return parent::exportToPdf($products, $fileName, $orientation);
+    }
+
+    protected function getPdfViewName(): ?string
+    {
+        return 'pages.report.product.pdf_product';
+    }
+
+    protected function getPdfData(Collection $items): array
+    {
+        return [
+            'company' => $this->getCompanyData(),
+            'products' => $items->map(function ($product) {
+                return [
+                    'name' => $product->name,
+                    'code' => $product->sku,
+                    'description' => $product->category->name ?? 'Sem categoria',
+                    'price' => $product->price,
+                ];
+            })->toArray(),
+        ];
     }
 
     /**

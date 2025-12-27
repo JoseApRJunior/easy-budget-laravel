@@ -12,6 +12,7 @@ readonly class ProviderUpdateDTO extends AbstractDTO
     public function __construct(
         // User
         public ?string $email = null,
+        public ?string $person_type = null,
         public ?UploadedFile $logo = null,
 
         // CommonData
@@ -54,6 +55,7 @@ readonly class ProviderUpdateDTO extends AbstractDTO
     {
         return new self(
             email: $data['email'] ?? null,
+            person_type: $data['person_type'] ?? null,
             logo: $data['logo'] ?? null,
             first_name: $data['first_name'] ?? null,
             last_name: $data['last_name'] ?? null,

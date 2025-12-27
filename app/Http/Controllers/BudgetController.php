@@ -73,23 +73,17 @@ class BudgetController extends Controller
     public function store(BudgetStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Budget::class);
-        try {
-            $dto = BudgetDTO::fromRequest($request->validated());
-            $result = $this->budgetService->create($dto);
+        $dto = BudgetDTO::fromRequest($request->validated());
+        $result = $this->budgetService->create($dto);
 
-            if ($result->isError()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', $result->getMessage());
-            }
-
-            return redirect()->route('provider.budgets.show', $result->getData()->code)
-                ->with('success', 'Orçamento criado com sucesso!');
-        } catch (\Exception $e) {
+        if ($result->isError()) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao criar orçamento: '.$e->getMessage());
+                ->with('error', $result->getMessage());
         }
+
+        return redirect()->route('provider.budgets.show', $result->getData()->code)
+            ->with('success', 'Orçamento criado com sucesso!');
     }
 
     public function show(string $code): View
@@ -144,23 +138,17 @@ class BudgetController extends Controller
         $budget = $result->getData();
         $this->authorize('update', $budget);
 
-        try {
-            $dto = BudgetDTO::fromRequest($request->validated());
-            $updateResult = $this->budgetService->update($code, $dto);
+        $dto = BudgetDTO::fromRequest($request->validated());
+        $updateResult = $this->budgetService->update($code, $dto);
 
-            if ($updateResult->isError()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', $updateResult->getMessage());
-            }
-
-            return redirect()->route('provider.budgets.show', $updateResult->getData()->code)
-                ->with('success', 'Orçamento atualizado com sucesso!');
-        } catch (\Exception $e) {
+        if ($updateResult->isError()) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar orçamento: '.$e->getMessage());
+                ->with('error', $updateResult->getMessage());
         }
+
+        return redirect()->route('provider.budgets.show', $updateResult->getData()->code)
+            ->with('success', 'Orçamento atualizado com sucesso!');
     }
 
     public function toggleStatus(Request $request, string $code): RedirectResponse

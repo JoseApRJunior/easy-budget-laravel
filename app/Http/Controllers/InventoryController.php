@@ -29,10 +29,6 @@ class InventoryController extends Controller
         $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getDashboardData();
 
-        if (! $result->isSuccess()) {
-            return redirect()->back()->with('error', $result->getMessage());
-        }
-
         return view('pages.inventory.dashboard', $result->getData());
     }
 
@@ -43,10 +39,6 @@ class InventoryController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getIndexData($request->all());
-
-        if (! $result->isSuccess()) {
-            return redirect()->back()->with('error', $result->getMessage());
-        }
 
         return view('pages.inventory.index', $result->getData());
     }
@@ -59,10 +51,6 @@ class InventoryController extends Controller
         $this->authorize('viewMovements', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getMovementsData($request->all());
 
-        if (! $result->isSuccess()) {
-            return redirect()->back()->with('error', $result->getMessage());
-        }
-
         return view('pages.inventory.movements', $result->getData());
     }
 
@@ -73,10 +61,6 @@ class InventoryController extends Controller
     {
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
-
-        if (! $result->isSuccess()) {
-            return redirect()->back()->with('error', $result->getMessage());
-        }
 
         return view('pages.inventory.stock-turnover', $result->getData());
     }
@@ -98,10 +82,6 @@ class InventoryController extends Controller
     {
         $this->authorize('manageAlerts', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getAlertsData();
-
-        if (! $result->isSuccess()) {
-            return redirect()->back()->with('error', $result->getMessage());
-        }
 
         return view('pages.inventory.alerts', $result->getData());
     }

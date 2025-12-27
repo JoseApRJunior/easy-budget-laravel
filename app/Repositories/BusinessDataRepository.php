@@ -33,7 +33,7 @@ class BusinessDataRepository extends AbstractTenantRepository
      */
     public function createFromDTO(BusinessDataDTO $dto): BusinessData
     {
-        return $this->model->newQuery()->create($dto->toArrayWithoutNulls());
+        return $this->create($dto->toArrayWithoutNulls());
     }
 
     /**

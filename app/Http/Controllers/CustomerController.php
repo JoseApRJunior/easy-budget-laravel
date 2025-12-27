@@ -41,24 +41,13 @@ class CustomerController extends Controller
         }
         $filters['per_page'] = $perPage;
 
-        try {
-            // Se não houver filtros, mostramos uma lista vazia ou inicial?
-            // O padrão do sistema parece ser mostrar os registros mesmo sem busca.
-            $result = $this->customerService->getFilteredCustomers($filters);
+        $result = $this->customerService->getFilteredCustomers($filters);
+        $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
 
-            $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
-
-            return $this->view('pages.customer.index', $result, 'customers', [
-                'filters' => $filters,
-                'areas_of_activity' => $areasOfActivity,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar clientes', [
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-            ]);
-            abort(500, 'Erro ao carregar clientes');
-        }
+        return $this->view('pages.customer.index', $result, 'customers', [
+            'filters' => $filters,
+            'areas_of_activity' => $areasOfActivity,
+        ]);
     }
 
     /**
@@ -86,27 +75,14 @@ class CustomerController extends Controller
     {
         $this->authorize('create', \App\Models\Customer::class);
 
-        try {
-            $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
-            $result = $this->customerService->createCustomer($dto);
+        $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
+        $result = $this->customerService->createCustomer($dto);
 
-            return $this->redirectWithServiceResult(
-                'provider.customers.create',
-                $result,
-                'Cliente criado com sucesso! Você pode cadastrar outro cliente agora.'
-            );
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao criar cliente', [
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()?->tenant_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('provider.customers.create')
-                ->with('error', 'Erro interno ao criar cliente. Tente novamente.')
-                ->withInput();
-        }
+        return $this->redirectWithServiceResult(
+            'provider.customers.create',
+            $result,
+            'Cliente criado com sucesso! Você pode cadastrar outro cliente agora.'
+        );
     }
 
     /**
@@ -160,28 +136,14 @@ class CustomerController extends Controller
     {
         $this->authorize('update', $customer);
 
-        try {
-            $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
-            $result = $this->customerService->updateCustomer((int) $customer->id, $dto);
+        $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
+        $result = $this->customerService->updateCustomer((int) $customer->id, $dto);
 
-            return $this->redirectWithServiceResult(
-                'provider.customers.index',
-                $result,
-                'Cliente atualizado com sucesso!'
-            );
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao atualizar cliente', [
-                'customer_id' => $customer->id,
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()?->tenant_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('provider.customers.edit', $customer->id)
-                ->with('error', 'Erro interno ao atualizar cliente. Tente novamente.')
-                ->withInput();
-        }
+        return $this->redirectWithServiceResult(
+            'provider.customers.index',
+            $result,
+            'Cliente atualizado com sucesso!'
+        );
     }
 
     /**
@@ -191,24 +153,13 @@ class CustomerController extends Controller
     {
         $this->authorize('delete', $customer);
 
-        try {
-            $result = $this->customerService->deleteCustomer((int) $customer->id);
+        $result = $this->customerService->deleteCustomer((int) $customer->id);
 
-            return $this->redirectWithServiceResult(
-                'provider.customers.index',
-                $result,
-                'Cliente excluído com sucesso!'
-            );
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao excluir cliente', [
-                'customer_id' => $customer->id,
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()?->tenant_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.customers.index', 'Erro interno ao excluir cliente.');
-        }
+        return $this->redirectWithServiceResult(
+            'provider.customers.index',
+            $result,
+            'Cliente excluído com sucesso!'
+        );
     }
 
     /**
@@ -218,31 +169,20 @@ class CustomerController extends Controller
     {
         $this->authorize('toggleStatus', $customer);
 
-        try {
-            $result = $this->customerService->toggleStatus((int) $customer->id);
+        $result = $this->customerService->toggleStatus((int) $customer->id);
 
-            if ($request->ajax() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => $result->isSuccess(),
-                    'message' => $result->getMessage(),
-                ], $result->isSuccess() ? 200 : 400);
-            }
-
-            return $this->redirectWithServiceResult(
-                'provider.customers.index',
-                $result,
-                'Status do cliente alterado com sucesso!'
-            );
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao alterar status do cliente', [
-                'customer_id' => $customer->id,
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()?->tenant_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.customers.index', 'Erro interno ao alterar status. Tente novamente.');
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => $result->isSuccess(),
+                'message' => $result->getMessage(),
+            ], $result->isSuccess() ? 200 : 400);
         }
+
+        return $this->redirectWithServiceResult(
+            'provider.customers.index',
+            $result,
+            'Status do cliente alterado com sucesso!'
+        );
     }
 
     /**
@@ -250,29 +190,18 @@ class CustomerController extends Controller
      */
     public function restore(string $id): RedirectResponse
     {
-        try {
-            $result = $this->customerService->findCustomer((int) $id);
-            if ($result->isSuccess()) {
-                $this->authorize('restore', $result->getData());
-            }
-
-            $result = $this->customerService->restoreCustomer((int) $id);
-
-            return $this->redirectWithServiceResult(
-                'provider.customers.index',
-                $result,
-                'Cliente restaurado com sucesso!'
-            );
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao restaurar cliente', [
-                'customer_id' => $id,
-                'user_id' => auth()->id(),
-                'tenant_id' => auth()->user()?->tenant_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->redirectError('provider.customers.index', 'Erro interno ao restaurar cliente. Tente novamente.');
+        $result = $this->customerService->findCustomer((int) $id);
+        if ($result->isSuccess()) {
+            $this->authorize('restore', $result->getData());
         }
+
+        $result = $this->customerService->restoreCustomer((int) $id);
+
+        return $this->redirectWithServiceResult(
+            'provider.customers.index',
+            $result,
+            'Cliente restaurado com sucesso!'
+        );
     }
 
     /**

@@ -205,6 +205,50 @@ class CustomerRepository extends AbstractTenantRepository
     // ========================================
 
     /**
+     * Obtém clientes filtrados sem paginação.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  array<string>  $with
+     * @return Collection<Customer>
+     */
+    public function getFiltered(
+        array $filters = [],
+        array $with = ['commonData', 'contact'],
+    ): Collection {
+        $query = $this->model->newQuery();
+
+        if (! empty($with)) {
+            $query->with($with);
+        }
+
+        $this->applyFilters($query, $filters);
+        $this->applySoftDeleteFilter($query, $filters);
+
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('commonData', function ($q) use ($searchTerm) {
+                    $q->where('company_name', 'like', "%{$searchTerm}%")
+                        ->orWhere('first_name', 'like', "%{$searchTerm}%")
+                        ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                        ->orWhere('cpf', 'like', "%{$searchTerm}%")
+                        ->orWhere('cnpj', 'like', "%{$searchTerm}%");
+                })->orWhereHas('contact', function ($q) use ($searchTerm) {
+                    $q->where('email', 'like', "%{$searchTerm}%")
+                        ->orWhere('phone', 'like', "%{$searchTerm}%")
+                        ->orWhere('cellphone', 'like', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        return $query->get();
+    }
+
+    /**
      * {@inheritdoc}
      *
      * Implementação específica para clientes com filtros avançados.
