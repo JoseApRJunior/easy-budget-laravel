@@ -23,10 +23,10 @@ class GlobalSettingsController extends Controller
      */
     public function index(): View
     {
-        $settings = SystemSettings::pluck('value', 'key')->toArray();
+        $settings = SystemSettings::where('tenant_id', auth()->user()->tenant_id)->first();
 
         return view('admin.settings.global', [
-            'settings' => $settings,
+            'settings' => $settings ? $settings->toArray() : [],
             'categories' => Category::count(),
             'activities' => AreaOfActivity::count(),
             'professions' => Profession::count(),
