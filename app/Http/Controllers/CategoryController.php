@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\DTOs\Category\CategoryDTO;
+use App\DTOs\Category\CategoryFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CategoryStoreRequest;
 use App\Http\Requests\CategoryUpdateRequest;
@@ -44,16 +45,15 @@ class CategoryController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Category::class);
-        $filters = $request->only(['search', 'active', 'per_page', 'deleted', 'all']);
 
         // Se nenhum parâmetro foi passado na URL, definimos filtros padrão
         if (empty($request->query())) {
-            $filters['active'] = '1';
-            $filters['deleted'] = '1';
+            $filters = ['active' => '1', 'deleted' => '1'];
             $result = $this->emptyResult();
         } else {
-            $perPage = (int) ($filters['per_page'] ?? 10);
-            $result = $this->categoryService->getFilteredCategories($filters, $perPage);
+            $filterDto = CategoryFilterDTO::fromRequest($request->all());
+            $result = $this->categoryService->getFilteredCategories($filterDto);
+            $filters = $filterDto->toFilterArray();
         }
 
         return $this->view('pages.category.index', $result, 'categories', [
@@ -122,6 +122,9 @@ class CategoryController extends Controller
         $category = $result->getData();
         $this->authorize('update', $category);
 
+        $category->load(['parent' => function ($query) {
+            $query->withTrashed();
+        }]);
         $category->loadCount(['children', 'services', 'products']);
         $parentResult = $this->categoryService->getParentCategories();
 
@@ -288,12 +291,9 @@ class CategoryController extends Controller
         $this->authorize('viewAny', \App\Models\Category::class);
         $format = $request->get('format', 'xlsx');
 
-        // Captura TODOS os filtros aplicados na listagem (exceto paginação)
-        $filters = $request->only(['search', 'active', 'deleted']);
-
-        // DEBUG: Ver o que está vindo
-        // Busca categorias com os filtros aplicados
-        $result = $this->categoryService->getFilteredCategories($filters, 1000);
+        // Usa o DTO para capturar e validar os filtros, definindo um limite alto para exportação
+        $filterDto = CategoryFilterDTO::fromRequest(array_merge($request->all(), ['per_page' => 1000]));
+        $result = $this->categoryService->getFilteredCategories($filterDto);
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());

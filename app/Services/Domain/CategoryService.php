@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\Category\CategoryDTO;
+use App\DTOs\Category\CategoryFilterDTO;
 use App\Enums\OperationStatus;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
@@ -68,24 +69,24 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
-     * Lista categorias do tenant com filtros e paginação.
+     * Lista categorias do tenant com filtros e paginação via DTO.
      */
-    public function getFilteredCategories(array $filters = [], int $perPage = 10): ServiceResult
+    public function getFilteredCategories(CategoryFilterDTO $filterDto): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters, $perPage) {
+        return $this->safeExecute(function () use ($filterDto) {
             if (! $this->tenantId()) {
                 return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
             }
 
-            // Normalização padronizada via Trait
-            $normalizedFilters = $this->normalizeFilters($filters, [
+            // Normalização padronizada via Trait usando o array do DTO
+            $normalizedFilters = $this->normalizeFilters($filterDto->toFilterArray(), [
                 'aliases' => ['active' => 'is_active'],
                 'likes' => ['name', 'slug'],
             ]);
 
             $paginator = $this->repository->getPaginated(
                 $normalizedFilters,
-                $perPage,
+                $filterDto->per_page,
                 ['parent' => fn ($q) => $q->withTrashed()],
             );
 
@@ -128,6 +129,11 @@ class CategoryService extends AbstractBaseService
                 $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->tenantId());
                 if ($parentResult->isError()) {
                     return $parentResult;
+                }
+
+                $parent = $parentResult->getData();
+                if (! $parent->is_active && ($data['is_active'] ?? true)) {
+                    return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar uma subcategoria ativa sob uma categoria pai inativa.');
                 }
 
                 if ((new Category(['parent_id' => $data['parent_id']]))->wouldCreateCircularReference((int) $data['parent_id'])) {
@@ -177,7 +183,35 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            $updated = DB::transaction(fn () => $this->repository->updateFromDTO($id, $dto));
+            // Regras de negócio para ativação/desativação se o status estiver mudando
+            if (isset($data['is_active'])) {
+                $newStatus = (bool) $data['is_active'];
+                $oldStatus = (bool) $category->is_active;
+
+                if ($newStatus !== $oldStatus) {
+                    if ($newStatus === true) {
+                        // Ao ativar, se for filho, o pai deve estar ativo
+                        $parentId = $data['parent_id'] ?? $category->parent_id;
+                        if ($parentId) {
+                            $parent = Category::find($parentId);
+                            if ($parent && ! $parent->is_active) {
+                                return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria porque a categoria pai '{$parent->name}' está inativa.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            $updated = DB::transaction(function () use ($id, $dto, $category, $data) {
+                // Se estiver desativando um pai, desativa todos os filhos em cascata
+                if (isset($data['is_active']) && $data['is_active'] === false && $category->is_active === true) {
+                    Category::where('parent_id', $category->id)
+                        ->where('tenant_id', $this->tenantId())
+                        ->update(['is_active' => false]);
+                }
+
+                return $this->repository->updateFromDTO($id, $dto);
+            });
 
             return $updated ?: $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada para atualização.');
         }, 'Erro ao atualizar categoria.');
@@ -196,8 +230,17 @@ class CategoryService extends AbstractBaseService
 
             $category = $ownerResult->getData();
 
+            // Verificações de "em uso" antes de deletar
             if ($category->hasChildren()) {
-                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir categoria que possui subcategorias');
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui subcategorias.');
+            }
+
+            if ($category->services()->exists()) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui serviços vinculados.');
+            }
+
+            if ($category->products()->exists()) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui produtos vinculados.');
             }
 
             return $this->delete($id);
@@ -258,11 +301,19 @@ class CategoryService extends AbstractBaseService
                 $category = $this->repository->findOneBy('id', (int) $id, [], true);
                 if ($category && $category->parent_id) {
                     $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
-                    if ($parent && $parent->trashed()) {
-                        return $this->error(
-                            OperationStatus::INVALID_DATA,
-                            "Não é possível restaurar a subcategoria '{$category->name}' porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
-                        );
+                    if ($parent) {
+                        if ($parent->trashed()) {
+                            return $this->error(
+                                OperationStatus::INVALID_DATA,
+                                "Não é possível restaurar a subcategoria '{$category->name}' porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                            );
+                        }
+                        if (! $parent->is_active && $category->is_active) {
+                            return $this->error(
+                                OperationStatus::INVALID_DATA,
+                                "Não é possível restaurar a subcategoria '{$category->name}' como ativa porque a categoria pai ({$parent->name}) está inativa."
+                            );
+                        }
                     }
                 }
             }
@@ -283,14 +334,22 @@ class CategoryService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
             }
 
-            // Validação: Não permitir restaurar filho se o pai estiver deletado
+            // Validação: Não permitir restaurar filho se o pai estiver deletado ou inativo
             if ($category->parent_id) {
                 $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
-                if ($parent && $parent->trashed()) {
-                    return $this->error(
-                        OperationStatus::INVALID_DATA,
-                        "Não é possível restaurar esta subcategoria porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
-                    );
+                if ($parent) {
+                    if ($parent->trashed()) {
+                        return $this->error(
+                            OperationStatus::INVALID_DATA,
+                            "Não é possível restaurar esta subcategoria porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                        );
+                    }
+                    if (! $parent->is_active && $category->is_active) {
+                        return $this->error(
+                            OperationStatus::INVALID_DATA,
+                            "Não é possível restaurar esta subcategoria como ativa porque a categoria pai ({$parent->name}) está inativa."
+                        );
+                    }
                 }
             }
 
@@ -338,20 +397,31 @@ class CategoryService extends AbstractBaseService
             $category = $ownerResult->getData();
             $newStatus = ! $category->is_active;
 
-            $updateResult = $this->updateCategory($category->id, new CategoryDTO(
-                name: $category->name,
-                slug: $category->slug,
-                parent_id: $category->parent_id,
-                is_active: $newStatus
-            ));
+            // Regras de negócio para ativação/desativação
+            if ($newStatus === true && $category->parent_id && $category->parent_id !== $category->id) {
+                // Ao ativar um filho, o pai deve estar ativo e não pode estar na lixeira
+                $parent = Category::withTrashed()->find($category->parent_id);
+                if ($parent && (! $parent->is_active || $parent->trashed())) {
+                    $reason = $parent->trashed() ? 'está na lixeira' : 'está inativa';
 
-            if ($updateResult->isError()) {
-                return $updateResult;
+                    return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria '{$category->name}' porque a categoria pai '{$parent->name}' {$reason}.");
+                }
             }
 
-            $message = $newStatus ? 'Categoria ativada com sucesso' : 'Categoria desativada com sucesso';
+            return DB::transaction(function () use ($category, $newStatus) {
+                // Se estiver desativando um pai, desativa todos os filhos em cascata
+                if ($newStatus === false) {
+                    Category::where('parent_id', $category->id)
+                        ->where('tenant_id', $this->tenantId())
+                        ->update(['is_active' => false]);
+                }
 
-            return $this->success($updateResult->getData(), $message);
+                $category->update(['is_active' => $newStatus]);
+
+                $message = $newStatus ? 'Categoria ativada com sucesso' : 'Categoria desativada com sucesso';
+
+                return $this->success($category->fresh(), $message);
+            });
         }, 'Erro ao alterar status da categoria.');
     }
 

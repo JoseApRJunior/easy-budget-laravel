@@ -3,6 +3,31 @@
 @section('title', 'Detalhes da Categoria')
 
 @section('content')
+@php
+    $isCurrentlyActive = $category->is_active;
+    $hasChildren = $category->children_count > 0;
+    // Uma categoria só não pode ser desativada se tiver serviços ou produtos vinculados.
+    // Subcategorias não bloqueiam a desativação, pois serão desativadas em cascata.
+    $canDeactivate = $category->services_count === 0 && $category->products_count === 0;
+
+    // Uma subcategoria não pode ser ativada se o pai estiver inativo ou na lixeira.
+    $parentIsInactive = false;
+    if ($category->parent_id && $category->parent_id !== $category->id && $category->parent) {
+        $parentIsInactive = !$category->parent->is_active || $category->parent->trashed();
+    }
+    $canActivate = !$parentIsInactive;
+
+    // Lógica para o botão de toggle status
+    $toggleDisabled = ($isCurrentlyActive && !$canDeactivate) || (!$isCurrentlyActive && !$canActivate);
+
+    // Lógica para exclusão
+    $canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0;
+
+    $toggleLabel = $isCurrentlyActive ? 'Desativar' : 'Ativar';
+    $toggleIcon = $isCurrentlyActive ? 'slash-circle' : 'check-lg';
+    $toggleVariant = $isCurrentlyActive ? 'warning' : 'success';
+@endphp
+
 <div class="container-fluid py-1">
     <x-page-header
         title="Detalhes da Categoria"
@@ -84,7 +109,9 @@
             </div>
 
             @if (!$category->parent_id)
-            @php($children = $category->children)
+            @php
+                $children = $category->children;
+            @endphp
             @if ($children->isNotEmpty())
             <div class="mt-4">
                 <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Subcategorias ({{ $children->count() }})
@@ -155,6 +182,27 @@
             </div>
             @endif
             @endif
+
+            @if ($parentIsInactive && !$isCurrentlyActive)
+                <div class="alert alert-info mt-4 mb-0" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Esta subcategoria não pode ser ativada porque a categoria pai <strong>{{ $category->parent->name }}</strong> está {{ $category->parent->trashed() ? 'na lixeira' : 'inativa' }}.
+                </div>
+            @endif
+
+            @if (!$canDeactivate && $isCurrentlyActive)
+                <div class="alert alert-warning mt-4 mb-0" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Não é possível desativar esta categoria: ela possui serviços ou produtos vinculados.
+                </div>
+            @endif
+
+            @if (!$canDelete && !$category->deleted_at)
+                <div class="alert alert-warning mt-4 mb-0" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Não é possível excluir esta categoria: ela possui subcategorias, serviços ou produtos vinculados.
+                </div>
+            @endif
         </div>
     </div>
 
@@ -173,7 +221,9 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($category->deleted_at)
-                    @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
+                    @php
+                        $parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed();
+                    @endphp
                     <x-button variant="success" style="min-width: 120px; {{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
                          data-bs-toggle="modal"
                          data-bs-target="{{ $parentIsTrashed ? '' : '#restoreModal-' . $category->slug }}"
@@ -181,26 +231,46 @@
                          label="Restaurar"
                          title="{{ $parentIsTrashed ? 'Restaure o pai primeiro' : 'Restaurar' }}"
                          :class="$parentIsTrashed ? 'opacity-50' : ''"
-                         onclick="{{ $parentIsTrashed ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.\', { duration: 8000 }); return false;' : '' }}" />
+                         onclick="{{ $parentIsTrashed ? 'easyAlert.warning("<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.", { duration: 8000 }); return false;' : '' }}" />
                     @else
                     <x-button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 
-                    <x-button :variant="$category->is_active ? 'warning' : 'success'" style="min-width: 120px;"
-                        data-bs-toggle="modal" data-bs-target="#toggleModal-{{ $category->slug }}"
-                        :icon="$category->is_active ? 'slash-circle' : 'check-lg'"
-                        :label="$category->is_active ? 'Desativar' : 'Ativar'" />
+                    @php
+                        $blockedMessage = '';
+                        if ($isCurrentlyActive && !$canDeactivate) {
+                            $blockedMessage = 'Não é possível desativar esta categoria porque ela possui serviços ou produtos vinculados.';
+                        } elseif (!$isCurrentlyActive && !$canActivate) {
+                            $parentName = $category->parent ? $category->parent->name : 'superior';
+                            $parentStatus = $category->parent && $category->parent->trashed() ? 'está na lixeira' : 'está inativa';
+                            $blockedMessage = "Não é possível ativar esta subcategoria porque a categoria pai {$parentName} {$parentStatus}.";
+                        }
+                    @endphp
 
-                    @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
+                    <x-button :variant="$toggleVariant"
+                        style="min-width: 120px; {{ $toggleDisabled ? 'cursor: not-allowed;' : '' }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="{{ $toggleDisabled ? '' : '#toggleModal-' . $category->slug }}"
+                        :icon="$toggleIcon"
+                        :label="$toggleLabel"
+                        :class="$toggleDisabled ? 'opacity-50' : ''"
+                        onclick="{{ $toggleDisabled ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>\' + \'' . addslashes($blockedMessage) . '\', { duration: 8000 }); return false;' : '' }}" />
+
                     @if ($canDelete)
-                    <x-button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" />
+                        <x-button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
+                            data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" />
+                    @else
+                        <x-button variant="outline-danger"
+                            style="min-width: 120px; cursor: not-allowed;"
+                            icon="trash-fill"
+                            label="Excluir"
+                            class="opacity-50"
+                            onclick="easyAlert.warning('<strong>Exclusão Bloqueada</strong><br>Não é possível excluir esta categoria porque ela possui subcategorias, serviços ou produtos vinculados.', { duration: 8000 }); return false;" />
                     @endif
                     @endif
                 </div>
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="modal fade" id="deleteModal-{{ $category->slug }}" tabindex="-1"
