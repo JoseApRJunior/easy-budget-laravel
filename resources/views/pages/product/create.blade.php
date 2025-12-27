@@ -4,9 +4,9 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <x-page-header 
-            title="Novo Produto" 
-            icon="bag-plus" 
+        <x-page-header
+            title="Novo Produto"
+            icon="bag-plus"
             :breadcrumb-items="[
                 'Produtos' => route('provider.products.index'),
                 'Novo' => '#'
@@ -55,20 +55,41 @@
                                     </div>
                                 </div>
 
-                                <!-- Preço -->
+                                <!-- Preço de Custo -->
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label for="price" class="form-label">Preço <span
+                                        <label for="cost_price" class="form-label">Preço de Custo</label>
+                                        <div class="input-group">
+                                            <div class="input-group-text">R$</div>
+                                            <input type="text" class="form-control currency-brl @error('cost_price') is-invalid @enderror"
+                                                id="cost_price" name="cost_price"
+                                                value="{{ old('cost_price', '0,00') }}"
+                                                inputmode="numeric">
+                                            @error('cost_price')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div id="cost-price-info" class="form-text">Usado para calcular sua margem de lucro</div>
+                                    </div>
+                                </div>
+
+                                <!-- Preço de Venda -->
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label">Preço de Venda <span
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-text">R$</div>
-                                            <input type="text" class="form-control @error('price') is-invalid @enderror"
+                                            <input type="text" class="form-control currency-brl @error('price') is-invalid @enderror"
                                                 id="price" name="price"
-                                                value="{{ old('price') ? 'R$ ' . number_format((float) old('price'), 2, ',', '.') : 'R$ 0,00' }}"
+                                                value="{{ old('price', '0,00') }}"
                                                 inputmode="numeric" required>
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
+                                        </div>
+                                        <div id="margin-preview" class="form-text mt-1 d-none">
+                                            <!-- Preenchido via JS -->
                                         </div>
                                     </div>
                                 </div>
@@ -189,58 +210,110 @@
 
 @push('scripts')
     <script>
-        // Aplicar máscara via VanillaMask
-        if (window.VanillaMask) {
-            new VanillaMask('price', 'currency');
-        } else {
+        document.addEventListener('DOMContentLoaded', function() {
             const priceInput = document.getElementById('price');
-            if (priceInput) {
-                priceInput.addEventListener('input', function() {
-                    const digits = this.value.replace(/\D/g, '');
-                    const num = (parseInt(digits || '0', 10) / 100);
-                    const integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    const cents = Math.round((num - Math.floor(num)) * 100).toString().padStart(2, '0');
-                    this.value = 'R$ ' + integer + ',' + cents;
+            const costPriceInput = document.getElementById('cost_price');
+            const form = priceInput.closest('form');
+
+            function unformat(val) {
+                if (!val) return 0;
+                return parseFloat(val.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            function validatePrices() {
+                const price = unformat(priceInput.value);
+                const costPrice = unformat(costPriceInput.value);
+                const costPriceInfo = document.getElementById('cost-price-info');
+                const marginPreview = document.getElementById('margin-preview');
+
+                // Validação visual de erro
+                if (costPrice > price && price > 0) {
+                    costPriceInput.classList.add('is-invalid');
+                    costPriceInfo.classList.add('d-none'); // Esconde a mensagem informativa se houver erro
+                    if (!document.getElementById('cost-price-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.id = 'cost-price-error';
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.innerText = 'O preço de custo não pode ser maior que o preço de venda.';
+                        costPriceInput.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    costPriceInput.classList.remove('is-invalid');
+                    costPriceInfo.classList.remove('d-none'); // Mostra a mensagem informativa se não houver erro
+                    const errorDiv = document.getElementById('cost-price-error');
+                    if (errorDiv) errorDiv.remove();
+                }
+
+                // Cálculo de Margem em tempo real
+                if (price > 0) {
+                    const profit = price - costPrice;
+                    const margin = (profit / price) * 100;
+
+                    marginPreview.classList.remove('d-none');
+                    if (profit < 0) {
+                        marginPreview.className = 'form-text mt-1 text-danger fw-bold';
+                        marginPreview.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> Prejuízo: ${margin.toFixed(2)}% (R$ ${profit.toLocaleString('pt-BR', {minimumFractionDigits: 2})})`;
+                    } else if (profit > 0) {
+                        marginPreview.className = 'form-text mt-1 text-success fw-bold';
+                        marginPreview.innerHTML = `<i class="bi bi-graph-up-arrow me-1"></i> Margem: ${margin.toFixed(2)}% (Lucro: R$ ${profit.toLocaleString('pt-BR', {minimumFractionDigits: 2})})`;
+                    } else {
+                        marginPreview.className = 'form-text mt-1 text-muted';
+                        marginPreview.innerHTML = `Margem: 0% (Ponto de equilíbrio)`;
+                    }
+                } else {
+                    marginPreview.classList.add('d-none');
+                }
+            }
+
+            priceInput.addEventListener('input', validatePrices);
+            costPriceInput.addEventListener('input', validatePrices);
+
+            form.addEventListener('submit', function(e) {
+                validatePrices();
+                if (costPriceInput.classList.contains('is-invalid')) {
+                    e.preventDefault();
+                    costPriceInput.focus();
+                }
+            });
+
+            // Aplicar máscara via VanillaMask
+            if (window.VanillaMask) {
+                new VanillaMask('price', 'currency');
+                new VanillaMask('cost_price', 'currency');
+            } else {
+                // Fallback manual se o VanillaMask não estiver disponível
+                const maskCurrency = (el) => {
+                    el.addEventListener('input', function() {
+                        const digits = this.value.replace(/\D/g, '');
+                        const num = (parseInt(digits || '0', 10) / 100);
+                        const integer = Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        const cents = Math.round((num - Math.floor(num)) * 100).toString().padStart(2, '0');
+                        this.value = integer + ',' + cents;
+                    });
+                };
+                maskCurrency(priceInput);
+                maskCurrency(costPriceInput);
+            }
+
+            // Preview da imagem
+            const imageInput = document.getElementById('image');
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const preview = document.getElementById('image-preview');
+                    const defaultImage = "{{ asset('assets/img/img_not_found.png') }}";
+
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            preview.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.src = defaultImage;
+                    }
                 });
             }
-        }
-
-        // Converter para decimal no submit
-        const productForm = document.querySelector('form[action*="products"]');
-        if (productForm) {
-            productForm.addEventListener('submit', function(e) {
-                const price = document.getElementById('price');
-                if (price) {
-                    let num = 0;
-                    if (window.parseCurrencyBRLToNumber) {
-                        num = window.parseCurrencyBRLToNumber(price.value) || 0;
-                    } else {
-                        num = parseFloat((price.value || '0').replace(/\./g, '').replace(',', '.').replace(
-                            /[^0-9\.]/g,
-                            '')) || 0;
-                    }
-                    price.value = num.toFixed(2);
-                }
-            });
-        }
-        // Preview da imagem
-        const imageInput = document.getElementById('image');
-        if (imageInput) {
-            imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('image-preview');
-                const defaultImage = "{{ asset('assets/img/img_not_found.png') }}";
-
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.src = defaultImage;
-                }
-            });
-        }
+        });
     </script>
 @endpush

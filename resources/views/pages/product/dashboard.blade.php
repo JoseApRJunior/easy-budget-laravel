@@ -35,10 +35,63 @@
     $deleted = $stats['deleted_products'] ?? 0;
     $recent = $stats['recent_products'] ?? collect();
 
+    $avgMargin = $stats['average_profit_margin'] ?? 0;
+    $inventoryCost = $stats['total_inventory_cost'] ?? 0;
+    $inventorySale = $stats['total_inventory_sale'] ?? 0;
+    $potentialProfit = $inventorySale - $inventoryCost;
+
     $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
     @endphp
 
-    <!-- Cards de Métricas -->
+    <!-- Cards de Métricas de Estoque e Lucro -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-primary bg-gradient text-white">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-cash-stack text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">VALOR EM ESTOQUE (VENDA)</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold">R$ {{ number_format($inventorySale, 2, ',', '.') }}</h3>
+                    <p class="text-white text-opacity-75 small-text mb-0">Preço total de venda.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-success bg-gradient text-white">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-graph-up-arrow text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">LUCRO POTENCIAL</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold">R$ {{ number_format($potentialProfit, 2, ',', '.') }}</h3>
+                    <p class="text-white text-opacity-75 small-text mb-0">Diferença venda vs custo.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-info bg-gradient text-white">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">MARGEM MÉDIA</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold">{{ number_format($avgMargin, 1, ',', '.') }}%</h3>
+                    <p class="text-white text-opacity-75 small-text mb-0">Média de todos os produtos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas de Quantidade -->
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6 col-xl-5-custom">
             <div class="card border-0 shadow-sm h-100">
@@ -138,6 +191,8 @@
                                     <tr>
                                         <th>Produto</th>
                                         <th>Categoria</th>
+                                        <th class="text-nowrap">Venda</th>
+                                        <th class="text-nowrap">Margem</th>
                                         <th>Status</th>
                                         <th>Criado em</th>
                                         <th class="text-center">Ações</th>
@@ -153,6 +208,16 @@
                                             </div>
                                         </td>
                                         <td>{{ $product->category->name ?? '—' }}</td>
+                                        <td class="text-nowrap">{{ $product->formatted_price }}</td>
+                                        <td>
+                                            @if($product->cost_price > 0)
+                                                <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}-subtle text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                    {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                                </span>
+                                            @else
+                                                <span class="text-muted small">N/A</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if ($product->active)
                                             <span class="badge bg-success-subtle text-success">Ativo</span>
@@ -181,13 +246,21 @@
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
                                     <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">{{ $product->name }}</div>
-                                        <div class="d-flex gap-2 flex-wrap">
+                                        <div class="fw-semibold mb-1">{{ $product->name }}</div>
+                                        <div class="d-flex gap-2 flex-wrap mb-2">
                                             @if ($product->active)
                                             <span class="badge bg-success-subtle text-success">Ativo</span>
                                             @else
                                             <span class="badge bg-danger-subtle text-danger">Inativo</span>
                                             @endif
+                                            @if($product->cost_price > 0)
+                                            <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}-subtle text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                            </span>
+                                            @endif
+                                        </div>
+                                        <div class="small text-muted">
+                                            Venda: {{ $product->formatted_price }}
                                         </div>
                                     </div>
                                     <i class="bi bi-chevron-right text-muted ms-2"></i>

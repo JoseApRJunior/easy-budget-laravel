@@ -77,6 +77,10 @@ readonly class ProductFilterDTO extends AbstractDTO
             $filters['all'] = '1';
         }
 
+        if ($this->per_page !== 10) {
+            $filters['per_page'] = $this->per_page;
+        }
+
         return $filters;
     }
 

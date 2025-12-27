@@ -25,6 +25,12 @@ class ProductUpdateRequest extends FormRequest
                 'price' => \App\Helpers\CurrencyHelper::unformat($this->input('price')),
             ]);
         }
+
+        if ($this->has('cost_price')) {
+            $this->merge([
+                'cost_price' => \App\Helpers\CurrencyHelper::unformat($this->input('cost_price')),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -46,6 +52,7 @@ class ProductUpdateRequest extends FormRequest
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string|max:1000',
             'price' => 'sometimes|required|numeric|min:0',
+            'cost_price' => 'sometimes|nullable|numeric|min:0|lte:price',
             'category_id' => 'sometimes|nullable|integer|exists:categories,id',
             'sku' => 'sometimes|nullable|string|max:50',
             'unit' => 'sometimes|nullable|string|max:20',
@@ -63,6 +70,9 @@ class ProductUpdateRequest extends FormRequest
             'price.required' => 'O preço é obrigatório.',
             'price.numeric' => 'O preço deve ser um valor numérico.',
             'price.min' => 'O preço deve ser no mínimo 0.',
+            'cost_price.numeric' => 'O preço de custo deve ser um valor numérico.',
+            'cost_price.min' => 'O preço de custo deve ser no mínimo 0.',
+            'cost_price.lte' => 'O preço de custo não pode ser maior que o preço de venda.',
             'category_id.exists' => 'A categoria selecionada é inválida.',
             'image.image' => 'O arquivo deve ser uma imagem.',
             'image.max' => 'A imagem não pode ter mais de 2MB.',

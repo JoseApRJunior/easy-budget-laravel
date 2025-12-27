@@ -66,9 +66,24 @@
                             <!-- Aba Detalhes -->
                             <div class="tab-pane fade show active" id="details" role="tabpanel">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Preço</label>
-                                        <p class="h4 text-success">R$ {{ number_format($product->price, 2, ',', '.') }}
+                                    <div class="col-md-4">
+                                        <label class="text-muted small text-uppercase fw-bold">Preço de Venda</label>
+                                        <p class="h4 text-success">{{ $product->formatted_price }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="text-muted small text-uppercase fw-bold">Preço de Custo</label>
+                                        <p class="h4 text-muted">{{ $product->formatted_cost_price }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="text-muted small text-uppercase fw-bold">Margem de Lucro</label>
+                                        <p class="h4">
+                                            @if($product->cost_price > 0)
+                                                <span class="text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                    {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                                </span>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
                                         </p>
                                     </div>
                                     <div class="col-md-6">

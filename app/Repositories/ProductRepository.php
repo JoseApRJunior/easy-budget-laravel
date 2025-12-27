@@ -87,13 +87,33 @@ class ProductRepository extends AbstractTenantRepository
     public function getDashboardStats(): array
     {
         $baseQuery = $this->model->newQuery();
+        $inventoryQuery = $this->model->newQuery()
+            ->join('product_inventory', 'products.id', '=', 'product_inventory.product_id');
+
+        // Margem média apenas para produtos com custo cadastrado
+        $avgMargin = (clone $baseQuery)
+            ->where('cost_price', '>', 0)
+            ->selectRaw('AVG(((price - cost_price) / price) * 100) as avg_margin')
+            ->value('avg_margin') ?? 0;
+
+        // Valor do inventário
+        $inventoryTotals = (clone $inventoryQuery)
+            ->selectRaw('
+                SUM(products.cost_price * product_inventory.quantity) as total_cost,
+                SUM(products.price * product_inventory.quantity) as total_sale
+            ')
+            ->first();
 
         return [
             'total_products' => (clone $baseQuery)->count(),
             'active_products' => (clone $baseQuery)->where('active', true)->count(),
             'inactive_products' => (clone $baseQuery)->where('active', false)->count(),
+            'deleted_products' => (clone $baseQuery)->onlyTrashed()->count(),
             'low_stock_count' => $this->getLowStockByTenant()->count(),
             'recent_products' => $this->getRecentByTenant(5),
+            'average_profit_margin' => (float) $avgMargin,
+            'total_inventory_cost' => (float) ($inventoryTotals->total_cost ?? 0),
+            'total_inventory_sale' => (float) ($inventoryTotals->total_sale ?? 0),
         ];
     }
 

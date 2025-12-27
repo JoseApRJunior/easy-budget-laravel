@@ -15,6 +15,7 @@ readonly class ProductDTO extends AbstractDTO
     public function __construct(
         public string $name,
         public float $price,
+        public ?float $cost_price = 0,
         public ?int $category_id = null,
         public ?string $description = null,
         public ?string $sku = null,
@@ -31,6 +32,7 @@ readonly class ProductDTO extends AbstractDTO
         return new self(
             name: self::formatTitle((string) $data['name']),
             price: (float) $data['price'],
+            cost_price: isset($data['cost_price']) ? (float) $data['cost_price'] : 0,
             category_id: isset($data['category_id']) ? (int) $data['category_id'] : null,
             description: $data['description'] ?? null,
             sku: $data['sku'] ?? null,

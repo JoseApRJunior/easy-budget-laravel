@@ -198,9 +198,10 @@
                                         <th>Imagem</th>
                                         <th>Nome</th>
                                         <th>SKU</th>
-                                        <th>Categoria</th>
-                                        <th>Preço</th>
-                                        <th>Status</th>
+                                        <th class="text-nowrap">Categoria</th>
+                                        <th class="text-nowrap">Preço de Venda</th>
+                                        <th class="text-nowrap">Margem</th>
+                                        <th class="text-nowrap">Status</th>
                                         <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
@@ -215,10 +216,19 @@
                                         <td>{{ $product->name }}</td>
                                         <td><span class="text-code">{{ $product->sku }}</span></td>
                                         <td>{{ $product->category->name ?? 'N/A' }}</td>
-                                        <td>R$ {{ number_format($product->price, 2, ',', '.') }}</td>
+                                        <td class="text-nowrap">{{ $product->formatted_price }}</td>
                                         <td>
+                                            @if($product->cost_price > 0)
+                                                <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                    {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                                </span>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-nowrap">
                                             <span
-                                                class="modern-badge  {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
+                                                class="modern-badge {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
                                                 {{ $product->deleted_at ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo') }}
                                             </span>
                                         </td>
@@ -245,7 +255,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">
+                                        <td colspan="8" class="text-center text-muted">
                                             <i class="bi bi-inbox mb-2" aria-hidden="true"
                                                 style="font-size: 2rem;"></i>
                                             <br>
@@ -283,8 +293,14 @@
                                             </span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">R$
-                                                {{ number_format($product->price, 2, ',', '.') }}</small>
+                                            <div>
+                                                <small class="text-muted d-block">Venda: {{ $product->formatted_price }}</small>
+                                                @if($product->cost_price > 0)
+                                                    <small class="text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                        Margem: {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                                    </small>
+                                                @endif
+                                            </div>
                                             <div class="d-flex gap-2">
                                                 <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 @if ($product->deleted_at)

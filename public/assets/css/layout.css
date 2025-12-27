@@ -264,6 +264,8 @@ header {
    font-weight: 600;
    text-transform: uppercase;
    letter-spacing: 0.5px;
+   white-space: nowrap;
+   display: inline-block;
 }
 
 .badge-warning {

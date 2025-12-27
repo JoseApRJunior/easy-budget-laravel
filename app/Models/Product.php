@@ -52,6 +52,7 @@ class Product extends Model
         'description',
         'sku',
         'price',
+        'cost_price',
         'unit',
         'active',
         'image',
@@ -69,6 +70,7 @@ class Product extends Model
         'description' => 'string',
         'sku' => 'string',
         'price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'unit' => 'string',
         'active' => 'boolean',
         'image' => 'string',
@@ -89,6 +91,7 @@ class Product extends Model
             'description' => 'nullable|string',
             'sku' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
             'unit' => 'nullable|string|max:20',
             'active' => 'boolean',
             'image' => 'nullable|string|max:255',
@@ -258,6 +261,36 @@ class Product extends Model
     public function getFormattedPriceAttribute(): string
     {
         return 'R$ '.number_format((float) $this->price, 2, ',', '.');
+    }
+
+    /**
+     * Retorna o preço de custo formatado como moeda (BRL).
+     */
+    public function getFormattedCostPriceAttribute(): string
+    {
+        return 'R$ '.number_format((float) $this->cost_price, 2, ',', '.');
+    }
+
+    /**
+     * Retorna a margem de lucro em valor monetário.
+     */
+    public function getProfitMarginValueAttribute(): float
+    {
+        return (float) $this->price - (float) $this->cost_price;
+    }
+
+    /**
+     * Retorna a margem de lucro em porcentagem.
+     */
+    public function getProfitMarginPercentageAttribute(): float
+    {
+        if ($this->price <= 0) {
+            return 0;
+        }
+
+        $margin = $this->profit_margin_value;
+
+        return ($margin / (float) $this->price) * 100;
     }
 
     /**
