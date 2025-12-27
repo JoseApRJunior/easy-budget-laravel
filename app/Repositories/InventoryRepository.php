@@ -84,6 +84,48 @@ class InventoryRepository extends AbstractTenantRepository
 
     /**
      * {@inheritdoc}
+     */
+    public function countByTenant(array $filters = []): int
+    {
+        $query = $this->model->newQuery();
+
+        // Aplicar filtros avançados (os mesmos do getPaginated)
+        $this->applyFilters($query, $filters);
+
+        if (! empty($filters['search'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('name', 'like', "%{$filters['search']}%")
+                    ->orWhere('sku', 'like', "%{$filters['search']}%");
+            });
+        }
+
+        if (isset($filters['low_stock']) && $filters['low_stock']) {
+            $query->whereColumn('quantity', '<=', 'min_quantity');
+        }
+
+        if (isset($filters['high_stock']) && $filters['high_stock']) {
+            $query->whereColumn('quantity', '>=', 'max_quantity');
+        }
+
+        if (isset($filters['quantity'])) {
+            $query->where('quantity', $filters['quantity']);
+        }
+
+        if (isset($filters['custom_sufficient']) && $filters['custom_sufficient']) {
+            $query->whereColumn('quantity', '>', 'min_quantity');
+        }
+
+        if (! empty($filters['category'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('category_id', $filters['category']);
+            });
+        }
+
+        return $query->count();
+    }
+
+    /**
+     * {@inheritdoc}
      *
      * Implementação específica para inventory com filtros avançados.
      *

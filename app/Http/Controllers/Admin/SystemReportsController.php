@@ -95,21 +95,17 @@ class SystemReportsController extends Controller
     {
         $dateRange = $request->get('date_range', 'last_30_days');
 
-        try {
-            $exportData = $this->reportService->prepareExportData($type, $dateRange);
+        $exportData = $this->reportService->prepareExportData($type, $dateRange);
 
-            if ($format === 'excel') {
-                return Excel::download($exportData, "{$type}_report.xlsx");
-            } elseif ($format === 'pdf') {
-                return $this->reportService->generatePdfExport($exportData, $type);
-            } elseif ($format === 'csv') {
-                return Excel::download($exportData, "{$type}_report.csv");
-            }
-
-            return back()->with('error', 'Formato de exportação não suportado.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao gerar relatório: '.$e->getMessage());
+        if ($format === 'excel') {
+            return Excel::download($exportData, "{$type}_report.xlsx");
+        } elseif ($format === 'pdf') {
+            return $this->reportService->generatePdfExport($exportData, $type);
+        } elseif ($format === 'csv') {
+            return Excel::download($exportData, "{$type}_report.csv");
         }
+
+        return back()->with('error', 'Formato de exportação não suportado.');
     }
 
     /**
@@ -125,18 +121,14 @@ class SystemReportsController extends Controller
             'format' => 'required|string|in:html,pdf,excel,csv',
         ]);
 
-        try {
-            $reportData = $this->reportService->generateCustomReport($validated);
+        $reportData = $this->reportService->generateCustomReport($validated);
 
-            if ($validated['format'] === 'html') {
-                return redirect()->route("admin.reports.{$validated['report_type']}", [
-                    'date_range' => $validated['date_range'],
-                ]);
-            }
-
-            return $this->export($request, $validated['report_type'], $validated['format']);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao gerar relatório: '.$e->getMessage());
+        if ($validated['format'] === 'html') {
+            return redirect()->route("admin.reports.{$validated['report_type']}", [
+                'date_range' => $validated['date_range'],
+            ]);
         }
+
+        return $this->export($request, $validated['report_type'], $validated['format']);
     }
 }

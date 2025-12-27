@@ -61,20 +61,12 @@ class CustomerApiController extends Controller
      */
     public function storePessoaFisica(CustomerPessoaFisicaRequest $request): JsonResponse
     {
-        try {
-            $customer = $this->customerService->createCustomer($request->validated());
+        $customer = $this->customerService->createCustomer($request->validated());
 
-            return response()->json([
-                'message' => 'Cliente pessoa física criado com sucesso',
-                'customer' => $customer->load(['address', 'contact', 'tags']),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao criar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Cliente pessoa física criado com sucesso',
+            'customer' => $customer->load(['address', 'contact', 'tags']),
+        ], 201);
     }
 
     /**
@@ -82,20 +74,12 @@ class CustomerApiController extends Controller
      */
     public function storePessoaJuridica(CustomerPessoaJuridicaRequest $request): JsonResponse
     {
-        try {
-            $customer = $this->customerService->createCustomer($request->validated());
+        $customer = $this->customerService->createCustomer($request->validated());
 
-            return response()->json([
-                'message' => 'Cliente pessoa jurídica criado com sucesso',
-                'customer' => $customer->load(['address', 'contact', 'tags']),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao criar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Cliente pessoa jurídica criado com sucesso',
+            'customer' => $customer->load(['address', 'contact', 'tags']),
+        ], 201);
     }
 
     /**
@@ -130,37 +114,29 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        try {
-            // Validar dados conforme tipo de cliente
-            $isIndividual = ($customer->commonData?->type ?? CommonData::TYPE_INDIVIDUAL) === CommonData::TYPE_INDIVIDUAL;
-            if ($isIndividual) {
-                $request->validate((new CustomerPessoaFisicaRequest)->rules());
-                $validatedData = $request->validated();
-            } else {
-                $request->validate((new CustomerPessoaJuridicaRequest)->rules());
-                $validatedData = $request->validated();
-            }
+        // Validar dados conforme tipo de cliente
+        $isIndividual = ($customer->commonData?->type ?? CommonData::TYPE_INDIVIDUAL) === CommonData::TYPE_INDIVIDUAL;
+        if ($isIndividual) {
+            $request->validate((new CustomerPessoaFisicaRequest)->rules());
+            $validatedData = $request->validated();
+        } else {
+            $request->validate((new CustomerPessoaJuridicaRequest)->rules());
+            $validatedData = $request->validated();
+        }
 
-            $updatedResult = $this->customerService->updateCustomer($customer->id, $validatedData);
-            if (! $updatedResult->isSuccess()) {
-                return response()->json([
-                    'message' => 'Erro ao atualizar cliente',
-                    'error' => $updatedResult->getMessage(),
-                ], 400);
-            }
-            $updatedCustomer = $updatedResult->getData();
-
-            return response()->json([
-                'message' => 'Cliente atualizado com sucesso',
-                'customer' => $updatedCustomer->load(['address', 'contact', 'tags']),
-            ]);
-
-        } catch (\Exception $e) {
+        $updatedResult = $this->customerService->updateCustomer($customer->id, $validatedData);
+        if (! $updatedResult->isSuccess()) {
             return response()->json([
                 'message' => 'Erro ao atualizar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
+                'error' => $updatedResult->getMessage(),
+            ], 400);
         }
+        $updatedCustomer = $updatedResult->getData();
+
+        return response()->json([
+            'message' => 'Cliente atualizado com sucesso',
+            'customer' => $updatedCustomer->load(['address', 'contact', 'tags']),
+        ]);
     }
 
     /**
@@ -172,25 +148,17 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        try {
-            $result = $this->customerService->delete($customer->id);
-            if (! $result->isSuccess()) {
-                return response()->json([
-                    'message' => 'Erro ao remover cliente',
-                    'error' => $result->getMessage(),
-                ], 400);
-            }
-
-            return response()->json([
-                'message' => 'Cliente removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
+        $result = $this->customerService->delete($customer->id);
+        if (! $result->isSuccess()) {
             return response()->json([
                 'message' => 'Erro ao remover cliente',
-                'error' => $e->getMessage(),
-            ], 500);
+                'error' => $result->getMessage(),
+            ], 400);
         }
+
+        return response()->json([
+            'message' => 'Cliente removido com sucesso',
+        ]);
     }
 
     /**
@@ -204,23 +172,15 @@ class CustomerApiController extends Controller
 
         $request->validate(Address::businessRules());
 
-        try {
-            $addressData = $request->validated();
-            $addressData['customer_id'] = $customer->id;
+        $addressData = $request->validated();
+        $addressData['customer_id'] = $customer->id;
 
-            $address = Address::create($addressData);
+        $address = Address::create($addressData);
 
-            return response()->json([
-                'message' => 'Endereço adicionado com sucesso',
-                'address' => $address,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Endereço adicionado com sucesso',
+            'address' => $address,
+        ], 201);
     }
 
     /**
@@ -234,20 +194,12 @@ class CustomerApiController extends Controller
 
         $request->validate(Address::businessRules());
 
-        try {
-            $address->update($request->validated());
+        $address->update($request->validated());
 
-            return response()->json([
-                'message' => 'Endereço atualizado com sucesso',
-                'address' => $address,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Endereço atualizado com sucesso',
+            'address' => $address,
+        ]);
     }
 
     /**
@@ -259,19 +211,11 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Endereço não encontrado'], 404);
         }
 
-        try {
-            $address->delete();
+        $address->delete();
 
-            return response()->json([
-                'message' => 'Endereço removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao remover endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Endereço removido com sucesso',
+        ]);
     }
 
     /**
@@ -285,23 +229,15 @@ class CustomerApiController extends Controller
 
         $request->validate(Contact::businessRules());
 
-        try {
-            $contactData = $request->validated();
-            $contactData['customer_id'] = $customer->id;
+        $contactData = $request->validated();
+        $contactData['customer_id'] = $customer->id;
 
-            $contact = Contact::create($contactData);
+        $contact = Contact::create($contactData);
 
-            return response()->json([
-                'message' => 'Contato adicionado com sucesso',
-                'contact' => $contact,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Contato adicionado com sucesso',
+            'contact' => $contact,
+        ], 201);
     }
 
     /**
@@ -315,20 +251,12 @@ class CustomerApiController extends Controller
 
         $request->validate(Contact::businessRules());
 
-        try {
-            $contact->update($request->validated());
+        $contact->update($request->validated());
 
-            return response()->json([
-                'message' => 'Contato atualizado com sucesso',
-                'contact' => $contact,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Contato atualizado com sucesso',
+            'contact' => $contact,
+        ]);
     }
 
     /**
@@ -340,19 +268,11 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Contato não encontrado'], 404);
         }
 
-        try {
-            $contact->delete();
+        $contact->delete();
 
-            return response()->json([
-                'message' => 'Contato removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao remover contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Contato removido com sucesso',
+        ]);
     }
 
     /**
@@ -390,24 +310,16 @@ class CustomerApiController extends Controller
 
         $request->validate(CustomerInteraction::businessRules());
 
-        try {
-            $interactionData = $request->validated();
-            $interactionData['customer_id'] = $customer->id;
-            $interactionData['user_id'] = auth()->user()->id;
+        $interactionData = $request->validated();
+        $interactionData['customer_id'] = $customer->id;
+        $interactionData['user_id'] = auth()->user()->id;
 
-            $interaction = $this->interactionService->createInteraction($customer, $interactionData, auth()->user());
+        $interaction = $this->interactionService->createInteraction($customer, $interactionData, auth()->user());
 
-            return response()->json([
-                'message' => 'Interação adicionada com sucesso',
-                'interaction' => $interaction->load('user'),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar interação',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Interação adicionada com sucesso',
+            'interaction' => $interaction->load('user'),
+        ], 201);
     }
 
     /**
@@ -421,20 +333,12 @@ class CustomerApiController extends Controller
 
         $request->validate(CustomerInteraction::businessRules());
 
-        try {
-            $updatedInteraction = $this->interactionService->updateInteraction($interaction, $request->validated(), auth()->user());
+        $updatedInteraction = $this->interactionService->updateInteraction($interaction, $request->validated(), auth()->user());
 
-            return response()->json([
-                'message' => 'Interação atualizada com sucesso',
-                'interaction' => $updatedInteraction->load('user'),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar interação',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Interação atualizada com sucesso',
+            'interaction' => $updatedInteraction->load('user'),
+        ]);
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\CustomersExport;
@@ -12,17 +14,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerManagementController extends Controller
 {
-    protected CacheService $cacheService;
-
-    public function __construct(CacheService $cacheService)
-    {
-        $this->cacheService = $cacheService;
-    }
+    public function __construct(
+        protected CacheService $cacheService
+    ) {}
 
     public function index(Request $request): View
     {

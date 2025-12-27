@@ -48,65 +48,57 @@ class BudgetApiController extends Controller
         $perPage = $request->get('per_page', 15);
         $page = $request->get('page', 1);
 
-        try {
-            $query = Budget::where('tenant_id', $user->tenant_id)
-                ->with(['customer', 'items']);
+        $query = Budget::where('tenant_id', $user->tenant_id)
+            ->with(['customer', 'items']);
 
-            // Aplicar filtros
-            if (! empty($filters['search'])) {
-                $query->where(function ($q) use ($filters) {
-                    $q->where('code', 'like', "%{$filters['search']}%")
-                        ->orWhere('description', 'like', "%{$filters['search']}%")
-                        ->orWhereHas('customer', function ($customerQuery) use ($filters) {
-                            $customerQuery->where('name', 'like', "%{$filters['search']}%");
-                        });
-                });
-            }
-
-            if (! empty($filters['status'])) {
-                $query->byStatus($filters['status']);
-            }
-
-            if (! empty($filters['customer_id'])) {
-                $query->where('customer_id', $filters['customer_id']);
-            }
-
-            if (! empty($filters['date_from'])) {
-                $query->whereDate('created_at', '>=', $filters['date_from']);
-            }
-
-            if (! empty($filters['date_to'])) {
-                $query->whereDate('created_at', '<=', $filters['date_to']);
-            }
-
-            // Ordenação
-            $sortBy = $filters['sort_by'] ?? 'created_at';
-            $sortOrder = $filters['sort_order'] ?? 'desc';
-
-            $query->orderBy($sortBy, $sortOrder);
-
-            $budgets = $query->paginate($perPage, ['*'], 'page', $page);
-
-            // Adicionar totais calculados
-            $budgets->getCollection()->transform(function ($budget) {
-                $totals = $this->calculationService->calculateTotals($budget);
-                $budget->calculated_totals = $totals;
-
-                return $budget;
+        // Aplicar filtros
+        if (! empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('code', 'like', "%{$filters['search']}%")
+                    ->orWhere('description', 'like', "%{$filters['search']}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($filters) {
+                        $customerQuery->where('name', 'like', "%{$filters['search']}%");
+                    });
             });
-
-            return response()->json([
-                'success' => true,
-                'data' => $budgets,
-                'message' => 'Orçamentos listados com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao listar orçamentos: '.$e->getMessage(),
-            ], 500);
         }
+
+        if (! empty($filters['status'])) {
+            $query->byStatus($filters['status']);
+        }
+
+        if (! empty($filters['customer_id'])) {
+            $query->where('customer_id', $filters['customer_id']);
+        }
+
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        // Ordenação
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        $budgets = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Adicionar totais calculados
+        $budgets->getCollection()->transform(function ($budget) {
+            $totals = $this->calculationService->calculateTotals($budget);
+            $budget->calculated_totals = $totals;
+
+            return $budget;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $budgets,
+            'message' => 'Orçamentos listados com sucesso.',
+        ]);
     }
 
     /**
@@ -132,58 +124,48 @@ class BudgetApiController extends Controller
             'items.*.budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            // Criar orçamento
-            $budget = Budget::create([
-                'tenant_id' => $user->tenant_id,
-                'customer_id' => $validated['customer_id'],
-                'status' => BudgetStatus::DRAFT->value,
-                'user_id' => $user->id,
-                'code' => $this->generateBudgetCode(),
-                'description' => $validated['description'] ?? null,
-                'valid_until' => $validated['valid_until'] ?? null,
-                'global_discount_percentage' => $validated['global_discount_percentage'] ?? 0,
-            ]);
+        // Criar orçamento
+        $budget = Budget::create([
+            'tenant_id' => $user->tenant_id,
+            'customer_id' => $validated['customer_id'],
+            'status' => BudgetStatus::DRAFT->value,
+            'user_id' => $user->id,
+            'code' => $this->generateBudgetCode(),
+            'description' => $validated['description'] ?? null,
+            'valid_until' => $validated['valid_until'] ?? null,
+            'global_discount_percentage' => $validated['global_discount_percentage'] ?? 0,
+        ]);
 
-            // Adicionar itens
-            foreach ($validated['items'] as $itemData) {
-                $budget->addItem($itemData);
-            }
-
-            // Calcular totais
-            $this->calculationService->recalculateBudgetItems($budget);
-
-            // Criar versão inicial
-            $budget->createVersion('Orçamento criado via API', $user->id);
-
-            // Log da ação
-            \App\Models\BudgetActionHistory::logAction(
-                $budget->id,
-                $user->id,
-                'created',
-                null,
-                'rascunho',
-                'Orçamento criado via API',
-            );
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'data' => $budget->load(['customer', 'items']),
-                'message' => 'Orçamento criado com sucesso.',
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao criar orçamento: '.$e->getMessage(),
-            ], 500);
+        // Adicionar itens
+        foreach ($validated['items'] as $itemData) {
+            $budget->addItem($itemData);
         }
+
+        // Calcular totais
+        $this->calculationService->recalculateBudgetItems($budget);
+
+        // Criar versão inicial
+        $budget->createVersion('Orçamento criado via API', $user->id);
+
+        // Log da ação
+        \App\Models\BudgetActionHistory::logAction(
+            $budget->id,
+            $user->id,
+            'created',
+            null,
+            'rascunho',
+            'Orçamento criado via API',
+        );
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'data' => $budget->load(['customer', 'items']),
+            'message' => 'Orçamento criado com sucesso.',
+        ], 201);
     }
 
     /**
@@ -246,57 +228,47 @@ class BudgetApiController extends Controller
             'items.*.budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            // Atualizar dados do orçamento
-            $budget->update([
-                'customer_id' => $validated['customer_id'],
-                'description' => $validated['description'] ?? null,
-                'valid_until' => $validated['valid_until'] ?? null,
-                'global_discount_percentage' => $validated['global_discount_percentage'] ?? 0,
-            ]);
+        // Atualizar dados do orçamento
+        $budget->update([
+            'customer_id' => $validated['customer_id'],
+            'description' => $validated['description'] ?? null,
+            'valid_until' => $validated['valid_until'] ?? null,
+            'global_discount_percentage' => $validated['global_discount_percentage'] ?? 0,
+        ]);
 
-            // Atualizar itens
-            $existingItemIds = [];
-            foreach ($validated['items'] as $itemData) {
-                if (isset($itemData['id'])) {
-                    $item = $budget->items()->find($itemData['id']);
-                    if ($item) {
-                        $item->update($itemData);
-                        $existingItemIds[] = $item->id;
-                    }
-                } else {
-                    $newItem = $budget->addItem($itemData);
-                    $existingItemIds[] = $newItem->id;
+        // Atualizar itens
+        $existingItemIds = [];
+        foreach ($validated['items'] as $itemData) {
+            if (isset($itemData['id'])) {
+                $item = $budget->items()->find($itemData['id']);
+                if ($item) {
+                    $item->update($itemData);
+                    $existingItemIds[] = $item->id;
                 }
+            } else {
+                $newItem = $budget->addItem($itemData);
+                $existingItemIds[] = $newItem->id;
             }
-
-            // Remover itens não incluídos
-            $budget->items()->whereNotIn('id', $existingItemIds)->delete();
-
-            // Recalcular totais
-            $this->calculationService->recalculateBudgetItems($budget);
-
-            // Criar nova versão
-            $budget->createVersion('Orçamento atualizado via API', Auth::id());
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'data' => $budget->load(['customer', 'items']),
-                'message' => 'Orçamento atualizado com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao atualizar orçamento: '.$e->getMessage(),
-            ], 500);
         }
+
+        // Remover itens não incluídos
+        $budget->items()->whereNotIn('id', $existingItemIds)->delete();
+
+        // Recalcular totais
+        $this->calculationService->recalculateBudgetItems($budget);
+
+        // Criar nova versão
+        $budget->createVersion('Orçamento atualizado via API', Auth::id());
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'data' => $budget->load(['customer', 'items']),
+            'message' => 'Orçamento atualizado com sucesso.',
+        ]);
     }
 
     /**
@@ -311,36 +283,26 @@ class BudgetApiController extends Controller
             ], 404);
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            // Log antes de excluir
-            \App\Models\BudgetActionHistory::logAction(
-                $budget->id,
-                Auth::id(),
-                'deleted',
-                $budget->budgetStatus()->value,
-                null,
-                'Orçamento excluído via API',
-            );
+        // Log antes de excluir
+        \App\Models\BudgetActionHistory::logAction(
+            $budget->id,
+            Auth::id(),
+            'deleted',
+            $budget->budgetStatus()->value,
+            null,
+            'Orçamento excluído via API',
+        );
 
-            $budget->delete();
+        $budget->delete();
 
-            DB::commit();
+        DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Orçamento excluído com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao excluir orçamento: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Orçamento excluído com sucesso.',
+        ]);
     }
 
     /**
@@ -366,27 +328,19 @@ class BudgetApiController extends Controller
             'budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        try {
-            $item = $budget->addItem($validated);
+        $item = $budget->addItem($validated);
 
-            // Recalcular totais
-            $this->calculationService->recalculateBudgetItems($budget);
+        // Recalcular totais
+        $this->calculationService->recalculateBudgetItems($budget);
 
-            // Criar nova versão
-            $budget->createVersion('Item adicionado via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Item adicionado via API', Auth::id());
 
-            return response()->json([
-                'success' => true,
-                'data' => $item,
-                'message' => 'Item adicionado com sucesso.',
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao adicionar item: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $item,
+            'message' => 'Item adicionado com sucesso.',
+        ], 201);
     }
 
     /**
@@ -419,27 +373,19 @@ class BudgetApiController extends Controller
             'budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        try {
-            $item->update($validated);
+        $item->update($validated);
 
-            // Recalcular totais
-            $this->calculationService->recalculateBudgetItems($budget);
+        // Recalcular totais
+        $this->calculationService->recalculateBudgetItems($budget);
 
-            // Criar nova versão
-            $budget->createVersion('Item atualizado via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Item atualizado via API', Auth::id());
 
-            return response()->json([
-                'success' => true,
-                'data' => $item,
-                'message' => 'Item atualizado com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao atualizar item: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $item,
+            'message' => 'Item atualizado com sucesso.',
+        ]);
     }
 
     /**
@@ -461,26 +407,18 @@ class BudgetApiController extends Controller
             ], 400);
         }
 
-        try {
-            $budget->removeItem($item);
+        $budget->removeItem($item);
 
-            // Recalcular totais
-            $this->calculationService->recalculateBudgetItems($budget);
+        // Recalcular totais
+        $this->calculationService->recalculateBudgetItems($budget);
 
-            // Criar nova versão
-            $budget->createVersion('Item removido via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Item removido via API', Auth::id());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Item removido com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao remover item: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Item removido com sucesso.',
+        ]);
     }
 
     /**
@@ -495,36 +433,28 @@ class BudgetApiController extends Controller
             ], 403);
         }
 
-        try {
-            // Alterar status
-            $budget->status = BudgetStatus::PENDING;
-            $budget->save();
+        // Alterar status
+        $budget->status = BudgetStatus::PENDING;
+        $budget->save();
 
-            // Criar nova versão
-            $budget->createVersion('Orçamento enviado via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Orçamento enviado via API', Auth::id());
 
-            // Log da ação
-            \App\Models\BudgetActionHistory::logAction(
-                $budget->id,
-                Auth::id(),
-                'sent',
-                'rascunho',
-                'enviado',
-                'Orçamento enviado para cliente via API',
-            );
+        // Log da ação
+        \App\Models\BudgetActionHistory::logAction(
+            $budget->id,
+            Auth::id(),
+            'sent',
+            'rascunho',
+            'enviado',
+            'Orçamento enviado para cliente via API',
+        );
 
-            return response()->json([
-                'success' => true,
-                'data' => $budget,
-                'message' => 'Orçamento enviado com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao enviar orçamento: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $budget,
+            'message' => 'Orçamento enviado com sucesso.',
+        ]);
     }
 
     /**
@@ -539,35 +469,27 @@ class BudgetApiController extends Controller
             ], 403);
         }
 
-        try {
-            $budget->status = BudgetStatus::APPROVED;
-            $budget->save();
+        $budget->status = BudgetStatus::APPROVED;
+        $budget->save();
 
-            // Criar nova versão
-            $budget->createVersion('Orçamento aprovado via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Orçamento aprovado via API', Auth::id());
 
-            // Log da ação
-            \App\Models\BudgetActionHistory::logAction(
-                $budget->id,
-                Auth::id(),
-                'approved',
-                'enviado',
-                'aprovado',
-                'Orçamento aprovado via API',
-            );
+        // Log da ação
+        \App\Models\BudgetActionHistory::logAction(
+            $budget->id,
+            Auth::id(),
+            'approved',
+            'enviado',
+            'aprovado',
+            'Orçamento aprovado via API',
+        );
 
-            return response()->json([
-                'success' => true,
-                'data' => $budget,
-                'message' => 'Orçamento aprovado com sucesso.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao aprovar orçamento: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $budget,
+            'message' => 'Orçamento aprovado com sucesso.',
+        ]);
     }
 
     /**
@@ -586,35 +508,27 @@ class BudgetApiController extends Controller
             'reason' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            $budget->status = BudgetStatus::REJECTED;
-            $budget->save();
+        $budget->status = BudgetStatus::REJECTED;
+        $budget->save();
 
-            // Criar nova versão
-            $budget->createVersion('Orçamento rejeitado via API', Auth::id());
+        // Criar nova versão
+        $budget->createVersion('Orçamento rejeitado via API', Auth::id());
 
-            // Log da ação
-            \App\Models\BudgetActionHistory::logAction(
-                $budget->id,
-                Auth::id(),
-                'rejected',
-                'enviado',
-                'rejeitado',
-                'Orçamento rejeitado via API: '.($validated['reason'] ?? 'Sem motivo')
-            );
+        // Log da ação
+        \App\Models\BudgetActionHistory::logAction(
+            $budget->id,
+            Auth::id(),
+            'rejected',
+            'enviado',
+            'rejeitado',
+            'Orçamento rejeitado via API: '.($validated['reason'] ?? 'Sem motivo')
+        );
 
-            return response()->json([
-                'success' => true,
-                'data' => $budget,
-                'message' => 'Orçamento rejeitado.',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao rejeitar orçamento: '.$e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $budget,
+            'message' => 'Orçamento rejeitado.',
+        ]);
     }
 
     /**

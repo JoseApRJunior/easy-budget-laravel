@@ -67,20 +67,15 @@ class TenantManagementController extends Controller
         ]);
 
         DB::beginTransaction();
-        try {
-            $tenant = Tenant::create([
-                'name' => $validated['name'],
-            ]);
 
-            DB::commit();
+        $tenant = Tenant::create([
+            'name' => $validated['name'],
+        ]);
 
-            return redirect()->route('admin.tenants.show', $tenant)
-                ->with('success', 'Tenant criado com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        DB::commit();
 
-            return back()->withInput()->with('error', 'Erro ao criar tenant: '.$e->getMessage());
-        }
+        return redirect()->route('admin.tenants.show', $tenant)
+            ->with('success', 'Tenant criado com sucesso!');
     }
 
     /**
@@ -111,19 +106,14 @@ class TenantManagementController extends Controller
         ]);
 
         DB::beginTransaction();
-        try {
-            $tenant->name = $validated['name'];
-            $tenant->save();
 
-            DB::commit();
+        $tenant->name = $validated['name'];
+        $tenant->save();
 
-            return redirect()->route('admin.tenants.show', $tenant)
-                ->with('success', 'Tenant atualizado com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        DB::commit();
 
-            return back()->withInput()->with('error', 'Erro ao atualizar tenant: '.$e->getMessage());
-        }
+        return redirect()->route('admin.tenants.show', $tenant)
+            ->with('success', 'Tenant atualizado com sucesso!');
     }
 
     /**
@@ -152,17 +142,12 @@ class TenantManagementController extends Controller
     public function destroy(Tenant $tenant): RedirectResponse
     {
         DB::beginTransaction();
-        try {
-            $tenant->delete();
-            DB::commit();
 
-            return redirect()->route('admin.tenants.index')
-                ->with('success', 'Tenant excluído com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        $tenant->delete();
+        DB::commit();
 
-            return back()->with('error', 'Erro ao excluir tenant: '.$e->getMessage());
-        }
+        return redirect()->route('admin.tenants.index')
+            ->with('success', 'Tenant excluído com sucesso!');
     }
 
     /**

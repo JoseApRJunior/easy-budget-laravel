@@ -33,40 +33,35 @@ class EmailTemplateApiController extends Controller
     {
         $user = Auth::user();
         $filters = $request->only(['search', 'category', 'is_active', 'sort_by', 'sort_direction']);
-        $perPage = $request->get('per_page', 15);
-        $page = $request->get('page', 1);
+        $perPage = (int) $request->get('per_page', 15);
+        $page = (int) $request->get('page', 1);
 
-        try {
-            // Para API, vamos usar paginação simples
-            $offset = ($page - 1) * $perPage;
+        // Para API, vamos usar paginação simples
+        $offset = ($page - 1) * $perPage;
 
-            $templatesResult = $this->templateService->listByTenantId($user->tenant_id, $filters);
+        $templatesResult = $this->templateService->listByTenantId($user->tenant_id, $filters);
 
-            if (! $templatesResult->isSuccess()) {
-                return $this->errorResponse('Erro ao listar templates: '.$templatesResult->getMessage());
-            }
-
-            $templates = $templatesResult->getData();
-
-            // Aplicar paginação manual
-            $total = count($templates);
-            $paginated = array_slice($templates, $offset, $perPage);
-
-            return $this->successResponse([
-                'templates' => $paginated,
-                'pagination' => [
-                    'current_page' => $page,
-                    'per_page' => $perPage,
-                    'total' => $total,
-                    'last_page' => ceil($total / $perPage),
-                    'from' => $offset + 1,
-                    'to' => min($offset + $perPage, $total),
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erro interno do servidor: '.$e->getMessage(), 500);
+        if (! $templatesResult->isSuccess()) {
+            return $this->errorResponse('Erro ao listar templates: '.$templatesResult->getMessage());
         }
+
+        $templates = $templatesResult->getData();
+
+        // Aplicar paginação manual
+        $total = count($templates);
+        $paginated = array_slice($templates, $offset, $perPage);
+
+        return $this->successResponse([
+            'templates' => $paginated,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => (int) ceil($total / $perPage),
+                'from' => $offset + 1,
+                'to' => min($offset + $perPage, $total),
+            ],
+        ]);
     }
 
     /**

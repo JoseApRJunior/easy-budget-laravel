@@ -79,27 +79,22 @@ class UserManagementController extends Controller
         ]);
 
         DB::beginTransaction();
-        try {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => $validated['role'],
-                'cpf_cnpj' => $validated['cpf_cnpj'] ?? null,
-                'phone' => $validated['phone'] ?? null,
-                'status' => $validated['status'],
-                'email_verified_at' => now(),
-            ]);
 
-            DB::commit();
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'cpf_cnpj' => $validated['cpf_cnpj'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'status' => $validated['status'],
+            'email_verified_at' => now(),
+        ]);
 
-            return redirect()->route('admin.users.show', $user)
-                ->with('success', 'Usuário criado com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        DB::commit();
 
-            return back()->withInput()->with('error', 'Erro ao criar usuário: '.$e->getMessage());
-        }
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', 'Usuário criado com sucesso!');
     }
 
     /**
@@ -136,29 +131,24 @@ class UserManagementController extends Controller
         ]);
 
         DB::beginTransaction();
-        try {
-            $user->name = $validated['name'];
-            $user->email = $validated['email'];
-            $user->role = $validated['role'];
-            $user->cpf_cnpj = $validated['cpf_cnpj'] ?? null;
-            $user->phone = $validated['phone'] ?? null;
-            $user->status = $validated['status'];
 
-            if (! empty($validated['password'])) {
-                $user->password = Hash::make($validated['password']);
-            }
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
+        $user->cpf_cnpj = $validated['cpf_cnpj'] ?? null;
+        $user->phone = $validated['phone'] ?? null;
+        $user->status = $validated['status'];
 
-            $user->save();
-
-            DB::commit();
-
-            return redirect()->route('admin.users.show', $user)
-                ->with('success', 'Usuário atualizado com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->withInput()->with('error', 'Erro ao atualizar usuário: '.$e->getMessage());
+        if (! empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
         }
+
+        $user->save();
+
+        DB::commit();
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', 'Usuário atualizado com sucesso!');
     }
 
     /**
@@ -211,17 +201,12 @@ class UserManagementController extends Controller
         }
 
         DB::beginTransaction();
-        try {
-            $user->delete();
-            DB::commit();
 
-            return redirect()->route('admin.users.index')
-                ->with('success', 'Usuário excluído com sucesso!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        $user->delete();
+        DB::commit();
 
-            return back()->with('error', 'Erro ao excluir usuário: '.$e->getMessage());
-        }
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuário excluído com sucesso!');
     }
 
     /**

@@ -35,17 +35,10 @@ class ReportApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        try {
-            $dto = ReportDTO::fromRequest($request->all());
-            $result = $this->reportService->generateReport($dto);
+        $dto = ReportDTO::fromRequest($request->all());
+        $result = $this->reportService->generateReport($dto);
 
-            return $this->jsonResponse($result);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao processar solicitação: '.$e->getMessage(),
-            ], 400);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**

@@ -53,27 +53,23 @@ class AuditController extends Controller
     {
         $format = $request->get('format', 'excel');
 
-        try {
-            $result = $this->auditLogService->prepareExportData($request->all());
+        $result = $this->auditLogService->prepareExportData($request->all());
 
-            if (! $result->isSuccess()) {
-                return back()->with('error', $result->getMessage());
-            }
-
-            $exportData = $result->getData();
-
-            if ($format === 'excel') {
-                // Aqui deveríamos ter uma classe de exportação do Excel,
-                // mas para manter a compatibilidade com o que existia:
-                return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.xlsx');
-            } elseif ($format === 'csv') {
-                return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.csv');
-            }
-
-            return back()->with('error', 'Formato de exportação não suportado.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exportar logs: '.$e->getMessage());
+        if (! $result->isSuccess()) {
+            return back()->with('error', $result->getMessage());
         }
+
+        $exportData = $result->getData();
+
+        if ($format === 'excel') {
+            // Aqui deveríamos ter uma classe de exportação do Excel,
+            // mas para manter a compatibilidade com o que existia:
+            return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.xlsx');
+        } elseif ($format === 'csv') {
+            return Excel::download(new \App\Exports\AuditLogsExport($exportData), 'audit_logs.csv');
+        }
+
+        return back()->with('error', 'Formato de exportação não suportado.');
     }
 
     /**
@@ -81,13 +77,9 @@ class AuditController extends Controller
      */
     public function destroy(AuditLog $log): RedirectResponse
     {
-        try {
-            $log->delete();
+        $log->delete();
 
-            return redirect()->route('admin.audit.logs')
-                ->with('success', 'Log de auditoria excluído com sucesso!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao excluir log: '.$e->getMessage());
-        }
+        return redirect()->route('admin.audit.index')
+            ->with('success', 'Log de auditoria excluído com sucesso!');
     }
 }

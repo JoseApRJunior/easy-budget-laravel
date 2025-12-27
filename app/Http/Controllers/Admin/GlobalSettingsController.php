@@ -337,28 +337,24 @@ class GlobalSettingsController extends Controller
             'settings_file' => 'required|file|mimes:json|max:1024',
         ]);
 
-        try {
-            $file = $request->file('settings_file');
-            $content = file_get_contents($file->getRealPath());
-            $settings = json_decode($content, true);
+        $file = $request->file('settings_file');
+        $content = file_get_contents($file->getRealPath());
+        $settings = json_decode($content, true);
 
-            DB::transaction(function () use ($settings) {
-                foreach ($settings as $setting) {
-                    SystemSettings::updateOrCreate(
-                        ['key' => $setting['key']],
-                        [
-                            'value' => $setting['value'],
-                            'type' => $setting['type'],
-                        ]
-                    );
-                }
-            });
+        DB::transaction(function () use ($settings) {
+            foreach ($settings as $setting) {
+                SystemSettings::updateOrCreate(
+                    ['key' => $setting['key']],
+                    [
+                        'value' => $setting['value'],
+                        'type' => $setting['type'],
+                    ]
+                );
+            }
+        });
 
-            Cache::forget('system_settings');
+        Cache::forget('system_settings');
 
-            return redirect()->back()->with('success', 'Configurações importadas com sucesso!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao importar configurações: '.$e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Configurações importadas com sucesso!');
     }
 }

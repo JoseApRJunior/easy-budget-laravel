@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Tenant;
 use App\Services\Admin\EnterpriseService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class EnterpriseController extends Controller
 {
-    protected $enterpriseService;
+    protected EnterpriseService $enterpriseService;
 
     public function __construct(EnterpriseService $enterpriseService)
     {
@@ -23,121 +28,81 @@ class EnterpriseController extends Controller
     /**
      * Dashboard principal de gestão de empresas
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        try {
-            $filters = [
-                'status' => $request->get('status'),
-                'plan' => $request->get('plan'),
-                'search' => $request->get('search'),
-                'date_from' => $request->get('date_from'),
-                'date_to' => $request->get('date_to'),
-            ];
+        $filters = [
+            'status' => $request->get('status'),
+            'plan' => $request->get('plan'),
+            'search' => $request->get('search'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+        ];
 
-            $enterprises = $this->enterpriseService->getEnterprises($filters, 20);
-            $statistics = $this->enterpriseService->getEnterpriseStatistics();
-            $plans = $this->enterpriseService->getAvailablePlans();
+        $enterprises = $this->enterpriseService->getEnterprises($filters, 20);
+        $statistics = $this->enterpriseService->getEnterpriseStatistics();
+        $plans = $this->enterpriseService->getAvailablePlans();
 
-            return view('admin.enterprises.index', compact('enterprises', 'statistics', 'plans', 'filters'));
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar dashboard de empresas: '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Erro ao carregar dados das empresas.');
-        }
+        return view('admin.enterprises.index', compact('enterprises', 'statistics', 'plans', 'filters'));
     }
 
     /**
      * Dados JSON para tabela de empresas (AJAX)
      */
-    public function data(Request $request)
+    public function data(Request $request): JsonResponse
     {
-        try {
-            $filters = [
-                'status' => $request->get('status'),
-                'plan' => $request->get('plan'),
-                'search' => $request->get('search'),
-                'date_from' => $request->get('date_from'),
-                'date_to' => $request->get('date_to'),
-            ];
+        $filters = [
+            'status' => $request->get('status'),
+            'plan' => $request->get('plan'),
+            'search' => $request->get('search'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+        ];
 
-            $enterprises = $this->enterpriseService->getEnterprises($filters, 100);
+        $enterprises = $this->enterpriseService->getEnterprises($filters, 100);
 
-            return response()->json([
-                'success' => true,
-                'enterprises' => $enterprises,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar dados de empresas: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao carregar dados das empresas',
-                'enterprises' => [],
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'enterprises' => $enterprises,
+        ]);
     }
 
     /**
      * Dados financeiros de uma empresa específica (AJAX)
      */
-    public function financialData($tenantId)
+    public function financialData(string $tenantId): JsonResponse
     {
-        try {
-            $financialData = $this->enterpriseService->getMonthlyFinancialData($tenantId);
+        $financialData = $this->enterpriseService->getMonthlyFinancialData($tenantId);
 
-            return response()->json([
-                'success' => true,
-                'data' => $financialData,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar dados financeiros da empresa '.$tenantId.': '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao carregar dados financeiros',
-                'data' => [
-                    'monthly_revenue' => 0,
-                    'last_month_revenue' => 0,
-                    'monthly_costs' => 0,
-                    'last_month_costs' => 0,
-                    'customer_count' => 0,
-                    'profit_margin' => 0,
-                    'revenue_growth' => 0,
-                ],
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $financialData,
+        ]);
     }
 
     /**
      * Detalhes de uma empresa específica
      */
-    public function show($id)
+    public function show(string $id): View
     {
-        try {
-            $enterprise = $this->enterpriseService->getEnterpriseDetails($id);
-            $financialSummary = $this->enterpriseService->getFinancialSummary($id);
-            $users = $this->enterpriseService->getEnterpriseUsers($id);
-            $activityLog = $this->enterpriseService->getActivityLog($id);
-            $performanceMetrics = $this->enterpriseService->getPerformanceMetrics($id);
+        $enterprise = $this->enterpriseService->getEnterpriseDetails($id);
+        $financialSummary = $this->enterpriseService->getFinancialSummary($id);
+        $users = $this->enterpriseService->getEnterpriseUsers($id);
+        $activityLog = $this->enterpriseService->getActivityLog($id);
+        $performanceMetrics = $this->enterpriseService->getPerformanceMetrics($id);
 
-            return view('admin.enterprises.show', compact(
-                'enterprise',
-                'financialSummary',
-                'users',
-                'activityLog',
-                'performanceMetrics'
-            ));
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar detalhes da empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->route('admin.enterprises.index')->with('error', 'Empresa não encontrada.');
-        }
+        return view('admin.enterprises.show', compact(
+            'enterprise',
+            'financialSummary',
+            'users',
+            'activityLog',
+            'performanceMetrics'
+        ));
     }
 
     /**
      * Formulário de criação de nova empresa
      */
-    public function create()
+    public function create(): View
     {
         $plans = $this->enterpriseService->getAvailablePlans();
         $countries = $this->enterpriseService->getCountries();
@@ -149,7 +114,7 @@ class EnterpriseController extends Controller
     /**
      * Criar nova empresa
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -175,51 +140,35 @@ class EnterpriseController extends Controller
                 ->with('error', 'Por favor, corrija os erros no formulário.');
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $enterprise = $this->enterpriseService->createEnterprise($request->all());
+        $enterprise = $this->enterpriseService->createEnterprise($request->all());
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Nova empresa criada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
+        Log::info('Nova empresa criada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
 
-            return redirect()->route('admin.enterprises.show', $enterprise->id)
-                ->with('success', 'Empresa criada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Erro ao criar empresa: '.$e->getMessage());
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erro ao criar empresa. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.enterprises.show', $enterprise->id)
+            ->with('success', 'Empresa criada com sucesso!');
     }
 
     /**
      * Formulário de edição de empresa
      */
-    public function edit($id)
+    public function edit(string $id): View
     {
-        try {
-            $enterprise = Tenant::findOrFail($id);
-            $plans = $this->enterpriseService->getAvailablePlans();
-            $countries = $this->enterpriseService->getCountries();
-            $timezones = $this->enterpriseService->getTimezones();
+        $enterprise = Tenant::findOrFail($id);
+        $plans = $this->enterpriseService->getAvailablePlans();
+        $countries = $this->enterpriseService->getCountries();
+        $timezones = $this->enterpriseService->getTimezones();
 
-            return view('admin.enterprises.edit', compact('enterprise', 'plans', 'countries', 'timezones'));
-        } catch (\Exception $e) {
-            Log::error('Erro ao carregar formulário de edição: '.$e->getMessage());
-
-            return redirect()->route('admin.enterprises.index')->with('error', 'Empresa não encontrada.');
-        }
+        return view('admin.enterprises.edit', compact('enterprise', 'plans', 'countries', 'timezones'));
     }
 
     /**
      * Atualizar empresa
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -243,133 +192,84 @@ class EnterpriseController extends Controller
                 ->with('error', 'Por favor, corrija os erros no formulário.');
         }
 
-        try {
-            $enterprise = $this->enterpriseService->updateEnterprise($id, $request->all());
+        $enterprise = $this->enterpriseService->updateEnterprise($id, $request->all());
 
-            Log::info('Empresa atualizada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
+        Log::info('Empresa atualizada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
 
-            return redirect()->route('admin.enterprises.show', $enterprise->id)
-                ->with('success', 'Empresa atualizada com sucesso!');
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao atualizar empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erro ao atualizar empresa. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.enterprises.show', $enterprise->id)
+            ->with('success', 'Empresa atualizada com sucesso!');
     }
 
     /**
      * Suspender empresa
      */
-    public function suspend($id)
+    public function suspend(string $id): RedirectResponse
     {
-        try {
-            $enterprise = $this->enterpriseService->suspendEnterprise($id);
+        $enterprise = $this->enterpriseService->suspendEnterprise($id);
 
-            Log::warning('Empresa suspensa: '.$enterprise->name.' (ID: '.$enterprise->id.')');
+        Log::warning('Empresa suspensa: '.$enterprise->name.' (ID: '.$enterprise->id.')');
 
-            return redirect()->route('admin.enterprises.show', $id)
-                ->with('warning', 'Empresa suspensa com sucesso.');
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao suspender empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Erro ao suspender empresa.');
-        }
+        return redirect()->route('admin.enterprises.show', $id)
+            ->with('warning', 'Empresa suspensa com sucesso.');
     }
 
     /**
      * Reativar empresa
      */
-    public function reactivate($id)
+    public function reactivate(string $id): RedirectResponse
     {
-        try {
-            $enterprise = $this->enterpriseService->reactivateEnterprise($id);
+        $enterprise = $this->enterpriseService->reactivateEnterprise($id);
 
-            Log::info('Empresa reativada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
+        Log::info('Empresa reativada: '.$enterprise->name.' (ID: '.$enterprise->id.')');
 
-            return redirect()->route('admin.enterprises.show', $id)
-                ->with('success', 'Empresa reativada com sucesso.');
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao reativar empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Erro ao reativar empresa.');
-        }
+        return redirect()->route('admin.enterprises.show', $id)
+            ->with('success', 'Empresa reativada com sucesso.');
     }
 
     /**
      * Excluir empresa (soft delete)
      */
-    public function destroy($id)
+    public function destroy(string $id): RedirectResponse
     {
-        try {
-            $enterprise = $this->enterpriseService->deleteEnterprise($id);
+        $enterprise = $this->enterpriseService->deleteEnterprise($id);
 
-            Log::warning('Empresa excluída: '.$enterprise->name.' (ID: '.$enterprise->id.')');
+        Log::warning('Empresa excluída: '.$enterprise->name.' (ID: '.$enterprise->id.')');
 
-            return redirect()->route('admin.enterprises.index')
-                ->with('success', 'Empresa excluída com sucesso.');
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao excluir empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Erro ao excluir empresa.');
-        }
+        return redirect()->route('admin.enterprises.index')
+            ->with('success', 'Empresa excluída com sucesso.');
     }
 
     /**
      * Exportar dados da empresa
      */
-    public function export($id)
+    public function export(string $id): JsonResponse
     {
-        try {
-            $exportData = $this->enterpriseService->exportEnterpriseData($id);
+        $exportData = $this->enterpriseService->exportEnterpriseData($id);
 
-            return response()->json($exportData, 200, [
-                'Content-Type' => 'application/json',
-                'Content-Disposition' => 'attachment; filename="enterprise_'.$id.'_export.json"',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao exportar empresa '.$id.': '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Erro ao exportar dados da empresa.');
-        }
+        return response()->json($exportData, 200, [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="enterprise_'.$id.'_export.json"',
+        ]);
     }
 
     /**
      * Obter dados para AJAX/DataTables
      */
-    public function getData(Request $request)
+    public function getData(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only(['status', 'plan', 'search', 'date_from', 'date_to']);
-            $data = $this->enterpriseService->getEnterpriseDataTable($filters);
+        $filters = $request->only(['status', 'plan', 'search', 'date_from', 'date_to']);
+        $data = $this->enterpriseService->getEnterpriseDataTable($filters);
 
-            return response()->json($data);
-        } catch (\Exception $e) {
-            Log::error('Erro ao obter dados de empresas: '.$e->getMessage());
-
-            return response()->json(['error' => 'Erro ao obter dados'], 500);
-        }
+        return response()->json($data);
     }
 
     /**
      * Obter estatísticas para dashboard
      */
-    public function getStatistics()
+    public function getStatistics(): JsonResponse
     {
-        try {
-            $statistics = $this->enterpriseService->getEnterpriseStatistics();
+        $statistics = $this->enterpriseService->getEnterpriseStatistics();
 
-            return response()->json($statistics);
-        } catch (\Exception $e) {
-            Log::error('Erro ao obter estatísticas: '.$e->getMessage());
-
-            return response()->json(['error' => 'Erro ao obter estatísticas'], 500);
-        }
+        return response()->json($statistics);
     }
 }

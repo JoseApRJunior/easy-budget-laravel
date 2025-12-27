@@ -138,9 +138,7 @@ class ActivityManagementController extends Controller
             'requirements' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            DB::beginTransaction();
-
+        $activity = DB::transaction(function () use ($validated) {
             $activity = new AreaOfActivity;
             $activity->fill($validated);
 
@@ -153,29 +151,18 @@ class ActivityManagementController extends Controller
 
             $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+            return $activity;
+        });
 
-            Log::info('Activity created', [
-                'activity_id' => $activity->id,
-                'name' => $activity->name,
-                'category_id' => $activity->category_id,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity created', [
+            'activity_id' => $activity->id,
+            'name' => $activity->name,
+            'category_id' => $activity->category_id,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.activities.index')
-                ->with('success', 'Atividade criada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating activity', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao criar atividade. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.activities.index')
+            ->with('success', 'Atividade criada com sucesso!');
     }
 
     public function show(AreaOfActivity $activity): View

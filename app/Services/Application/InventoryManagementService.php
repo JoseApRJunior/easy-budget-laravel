@@ -133,10 +133,7 @@ class InventoryManagementService extends AbstractBaseService
             // Additional stats that might not be in getStatistics
             $outOfStockCount = $this->inventoryRepository->countByTenant(['quantity' => 0]);
 
-            $highStockCount = $this->inventoryRepository->getQuery()
-                ->whereNotNull('max_quantity')
-                ->whereColumn('quantity', '>=', 'max_quantity')
-                ->count();
+            $highStockCount = $this->inventoryRepository->countByTenant(['high_stock' => true]);
 
             return ServiceResult::success([
                 'totalProducts' => $totalProducts,
