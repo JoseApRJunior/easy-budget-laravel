@@ -7,7 +7,6 @@ namespace App\Models\Traits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TenantScope implements Scope

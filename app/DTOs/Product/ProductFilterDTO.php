@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Product;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\CurrencyHelper;
 
 /**
  * DTO para filtragem de Produtos.
@@ -14,9 +15,9 @@ readonly class ProductFilterDTO extends AbstractDTO
 {
     public function __construct(
         public ?string $search = null,
-        public ?bool $is_active = null,
+        public ?string $is_active = null,
         public ?string $deleted = null,
-        public ?int $category_id = null,
+        public ?string $category = null,
         public ?float $min_price = null,
         public ?float $max_price = null,
         public bool $all = false,
@@ -30,18 +31,19 @@ readonly class ProductFilterDTO extends AbstractDTO
     {
         return new self(
             search: $data['search'] ?? null,
-            is_active: isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null,
+            is_active: $data['active'] ?? null,
             deleted: $data['deleted'] ?? null,
-            category_id: isset($data['category_id']) ? (int) $data['category_id'] : null,
-            min_price: isset($data['min_price']) ? (float) $data['min_price'] : null,
-            max_price: isset($data['max_price']) ? (float) $data['max_price'] : null,
+            category: $data['category'] ?? null,
+            min_price: isset($data['min_price']) && $data['min_price'] !== '' ? CurrencyHelper::unformat($data['min_price']) : null,
+            max_price: isset($data['max_price']) && $data['max_price'] !== '' ? CurrencyHelper::unformat($data['max_price']) : null,
             all: filter_var($data['all'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            per_page: (int) ($data['per_page'] ?? 15),
+            per_page: (int) ($data['per_page'] ?? 10),
         );
     }
 
     /**
      * Converte o DTO para o formato de filtros esperado pelo Service/Repository.
+     * Retorna valores puros (floats) para consultas no banco.
      */
     public function toFilterArray(): array
     {
@@ -52,15 +54,15 @@ readonly class ProductFilterDTO extends AbstractDTO
         }
 
         if ($this->is_active !== null) {
-            $filters['active'] = $this->is_active ? '1' : '0';
+            $filters['active'] = $this->is_active;
         }
 
         if ($this->deleted !== null) {
             $filters['deleted'] = $this->deleted;
         }
 
-        if ($this->category_id !== null) {
-            $filters['category_id'] = $this->category_id;
+        if ($this->category !== null) {
+            $filters['category'] = $this->category;
         }
 
         if ($this->min_price !== null) {
@@ -76,5 +78,24 @@ readonly class ProductFilterDTO extends AbstractDTO
         }
 
         return $filters;
+    }
+
+    /**
+     * Converte o DTO para o formato de exibição na View.
+     * Formata preços para o padrão brasileiro (sem R$).
+     */
+    public function toDisplayArray(): array
+    {
+        $display = $this->toFilterArray();
+
+        if ($this->min_price !== null) {
+            $display['min_price'] = CurrencyHelper::format($this->min_price, 2, false);
+        }
+
+        if ($this->max_price !== null) {
+            $display['max_price'] = CurrencyHelper::format($this->max_price, 2, false);
+        }
+
+        return $display;
     }
 }

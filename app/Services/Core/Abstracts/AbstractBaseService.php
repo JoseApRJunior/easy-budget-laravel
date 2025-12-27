@@ -43,6 +43,11 @@ abstract class AbstractBaseService implements CrudServiceInterface
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error($errorMessage, ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
+            // Trata erro de duplicidade (SQLSTATE 23000)
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
+                return $this->error(OperationStatus::CONFLICT, 'Já existe um registro com estes dados (conflito de duplicidade).', null, $e);
+            }
+
             return $this->error(OperationStatus::CONFLICT, 'Erro de integridade de dados ou conflito no banco.', null, $e);
         } catch (Exception $e) {
             Log::error($errorMessage, ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);

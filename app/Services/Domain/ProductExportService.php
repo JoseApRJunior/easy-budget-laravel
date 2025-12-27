@@ -25,7 +25,10 @@ class ProductExportService extends AbstractExportService
     {
         $createdAt = $product->created_at ? $product->created_at->format('d/m/Y H:i:s') : '';
         $price = 'R$ '.number_format((float) $product->price, 2, ',', '.');
-        $stock = $product->total_stock; // Accessor do Model
+        
+        // Garante que o estoque seja exibido como número, inclusive se for 0
+        $stock = (string) ($product->total_stock ?? 0);
+        
         $category = $product->category ? $product->category->name : '-';
 
         // Determina a situação: Deletado > Inativo > Ativo

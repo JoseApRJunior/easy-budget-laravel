@@ -34,25 +34,25 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="category_id">Categoria</label>
-                                    <select class="form-select tom-select" id="category_id" name="category_id">
+                                    <label for="category">Categoria</label>
+                                    <select class="form-select tom-select" id="category" name="category">
                                         <option value="">Todas as categorias</option>
                                         @foreach ($categories as $category)
                                         @if ($category->parent_id === null)
                                         @if ($category->children->isEmpty())
-                                        <option value="{{ $category->id }}"
-                                            {{ old('category_id', $filters['category_id'] ?? '') == $category->id ? 'selected' : '' }}>
+                                        <option value="{{ $category->slug }}"
+                                            {{ old('category', $filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
                                             {{ $category->name }}
                                         </option>
                                         @else
                                         <optgroup label="{{ $category->name }}">
-                                            <option value="{{ $category->id }}"
-                                                {{ old('category_id', $filters['category_id'] ?? '') == $category->id ? 'selected' : '' }}>
+                                            <option value="{{ $category->slug }}"
+                                                {{ old('category', $filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
                                                 {{ $category->name }} (Geral)
                                             </option>
                                             @foreach ($category->children as $subcategory)
-                                            <option value="{{ $subcategory->id }}"
-                                                {{ old('category_id', $filters['category_id'] ?? '') == $subcategory->id ? 'selected' : '' }}>
+                                            <option value="{{ $subcategory->slug }}"
+                                                {{ old('category', $filters['category'] ?? '') == $subcategory->slug ? 'selected' : '' }}>
                                                 {{ $subcategory->name }}
                                             </option>
                                             @endforeach

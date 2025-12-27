@@ -155,12 +155,19 @@ class ProductRepository extends AbstractTenantRepository
         // Remove duplicatas de with
         $with = array_unique($with);
 
+        $effectivePerPage = $this->getEffectivePerPage($filters, $perPage);
+
+        // Se o filtro 'all' estiver ativo, usamos um número bem alto para trazer todos os registros na mesma "página"
+        if (isset($filters['all']) && ($filters['all'] === '1' || $filters['all'] === true)) {
+            $effectivePerPage = 999999;
+        }
+
         return $this->model->newQuery()
             ->with($with)
             ->tap(fn ($q) => $this->applyAllProductFilters($q, $filters))
-            ->when(! $orderBy, fn ($q) => $q->orderBy('name'))
+            ->when(! $orderBy, fn ($q) => $q->orderBy('sku'))
             ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
-            ->paginate($this->getEffectivePerPage($filters, $perPage));
+            ->paginate($effectivePerPage);
     }
 
     /**
@@ -199,9 +206,11 @@ class ProductRepository extends AbstractTenantRepository
         $this->applyBooleanFilter($query, $filters, 'active', 'active');
         $this->applySoftDeleteFilter($query, $filters);
 
-        // Filtro de Categoria
-        $query->when(! empty($filters['category_id']), function ($q) use ($filters) {
-            $q->where('category_id', $filters['category_id']);
+        // Filtro de Categoria (Slug)
+        $query->when(! empty($filters['category']), function ($q) use ($filters) {
+            $q->whereHas('category', function ($subQuery) use ($filters) {
+                $subQuery->where('slug', $filters['category']);
+            });
         });
 
         // Filtros de Preço

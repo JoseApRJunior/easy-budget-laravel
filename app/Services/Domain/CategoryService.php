@@ -11,7 +11,6 @@ use App\Models\Category;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -458,18 +457,6 @@ class CategoryService extends AbstractBaseService
 
             return $this->success($stats, 'Estatísticas obtidas com sucesso');
         }, 'Erro ao obter estatísticas de categorias.');
-    }
-
-    // --- Auxiliares Privados ---
-
-    private function ensureTenantId(): int
-    {
-        $id = $this->tenantId();
-        if (! $id) {
-            throw new Exception('Tenant não identificado');
-        }
-
-        return $id;
     }
 
     private function findAndVerifyOwnership(int $id): ServiceResult

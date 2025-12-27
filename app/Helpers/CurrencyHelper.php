@@ -7,9 +7,11 @@ class CurrencyHelper
     /**
      * Formata valor monetário em BRL.
      */
-    public static function format($value, int $decimals = 2): string
+    public static function format($value, int $decimals = 2, bool $withSymbol = true): string
     {
-        return 'R$ '.number_format((float) $value, $decimals, ',', '.');
+        $prefix = $withSymbol ? 'R$ ' : '';
+
+        return $prefix.number_format((float) $value, $decimals, ',', '.');
     }
 
     /**

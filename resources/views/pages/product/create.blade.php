@@ -47,11 +47,11 @@
                                     <div class="mb-3">
                                         <label for="sku" class="form-label">SKU</label>
                                         <input type="text" class="form-control @error('sku') is-invalid @enderror"
-                                            id="sku" name="sku" value="{{ old('sku') }}">
+                                            id="sku" name="sku" value="{{ old('sku', $defaults['sku'] ?? '') }}">
                                         @error('sku')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
-                                        <div class="form-text">Deixe em branco para gerar automaticamente</div>
+                                        <div class="form-text">Você pode usar o código sugerido ou digitar um personalizado</div>
                                     </div>
                                 </div>
 

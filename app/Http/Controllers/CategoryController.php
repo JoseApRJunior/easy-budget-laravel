@@ -48,7 +48,7 @@ class CategoryController extends Controller
 
         // Se nenhum parâmetro foi passado na URL, definimos filtros padrão
         if (empty($request->query())) {
-            $filters = ['active' => '1', 'deleted' => '1'];
+            $filters = ['active' => '1', 'deleted' => 'current'];
             $result = $this->emptyResult();
         } else {
             $filterDto = CategoryFilterDTO::fromRequest($request->all());

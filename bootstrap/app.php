@@ -5,10 +5,7 @@ use App\Http\Middleware\MonitoringMiddleware;
 use App\Http\Middleware\OptimizeAuthUser;
 use App\Http\Middleware\ProviderMiddleware;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,8 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'tenancy' => InitializeTenancyByPath::class,
-            'tenancy.prevent' => PreventAccessFromCentralDomains::class,
             'provider' => ProviderMiddleware::class,
             'admin' => AdminMiddleware::class,
             'monitoring' => MonitoringMiddleware::class,
@@ -47,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (): void {
         // Only attempt to resolve the 'view' instance if the container has it bound.
         // This prevents fatal "Target class [view] does not exist" errors when
         // an exception occurs very early in the application lifecycle.

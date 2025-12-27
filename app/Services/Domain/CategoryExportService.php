@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\Services\Domain\Abstracts\AbstractExportService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CategoryExportService extends AbstractExportService

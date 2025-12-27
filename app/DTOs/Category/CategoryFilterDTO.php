@@ -14,7 +14,7 @@ readonly class CategoryFilterDTO extends AbstractDTO
 {
     public function __construct(
         public ?string $search = null,
-        public ?bool $is_active = null,
+        public ?string $is_active = null,
         public ?string $deleted = null,
         public bool $all = false,
         public int $per_page = 10,
@@ -27,7 +27,7 @@ readonly class CategoryFilterDTO extends AbstractDTO
     {
         return new self(
             search: $data['search'] ?? null,
-            is_active: isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null,
+            is_active: $data['active'] ?? null,
             deleted: $data['deleted'] ?? null,
             all: filter_var($data['all'] ?? false, FILTER_VALIDATE_BOOLEAN),
             per_page: (int) ($data['per_page'] ?? 10),
@@ -46,7 +46,7 @@ readonly class CategoryFilterDTO extends AbstractDTO
         }
 
         if ($this->is_active !== null) {
-            $filters['active'] = $this->is_active ? '1' : '0';
+            $filters['active'] = $this->is_active;
         }
 
         if ($this->deleted !== null) {

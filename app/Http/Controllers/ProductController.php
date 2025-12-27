@@ -51,12 +51,12 @@ class ProductController extends Controller
         $this->authorize('viewAny', Product::class);
 
         if (empty($request->query())) {
-            $filters = ['active' => '1', 'deleted' => '1'];
+            $filters = ['active' => '1', 'deleted' => 'current'];
             $result = $this->emptyResult();
         } else {
             $filterDto = ProductFilterDTO::fromRequest($request->all());
             $result = $this->productService->getFilteredProducts($filterDto, ['category']);
-            $filters = $filterDto->toFilterArray();
+            $filters = $filterDto->toDisplayArray();
         }
 
         return $this->view('pages.product.index', $result, 'products', [
@@ -74,9 +74,13 @@ class ProductController extends Controller
     {
         $this->authorize('create', Product::class);
         $result = $this->categoryService->getActive();
+        $nextSku = $this->productService->generateNextSku()->getData();
 
         return $this->view('pages.product.create', $result, 'categories', [
-            'defaults' => ['is_active' => true],
+            'defaults' => [
+                'is_active' => true,
+                'sku' => $nextSku,
+            ],
         ]);
     }
 
@@ -105,8 +109,7 @@ class ProductController extends Controller
         $result = $this->productService->findBySku(
             $sku,
             ['category'],
-            true, // withTrashed
-            ['orders'] // exemplo de loadCount
+            true // withTrashed
         );
 
         if ($result->isError()) {
@@ -328,8 +331,8 @@ class ProductController extends Controller
     public function ajaxSearch(Request $request): JsonResponse
     {
         $this->authorize('viewAny', \App\Models\Product::class);
-        $filters = $request->only(['search', 'active', 'category_id', 'min_price', 'max_price']);
-        $result = $this->productService->getFilteredProducts($filters, ['category']);
+        $filterDto = ProductFilterDTO::fromRequest($request->all());
+        $result = $this->productService->getFilteredProducts($filterDto, ['category']);
 
         return $this->jsonResponse($result);
     }
@@ -344,28 +347,23 @@ class ProductController extends Controller
         $this->authorize('viewAny', \App\Models\Product::class);
         $format = $request->get('format', 'xlsx');
 
-        // Captura TODOS os filtros aplicados na listagem (exceto paginação)
-        $filters = $request->only(['search', 'active', 'deleted', 'category_id', 'min_price', 'max_price']);
+        // Usa o DTO para capturar os filtros diretamente da request
+        $data = $request->all();
+        $data['all'] = true; // Força trazer todos os registros para a exportação
 
-        // Busca produtos com os filtros aplicados
-        $result = $this->productService->getFilteredProducts($filters, ['category'], 1000);
+        $filterDto = ProductFilterDTO::fromRequest($data);
+
+        $result = $this->productService->getFilteredProducts($filterDto, ['category']);
 
         if ($result->isError()) {
             return $this->redirectError('provider.products.index', $result->getMessage());
         }
 
-        // Extrai a collection do paginator preservando todos os atributos
-        $paginatorOrCollection = $result->getData();
+        $products = $result->getData();
 
-        if (method_exists($paginatorOrCollection, 'items')) {
-            // É um LengthAwarePaginator - pega os items diretamente
-            $products = collect($paginatorOrCollection->items());
-        } elseif (method_exists($paginatorOrCollection, 'getCollection')) {
-            // É um Paginator - usa getCollection
-            $products = $paginatorOrCollection->getCollection();
-        } else {
-            // Já é uma Collection
-            $products = $paginatorOrCollection;
+        // Se o resultado for um paginador (LengthAwarePaginator), extraímos a coleção subjacente
+        if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            $products = $products->getCollection();
         }
 
         return $format === 'pdf'

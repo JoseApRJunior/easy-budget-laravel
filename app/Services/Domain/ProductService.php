@@ -39,7 +39,7 @@ class ProductService extends AbstractBaseService
 
     protected function getSupportedFilters(): array
     {
-        return ['id', 'name', 'sku', 'price', 'active', 'category_id', 'created_at', 'updated_at'];
+        return ['id', 'name', 'sku', 'price', 'active', 'category', 'created_at', 'updated_at'];
     }
 
     /**
@@ -71,7 +71,7 @@ class ProductService extends AbstractBaseService
     public function findBySku(string $sku, array $with = [], bool $withTrashed = false, array $loadCounts = []): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $with, $withTrashed, $loadCounts) {
-            $product = $this->repository->findBySku($sku, $withTrashed);
+            $product = $this->repository->findBySku($sku, $with, $withTrashed);
 
             if (! $product) {
                 return $this->error(
@@ -280,6 +280,16 @@ class ProductService extends AbstractBaseService
 
             return $paginator;
         }, 'Erro ao carregar produtos.');
+    }
+
+    /**
+     * Gera o próximo SKU disponível.
+     */
+    public function generateNextSku(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return $this->repository->generateUniqueSku();
+        });
     }
 
     // --- Auxiliares Privados ---
