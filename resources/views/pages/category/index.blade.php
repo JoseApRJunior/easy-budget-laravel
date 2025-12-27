@@ -147,7 +147,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-1">
-                                            {{ $category->parent ? $category->parent->name : $category->name }}
+                                            {{ $category->parent_id && $category->parent ? $category->parent->name : $category->name }}
                                         </div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
                                             <span
@@ -155,7 +155,7 @@
                                                 {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
                                             </span>
                                         </div>
-                                        @if ($category->parent)
+                                        @if ($category->parent_id)
                                         <div class="mb-2">
                                             <small class="text-muted">Subcategoria:
                                                 {{ $category->name }}</small>
@@ -229,7 +229,7 @@
                                         </td>
                                         <td>
                                             <div class="item-name-cell">
-                                                @if ($category->parent)
+                                                @if ($category->parent_id && $category->parent)
                                                 {{ $category->parent->name }}
                                                 @else
                                                 {{ $category->name }}
@@ -237,7 +237,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            @if ($category->parent)
+                                            @if ($category->parent_id)
                                             <span class="text-muted">{{ $category->name }}</span>
                                             @else
                                             <span class="text-muted">—</span>
@@ -259,11 +259,16 @@
                                                 @if ($category->deleted_at)
                                                 {{-- Categoria deletada: visualizar e restaurar --}}
                                                 <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />
+
+                                                @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
                                                 <x-button variant="success" icon="arrow-counterclockwise"
-                                                    data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                    data-bs-toggle="modal" data-bs-target="{{ $parentIsTrashed ? '' : '#restoreModal' }}"
                                                     data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
                                                     data-category-name="{{ $category->name }}"
-                                                    title="Restaurar" />
+                                                    title="{{ $parentIsTrashed ? 'Restaure o pai primeiro' : 'Restaurar' }}"
+                                                    :class="$parentIsTrashed ? 'opacity-50' : ''"
+                                                    style="{{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
+                                                    onclick="{{ $parentIsTrashed ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.\', { duration: 8000 }); return false;' : '' }}" />
                                                 @else
                                                 {{-- Categoria ativa: show, edit, delete --}}
                                                 <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />

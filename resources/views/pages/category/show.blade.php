@@ -17,23 +17,33 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             <div class="row g-4">
-
-                @php($isAdmin = false)
-                @role('admin')
-                @php($isAdmin = true)
-                @endrole
-
-                <div class="col-md-3">
+                {{-- Primeira Linha: Informações Principais --}}
+                <div class="col-md-5">
                     <div class="d-flex flex-column">
                         <label class="text-muted small mb-1">Nome</label>
-                        <h5 class="mb-0">
+                        <h5 class="mb-0 fw-bold">
                             {{ $category->name }}
                         </h5>
                     </div>
                 </div>
 
-                <div class="col-md-2">
+                @if ($category->parent)
+                <div class="col-md-4">
                     <div class="d-flex flex-column">
+                        <label class="text-muted small mb-1">Categoria Pai</label>
+                        <h5 class="mb-0">
+                            <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
+                                class="text-decoration-none d-inline-flex align-items-center">
+                                <i class="bi bi-folder2-open me-2 text-primary"></i>
+                                {{ $category->parent->name }}
+                            </a>
+                        </h5>
+                    </div>
+                </div>
+                @endif
+
+                <div class="col-md-3">
+                    <div class="d-flex flex-column {{ !$category->parent ? 'offset-md-4' : '' }}">
                         <label class="text-muted small mb-1">Status</label>
                         <div>
                             <span
@@ -44,33 +54,33 @@
                     </div>
                 </div>
 
-                @if ($category->parent)
-                <div class="col-md-2">
+                {{-- Segunda Linha: Datas e Auditoria --}}
+                <div class="col-12 mt-0">
+                    <hr class="text-muted opacity-25">
+                </div>
+
+                <div class="col-md-4 mt-2">
                     <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1">Categoria Pai</label>
-                        <h5 class="mb-0">
-                            <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
-                                class="text-decoration-none">
-                                {{ $category->parent->name }}
-                            </a>
-                        </h5>
+                        <label class="text-muted small mb-1"><i class="bi bi-calendar-plus me-1"></i>Criado em</label>
+                        <h6 class="mb-0 text-dark">{{ $category->created_at?->format('d/m/Y H:i') }}</h6>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mt-2">
+                    <div class="d-flex flex-column">
+                        <label class="text-muted small mb-1"><i class="bi bi-calendar-check me-1"></i>Atualizado em</label>
+                        <h6 class="mb-0 text-dark">{{ $category->updated_at?->format('d/m/Y H:i') }}</h6>
+                    </div>
+                </div>
+
+                @if($category->deleted_at)
+                <div class="col-md-4 mt-2">
+                    <div class="d-flex flex-column">
+                        <label class="text-muted small mb-1 text-danger"><i class="bi bi-calendar-x me-1"></i>Deletado em</label>
+                        <h6 class="mb-0 text-danger">{{ $category->deleted_at->format('d/m/Y H:i') }}</h6>
                     </div>
                 </div>
                 @endif
-
-
-                <div class="col-md-2">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1">Criado em</label>
-                        <h5 class="mb-0">{{ $category->created_at?->format('d/m/Y H:i') }}</h5>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1">Atualizado em</label>
-                        <h5 class="mb-0">{{ $category->updated_at?->format('d/m/Y H:i') }}</h5>
-                    </div>
-                </div>
             </div>
 
             @if (!$category->parent_id)
@@ -163,8 +173,15 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($category->deleted_at)
-                    <x-button variant="success" style="min-width: 120px;" data-bs-toggle="modal"
-                        data-bs-target="#restoreModal-{{ $category->slug }}" icon="arrow-counterclockwise" label="Restaurar" />
+                    @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
+                    <x-button variant="success" style="min-width: 120px; {{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
+                         data-bs-toggle="modal"
+                         data-bs-target="{{ $parentIsTrashed ? '' : '#restoreModal-' . $category->slug }}"
+                         icon="arrow-counterclockwise"
+                         label="Restaurar"
+                         title="{{ $parentIsTrashed ? 'Restaure o pai primeiro' : 'Restaurar' }}"
+                         :class="$parentIsTrashed ? 'opacity-50' : ''"
+                         onclick="{{ $parentIsTrashed ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.\', { duration: 8000 }); return false;' : '' }}" />
                     @else
                     <x-button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 

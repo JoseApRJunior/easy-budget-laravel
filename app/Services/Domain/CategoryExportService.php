@@ -25,7 +25,7 @@ class CategoryExportService extends AbstractExportService
     {
         $createdAt = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
         $updatedAt = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
-        $categoryName = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
+        $categoryName = $category->parent_id && $category->parent ? $category->parent->name : $category->name;
         $subcategoryName = $category->parent_id ? $category->name : '—';
         $childrenCount = $category->children()->where('is_active', true)->count();
 

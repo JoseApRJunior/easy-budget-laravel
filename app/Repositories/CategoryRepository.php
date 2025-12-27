@@ -148,7 +148,7 @@ class CategoryRepository extends AbstractTenantRepository
             ->whereNull('parent_id')
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'is_active']);
     }
 
     /**
@@ -175,14 +175,20 @@ class CategoryRepository extends AbstractTenantRepository
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
-        array $with = ['parent'],
+        array $with = [],
         ?array $orderBy = null,
     ): LengthAwarePaginator {
+        // Se $with estiver vazio, usamos o padrão garantindo withTrashed para o pai
+        if (empty($with)) {
+            $with = ['parent' => fn ($q) => $q->withTrashed()];
+        }
+
         return $this->model->newQuery()
             ->with($with)
             ->withCount(['children', 'services', 'products'])
             ->tap(fn ($q) => $this->applyAllCategoryFilters($q, $filters))
             ->when(! $orderBy, function ($q) {
+                // Ordenação por nome do pai (mesmo se deletado) para agrupar pai/filho
                 $q->orderByRaw('COALESCE((SELECT name FROM categories AS p WHERE p.id = categories.parent_id LIMIT 1), name), parent_id IS NULL DESC, name');
             })
             ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))

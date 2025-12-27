@@ -86,7 +86,7 @@ class CategoryService extends AbstractBaseService
             $paginator = $this->repository->getPaginated(
                 $normalizedFilters,
                 $perPage,
-                ['parent'],
+                ['parent' => fn ($q) => $q->withTrashed()],
             );
 
             Log::info('Categorias carregadas', ['total' => $paginator->total()]);
@@ -253,7 +253,22 @@ class CategoryService extends AbstractBaseService
      */
     public function restoreCategories(array $ids): ServiceResult
     {
-        return $this->safeExecute(fn () => $this->repository->restoreMany($ids), 'Erro ao restaurar categorias.');
+        return $this->safeExecute(function () use ($ids) {
+            foreach ($ids as $id) {
+                $category = $this->repository->findOneBy('id', (int) $id, [], true);
+                if ($category && $category->parent_id) {
+                    $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
+                    if ($parent && $parent->trashed()) {
+                        return $this->error(
+                            OperationStatus::INVALID_DATA,
+                            "Não é possível restaurar a subcategoria '{$category->name}' porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                        );
+                    }
+                }
+            }
+
+            return $this->repository->restoreMany($ids);
+        }, 'Erro ao restaurar categorias.');
     }
 
     /**
@@ -262,10 +277,27 @@ class CategoryService extends AbstractBaseService
     public function restoreCategoriesBySlug(string $slug): ServiceResult
     {
         return $this->safeExecute(function () use ($slug) {
+            $category = $this->repository->findBySlug($slug, true);
+
+            if (! $category) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
+            }
+
+            // Validação: Não permitir restaurar filho se o pai estiver deletado
+            if ($category->parent_id) {
+                $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
+                if ($parent && $parent->trashed()) {
+                    return $this->error(
+                        OperationStatus::INVALID_DATA,
+                        "Não é possível restaurar esta subcategoria porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                    );
+                }
+            }
+
             $success = $this->repository->restoreBySlug($slug);
 
             if (! $success) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
+                return $this->error(OperationStatus::ERROR, 'Erro ao restaurar a categoria');
             }
 
             return $this->success(null, 'Categoria restaurada com sucesso');
@@ -275,10 +307,10 @@ class CategoryService extends AbstractBaseService
     /**
      * Busca categoria por slug dentro do tenant.
      */
-    public function findBySlug(string $slug, array $with = []): ServiceResult
+    public function findBySlug(string $slug, array $with = [], bool $withTrashed = true): ServiceResult
     {
-        return $this->safeExecute(function () use ($slug, $with) {
-            $entity = $this->repository->findBySlug($slug);
+        return $this->safeExecute(function () use ($slug, $with, $withTrashed) {
+            $entity = $this->repository->findBySlug($slug, $withTrashed);
 
             if (! $entity) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada');

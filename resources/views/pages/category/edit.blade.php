@@ -56,7 +56,8 @@
                                         @foreach ($parents ?? collect() as $p)
                                             <option value="{{ $p->id }}"
                                                 {{ (string) $category->parent_id === (string) $p->id ? 'selected' : '' }}>
-                                                {{ $p->name }}</option>
+                                                {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     <div class="alert alert-warning mt-2 mb-0" role="alert">
@@ -69,7 +70,8 @@
                                         @foreach ($parents ?? collect() as $p)
                                             <option value="{{ $p->id }}"
                                                 {{ (string) old('parent_id', $category->parent_id) === (string) $p->id ? 'selected' : '' }}>
-                                                {{ $p->name }}</option>
+                                                {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 @endif

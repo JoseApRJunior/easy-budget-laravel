@@ -104,6 +104,7 @@ class CategoryController extends Controller
         $this->authorize('view', $category);
 
         $category->loadCount(['children', 'services', 'products']);
+        $category->load(['parent' => fn ($q) => $q->withTrashed()]);
 
         return $this->view('pages.category.show', $result, 'category');
     }
@@ -128,8 +129,21 @@ class CategoryController extends Controller
             ? $parentResult->getData()->filter(fn ($p) => $p->id !== $category->id)
             : collect();
 
+        // Se a categoria tem um pai e ele está inativo, precisamos garantir que ele esteja na lista
+        if ($category->parent_id) {
+            $currentParent = $parents->firstWhere('id', $category->parent_id);
+            if (! $currentParent) {
+                // O pai atual não está na lista (provavelmente está inativo)
+                // Vamos carregar o pai especificamente
+                $actualParent = \App\Models\Category::find($category->parent_id);
+                if ($actualParent) {
+                    $parents->push($actualParent);
+                }
+            }
+        }
+
         return $this->view('pages.category.edit', $result, 'category', [
-            'parents' => $parents,
+            'parents' => $parents->sortBy('name'),
         ]);
     }
 
