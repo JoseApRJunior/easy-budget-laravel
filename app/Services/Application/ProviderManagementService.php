@@ -5,20 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Application;
 
 use App\Actions\Provider\RegisterProviderAction;
-use App\DTOs\Common\AddressDTO;
-use App\DTOs\Common\BusinessDataDTO;
-use App\DTOs\Common\CommonDataDTO;
-use App\DTOs\Common\ContactDTO;
-use App\DTOs\Provider\ProviderDTO;
+use App\Actions\Provider\UpdateProviderAction;
 use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\DTOs\Provider\ProviderUpdateDTO;
-use App\DTOs\Tenant\PlanSubscriptionDTO;
 use App\DTOs\User\UserDTO;
 use App\Enums\OperationStatus;
-use App\Models\CommonData;
 use App\Models\Provider;
-use App\Models\Tenant;
-use App\Models\User;
 use App\Repositories\AddressRepository;
 use App\Repositories\AreaOfActivityRepository;
 use App\Repositories\AuditLogRepository;
@@ -43,12 +35,8 @@ use App\Services\Infrastructure\FileUploadService;
 use App\Services\Infrastructure\FinancialSummary;
 use App\Services\Shared\EntityDataService;
 use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 // Constants for magic strings to improve maintainability
 const ROLE_PROVIDER = 'provider';
@@ -85,6 +73,7 @@ class ProviderManagementService
         private PlanSubscriptionRepository $planSubscriptionRepository,
         private \App\Repositories\InventoryRepository $inventoryRepository,
         private RegisterProviderAction $registerProviderAction,
+        private UpdateProviderAction $updateProviderAction,
     ) {}
 
     /**
@@ -165,66 +154,9 @@ class ProviderManagementService
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Provider não encontrado');
             }
 
-            return DB::transaction(function () use ($provider, $dto, $user, $tenantId) {
-                // Handle logo upload
-                $logoPath = $user->logo;
-                if ($dto->logo instanceof UploadedFile) {
-                    $logoPath = $this->fileUploadService->uploadProviderLogo($dto->logo, $user->logo);
-                }
+            $updatedProvider = $this->updateProviderAction->execute($provider, $user, $dto, $tenantId);
 
-                // Update User (email and logo only)
-                $this->userRepository->update($user->id, array_filter([
-                    'email' => $dto->email,
-                    'logo' => $logoPath,
-                ], fn ($value) => $value !== null));
-
-                // Detectar tipo (PF ou PJ)
-                $type = $dto->person_type === 'pj' ? CommonData::TYPE_COMPANY : CommonData::TYPE_INDIVIDUAL;
-
-                // Atualizar CommonData
-                if ($provider->commonData) {
-                    $this->commonDataRepository->updateFromDTO(
-                        $provider->commonData->id,
-                        CommonDataDTO::fromRequest(array_merge($dto->toArray(), ['type' => $type]))
-                    );
-                }
-
-                // Atualizar Contact
-                if ($provider->contact) {
-                    $this->contactRepository->updateFromDTO(
-                        $provider->contact->id,
-                        ContactDTO::fromRequest(array_merge($dto->toArray(), [
-                            'email_personal' => $dto->email_personal ?? $dto->email,
-                        ]))
-                    );
-                }
-
-                // Atualizar Address
-                if ($provider->address) {
-                    $this->addressRepository->updateFromDTO(
-                        $provider->address->id,
-                        AddressDTO::fromRequest($dto->toArray())
-                    );
-                }
-
-                // Atualizar dados empresariais
-                if ($type === CommonData::TYPE_COMPANY) {
-                    $businessDataDTO = BusinessDataDTO::fromRequest(array_merge($dto->toArray(), [
-                        'provider_id' => $provider->id,
-                        'tenant_id' => $tenantId,
-                    ]));
-
-                    if ($provider->businessData) {
-                        $this->businessDataRepository->updateFromDTO($provider->businessData->id, $businessDataDTO);
-                    } else {
-                        $this->businessDataRepository->createFromDTO($businessDataDTO);
-                    }
-                }
-
-                $provider->refresh();
-
-                return ServiceResult::success($provider, 'Provider atualizado com sucesso');
-            });
+            return ServiceResult::success($updatedProvider, 'Provider atualizado com sucesso');
         }, 'Erro ao atualizar provider.');
     }
 
@@ -387,7 +319,7 @@ class ProviderManagementService
     {
         return $this->safeExecute(function () use ($dto) {
             $data = $this->registerProviderAction->execute($dto);
-            
+
             return ServiceResult::success($data, 'Registro completo realizado com sucesso.');
         }, 'Erro ao criar registro do provedor.');
     }

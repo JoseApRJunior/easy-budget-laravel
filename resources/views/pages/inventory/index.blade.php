@@ -4,27 +4,21 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-boxes me-2"></i>
-            Inventário de Produtos
-        </h3>
-        <p class="text-muted mb-3">Controle de estoque de produtos</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Listar</li>
-            </ol>
-        </nav>
-    </div>
+    <x-page-header
+        title="Inventário de Produtos"
+        icon="boxes"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Listar' => '#'
+        ]">
+        <p class="text-muted mb-0">Controle de estoque de produtos</p>
+    </x-page-header>
 
     <div class="row">
         <div class="col-12">
             <!-- Filtros -->
-            <div class="card mb-4">
-                <div class="card-header">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-transparent">
                     <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                 </div>
                 <div class="card-body">
@@ -32,15 +26,15 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="search">Buscar</label>
+                                    <label for="search" class="form-label">Buscar</label>
                                     <input type="text" class="form-control" id="search" name="search"
                                         value="{{ request('search') }}" placeholder="Nome ou SKU do produto">
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="category">Categoria</label>
-                                    <select name="category" id="category" class="form-control">
+                                    <label for="category" class="form-label">Categoria</label>
+                                    <select name="category" id="category" class="form-select tom-select">
                                         <option value="">Todas as Categorias</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->id }}"
@@ -53,8 +47,8 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="status">Status do Estoque</label>
-                                    <select name="status" id="status" class="form-control">
+                                    <label for="status" class="form-label">Status do Estoque</label>
+                                    <select name="status" id="status" class="form-select tom-select">
                                         <option value="">Todos</option>
                                         <option value="sufficient" {{ request('status') == 'sufficient' ? 'selected' : '' }}>Estoque OK</option>
                                         <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>Estoque Baixo</option>
@@ -64,12 +58,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search me-1"></i>Filtrar
-                                    </button>
-                                    <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary">
-                                        <i class="bi bi-x me-1"></i>Limpar
-                                    </a>
+                                    <x-button type="submit" icon="search" label="Filtrar" />
+                                    <x-button type="link" :href="route('provider.inventory.index')" variant="secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -78,19 +68,17 @@
             </div>
 
             <!-- Tabela de Inventário -->
-            <div class="card">
-                <div class="card-header">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent">
                     <div class="row align-items-center">
                         <div class="col-12 col-md-8">
                             <h5 class="mb-0">
                                 <i class="bi bi-list-ul me-1"></i> Lista de Inventário
-                                <span class="text-muted">({{ $inventories->total() }} registros)</span>
+                                <span class="text-muted small">({{ $inventories->total() }} registros)</span>
                             </h5>
                         </div>
                         <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                            <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-info btn-sm">
-                                <i class="bi bi-bar-chart me-1"></i>Dashboard
-                            </a>
+                            <x-button type="link" :href="route('provider.inventory.dashboard')" variant="info" icon="bar-chart" label="Dashboard" size="sm" />
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Actions\Provider\RegisterProviderAction;
 use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
@@ -13,7 +14,6 @@ use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
@@ -43,18 +43,6 @@ use Illuminate\Support\Facades\Log;
  */
 class UserRegistrationService extends AbstractBaseService
 {
-    protected UserConfirmationTokenService $userConfirmationTokenService;
-
-    protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
-
-    protected UserRepository $userRepository;
-
-    protected ProviderManagementService $providerManagementService;
-
-    protected EmailVerificationService $emailVerificationService;
-
-    protected TenantRepository $tenantRepository;
-
     public function __construct(
         private UserRepository $userRepository,
         private UserConfirmationTokenService $userConfirmationTokenService,

@@ -1,48 +1,32 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Dashboard de Inventário')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-speedometer2 me-2"></i>
-            Dashboard de Inventário
-        </h3>
-        <p class="text-muted mb-3">Visão geral do estoque e movimentações</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Inventário</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container-fluid py-1">
+    <x-page-header
+        title="Dashboard de Inventário"
+        icon="speedometer2"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard')
+        ]">
+        <p class="text-muted mb-0">Visão geral do estoque e movimentações</p>
+    </x-page-header>
 
     <!-- Ações Rápidas -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent">
                     <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Ações Rápidas</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-primary">
-                            <i class="bi bi-list me-1"></i> Ver Inventário
-                        </a>
-                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-info">
-                            <i class="bi bi-arrow-left-right me-1"></i> Movimentações
-                        </a>
-                        <a href="{{ route('provider.inventory.stock-turnover') }}" class="btn btn-success">
-                            <i class="bi bi-graph-up me-1"></i> Giro de Estoque
-                        </a>
-                        <a href="{{ route('provider.inventory.most-used') }}" class="btn btn-warning">
-                            <i class="bi bi-star me-1"></i> Produtos Mais Usados
-                        </a>
-                        <a href="{{ route('provider.inventory.alerts') }}" class="btn btn-danger">
-                            <i class="bi bi-bell me-1"></i> Alertas
-                        </a>
+                        <x-button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" />
+                        <x-button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" />
+                        <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" />
+                        <x-button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" />
+                        <x-button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" />
                     </div>
                 </div>
             </div>

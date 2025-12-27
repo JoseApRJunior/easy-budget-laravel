@@ -272,7 +272,7 @@ class PlanManagementController extends Controller
                 $q->whereHas('tenant', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
                 })
-                    ->orWhereHas('user', function ($q) use ($search) {
+                    ->orWhereHas('provider.user', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
                     });

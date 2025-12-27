@@ -87,19 +87,13 @@ class GoogleController extends Controller
         $authResult = $this->socialAuthService->authenticateWithSocialProvider('google', $googleUserData);
 
         if (! $authResult->isSuccess()) {
-            Log::error('Falha na autenticação social Google', [
-                'error' => $authResult->getMessage(),
-                'ip' => $request->ip(),
-            ]);
-
             return redirect()->route('home')->with('error', $authResult->getMessage());
         }
 
         // Loga o usuário
         Auth::login($authResult->getData());
 
-        // Redireciona para o dashboard
-        return redirect()->intended(route('provider.dashboard'))
+        return redirect()->intended(route('provider.dashboard', absolute: false))
             ->with('success', 'Bem-vindo! Login realizado com sucesso via Google.');
     }
 
@@ -111,41 +105,32 @@ class GoogleController extends Controller
      */
     private function ensureCleanSession(Request $request): void
     {
-        try {
-            // Remove dados de sessão anteriores que podem causar conflitos
-            session()->forget([
-                'previous_login_method',
-                'old_session_data',
-                'temp_oauth_data',
-            ]);
+        // Remove dados de sessão anteriores que podem causar conflitos
+        session()->forget([
+            'previous_login_method',
+            'old_session_data',
+            'temp_oauth_data',
+        ]);
 
-            // Garante que dados críticos estejam presentes
-            $user = Auth::user();
+        // Garante que dados críticos estejam presentes
+        $user = Auth::user();
 
-            if (! $user) {
-                Log::warning('Tentativa de limpeza de sessão sem usuário autenticado');
+        if (! $user) {
+            Log::warning('Tentativa de limpeza de sessão sem usuário autenticado');
 
-                return;
-            }
-
-            // Atualiza timestamp da sessão
-            session([
-                'last_activity' => now()->toISOString(),
-                'session_validated' => true,
-            ]);
-
-            Log::info('Sessão limpa garantida para Google OAuth', [
-                'user_id' => $user->id,
-                'ip' => $request->ip(),
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao garantir sessão limpa Google OAuth', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id(),
-                'ip' => $request->ip(),
-            ]);
+            return;
         }
+
+        // Atualiza timestamp da sessão
+        session([
+            'last_activity' => now()->toISOString(),
+            'session_validated' => true,
+        ]);
+
+        Log::info('Sessão limpa garantida para Google OAuth', [
+            'user_id' => $user->id,
+            'ip' => $request->ip(),
+        ]);
     }
 
     /**
@@ -153,42 +138,31 @@ class GoogleController extends Controller
      */
     public function unlink(Request $request): RedirectResponse
     {
-        try {
-            $user = Auth::user();
+        $user = Auth::user();
 
-            // Verifica se o usuário tem conta Google vinculada
-            if (! $user->google_id) {
-                Log::info('Tentativa de desvinculação sem conta Google', [
-                    'user_id' => $user->id,
-                    'ip' => $request->ip(),
-                ]);
-
-                return redirect()->back()->with('error', 'Nenhuma conta Google vinculada para desvincular.');
-            }
-
-            // Desvincula a conta Google
-            $user->update([
-                'google_id' => null,
-                'avatar' => null,
-                'google_data' => null,
-            ]);
-
-            Log::info('Conta Google desvinculada com sucesso', [
+        // Verifica se o usuário tem conta Google vinculada
+        if (! $user->google_id) {
+            Log::info('Tentativa de desvinculação sem conta Google', [
                 'user_id' => $user->id,
-                'email' => $user->email,
                 'ip' => $request->ip(),
             ]);
 
-            return redirect()->back()->with('success', 'Conta Google desvinculada com sucesso.');
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao desvincular conta Google', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id(),
-                'ip' => $request->ip(),
-            ]);
-
-            return redirect()->back()->with('error', 'Erro ao desvincular conta Google. Tente novamente.');
+            return redirect()->back()->with('error', 'Nenhuma conta Google vinculada para desvincular.');
         }
+
+        // Desvincula a conta Google
+        $user->update([
+            'google_id' => null,
+            'avatar' => null,
+            'google_data' => null,
+        ]);
+
+        Log::info('Conta Google desvinculada com sucesso', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'Conta Google desvinculada com sucesso.');
     }
 }
