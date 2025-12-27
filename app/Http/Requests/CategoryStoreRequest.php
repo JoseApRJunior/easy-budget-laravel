@@ -8,11 +8,11 @@ use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-class StoreCategoryRequest extends FormRequest
+class CategoryStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return \Illuminate\Support\Facades\Auth::check();
     }
 
     public function rules(): array

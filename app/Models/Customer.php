@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-// use App\Models\Traits\Auditable;
 use App\Models\Traits\TenantScoped;
 use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -264,7 +263,7 @@ class Customer extends Model
     {
         return $this->interactions()
             ->whereNotNull('next_action_date')
-            ->where('next_action_date', '<', now())
+            ->where('next_action_date', '<', Carbon::now())
             ->where(function ($query) {
                 $query->whereNull('outcome')
                     ->orWhere('outcome', '!=', 'completed');
@@ -280,7 +279,7 @@ class Customer extends Model
         return $this->interactions()
             ->whereNotNull('next_action')
             ->whereNotNull('next_action_date')
-            ->where('next_action_date', '>=', now())
+            ->where('next_action_date', '>=', \Illuminate\Support\Carbon::now())
             ->where(function ($query) {
                 $query->whereNull('outcome')
                     ->orWhere('outcome', '!=', 'completed');
@@ -392,7 +391,7 @@ class Customer extends Model
     public function scopeWithRecentInteractions($query, int $days = 30)
     {
         return $query->whereHas('interactions', function ($q) use ($days) {
-            $q->where('interaction_date', '>=', now()->subDays($days));
+            $q->where('interaction_date', '>=', \Illuminate\Support\Carbon::now()->subDays($days));
         });
     }
 
@@ -404,7 +403,7 @@ class Customer extends Model
         return $query->whereHas('interactions', function ($q) {
             $q->whereNotNull('next_action')
                 ->whereNotNull('next_action_date')
-                ->where('next_action_date', '>=', now())
+                ->where('next_action_date', '>=', \Illuminate\Support\Carbon::now())
                 ->where(function ($subQuery) {
                     $subQuery->whereNull('outcome')
                         ->orWhere('outcome', '!=', 'completed');

@@ -41,14 +41,9 @@ class PlanRepository extends AbstractGlobalRepository
     /**
      * Atualiza um plano a partir de um DTO.
      */
-    public function updateFromDTO(int $id, PlanDTO $dto): bool
+    public function updateFromDTO(int $id, PlanDTO $dto): ?Model
     {
-        $plan = $this->find($id);
-        if (! $plan) {
-            return false;
-        }
-
-        return $plan->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     // --------------------------------------------------------------------------

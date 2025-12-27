@@ -6,8 +6,8 @@ namespace App\Http\Controllers;
 
 use App\DTOs\Category\CategoryDTO;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\CategoryStoreRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Services\Domain\CategoryExportService;
 use App\Services\Domain\CategoryService;
 use Illuminate\Http\RedirectResponse;
@@ -46,9 +46,10 @@ class CategoryController extends Controller
         $this->authorize('viewAny', \App\Models\Category::class);
         $filters = $request->only(['search', 'active', 'per_page', 'deleted', 'all']);
 
-        // Se nenhum parâmetro foi passado na URL, iniciamos com a lista vazia
-        // O helper $this->view lida com o ServiceResult automaticamente
+        // Se nenhum parâmetro foi passado na URL, definimos filtros padrão
         if (empty($request->query())) {
+            $filters['active'] = 'all';
+            $filters['deleted'] = 'all';
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 10);
@@ -76,7 +77,7 @@ class CategoryController extends Controller
     /**
      * Persiste nova categoria.
      */
-    public function store(StoreCategoryRequest $request): RedirectResponse
+    public function store(CategoryStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', \App\Models\Category::class);
         $dto = CategoryDTO::fromRequest($request->validated());
@@ -127,13 +128,15 @@ class CategoryController extends Controller
             ? $parentResult->getData()->filter(fn ($p) => $p->id !== $category->id)
             : collect();
 
-        return view('pages.category.edit', compact('category', 'parents'));
+        return $this->view('pages.category.edit', $result, 'category', [
+            'parents' => $parents,
+        ]);
     }
 
     /**
      * Atualiza categoria.
      */
-    public function update(UpdateCategoryRequest $request, string $slug): RedirectResponse
+    public function update(CategoryUpdateRequest $request, string $slug): RedirectResponse
     {
         $result = $this->categoryService->findBySlug($slug);
         if ($result->isError()) {
@@ -146,7 +149,15 @@ class CategoryController extends Controller
         $dto = CategoryDTO::fromRequest($request->validated());
         $updateResult = $this->categoryService->updateCategory($category->id, $dto);
 
-        return $this->redirectWithServiceResult('provider.categories.show', $updateResult, 'Categoria atualizada com sucesso.', ['slug' => $slug]);
+        // Se a atualização for bem-sucedida, usamos o novo slug para o redirecionamento
+        $redirectSlug = $updateResult->isSuccess() ? $updateResult->getData()->slug : $slug;
+
+        return $this->redirectWithServiceResult(
+            'provider.categories.show',
+            $updateResult,
+            'Categoria atualizada com sucesso.',
+            ['slug' => $redirectSlug]
+        );
     }
 
     /**

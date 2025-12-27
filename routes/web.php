@@ -349,6 +349,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::post('/handle', [QrCodeController::class, 'handle'])->name('handle');
         Route::post('/budget', [QrCodeController::class, 'generateForBudget'])->name('budget');
         Route::post('/invoice', [QrCodeController::class, 'generateForInvoice'])->name('invoice');
+        Route::post('/service', [QrCodeController::class, 'generateForService'])->name('service');
     });
 
     // Reports

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\AuditLog\AuditLogDTO;
 use App\Models\AuditLog;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,7 +35,7 @@ class AuditLogRepository extends AbstractTenantRepository
     /**
      * Cria um novo log de auditoria a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\AuditLog\AuditLogDTO $dto): Model
+    public function createFromDTO(AuditLogDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }

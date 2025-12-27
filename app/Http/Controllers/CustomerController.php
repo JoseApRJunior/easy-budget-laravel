@@ -46,7 +46,7 @@ class CustomerController extends Controller
             // O padrão do sistema parece ser mostrar os registros mesmo sem busca.
             $result = $this->customerService->getFilteredCustomers($filters);
 
-            $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
+            $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
 
             return $this->view('pages.customer.index', $result, 'customers', [
                 'filters' => $filters,
@@ -69,8 +69,8 @@ class CustomerController extends Controller
         $this->authorize('create', \App\Models\Customer::class);
 
         // Dados necessários para o formulário
-        $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
-        $professions = $this->customerService->getProfessions()->getData();
+        $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
+        $professions = $this->customerService->getProfessions()->getData() ?? [];
 
         return view('pages.customer.create', [
             'areas_of_activity' => $areasOfActivity ?? [],
@@ -143,8 +143,8 @@ class CustomerController extends Controller
         $this->authorize('update', $customer);
 
         // Dados necessários para o formulário
-        $areasOfActivity = $this->customerService->getAreasOfActivity()->getData();
-        $professions = $this->customerService->getProfessions()->getData();
+        $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
+        $professions = $this->customerService->getProfessions()->getData() ?? [];
 
         return view('pages.customer.edit', [
             'customer' => $customer,

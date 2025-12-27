@@ -134,6 +134,18 @@ class InventoryService extends AbstractBaseService
                 $this->inventoryRepository->updateQuantity($productId, $newQuantity);
                 $inventory->quantity = $newQuantity;
 
+                // Check for low stock alert
+                if ($inventory->isLowStock()) {
+                    Log::warning('Low stock alert', [
+                        'product_id' => $productId,
+                        'current_quantity' => $newQuantity,
+                        'min_quantity' => $inventory->min_quantity,
+                        'tenant_id' => $inventory->tenant_id ?? 'N/A'
+                    ]);
+                    
+                    // TODO: Trigger actual notification (Email/Push) when system is ready
+                }
+
                 // Record movement
                 $this->movementRepository->createFromDTO(new InventoryMovementDTO(
                     product_id: $productId,

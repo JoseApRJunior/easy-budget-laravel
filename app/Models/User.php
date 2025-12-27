@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -158,8 +159,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return Permission::whereHas('roles', function ($query) {
             $query->whereHas('users', function ($query) {
-                $query->where('user_id', $this->id)
-                    ->where('tenant_id', $this->tenant_id);
+                $query->where('user_roles.user_id', $this->id)
+                    ->where('user_roles.tenant_id', $this->tenant_id);
             });
         });
     }
@@ -312,7 +313,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $activeSubscription = $provider->planSubscriptions()
             ->where('status', PlanSubscription::STATUS_ACTIVE)
-            ->where('end_date', '>', now())
+            ->where('end_date', '>', Carbon::now())
             ->with('plan')
             ->first();
 
@@ -352,7 +353,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $activeSubscription = $provider->planSubscriptions()
             ->where('status', PlanSubscription::STATUS_ACTIVE)
-            ->where('end_date', '>', now())
+            ->where('end_date', '>', Carbon::now())
             ->first();
 
         if (! $activeSubscription) {
@@ -378,7 +379,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return $activeSubscription->end_date < now();
+        return $activeSubscription->end_date < Carbon::now();
     }
 
     /* ==========================

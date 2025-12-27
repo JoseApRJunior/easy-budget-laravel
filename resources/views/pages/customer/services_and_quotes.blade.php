@@ -82,7 +82,10 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="confirmDelete('servico', {{ $servico->id }})" data-bs-toggle="tooltip"
+                                                data-type="servico" 
+                                                data-id="{{ $servico->id }}"
+                                                onclick="handleGenericDelete(this)" 
+                                                data-bs-toggle="tooltip"
                                                 title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -169,7 +172,9 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="confirmDelete('orcamento', {{ $orcamento->id }})"
+                                                data-type="orcamento" 
+                                                data-id="{{ $orcamento->id }}"
+                                                onclick="handleGenericDelete(this)"
                                                 data-bs-toggle="tooltip" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -225,6 +230,15 @@
             tooltipTriggerList.map( function ( tooltipTriggerEl ) {
                 return new bootstrap.Tooltip( tooltipTriggerEl );
             } );
+
+            // Listener para botões de exclusão
+            document.querySelectorAll('.btn-delete-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    confirmDelete(type, id);
+                });
+            });
         } );
 
         function confirmDelete( type, id ) {

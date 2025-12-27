@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -146,7 +147,7 @@ class CustomerInteraction extends Model
     {
         return $query->whereNotNull('next_action')
             ->whereNotNull('next_action_date')
-            ->where('next_action_date', '>=', now())
+            ->where('next_action_date', '>=', Carbon::now())
             ->where(function ($q) {
                 $q->whereNull('outcome')->orWhere('outcome', '!=', 'completed');
             });
@@ -277,7 +278,7 @@ class CustomerInteraction extends Model
             return 'normal';
         }
 
-        $daysUntilDue = now()->diffInDays($this->next_action_date, false);
+        $daysUntilDue = Carbon::now()->diffInDays($this->next_action_date, false);
 
         return match (true) {
             $daysUntilDue < 0 => 'overdue',
@@ -318,7 +319,7 @@ class CustomerInteraction extends Model
             return null;
         }
 
-        $diff = now()->diff($this->next_action_date);
+        $diff = Carbon::now()->diff($this->next_action_date);
 
         if ($diff->invert) {
             return 'Vencida há '.$diff->format('%d dias');

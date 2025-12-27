@@ -161,7 +161,7 @@
                                     class="form-select @error('area_of_activity_id') is-invalid @enderror"
                                     id="area_of_activity_id">
                                     <option value="">Selecione uma área</option>
-                                    @foreach ($areas_of_activity as $area)
+                                    @foreach ($areas_of_activity ?? [] as $area)
                                         <option value="{{ $area->id }}"
                                             {{ old('area_of_activity_id', $customer->commonData?->area_of_activity_id) == $area->id ? 'selected' : '' }}>
                                             {{ $area->name }}
@@ -178,7 +178,7 @@
                                 <select name="profession_id"
                                     class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
                                     <option value="">Selecione uma profissão</option>
-                                    @foreach ($professions as $prof)
+                                    @foreach ($professions ?? [] as $prof)
                                         <option value="{{ $prof->id }}"
                                             {{ old('profession_id', $customer->commonData?->profession_id) == $prof->id ? 'selected' : '' }}>
                                             {{ $prof->name }}
@@ -462,6 +462,8 @@
                     new VanillaMask('phone_personal', 'phone');
                     new VanillaMask('phone_business', 'phone');
                     new VanillaMask('cep', 'cep');
+                    new VanillaMask('birth_date', 'date');
+                    new VanillaMask('founding_date', 'date');
 
                     // Inicializar máscara baseada no tipo de pessoa atual
                     const type = document.getElementById('person_type').value;

@@ -8,6 +8,7 @@ use App\DTOs\Budget\BudgetShareDTO;
 use App\Models\BudgetShare;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -35,11 +36,9 @@ class BudgetShareRepository extends AbstractTenantRepository
     /**
      * Atualiza um compartilhamento a partir de um DTO.
      */
-    public function updateFromDTO(int $id, BudgetShareDTO $dto): bool
+    public function updateFromDTO(int $id, BudgetShareDTO $dto): ?Model
     {
-        return $this->model->newQuery()
-            ->where('id', $id)
-            ->update($dto->toArray()) > 0;
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

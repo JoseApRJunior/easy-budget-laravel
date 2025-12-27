@@ -33,14 +33,9 @@ class ContactRepository extends AbstractTenantRepository
     /**
      * Atualiza um contato a partir de um DTO.
      */
-    public function updateFromDTO(int $id, ContactDTO $dto): bool
+    public function updateFromDTO(int $id, ContactDTO $dto): ?Model
     {
-        $contact = $this->find($id);
-        if (! $contact) {
-            return false;
-        }
-
-        return $contact->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

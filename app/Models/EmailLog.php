@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -178,13 +179,13 @@ class EmailLog extends Model
                 return $query->whereDate('created_at', today());
             case 'week':
                 return $query->whereBetween('created_at', [
-                    now()->startOfWeek(),
-                    now()->endOfWeek(),
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek(),
                 ]);
             case 'month':
-                return $query->whereMonth('created_at', now()->month);
+                return $query->whereMonth('created_at', Carbon::now()->month);
             case 'year':
-                return $query->whereYear('created_at', now()->year);
+                return $query->whereYear('created_at', Carbon::now()->year);
             default:
                 return $query;
         }
@@ -229,7 +230,7 @@ class EmailLog extends Model
     {
         if (! $this->isOpened()) {
             $this->update([
-                'opened_at' => now(),
+                'opened_at' => Carbon::now(),
                 'status' => 'opened',
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
@@ -243,7 +244,7 @@ class EmailLog extends Model
     public function markAsClicked(?string $ipAddress = null, ?string $userAgent = null): void
     {
         $this->update([
-            'clicked_at' => now(),
+            'clicked_at' => Carbon::now(),
             'status' => 'clicked',
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
@@ -258,7 +259,7 @@ class EmailLog extends Model
         $this->update([
             'status' => $status,
             'error_message' => $errorMessage,
-            'bounced_at' => $status === 'bounced' ? now() : null,
+            'bounced_at' => $status === 'bounced' ? Carbon::now() : null,
         ]);
     }
 

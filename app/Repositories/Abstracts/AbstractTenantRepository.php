@@ -113,7 +113,19 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
      */
     public function create(array $data): Model
     {
+        if (empty($data['tenant_id'])) {
+            $data['tenant_id'] = $this->getTenantId();
+        }
+
         return $this->model->create($data);
+    }
+
+    /**
+     * Obtém o ID do tenant atual do usuário autenticado.
+     */
+    protected function getTenantId(): ?int
+    {
+        return auth()->user()?->tenant_id;
     }
 
     /**

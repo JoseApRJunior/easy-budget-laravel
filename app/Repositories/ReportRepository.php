@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\DTOs\Report\ReportDTO;
 use App\Models\Report;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -107,12 +108,12 @@ class ReportRepository extends AbstractTenantRepository
         ];
     }
 
-    public function createFromDTO(\App\DTOs\Report\ReportDTO $dto): Model
+    public function createFromDTO(ReportDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
 
-    public function updateFromDTO(int $id, \App\DTOs\Report\ReportDTO $dto): ?Model
+    public function updateFromDTO(int $id, ReportDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

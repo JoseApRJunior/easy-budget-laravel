@@ -127,8 +127,8 @@
                                     </div>
                                     <h5 class="card-title mb-2">Serviços</h5>
                                     <p class="card-text text-muted small mb-3">Gerar QR Code para verificação de serviço</p>
-                                    <button class="btn btn-info btn-sm"
-                                        onclick="alert('Funcionalidade em desenvolvimento')">
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#serviceModal">
                                         <i class="bi bi-qr-code me-2"></i>Gerar QR Serviço
                                     </button>
                                 </div>
@@ -218,6 +218,49 @@
                             <i class="bi bi-x-circle me-2"></i>Cancelar
                         </button>
                         <button type="submit" class="btn btn-success">
+                            <i class="bi bi-qr-code me-2"></i>Gerar QR Code
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div class="modal fade" id="serviceModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-tools me-2"></i>Gerar QR Code para Serviço
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="serviceQrForm">
+                    <div class="modal-body">
+                        @csrf
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control @error('service_id') is-invalid @enderror"
+                                id="service_id" name="service_id" required>
+                            <label for="service_id">ID do Serviço *</label>
+                            @error('service_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="url" class="form-control @error('service_url') is-invalid @enderror"
+                                id="service_url" name="url" placeholder="https://..." required>
+                            <label for="service_url">URL de Verificação *</label>
+                            @error('service_url')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-info text-white">
                             <i class="bi bi-qr-code me-2"></i>Gerar QR Code
                         </button>
                     </div>
@@ -337,6 +380,66 @@
                             `);
                             // Clear form
                             $('#budgetQrForm')[0].reset();
+                        } else {
+                            alert('Erro: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        let errorMessage = 'Erro ao gerar QR Code';
+
+                        if (xhr.status === 401) {
+                            errorMessage =
+                                'Você precisa estar logado para gerar QR codes. Por favor, faça login.';
+                        } else if (xhr.status === 419) {
+                            errorMessage =
+                                'Sessão expirada. Por favor, recarregue a página e tente novamente.';
+                        } else if (xhr.status === 302) {
+                            errorMessage =
+                                'Redirecionando para login... Você precisa estar autenticado.';
+                        } else if (response?.message) {
+                            errorMessage = response.message;
+                        }
+
+                        alert('Erro: ' + errorMessage);
+                    },
+                    complete: function() {
+                        submitBtn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
+
+            // Service QR Code generator
+            $('#serviceQrForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const formData = $(this).serialize();
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+
+                submitBtn.html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...'
+                    ).prop('disabled', true);
+
+                $.ajax({
+                    url: '{{ route('provider.qrcode.service') }}',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#serviceModal').modal('hide');
+                            $('#qrResult').html(`
+                                <div class="alert alert-info">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <strong>Sucesso!</strong> ${response.message}
+                                </div>
+                                <img src="${response.data.qr_code}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+                                <div class="mt-2">
+                                    <small class="text-muted">Serviço ID: ${response.data.service_id}</small>
+                                </div>
+                            `);
+                            // Clear form
+                            $('#serviceQrForm')[0].reset();
                         } else {
                             alert('Erro: ' + response.message);
                         }

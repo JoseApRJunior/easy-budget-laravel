@@ -82,49 +82,28 @@ document.addEventListener("DOMContentLoaded", function () {
    }
 });
 
+// Função para lidar com clique no botão de exclusão
+function handleDelete(button) {
+   const customerId = button.getAttribute('data-id');
+   const customerName = button.getAttribute('data-name');
+   confirmDelete(customerId, customerName);
+}
+
 // Função para confirmar exclusão
-function confirmDelete(customerId) {
-   const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
-   const confirmBtn = document.getElementById("confirmDeleteBtn");
-   const csrfToken = document
-      .querySelector('meta[name="csrf-token"]')
-      .getAttribute("content");
+function confirmDelete(customerId, customerName) {
+   const modalElement = document.getElementById("deleteModal");
+   const modal = new bootstrap.Modal(modalElement);
+   const confirmBtn = modalElement.querySelector('button[type="submit"]');
+   const namePlaceholder = document.getElementById("deleteCustomerName");
+   const form = document.getElementById("deleteForm");
 
-   // Criar formulário DELETE dinamicamente
-   const form = document.createElement("form");
-   form.method = "POST";
-   form.action = `/provider/customers/${customerId}`;
-   form.style.display = "none";
+   if (namePlaceholder) {
+      namePlaceholder.textContent = customerName;
+   }
 
-   // Token CSRF
-   const csrfInput = document.createElement("input");
-   csrfInput.type = "hidden";
-   csrfInput.name = "_token";
-   csrfInput.value = csrfToken;
-   form.appendChild(csrfInput);
-
-   // Método DELETE
-   const methodInput = document.createElement("input");
-   methodInput.type = "hidden";
-   methodInput.name = "_method";
-   methodInput.value = "DELETE";
-   form.appendChild(methodInput);
-
-   document.body.appendChild(form);
-
-   // Configurar botão de confirmação
-   confirmBtn.onclick = function () {
-      form.submit();
-      modal.hide();
-   };
-
-   // Cleanup ao fechar modal
-   document
-      .getElementById("deleteModal")
-      .addEventListener("hidden.bs.modal", function () {
-         document.body.removeChild(form);
-         confirmBtn.onclick = null;
-      });
+   if (form) {
+      form.action = `/provider/customers/${customerId}`;
+   }
 
    modal.show();
 }

@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Validator;
 
-class UpdateCategoryRequest extends FormRequest
+class CategoryUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {

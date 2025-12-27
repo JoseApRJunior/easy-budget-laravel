@@ -82,6 +82,7 @@ class ProviderManagementService
         private AreaOfActivityRepository $areaOfActivityRepository,
         private ProfessionRepository $professionRepository,
         private PlanSubscriptionRepository $planSubscriptionRepository,
+        private \App\Repositories\InventoryRepository $inventoryRepository,
     ) {}
 
     /**
@@ -105,11 +106,17 @@ class ProviderManagementService
             // Buscar compromissos do dia
             $events = $this->scheduleRepository->getTodayEvents(5);
 
+            // Buscar itens com estoque baixo
+            $lowStockItems = $this->inventoryRepository->getLowStockItems(5);
+            $lowStockCount = $this->inventoryRepository->getLowStockCount();
+
             return ServiceResult::success([
                 'budgets' => $budgets,
                 'activities' => $activities,
                 'financial_summary' => $financialSummary,
                 'events' => $events,
+                'low_stock_items' => $lowStockItems,
+                'low_stock_count' => $lowStockCount,
             ]);
         }, 'Erro ao obter dados do dashboard do provedor.');
     }

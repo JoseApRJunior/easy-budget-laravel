@@ -30,11 +30,15 @@ class CustomerRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        Log::info('CustomerRequest - Dados antes da limpeza:', $this->all());
+
         // Obter ID do customer se estiver em rota de atualização
         $this->excludeCustomerId = $this->route('customer')?->id;
 
         // Limpar e formatar dados antes da validação
         $this->cleanAndFormatData();
+
+        Log::info('CustomerRequest - Dados após limpeza:', $this->all());
     }
 
     /**
@@ -42,53 +46,19 @@ class CustomerRequest extends FormRequest
      */
     private function cleanAndFormatData(): void
     {
-        // Limpar CEP - remover formatação
-        if ($this->has('cep')) {
-            $cep = preg_replace('/\D/', '', $this->input('cep'));
-            $this->merge(['cep' => $cep]);
+        // NÃO limpar o CEP ou Datas aqui.
+        // A validação deve ocorrer no formato original enviado pelo formulário (com máscara).
+        // A formatação para o banco deve ocorrer DEPOIS da validação, idealmente no DTO ou Service.
+
+        // Limpar telefones - manter apenas números para consistência
+        if ($this->filled('phone_personal')) {
+            $phone = preg_replace('/\D/', '', (string) $this->input('phone_personal'));
+            $this->merge(['phone_personal' => $phone]);
         }
 
-        // Limpar telefone - manter apenas números e espaços/parênteses
-        if ($this->has('phone_personal') && $this->input('phone_personal') !== null) {
-            $phone = $this->input('phone_personal');
-            if (is_string($phone)) {
-                $cleanedPhone = preg_replace('/[^0-9\(\)\-\s]/', '', $phone);
-                $this->merge(['phone_personal' => $cleanedPhone]);
-            }
-        }
-
-        if ($this->has('phone_business') && $this->input('phone_business') !== null) {
-            $phone = $this->input('phone_business');
-            if (is_string($phone)) {
-                $cleanedPhone = preg_replace('/[^0-9\(\)\-\s]/', '', $phone);
-                $this->merge(['phone_business' => $cleanedPhone]);
-            }
-        }
-
-        // Formatar data de nascimento para formato ISO (Y-m-d)
-        if ($this->has('birth_date')) {
-            $birthDate = $this->input('birth_date');
-            if ($birthDate && strpos($birthDate, '/') !== false) {
-                // Converter de DD/MM/YYYY para YYYY-MM-DD
-                $dateParts = explode('/', $birthDate);
-                if (count($dateParts) === 3) {
-                    $formattedDate = $dateParts[2].'-'.$dateParts[1].'-'.$dateParts[0];
-                    $this->merge(['birth_date' => $formattedDate]);
-                }
-            }
-        }
-
-        // Formatar data de fundação para formato ISO (Y-m-d)
-        if ($this->has('founding_date')) {
-            $foundingDate = $this->input('founding_date');
-            if ($foundingDate && strpos($foundingDate, '/') !== false) {
-                // Converter de DD/MM/YYYY para YYYY-MM-DD
-                $dateParts = explode('/', $foundingDate);
-                if (count($dateParts) === 3) {
-                    $formattedDate = $dateParts[2].'-'.$dateParts[1].'-'.$dateParts[0];
-                    $this->merge(['founding_date' => $formattedDate]);
-                }
-            }
+        if ($this->filled('phone_business')) {
+            $phone = preg_replace('/\D/', '', (string) $this->input('phone_business'));
+            $this->merge(['phone_business' => $phone]);
         }
 
         // Limpeza condicional baseada no tipo de pessoa
@@ -158,18 +128,18 @@ class CustomerRequest extends FormRequest
             // Dados específicos por tipo de pessoa
             // Pessoa Física
             'cpf' => 'sometimes|required_if:person_type,pf|string|max:14',
-            'birth_date' => 'sometimes|required_if:person_type,pf|date|before:today|after:1900-01-01',
+            'birth_date' => 'sometimes|required_if:person_type,pf|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
             'profession_id' => 'sometimes|required_if:person_type,pf|exists:professions,id',
 
             // Pessoa Jurídica
             'company_name' => 'sometimes|required_if:person_type,pj|string|max:255',
             'cnpj' => 'sometimes|required_if:person_type,pj|string|max:18',
             'fantasy_name' => 'nullable|string|max:255',
-            'founding_date' => 'nullable|date|before:today',
+            'founding_date' => 'nullable|date_format:d/m/Y|before_or_equal:today',
             'state_registration' => 'nullable|string|max:50',
             'municipal_registration' => 'nullable|string|max:50',
             'industry' => 'nullable|string|max:100',
-            'company_size' => 'nullable|in:micro,small,medium,large,enterprise',
+            'company_size' => 'nullable|in:micro,pequena,media,grande',
 
             // Dados comuns
             'area_of_activity_id' => 'sometimes|exists:areas_of_activity,id',
@@ -183,7 +153,7 @@ class CustomerRequest extends FormRequest
             'website' => 'nullable|url|max:255',
 
             // Endereço - todos obrigatórios
-            'cep' => 'required|digits:8',
+            'cep' => 'required|cep_br',
             'address' => 'required|string|max:255',
             'address_number' => 'nullable|string|max:20',
             'neighborhood' => 'required|string|max:100',
@@ -213,7 +183,6 @@ class CustomerRequest extends FormRequest
             'phone_personal.required' => 'O telefone é obrigatório.',
             'phone_personal.regex' => 'Digite um telefone válido no formato (00) 00000-0000.',
             'phone_business.regex' => 'Digite um telefone comercial válido no formato (00) 00000-0000.',
-            'cep.required' => 'O CEP é obrigatório.',
             'address.required' => 'O endereço é obrigatório.',
             'neighborhood.required' => 'O bairro é obrigatório.',
             'city.required' => 'A cidade é obrigatória.',
@@ -226,14 +195,14 @@ class CustomerRequest extends FormRequest
             // Mensagens para data de nascimento
             'birth_date.required_if' => 'A data de nascimento é obrigatória para pessoa física.',
             'birth_date.date' => 'Digite uma data de nascimento válida.',
-            'birth_date.before' => 'A data de nascimento deve ser anterior a hoje.',
+            'birth_date.before_or_equal' => 'A data de nascimento deve ser anterior ou igual a hoje.',
             'birth_date.after' => 'Data de nascimento deve ser posterior a 1900.',
 
             // Mensagens para empresa
             'company_name.required_if' => 'A razão social é obrigatória para pessoa jurídica.',
             'founding_date.date' => 'Digite uma data de fundação válida.',
-            'founding_date.before' => 'A data de fundação deve ser anterior a hoje.',
-            'company_size.in' => 'Tamanho da empresa deve ser: micro, small, medium, large ou enterprise.',
+            'founding_date.before_or_equal' => 'A data de fundação deve ser anterior ou igual a hoje.',
+            'company_size.in' => 'Tamanho da empresa deve ser: micro, pequena, media ou grande.',
 
             // Mensagens para dados comuns
             'area_of_activity_id.exists' => 'Área de atividade inválida.',
@@ -241,7 +210,8 @@ class CustomerRequest extends FormRequest
             'profession_id.exists' => 'Profissão inválida.',
 
             // Mensagens para CEP
-            'cep.digits' => 'O CEP deve ter exatamente 8 dígitos.',
+            'cep.cep_br' => 'O CEP informado é inválido.',
+            'cep.required' => 'O CEP é obrigatório.',
 
             // Mensagens para estado
             'state.size' => 'O estado deve ter exatamente 2 caracteres (ex: SP, RJ).',

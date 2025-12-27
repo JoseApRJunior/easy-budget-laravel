@@ -47,6 +47,7 @@ class ProductUpdateRequest extends FormRequest
             'description' => 'sometimes|nullable|string|max:1000',
             'price' => 'sometimes|required|numeric|min:0',
             'category_id' => 'sometimes|nullable|integer|exists:categories,id',
+            'sku' => 'sometimes|nullable|string|max:50',
             'unit' => 'sometimes|nullable|string|max:20',
             'active' => 'sometimes|boolean',
             'image' => 'nullable|image|max:2048',

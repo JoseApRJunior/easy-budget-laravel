@@ -37,9 +37,9 @@ class ProviderRepository extends AbstractTenantRepository
     /**
      * Atualiza um provider a partir de um DTO.
      */
-    public function updateFromDTO(int $id, ProviderDTO $dto): ?Provider
+    public function updateFromDTO(int $id, ProviderDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArray());
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

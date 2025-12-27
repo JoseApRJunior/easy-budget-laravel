@@ -47,6 +47,8 @@ class ProviderController extends Controller
                 'financial_summary' => [],
                 'total_activities' => 0,
                 'events' => collect(),
+                'low_stock_items' => collect(),
+                'low_stock_count' => 0,
             ])->with('error', $result->getMessage());
         }
 
@@ -58,6 +60,8 @@ class ProviderController extends Controller
             'financial_summary' => $dashboardData['financial_summary'],
             'total_activities' => count($dashboardData['activities']),
             'events' => $dashboardData['events'] ?? [],
+            'low_stock_items' => $dashboardData['low_stock_items'],
+            'low_stock_count' => $dashboardData['low_stock_count'],
         ]);
     }
 

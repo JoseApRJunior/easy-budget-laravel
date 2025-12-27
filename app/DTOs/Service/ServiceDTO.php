@@ -41,7 +41,7 @@ readonly class ServiceDTO extends AbstractDTO
         );
     }
 
-    public function toArray(): array
+    public function toDatabaseArray(): array
     {
         return [
             'budget_id' => $this->budget_id,

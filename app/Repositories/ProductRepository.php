@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Product\ProductDTO;
 use App\Models\Product;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,7 +60,7 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Cria um novo produto a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Product\ProductDTO $dto): Model
+    public function createFromDTO(ProductDTO $dto): Model
     {
         $data = $dto->toDatabaseArray();
 
@@ -73,9 +74,9 @@ class ProductRepository extends AbstractTenantRepository
     /**
      * Atualiza um produto a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Product\ProductDTO $dto): bool
+    public function updateFromDTO(int $id, ProductDTO $dto): ?Model
     {
-        $data = $dto->toDatabaseArray();
+        $data = $dto->toDatabaseArray(false); // Não inclui nulos no update
 
         return $this->update($id, $data);
     }

@@ -45,9 +45,16 @@
                         <h4 class="text-primary mb-1">R$
                             {{ number_format($financial_summary['monthly_revenue'] ?? 0, 2, ',', '.') }}</h4>
                         <p class="text-muted mb-0 small">Faturamento do Mês</p>
-                        <small class="text-success">
-                            <i class="bi bi-arrow-up"></i> +12% vs mês anterior
-                        </small>
+                        @if(isset($financial_summary['trends']['growth_rate']))
+                            <small class="text-{{ $financial_summary['trends']['growth_rate'] >= 0 ? 'success' : 'danger' }}">
+                                <i class="bi bi-arrow-{{ $financial_summary['trends']['growth_rate'] >= 0 ? 'up' : 'down' }}"></i>
+                                {{ number_format(abs($financial_summary['trends']['growth_rate']), 1, ',', '.') }}% vs anterior
+                            </small>
+                        @else
+                            <small class="text-muted">
+                                <i class="bi bi-dash"></i> Sem dados comparativos
+                            </small>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -100,33 +107,13 @@
             </div>
         </div>
 
-        {{-- Linha 1: Resumo Financeiro + Atividades --}}
-        @php
-            $translations = [
-                'actionIcons' => [
-                    'created_budget' => 'bi-file-earmark-plus',
-                    'updated_budget' => 'bi-pencil-square',
-                    'deleted_budget' => 'bi-trash',
-                ],
-                'textColors' => [
-                    'created_budget' => 'text-success',
-                    'updated_budget' => 'text-warning',
-                    'deleted_budget' => 'text-danger',
-                ],
-                'descriptionTranslation' => [
-                    'created_budget' => 'Orçamento Criado',
-                    'updated_budget' => 'Orçamento Atualizado',
-                    'deleted_budget' => 'Orçamento Removido',
-                ],
-            ];
-        @endphp
-
+        {{-- Linha 1: Resumo Financeiro + Alertas de Estoque --}}
         <div class="row g-4">
             <div class="col-12 col-lg-8">
                 <x-financial-summary :summary="$financial_summary" />
             </div>
             <div class="col-12 col-lg-4">
-                <x-activities :activities="$activities" :translations="$translations" :total="$total_activities" />
+                <x-inventory-alerts :items="$low_stock_items" :count="$low_stock_count" />
             </div>
         </div>
 
@@ -134,36 +121,48 @@
         <div class="row g-4 mt-2">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="card-title mb-0 py-1">
                             <i class="bi bi-lightning-charge me-2 text-warning"></i>
                             Ações Rápidas
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.create') }}" class="btn btn-primary w-100">
-                                    <i class="bi bi-file-earmark-plus me-2"></i>
-                                    Novo Orçamento
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.budgets.create') }}" class="btn btn-outline-primary w-100 py-3 hover-card">
+                                    <i class="bi bi-file-earmark-plus fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Novo Orçamento</span>
                                 </a>
                             </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('provider.customers.create') }}" class="btn btn-success w-100">
-                                    <i class="bi bi-person-plus me-2"></i>
-                                    Novo Cliente
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.customers.create') }}" class="btn btn-outline-success w-100 py-3 hover-card">
+                                    <i class="bi bi-person-plus fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Novo Cliente</span>
                                 </a>
                             </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('provider.services.index') }}" class="btn btn-info w-100">
-                                    <i class="bi bi-tools me-2"></i>
-                                    Serviços
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.services.index') }}" class="btn btn-outline-info w-100 py-3 hover-card">
+                                    <i class="bi bi-tools fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Serviços</span>
                                 </a>
                             </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('provider.invoices.create') }}" class="btn btn-warning w-100">
-                                    <i class="bi bi-receipt me-2"></i>
-                                    Nova Fatura
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.invoices.create') }}" class="btn btn-outline-warning w-100 py-3 hover-card">
+                                    <i class="bi bi-receipt fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Nova Fatura</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.inventory.index') }}" class="btn btn-outline-secondary w-100 py-3 hover-card">
+                                    <i class="bi bi-box-seam fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Estoque</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="{{ route('provider.qrcode.index') }}" class="btn btn-outline-dark w-100 py-3 hover-card">
+                                    <i class="bi bi-qr-code-scan fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Gerar QR Code</span>
                                 </a>
                             </div>
                         </div>

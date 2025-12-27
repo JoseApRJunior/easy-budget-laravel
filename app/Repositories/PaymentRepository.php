@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Payment\PaymentDTO;
 use App\Models\Payment;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -94,7 +95,7 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
     /**
      * Cria um pagamento a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Payment\PaymentDTO $dto): \App\Models\Payment
+    public function createFromDTO(PaymentDTO $dto): Payment
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
@@ -102,7 +103,7 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
     /**
      * Atualiza um pagamento a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Payment\PaymentDTO $dto): ?\App\Models\Payment
+    public function updateFromDTO(int $id, PaymentDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

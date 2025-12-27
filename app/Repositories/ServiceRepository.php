@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Service\ServiceDTO;
 use App\Models\Service;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
@@ -152,7 +153,7 @@ class ServiceRepository extends AbstractTenantRepository
     /**
      * Cria um serviço a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Service\ServiceDTO $dto): Model
+    public function createFromDTO(ServiceDTO $dto): Model
     {
         return $this->create($dto->toArray());
     }
@@ -160,8 +161,8 @@ class ServiceRepository extends AbstractTenantRepository
     /**
      * Atualiza um serviço a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Service\ServiceDTO $dto): ?Model
+    public function updateFromDTO(int $id, ServiceDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArray());
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 }

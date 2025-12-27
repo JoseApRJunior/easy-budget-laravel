@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Schedule\ScheduleDTO;
+use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Models\Schedule;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -162,12 +165,12 @@ class ScheduleRepository extends AbstractTenantRepository
         $this->applySoftDeleteFilter($query, $filters);
     }
 
-    public function createFromDTO(\App\DTOs\Schedule\ScheduleDTO $dto): Model
+    public function createFromDTO(ScheduleDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
 
-    public function updateFromDTO(int $id, \App\DTOs\Schedule\ScheduleUpdateDTO $dto): ?Model
+    public function updateFromDTO(int $id, ScheduleUpdateDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

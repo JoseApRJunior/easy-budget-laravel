@@ -288,11 +288,15 @@
                                                             <form action="{{ route('provider.customers.toggle-status', $customer->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('PATCH')
-                                                                <button type="submit" class="action-btn {{ $customer->status === 'active' ? 'action-btn-warning' : 'action-btn-success' }}" title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}" onclick="return confirm('{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }} este cliente?')">
+                                                                <button type="submit" class="action-btn {{ $customer->status === 'active' ? 'action-btn-warning' : 'action-btn-success' }}" title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}">
                                                                     <i class="bi bi-{{ $customer->status === 'active' ? 'slash-circle' : 'check-lg' }}"></i>
                                                                 </button>
                                                             </form>
-                                                            <button type="button" class="action-btn action-btn-delete" onclick="confirmDelete({{ $customer->id }})" title="Excluir">
+                                                            <button type="button" class="action-btn action-btn-delete"
+                                                                    data-id="{{ $customer->id }}"
+                                                                    data-name="{{ $customer->name ?? $customer->company_name }}"
+                                                                    onclick="handleDelete(this)"
+                                                                    title="Excluir">
                                                                 <i class="bi bi-trash-fill"></i>
                                                             </button>
                                                         @endif

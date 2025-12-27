@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Invoice\InvoiceDTO;
+use App\DTOs\Invoice\InvoiceUpdateDTO;
 use App\Models\Invoice;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use App\Repositories\Traits\RepositoryFiltersTrait;
@@ -160,7 +162,7 @@ class InvoiceRepository extends AbstractTenantRepository
     /**
      * Cria uma fatura a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Invoice\InvoiceDTO $dto): Model
+    public function createFromDTO(InvoiceDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
@@ -168,7 +170,7 @@ class InvoiceRepository extends AbstractTenantRepository
     /**
      * Atualiza uma fatura a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Invoice\InvoiceUpdateDTO $dto): ?Model
+    public function updateFromDTO(int $id, InvoiceUpdateDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

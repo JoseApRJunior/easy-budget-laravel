@@ -40,14 +40,9 @@ class UserRepository extends AbstractTenantRepository
     /**
      * Atualiza um usuário a partir de um DTO.
      */
-    public function updateFromDTO(int $id, UserDTO $dto): bool
+    public function updateFromDTO(int $id, UserDTO $dto): ?Model
     {
-        $user = $this->find($id);
-        if (! $user) {
-            return false;
-        }
-
-        return $user->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

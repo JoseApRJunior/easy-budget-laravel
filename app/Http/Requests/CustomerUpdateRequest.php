@@ -30,6 +30,8 @@ class CustomerUpdateRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        Log::info('CustomerUpdateRequest - Dados antes da limpeza:', $this->all());
+
         $routeCustomer = $this->route('customer');
         $routeId = $this->route('id');
         $this->excludeCustomerId = is_object($routeCustomer)
@@ -38,16 +40,33 @@ class CustomerUpdateRequest extends FormRequest
                 ? (int) $routeCustomer
                 : (is_numeric($routeId) ? (int) $routeId : null));
 
-        $this->cleanDataByPersonType();
+        // Limpar e formatar dados antes da validação
+        $this->cleanAndFormatData();
 
-        $birth = $this->input('birth_date');
-        if (isset($birth)) {
-            $birth = trim((string) $birth);
-            if ($birth !== '' && preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $birth, $m)) {
-                $iso = $m[3].'-'.str_pad($m[2], 2, '0', STR_PAD_LEFT).'-'.str_pad($m[1], 2, '0', STR_PAD_LEFT);
-                $this->merge(['birth_date' => $iso]);
-            }
+        Log::info('CustomerUpdateRequest - Dados após limpeza:', $this->all());
+    }
+
+    /**
+     * Limpar e formatar dados para validação.
+     */
+    private function cleanAndFormatData(): void
+    {
+        // NÃO limpar o CEP ou Datas aqui. 
+        // A validação deve ocorrer no formato original enviado pelo formulário (com máscara).
+        
+        // Limpar telefones - manter apenas números para consistência
+        if ($this->filled('phone_personal')) {
+            $phone = preg_replace('/\D/', '', (string) $this->input('phone_personal'));
+            $this->merge(['phone_personal' => $phone]);
         }
+
+        if ($this->filled('phone_business')) {
+            $phone = preg_replace('/\D/', '', (string) $this->input('phone_business'));
+            $this->merge(['phone_business' => $phone]);
+        }
+
+        // Limpeza condicional baseada no tipo de pessoa
+        $this->cleanDataByPersonType();
     }
 
     /**
@@ -99,18 +118,18 @@ class CustomerUpdateRequest extends FormRequest
             // Dados específicos por tipo de pessoa
             // Pessoa Física
             'cpf' => 'sometimes|required_if:person_type,pf|string|max:14',
-            'birth_date' => 'sometimes|required_if:person_type,pf|date|before:today|after:1900-01-01',
+            'birth_date' => 'sometimes|required_if:person_type,pf|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
             'profession_id' => 'sometimes|required_if:person_type,pf|exists:professions,id',
 
             // Pessoa Jurídica
             'company_name' => 'sometimes|required_if:person_type,pj|string|max:255',
             'cnpj' => 'sometimes|required_if:person_type,pj|string|max:18',
             'fantasy_name' => 'nullable|string|max:255',
-            'founding_date' => 'nullable|date|before:today',
+            'founding_date' => 'nullable|date_format:d/m/Y|before_or_equal:today',
             'state_registration' => 'nullable|string|max:50',
             'municipal_registration' => 'nullable|string|max:50',
             'industry' => 'nullable|string|max:100',
-            'company_size' => 'nullable|in:micro,small,medium,large,enterprise',
+            'company_size' => 'nullable|in:micro,pequena,media,grande',
 
             // Dados comuns
             'area_of_activity_id' => 'sometimes|exists:areas_of_activity,id',
@@ -118,13 +137,13 @@ class CustomerUpdateRequest extends FormRequest
 
             // Contatos - pessoais obrigatórios, empresariais opcionais
             'email_personal' => 'required|email|max:255',
-            'phone_personal' => 'required|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
+            'phone_personal' => 'required|string|phone_br',
             'email_business' => 'nullable|email|max:255',
-            'phone_business' => 'nullable|string|regex:/^\(\d{2}\) \d{4,5}-\d{4}$/',
+            'phone_business' => 'nullable|string|phone_br',
             'website' => 'nullable|url|max:255',
 
             // Endereço - todos obrigatórios
-            'cep' => 'required|digits:8',
+            'cep' => 'required|cep_br',
             'address' => 'required|string|max:255',
             'address_number' => 'nullable|string|max:20',
             'neighborhood' => 'required|string|max:100',
@@ -168,15 +187,15 @@ class CustomerUpdateRequest extends FormRequest
 
             // Mensagens para data de nascimento
             'birth_date.required_if' => 'A data de nascimento é obrigatória para pessoa física.',
-            'birth_date.date' => 'Digite uma data de nascimento válida.',
-            'birth_date.before' => 'A data de nascimento deve ser anterior a hoje.',
+            'birth_date.date_format' => 'Digite uma data de nascimento válida no formato DD/MM/AAAA.',
+            'birth_date.before_or_equal' => 'A data de nascimento deve ser anterior ou igual a hoje.',
             'birth_date.after' => 'Data de nascimento deve ser posterior a 1900.',
 
             // Mensagens para empresa
             'company_name.required_if' => 'A razão social é obrigatória para pessoa jurídica.',
-            'founding_date.date' => 'Digite uma data de fundação válida.',
-            'founding_date.before' => 'A data de fundação deve ser anterior a hoje.',
-            'company_size.in' => 'Tamanho da empresa deve ser: micro, small, medium, large ou enterprise.',
+            'founding_date.date_format' => 'Digite uma data de fundação válida no formato DD/MM/AAAA.',
+            'founding_date.before_or_equal' => 'A data de fundação deve ser anterior ou igual a hoje.',
+            'company_size.in' => 'Tamanho da empresa deve ser: micro, pequena, media ou grande.',
 
             // Mensagens para dados comuns
             'area_of_activity_id.exists' => 'Área de atividade inválida.',
@@ -184,7 +203,7 @@ class CustomerUpdateRequest extends FormRequest
             'profession_id.exists' => 'Profissão inválida.',
 
             // Mensagens para CEP
-            'cep.digits' => 'O CEP deve ter exatamente 8 dígitos.',
+            'cep.cep_br' => 'O CEP informado é inválido.',
 
             // Mensagens para estado
             'state.size' => 'O estado deve ter exatamente 2 caracteres (ex: SP, RJ).',

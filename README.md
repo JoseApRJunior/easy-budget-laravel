@@ -20,10 +20,12 @@ No **Easy Budget**, nossa missão é revolucionar a forma como prestadores de se
     *   **Assinatura de Planos (Provider -> Plataforma)**: Corrigido o `PaymentMercadoPagoPlanService` para utilizar as credenciais da **Plataforma** (definidas no `.env`) ao cobrar assinaturas de prestadores, corrigindo o erro onde o sistema tentava usar as credenciais do próprio prestador para se cobrar.
     *   **Novo MercadoPagoService**: Implementada uma camada de infraestrutura (`MercadoPagoService`) robusta e agnóstica para comunicação com a API do Mercado Pago, padronizando a criação de preferências e webhooks.
 
-### ✅ Status dos Módulos
+### ✅ Status dos Módulos (Dez/2025)
 *   **Provider, Category, Product, Customer**: Validados e operacionais com a nova estrutura de DTOs.
 *   **Budget & Service**: Lógica de backend validada. Views de criação de serviços suportam adição dinâmica de itens.
-*   **Financeiro**: Fluxos de pagamento de Faturas e Assinaturas operacionais.
+*   **QR Code de Verificação**: Implementado para Orçamentos, Faturas e agora também para **Execução de Serviços**.
+*   **Financeiro**: Fluxos de pagamento de Faturas e Assinaturas operacionais (Mercado Pago).
+*   **Estoque**: Controle de entrada/saída funcional com alertas de estoque baixo integrados ao log do sistema.
 
 ---
 
@@ -104,21 +106,17 @@ O sistema opera sob um fluxo linear e seguro, garantindo que cada etapa seja val
 
 ---
 
-## 🧠 Inteligência Artificial (Easy Budget AI)
+## 🚀 Roadmap e Funcionalidades Planejadas
 
-Estamos integrando IA para transformar dados em decisões estratégicas para o prestador.
+### 🧠 Inteligência Artificial (Easy Budget AI) - [EM PLANEJAMENTO]
+Estamos desenhando a integração de IA para transformar dados em decisões estratégicas:
+*   **IA Generativa:** Sugestão de descrições para orçamentos e respostas automáticas no chat.
+*   **IA Analítica:** Previsão de demanda, otimização de preços e insights de inventário.
 
-### 🤖 IA Generativa (Assistente Criativo)
-*   **Criação Automática de Descrições:** A IA sugere descrições atraentes e detalhadas para orçamentos e serviços com base em poucas palavras-chave.
-*   **Sugestão de Respostas:** Respostas rápidas e profissionais para dúvidas de clientes no chat integrado.
-
-### 📊 IA Analítica (Insights de Negócio)
-A IA analisa os dados do prestador para fornecer inteligência de mercado:
-*   **Previsão de Demanda:** "Baseado no seu histórico, a procura por *Serviço X* tende a aumentar no próximo mês."
-*   **Otimização de Preços:** Sugestões de ajuste de preços baseadas na margem de lucro e aceitação dos orçamentos.
-*   **Análise de Clientes:** Identificação de clientes com maior potencial de compra (LTV) e risco de cancelamento (Churn).
-*   **Insights de Inventário:** Alertas preditivos de ruptura de estoque antes que os produtos acabem.
-*   **Mapa de Calor:** Identificação das regiões geográficas onde o prestador tem maior aceitação.
+### � Notificações Multicanal - [EM DESENVOLVIMENTO]
+*   **E-mail:** Operacional via `NotificationService`.
+*   **Push Notifications:** Planejado para notificações em tempo real no navegador e futuro App Mobile.
+*   **SMS/WhatsApp:** Integrado ao roadmap para alertas críticos de agendamento.
 
 ---
 

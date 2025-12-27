@@ -178,7 +178,7 @@ class ReportSchedule extends Model
 
     public function scopeDue($query)
     {
-        return $query->where('next_run_at', '<=', now());
+        return $query->where('next_run_at', '<=', Carbon::now());
     }
 
     public function scopeByDefinition($query, int $definitionId)
@@ -211,7 +211,7 @@ class ReportSchedule extends Model
 
     public function calculateNextRun(): Carbon
     {
-        $now = now($this->timezone);
+        $now = Carbon::now($this->timezone);
         $time = $this->time_to_run;
 
         switch ($this->frequency_type) {
@@ -262,7 +262,7 @@ class ReportSchedule extends Model
 
     public function markAsRun(): void
     {
-        $this->last_run_at = now();
+        $this->last_run_at = Carbon::now();
         $this->updateNextRun();
     }
 
@@ -272,7 +272,7 @@ class ReportSchedule extends Model
             return false;
         }
 
-        $today = now($this->timezone)->toDateString();
+        $today = Carbon::now($this->timezone)->toDateString();
         $nextRun = $this->next_run_at?->toDateString();
 
         return $nextRun === $today;

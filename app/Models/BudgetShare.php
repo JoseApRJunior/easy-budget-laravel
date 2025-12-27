@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -114,7 +115,7 @@ class BudgetShare extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->where('expires_at', '<=', now());
+        return $query->where('expires_at', '<=', Carbon::now());
     }
 
     /**
@@ -125,7 +126,7 @@ class BudgetShare extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', Carbon::now());
             });
     }
 
@@ -135,7 +136,7 @@ class BudgetShare extends Model
     public function incrementAccessCount(): bool
     {
         $this->increment('access_count');
-        $this->last_accessed_at = now();
+        $this->last_accessed_at = Carbon::now();
 
         return $this->save();
     }
@@ -179,7 +180,7 @@ class BudgetShare extends Model
      */
     public function extendValidity(int $days): bool
     {
-        $this->expires_at = now()->addDays($days);
+        $this->expires_at = Carbon::now()->addDays($days);
 
         return $this->save();
     }

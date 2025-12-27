@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class AlertSetting extends Model
 {
@@ -87,7 +88,7 @@ class AlertSetting extends Model
     public function isInCooldown(): bool
     {
         $lastAlert = $this->monitoringAlertsHistory()
-            ->where('created_at', '>=', now()->subMinutes($this->cooldown_minutes))
+            ->where('created_at', '>=', Carbon::now()->subMinutes($this->cooldown_minutes))
             ->exists();
 
         return $lastAlert;

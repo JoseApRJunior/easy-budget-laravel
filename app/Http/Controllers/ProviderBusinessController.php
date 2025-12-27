@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\DTOs\Provider\ProviderUpdateDTO;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\ProviderBusinessUpdateRequest;
+use App\Http\Requests\ProviderUpdateRequest;
 use App\Models\Provider;
 use App\Services\Application\ProviderManagementService;
 use Illuminate\Http\RedirectResponse;
@@ -49,7 +49,7 @@ class ProviderBusinessController extends Controller
     /**
      * Processa atualização dos dados empresariais.
      */
-    public function update(ProviderBusinessUpdateRequest $request): RedirectResponse
+    public function update(ProviderUpdateRequest $request): RedirectResponse
     {
         // Criar DTO a partir do request
         $dto = ProviderUpdateDTO::fromRequest($request);

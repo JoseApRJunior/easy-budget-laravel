@@ -139,8 +139,13 @@ class ProductService extends AbstractBaseService
                     unset($data['image']);
                 }
 
-                // 2. Atualizar
-                $this->repository->update($product->id, $data);
+                // 2. Atualizar usando o repositório (que filtra nulos)
+                $this->repository->updateFromDTO($product->id, $dto);
+
+                // Caso haja campos extras em $data (como a imagem processada) que não estão no DTO
+                if (isset($data['image'])) {
+                    $this->repository->update($product->id, ['image' => $data['image']]);
+                }
 
                 return $product->fresh();
             });

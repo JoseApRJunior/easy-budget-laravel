@@ -15,12 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Profession extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory;
 
     protected $table = 'professions';
 
     protected $fillable = [
-        'tenant_id',
         'slug',
         'name',
         'description',
@@ -55,7 +54,6 @@ class Profession extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootTenantScoped();
     }
 
     /**

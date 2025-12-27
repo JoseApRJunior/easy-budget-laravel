@@ -307,7 +307,7 @@ class Budget extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('valid_until')
-                ->orWhere('valid_until', '>', now());
+                ->orWhere('valid_until', '>', Carbon::now());
         });
     }
 
@@ -316,7 +316,7 @@ class Budget extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->where('valid_until', '<=', now());
+        return $query->where('valid_until', '<=', Carbon::now());
     }
 
     /**
@@ -449,7 +449,7 @@ class Budget extends Model
         $this->update([
             'subtotal' => $totals['subtotal'],
             'total' => $totals['grand_total'],
-            'updated_at' => now(),
+            'updated_at' => Carbon::now(),
         ]);
     }
 
@@ -469,7 +469,7 @@ class Budget extends Model
             'items_data' => $this->items->toArray(),
             'version_total' => $totals['grand_total'],
             'is_current' => true,
-            'version_date' => now(),
+            'version_date' => Carbon::now(),
         ]);
 
         // Marcar versão atual

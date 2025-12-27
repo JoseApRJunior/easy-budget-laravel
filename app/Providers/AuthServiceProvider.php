@@ -24,6 +24,11 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\AreaOfActivity::class => \App\Policies\AreaOfActivityPolicy::class,
         \App\Models\Profession::class => \App\Policies\ProfessionPolicy::class,
         \App\Models\Product::class => \App\Policies\ProductPolicy::class,
+        \App\Models\Budget::class => \App\Policies\BudgetPolicy::class,
+        \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
+        \App\Models\Service::class => \App\Policies\ServicePolicy::class,
+        \App\Models\ProductInventory::class => \App\Policies\ProductInventoryPolicy::class,
+        \App\Models\InventoryMovement::class => \App\Policies\InventoryMovementPolicy::class,
     ];
 
     /**
@@ -205,65 +210,65 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Category Management
         Gate::define('manage-categories', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('create-category', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('update-category', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('delete-category', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('duplicate-category', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         // Activity Management
         Gate::define('manage-activities', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('create-activity', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('update-activity', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('delete-activity', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('duplicate-activity', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         // Profession Management
         Gate::define('manage-professions', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('create-profession', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('update-profession', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('delete-profession', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('duplicate-profession', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
     }
 
@@ -303,36 +308,36 @@ class AuthServiceProvider extends ServiceProvider
 
         // Customer Management
         Gate::define('manage-customers', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('create-customer', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('update-customer', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('delete-customer', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         // Provider Management
         Gate::define('manage-providers', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('create-provider', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('update-provider', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('delete-provider', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
     }
 
@@ -343,19 +348,19 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Financial Control
         Gate::define('manage-financial', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('view-financial-reports', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('manage-budget-alerts', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('view-provider-finances', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
     }
 
@@ -420,27 +425,27 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Inventory Management
         Gate::define('manage-inventory', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAdmin() || $user->isProvider();
         });
 
         Gate::define('view-inventory', function (User $user) {
-            return $user->isAdmin() || $user->hasPermission('view-inventory');
+            return $user->isAdmin() || $user->isProvider() || $user->hasPermission('view-inventory');
         });
 
         Gate::define('view-inventory-reports', function (User $user) {
-            return $user->isAdmin() || $user->hasPermission('view-inventory-reports');
+            return $user->isAdmin() || $user->isProvider() || $user->hasPermission('view-inventory-reports');
         });
 
         Gate::define('view-inventory-alerts', function (User $user) {
-            return $user->isAdmin() || $user->hasPermission('view-inventory-alerts');
+            return $user->isAdmin() || $user->isProvider() || $user->hasPermission('view-inventory-alerts');
         });
 
         Gate::define('adjust-inventory', function (User $user) {
-            return $user->isAdmin() || $user->hasPermission('adjust-inventory');
+            return $user->isAdmin() || $user->isProvider() || $user->hasPermission('adjust-inventory');
         });
 
         Gate::define('export-inventory-reports', function (User $user) {
-            return $user->isAdmin() || $user->hasPermission('export-inventory-reports');
+            return $user->isAdmin() || $user->isProvider() || $user->hasPermission('export-inventory-reports');
         });
     }
 
@@ -452,7 +457,7 @@ class AuthServiceProvider extends ServiceProvider
     protected function registerCategoryGates(): void
     {
         // Inject PermissionService
-        $permissionService = app(\App\Services\Core\PermissionService::class);
+        $permissionService = \Illuminate\Support\Facades\App::make(\App\Services\Core\PermissionService::class);
 
         // Gerenciamento de categorias (provider ou admin)
         Gate::define('manage-categories', function (User $user) use ($permissionService) {

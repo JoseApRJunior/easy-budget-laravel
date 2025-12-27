@@ -421,10 +421,14 @@
 
             setTimeout(() => {
                 if (typeof VanillaMask !== 'undefined') {
-                    ['phone_personal', 'phone_business', 'cep', 'cpf', 'cnpj'].forEach(id => {
+                    ['phone_personal', 'phone_business', 'cep', 'cpf', 'cnpj', 'birth_date', 'founding_date'].forEach(id => {
                         const el = document.getElementById(id);
-                        if (el) new VanillaMask(id, id === 'phone_personal' || id ===
-                            'phone_business' ? 'phone' : id);
+                        if (el) {
+                            let maskType = id;
+                            if (id === 'phone_personal' || id === 'phone_business') maskType = 'phone';
+                            if (id === 'birth_date' || id === 'founding_date') maskType = 'date';
+                            new VanillaMask(id, maskType);
+                        }
                     });
                 }
             }, 100);

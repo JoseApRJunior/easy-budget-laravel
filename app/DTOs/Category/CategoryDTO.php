@@ -26,10 +26,10 @@ readonly class CategoryDTO extends AbstractDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            name: mb_convert_case((string) $data['name'], MB_CASE_TITLE, 'UTF-8'),
+            name: self::formatTitle((string) $data['name']),
             slug: $data['slug'] ?? null,
             parent_id: isset($data['parent_id']) ? (int) $data['parent_id'] : null,
-            is_active: (bool) ($data['is_active'] ?? true),
+            is_active: self::mapBoolean($data['is_active'] ?? true),
         );
     }
 }

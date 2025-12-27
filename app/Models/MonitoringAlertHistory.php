@@ -187,7 +187,7 @@ class MonitoringAlertHistory extends Model
     {
         $this->update([
             'is_resolved' => true,
-            'resolved_at' => now(),
+            'resolved_at' => Carbon::now(),
             'resolved_by' => $user->id,
             'resolution_notes' => $notes,
         ]);
@@ -271,7 +271,7 @@ class MonitoringAlertHistory extends Model
     {
         $this->update([
             'notification_sent' => true,
-            'notification_sent_at' => now(),
+            'notification_sent_at' => Carbon::now(),
         ]);
     }
 

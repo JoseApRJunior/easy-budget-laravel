@@ -43,13 +43,8 @@ class ServiceItemRepository extends AbstractTenantRepository
     /**
      * Atualiza um item de serviço a partir de um DTO.
      */
-    public function updateFromDTO(int $id, ServiceItemDTO $dto): bool
+    public function updateFromDTO(int $id, ServiceItemDTO $dto): ?Model
     {
-        $item = $this->find($id);
-        if (! $item) {
-            return false;
-        }
-
-        return $item->update($dto->toArrayWithoutNulls());
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 }

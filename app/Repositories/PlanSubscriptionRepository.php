@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\DTOs\Tenant\PlanSubscriptionDTO;
 use App\Models\PlanSubscription;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use Illuminate\Support\Carbon;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,14 +34,9 @@ class PlanSubscriptionRepository extends AbstractTenantRepository
     /**
      * Atualiza uma assinatura de plano a partir de um DTO.
      */
-    public function updateFromDTO(int $id, PlanSubscriptionDTO $dto): bool
+    public function updateFromDTO(int $id, PlanSubscriptionDTO $dto): ?Model
     {
-        $subscription = $this->find($id);
-        if (! $subscription) {
-            return false;
-        }
-
-        return $subscription->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

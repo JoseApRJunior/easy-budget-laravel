@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Customer\CustomerDTO;
 use App\Models\Address;
 use App\Models\BusinessData;
 use App\Models\CommonData;
@@ -221,24 +222,6 @@ class CustomerRepository extends AbstractTenantRepository
      * @param  array<string, string>|null  $orderBy  Ordenação personalizada (padrão: ['created_at' => 'desc'])
      * @return LengthAwarePaginator Resultado paginado
      */
-    /**
-     * {@inheritdoc}
-     *
-     * Implementação específica para clientes com filtros avançados.
-     *
-     * @param  array<string, mixed>  $filters  Filtros específicos:
-     *                                         - search: termo de busca em nome, email, CPF/CNPJ, razão social
-     *                                         - type: 'pessoa_fisica' ou 'pessoa_juridica'
-     *                                         - status: status do cliente
-     *                                         - area_of_activity_id: ID da área de atuação
-     *                                         - profession_id: ID da profissão
-     *                                         - per_page: número de itens por página
-     *                                         - deleted: 'only' para mostrar apenas clientes deletados
-     * @param  int  $perPage  Número padrão de itens por página (15)
-     * @param  array<string>  $with  Relacionamentos para eager loading (padrão: ['commonData.areaOfActivity', 'commonData.profession', 'contact', 'address', 'businessData'])
-     * @param  array<string, string>|null  $orderBy  Ordenação personalizada (padrão: ['created_at' => 'desc'])
-     * @return LengthAwarePaginator Resultado paginado
-     */
     public function getPaginated(
         array $filters = [],
         int $perPage = 15,
@@ -398,7 +381,7 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Cria customer com todas as relações (estrutura de 5 tabelas) a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Customer\CustomerDTO $dto): Customer
+    public function createFromDTO(CustomerDTO $dto): Customer
     {
         $data = $dto->toArrayWithoutNulls();
         $data['tenant_id'] = $this->getTenantId();
@@ -409,7 +392,7 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Atualiza customer com todas as relações a partir de um DTO.
      */
-    public function updateFromDTO(Customer $customer, \App\DTOs\Customer\CustomerDTO $dto): bool
+    public function updateFromDTO(Customer $customer, CustomerDTO $dto): ?Model
     {
         $data = $dto->toArrayWithoutNulls();
 
@@ -532,7 +515,7 @@ class CustomerRepository extends AbstractTenantRepository
     /**
      * Atualiza customer com todas as relações
      */
-    public function updateWithRelations(Customer $customer, array $data): bool
+    public function updateWithRelations(Customer $customer, array $data): ?Customer
     {
         return DB::transaction(function () use ($customer, $data) {
             // Atualizar CommonData
@@ -606,7 +589,7 @@ class CustomerRepository extends AbstractTenantRepository
                 'status' => $data['status'] ?? $customer->status,
             ]);
 
-            return true;
+            return $customer->fresh(['commonData', 'contact', 'address', 'businessData']);
         });
     }
 

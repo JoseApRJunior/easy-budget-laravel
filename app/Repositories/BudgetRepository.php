@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Budget\BudgetDTO;
 use App\Models\Budget;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use Illuminate\Support\Carbon;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -156,7 +158,7 @@ class BudgetRepository extends AbstractTenantRepository
     /**
      * Cria um orçamento a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Budget\BudgetDTO $dto): Model
+    public function createFromDTO(BudgetDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
@@ -164,7 +166,7 @@ class BudgetRepository extends AbstractTenantRepository
     /**
      * Atualiza um orçamento a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Budget\BudgetDTO $dto): ?Model
+    public function updateFromDTO(int $id, BudgetDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

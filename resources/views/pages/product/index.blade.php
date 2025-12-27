@@ -67,14 +67,14 @@
                                 <div class="form-group">
                                     <label for="active">Status</label>
                                     <select class="form-select tom-select" id="active" name="active">
-                                        @php($selectedActive = empty($filters) ? '1' : $filters['active'] ?? '')
+                                        @php($selectedActive = $filters['active'] ?? '1')
                                         <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
                                             Ativo
                                         </option>
                                         <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
                                             Inativo
                                         </option>
-                                        <option value="" {{ $selectedActive === '' ? 'selected' : '' }}>
+                                        <option value="all" {{ $selectedActive === 'all' ? 'selected' : '' }}>
                                             Todos
                                         </option>
                                     </select>
@@ -95,14 +95,14 @@
                                 <div class="form-group">
                                     <label for="deleted">Registros</label>
                                     <select name="deleted" id="deleted" class="form-select tom-select">
-                                        @php($selectedDeleted = empty($filters) ? 'current' : $filters['deleted'] ?? '')
+                                        @php($selectedDeleted = $filters['deleted'] ?? 'current')
                                         <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
                                             Atuais
                                         </option>
                                         <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
                                             Deletados
                                         </option>
-                                        <option value="" {{ $selectedDeleted === '' ? 'selected' : '' }}>
+                                        <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>
                                             Todos
                                         </option>
                                     </select>

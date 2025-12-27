@@ -152,15 +152,16 @@ class CategoryService extends AbstractBaseService
             $data = $dto->toArray();
 
             if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId());
+                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->tenantId());
+                $dto = CategoryDTO::fromArray($data);
             }
 
-            if (! Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId())) {
+            if (! Category::validateUniqueSlug($data['slug'], (int) $this->tenantId())) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
             if (! empty($data['parent_id'])) {
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->getTenantId());
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->tenantId());
                 if ($parentResult->isError()) {
                     return $parentResult;
                 }
@@ -189,10 +190,11 @@ class CategoryService extends AbstractBaseService
             $data = $dto->toArray();
 
             if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->getTenantId(), $id);
+                $data['slug'] = $this->generateUniqueSlug($dto->name, (int) $this->tenantId(), $id);
+                $dto = CategoryDTO::fromArray($data);
             }
 
-            if (! Category::validateUniqueSlug($data['slug'], (int) $this->getTenantId(), $id)) {
+            if (! Category::validateUniqueSlug($data['slug'], (int) $this->tenantId(), $id)) {
                 return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
@@ -201,7 +203,7 @@ class CategoryService extends AbstractBaseService
                     return $this->error(OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma');
                 }
 
-                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->getTenantId());
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], (int) $this->tenantId());
                 if ($parentResult->isError()) {
                     return $parentResult;
                 }
@@ -211,7 +213,9 @@ class CategoryService extends AbstractBaseService
                 }
             }
 
-            return DB::transaction(fn () => $this->repository->updateFromDTO($id, $dto));
+            $updated = DB::transaction(fn () => $this->repository->updateFromDTO($id, $dto));
+
+            return $updated ?: $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada para atualização.');
         }, 'Erro ao atualizar categoria.');
     }
 

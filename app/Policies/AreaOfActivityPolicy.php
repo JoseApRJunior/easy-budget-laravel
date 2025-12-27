@@ -15,7 +15,7 @@ class AreaOfActivityPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('manage-activities');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-activities');
     }
 
     /**
@@ -23,7 +23,7 @@ class AreaOfActivityPolicy
      */
     public function view(User $user, AreaOfActivity $activity): bool
     {
-        return $user->hasPermission('manage-activities');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-activities');
     }
 
     /**
@@ -31,7 +31,7 @@ class AreaOfActivityPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('manage-activities');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-activities');
     }
 
     /**
@@ -39,7 +39,7 @@ class AreaOfActivityPolicy
      */
     public function update(User $user, AreaOfActivity $activity): bool
     {
-        return $user->hasPermission('manage-activities');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-activities');
     }
 
     /**
@@ -47,7 +47,7 @@ class AreaOfActivityPolicy
      */
     public function delete(User $user, AreaOfActivity $activity): bool
     {
-        return $user->hasPermission('manage-activities');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-activities');
     }
 
     /**

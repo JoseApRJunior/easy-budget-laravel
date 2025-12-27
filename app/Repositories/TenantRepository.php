@@ -36,11 +36,9 @@ class TenantRepository extends AbstractGlobalRepository
     /**
      * Atualiza um tenant a partir de um DTO.
      */
-    public function updateFromDTO(int $id, TenantDTO $dto): bool
+    public function updateFromDTO(int $id, TenantDTO $dto): ?Model
     {
-        return $this->model->newQuery()
-            ->where('id', $id)
-            ->update($dto->toArray()) > 0;
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

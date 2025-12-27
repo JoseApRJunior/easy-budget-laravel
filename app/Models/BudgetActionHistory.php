@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -102,7 +103,7 @@ class BudgetActionHistory extends Model
      */
     public function scopeRecent($query, int $days = 30)
     {
-        return $query->where('created_at', '>=', now()->subDays($days));
+        return $query->where('created_at', '>=', Carbon::now()->subDays($days));
     }
 
     /**

@@ -33,7 +33,17 @@ trait RepositoryFiltersTrait
     protected function applyFilters(Builder $query, array $filters): Builder
     {
         foreach ($filters as $field => $value) {
-            $query->when($value !== null, function ($q) use ($field, $value) {
+            // Ignora campos que não existem no modelo para evitar erros de query
+            if (! $this->isValidField($field)) {
+                continue;
+            }
+
+            // Se o valor for 'all', ignoramos o filtro para este campo (ex: active=all)
+            if ($value === 'all') {
+                continue;
+            }
+
+            $query->when($value !== null && $value !== '', function ($q) use ($field, $value) {
                 if (is_array($value)) {
                     if (isset($value['operator'], $value['value'])) {
                         $q->where($field, $value['operator'], $value['value']);
@@ -117,10 +127,9 @@ trait RepositoryFiltersTrait
 
         return match ($deletedFilter) {
             'only' => $query->onlyTrashed(),  // Apenas deletados
-            'current' => $query,                  // Apenas ativos (padrão do Eloquent)
-            '' => $query->withTrashed(),   // Todos (string vazia do formulário)
-            'all' => $query->withTrashed(),   // Todos (alternativa)
-            default => $query,                  // Fallback: apenas ativos
+            'current' => $query,              // Apenas ativos (padrão do Eloquent)
+            'all' => $query->withTrashed(),   // Todos
+            default => $query,                // Fallback: apenas ativos
         };
     }
 
@@ -145,7 +154,9 @@ trait RepositoryFiltersTrait
      */
     protected function getEffectivePerPage(array $filters, int $defaultPerPage): int
     {
-        return $filters['per_page'] ?? $defaultPerPage;
+        $perPage = $filters['per_page'] ?? $defaultPerPage;
+
+        return is_numeric($perPage) ? (int) $perPage : $defaultPerPage;
     }
 
     /**

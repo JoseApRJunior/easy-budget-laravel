@@ -15,7 +15,7 @@ class CategoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('manage-categories');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-categories');
     }
 
     /**
@@ -23,12 +23,12 @@ class CategoryPolicy
      */
     public function view(User $user, Category $category): bool
     {
-        return $user->hasPermission('manage-categories');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-categories');
     }
 
     public function manage(User $user, Category $category): bool
     {
-        return $user->hasPermission('manage-categories') && $category->tenant_id === $user->tenant_id;
+        return ($user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-categories')) && $category->tenant_id === $user->tenant_id;
     }
 
     /**
@@ -36,7 +36,7 @@ class CategoryPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('manage-categories');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-categories');
     }
 
     /**

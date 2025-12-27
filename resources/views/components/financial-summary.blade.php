@@ -1,11 +1,13 @@
 @props( [ 'summary' ] )
 
-<div class="card hover-card mb-4">
-    <div class="card-header bg-primary">
+<div class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">Resumo Financeiro</h5>
-            <span class="badge bg-light text-primary">
-                {{ month_year_pt( now() ) }}
+            <h5 class="card-title mb-0 fw-bold text-dark">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Resumo Financeiro
+            </h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">
+                {{ month_year_pt(now()) }}
             </span>
         </div>
     </div>
@@ -66,11 +68,13 @@
             </div>
         </div>
     </div>
-    <div class="card-footer bg-light">
+    <div class="card-footer bg-white border-top-0 pb-4">
         <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">Última atualização: {{ now()->format( 'd/m/Y H:i' ) }}</small>
-            <a href="{{ route( 'provider.reports.financial' ) }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-graph-up me-1"></i>Ver Relatório Completo
+            <small class="text-muted small">
+                <i class="bi bi-clock-history me-1"></i>{{ now()->format('d/m/Y H:i') }}
+            </small>
+            <a href="{{ route('provider.reports.financial') }}" class="btn btn-sm btn-link text-decoration-none p-0">
+                Relatório Completo <i class="bi bi-arrow-right ms-1"></i>
             </a>
         </div>
     </div>

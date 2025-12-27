@@ -39,14 +39,9 @@ class BusinessDataRepository extends AbstractTenantRepository
     /**
      * Atualiza um registro de dados empresariais a partir de um DTO.
      */
-    public function updateFromDTO(int $id, BusinessDataDTO $dto): bool
+    public function updateFromDTO(int $id, BusinessDataDTO $dto): ?Model
     {
-        $businessData = $this->find($id);
-        if (! $businessData) {
-            return false;
-        }
-
-        return $businessData->update($dto->toArrayWithoutNulls());
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     public function findByCustomerId(int $customerId): ?BusinessData

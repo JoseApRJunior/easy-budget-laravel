@@ -197,4 +197,46 @@ class QrCodeController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Generate QR code for service verification
+     */
+    public function generateForService(Request $request): JsonResponse
+    {
+        $request->validate([
+            'service_id' => 'required|integer',
+            'url' => 'required|url|max:500',
+        ]);
+
+        try {
+            $serviceId = $request->input('service_id');
+            $url = $request->input('url');
+
+            // Generate QR code with service-specific settings
+            $dataUri = $this->qrCodeService->generateDataUri($url, 200);
+
+            if (empty($dataUri)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao gerar QR Code do serviço',
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'QR Code do serviço gerado com sucesso',
+                'data' => [
+                    'qr_code' => $dataUri,
+                    'service_id' => $serviceId,
+                    'url' => $url,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao gerar QR Code do serviço: '.$e->getMessage(),
+            ], 500);
+        }
+    }
 }

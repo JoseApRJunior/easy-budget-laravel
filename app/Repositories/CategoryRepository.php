@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Category\CategoryDTO;
 use App\Models\Category;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -153,7 +154,7 @@ class CategoryRepository extends AbstractTenantRepository
     /**
      * Cria uma nova categoria a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Category\CategoryDTO $dto): Model
+    public function createFromDTO(CategoryDTO $dto): Model
     {
         return $this->create($dto->toArray());
     }
@@ -161,9 +162,9 @@ class CategoryRepository extends AbstractTenantRepository
     /**
      * Atualiza uma categoria a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Category\CategoryDTO $dto): bool
+    public function updateFromDTO(int $id, CategoryDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArray());
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**

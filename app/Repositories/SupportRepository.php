@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Support\SupportDTO;
+use App\DTOs\Support\SupportUpdateDTO;
 use App\Models\Support;
 use App\Repositories\Abstracts\AbstractTenantRepository;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +41,7 @@ class SupportRepository extends AbstractTenantRepository
     /**
      * Cria um novo ticket de suporte a partir de um DTO.
      */
-    public function createFromDTO(\App\DTOs\Support\SupportDTO $dto): Model
+    public function createFromDTO(SupportDTO $dto): Model
     {
         return $this->create($dto->toArrayWithoutNulls());
     }
@@ -47,7 +49,7 @@ class SupportRepository extends AbstractTenantRepository
     /**
      * Atualiza um ticket de suporte a partir de um DTO.
      */
-    public function updateFromDTO(int $id, \App\DTOs\Support\SupportUpdateDTO $dto): ?Model
+    public function updateFromDTO(int $id, SupportUpdateDTO $dto): ?Model
     {
         return $this->update($id, $dto->toArrayWithoutNulls());
     }

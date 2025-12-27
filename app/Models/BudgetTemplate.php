@@ -8,6 +8,7 @@ use App\Enums\BudgetStatus;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class BudgetTemplate extends Model
 {
@@ -25,7 +26,7 @@ class BudgetTemplate extends Model
         // Atualizar contador de uso quando usado
         static::saving(function ($template) {
             if ($template->isDirty('usage_count')) {
-                $template->last_used_at = now();
+                $template->last_used_at = Carbon::now();
             }
         });
     }
@@ -206,7 +207,7 @@ class BudgetTemplate extends Model
     public function incrementUsage(): bool
     {
         $this->increment('usage_count');
-        $this->last_used_at = now();
+        $this->last_used_at = Carbon::now();
 
         return $this->save();
     }
@@ -224,7 +225,7 @@ class BudgetTemplate extends Model
             'customer_id' => $overrides['customer_id'] ?? null,
             'budget_statuses_id' => BudgetStatus::DRAFT->value,
             'description' => $this->description,
-            'valid_until' => now()->addDays(30), // padrão 30 dias
+            'valid_until' => Carbon::now()->addDays(30), // padrão 30 dias
         ], $overrides);
 
         // Criar orçamento

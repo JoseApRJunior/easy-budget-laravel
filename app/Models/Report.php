@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -206,7 +207,7 @@ class Report extends Model
 
     public function scopeRecent($query, int $days = 7)
     {
-        return $query->where('created_at', '>=', now()->subDays($days));
+        return $query->where('created_at', '>=', Carbon::now()->subDays($days));
     }
 
     /**

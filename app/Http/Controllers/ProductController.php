@@ -50,6 +50,8 @@ class ProductController extends Controller
         $filters = $request->only(['search', 'active', 'deleted', 'per_page', 'all', 'category_id', 'min_price', 'max_price']);
 
         if (empty($request->query())) {
+            $filters['active'] = 'all';
+            $filters['deleted'] = 'all';
             $result = $this->emptyResult();
         } else {
             $perPage = (int) ($filters['per_page'] ?? 15);
@@ -156,11 +158,14 @@ class ProductController extends Controller
 
             $updateResult = $this->productService->updateProductBySku($sku, $dto, $removeImage);
 
+            // Se a atualização for bem-sucedida, usamos o novo SKU para o redirecionamento
+            $redirectSku = $updateResult->isSuccess() ? $updateResult->getData()->sku : $sku;
+
             return $this->redirectWithServiceResult(
                 'provider.products.show',
                 $updateResult,
                 'Produto atualizado com sucesso!',
-                ['sku' => $sku]
+                ['sku' => $redirectSku]
             );
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro inesperado ao atualizar produto', [

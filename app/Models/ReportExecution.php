@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -126,7 +127,7 @@ class ReportExecution extends Model
 
     public function scopeExpired($query)
     {
-        return $query->where('expires_at', '<', now());
+        return $query->where('expires_at', '<', Carbon::now());
     }
 
     public function scopeByDefinition($query, int $definitionId)
@@ -141,7 +142,7 @@ class ReportExecution extends Model
 
     public function scopeRecent($query, int $days = 7)
     {
-        return $query->where('created_at', '>=', now()->subDays($days));
+        return $query->where('created_at', '>=', Carbon::now()->subDays($days));
     }
 
     /**
@@ -176,7 +177,7 @@ class ReportExecution extends Model
     {
         $this->update([
             'status' => 'completed',
-            'completed_at' => now(),
+            'completed_at' => Carbon::now(),
             'file_path' => $filePath,
             'file_size' => $fileSize,
         ]);
@@ -186,7 +187,7 @@ class ReportExecution extends Model
     {
         $this->update([
             'status' => 'failed',
-            'completed_at' => now(),
+            'completed_at' => Carbon::now(),
             'error_message' => $errorMessage,
         ]);
     }
@@ -231,7 +232,7 @@ class ReportExecution extends Model
                 $model->execution_id = 'exec_'.uniqid().'_'.time();
             }
             if (empty($model->executed_at)) {
-                $model->executed_at = now();
+                $model->executed_at = Carbon::now();
             }
         });
     }

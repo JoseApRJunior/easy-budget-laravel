@@ -49,6 +49,43 @@ abstract readonly class AbstractDTO
     }
 
     /**
+     * Converte o DTO para um array formatado para persistência no banco de dados.
+     * Pode ser sobrescrito em DTOs específicos para mapear nomes de campos.
+     */
+    public function toDatabaseArray(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Formata um nome para Case Title (Primeira Letra Maiúscula).
+     */
+    protected static function formatTitle(string $value): string
+    {
+        return mb_convert_case(trim($value), MB_CASE_TITLE, 'UTF-8');
+    }
+
+    /**
+     * Remove caracteres não numéricos de uma string (CPF, CNPJ, CEP).
+     */
+    protected static function sanitizeNumbers(?string $value): ?string
+    {
+        return $value ? preg_replace('/[^0-9]/', '', $value) : null;
+    }
+
+    /**
+     * Mapeia um booleano de forma flexível (aceita null, strings 'true'/'false', 0/1).
+     */
+    protected static function mapBoolean($value, bool $default = true): bool
+    {
+        if ($value === null) {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
      * Método auxiliar para instanciar o DTO a partir de um array.
      * Usa Reflection para mapear apenas os argumentos existentes no construtor.
      * Ignora chaves extras no array de entrada (previne erros).

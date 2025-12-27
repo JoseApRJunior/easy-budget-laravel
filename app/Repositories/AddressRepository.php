@@ -33,14 +33,9 @@ class AddressRepository extends AbstractTenantRepository
     /**
      * Atualiza um endereço a partir de um DTO.
      */
-    public function updateFromDTO(int $id, AddressDTO $dto): bool
+    public function updateFromDTO(int $id, AddressDTO $dto): ?Model
     {
-        $address = $this->find($id);
-        if (! $address) {
-            return false;
-        }
-
-        return $address->update(array_filter($dto->toArray(), fn ($value) => $value !== null));
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**
