@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\Budget\BudgetDTO;
-use App\DTOs\Budget\BudgetItemDTO;
 use App\Enums\BudgetStatus;
 use App\Enums\ServiceStatus;
 use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
-use App\Repositories\BudgetItemRepository;
 use App\Repositories\BudgetRepository;
-use App\Repositories\ServiceRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
@@ -21,8 +18,7 @@ class BudgetService extends AbstractBaseService
 {
     public function __construct(
         BudgetRepository $budgetRepository,
-        private readonly ServiceRepository $serviceRepository,
-        private readonly \App\Repositories\ServiceItemRepository $itemRepository,
+        private readonly ServiceService $serviceService,
         private readonly BudgetCodeGeneratorService $codeGeneratorService,
     ) {
         parent::__construct($budgetRepository);
@@ -127,20 +123,11 @@ class BudgetService extends AbstractBaseService
                             tenant_id: $budget->tenant_id
                         );
 
-                        // Cria o serviço usando o repository correspondente
-                        $service = $this->serviceRepository->createFromDTO($finalServiceDto);
+                        // Cria o serviço usando o ServiceService
+                        $serviceResult = $this->serviceService->create($finalServiceDto);
 
-                        // Cria os itens do serviço usando seu repositório especializado
-                        if (! empty($serviceDto->items)) {
-                            foreach ($serviceDto->items as $itemDto) {
-                                /** @var \App\DTOs\Service\ServiceItemDTO $itemDto */
-                                // O Repositório de itens de serviço deve ser o ServiceItemRepository
-                                if ($this->serviceRepository instanceof \App\Repositories\ServiceRepository) {
-                                    // Assumindo que o ServiceRepository tem acesso ou injeta o ServiceItemRepository
-                                    // Mas aqui usamos o repositório injetado no construtor
-                                    $this->itemRepository->createFromDTO($itemDto, $service->id);
-                                }
-                            }
+                        if ($serviceResult->isError()) {
+                            throw new \Exception($serviceResult->getMessage());
                         }
                     }
                 }
@@ -173,10 +160,8 @@ class BudgetService extends AbstractBaseService
                 // Atualiza os serviços: estratégia de sincronização completa
                 if (isset($dto->services)) {
                     // Remove serviços e itens órfãos vinculados a este orçamento
-                    $oldServices = $budget->services;
-                    foreach ($oldServices as $oldService) {
-                        $oldService->serviceItems()->delete();
-                        $oldService->delete();
+                    foreach ($budget->services as $oldService) {
+                        $this->serviceService->deleteByCode($oldService->code);
                     }
 
                     // Recria a hierarquia completa
@@ -196,13 +181,9 @@ class BudgetService extends AbstractBaseService
                             tenant_id: $budget->tenant_id
                         );
 
-                        $service = $this->serviceRepository->createFromDTO($finalServiceDto);
-
-                        if (! empty($serviceDto->items)) {
-                            foreach ($serviceDto->items as $itemDto) {
-                                /** @var \App\DTOs\Service\ServiceItemDTO $itemDto */
-                                $this->itemRepository->createFromDTO($itemDto, $service->id);
-                            }
+                        $serviceResult = $this->serviceService->create($finalServiceDto);
+                        if ($serviceResult->isError()) {
+                            throw new \Exception($serviceResult->getMessage());
                         }
                     }
                 }

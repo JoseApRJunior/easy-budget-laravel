@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\DTOs\Invoice\InvoiceFromServiceDTO;
 use App\Enums\ServiceStatus;
 use App\Models\Service;
 use App\Services\Domain\InvoiceService;
@@ -65,15 +66,16 @@ class ServiceObserver
             }
 
             // Preparar dados para a fatura automática
-            $invoiceData = [
+            $invoiceDTO = InvoiceFromServiceDTO::fromRequest([
+                'service_code' => $service->code,
                 'issue_date' => now()->format('Y-m-d'),
                 'due_date' => now()->addDays(30)->format('Y-m-d'), // 30 dias para pagamento
                 'notes' => 'Fatura gerada automaticamente após conclusão do serviço',
                 'is_automatic' => true, // Marcar como fatura automática
-            ];
+            ]);
 
             // Gerar a fatura
-            $result = $this->invoiceService->createInvoiceFromService($service->code, $invoiceData);
+            $result = $this->invoiceService->createInvoiceFromService($invoiceDTO);
 
             if ($result->isSuccess()) {
                 $invoice = $result->getData();

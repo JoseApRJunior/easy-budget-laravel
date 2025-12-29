@@ -27,7 +27,6 @@ use App\Listeners\SendSupportContactEmail;
 use App\Listeners\SendSupportResponse;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\Budget;
-use App\Models\BudgetItem;
 use App\Models\Service;
 use App\Models\ServiceItem;
 use App\Observers\BudgetObserver;
@@ -129,7 +128,6 @@ class EventServiceProvider extends ServiceProvider
         Service::observe([ServiceObserver::class, $inventoryObserver]);
 
         Budget::observe([BudgetObserver::class, BudgetStatusObserver::class, $inventoryObserver]);
-        BudgetItem::observe([$inventoryObserver]);
         ServiceItem::observe([$inventoryObserver]);
 
         // Registra observers adicionais se necessário
